@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-utensils">
+  <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
+  <path d="M15 2v10"/>
+  <path d="M12 2v6"/>
+  <path d="M18 12a4 4 0 0 1-8 0"/>
+  <path d="M14 16v6"/>
+  <path d="M6 2v20"/>
+  <path d="M3 2h6"/>
+</svg>

@@ -1,0 +1,80 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules
+.pnp
+.pnp.js
+
+# ─── Next.js ─────────────────────────────────────────────────────────────────
+.next/
+out/
+build/
+dist/
+
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.secret
+secrets/
+
+# ─── Database ────────────────────────────────────────────────────────────────
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+db-backups/
+
+# ─── Testing ─────────────────────────────────────────────────────────────────
+coverage/
+playwright-report/
+test-results/
+.playwright/
+
+# ─── Media / Uploads ─────────────────────────────────────────────────────────
+public/uploads/
+public/generated/
+uploads/
+local-media/
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+logs/
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─── Editor ──────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── TypeScript ──────────────────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+.cache/
+.temp/
+tmp/

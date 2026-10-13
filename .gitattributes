@@ -1,0 +1,24 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Force binary for these file types
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+
+# SQLite database files are binary
+*.sqlite binary
+*.sqlite3 binary
+*.db binary
+
+# Lock files
+pnpm-lock.yaml text eol=lf merge=ours
