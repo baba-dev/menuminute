@@ -1,30 +1,59 @@
 # MenuMinute — Shared design and theme contract
 
-Status: **Ink & Ember selected; button design pending.** The user approved 01 Ink & Ember on 14 October 2026, explicitly excluding the brochure's flat buttons. Use gradient buttons with intent-driven animation; review [button options](button-options.md) before locking the button family.
+Status: **approved design direction, 14 October 2026**. The user selected **Ink & Ember**, then approved **Ember Flow for everyday actions** and **Ink Press for a stronger tactile feel**. The earlier flat buttons are excluded.
 
-The earlier five muted candidates remain rejected; Collection 02 alternatives are historical exploration, not active competing base directions. Keep the approved Ink & Ember typography and food-specific sketch character.
+This document and the [approved gradient button contract](button-options.md) define the implementation direction. Earlier brochures are visual references; their unselected options do not override this decision.
 
 ## Confirmed visual direction constraints
 
 - Light: pure white canvas/working surfaces, near-black ink, vivid saturated controls and graphic accents. Do not replace these with tinted linen, sage or pastel washes.
 - Dark: charcoal surfaces, gold primary emphasis and orange editorial/detail accents, with high-contrast readable text.
 - Character: expressive headings, selective marker underlines, offset ink frames and small handwritten chef's notes, inspired by Creators' Pencil & Pixel.
-- Food identity: steam, plate outlines, ingredients and ticket details replace studio/cursor imagery. Ink & Ember's Bricolage/DM Sans/Kalam roles and base palette are selected; final gradient button tokens and states remain under review.
+- Food identity: steam, plate outlines, ingredients and ticket details replace studio/cursor imagery. Ink & Ember's Bricolage/DM Sans/Kalam roles and base palette are selected; the approved gradient stops and final component states still require implementation verification.
 - Keep ordinary controls, prices, financial/security content and kitchen instructions precise. Handwriting is a decorative annotation role only.
 - Use at most one focal sketch gesture per main viewport and avoid stacking decoration on every card. Brand character should never obscure food or service state.
 
-## Remaining button selection and implementation
+## Approved button hierarchy and implementation
 
-1. User selects Ember Flow, Ink Press, Hearth Glow, Service Split, or a specified hybrid.
-2. Refine gradient stops, label contrast, geometry and action-driven motion within Ink & Ember.
-3. Prototype guest, owner and kitchen actions in both modes, including keyboard, touch, reduced motion, pending, error and success states.
-4. Apply the accepted system throughout the app. Do not implement the explicitly rejected flat buttons.
+Use Ember Flow as the default for everyday actions: cart, save, continue and routine service updates. Use Ink Press for selected focal actions such as publishing a menu or a prominent first-menu CTA. Keep the latter sparse; the stronger tactile edge loses meaning if repeated everywhere. Secondary and destructive actions preserve their own semantic hierarchy.
 
-The base theme is selected. No button candidate is implemented automatically.
+Build both as variants of one shared component. Use short directional hover/press cues, explicit pending labels, duplicate-action prevention, server-acknowledged success and recoverable errors. Respect reduced motion. Do not turn the demonstration's fixed delays or automatic resets into production logic.
+
+Next: refine and verify all state tokens, prototype the approved guest/owner/kitchen treatments, then apply them throughout the app. Design selection is complete; implementation is not claimed by this documentation PR.
+
+## Canonical base tokens
+
+| Role                       | Light                 | Dark                  |
+| -------------------------- | --------------------- | --------------------- |
+| Canvas                     | `#FFFFFF`             | `#111111`             |
+| Card/popover               | `#FFFFFF`             | `#202020`             |
+| Foreground                 | `#171717`             | `#FFFFFF`             |
+| Supporting text            | `#555555`             | `#BEBEBE`             |
+| Raised/quiet surface       | `#F5F5F5`             | `#2C2C2C`             |
+| Primary brand              | `#FF5B1A`             | `#FFC83D`             |
+| Gold detail                | `#FFD23F`             | `#FFC83D`             |
+| Orange detail              | `#FF5B1A`             | `#FF7A1A`             |
+| Readable orange annotation | `#A83500`             | `#FF7A1A`             |
+| Decorative divider         | `#D7D7D7`             | `#505050`             |
+| Success fill/text          | `#067345` / `#FFFFFF` | `#4DDD9B` / `#10251A` |
+| Gradient start             | `#FF5B1A`             | `#FFD54B`             |
+| Gradient middle            | `#FF8A1E`             | `#FFB52C`             |
+| Gradient end               | `#FFD046`             | `#FF7A1A`             |
+| Gradient foreground        | `#211600`             | `#211600`             |
+
+The divider is decorative, not an accessible control boundary by itself. Focus, inputs, destructive/warning/info pairs, charts and disabled states require explicit semantic values and rendered-state checks during implementation. Do not use saturated orange text on white where the readable annotation token is needed.
+
+## Typography and geometry
+
+- Bricolage Grotesque for display headings; DM Sans for body, controls, prices and operations.
+- Kalam for short decorative chef's notes only; never instructions, prices, security or required choices.
+- Body target 16/24px, controls 14/20px, editorial display 40–64px, kitchen item text 18–24px.
+- A 4px spacing base, 14px standard cards, Ember Flow 13px buttons and Ink Press 9px buttons; larger editorial panels may use 24px.
+- Tabular numerals for aligned prices, ticket quantities and timers.
 
 ## App-wide Light / Dark / System support
 
-This is a confirmed user requirement, independent of which design wins.
+This is a confirmed user requirement for the approved system.
 
 | Surface                                           | Required theme coverage                                              |
 | ------------------------------------------------- | -------------------------------------------------------------------- |
@@ -47,7 +76,7 @@ Within the selected Ink & Ember system, define paired values for background/fore
 
 Add status, chart and sidebar pairs where used. Separate decorative borders from control boundaries that must be perceptible. Component states must include hover, focus, pressed, selected, disabled, loading, error and success in both modes.
 
-Raw colors live in theme variables; Tailwind semantic utilities and shared shadcn/Radix primitives consume them. Use the selected Ink & Ember palette as the base; final state and gradient pairs still require testing. Candidate swatches are exploration data, not an implementation-ready accessibility certification.
+Raw colors live in theme variables; Tailwind semantic utilities and shared shadcn/Radix primitives consume them. Use the selected Ink & Ember palette as the base; final state and gradient pairs still require testing. Approved base tokens do not replace full component-state accessibility verification.
 
 All earlier kitchen-only overrides and light-only marketing/guest policy are superseded. Theme scope is the whole app. The Collection 01 palettes are also superseded by the user's vivid-white / charcoal-gold-orange requirement.
 
@@ -66,7 +95,7 @@ Use inline field validation and durable saved/error states; toast feedback is su
 - Guest cart has safe-area spacing and does not cover content/focus. Free menus do not show unusable ordering controls.
 - Kitchen tickets show number, table, quantities, variants, notes, elapsed time and one next action; connection health remains visible.
 - Buttons default to at least 44px touch height; kitchen actions can be larger.
-- A 4px spacing base is shared; final button radius/density remains part of the pending button selection.
+- A 4px spacing base is shared; button geometry follows the approved Ember Flow / Ink Press variants.
 - Motion should help orientation, respect reduced motion and never convey essential information alone.
 - Use an appropriate Devanagari font when Hindi is introduced; no unreviewed automatic translation is published.
 

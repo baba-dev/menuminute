@@ -1,6 +1,6 @@
 # MenuMinute — Product direction
 
-Direction baseline: 14 October 2026. Product scope is proposed in this PR; Ink & Ember is now user-selected, with gradient button styling/motion still awaiting choice.
+Direction baseline: 14 October 2026. Product scope is proposed in this PR; Ink & Ember and the Ember Flow / Ink Press gradient-button hierarchy are user-approved.
 
 ## 1. Product promise
 
@@ -14,16 +14,16 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 
 ## 2. What we recovered and what this PR resolves
 
-| Decision                                                              | Provenance / treatment                                                |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                |
-| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                |
-| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses       |
-| Ink & Ember (Collection 02)                                           | User-selected; flat buttons excluded; gradient button family pending  |
-| Typography                                                            | Ink & Ember: Bricolage Grotesque, DM Sans, Kalam for decorative notes |
-| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                         |
-| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                            |
-| AI outside the ordering path                                          | Retained reliability requirement                                      |
+| Decision                                                              | Provenance / treatment                                                                 |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                                 |
+| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                                 |
+| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses                        |
+| Ink & Ember (Collection 02)                                           | User-approved; Ember Flow everyday / Ink Press tactile emphasis; flat buttons excluded |
+| Typography                                                            | Ink & Ember: Bricolage Grotesque, DM Sans, Kalam for decorative notes                  |
+| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                                          |
+| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                                             |
+| AI outside the ordering path                                          | Retained reliability requirement                                                       |
 
 ## 3. Commercial model
 
@@ -101,8 +101,10 @@ Pilot with 3–5 independent venues before broad launch. Measure time to first p
 
 Launch requires usable mobile flows, tenant-isolation tests, order integrity, backup restore evidence and measured load on the actual VPS. “Oracle free” is a hosting target, not an uptime or permanent capacity guarantee.
 
-## 8. UI selection and appearance requirement
+## 8. Approved UI and appearance direction
 
-The user has explicitly not finalized UI tokens. [Three Collection 02 design candidates](design-options.md) remain open; obtain their design choice before making any one palette, typography or layout the implementation contract. A specific hybrid may be requested. The original five candidates were rejected as washed out. The required visual language is vivid color on white in light mode and charcoal with gold/orange in dark mode, with restaurant-specific sketch character inspired by Creators' Pencil & Pixel.
+**Ink & Ember** is selected. Use **Ember Flow for everyday actions** and **Ink Press for a stronger tactile feel**. Keep the white daytime canvas, vivid orange/gold gradients, charcoal nighttime surfaces, Bricolage/DM Sans/Kalam typography roles and food-specific sketch character.
 
-Light, Dark and System support is required throughout the app, including marketing, authentication, onboarding, guest menus/cart/tracking, owner tools, overlays and kitchen. This supersedes any earlier light-only guest/marketing or kitchen-only dark guidance. See [design system](design-system.md).
+Use Ink Press sparingly for selected focal moments. The earlier flat buttons and muted Collection 01 are superseded. See the [design system](design-system.md) and [approved button contract](button-options.md) for exact base tokens, hierarchy and state requirements.
+
+Light / Dark / System is required across public pages, authentication, onboarding, guest menu/cart/tracking, owner tools, overlays and kitchen. Theme selection is complete; component implementation and verification follow in Phase A.

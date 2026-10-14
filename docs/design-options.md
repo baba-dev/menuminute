@@ -1,6 +1,6 @@
 # MenuMinute — Vivid restaurant design exploration
 
-**Collection 02. Ink & Ember selected.** Updated 14 October 2026 after user approval. The user explicitly excluded the flat buttons shown in the brochure and requested gradient buttons with intent-driven animations. [Button family review](button-options.md) is pending.
+**Collection 02. Ink & Ember selected.** Updated 14 October 2026 after user approval. The user explicitly excluded the flat buttons shown in the brochure and requested gradient buttons with intent-driven animations. The user approved the [Ember Flow / Ink Press hierarchy](button-options.md).
 
 ## Confirmed visual brief
 
@@ -14,7 +14,7 @@ The user rejected all five original candidates as washed out. Collection 01 (Oli
 
 The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directions at larger scale. Each includes public, guest-menu/cart, owner Menu Studio and kitchen views in light and dark mode. All are UI studies with original vector food illustrations, not live product screenshots or actual restaurant photography. Subsequent user approval selects 01 Ink & Ember as the base; the brochure's flat buttons are excluded.
 
-## Three new directions
+## Collection 02 exploration archive
 
 | Direction            | Character                                   | Typography                            | Shape                              | Review pages |
 | -------------------- | ------------------------------------------- | ------------------------------------- | ---------------------------------- | ------------ |
@@ -24,7 +24,7 @@ The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directi
 
 ## 01 — Ink & Ember
 
-**My recommendation.** Chef’s notebook meets a precise product.
+**Selected direction.** Chef’s notebook meets a precise product.
 
 - Components and graphics: Expressive, slightly irregular display type; One marker underline; small chef’s note; Offset ink frame on featured panels.
 - Best fit: A distinctive main brand with warm restaurant personality and disciplined daily tools.
@@ -102,9 +102,9 @@ The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directi
 
 ## Recorded decision
 
-**01 — Ink & Ember** is the recommended next prototype: it carries expressive craft from Pencil & Pixel, with its own orange/white daytime language, gold/charcoal nighttime treatment and chef's-note personality. This is a recommendation, not a selection.
+The user selected **01 Ink & Ember**, with **Ember Flow for everyday actions** and **Ink Press for a stronger tactile feel**. The brochure's flat buttons are excluded. Hearth Glow and Service Split are not selected.
 
-The user can choose 01, 02 or 03, or specify a deliberate hybrid. After selection, refine the complete semantic token layer and every state before implementing app-wide. Keep operational screens precise, with ordinary sans-serif labels and tabular prices. Handwriting never carries a price, required choice, security warning or kitchen instruction.
+The definitive implementation contract is [design-system.md](design-system.md) with [button-options.md](button-options.md). Keep operational labels sans serif, tabular prices precise and handwritten chef's notes decorative.
 
 ## Source reference
 

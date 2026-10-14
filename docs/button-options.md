@@ -1,6 +1,27 @@
-# Ink & Ember — Gradient button review
+# Ink & Ember — Approved gradient buttons
 
-Status: **base theme approved; button family unselected**. The user selected Ink & Ember but explicitly excluded the earlier flat buttons. They want gradient fills and intent-driven animation.
+Status: **user-approved hybrid, 14 October 2026**. Use **Ember Flow for everyday actions** and **Ink Press for a stronger tactile feel**. Hearth Glow and Service Split are archived alternatives; the earlier flat brochure buttons remain excluded.
+
+## Usage hierarchy
+
+| Treatment            | Role                                             | Examples                                                                     |
+| -------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Ember Flow           | Default everyday primary action                  | Add to cart, save changes, continue, apply settings, routine service updates |
+| Ink Press            | Deliberate focal action needing tactile emphasis | Publish menu, prominent first-menu CTA, a selected milestone action          |
+| Quiet secondary      | Supporting action in the same group              | Preview, cancel, back                                                        |
+| Semantic destructive | An explicitly destructive action                 | Delete, revoke, cancel accepted work with permission/reason                  |
+
+Ink Press is a semantic variant in the same button system, not an unrelated style. Use it sparingly, normally at most one focal action per group or major viewport. A kitchen board favors large, fast Ember Flow actions; do not add a decorative stamp/shadow to every ticket. Do not equate tactile emphasis with destructive confirmation.
+
+## Approved geometry
+
+- **Ember Flow**: 13px corners, warm gradient face, trailing icon tile, subtle elevation.
+- **Ink Press**: 9px corners, ink outline, small offset shadow, leading icon divider and the same gradient family.
+- Preserve at least 44px touch targets; favor 48–56px in service contexts.
+- On coarse pointers, do not depend on hover to expose an action.
+- Secondary and destructive actions retain clear semantic treatments rather than inheriting the bright primary gradient automatically.
+
+## Exploration archive
 
 ## Four candidates
 
@@ -15,11 +36,11 @@ The interactive comparison demonstrates guest Add to cart, owner Publish menu an
 
 ## Gradient contract
 
-Use the selected Ink & Ember vivid-orange/white and gold-orange/charcoal language. Candidate preview stops are:
+Use the selected Ink & Ember vivid-orange/white and gold-orange/charcoal language. Approved base gradient stops are:
 
 - Light: `#FF5B1A` → `#FF8A1E` → `#FFD046`.
 - Dark: `#FFD54B` → `#FFB52C` → `#FF7A1A`.
-- Foreground: near-black `#211600`, verified across all stops and interpolation before implementation.
+- Foreground: near-black `#211600`. Sampled sRGB interpolation checks gave minimum text contrast of 5.73:1 in light mode and 6.83:1 in dark mode; recheck rendered states during implementation.
 
 Do not assume white labels are readable on bright orange/gold. Gradients are emphasis, not a replacement for status semantics. Quiet secondary/destructive actions require their own accessible treatment; do not turn every operation into the same bright primary.
 
@@ -34,6 +55,6 @@ Do not assume white labels are readable on bright orange/gold. Gradients are emp
 
 The interactive comparison uses explicitly simulated delays and a finite demo progress sweep; these are not production progress estimates. No real publishing or orders occur.
 
-## Before implementation
+## Implementation acceptance
 
-Let the user choose the button family or hybrid. Then validate all gradient points and every state in both modes, keyboard/touch interaction, 44px or larger targets, long labels/localization, duplicate prevention, errors and reduced motion. Production feedback remains visible until the user has a meaningful next action; the short automatic reset in the comparison is demonstration-only.
+The hybrid is selected. Validate all gradient points and every state in both modes, keyboard/touch interaction, 44px or larger targets, long labels/localization, duplicate prevention, errors and reduced motion. Production feedback remains visible until the user has a meaningful next action; the short automatic reset in the comparison is demonstration-only.

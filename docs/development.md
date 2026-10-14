@@ -76,6 +76,6 @@ The database seed provides a pre-configured restaurant owner account:
 
 Before implementing a feature, read [product direction](product-direction.md), [design system](design-system.md), [AI and media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
 
-Use semantic theme tokens and shared shadcn/Radix primitives. UI selection is open. The five original palettes were rejected as washed out. Review Collection 02; use vivid color on white for light mode and charcoal/gold/orange for dark mode. Do not default to any candidate. After the user chooses a direction, implement and verify Light / Dark / System throughout the app. Preserve the existing order enum mapping until a migration is justified.
+Use semantic theme tokens and shared shadcn/Radix primitives. The approved visual system is Ink & Ember with Ember Flow for everyday actions and Ink Press for selected tactile emphasis. Read [the approved button contract](button-options.md). Implement and verify Light / Dark / System throughout the app; keep the earlier flat buttons excluded. Preserve the existing order enum mapping until a migration is justified.
 
 Each feature PR should identify the phase, behavior changed, necessary schema/migration changes, applicable acceptance evidence and any provider/production dependency. Distinguish a preview from an implemented capability. Never claim a CI result from an earlier commit as verification of the current SHA.

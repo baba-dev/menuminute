@@ -27,13 +27,13 @@ Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at 
 
 ### Design direction: Ink & Ember
 
-The user selected **01 Ink & Ember** from [Collection 02](docs/design-options.md). Keep its expressive restaurant identity, vivid orange on white and gold/orange on charcoal. The flat buttons shown in the brochure were explicitly excluded: the user wants **gradient buttons with intent-driven animation**. Button family selection is pending; see [button options](docs/button-options.md).
+The approved direction is **Ink & Ember**: vivid orange on white, gold/orange on charcoal, expressive restaurant typography and selective chef's-note details. Use **Ember Flow for everyday actions** and **Ink Press for selected stronger tactile emphasis**. Both use gradients and intent-driven motion; see the [approved button contract](docs/button-options.md).
 
 **Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
 
 The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
 
-Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). The Ink & Ember base direction is selected; button geometry, gradient treatment and motion remain under review.
+Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). The Ink & Ember theme and Ember Flow / Ink Press button hierarchy are approved. Implementation and component-state acceptance are the next Phase A work.
 
 ---
 
@@ -143,7 +143,7 @@ pnpm test:e2e
 ## 📚 Documentation Index
 
 - [Product Direction](docs/product-direction.md)
-- [Design Options for Selection](docs/design-options.md)
+- [Design Exploration and Recorded Decision](docs/design-options.md)
 - [Design System and Theme Requirements](docs/design-system.md)
 - [AI and Media Policy](docs/ai-and-media.md)
 - [Architecture Guide](docs/architecture.md)

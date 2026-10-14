@@ -56,14 +56,16 @@
 - **Consequences**: Paid expiry preserves menu access. Entitlements are server-enforced. V1 guest payment is at the counter; platform subscription billing is separate.
 - **Contract**: [Product direction](product-direction.md).
 
-## ADR 007: Vivid restaurant exploration; selection remains open
+## ADR 007: Ink & Ember with Ember Flow and Ink Press
 
-- **Status**: Awaiting user selection. The user rejected all five Collection 01 candidates as washed out.
-- **Confirmed constraints**: Vivid saturated color on white in light mode; charcoal with gold/orange in dark mode; app-wide Light / Dark / System.
-- **Reference**: Adapt the expressive type and selective sketch craft of Creators' Pencil & Pixel to food, chef's notes, plates and order tickets. Do not clone the Creators identity.
-- **Decision pending**: Collection 02 offers 01 Ink & Ember, 02 Ticket & Flame and 03 Market & Marker. 01 is recommended but not selected.
-- **Consequences**: No candidate is implemented by default. Refine full paired tokens and a focused prototype after the user's choice.
-- **Contract**: [Design options](design-options.md), [shared design contract](design-system.md).
+- **Status**: User-approved, 14 October 2026.
+- **Decision**: Ink & Ember base identity; Ember Flow for everyday actions and Ink Press for a stronger tactile feel.
+- **Visual contract**: Vivid color on white by day; charcoal/gold/orange by night; Bricolage display, DM Sans UI and decorative Kalam chef's notes.
+- **Button contract**: Warm gradients with readable near-black labels; sparse tactile emphasis; intent-driven hover/press/pending/success/error feedback; reduced-motion support.
+- **App-wide requirement**: Light / Dark / System with persistent choice and no partial-theme overlays.
+- **Superseded**: Collection 01, other Collection 02 base directions and the original flat brochure buttons.
+- **Consequences**: Design selection is complete. Implement shared variants and verify accessibility and behavior in Phase A; do not mistake prototype effects for server-backed outcomes.
+- **Contract**: [Design system](design-system.md), [approved buttons](button-options.md), [exploration archive](design-options.md).
 
 ---
 
