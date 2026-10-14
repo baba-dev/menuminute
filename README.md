@@ -1,4 +1,4 @@
-# MenuMinute (Working Name)
+# MenuMinute
 
 > **Affordable, mobile-first restaurant SaaS.**  
 > Create digital menus, generate permanent QR codes for free forever, and scale into online ordering and kitchen display systems.
@@ -7,22 +7,33 @@
 [![Node.js](https://img.shields.io/badge/Node.js-LTS_v22%2B-green.svg)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/Database-SQLite_WAL-blue.svg)](https://sqlite.org/)
 [![ORM](https://img.shields.io/badge/ORM-Drizzle-orange.svg)](https://orm.drizzle.team/)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-## 🍽️ Product Overview & Tiers
+## Product direction
 
-- **Free Forever (Primary Customer Acquisition Channel)**:
-  - Create full digital menus with categories, dishes, descriptions, and dietary indicators.
-  - Generate permanent QR codes that diners scan with zero registration required.
-  - Unlimited menu items with real-time updates.
-- **Online Ordering — Planned ₹149/month (Phase C)**:
-  - Table-based QR ordering with mobile cart and submission.
-  - Live order management for front-of-house staff.
-- **Kitchen Pro — Planned ₹299/month (Phase D)**:
-  - Dedicated Kitchen Display System (KDS) tablet interface.
-  - Order acceptance and preparation stages with audible notifications.
+**A beautiful menu for every restaurant. A calmer service for every team.**
+
+For independent cafés, dhabas, bakeries and small restaurants: free permanent QR menus, with subscriptions for guest ordering and kitchen operations.
+
+| Tier        | Pilot pricing hypothesis             | Outcome                                                                           |
+| ----------- | ------------------------------------ | --------------------------------------------------------------------------------- |
+| Free Menu   | ₹0                                   | Mobile menu, restaurant branding, categories/items, availability and permanent QR |
+| Ordering    | ₹149/outlet/month                    | Table ordering, guest cart, staff acceptance, tracking and history                |
+| Kitchen Pro | ₹299/outlet/month, includes Ordering | Dedicated kitchen board, timers, staff roles and reconnect recovery               |
+
+Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at the counter. Keep the free menu accessible when a paid plan ends. See [product direction](docs/product-direction.md) for exact boundaries and open launch decisions.
+
+### Design baseline: Olive & Linen
+
+Linen surfaces, olive primary actions, restrained terracotta accents, Fraunces editorial headings and DM Sans controls. Use Nova-inspired shadcn components and distinct guest, owner and kitchen layouts.
+
+![Olive and Linen direction board](docs/assets/olive-linen-direction.svg)
+
+The baseline is proposed in this documentation PR. The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
+
+Start with [product direction](docs/product-direction.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). These define the next implementation contract.
 
 ---
 
@@ -98,8 +109,8 @@ See [docs/architecture.md](docs/architecture.md) for architectural details.
 ```text
 src/
 ├── app/                  # Next.js App Router route handlers & pages
-│   ├── (marketing)/      # Landing page & pricing
-│   ├── (auth)/           # Login and user registration
+│   ├── page.tsx, pricing/ # Landing page & pricing
+│   ├── login/, register/ # Login and user registration
 │   ├── (dashboard)/      # Restaurant management portal
 │   ├── (public-menu)/    # Mobile-first customer menu view
 │   └── api/              # RESTful endpoints for menu and auth
@@ -131,6 +142,9 @@ pnpm test:e2e
 
 ## 📚 Documentation Index
 
+- [Product Direction](docs/product-direction.md)
+- [Design System and Tokens](docs/design-system.md)
+- [AI and Media Policy](docs/ai-and-media.md)
 - [Architecture Guide](docs/architecture.md)
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)

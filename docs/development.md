@@ -69,3 +69,13 @@ The database seed provides a pre-configured restaurant owner account:
 | `pnpm db:migrate`    | Execute pending database migrations                       |
 | `pnpm db:seed`       | Idempotently seed demonstration restaurant and menu       |
 | `pnpm env:validate`  | Verify environment configuration variables                |
+
+---
+
+## 5. Product and design contract
+
+Before implementing a feature, read [product direction](product-direction.md), [design system](design-system.md), [AI and media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
+
+Use semantic theme tokens and shared shadcn/Radix primitives. The Olive & Linen theme and font migration are Phase A work, not completed by the documentation update. Preserve the existing order enum mapping until a migration is justified.
+
+Each feature PR should identify the phase, behavior changed, necessary schema/migration changes, applicable acceptance evidence and any provider/production dependency. Distinguish a preview from an implemented capability. Never claim a CI result from an earlier commit as verification of the current SHA.
