@@ -1,6 +1,6 @@
 # MenuMinute — Vivid restaurant design exploration
 
-**Collection 02. No design selected.** Updated 14 October 2026 after direct user feedback.
+**Collection 02. Ink & Ember selected.** Updated 14 October 2026 after user approval. The user explicitly excluded the flat buttons shown in the brochure and requested gradient buttons with intent-driven animations. [Button family review](button-options.md) is pending.
 
 ## Confirmed visual brief
 
@@ -12,7 +12,7 @@ The user rejected all five original candidates as washed out. Collection 01 (Oli
 - Distinct restaurant identity: chef's notes, steam strokes, plate outlines, ingredient marks and order-ticket details. Do not copy the Creators logo, cursor motif, violet palette or entire type stack.
 - Confirmed app-wide requirement: Light / Dark / System on every surface, with persistent preference and theme-safe overlays.
 
-The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directions at larger scale. Each includes public, guest-menu/cart, owner Menu Studio and kitchen views in light and dark mode. All are UI studies with original vector food illustrations, not live product screenshots or actual restaurant photography. No theme is approved by this document or brochure.
+The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directions at larger scale. Each includes public, guest-menu/cart, owner Menu Studio and kitchen views in light and dark mode. All are UI studies with original vector food illustrations, not live product screenshots or actual restaurant photography. Subsequent user approval selects 01 Ink & Ember as the base; the brochure's flat buttons are excluded.
 
 ## Three new directions
 
@@ -100,7 +100,7 @@ The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directi
 
 `orange` is the vivid graphic color; `accentInk` is its darker light-mode text companion where needed for legibility. Bright orange/gold actions use the documented `on` text, not white labels by default. `line` is a decorative divider and is not an automatic accessible input boundary.
 
-## Recommendation and decision
+## Recorded decision
 
 **01 — Ink & Ember** is the recommended next prototype: it carries expressive craft from Pencil & Pixel, with its own orange/white daytime language, gold/charcoal nighttime treatment and chef's-note personality. This is a recommendation, not a selection.
 

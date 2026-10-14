@@ -1,26 +1,26 @@
 # MenuMinute — Shared design and theme contract
 
-Status: **UI direction not selected.** Updated 14 October 2026. The user rejected all five Collection 01 directions as washed out. They are superseded, including the former Olive & Linen proposal.
+Status: **Ink & Ember selected; button design pending.** The user approved 01 Ink & Ember on 14 October 2026, explicitly excluding the brochure's flat buttons. Use gradient buttons with intent-driven animation; review [button options](button-options.md) before locking the button family.
 
-Review [Collection 02](design-options.md): 01 Ink & Ember, 02 Ticket & Flame and 03 Market & Marker, with the revised ten-page brochure. None is selected.
+The earlier five muted candidates remain rejected; Collection 02 alternatives are historical exploration, not active competing base directions. Keep the approved Ink & Ember typography and food-specific sketch character.
 
 ## Confirmed visual direction constraints
 
 - Light: pure white canvas/working surfaces, near-black ink, vivid saturated controls and graphic accents. Do not replace these with tinted linen, sage or pastel washes.
 - Dark: charcoal surfaces, gold primary emphasis and orange editorial/detail accents, with high-contrast readable text.
 - Character: expressive headings, selective marker underlines, offset ink frames and small handwritten chef's notes, inspired by Creators' Pencil & Pixel.
-- Food identity: steam, plate outlines, ingredients and ticket details replace studio/cursor imagery. Typography and exact colors remain candidates.
+- Food identity: steam, plate outlines, ingredients and ticket details replace studio/cursor imagery. Ink & Ember's Bricolage/DM Sans/Kalam roles and base palette are selected; final gradient button tokens and states remain under review.
 - Keep ordinary controls, prices, financial/security content and kitchen instructions precise. Handwriting is a decorative annotation role only.
 - Use at most one focal sketch gesture per main viewport and avoid stacking decoration on every card. Brand character should never obscure food or service state.
 
-## Selection process
+## Remaining button selection and implementation
 
-1. User chooses 01–03 from Collection 02 or specifies a hybrid of typography, color and layout.
-2. Refine paired light/dark semantic tokens and component states for that choice.
-3. Build a focused guest/owner/kitchen prototype for visual acceptance.
-4. Apply the accepted system throughout the app, including marketing and auth.
+1. User selects Ember Flow, Ink Press, Hearth Glow, Service Split, or a specified hybrid.
+2. Refine gradient stops, label contrast, geometry and action-driven motion within Ink & Ember.
+3. Prototype guest, owner and kitchen actions in both modes, including keyboard, touch, reduced motion, pending, error and success states.
+4. Apply the accepted system throughout the app. Do not implement the explicitly rejected flat buttons.
 
-Preserve the existing starter until a visual direction is chosen. Product functionality and uncontroversial accessibility requirements can still be planned independently.
+The base theme is selected. No button candidate is implemented automatically.
 
 ## App-wide Light / Dark / System support
 
@@ -43,11 +43,11 @@ Kitchen follows the chosen preference and may offer an explicit device override 
 
 ## Semantic token contract
 
-After selection, define paired values for background/foreground, card/foreground, popover/foreground, primary/foreground/hover, secondary/foreground, muted/foreground, accent/foreground, destructive/foreground, border, input and ring.
+Within the selected Ink & Ember system, define paired values for background/foreground, card/foreground, popover/foreground, primary/foreground/hover, secondary/foreground, muted/foreground, accent/foreground, destructive/foreground, border, input and ring.
 
 Add status, chart and sidebar pairs where used. Separate decorative borders from control boundaries that must be perceptible. Component states must include hover, focus, pressed, selected, disabled, loading, error and success in both modes.
 
-Raw colors live in theme variables; Tailwind semantic utilities and shared shadcn/Radix primitives consume them. No palette is authoritative until selected and tested. Candidate swatches are exploration data, not an implementation-ready accessibility certification.
+Raw colors live in theme variables; Tailwind semantic utilities and shared shadcn/Radix primitives consume them. Use the selected Ink & Ember palette as the base; final state and gradient pairs still require testing. Candidate swatches are exploration data, not an implementation-ready accessibility certification.
 
 All earlier kitchen-only overrides and light-only marketing/guest policy are superseded. Theme scope is the whole app. The Collection 01 palettes are also superseded by the user's vivid-white / charcoal-gold-orange requirement.
 
@@ -66,7 +66,7 @@ Use inline field validation and durable saved/error states; toast feedback is su
 - Guest cart has safe-area spacing and does not cover content/focus. Free menus do not show unusable ordering controls.
 - Kitchen tickets show number, table, quantities, variants, notes, elapsed time and one next action; connection health remains visible.
 - Buttons default to at least 44px touch height; kitchen actions can be larger.
-- A 4px spacing base is shared; exact radius/density is part of the user's design selection.
+- A 4px spacing base is shared; final button radius/density remains part of the pending button selection.
 - Motion should help orientation, respect reduced motion and never convey essential information alone.
 - Use an appropriate Devanagari font when Hindi is introduced; no unreviewed automatic translation is published.
 

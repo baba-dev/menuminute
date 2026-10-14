@@ -25,15 +25,15 @@ For independent cafés, dhabas, bakeries and small restaurants: free permanent Q
 
 Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at the counter. Keep the free menu accessible when a paid plan ends. See [product direction](docs/product-direction.md) for exact boundaries and open launch decisions.
 
-### Design selection: open
+### Design direction: Ink & Ember
 
-The original five muted candidates were rejected. No new direction is selected. [Collection 02](docs/design-options.md) offers **01 Ink & Ember**, **02 Ticket & Flame** and **03 Market & Marker**: vivid color on white in light mode, charcoal with gold/orange in dark mode, and restaurant-specific sketch character inspired by Creators' Pencil & Pixel.
+The user selected **01 Ink & Ember** from [Collection 02](docs/design-options.md). Keep its expressive restaurant identity, vivid orange on white and gold/orange on charcoal. The flat buttons shown in the brochure were explicitly excluded: the user wants **gradient buttons with intent-driven animation**. Button family selection is pending; see [button options](docs/button-options.md).
 
 **Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
 
 The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
 
-Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). Visual tokens stay provisional until the user chooses a direction.
+Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). The Ink & Ember base direction is selected; button geometry, gradient treatment and motion remain under review.
 
 ---
 

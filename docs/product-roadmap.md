@@ -8,7 +8,7 @@ The starter repository contains Next.js/TypeScript, SQLite/Drizzle migrations an
 
 ## Phase A — Design foundation and complete free menu
 
-- Await the user's Collection 02 choice (01 Ink & Ember, 02 Ticket & Flame, 03 Market & Marker) or a specified hybrid; then refine paired semantic tokens, typography and a focused prototype. Collection 01 is rejected. Honor vivid color on white in light mode and charcoal/gold/orange in dark mode.
+- Base direction selected: 01 Ink & Ember. Finalize the user's gradient button family choice and action-driven motion; the brochure's flat buttons are excluded. Refine paired tokens and a focused prototype before app-wide implementation.nk & Ember, 02 Ticket & Flame, 03 Market & Marker) or a specified hybrid; then refine paired semantic tokens, typography and a focused prototype. Collection 01 is rejected. Honor vivid color on white in light mode and charcoal/gold/orange in dark mode.
 - Implement the accepted shared shadcn/Radix components and layout shells with app-wide Light / Dark / System support, including marketing, authentication, guests, owner tools, overlays and kitchen.
 - Complete onboarding, restaurant details, category/item editing, variants, availability, accessible reordering and menu publication states.
 - Implement Menu Studio desktop editor/preview and mobile Edit/Preview.

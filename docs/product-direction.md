@@ -1,6 +1,6 @@
 # MenuMinute — Product direction
 
-Direction baseline: 14 October 2026. Product scope is proposed in this PR; UI selection remains open following the user's clarification. No visual direction or tokens are approved.
+Direction baseline: 14 October 2026. Product scope is proposed in this PR; Ink & Ember is now user-selected, with gradient button styling/motion still awaiting choice.
 
 ## 1. Product promise
 
@@ -14,16 +14,16 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 
 ## 2. What we recovered and what this PR resolves
 
-| Decision                                                              | Provenance / treatment                                               |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                               |
-| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                               |
-| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses      |
-| Three vivid restaurant directions in design-options.md                | Earlier five rejected; user will choose 01–03; none selected         |
-| Typography                                                            | New embedded typography samples in Collection 02; no family selected |
-| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                        |
-| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                           |
-| AI outside the ordering path                                          | Retained reliability requirement                                     |
+| Decision                                                              | Provenance / treatment                                                |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                |
+| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                |
+| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses       |
+| Ink & Ember (Collection 02)                                           | User-selected; flat buttons excluded; gradient button family pending  |
+| Typography                                                            | Ink & Ember: Bricolage Grotesque, DM Sans, Kalam for decorative notes |
+| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                         |
+| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                            |
+| AI outside the ordering path                                          | Retained reliability requirement                                      |
 
 ## 3. Commercial model
 
