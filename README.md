@@ -25,15 +25,15 @@ For independent cafés, dhabas, bakeries and small restaurants: free permanent Q
 
 Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at the counter. Keep the free menu accessible when a paid plan ends. See [product direction](docs/product-direction.md) for exact boundaries and open launch decisions.
 
-### Design baseline: Olive & Linen
+### Design selection: open
 
-Linen surfaces, olive primary actions, restrained terracotta accents, Fraunces editorial headings and DM Sans controls. Use Nova-inspired shadcn components and distinct guest, owner and kitchen layouts.
+No palette, type system or layout direction has been selected. Review the five candidates in [design options](docs/design-options.md): A Olive & Linen, B Ember & Stone, C Paper & Plate, D Citrus Grid and E Coastal Calm.
 
-![Olive and Linen direction board](docs/assets/olive-linen-direction.svg)
+**Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
 
-The baseline is proposed in this documentation PR. The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
+The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
 
-Start with [product direction](docs/product-direction.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). These define the next implementation contract.
+Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). Visual tokens stay provisional until the user chooses a direction.
 
 ---
 
@@ -143,7 +143,8 @@ pnpm test:e2e
 ## 📚 Documentation Index
 
 - [Product Direction](docs/product-direction.md)
-- [Design System and Tokens](docs/design-system.md)
+- [Design Options for Selection](docs/design-options.md)
+- [Design System and Theme Requirements](docs/design-system.md)
 - [AI and Media Policy](docs/ai-and-media.md)
 - [Architecture Guide](docs/architecture.md)
 - [Database & Schema](docs/database.md)

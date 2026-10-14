@@ -1,6 +1,6 @@
 # MenuMinute — Product direction
 
-Direction baseline: 14 October 2026. This document reconciles the earlier planning discussion with the starting repository at `56fb3fa`. It defines the proposed implementation contract in this documentation PR; it does not claim that new recommendations have already been approved or implemented.
+Direction baseline: 14 October 2026. Product scope is proposed in this PR; UI selection remains open following the user's clarification. No visual direction or tokens are approved.
 
 ## 1. Product promise
 
@@ -14,16 +14,16 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 
 ## 2. What we recovered and what this PR resolves
 
-| Decision                                                              | Provenance / treatment                                                         |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                         |
-| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                         |
-| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses                |
-| Olive & Linen with Nova-inspired shadcn components                    | Earlier recommendation, no recorded selection; concrete baseline proposed here |
-| Fraunces headings and DM Sans interface                               | Earlier typography recommendation; specified here                              |
-| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                                  |
-| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                                     |
-| AI outside the ordering path                                          | Retained reliability requirement                                               |
+| Decision                                                              | Provenance / treatment                                                     |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                     |
+| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                     |
+| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses            |
+| Five visual directions in design-options.md                           | User will select; Olive & Linen is candidate A only                        |
+| Typography                                                            | Different embedded font samples in the review brochure; no family selected |
+| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                              |
+| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                                 |
+| AI outside the ordering path                                          | Retained reliability requirement                                           |
 
 ## 3. Commercial model
 
@@ -100,3 +100,9 @@ Defer full POS, inventory, accounting, delivery fleet/aggregator integration, gu
 Pilot with 3–5 independent venues before broad launch. Measure time to first published menu, QR-to-menu success, order submission success, duplicate/lost tickets, reconnect recovery, staff training effort, weekly active venues and willingness to pay. A useful target is first menu publication within ten minutes using an existing menu; validate it rather than advertise it as a proven result.
 
 Launch requires usable mobile flows, tenant-isolation tests, order integrity, backup restore evidence and measured load on the actual VPS. “Oracle free” is a hosting target, not an uptime or permanent capacity guarantee.
+
+## 8. UI selection and appearance requirement
+
+The user has explicitly not finalized UI tokens. [Five design candidates](design-options.md) remain open; obtain their design choice before making any one palette, typography or layout the implementation contract. A specific hybrid may be requested.
+
+Light, Dark and System support is required throughout the app, including marketing, authentication, onboarding, guest menus/cart/tracking, owner tools, overlays and kitchen. This supersedes any earlier light-only guest/marketing or kitchen-only dark guidance. See [design system](design-system.md).

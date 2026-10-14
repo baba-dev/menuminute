@@ -56,12 +56,15 @@
 - **Consequences**: Paid expiry preserves menu access. Entitlements are server-enforced. V1 guest payment is at the counter; platform subscription billing is separate.
 - **Contract**: [Product direction](product-direction.md).
 
-## ADR 007: Olive & Linen semantic theme
+## ADR 007: Visual selection remains open
 
-- **Status**: Proposed concrete design baseline in this PR; earlier recommendation was not a recorded user selection.
-- **Decision**: Linen canvas, olive primary actions, restrained terracotta detail, Fraunces editorial headings, DM Sans UI and Noto Sans Devanagari for Hindi. Use Nova-inspired shadcn components with the existing Radix foundation.
-- **Consequences**: Migrate the starter's orange/Inter UI in Phase A. Share semantic tokens and components; specialize guest, owner and kitchen density. Restaurant guest accents cannot override operational status semantics.
-- **Contract**: [Design system](design-system.md).
+- **Status**: Awaiting user selection; supersedes the earlier Olive & Linen baseline proposal.
+- **Decision**: Explore five complete directions and let the user choose typography, palette, components and layout. Olive & Linen is candidate A, not the default.
+- **Confirmed requirement**: Light / Dark / System across every app surface, not kitchen-only dark mode.
+- **Consequences**: Do not lock or apply candidate tokens before selection. Prototype and verify both modes after the choice.
+- **Contract**: [Design options](design-options.md), [shared design contract](design-system.md).
+
+---
 
 ## ADR 008: Durable orders before live delivery
 

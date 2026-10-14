@@ -8,7 +8,8 @@ The starter repository contains Next.js/TypeScript, SQLite/Drizzle migrations an
 
 ## Phase A — Design foundation and complete free menu
 
-- Implement Olive & Linen semantic tokens, typography, shared shadcn/Radix components and layout shells.
+- Await the user's design choice from A–E or a specified hybrid; then refine paired semantic tokens, typography and a focused prototype.
+- Implement the accepted shared shadcn/Radix components and layout shells with app-wide Light / Dark / System support, including marketing, authentication, guests, owner tools, overlays and kitchen.
 - Complete onboarding, restaurant details, category/item editing, variants, availability, accessible reordering and menu publication states.
 - Implement Menu Studio desktop editor/preview and mobile Edit/Preview.
 - Provide logo/cover uploads, responsive menu images and local SVG fallbacks.
