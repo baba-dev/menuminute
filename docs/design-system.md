@@ -1,12 +1,21 @@
 # MenuMinute — Shared design and theme contract
 
-Status: **UI direction not selected.** Updated 14 October 2026 following the user's clarification. The earlier Olive & Linen proposal is candidate A only. No palette, font pairing or layout has been approved.
+Status: **UI direction not selected.** Updated 14 October 2026. The user rejected all five Collection 01 directions as washed out. They are superseded, including the former Olive & Linen proposal.
 
-Read [design options](design-options.md) and the companion ten-page review brochure before selecting. Do not migrate the starter UI to candidate A by default.
+Review [Collection 02](design-options.md): 01 Ink & Ember, 02 Ticket & Flame and 03 Market & Marker, with the revised ten-page brochure. None is selected.
+
+## Confirmed visual direction constraints
+
+- Light: pure white canvas/working surfaces, near-black ink, vivid saturated controls and graphic accents. Do not replace these with tinted linen, sage or pastel washes.
+- Dark: charcoal surfaces, gold primary emphasis and orange editorial/detail accents, with high-contrast readable text.
+- Character: expressive headings, selective marker underlines, offset ink frames and small handwritten chef's notes, inspired by Creators' Pencil & Pixel.
+- Food identity: steam, plate outlines, ingredients and ticket details replace studio/cursor imagery. Typography and exact colors remain candidates.
+- Keep ordinary controls, prices, financial/security content and kitchen instructions precise. Handwriting is a decorative annotation role only.
+- Use at most one focal sketch gesture per main viewport and avoid stacking decoration on every card. Brand character should never obscure food or service state.
 
 ## Selection process
 
-1. User chooses A–E or specifies a hybrid of typography, color and layout.
+1. User chooses 01–03 from Collection 02 or specifies a hybrid of typography, color and layout.
 2. Refine paired light/dark semantic tokens and component states for that choice.
 3. Build a focused guest/owner/kitchen prototype for visual acceptance.
 4. Apply the accepted system throughout the app, including marketing and auth.
@@ -40,7 +49,7 @@ Add status, chart and sidebar pairs where used. Separate decorative borders from
 
 Raw colors live in theme variables; Tailwind semantic utilities and shared shadcn/Radix primitives consume them. No palette is authoritative until selected and tested. Candidate swatches are exploration data, not an implementation-ready accessibility certification.
 
-The earlier kitchen-only overrides and light-only marketing/guest policy are superseded. Theme scope is the whole app.
+All earlier kitchen-only overrides and light-only marketing/guest policy are superseded. Theme scope is the whole app. The Collection 01 palettes are also superseded by the user's vivid-white / charcoal-gold-orange requirement.
 
 ## Component foundation
 

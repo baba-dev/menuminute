@@ -56,12 +56,13 @@
 - **Consequences**: Paid expiry preserves menu access. Entitlements are server-enforced. V1 guest payment is at the counter; platform subscription billing is separate.
 - **Contract**: [Product direction](product-direction.md).
 
-## ADR 007: Visual selection remains open
+## ADR 007: Vivid restaurant exploration; selection remains open
 
-- **Status**: Awaiting user selection; supersedes the earlier Olive & Linen baseline proposal.
-- **Decision**: Explore five complete directions and let the user choose typography, palette, components and layout. Olive & Linen is candidate A, not the default.
-- **Confirmed requirement**: Light / Dark / System across every app surface, not kitchen-only dark mode.
-- **Consequences**: Do not lock or apply candidate tokens before selection. Prototype and verify both modes after the choice.
+- **Status**: Awaiting user selection. The user rejected all five Collection 01 candidates as washed out.
+- **Confirmed constraints**: Vivid saturated color on white in light mode; charcoal with gold/orange in dark mode; app-wide Light / Dark / System.
+- **Reference**: Adapt the expressive type and selective sketch craft of Creators' Pencil & Pixel to food, chef's notes, plates and order tickets. Do not clone the Creators identity.
+- **Decision pending**: Collection 02 offers 01 Ink & Ember, 02 Ticket & Flame and 03 Market & Marker. 01 is recommended but not selected.
+- **Consequences**: No candidate is implemented by default. Refine full paired tokens and a focused prototype after the user's choice.
 - **Contract**: [Design options](design-options.md), [shared design contract](design-system.md).
 
 ---

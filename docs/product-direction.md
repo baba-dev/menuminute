@@ -14,16 +14,16 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 
 ## 2. What we recovered and what this PR resolves
 
-| Decision                                                              | Provenance / treatment                                                     |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                     |
-| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                     |
-| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses            |
-| Five visual directions in design-options.md                           | User will select; Olive & Linen is candidate A only                        |
-| Typography                                                            | Different embedded font samples in the review brochure; no family selected |
-| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                              |
-| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                                 |
-| AI outside the ordering path                                          | Retained reliability requirement                                           |
+| Decision                                                              | Provenance / treatment                                               |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                               |
+| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                               |
+| ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses      |
+| Three vivid restaurant directions in design-options.md                | Earlier five rejected; user will choose 01–03; none selected         |
+| Typography                                                            | New embedded typography samples in Collection 02; no family selected |
+| Pay at counter; diner online payments later                           | Earlier scope recommendation; retained for V1                        |
+| One kitchen queue; multi-station routing later                        | Restores earlier scope after roadmap drift                           |
+| AI outside the ordering path                                          | Retained reliability requirement                                     |
 
 ## 3. Commercial model
 
@@ -103,6 +103,6 @@ Launch requires usable mobile flows, tenant-isolation tests, order integrity, ba
 
 ## 8. UI selection and appearance requirement
 
-The user has explicitly not finalized UI tokens. [Five design candidates](design-options.md) remain open; obtain their design choice before making any one palette, typography or layout the implementation contract. A specific hybrid may be requested.
+The user has explicitly not finalized UI tokens. [Three Collection 02 design candidates](design-options.md) remain open; obtain their design choice before making any one palette, typography or layout the implementation contract. A specific hybrid may be requested. The original five candidates were rejected as washed out. The required visual language is vivid color on white in light mode and charcoal with gold/orange in dark mode, with restaurant-specific sketch character inspired by Creators' Pencil & Pixel.
 
 Light, Dark and System support is required throughout the app, including marketing, authentication, onboarding, guest menus/cart/tracking, owner tools, overlays and kitchen. This supersedes any earlier light-only guest/marketing or kitchen-only dark guidance. See [design system](design-system.md).

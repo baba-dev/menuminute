@@ -1,139 +1,113 @@
-# MenuMinute — Five design directions for user selection
+# MenuMinute — Vivid restaurant design exploration
 
-Status: **none selected**. The user will choose the visual system. This comparison supersedes any assumption that Olive & Linen was finalized.
+**Collection 02. No design selected.** Updated 14 October 2026 after direct user feedback.
 
-The ten-page companion brochure, **MenuMinute-Design-Collection.pdf**, shows actual embedded fonts and representative owner, guest and kitchen mockups in Light and Dark. It also compares controls, layouts and appearance behavior. Illustrations are placeholders, not production screenshots.
+## Confirmed visual brief
 
-## Quick comparison
+The user rejected all five original candidates as washed out. Collection 01 (Olive & Linen, Ember & Stone, Paper & Plate, Citrus Grid and Coastal Calm) is superseded and must not be implemented.
 
-| Option            | Character                      | Typography                   | Layout                               | Card radius |
-| ----------------- | ------------------------------ | ---------------------------- | ------------------------------------ | ----------- |
-| A — Olive & Linen | Editorial hospitality          | Fraunces + DM Sans           | Editorial sections + split editor    | 10px        |
-| B — Ember & Stone | Warm, bold and rounded         | Plus Jakarta Sans + Manrope  | Rounded bento + visual item cards    | 18px        |
-| C — Paper & Plate | Minimal, precise and neutral   | Inter, with distinct weights | Compact table + structured list      | 4px         |
-| D — Citrus Grid   | Graphic, geometric and digital | Space Grotesk + DM Sans      | Modular grid + command toolbar       | 8px         |
-| E — Coastal Calm  | Airy, refined and reassuring   | Lora + Source Sans 3         | Airy sidebar + balanced split panels | 12px        |
+- Light mode: **white canvas and white working surfaces**, near-black text and vivid saturated color. No linen/sage/oatmeal page wash or pastel substitute for strong accents.
+- Dark mode: deep charcoal surfaces with **gold and orange** as the defining brand accents, crisp readable text and clear hierarchy.
+- Inspiration: Aiwa Creators' **Pencil & Pixel**. Preserve expressive display type, selective marker gestures, offset ink frames and short handwritten details.
+- Distinct restaurant identity: chef's notes, steam strokes, plate outlines, ingredient marks and order-ticket details. Do not copy the Creators logo, cursor motif, violet palette or entire type stack.
+- Confirmed app-wide requirement: Light / Dark / System on every surface, with persistent preference and theme-safe overlays.
 
-## Required across all options
+The revised ten-page **MenuMinute-Design-Collection.pdf** presents these directions at larger scale. Each includes public, guest-menu/cart, owner Menu Studio and kitchen views in light and dark mode. All are UI studies with original vector food illustrations, not live product screenshots or actual restaurant photography. No theme is approved by this document or brochure.
 
-Light / Dark / System throughout marketing, pricing, authentication, onboarding, guest menus/cart/tracking, owner tools, settings, overlays and kitchen. Persist the device preference; follow the system until explicitly overridden; avoid theme flash. No light-only guest/marketing or dark-only kitchen policy. See [shared design contract](design-system.md).
+## Three new directions
 
-All palettes below are exploratory. The brochure's 60 key text/background contrast pair checks passed 4.5:1; final components, focus/boundary contrast, status colors and every state still require validation. Border swatches are decorative and are not automatically suitable input boundaries. Shared semantic status meanings stay independent of brand colors.
+| Direction            | Character                                   | Typography                            | Shape                              | Review pages |
+| -------------------- | ------------------------------------------- | ------------------------------------- | ---------------------------------- | ------------ |
+| 01 — Ink & Ember     | Chef’s notebook meets a precise product.    | Bricolage Grotesque / DM Sans / Kalam | 14px feature/card radius candidate | 3–4          |
+| 02 — Ticket & Flame  | The energy of a busy restaurant pass.       | Barlow Condensed / Manrope / Caveat   | 6px feature/card radius candidate  | 5–6          |
+| 03 — Market & Marker | Fresh-market colour. Clear digital service. | Outfit / DM Sans / Kalam              | 20px feature/card radius candidate | 7–8          |
 
-## A — Olive & Linen
+## 01 — Ink & Ember
 
-**Editorial hospitality.** Quiet confidence. Food and stories take the lead.
+**My recommendation.** Chef’s notebook meets a precise product.
 
-- Typography: Fraunces + DM Sans; body 16/24, controls 14/20, editorial 40–64 and kitchen 18–24px targets.
-- Layout: Editorial sections + split editor.
-- Components: Thin rules and generous linen space; Small olive actions; terracotta detail; Food rows, editorial menu headings. 10px card radius is a candidate, not a global rule.
-- Best fit: Independent cafés, bakeries and restaurants with a personal story.
-- Trade-off: Serif headlines need restraint on dense operational screens.
+- Components and graphics: Expressive, slightly irregular display type; One marker underline; small chef’s note; Offset ink frame on featured panels.
+- Best fit: A distinctive main brand with warm restaurant personality and disciplined daily tools.
+- Limit: Keep expressive marks in headers and highlights, away from dense service data.
 
-| Candidate semantic role | Light     | Dark      |
-| ----------------------- | --------- | --------- |
-| Canvas                  | `#F7F5EE` | `#151B16` |
-| Surface                 | `#FFFFFF` | `#222B23` |
-| Text                    | `#232820` | `#F3F5EE` |
-| Muted text              | `#62685C` | `#B8C3B2` |
-| Primary action          | `#465C35` | `#C0D7A6` |
-| On-primary text         | `#FFFFFF` | `#1F2B19` |
-| Accent surface          | `#E4EAD9` | `#303D2E` |
-| Decorative border       | `#D9DDCF` | `#465344` |
-| Editorial detail        | `#A34F35` | `#EDAA8B` |
+| Exploratory token | Light     | Dark      |
+| ----------------- | --------- | --------- |
+| bg                | `#FFFFFF` | `#111111` |
+| surface           | `#FFFFFF` | `#202020` |
+| fg                | `#171717` | `#FFFFFF` |
+| muted             | `#555555` | `#BEBEBE` |
+| primary           | `#FF5B1A` | `#FFC83D` |
+| on                | `#18130F` | `#211600` |
+| gold              | `#FFD23F` | `#FFC83D` |
+| orange            | `#FF5B1A` | `#FF7A1A` |
+| accentInk         | `#A83500` | `#FF7A1A` |
+| line              | `#D7D7D7` | `#505050` |
+| raised            | `#F5F5F5` | `#2C2C2C` |
+| green             | `#008553` | `#43D99B` |
+| onGreen           | `#FFFFFF` | `#10251A` |
 
-## B — Ember & Stone
+`orange` is the vivid graphic color; `accentInk` is its darker light-mode text companion where needed for legibility. Bright orange/gold actions use the documented `on` text, not white labels by default. `line` is a decorative divider and is not an automatic accessible input boundary.
 
-**Warm, bold and rounded.** An inviting storefront with energetic, tactile controls.
+## 02 — Ticket & Flame
 
-- Typography: Plus Jakarta Sans + Manrope; body 16/24, controls 14/20, editorial 40–64 and kitchen 18–24px targets.
-- Layout: Rounded bento + visual item cards.
-- Components: Soft surfaces and 18px cards; Bold rounded sans-serif headings; Prominent action buttons and pill tabs. 18px card radius is a candidate, not a global rule.
-- Best fit: Casual dining, street-food brands and expressive quick-service venues.
-- Trade-off: Large cards consume more space; keep editing lists compact.
+**Bold and operational.** The energy of a busy restaurant pass.
 
-| Candidate semantic role | Light     | Dark      |
-| ----------------------- | --------- | --------- |
-| Canvas                  | `#FAF7F3` | `#1D1714` |
-| Surface                 | `#FFFFFF` | `#2C221D` |
-| Text                    | `#2A211D` | `#FFF4ED` |
-| Muted text              | `#72645B` | `#D1B9AA` |
-| Primary action          | `#B44720` | `#FFB18A` |
-| On-primary text         | `#FFFFFF` | `#3C1D0E` |
-| Accent surface          | `#F8E6DB` | `#493023` |
-| Decorative border       | `#E8DCD2` | `#6F5140` |
-| Editorial detail        | `#80562A` | `#E5C080` |
+- Components and graphics: Tall condensed headings, crisp ticket rules; Cobalt on white; flame-orange callouts; Perforation-inspired featured edges.
+- Best fit: Quick-service restaurants, food counters and teams who want a forceful, efficient interface.
+- Limit: Restrict condensed type to headings; order items and controls remain comfortably readable.
 
-## C — Paper & Plate
+| Exploratory token | Light     | Dark      |
+| ----------------- | --------- | --------- |
+| bg                | `#FFFFFF` | `#101113` |
+| surface           | `#FFFFFF` | `#1D2024` |
+| fg                | `#111827` | `#FFFFFF` |
+| muted             | `#515967` | `#BDC2CC` |
+| primary           | `#244BFF` | `#FFD046` |
+| on                | `#FFFFFF` | `#241A00` |
+| gold              | `#FFD23F` | `#FFD046` |
+| orange            | `#FF6A00` | `#FF7B21` |
+| accentInk         | `#A83500` | `#FF7B21` |
+| line              | `#CCD0D8` | `#505760` |
+| raised            | `#F5F6F8` | `#2D3137` |
+| green             | `#007D4A` | `#40DB94` |
+| onGreen           | `#FFFFFF` | `#10251A` |
 
-**Minimal, precise and neutral.** Strong hierarchy. Efficient work. Almost no decoration.
+`orange` is the vivid graphic color; `accentInk` is its darker light-mode text companion where needed for legibility. Bright orange/gold actions use the documented `on` text, not white labels by default. `line` is a decorative divider and is not an automatic accessible input boundary.
 
-- Typography: Inter, with distinct weights; body 16/24, controls 14/20, editorial 40–64 and kitchen 18–24px targets.
-- Layout: Compact table + structured list.
-- Components: 4px corners, crisp separators; Monochrome controls, quiet accents; Compact rows with visible metadata. 4px card radius is a candidate, not a global rule.
-- Best fit: Owners who prioritize speed, clarity and a neutral restaurant canvas.
-- Trade-off: Needs excellent spacing and food imagery to avoid feeling generic.
+## 03 — Market & Marker
 
-| Candidate semantic role | Light     | Dark      |
-| ----------------------- | --------- | --------- |
-| Canvas                  | `#F7F7F5` | `#111513` |
-| Surface                 | `#FFFFFF` | `#1D2320` |
-| Text                    | `#202321` | `#F2F5F1` |
-| Muted text              | `#626760` | `#B9C3B9` |
-| Primary action          | `#252C27` | `#E5EDE1` |
-| On-primary text         | `#FFFFFF` | `#182019` |
-| Accent surface          | `#E9ECE6` | `#2C352E` |
-| Decorative border       | `#D6DCD3` | `#506053` |
-| Editorial detail        | `#735D41` | `#D5BC94` |
+**Playful and graphic.** Fresh-market colour. Clear digital service.
 
-## D — Citrus Grid
+- Components and graphics: Round bold type with flat graphic shapes; Sunflower labels and vivid orange details; Produce doodles and stamp-like badges.
+- Best fit: Cafés, casual food brands and restaurants that want a lively, welcoming personality.
+- Limit: Keep the visual playfulness concentrated; the owner and kitchen views stay structured.
 
-**Graphic, geometric and digital.** A fresh digital identity with confident graphic rhythm.
+| Exploratory token | Light     | Dark      |
+| ----------------- | --------- | --------- |
+| bg                | `#FFFFFF` | `#111610` |
+| surface           | `#FFFFFF` | `#20291D` |
+| fg                | `#172018` | `#FFFFFF` |
+| muted             | `#515B53` | `#BDCBB7` |
+| primary           | `#FFD600` | `#FFCA28` |
+| on                | `#1B210C` | `#251900` |
+| gold              | `#FFD600` | `#FFCA28` |
+| orange            | `#F75A1E` | `#FF861F` |
+| accentInk         | `#A83500` | `#FF861F` |
+| line              | `#CDD7CD` | `#53624B` |
+| raised            | `#F5F7F5` | `#2D3828` |
+| green             | `#00824C` | `#60DF7B` |
+| onGreen           | `#FFFFFF` | `#142812` |
 
-- Typography: Space Grotesk + DM Sans; body 16/24, controls 14/20, editorial 40–64 and kitchen 18–24px targets.
-- Layout: Modular grid + command toolbar.
-- Components: Geometric type and modular tiles; Citrus highlights with dark text; Visible toolbar and strong grid alignment. 8px card radius is a candidate, not a global rule.
-- Best fit: Modern food brands, cloud kitchens and younger digital-first operators.
-- Trade-off: Citrus stays an accent; large neon areas can tire busy teams.
+`orange` is the vivid graphic color; `accentInk` is its darker light-mode text companion where needed for legibility. Bright orange/gold actions use the documented `on` text, not white labels by default. `line` is a decorative divider and is not an automatic accessible input boundary.
 
-| Candidate semantic role | Light     | Dark      |
-| ----------------------- | --------- | --------- |
-| Canvas                  | `#F6F8ED` | `#12180F` |
-| Surface                 | `#FFFFFF` | `#202B19` |
-| Text                    | `#202720` | `#F0F7E8` |
-| Muted text              | `#626C58` | `#B7C7A7` |
-| Primary action          | `#3F5D1C` | `#C4F264` |
-| On-primary text         | `#FFFFFF` | `#223307` |
-| Accent surface          | `#E7F2C6` | `#354725` |
-| Decorative border       | `#CED9BA` | `#526942` |
-| Editorial detail        | `#B8EC48` | `#C4F264` |
+## Recommendation and decision
 
-## E — Coastal Calm
+**01 — Ink & Ember** is the recommended next prototype: it carries expressive craft from Pencil & Pixel, with its own orange/white daytime language, gold/charcoal nighttime treatment and chef's-note personality. This is a recommendation, not a selection.
 
-**Airy, refined and reassuring.** A relaxed service experience with clear, polished structure.
+The user can choose 01, 02 or 03, or specify a deliberate hybrid. After selection, refine the complete semantic token layer and every state before implementing app-wide. Keep operational screens precise, with ordinary sans-serif labels and tabular prices. Handwriting never carries a price, required choice, security warning or kitchen instruction.
 
-- Typography: Lora + Source Sans 3; body 16/24, controls 14/20, editorial 40–64 and kitchen 18–24px targets.
-- Layout: Airy sidebar + balanced split panels.
-- Components: Teal controls with warm brass detail; Airy grouped cards and 12px corners; Balanced reading and action zones. 12px card radius is a candidate, not a global rule.
-- Best fit: Bistros, premium cafés and venues seeking a calm, versatile identity.
-- Trade-off: Keep decorative serif use to headings; tables remain sans serif.
+## Source reference
 
-| Candidate semantic role | Light     | Dark      |
-| ----------------------- | --------- | --------- |
-| Canvas                  | `#F2F8F7` | `#102322` |
-| Surface                 | `#FFFFFF` | `#193532` |
-| Text                    | `#193330` | `#EFF8F5` |
-| Muted text              | `#57716C` | `#ACCCC3` |
-| Primary action          | `#126C65` | `#83D9C7` |
-| On-primary text         | `#FFFFFF` | `#102D25` |
-| Accent surface          | `#DDF0EB` | `#264B43` |
-| Decorative border       | `#C8DFD9` | `#477B6C` |
-| Editorial detail        | `#A26A32` | `#E4BF86` |
+The Creators reference was recovered and checked against its current [design-system documentation](https://github.com/baba-dev/creator-platform/blob/main/docs/design-system.md) and [theme stylesheet](https://github.com/baba-dev/creator-platform/blob/main/apps/web/src/app/globals.css). It uses Bricolage Grotesque, Manrope and Caveat with sparse sketch gestures. MenuMinute borrows those principles and adapts typography, subject and palette rather than copying the system.
 
-## Choose a direction
-
-Select A, B, C, D or E, or specify an intentional hybrid such as typography A + layout C + colors E. No candidate will be applied automatically.
-
-After selection: refine complete semantic pairs and component states; make a focused guest/owner/kitchen prototype; then implement the accepted system app-wide in both modes. The starter orange/Inter UI remains unchanged by this documentation work.
-
-All font families shown in the brochure were embedded for accurate comparison. Production will bundle only used scripts/weights with sensible fallbacks. Choose appropriate Devanagari support for Hindi independently of the Latin editorial family.
+The shared theme, accessibility and responsive requirements remain in [design-system.md](design-system.md).

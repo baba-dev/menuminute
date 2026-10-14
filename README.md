@@ -27,7 +27,7 @@ Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at 
 
 ### Design selection: open
 
-No palette, type system or layout direction has been selected. Review the five candidates in [design options](docs/design-options.md): A Olive & Linen, B Ember & Stone, C Paper & Plate, D Citrus Grid and E Coastal Calm.
+The original five muted candidates were rejected. No new direction is selected. [Collection 02](docs/design-options.md) offers **01 Ink & Ember**, **02 Ticket & Flame** and **03 Market & Marker**: vivid color on white in light mode, charcoal with gold/orange in dark mode, and restaurant-specific sketch character inspired by Creators' Pencil & Pixel.
 
 **Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
 
