@@ -74,7 +74,7 @@ The database seed provides a pre-configured restaurant owner account:
 
 ## 5. Product and design contract
 
-Before implementing a feature, read [product direction](product-direction.md), [design system](design-system.md), [AI and media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
+Before implementing a feature, read [product direction](product-direction.md), [design system](design-system.md), [feedback and motion](feedback-and-motion.md), [AI and media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
 
 Use semantic theme tokens and shared shadcn/Radix primitives. The approved visual system is Ink & Ember with Ember Flow for everyday actions and Ink Press for selected tactile emphasis. Read [the approved button contract](button-options.md). Implement and verify Light / Dark / System throughout the app; keep the earlier flat buttons excluded. Preserve the existing order enum mapping until a migration is justified.
 

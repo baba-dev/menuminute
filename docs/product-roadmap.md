@@ -9,6 +9,7 @@ The starter repository contains Next.js/TypeScript, SQLite/Drizzle migrations an
 ## Phase A — Design foundation and complete free menu
 
 - Implement the approved Ink & Ember system: Ember Flow for everyday gradient actions, Ink Press for selected tactile emphasis. Refine complete state tokens and a focused prototype; the earlier flat buttons and other base-theme candidates are excluded.
+- Implement the approved A/B/C popup hierarchy, scoped alerts, compact toasts, form errors, recovery states and motion/reduced-motion behavior from [feedback-and-motion.md](feedback-and-motion.md).
 - Implement the accepted shared shadcn/Radix components and layout shells with app-wide Light / Dark / System support, including marketing, authentication, guests, owner tools, overlays and kitchen.
 - Complete onboarding, restaurant details, category/item editing, variants, availability, accessible reordering and menu publication states.
 - Implement Menu Studio desktop editor/preview and mobile Edit/Preview.

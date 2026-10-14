@@ -108,3 +108,7 @@ Launch requires usable mobile flows, tenant-isolation tests, order integrity, ba
 Use Ink Press sparingly for selected focal moments. The earlier flat buttons and muted Collection 01 are superseded. See the [design system](design-system.md) and [approved button contract](button-options.md) for exact base tokens, hierarchy and state requirements.
 
 Light / Dark / System is required across public pages, authentication, onboarding, guest menu/cart/tracking, owner tools, overlays and kitchen. Theme selection is complete; component implementation and verification follow in Phase A.
+
+## 9. Approved popup hierarchy
+
+The user approved **A routine / B milestones / C optional guidance**: Service Card for everyday dialogs, Ink Ticket for occasional milestones and Chef's Note for optional contextual guidance. Keep alerts/errors at the affected task scope, with persistent recovery for uncertain orders or kitchen disconnection. See the [feedback and motion contract](feedback-and-motion.md). This is a design decision; implementation and verification remain Phase A work.

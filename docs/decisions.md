@@ -82,3 +82,11 @@
 - **Decision**: Publish owner-approved assets/content only. Local SVG is always available; provider jobs are asynchronous, bounded and optional. NVIDIA trial access is not enabled for production.
 - **Consequences**: No AI in menu rendering/order submission; no automatic paid fallback. Provider rights, quotas and image provenance are integration gates.
 - **Contract**: [AI and media policy](ai-and-media.md).
+
+## ADR 010: Service Card / Ink Ticket / Chef's Note hierarchy
+
+- **Status**: User-approved, 14 October 2026.
+- **Decision**: A — Service Card for routine dialogs; B — Ink Ticket for occasional milestones; C — Chef's Note for optional guidance.
+- **Consequences**: Keep errors, required instructions and operational/financial decisions clear and undecorated. Use scoped alerts/toasts and persistent recovery where appropriate. Preserve the approved Ember Flow / Ink Press button hierarchy and app-wide light/dark behavior.
+- **Motion**: Implement state-driven feedback, reduced-motion alternatives and server-acknowledged success. Treat the PDF's detailed timing/graphic frames as prototype targets, not evidence of production behavior.
+- **Contract**: [Feedback and motion](feedback-and-motion.md).

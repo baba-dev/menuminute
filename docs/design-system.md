@@ -2,7 +2,7 @@
 
 Status: **approved design direction, 14 October 2026**. The user selected **Ink & Ember**, then approved **Ember Flow for everyday actions** and **Ink Press for a stronger tactile feel**. The earlier flat buttons are excluded.
 
-This document and the [approved gradient button contract](button-options.md) define the implementation direction. Earlier brochures are visual references; their unselected options do not override this decision.
+This document, the [approved gradient button contract](button-options.md) and the [feedback/motion contract](feedback-and-motion.md) define the implementation direction. Earlier brochures are visual references; their unselected options do not override this decision.
 
 ## Confirmed visual direction constraints
 
@@ -50,6 +50,16 @@ The divider is decorative, not an accessible control boundary by itself. Focus, 
 - Body target 16/24px, controls 14/20px, editorial display 40–64px, kitchen item text 18–24px.
 - A 4px spacing base, 14px standard cards, Ember Flow 13px buttons and Ink Press 9px buttons; larger editorial panels may use 24px.
 - Tabular numerals for aligned prices, ticket quantities and timers.
+
+## Approved feedback hierarchy
+
+The user approved **A routine / B milestones / C optional guidance**:
+
+- **A — Service Card**: standard dialogs, focused decisions and forms.
+- **B — Ink Ticket**: first publication and occasional important milestones.
+- **C — Chef's Note**: dismissible onboarding/contextual tips; never required instructions or error content.
+
+Use inline semantic alerts, compact toasts and persistent recovery states at the appropriate task scope. Follow [feedback-and-motion.md](feedback-and-motion.md) for placement, copy, focus, loading, error recovery and motion targets. Exact animated art and timings are verified during prototype acceptance; the hierarchy is approved.
 
 ## App-wide Light / Dark / System support
 

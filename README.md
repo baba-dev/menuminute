@@ -27,7 +27,7 @@ Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at 
 
 ### Design direction: Ink & Ember
 
-The approved direction is **Ink & Ember**: vivid orange on white, gold/orange on charcoal, expressive restaurant typography and selective chef's-note details. Use **Ember Flow for everyday actions** and **Ink Press for selected stronger tactile emphasis**. Both use gradients and intent-driven motion; see the [approved button contract](docs/button-options.md).
+The approved direction is **Ink & Ember**: vivid orange on white, gold/orange on charcoal, expressive restaurant typography and selective chef's-note details. Use **Ember Flow for everyday actions** and **Ink Press for selected stronger tactile emphasis**. Both use gradients and intent-driven motion; see the [approved button contract](docs/button-options.md). Popup hierarchy is also approved: **Service Card for routine dialogs, Ink Ticket for milestones, Chef's Note for optional guidance**. See [feedback and motion](docs/feedback-and-motion.md).
 
 **Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
 
@@ -145,6 +145,8 @@ pnpm test:e2e
 - [Product Direction](docs/product-direction.md)
 - [Design Exploration and Recorded Decision](docs/design-options.md)
 - [Design System and Theme Requirements](docs/design-system.md)
+- [Approved Buttons](docs/button-options.md)
+- [Feedback, Overlays and Motion](docs/feedback-and-motion.md)
 - [AI and Media Policy](docs/ai-and-media.md)
 - [Architecture Guide](docs/architecture.md)
 - [Database & Schema](docs/database.md)
