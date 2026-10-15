@@ -52,6 +52,9 @@ jobs:
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
+      - name: Verify India dish illustration backlog
+        run: node scripts/food-artwork/verify-india-backlog.mjs
+
       - name: Lint source code (ESLint)
         run: pnpm lint
 
