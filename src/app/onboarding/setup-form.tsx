@@ -43,16 +43,18 @@ export function OnboardingForm() {
           className="block w-full rounded border p-2"
         />
       </label>
-      <label className="block">
-        Outlet type
-        <select name="outletType" className="block w-full rounded border p-2">
+      <div>
+        <label htmlFor="outletType" className="block">
+          Outlet type
+        </label>
+        <select id="outletType" name="outletType" className="block w-full rounded border p-2">
           {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((v) => (
             <option key={v} value={v}>
               {v.replaceAll("_", " ")}
             </option>
           ))}
         </select>
-      </label>
+      </div>
       <label className="block">
         Country code
         <input
@@ -63,17 +65,27 @@ export function OnboardingForm() {
           className="block w-full rounded border p-2"
         />
       </label>
-      <label className="block">
-        Currency
-        <select name="currency" defaultValue="INR" className="block w-full rounded border p-2">
+      <div>
+        <label htmlFor="currency" className="block">
+          Currency
+        </label>
+        <select
+          id="currency"
+          name="currency"
+          defaultValue="INR"
+          className="block w-full rounded border p-2"
+        >
           {Intl.supportedValuesOf("currency").map((v) => (
             <option key={v}>{v}</option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        Timezone
+      </div>
+      <div>
+        <label htmlFor="timezone" className="block">
+          Timezone
+        </label>
         <select
+          id="timezone"
           name="timezone"
           defaultValue="Asia/Calcutta"
           className="block w-full rounded border p-2"
@@ -82,7 +94,7 @@ export function OnboardingForm() {
             <option key={v}>{v}</option>
           ))}
         </select>
-      </label>
+      </div>
       {error && <p role="alert">{error}</p>}
       <button
         disabled={busy}
