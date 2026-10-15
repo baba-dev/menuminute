@@ -1,6 +1,6 @@
 # Phase 1 producer contracts v1
 
-Phase 1 is stacked on open PR #14. This contract precedes the runtime conversion in the branch.
+Phase 1 started on PR #14, which has since merged. This contract precedes the runtime conversion in the branch.
 No production cutover or server modification is authorized by these files.
 
 - `Actor = { userId: string }` is constructed from a freshly resolved Better Auth database session,

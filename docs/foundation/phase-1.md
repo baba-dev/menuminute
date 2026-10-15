@@ -1,7 +1,7 @@
 # Phase 1 — Production foundation
 
 This branch implements PostgreSQL, database sessions, tenant services and CI/infrastructure preparation.
-It is stacked on Phase 0 PR #14. Production deployment and data inventory remain separate gates.
+Phase 0 PR #14 merged during implementation. Production deployment and data inventory remain separate gates.
 
 ## Implemented boundary
 
