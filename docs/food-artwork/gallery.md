@@ -153,4 +153,3 @@ Review the package's light and dark contact sheets before approving integration.
 ### Gelato
 
 ![Gelato](../../public/assets/food/dishes/italian/gelato.png)
-
