@@ -50,11 +50,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Temporary formatter diagnostic (remove before merge)
-        run: |
-          pnpm exec prettier --write scripts/food-artwork/verify.mjs
-          git diff -- scripts/food-artwork/verify.mjs
-
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
