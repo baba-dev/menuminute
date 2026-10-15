@@ -44,13 +44,7 @@ const group = z
     options: z.array(option).min(1).max(100),
   })
   .strict()
-  .refine(
-    (g) =>
-      g.min <= g.max &&
-      g.max <= g.options.length &&
-      g.options.filter((o) => o.isAvailable).length >= g.min,
-    "Invalid selection rule"
-  );
+  .refine((g) => g.min <= g.max && g.max <= g.options.length, "Invalid selection rule");
 export const dishSchema = z
   .object({
     id: entityId,

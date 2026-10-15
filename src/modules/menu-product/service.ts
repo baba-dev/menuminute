@@ -6,7 +6,7 @@ import { getPool } from "@/db";
 import { getPublicMenu, getRestaurantById } from "@/modules/restaurants/service";
 import { getFullMenu } from "@/modules/menus/service";
 import { domainError } from "@/modules/organizations/service";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 export async function listMenus(actor: Actor, outletId: string) {
   await getRestaurantById(actor, outletId);
@@ -54,6 +54,15 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
         ).rows[0]!.result
     );
   } catch (e) {
+    const inner = e instanceof Error && e.cause ? e.cause : e;
+    if (
+      inner instanceof Error &&
+      [
+        "Variant prices cannot use a local base-price override",
+        "Clear local base-price overrides before adding variants",
+      ].includes(inner.message)
+    )
+      throw new ValidationError(inner.message);
     domainError(e);
   }
 }

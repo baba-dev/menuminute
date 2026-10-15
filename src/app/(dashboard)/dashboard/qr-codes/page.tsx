@@ -1,3 +1,4 @@
+import { env } from "@/lib/config/env";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant, getRestaurantQrCodes } from "@/modules/restaurants/service";
@@ -27,6 +28,7 @@ export default async function Page() {
         tableId,
       }))}
       outletId={outlet.id}
+      origin={env.APP_URL}
       canRevoke={org?.role === "owner" || org?.role === "admin"}
     />
   );

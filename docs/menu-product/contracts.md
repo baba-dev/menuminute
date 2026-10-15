@@ -31,3 +31,5 @@ Base: merged #19, dd39ef4. Work package #10; root is the sole schema/layout/work
 
 Acceptance includes real PostgreSQL/Redis failure/race tests, native ARM64 builds, browser editing,
 preview/publication, public filtering, QR and media flows in Light/Dark/System, keyboard and mobile.
+
+Local base-price overrides apply only to dishes without variants; variant dishes may override sold-out status locally. Clear existing local prices before introducing shared variants. Unavailable required add-ons can be saved; dishes with too few available required options or no available variants are displayed sold out.

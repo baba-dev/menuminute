@@ -1059,6 +1059,11 @@ export function MenuStudio({
                         ))}
                       </ul>
                       <h3>Local price / sold-out override</h3>
+                      <p>
+                        Local prices apply to dishes without variants. For dishes with variants,
+                        leave price blank and edit shared variant prices in Dishes. Clear local
+                        prices before adding variants.
+                      </p>
                       <form
                         className="stack"
                         onSubmit={(e) => {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { QrCode, Download, Printer } from "lucide-react";
 type QR = {
   id: string;
@@ -12,17 +12,17 @@ export function QrManager({
   initial,
   outletId,
   canRevoke,
+  origin,
 }: {
   initial: QR[];
   outletId: string;
   canRevoke: boolean;
+  origin: string;
 }) {
   const [codes, setCodes] = useState(initial),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
   const retry = useRef({ signature: "", key: "" });
   async function command(action: string, data: Record<string, unknown>) {
     const signature = JSON.stringify({ action, data });

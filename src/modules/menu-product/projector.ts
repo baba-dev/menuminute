@@ -21,7 +21,10 @@ export function projectMenu(
             return {
               ...i,
               priceMinor: o?.priceMinor ?? i.priceMinor,
-              soldOut: o?.soldOut ?? i.soldOut,
+              soldOut:
+                (o?.soldOut ?? i.soldOut) ||
+                (i.variants.length > 0 && i.variants.every((v) => !v.isAvailable)) ||
+                i.addOnGroups.some((g) => g.options.filter((v) => v.isAvailable).length < g.min),
               open: open && availableNow(i.schedule, timezone, now),
             };
           }),

@@ -40,6 +40,7 @@ BEGIN
  ELSE IF m.revision<>p_expected THEN RAISE EXCEPTION 'Stale menu' USING ERRCODE='40001'; END IF; END IF;
  doc:=CASE WHEN p_action IN ('create','save') THEN p_data->'document' ELSE m.document END;
  IF p_action IN ('create','save') THEN
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(doc->'categories') c,jsonb_array_elements(c->'items') i JOIN menu_overrides o ON o.menu_id=p_menu AND o.dish_id=i->>'id' WHERE o.price_minor IS NOT NULL AND jsonb_array_length(i->'variants')>0) THEN RAISE EXCEPTION 'Clear local base-price overrides before adding variants' USING ERRCODE='22023';END IF;
  IF octet_length(doc::text)>600000 OR doc->>'currency'<>r.currency OR jsonb_typeof(doc->'categories')<>'array' THEN RAISE EXCEPTION 'Invalid menu' USING ERRCODE='22023'; END IF;
  IF EXISTS(SELECT 1 FROM menu_assignments a JOIN restaurants x ON x.id=a.outlet_id WHERE a.menu_id=p_menu AND x.currency<>doc->>'currency') THEN RAISE EXCEPTION 'Currency mismatch' USING ERRCODE='22023';END IF;
  END IF;
@@ -76,6 +77,7 @@ BEGIN
  END IF;
  UPDATE menus SET revision=revision+1,updated_at=now() WHERE id=p_menu RETURNING revision INTO v;
  WHEN 'override' THEN
+ IF p_data->>'priceMinor' IS NOT NULL AND EXISTS(SELECT 1 FROM (SELECT doc AS d UNION ALL SELECT document FROM menu_releases WHERE menu_id=p_menu AND revision=m.published_revision) docs,jsonb_array_elements(docs.d->'categories') c,jsonb_array_elements(c->'items') i WHERE i->>'id'=p_data->>'dishId' AND jsonb_array_length(i->'variants')>0) THEN RAISE EXCEPTION 'Variant prices cannot use a local base-price override' USING ERRCODE='22023';END IF;
  IF NOT EXISTS(SELECT 1 FROM menu_assignments a WHERE a.menu_id=p_menu AND a.outlet_id=p_data->>'outletId' AND app_private.can_outlet(a.outlet_id,'menu.write')) THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501';END IF;
  IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(doc->'categories') c,jsonb_array_elements(c->'items') i WHERE i->>'id'=p_data->>'dishId') THEN RAISE EXCEPTION 'Unknown dish' USING ERRCODE='22023';END IF;
  INSERT INTO menu_overrides(menu_id,outlet_id,dish_id,price_minor,sold_out) VALUES(p_menu,p_data->>'outletId',p_data->>'dishId',(p_data->>'priceMinor')::int,(p_data->>'soldOut')::boolean) ON CONFLICT(menu_id,outlet_id,dish_id) DO UPDATE SET price_minor=excluded.price_minor,sold_out=excluded.sold_out;

@@ -8,6 +8,7 @@ import {
   qrCommand,
 } from "../src/modules/menu-product/service";
 import { menuDocumentSchema, availableNow } from "../src/modules/menu-product/contracts";
+import { projectMenu } from "../src/modules/menu-product/projector";
 import { withActor } from "../src/modules/tenancy/service";
 import { manageOrganization, listOrganizations } from "../src/modules/organizations/service";
 const document = (currency = "INR") =>
@@ -185,11 +186,19 @@ it("enforces organization/currency sharing, all-assignment edits, and outlet-loc
       data: { document: document() },
     })
   ).rejects.toMatchObject({ statusCode: 403 });
+  await expect(
+    commandMenu(actor, String(other.outletId), id, {
+      key: crypto.randomUUID(),
+      expectedRevision: (await menuDetail(actor, id)).revision,
+      action: "override",
+      data: { outletId: other.outletId, dishId: "dish-one", priceMinor: 15000, soldOut: true },
+    })
+  ).rejects.toThrow("Variant prices cannot use a local base-price override");
   await commandMenu(actor, String(other.outletId), id, {
     key: crypto.randomUUID(),
     expectedRevision: (await menuDetail(actor, id)).revision,
     action: "override",
-    data: { outletId: other.outletId, dishId: "dish-one", priceMinor: 15000, soldOut: true },
+    data: { outletId: other.outletId, dishId: "dish-one", priceMinor: null, soldOut: true },
   });
   await command(f, id, "publish");
   const localToken = await admin(
@@ -208,6 +217,31 @@ it("enforces organization/currency sharing, all-assignment edits, and outlet-loc
       tx.execute(sql`update menus set published_revision=1 where id=${id}`)
     )
   ).rejects.toThrow();
+});
+it("requires clearing local base prices before introducing shared variants", async () => {
+  const f = await fixture();
+  const doc = document();
+  doc.categories[0]!.items[0]!.variants = [];
+  const id = await create(f, doc);
+  await command(f, id, "override", {
+    outletId: f.outlet.id,
+    dishId: "dish-one",
+    priceMinor: 14000,
+    soldOut: null,
+  });
+  await expect(command(f, id, "save", { document: document() })).rejects.toThrow(
+    "Clear local base-price overrides before adding variants"
+  );
+  await command(f, id, "override", {
+    outletId: f.outlet.id,
+    dishId: "dish-one",
+    priceMinor: null,
+    soldOut: null,
+  });
+  await command(f, id, "save", { document: document() });
+  expect((await menuDetail(f.actor, id)).document.categories[0]!.items[0]!.variants).toHaveLength(
+    2
+  );
 });
 it("creates service-point QR, preserves identity and explicitly revokes/regenerates old tokens", async () => {
   const f = await fixture();
@@ -238,6 +272,21 @@ it("validates flat options, prices, duplicate IDs, weekly overnight/date excepti
   const doc = document();
   doc.categories[0]!.items[0]!.addOnGroups[0]!.min = 2;
   expect(menuDocumentSchema.safeParse(doc).success).toBe(false);
+  const unavailable = document();
+  const item = unavailable.categories[0]!.items[0]!;
+  item.addOnGroups[0]!.min = 1;
+  item.addOnGroups[0]!.options[0]!.isAvailable = false;
+  expect(menuDocumentSchema.safeParse(unavailable).success).toBe(true);
+  expect(
+    projectMenu(unavailable, "Asia/Kolkata", new Date(), []).categories[0]!.items[0]!.soldOut
+  ).toBe(true);
+  item.addOnGroups[0]!.min = 0;
+  item.variants.forEach((v) => {
+    v.isAvailable = false;
+  });
+  expect(
+    projectMenu(unavailable, "Asia/Kolkata", new Date(), []).categories[0]!.items[0]!.soldOut
+  ).toBe(true);
   const schedule = {
     weekly: [{ day: 1, start: "18:00", end: "02:00", allDay: false }],
     exceptions: [],
