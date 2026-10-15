@@ -1,0 +1,124 @@
+name: Publish verified ARM64 artifact
+
+# A PR tests packaging without publishing. Only successful main-push CI publishes a
+# prerelease artifact. Nothing logs into or modifies the shared ERP VPS.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/publish-arm64.yml
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    if: >-
+      ${{ github.event_name == 'pull_request' ||
+          (github.event_name == 'workflow_run' &&
+           github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'push' &&
+           github.event.workflow_run.head_branch == 'main' &&
+           github.event.workflow_run.head_repository.full_name == github.repository) }}
+    runs-on: ubuntu-24.04-arm
+    env:
+      RELEASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+      APP_URL: https://food.bababuilds.com
+      DATABASE_URL: postgresql://menuminute_app:isolated-ci-build-password@127.0.0.1:5432/menuminute_build
+      AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+      REDIS_QUEUE_URL: redis://127.0.0.1:6379
+      REDIS_CACHE_URL: redis://127.0.0.1:6380
+      MEDIA_STORAGE: local
+      MEDIA_ROOT: /var/lib/menuminute/media
+      MEDIA_OUTLET_BUDGET_BYTES: 104857600
+      BETTER_AUTH_TELEMETRY: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Confirm exact native release source
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node -e 'if(process.platform !== "linux" || process.arch !== "arm64" || Number(process.versions.node.split(".")[0]) !== 24) process.exit(1)'
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - name: Frozen install and production builds
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm build:worker
+          pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs
+          test -f .next/standalone/server.js
+          test -f dist/worker.mjs
+          test -f dist/db-migrate.mjs
+      - name: Package production-only native dependencies
+        run: |
+          set -euo pipefail
+          pnpm install --prod --frozen-lockfile
+          node -e 'require("pg"); require("bullmq"); require("sharp")'
+          stage="$RUNNER_TEMP/menuminute-release"
+          install -d "$stage/.next/standalone/.next" "$stage/dist" "$stage/src/db" "$stage/infra"
+          cp -a .next/standalone/. "$stage/.next/standalone/"
+          cp -a .next/static "$stage/.next/standalone/.next/static"
+          cp -a public "$stage/.next/standalone/public"
+          cp -a dist/. "$stage/dist/"
+          cp -a node_modules "$stage/node_modules"
+          cp -a src/db/migrations "$stage/src/db/migrations"
+          cp -a infra/systemd "$stage/infra/systemd"
+          cp -a infra/nginx "$stage/infra/nginx"
+          cp package.json pnpm-lock.yaml pnpm-workspace.yaml "$stage/"
+          printf '%s\n' "$RELEASE_SHA" > "$stage/RELEASE-SHA"
+          test -f "$stage/.next/standalone/server.js"
+          test -f "$stage/dist/worker.mjs"
+          test -f "$stage/dist/db-migrate.mjs"
+          cd "$stage"
+          node -e 'require("pg"); require("bullmq"); require("sharp")'
+          node --check dist/worker.mjs
+          node --check dist/db-migrate.mjs
+          short="${RELEASE_SHA:0:12}"
+          tar --sort=name --owner=0 --group=0 --numeric-owner -czf "$GITHUB_WORKSPACE/menuminute-${short}-linux-arm64.tar.gz" .
+          cd "$GITHUB_WORKSPACE"
+          sha256sum "menuminute-${short}-linux-arm64.tar.gz" > "menuminute-${short}-linux-arm64.tar.gz.sha256"
+      - name: Upload checksum-protected release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: menuminute-arm64-release
+          path: |
+            menuminute-*-linux-arm64.tar.gz
+            menuminute-*-linux-arm64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: package
+    if: ${{ github.event_name == 'workflow_run' && needs.package.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: menuminute-arm64-release
+      - name: Publish immutable prerelease with SHA-256
+        run: |
+          set -euo pipefail
+          short="${RELEASE_SHA:0:12}"
+          tag="arm64-${short}"
+          test -f "menuminute-${short}-linux-arm64.tar.gz"
+          sha256sum -c "menuminute-${short}-linux-arm64.tar.gz.sha256"
+          gh release create "$tag" "menuminute-${short}-linux-arm64.tar.gz" "menuminute-${short}-linux-arm64.tar.gz.sha256" \
+            --repo "$GITHUB_REPOSITORY" --target "$RELEASE_SHA" \
+            --title "MenuMinute ARM64 ${short}" --prerelease \
+            --notes "Native Linux ARM64 web, worker, bundled migration runner, reviewed SQL and production dependencies from the exact main SHA of successful full CI: ${RELEASE_SHA}. Artifact only; no production deployment. Verify SHA-256 prior to installation."
