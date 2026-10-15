@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Validate the 86 individually named dish PNG assets in the review branch.
+// Validate the 136 individually named dish PNG assets in the review branch.
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,8 +9,8 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const manifest = JSON.parse(readFileSync(join(root, "docs/food-artwork/manifest.json"), "utf8"));
 const errors = [];
 const groups = Object.entries(manifest.groups);
-if (manifest.assetCount !== 86 || manifest.assets.length !== manifest.assetCount) {
-  errors.push("Expected 86 manifest assets");
+if (manifest.assetCount !== 136 || manifest.assets.length !== manifest.assetCount) {
+  errors.push("Expected 136 manifest assets");
 }
 if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
   errors.push("Group totals disagree with assetCount");
@@ -41,6 +41,10 @@ for (const asset of manifest.assets) {
       asset.width !== width || asset.height !== height || asset.format !== "image/png") {
     errors.push("Expected 360x280 RGBA PNG with matching metadata: " + asset.path);
   }
+  if (asset.gitBlobSha && createHash("sha1").update("blob " + bytes.length + "\\0").update(bytes).digest("hex") !== asset.gitBlobSha) {
+    errors.push("Git blob SHA mismatch: " + asset.path);
+  }
+  if (asset.datasetId && !/^MM-IN-\\d{3}$/.test(asset.datasetId)) errors.push("Invalid dataset ID: " + asset.path);
   if (asset.sha256 && createHash("sha256").update(bytes).digest("hex") !== asset.sha256) {
     errors.push("SHA-256 mismatch: " + asset.path);
   }
@@ -55,4 +59,4 @@ for (const [category, expected] of groups) {
   }
 }
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-console.log("Verified 86 named 360x280 RGBA PNG artwork files across " + groups.length + " categories.");
+console.log("Verified 136 named 360x280 RGBA PNG artwork files across " + groups.length + " categories.");

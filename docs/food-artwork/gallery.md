@@ -368,3 +368,264 @@ Review the package's light and dark contact sheets before approving integration.
 
 ![Schezwan Momos](../../public/assets/food/dishes/indo-chinese-starters/schezwan-momos.png)
 
+
+---
+
+## Second generated 50 — awaiting owner review
+
+The 50 below are canonical 360×280 transparent PNGs; the light/dark sheets show the same PNG composited onto both surfaces. The artwork labels do not all correspond to the same sequential rows of the separate India-200 backlog. Only exact matches are linked by `datasetId` in the manifest.
+
+### Tamil & Karnataka Fare — 10 artworks
+
+**Light theme proof**
+
+![Tamil & Karnataka Fare on light background](previews/second-50/preview-tamil-karnataka-fare-light.jpg)
+
+**Dark theme proof**
+
+![Tamil & Karnataka Fare on dark background](previews/second-50/preview-tamil-karnataka-fare-dark.jpg)
+
+#### Puliyodarai
+
+![Puliyodarai](../../public/assets/food/dishes/tamil-karnataka-fare/puliyodarai.png)
+
+#### Bisi Bele Bath
+
+![Bisi Bele Bath](../../public/assets/food/dishes/tamil-karnataka-fare/bisi-bele-bath.png)
+
+#### Ragi Mudde with Bassaru
+
+![Ragi Mudde with Bassaru](../../public/assets/food/dishes/tamil-karnataka-fare/ragi-mudde-with-bassaru.png)
+
+#### Akki Roti
+
+![Akki Roti](../../public/assets/food/dishes/tamil-karnataka-fare/akki-roti.png)
+
+#### Maddur Vada
+
+![Maddur Vada](../../public/assets/food/dishes/tamil-karnataka-fare/maddur-vada.png)
+
+#### Mangalore Buns
+
+![Mangalore Buns](../../public/assets/food/dishes/tamil-karnataka-fare/mangalore-buns.png)
+
+#### Kori Rotti
+
+![Kori Rotti](../../public/assets/food/dishes/tamil-karnataka-fare/kori-rotti.png)
+
+#### Chicken Sukka
+
+![Chicken Sukka](../../public/assets/food/dishes/tamil-karnataka-fare/chicken-sukka.png)
+
+#### Chow Chow Bath
+
+![Chow Chow Bath](../../public/assets/food/dishes/tamil-karnataka-fare/chow-chow-bath.png)
+
+#### Mysore Bonda
+
+![Mysore Bonda](../../public/assets/food/dishes/tamil-karnataka-fare/mysore-bonda.png)
+
+
+### Kerala Signatures — 10 artworks
+
+**Light theme proof**
+
+![Kerala Signatures on light background](previews/second-50/preview-kerala-signatures-light.jpg)
+
+**Dark theme proof**
+
+![Kerala Signatures on dark background](previews/second-50/preview-kerala-signatures-dark.jpg)
+
+#### Appam with Vegetable Stew
+
+![Appam with Vegetable Stew](../../public/assets/food/dishes/kerala-signatures/appam-with-vegetable-stew.png)
+
+#### Puttu Kadala Curry
+
+![Puttu Kadala Curry](../../public/assets/food/dishes/kerala-signatures/puttu-kadala-curry.png)
+
+#### Kerala Sadya
+
+![Kerala Sadya](../../public/assets/food/dishes/kerala-signatures/kerala-sadya.png)
+
+#### Malabar Parotta with Chicken Curry
+
+![Malabar Parotta with Chicken Curry](../../public/assets/food/dishes/kerala-signatures/malabar-parotta-with-chicken-curry.png)
+
+#### Karimeen Pollichathu
+
+![Karimeen Pollichathu](../../public/assets/food/dishes/kerala-signatures/karimeen-pollichathu.png)
+
+#### Meen Moilee
+
+![Meen Moilee](../../public/assets/food/dishes/kerala-signatures/meen-moilee.png)
+
+#### Kerala Beef Fry
+
+![Kerala Beef Fry](../../public/assets/food/dishes/kerala-signatures/kerala-beef-fry.png)
+
+#### Erachi Pathiri
+
+![Erachi Pathiri](../../public/assets/food/dishes/kerala-signatures/erachi-pathiri.png)
+
+#### Pazham Pori
+
+![Pazham Pori](../../public/assets/food/dishes/kerala-signatures/pazham-pori.png)
+
+#### Avial
+
+![Avial](../../public/assets/food/dishes/kerala-signatures/avial.png)
+
+
+### Andhra & Telangana Flavors — 10 artworks
+
+**Light theme proof**
+
+![Andhra & Telangana Flavors on light background](previews/second-50/preview-andhra-telangana-flavors-light.jpg)
+
+**Dark theme proof**
+
+![Andhra & Telangana Flavors on dark background](previews/second-50/preview-andhra-telangana-flavors-dark.jpg)
+
+#### Gongura Pachadi
+
+![Gongura Pachadi](../../public/assets/food/dishes/andhra-telangana-flavors/gongura-pachadi.png)
+
+#### Gongura Mutton
+
+![Gongura Mutton](../../public/assets/food/dishes/andhra-telangana-flavors/gongura-mutton.png)
+
+#### Pesarattu Upma
+
+![Pesarattu Upma](../../public/assets/food/dishes/andhra-telangana-flavors/pesarattu-upma.png)
+
+#### Royyala Iguru
+
+![Royyala Iguru](../../public/assets/food/dishes/andhra-telangana-flavors/royyala-iguru.png)
+
+#### Gutti Vankaya Kura
+
+![Gutti Vankaya Kura](../../public/assets/food/dishes/andhra-telangana-flavors/gutti-vankaya-kura.png)
+
+#### Andhra Chicken Fry
+
+![Andhra Chicken Fry](../../public/assets/food/dishes/andhra-telangana-flavors/andhra-chicken-fry.png)
+
+#### Ulavacharu
+
+![Ulavacharu](../../public/assets/food/dishes/andhra-telangana-flavors/ulavacharu.png)
+
+#### Kodi Vepudu
+
+![Kodi Vepudu](../../public/assets/food/dishes/andhra-telangana-flavors/kodi-vepudu.png)
+
+#### Sarva Pindi
+
+![Sarva Pindi](../../public/assets/food/dishes/andhra-telangana-flavors/sarva-pindi.png)
+
+#### Qubani ka Meetha
+
+![Qubani ka Meetha](../../public/assets/food/dishes/andhra-telangana-flavors/qubani-ka-meetha.png)
+
+
+### Maharashtra Classics — 10 artworks
+
+**Light theme proof**
+
+![Maharashtra Classics on light background](previews/second-50/preview-maharashtra-classics-light.jpg)
+
+**Dark theme proof**
+
+![Maharashtra Classics on dark background](previews/second-50/preview-maharashtra-classics-dark.jpg)
+
+#### Thalipeeth
+
+![Thalipeeth](../../public/assets/food/dishes/maharashtra-classics/thalipeeth.png)
+
+#### Sabudana Khichdi
+
+![Sabudana Khichdi](../../public/assets/food/dishes/maharashtra-classics/sabudana-khichdi.png)
+
+#### Pithla Bhakri
+
+![Pithla Bhakri](../../public/assets/food/dishes/maharashtra-classics/pithla-bhakri.png)
+
+#### Bharli Vangi
+
+![Bharli Vangi](../../public/assets/food/dishes/maharashtra-classics/bharli-vangi.png)
+
+#### Kolhapuri Chicken
+
+![Kolhapuri Chicken](../../public/assets/food/dishes/maharashtra-classics/kolhapuri-chicken.png)
+
+#### Malvani Fish Curry
+
+![Malvani Fish Curry](../../public/assets/food/dishes/maharashtra-classics/malvani-fish-curry.png)
+
+#### Bombil Fry
+
+![Bombil Fry](../../public/assets/food/dishes/maharashtra-classics/bombil-fry.png)
+
+#### Sol Kadhi
+
+![Sol Kadhi](../../public/assets/food/dishes/maharashtra-classics/sol-kadhi.png)
+
+#### Kombdi Vade
+
+![Kombdi Vade](../../public/assets/food/dishes/maharashtra-classics/kombdi-vade.png)
+
+#### Zunka Bhakar
+
+![Zunka Bhakar](../../public/assets/food/dishes/maharashtra-classics/zunka-bhakar.png)
+
+
+### Gujarat & Goa Delights — 10 artworks
+
+**Light theme proof**
+
+![Gujarat & Goa Delights on light background](previews/second-50/preview-gujarat-goa-delights-light.jpg)
+
+**Dark theme proof**
+
+![Gujarat & Goa Delights on dark background](previews/second-50/preview-gujarat-goa-delights-dark.jpg)
+
+#### Undhiyu
+
+![Undhiyu](../../public/assets/food/dishes/gujarat-goa-delights/undhiyu.png)
+
+#### Sev Tameta
+
+![Sev Tameta](../../public/assets/food/dishes/gujarat-goa-delights/sev-tameta.png)
+
+#### Thepla
+
+![Thepla](../../public/assets/food/dishes/gujarat-goa-delights/thepla.png)
+
+#### Fafda Jalebi
+
+![Fafda Jalebi](../../public/assets/food/dishes/gujarat-goa-delights/fafda-jalebi.png)
+
+#### Handvo
+
+![Handvo](../../public/assets/food/dishes/gujarat-goa-delights/handvo.png)
+
+#### Patra
+
+![Patra](../../public/assets/food/dishes/gujarat-goa-delights/patra.png)
+
+#### Khaman
+
+![Khaman](../../public/assets/food/dishes/gujarat-goa-delights/khaman.png)
+
+#### Goan Fish Curry
+
+![Goan Fish Curry](../../public/assets/food/dishes/gujarat-goa-delights/goan-fish-curry.png)
+
+#### Chicken Cafreal
+
+![Chicken Cafreal](../../public/assets/food/dishes/gujarat-goa-delights/chicken-cafreal.png)
+
+#### Bebinca
+
+![Bebinca](../../public/assets/food/dishes/gujarat-goa-delights/bebinca.png)
+

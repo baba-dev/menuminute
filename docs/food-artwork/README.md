@@ -22,3 +22,14 @@ The 50 additions reflect the *five specifically generated/reviewed category shee
 5. Require a fresh successful CI run for all repository lanes on the final SHA.
 
 This artwork-only PR does not change runtime behavior, merchant-photo priority, menu UI, sold-out treatment or theme tokens. Future fallback integration should prefer merchant photography, then merchant-selected illustration, then a suitable dish/category fallback and finally a neutral placeholder. Food artwork does not certify ingredients, allergens or dietary/religious status.
+
+## Second 50 generated artwork — 2026-10-15
+
+The second new wave adds 50 original raster cutouts, ten each in `tamil-karnataka-fare`, `kerala-signatures`, `andhra-telangana-flavors`, `maharashtra-classics`, and `gujarat-goa-delights`. There are now **136** assets in this PR. Original 86 files are preserved; no menu runtime code is changed.
+
+- The real `360×280` RGBA PNGs are under `public/assets/food/dishes/<category>/` and the ten light/dark proof sheets are under `docs/food-artwork/previews/second-50/`.
+- The dark and light proof sheets are **not separate food assets**; one canonical transparent PNG is composited against white and charcoal.
+- Source artwork was raster AI-generated category boards. Do not present PNGs as SVG vector masters. Owner should inspect extraction halos, truncated outer edges, pale food on light backgrounds and regional depiction prior to approval.
+- The generated second batch is **not an exact sequential rendering of CSV rows 51–100** from Draft PR #16. The manifest assigns `datasetId` only to exact slug matches; unmatched names remain for dataset reconciliation and should not be assigned invented IDs.
+- Some illustrations represent alternate renderings of dishes already in the earlier 50 (e.g. appam/stew and puttu/kadala): do not auto-select between them until the owner reviews the preferred canonical mapping.
+- Keep the PR Draft until the product owner approves artwork and final CI passes. No merge or deploy from this asset-only change.
