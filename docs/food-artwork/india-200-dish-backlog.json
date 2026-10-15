@@ -994,13 +994,13 @@
     },
     {
       "id": "MM-IN-087",
-      "dish_name": "Alu Vadi",
-      "slug": "alu-vadi",
+      "dish_name": "Bharli Mirchi",
+      "slug": "bharli-mirchi",
       "collection": "west-maharashtra-gujarat-goa",
       "regional_association": "Maharashtra",
-      "category": "snack",
+      "category": "side",
       "dietary_hint": "vegetarian",
-      "visual_anchor": "spiral slices of spiced colocasia leaf rolls",
+      "visual_anchor": "whole green chilies stuffed with coarse spiced peanut filling",
       "illustration_status": "not_created"
     },
     {
