@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 // Local test-only TLS proxy exercises the built standalone server, including Secure cookies.
 import https from "node:https";
 import http from "node:http";
@@ -47,6 +48,17 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     HOSTNAME: "127.0.0.1",
   },
 });
+const mediaWorker = spawn(process.execPath, ["dist/worker.mjs"], {
+  stdio: "inherit",
+  env: {
+    PATH: process.env.PATH,
+    NODE_ENV: "production",
+    WORKER_DATABASE_URL: workerUrl,
+    REDIS_QUEUE_URL: process.env.REDIS_QUEUE_URL,
+    MEDIA_ROOT: process.env.MEDIA_ROOT,
+    MEDIA_STORAGE: "local",
+  },
+});
 const server = https.createServer(
   {
     key: await readFile(path.join(dir, "key.pem")),
@@ -59,7 +71,30 @@ const server = https.createServer(
         port: 3100,
         path: req.url,
         method: req.method,
-        headers: { ...req.headers, "x-forwarded-proto": "https", "x-forwarded-for": "127.0.0.1" },
+        headers: {
+          ...req.headers,
+          "x-forwarded-proto": "https",
+          "x-forwarded-for": /^[a-f0-9-]{36}$/.test(
+            String(req.headers["x-browser-test-client"] ?? "")
+          )
+            ? "198.18." +
+              Number.parseInt(
+                createHash("sha256")
+                  .update(String(req.headers["x-browser-test-client"]))
+                  .digest("hex")
+                  .slice(0, 2),
+                16
+              ) +
+              "." +
+              Number.parseInt(
+                createHash("sha256")
+                  .update(String(req.headers["x-browser-test-client"]))
+                  .digest("hex")
+                  .slice(2, 4),
+                16
+              )
+            : "127.0.0.1",
+        },
       },
       (response) => {
         res.writeHead(response.statusCode ?? 502, response.headers);
@@ -79,6 +114,7 @@ async function stop() {
   if (stopping) return;
   stopping = true;
   backend.kill("SIGTERM");
+  mediaWorker.kill("SIGTERM");
   server.close();
   await rm(dir, { recursive: true, force: true });
   process.exit(0);

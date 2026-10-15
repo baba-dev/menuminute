@@ -17,6 +17,9 @@ env:
   WORKER_DATABASE_URL: postgresql://menuminute_worker:isolated-ci-worker-password@127.0.0.1:5432/menuminute_test
   REDIS_QUEUE_URL: redis://127.0.0.1:6379
   REDIS_CACHE_URL: redis://127.0.0.1:6380
+  MEDIA_ROOT: /tmp/menuminute-ci-media
+  MEDIA_STORAGE: local
+  MEDIA_OUTLET_BUDGET_BYTES: 104857600
   BETTER_AUTH_TELEMETRY: "0"
 jobs:
   quality:
@@ -102,7 +105,7 @@ jobs:
       - run: pnpm build:worker
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - if: failure()
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-failure-evidence

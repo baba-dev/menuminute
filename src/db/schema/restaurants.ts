@@ -23,6 +23,7 @@ export const restaurants = pgTable(
     timezone: text("timezone").notNull().default("Asia/Kolkata"),
     fulfillmentModes: text("fulfillment_modes").array().notNull().default(["dine_in"]),
     outletType: text("outlet_type").notNull().default("restaurant"),
+    freeMenuEnabled: boolean("free_menu_enabled").notNull().default(false),
     isPublished: boolean("is_published").notNull().default(false),
     // Stable opaque public identifier — never changes even if name/slug changes
     publicId: text("public_id").notNull(),

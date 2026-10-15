@@ -23,7 +23,7 @@ const modes = z
   .max(2)
   .refine((v) => new Set(v).size === v.length);
 const outletFields = createRestaurantSchema
-  .omit({ description: true, city: true })
+  .omit({ description: true, city: true, menuSchedule: true, fulfillmentModes: true })
   .extend({ fulfillmentModes: modes });
 const action = z.discriminatedUnion("action", [
   z.object({ action: z.literal("organization.rename"), data: z.object({ name }).strict() }),
@@ -80,9 +80,15 @@ export function domainError(error: unknown): never {
   if (code === "42501") throw new ForbiddenError();
   if (code === "40001" || code === "23505")
     throw new ConflictError("Organization changed or request key reused. Refresh and try again.");
-  if (code === "22023" || code === "23514" || code === "23502")
+  if (code === "23503" || code === "22023" || code === "23514" || code === "23502")
     throw new ValidationError(
       "Invalid domain change. Check the account, scope and settings; currency changes with existing prices require repricing."
+    );
+  if (code === "54000")
+    throw new AppError(
+      "Photo uploads are temporarily limited. Your existing photos are safe.",
+      "MEDIA_LIMIT",
+      503
     );
   if (code === "53000")
     throw new AppError("Background processing is behind. Try again later.", "BACKLOG", 503);

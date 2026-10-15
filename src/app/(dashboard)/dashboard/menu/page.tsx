@@ -1,41 +1,36 @@
+import { withActor } from "@/modules/tenancy/service";
+import { brands } from "@/db/schema";
+import { getRestaurantsByUserId } from "@/modules/restaurants/service";
+import { mediaList } from "@/modules/menu-product/service";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
-import { getCategoriesByRestaurant, getMenuItemsByCategory } from "@/modules/menus/service";
-import { MenuManager } from "./menu-manager";
-
-export const metadata = {
-  title: "Menu Management — MenuMinute",
-  description: "Create and manage your restaurant menu items and categories.",
-};
-
-export default async function MenuPage() {
+import { listMenus, menuDetail } from "@/modules/menu-product/service";
+import { MenuStudio } from "@/components/menu-product/menu-studio";
+export default async function Page() {
   const session = await auth();
-  if (!session?.user.id) redirect("/login");
+  if (!session) redirect("/login");
   const actor = { userId: session.user.id };
-  const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
-
-  if (!restaurant) {
+  const outlet = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
+  if (!outlet)
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center">
-        <h2 className="text-base font-bold text-stone-900">No Restaurant Configured</h2>
-        <p className="mt-1 text-xs text-stone-500">
-          Please initialize or select a restaurant first.
-        </p>
+      <div className="product panel">
+        <h1>Select an outlet</h1>
+        <a href="/onboarding">Set up your first outlet</a>
       </div>
     );
-  }
-
-  const categories = await getCategoriesByRestaurant(actor, restaurant.id);
-  const items = (
-    await Promise.all(categories.map((cat) => getMenuItemsByCategory(actor, cat.id, restaurant.id)))
-  ).flat();
-
+  const list = await listMenus(actor, outlet.id);
   return (
-    <MenuManager
-      initialCategories={categories}
-      initialItems={items}
-      currency={restaurant.currency}
+    <MenuStudio
+      key={outlet.id}
+      outlet={outlet}
+      initialList={list}
+      initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
+      initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
+      outletChoices={await getRestaurantsByUserId(actor.userId)}
+      brandChoices={await withActor(actor, (tx) =>
+        tx.select({ id: brands.id, name: brands.name }).from(brands)
+      )}
     />
   );
 }

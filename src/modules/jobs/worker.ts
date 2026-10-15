@@ -1,3 +1,4 @@
+import { processMedia } from "../media/worker";
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
@@ -134,6 +135,31 @@ export async function consumeEvent(
   const data = queueData.parse(raw);
   if (jobId !== `${data.eventId}-${data.deliverySequence}`)
     throw new Error("Invalid delivery identity");
+  const stored = (
+    await pool.query(
+      "select type,schema_version,delivery_sequence,attempts,max_attempts from outbox_events where id=$1 and organization_id=$2",
+      [data.eventId, data.organizationId]
+    )
+  ).rows[0];
+  if (!stored || data.deliverySequence > stored.delivery_sequence)
+    throw new Error("Delivery scope mismatch");
+  if (stored.type === "media.process" && stored.schema_version === 1) {
+    try {
+      return await processMedia(pool, data.eventId, data.organizationId);
+    } catch (e) {
+      await pool.query(
+        "update outbox_events set status=case when attempts>=max_attempts then 'failed' else 'pending' end,lease_token=null,lease_until=null,next_attempt_at=now()+interval '5 seconds',last_error='media_processing_failed' where id=$1 and organization_id=$2 and delivery_sequence=$3 and status<>'completed'",
+        [data.eventId, data.organizationId, data.deliverySequence]
+      );
+      if (stored.attempts >= stored.max_attempts)
+        await pool.query("select app_private.media_job($1,$2,$3::jsonb)", [
+          data.eventId,
+          data.organizationId,
+          JSON.stringify({ error: "processing_failed" }),
+        ]);
+      throw e;
+    }
+  }
   const client = await pool.connect();
   let permanent = false;
   try {
@@ -225,7 +251,9 @@ export async function startWorker(
   let pending: Promise<unknown> | undefined;
   const tick = () => {
     if (stopping || pending) return;
-    pending = dispatchOnce(pool, producer)
+    pending = pool
+      .query("select app_private.reconcile_media_uploads()")
+      .then(() => dispatchOnce(pool, producer))
       .catch(() => console.error("Durable dispatcher unavailable"))
       .finally(() => {
         pending = undefined;
