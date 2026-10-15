@@ -170,6 +170,7 @@ pnpm test:e2e
 ## 📚 Documentation Index
 
 - [Phase 1 foundation status, cutover and infrastructure](docs/foundation/phase-1.md)
+- [Phase 2 core domain contracts](docs/core-domains/contracts.md) and [worker/billing operations](docs/core-domains/operations.md)
 
 - [Phase 0 Development Orchestration](docs/orchestration/README.md)
 - [Approved Product Requirements](docs/product-requirements.md)

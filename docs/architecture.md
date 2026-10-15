@@ -1,6 +1,6 @@
 # Approved system architecture
 
-Status: approved target, 2026-10-15. Phase 1 implementation is described in [foundation status](foundation/phase-1.md); ordering/outbox remain target work.
+Status: approved target, 2026-10-15. Phase 1 implementation is described in [foundation status](foundation/phase-1.md); Phase 2 adds core management, durable projection delivery and entitlement foundations; ordering remains target work. See [core contracts](core-domains/contracts.md).
 
 ## Current scaffold versus target
 

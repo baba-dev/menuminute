@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import type { ReactNode } from "react";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
@@ -87,6 +88,7 @@ function Form({
   );
 }
 export function OrganizationManager({ organizations }: { organizations: Organization[] }) {
+  const router = useRouter();
   const [selected, setSelected] = useState(organizations[0]?.id ?? "");
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
@@ -152,6 +154,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
       throw new Error(e.message ?? "Change failed");
     }
     await load();
+    router.refresh();
   }
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";

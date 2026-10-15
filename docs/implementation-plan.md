@@ -21,6 +21,11 @@ agent task/handoff contracts, single-writer reservations, architecture interface
 GitHub work packages and final-SHA evidence. It does not renumber slices, migrate runtime code or
 prove launch readiness. [The backlog](orchestration/backlog.md) maps tasks to these slices.
 
+Phase 2 adds organization/outlet/brand administration, scoped permission commands, a PostgreSQL
+outbox with a BullMQ projection worker, and explicit entitlement windows. See [contracts](core-domains/contracts.md)
+and [operation/rollback](core-domains/operations.md). Ordering, KDS, payment collection and production
+release remain gated; no commercial pricing or trial/grace policy is introduced.
+
 ## Original scaffold inventory addressed by Phase 1
 
 The observations below describe the pre-conversion baseline, not the current branch. Foundation
