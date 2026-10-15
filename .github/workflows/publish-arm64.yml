@@ -1,8 +1,11 @@
 name: Publish verified ARM64 artifact
 
-# Publish an immutable *artifact*, never automatically deploy to the shared ERP host.
-# Only a successful CI run caused by a push to this repository's main branch can publish.
+# A PR tests packaging without publishing. Only successful main-push CI publishes a
+# prerelease artifact. Nothing logs into or modifies the shared ERP VPS.
 on:
+  pull_request:
+    paths:
+      - .github/workflows/publish-arm64.yml
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -13,15 +16,15 @@ permissions:
 jobs:
   package:
     if: >-
-      ${{ github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push' &&
-          github.event.workflow_run.head_branch == 'main' &&
-          github.event.workflow_run.head_repository.full_name == github.repository }}
+      ${{ github.event_name == 'pull_request' ||
+          (github.event_name == 'workflow_run' &&
+           github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'push' &&
+           github.event.workflow_run.head_branch == 'main' &&
+           github.event.workflow_run.head_repository.full_name == github.repository) }}
     runs-on: ubuntu-24.04-arm
-    permissions:
-      contents: write
     env:
-      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+      RELEASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,13 +77,37 @@ jobs:
           tar --sort=name --owner=0 --group=0 --numeric-owner -czf "$GITHUB_WORKSPACE/menuminute-${short}-linux-arm64.tar.gz" .
           cd "$GITHUB_WORKSPACE"
           sha256sum "menuminute-${short}-linux-arm64.tar.gz" > "menuminute-${short}-linux-arm64.tar.gz.sha256"
-      - name: Publish checksum-protected pre-release asset
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Upload checksum-protected release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: menuminute-arm64-release
+          path: |
+            menuminute-*-linux-arm64.tar.gz
+            menuminute-*-linux-arm64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: package
+    if: ${{ github.event_name == 'workflow_run' && needs.package.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: menuminute-arm64-release
+      - name: Publish immutable prerelease with SHA-256
         run: |
           set -euo pipefail
           short="${RELEASE_SHA:0:12}"
           tag="arm64-${short}"
+          test -f "menuminute-${short}-linux-arm64.tar.gz"
+          sha256sum -c "menuminute-${short}-linux-arm64.tar.gz.sha256"
           gh release create "$tag" "menuminute-${short}-linux-arm64.tar.gz" "menuminute-${short}-linux-arm64.tar.gz.sha256" \
-            --target "$RELEASE_SHA" --title "MenuMinute ARM64 ${short}" --prerelease \
-            --notes "Native Linux ARM64 web, worker, migration runner, reviewed SQL and production dependencies. Built from the exact main SHA of a successful full CI run: ${RELEASE_SHA}. Artifact only: no automatic production deployment. Verify the adjacent SHA-256 checksum before installation."
+            --repo "$GITHUB_REPOSITORY" --target "$RELEASE_SHA" \
+            --title "MenuMinute ARM64 ${short}" --prerelease \
+            --notes "Native Linux ARM64 web, worker, bundled migration runner, reviewed SQL and production dependencies from the exact main SHA of successful full CI: ${RELEASE_SHA}. Artifact only; no production deployment. Verify SHA-256 prior to installation."
