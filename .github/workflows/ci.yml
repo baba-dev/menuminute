@@ -66,6 +66,7 @@ jobs:
       - run: docker compose -f infra/compose.test.yml up -d --wait
       - run: pnpm exec tsx scripts/test-bootstrap.ts
       - run: pnpm db:migrate
+      - run: pnpm build:worker
       - run: pnpm test
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v

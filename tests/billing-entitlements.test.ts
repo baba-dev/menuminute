@@ -46,6 +46,18 @@ it("uses explicit DB-time windows, immutable idempotent grants and owner-only bi
       )
     )
   ).rejects.toThrow();
+  const adminUser = crypto.randomUUID();
+  await admin(async (_, p) => {
+    await p.query("insert into users(id,name,email) values($1,'Billing admin',$2)", [
+      adminUser,
+      `${adminUser}@test.invalid`,
+    ]);
+    await p.query(
+      "insert into organization_members(id,organization_id,user_id,role) values($1,$2,$3,'admin')",
+      [crypto.randomUUID(), org, adminUser]
+    );
+  });
+  await expect(billingState({ userId: adminUser }, org)).rejects.toMatchObject({ statusCode: 403 });
   const another = await fixture();
   await expect(billingState(another.actor, org)).rejects.toMatchObject({ statusCode: 403 });
 });

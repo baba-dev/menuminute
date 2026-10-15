@@ -15,7 +15,8 @@ Base: merged Phase 1 #15. Runtime changes follow these producer boundaries.
   version, action and validated payload; reuse with a different command conflicts. Command results
   are retained durably, not cached authorization. Every retry still resolves current authority.
 - Domain events contain durable ID, schema version, organization/outlet, aggregate version and a
-  bounded server-generated summary. Queue jobs only carry IDs/scope/attempt, never authority or secrets.
+  bounded server-generated summary. Queue jobs only carry IDs/scope/attempt and a monotonic delivery
+  sequence, never authority or secrets.
 - Dispatcher claims finite leases with SKIP LOCKED, enqueues outside SQL, and conditionally acknowledges
   its lease. Unreceipted dispatches become eligible again after a deadline; Redis loss is recoverable.
   Consumer effects and receipts commit together. The initial consumer maintains a versioned domain

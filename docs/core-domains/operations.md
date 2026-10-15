@@ -10,6 +10,8 @@ Before migrations 0002–0003, a database administrator creates `menuminute_work
 `infra/postgres/bootstrap.sql` and sets its credential separately. Existing installations already
 have the app role: execute only the new worker CREATE ROLE statement. Never rerun CREATE ROLE for
 an existing role. Apply `pnpm db:migrate` as the existing migration owner. Do not edit applied files.
+Before migration, review any organization with zero or multiple active owners; resolve ownership
+explicitly rather than deleting memberships to satisfy the single-owner index.
 The migration owner owns checked SECURITY DEFINER functions with fixed search paths; PUBLIC cannot
 execute them. Web has no direct administrative or entitlement writes. Worker can read/update outbox,
 insert receipts and maintain projections, but cannot read auth/merchant data or issue entitlements.

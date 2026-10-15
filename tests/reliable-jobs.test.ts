@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { it, expect } from "vitest";
 import { Queue, Worker } from "bullmq";
 import { admin, fixture } from "./helpers";
@@ -233,3 +234,37 @@ it("does not roll a projection back for out-of-order events and exposes bounded 
     await pool.end();
   }
 });
+
+it("runs the production worker bundle and drains on SIGTERM with only worker credentials", async () => {
+  await isolate();
+  const { outlet } = await fixture();
+  const id = await eventFor(outlet.organizationId);
+  const child = spawn(process.execPath, ["dist/worker.mjs"], {
+    env: {
+      PATH: process.env["PATH"],
+      NODE_ENV: "production",
+      WORKER_DATABASE_URL: url,
+      REDIS_QUEUE_URL: queueUrl,
+    },
+    stdio: "ignore",
+  });
+  const stopped = new Promise<number | null>((resolve, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code) => resolve(code));
+  });
+  try {
+    await until(async () => (await state(id)).status === "completed");
+    child.kill("SIGTERM");
+    expect(
+      await Promise.race([
+        stopped,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Worker did not drain")), 5000)
+        ),
+      ])
+    ).toBe(0);
+  } finally {
+    if (child.exitCode === null) child.kill("SIGKILL");
+    await stopped;
+  }
+}, 20000);

@@ -42,9 +42,10 @@ independent scoped task only after releasing/recording the old claim.
 - Documentation-only: changed Markdown formatting, local links and `git diff --check`.
 - Runtime: lint, strict typecheck, relevant tests and ARM64 production build. Affected browser flows
   require E2E evidence. PostgreSQL/Redis scenarios use real isolated dependencies once implemented.
-- Current CI lanes are Lint & Code Style, TypeScript Strict Typecheck, Unit & Integration Tests
-  (SQLite), Production Build (ARM64). These validate the scaffold; they do not prove target RLS,
-  outbox recovery or production readiness. Add integration gates in the foundation implementation.
+- Current CI lanes are Lint & Code Style, TypeScript Strict Typecheck, PostgreSQL & Redis
+  Integration, and Production Build & Browser, all on Linux ARM64. Foundation tests exercise RLS
+  and real dependencies; core-domain tests add outbox recovery and entitlements. Passing CI does not
+  establish production restore evidence or capacity.
 - Check runs must match the latest rebased commit; a predecessor's green run is insufficient.
 - No bypassing failures, self-approvals or untested capacity claims. Explain baseline failures.
 - Integration owner verifies dependencies, shared-file reservations, rollback and no stale consumers.

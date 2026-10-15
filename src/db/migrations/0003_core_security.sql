@@ -145,8 +145,8 @@ BEGIN
  END IF;
  INSERT INTO organizations(id,name) VALUES(org,request_input->>'name');
  INSERT INTO organization_members(id,organization_id,user_id,role) VALUES('member-'||outlet,org,actor,'owner');
- INSERT INTO restaurants(id,organization_id,public_id,name,slug,description,city,country,currency,timezone,outlet_type)
- VALUES(outlet,org,token,request_input->>'name',outlet,request_input->>'description',request_input->>'city',request_input->>'country',request_input->>'currency',request_input->>'timezone',request_input->>'outletType');
+ INSERT INTO restaurants(id,organization_id,public_id,name,slug,description,city,country,currency,timezone,outlet_type,fulfillment_modes)
+ VALUES(outlet,org,token,request_input->>'name',outlet,request_input->>'description',request_input->>'city',request_input->>'country',request_input->>'currency',request_input->>'timezone',request_input->>'outletType',CASE WHEN request_input->>'outletType' IN ('cafe','takeout','cloud_kitchen') THEN ARRAY['pickup']::text[] ELSE ARRAY['dine_in']::text[] END);
  INSERT INTO app_private.provisioning_requests(outlet_id,actor_id,input) VALUES(outlet,actor,request_input-'svgData');
  INSERT INTO brands(id,organization_id,name) VALUES('brand-'||outlet,org,request_input->>'name');
  INSERT INTO brand_outlets(organization_id,brand_id,outlet_id) VALUES(org,'brand-'||outlet,outlet);
@@ -205,3 +205,5 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.scoped_member_directory(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.scoped_member_directory(text) TO menuminute_app;
+
+ALTER TABLE restaurants ADD CONSTRAINT pickup_only_types CHECK(outlet_type NOT IN ('takeout','cloud_kitchen') OR fulfillment_modes=ARRAY['pickup']::text[]);

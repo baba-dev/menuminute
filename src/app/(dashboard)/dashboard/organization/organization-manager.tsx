@@ -108,6 +108,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   const requestGeneration = useRef(0);
   const selectedOrg = organizations.find((o) => o.id === selected);
   const load = useCallback(async () => {
+    if (activeSelection.current !== selected) return;
     const generation = ++requestGeneration.current;
     const res = await fetch(`/api/organizations/${selected}`);
     const body = await res.json();
@@ -153,8 +154,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
       if (r.status === 409) await load();
       throw new Error(e.message ?? "Change failed");
     }
-    await load();
-    router.refresh();
+    if (activeSelection.current === selected) {
+      await load();
+      router.refresh();
+    }
   }
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";
@@ -182,6 +185,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
             className={inputClass}
             value={selected}
             onChange={(e) => {
+              if (e.target.value === selected) return;
               activeSelection.current = e.target.value;
               requestGeneration.current++;
               setDetail(null);
@@ -286,7 +290,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
             >
               <label className="block text-sm">
                 Outlet
-                <select name="outletId" className={inputClass}>
+                <select aria-label="Outlet" name="outletId" className={inputClass}>
                   {detail.outlets.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.name}
@@ -296,7 +300,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
               </label>
               <label className="block text-sm">
                 Member
-                <select name="memberId" className={inputClass}>
+                <select aria-label="Member" name="memberId" className={inputClass}>
                   {detail.members
                     .filter((m) => m.role === "member" && m.isActive)
                     .map((m) => (
@@ -358,7 +362,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                   </label>
                   <label className="block text-sm">
                     Outlet
-                    <select name="outletId" className={inputClass}>
+                    <select aria-label="Outlet" name="outletId" className={inputClass}>
                       {detail.outlets.map((o) => (
                         <option key={o.id} value={o.id}>
                           {o.name}
@@ -425,7 +429,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 >
                   <label className="block text-sm">
                     New owner
-                    <select name="memberId" required className={inputClass}>
+                    <select aria-label="Member" name="memberId" required className={inputClass}>
                       {detail.members
                         .filter((m) => m.role !== "owner" && m.isActive)
                         .map((m) => (
@@ -536,6 +540,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   );
 }
 function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
+  const [type, setType] = useState(outlet?.outletType ?? "restaurant");
+  const [modes, setModes] = useState(outlet?.fulfillmentModes ?? ["dine_in"]);
   return (
     <>
       <Field label="Outlet name" name="name" defaultValue={outlet?.name} />
@@ -549,7 +555,15 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
         <select
           name="outletType"
           className={inputClass}
-          defaultValue={outlet?.outletType ?? "restaurant"}
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value);
+            setModes(
+              ["cafe", "takeout", "cloud_kitchen"].includes(e.target.value)
+                ? ["pickup"]
+                : ["dine_in"]
+            );
+          }}
         >
           {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((t) => (
             <option key={t}>{t}</option>
@@ -563,7 +577,11 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
               type="checkbox"
               name="modes"
               value={m}
-              defaultChecked={outlet ? outlet.fulfillmentModes.includes(m) : m === "dine_in"}
+              checked={modes.includes(m)}
+              disabled={m === "dine_in" && ["takeout", "cloud_kitchen"].includes(type)}
+              onChange={(e) =>
+                setModes(e.target.checked ? [...modes, m] : modes.filter((value) => value !== m))
+              }
             />{" "}
             {m === "dine_in" ? "Dine-in" : "Pickup"}
           </label>

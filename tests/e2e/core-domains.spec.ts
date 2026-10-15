@@ -176,6 +176,27 @@ test("organization switching ignores a late response from the previous organizat
   await form.getByLabel("Organization name", { exact: true }).fill("Beta Safely Renamed");
   await form.getByRole("button", { name: "Save organization name" }).click();
   await expect(form.getByRole("status")).toHaveText("Saved");
+  let releaseSave!: () => void;
+  let saveStarted!: () => void;
+  const saving = new Promise<void>((r) => (saveStarted = r));
+  const saveGate = new Promise<void>((r) => (releaseSave = r));
+  await page.route(`**/api/organizations/${f.otherOrg}`, async (route) => {
+    if (route.request().method() !== "PATCH") {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    saveStarted();
+    await saveGate;
+    await route.fulfill({ response });
+  });
+  await form.getByLabel("Organization name", { exact: true }).fill("Beta Background Save");
+  await form.getByRole("button", { name: "Save organization name" }).click();
+  await saving;
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  releaseSave();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Alpha Domain");
   const unchanged = await page.request.get(`/api/organizations/${f.org}`);
   expect((await unchanged.json()).organization.name).toBe("Alpha Domain");
 });

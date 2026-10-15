@@ -128,6 +128,16 @@ it("preserves permanent QR on outlet edits, enforces explicit currency repricing
   expect((await getRestaurantById(actor, String(second.outletId)))?.fulfillmentModes).toEqual([
     "pickup",
   ]);
+  await expect(
+    command(actor, org, "outlet.create", {
+      name: "Invalid kitchen modes",
+      country: "IN",
+      currency: "INR",
+      timezone: "Asia/Kolkata",
+      outletType: "cloud_kitchen",
+      fulfillmentModes: ["dine_in"],
+    })
+  ).rejects.toMatchObject({ statusCode: 422 });
   const brand = await command(actor, org, "brand.create", { name: "Multi-outlet brand" });
   for (const outletId of [outlet.id, String(second.outletId)])
     await command(actor, org, "brand.link", { brandId: brand.brandId, outletId, linked: true });
