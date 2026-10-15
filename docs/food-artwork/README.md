@@ -1,37 +1,20 @@
-# Dish artwork — staging review
+# Approved original dish artwork — Indian, Western, Italian
 
-This review branch tracks the user's approved three AI-rendered concept sheets and their 36 **separated, labeled** illustrations (12 Indian, 12 Western, 12 Italian).
+This PR contains **36 separate, labeled, 360 × 280 transparent PNGs**, extracted from the three owner-approved AI-rendered category sheets: 12 Indian, 12 Western, 12 Italian.
 
-**Status: binary import pending.** The actual 36 RGBA files and the source sheets were generated in the ChatGPT workspace and packaged as `menuminute-approved-dishes-review.zip`. GitHub's connected text/encoded-blob interface cannot directly consume a local sandbox binary path. Do not represent this staging PR as an asset-complete change or merge it before importing the images.
+- See [the labeled GitHub gallery](gallery.md) and [canonical manifest](manifest.json).
+- `public/assets/food/dishes/{indian,western,italian}/*.png` contains all 36 independent files. Slugs, intended accessible labels and paths are explicit.
+- A separate conversation review ZIP includes the original approved source sheets, lossless individual PNGs, SHA-256 manifest, light/dark comparison previews and reproducible extraction script.
+- All 36 PNGs retain real transparency (RGBA) and are *not* faux SVG wrappers. The AI-rendered sheets were raster concept art, not editable vector originals. A follow-up hand-reviewed paths-only SVG redraw would be needed to provide authentic vector masters.
+- The assets are source artwork; **no production menu selection, owner-upload priority, sold-out behavior or theme logic is altered in this PR.**
 
-## Approved artwork & canonical naming
+## Required checks before merging
 
-See `manifest.json` for all filenames. Intended location:
+1. Run `node scripts/food-artwork/verify.mjs` (36 files, 360 × 280, PNG RGBA, exact naming).
+2. Review individual crops in [gallery.md](gallery.md) and compare light (white + #F8F5E9 artwork card) and dark (#111111 + #262626 artwork card) previews included in the ZIP. Avoid illustrations blending into parent surfaces.
+3. Confirm the original AI-rendered art faithfully represents the intended dish names; amend only if owner requests.
+4. Run existing repository CI on the final PR SHA. Keep this artwork-only until approval.
 
-```
-public/assets/food/dishes/
-├── indian/   # 12 transparent PNGs
-├── western/  # 12 transparent PNGs
-└── italian/  # 12 transparent PNGs
-```
+## Later fallback contract (not implemented here)
 
-## Required importer steps
-
-1. Download the finished review ZIP from the conversation and extract it.
-2. Copy its `public/assets/food/dishes` subtree to the root of this branch.
-3. Copy `asset-manifest.json` and the preview sheets to `docs/food-artwork/review/`; keep the original concept sheets in `docs/food-artwork/review/reference-sheets/` if approved for repository storage.
-4. Run `node scripts/food-artwork/verify.mjs` to assert all 36 RGBA PNG assets exist, have the correct dimensions, and no duplicates or unexpected files.
-5. Compare the actual image rendering on light (#FFFFFF with contrasted #F8F5E9 card) and dark (#111111 with contrasted #262626 card) surfaces. Check for edge artifacts and legibility at menu-thumbnail size.
-6. Change `status` in the manifest to `assets-imported`, then mark PR ready for review. Keep this as an artwork-only PR.
-
-### Important format note
-
-The user asked for editable SVGs originally, but the approved sheets were AI-generated raster images. The files in the ZIP are **real separated transparent PNGs** and must not be disguised as vector SVGs. Native paths-only SVGs require a follow-up human-reviewed vectorization stage.
-
-### Future application contract (not implemented in this PR)
-
-Merchant-uploaded dish photography wins; otherwise an explicit merchant-selected illustration; otherwise an appropriate categorized illustration; otherwise a neutral fallback. Existing sold-out imagery treatment continues. No category image or icon may imply a verified allergen or religious certification. No app runtime changes in this staging PR.
-
-### Scope and CI
-
-Only documentation and a standalone Node.js verifier are introduced here. The existing menu, ordering, and UI are unchanged. Do not enable the verifier in CI until the actual assets are committed.
+Owner-provided actual dish photo > owner-selected illustration > appropriate category/dish illustration > generic illustration placeholder. Preserve Sold Out visible greyed image and accessible status text. Never infer a dietary/allergen or religious certification from food illustration alone. Avoid falsely representing a specific dish where only a category is known.

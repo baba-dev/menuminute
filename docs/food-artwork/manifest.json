@@ -4,7 +4,7 @@
   "assetCount": 36,
   "sourceFormat": "AI-rendered reference boards (PNG)",
   "exportFormat": "transparent PNG (RGBA), not native SVG",
-  "status": "draft-binary-import-pending",
+  "status": "assets-imported-awaiting-owner-review",
   "groups": {
     "indian": 12,
     "western": 12,
@@ -19,7 +19,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -29,7 +29,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -39,7 +39,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -49,7 +49,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -59,7 +59,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -69,7 +69,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -79,7 +79,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -89,7 +89,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -99,7 +99,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -109,7 +109,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -119,7 +119,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "indian",
@@ -129,7 +129,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -139,7 +139,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -149,7 +149,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -159,7 +159,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -169,7 +169,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -179,7 +179,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -189,7 +189,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -199,7 +199,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -209,7 +209,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -219,7 +219,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -229,7 +229,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -239,7 +239,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "western",
@@ -249,7 +249,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -259,7 +259,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -269,7 +269,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -279,7 +279,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -289,7 +289,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -299,7 +299,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -309,7 +309,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -319,7 +319,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -329,7 +329,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -339,7 +339,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -349,7 +349,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -359,7 +359,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     },
     {
       "category": "italian",
@@ -369,7 +369,7 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "pending-binary-import"
+      "state": "assets-imported"
     }
   ]
 }
