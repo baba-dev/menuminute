@@ -13,3 +13,5 @@ export * from "./jobs";
 export * from "./audit";
 
 export * from "./tenancy";
+
+export * from "./core-domains";

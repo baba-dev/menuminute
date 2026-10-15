@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { getDb } from "@/db";
 import { users, sessions, accounts, verificationTokens, rateLimits } from "@/db/schema";
 import { env } from "@/lib/config/env";
@@ -59,5 +59,8 @@ export const authServer = betterAuth({
   plugins: [nextCookies()],
 });
 export async function auth() {
-  return authServer.api.getSession({ headers: await headers() });
+  const session = await authServer.api.getSession({ headers: await headers() });
+  return session
+    ? { ...session, activeOutletId: (await cookies()).get("menuminute.outlet")?.value }
+    : null;
 }

@@ -1,7 +1,9 @@
 # Phase 1 — Production foundation
 
 This branch implements PostgreSQL, database sessions, tenant services and CI/infrastructure preparation.
-Phase 0 PR #14 merged during implementation. Production deployment and data inventory remain separate gates.
+Phase 0 PR #14 and Phase 1 PR #15 are merged. Production deployment and data inventory remain separate gates.
+Phase 2 extends this baseline with [core domain administration and durable jobs](../core-domains/contracts.md);
+items below describe the Phase 1 boundary.
 
 ## Implemented boundary
 

@@ -2,7 +2,7 @@
   "name": "menuminute",
   "version": "0.1.0",
   "private": true,
-  "description": "Affordable mobile-first restaurant SaaS — free QR menus, online ordering and kitchen display",
+  "description": "Affordable mobile-first restaurant SaaS \u2014 free QR menus, online ordering and kitchen display",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=11.0.0"
@@ -28,7 +28,10 @@
     "env:validate": "tsx scripts/env-validate.ts",
     "db:import:sqlite": "tsx scripts/import-sqlite.ts",
     "infra:test:up": "docker compose -f infra/compose.test.yml up -d --wait",
-    "infra:test:down": "docker compose -f infra/compose.test.yml down -v"
+    "infra:test:down": "docker compose -f infra/compose.test.yml down -v",
+    "build:worker": "esbuild scripts/worker.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/worker.mjs",
+    "worker": "node dist/worker.mjs",
+    "billing:entitlement": "tsx scripts/entitlement.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.7",
@@ -52,6 +55,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "bcryptjs": "^3.0.2",
     "better-auth": "1.7.7",
+    "bullmq": "5.80.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -96,7 +100,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "esbuild": "0.28.2"
   },
   "packageManager": "pnpm@11.19.0"
 }

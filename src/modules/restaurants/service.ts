@@ -30,9 +30,10 @@ export async function getRestaurantsByUserId(userId: string) {
   );
 }
 /** Member-only selection: absent memberships return undefined, never a public demo. */
-export async function getDefaultOrActiveRestaurant(userId?: string) {
+export async function getDefaultOrActiveRestaurant(userId?: string, activeOutletId?: string) {
   if (!userId) return undefined;
-  return (await getRestaurantsByUserId(userId))[0];
+  const outlets = await getRestaurantsByUserId(userId);
+  return activeOutletId ? outlets.find((o) => o.id === activeOutletId) : outlets[0];
 }
 export async function getRestaurantById(actor: Actor, id: string) {
   return withOutlet(

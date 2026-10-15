@@ -31,7 +31,7 @@ export async function withOutlet<T>(
   return withActor(actor, async (tx) => {
     await tx.execute(sql`select set_config('app.outlet_id',${outletId},true)`);
     const allowed = await tx.execute<{ allowed: boolean }>(
-      sql`select app_private.can_outlet(${outletId},${permission}) as allowed`
+      sql`select app_private.lock_outlet(${outletId},${permission}) as allowed`
     );
     if (!allowed.rows[0]?.allowed) throw new ForbiddenError();
     return work(tx);

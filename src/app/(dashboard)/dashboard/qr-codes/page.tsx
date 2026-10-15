@@ -14,7 +14,7 @@ export default async function QrCodesPage() {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const actor = { userId: session.user.id };
-  const restaurant = await getDefaultOrActiveRestaurant(actor.userId);
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
 
   if (!restaurant) {
     return (

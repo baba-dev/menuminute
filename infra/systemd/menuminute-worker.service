@@ -1,0 +1,33 @@
+[Unit]
+Description=MenuMinute durable domain worker (ARM64)
+After=network-online.target postgresql.service redis-menuminute-queue.service
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=menuminute-worker
+Group=menuminute-worker
+WorkingDirectory=/var/www/menuminute/worker-current
+# Only WORKER_DATABASE_URL and REDIS_QUEUE_URL. No auth secret, web URL or migration credential.
+EnvironmentFile=/etc/menuminute/worker.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist/worker.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+KillSignal=SIGTERM
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryHigh=192M
+MemoryMax=256M
+CPUQuota=50%
+TasksMax=64
+LimitNOFILE=2048
+
+[Install]
+WantedBy=multi-user.target
