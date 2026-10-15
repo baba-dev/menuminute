@@ -57,13 +57,15 @@ jobs:
           pnpm install --prod --frozen-lockfile
           node -e 'require("pg"); require("bullmq"); require("sharp")'
           stage="$RUNNER_TEMP/menuminute-release"
-          install -d "$stage/.next/standalone/.next" "$stage/dist" "$stage/src/db"
+          install -d "$stage/.next/standalone/.next" "$stage/dist" "$stage/src/db" "$stage/infra"
           cp -a .next/standalone/. "$stage/.next/standalone/"
           cp -a .next/static "$stage/.next/standalone/.next/static"
           cp -a public "$stage/.next/standalone/public"
           cp -a dist/. "$stage/dist/"
           cp -a node_modules "$stage/node_modules"
           cp -a src/db/migrations "$stage/src/db/migrations"
+          cp -a infra/systemd "$stage/infra/systemd"
+          cp -a infra/nginx "$stage/infra/nginx"
           cp package.json pnpm-lock.yaml pnpm-workspace.yaml "$stage/"
           printf '%s\n' "$RELEASE_SHA" > "$stage/RELEASE-SHA"
           test -f "$stage/.next/standalone/server.js"
