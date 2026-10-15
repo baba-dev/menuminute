@@ -24,14 +24,13 @@ canonical main code updates its canonical pointer while retaining the old revoke
 and counter labels provide context, not ordering authority or physical-presence proof.
 
 Drafts, published revisions and archives remain distinct. Publication holds the organization lock,
-checks expected revision/current authority/currency/approved media, writes immutable release + audit
-
-- durable outbox in one commit. Reused keys reconcile their committed result after authority checks.
-  Public menu and photo responses are dynamic/no-store; availability or revocation does not depend on
-  cache Redis or a worker invalidating a cache. A future CDN cache must add versioned invalidation
-  before changing this contract. Browsers refresh public data every 30 seconds and label offline/stale
-  content; there is no offline order queue. Saved drafts and entered fields survive request failures;
-  a stale edit can explicitly reload the saved version rather than silently overwrite another editor.
+checks expected revision/current authority/currency/approved media, writes immutable release, audit and
+durable outbox in one commit. Reused keys reconcile their committed result after authority checks.
+Public menu and photo responses are dynamic/no-store; availability or revocation does not depend on
+cache Redis or a worker invalidating a cache. A future CDN cache must add versioned invalidation
+before changing this contract. Browsers refresh public data every 30 seconds and label offline/stale
+content; there is no offline order queue. Saved drafts and entered fields survive request failures;
+a stale edit can explicitly reload the saved version rather than silently overwrite another editor.
 
 ## Private media storage
 

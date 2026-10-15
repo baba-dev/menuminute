@@ -171,7 +171,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByLabel("QR label", { exact: true }).fill("Patio menu");
   await page.getByLabel("Table / counter label (optional)", { exact: true }).fill("Table 4");
   await page.getByRole("button", { name: "Create QR code", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("QR code created");
+  await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code created");
   const rows = await (await page.request.get("/api/qr")).json();
   const q = rows.find((q: { label: string }) => q.label === "Patio menu");
   const download = await page.request.get(`/api/qr/${q.id}/download`);
@@ -185,7 +185,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
     .locator("xpath=ancestor::section")
     .getByRole("button", { name: "Revoke QR", exact: true })
     .click();
-  await expect(page.getByRole("status")).toHaveText("QR code revoked");
+  await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code revoked");
   expect((await guest.goto(`/m/${q.destinationToken}`))?.status()).toBe(404);
   expect((await guest.goto(`/m/${f.token}`))?.status()).toBe(200);
   await guest.screenshot({ path: info.outputPath("published-menu.png"), fullPage: true });
