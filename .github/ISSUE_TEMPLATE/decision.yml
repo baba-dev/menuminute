@@ -1,0 +1,20 @@
+name: Product or architecture decision
+description: Resolve a blocking decision before implementation invents behavior
+title: "[Decision] "
+body:
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision required
+      value: |
+        Decision owner:
+        Blocked issues:
+        Current approved behavior / source:
+        Missing input:
+        Options and consequences:
+        Recommendation:
+        Affected contracts / migration / UX:
+        Acceptance evidence:
+        Resolution / date / ADR link:
+    validations:
+      required: true

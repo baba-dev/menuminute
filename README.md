@@ -164,6 +164,7 @@ pnpm test:e2e
 
 ## 📚 Documentation Index
 
+- [Phase 0 Development Orchestration](docs/orchestration/README.md)
 - [Approved Product Requirements](docs/product-requirements.md)
 - [Product Direction](docs/product-direction.md)
 - [Design Exploration and Recorded Decision](docs/design-options.md)
