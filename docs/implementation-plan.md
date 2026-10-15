@@ -26,6 +26,11 @@ outbox with a BullMQ projection worker, and explicit entitlement windows. See [c
 and [operation/rollback](core-domains/operations.md). Ordering, KDS, payment collection and production
 release remain gated; no commercial pricing or trial/grace policy is introduced.
 
+Phase 3 adds the [free QR menu product](menu-product/contracts.md): versioned drafts/releases,
+scoped sharing, service schedules, reviewed private media, permanent QR lifecycle and public browsing.
+See [operation and rollback](menu-product/operations.md). Ordering and live provider/deployment gates
+remain separate.
+
 ## Original scaffold inventory addressed by Phase 1
 
 The observations below describe the pre-conversion baseline, not the current branch. Foundation

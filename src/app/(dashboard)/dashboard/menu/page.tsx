@@ -1,3 +1,7 @@
+import { withActor } from "@/modules/tenancy/service";
+import { brands } from "@/db/schema";
+import { getRestaurantsByUserId } from "@/modules/restaurants/service";
+import { mediaList } from "@/modules/menu-product/service";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
@@ -22,6 +26,11 @@ export default async function Page() {
       outlet={outlet}
       initialList={list}
       initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
+      initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
+      outletChoices={await getRestaurantsByUserId(actor.userId)}
+      brandChoices={await withActor(actor, (tx) =>
+        tx.select({ id: brands.id, name: brands.name }).from(brands)
+      )}
     />
   );
 }

@@ -1,6 +1,8 @@
 # MenuMinute — AI and media policy
 
-Target behavior, not implemented integrations. The current AI service returns scaffold results; the media resolver currently uses an uploaded URL or local category SVG.
+Phase 3 implements private uploaded-photo processing, explicit approval, publication-bound derivative
+delivery and local illustration fallback. See [menu/media operation](menu-product/operations.md).
+The stock/AI integrations below remain target behavior; no inference or stock search is enabled.
 
 ## Owner assistance
 

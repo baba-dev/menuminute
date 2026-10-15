@@ -1,10 +1,11 @@
+import { themeScript } from "@/components/menu-product/theme-script";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
 import "@/styles/menu-product.css";
-import { ThemeControl, themeScript } from "@/components/menu-product/theme-control";
+import { ThemeControl } from "@/components/menu-product/theme-control";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",

@@ -76,6 +76,9 @@ export function MenuStudio({
   outlet,
   initialList,
   initialDetail,
+  initialMedia,
+  outletChoices,
+  brandChoices,
 }: {
   outlet: {
     id: string;
@@ -88,6 +91,9 @@ export function MenuStudio({
   };
   initialList: { id: string; document: unknown; archived: boolean }[];
   initialDetail: Detail | null;
+  initialMedia: Media[];
+  outletChoices: { id: string; name: string; currency: string }[];
+  brandChoices: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [list, setList] = useState(initialList);
@@ -99,7 +105,7 @@ export function MenuStudio({
   const [error, setError] = useState("");
   const [tab, setTab] = useState("dishes");
   const [preview, setPreview] = useState(false);
-  const [media, setMedia] = useState<Media[]>([]);
+  const [media, setMedia] = useState<Media[]>(initialMedia);
   const [milestone, setMilestone] = useState(false);
   const selected = useRef(initialDetail?.id ?? "");
   const creationKey = useRef(id());
@@ -146,7 +152,12 @@ export function MenuStudio({
     return json(path(detail.id), {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ key: id(), expectedRevision: revision, action, data }),
+      body: JSON.stringify({
+        key: commandRetry.current.key,
+        expectedRevision: revision,
+        action,
+        data,
+      }),
     });
   }
   async function save() {
@@ -427,6 +438,7 @@ export function MenuStudio({
                     ))}
                   </nav>
                   <form
+                    key={`${detail.id}:${detail.revision}`}
                     ref={form}
                     className="stack"
                     onSubmit={(e) => {
@@ -587,14 +599,29 @@ export function MenuStudio({
                                     ))}
                                   </div>
                                   <label className="field">
-                                    Approved photo ID
-                                    <input
+                                    Dish photo
+                                    <select
+                                      aria-label={`Dish photo ${ci + 1}.${di + 1}`}
                                       value={dish.mediaId ?? ""}
                                       onChange={(e) =>
                                         updateDish(ci, di, { mediaId: e.target.value || null })
                                       }
-                                      placeholder="Select a processed photo from Media"
-                                    />
+                                    >
+                                      <option value="">Local illustration</option>
+                                      {dish.mediaId &&
+                                        !media.some((a) => a.id === dish.mediaId) && (
+                                          <option value={dish.mediaId}>
+                                            Current approved photo
+                                          </option>
+                                        )}
+                                      {media
+                                        .filter((a) => a.status === "ready" && a.approvedAt)
+                                        .map((a, n) => (
+                                          <option key={a.id} value={a.id}>
+                                            Approved photo {n + 1}
+                                          </option>
+                                        ))}
+                                    </select>
                                   </label>
                                   <details>
                                     <summary>Variants & add-ons</summary>
@@ -922,7 +949,7 @@ export function MenuStudio({
                                 ? "Photo processing failed"
                                 : "Processing photo"}
                           </strong>
-                          <small>{a.id}</small>
+
                           {a.lastError && <p>{a.lastError}</p>}
                           {a.status === "ready" && (
                             <>
@@ -949,27 +976,12 @@ export function MenuStudio({
                                     setMessage(
                                       a.approvedAt
                                         ? "Photo approval removed"
-                                        : "Photo approved. Select it on a dish, then publish."
+                                        : "Photo approved. Choose it in a dish’s photo selector, then publish."
                                     );
                                   })
                                 }
                               >
                                 {a.approvedAt ? "Remove approval" : "Approve photo"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard
-                                    .writeText(a.id)
-                                    .then(() =>
-                                      setMessage(
-                                        "Photo ID copied. Paste it into the dish photo field."
-                                      )
-                                    )
-                                    .catch(() => setMessage(`Photo ID: ${a.id}`));
-                                }}
-                              >
-                                Copy photo ID
                               </button>
                             </>
                           )}
@@ -1002,12 +1014,25 @@ export function MenuStudio({
                         }}
                       >
                         <label className="field">
-                          Outlet ID
-                          <input name="outletId" required />
+                          Outlet
+                          <select name="outletId" required>
+                            {outletChoices.map((o) => (
+                              <option key={o.id} value={o.id}>
+                                {o.name} ({o.currency})
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         <label className="field">
-                          Brand ID (optional)
-                          <input name="brandId" />
+                          Brand (optional)
+                          <select name="brandId">
+                            <option value="">No brand</option>
+                            {brandChoices.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         <label>
                           <input type="checkbox" name="assigned" defaultChecked />
@@ -1019,9 +1044,17 @@ export function MenuStudio({
                       </form>
                       <ul>
                         {detail.assignments.map((a) => (
-                          <li key={a.outletId}>
-                            {a.outletId}
-                            {a.brandId ? ` · brand ${a.brandId}` : ""}
+                          <li
+                            key={
+                              outletChoices.find((o) => o.id === a.outletId)?.name ??
+                              "Assigned outlet"
+                            }
+                          >
+                            {outletChoices.find((o) => o.id === a.outletId)?.name ??
+                              "Assigned outlet"}
+                            {a.brandId
+                              ? ` · ${brandChoices.find((b) => b.id === a.brandId)?.name ?? "Brand"}`
+                              : ""}
                           </li>
                         ))}
                       </ul>

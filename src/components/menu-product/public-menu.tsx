@@ -139,7 +139,7 @@ export function PublicMenu({
             {status}
           </p>
         )}
-        <main id="dishes" className="stack">
+        <main tabIndex={-1} id="dishes" className="stack">
           {docs.map((m) => (
             <div key={m.id} className="stack">
               <div className="row between">

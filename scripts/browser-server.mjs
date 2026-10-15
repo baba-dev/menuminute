@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 // Local test-only TLS proxy exercises the built standalone server, including Secure cookies.
 import https from "node:https";
 import http from "node:http";
@@ -70,7 +71,30 @@ const server = https.createServer(
         port: 3100,
         path: req.url,
         method: req.method,
-        headers: { ...req.headers, "x-forwarded-proto": "https", "x-forwarded-for": "127.0.0.1" },
+        headers: {
+          ...req.headers,
+          "x-forwarded-proto": "https",
+          "x-forwarded-for": /^[a-f0-9-]{36}$/.test(
+            String(req.headers["x-browser-test-client"] ?? "")
+          )
+            ? "198.18." +
+              Number.parseInt(
+                createHash("sha256")
+                  .update(String(req.headers["x-browser-test-client"]))
+                  .digest("hex")
+                  .slice(0, 2),
+                16
+              ) +
+              "." +
+              Number.parseInt(
+                createHash("sha256")
+                  .update(String(req.headers["x-browser-test-client"]))
+                  .digest("hex")
+                  .slice(2, 4),
+                16
+              )
+            : "127.0.0.1",
+        },
       },
       (response) => {
         res.writeHead(response.statusCode ?? 502, response.headers);

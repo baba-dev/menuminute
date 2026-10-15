@@ -133,3 +133,55 @@ it("rejects malformed/SVG content and revoked delegated authority without publis
     expect(row.approved_at).toBeNull();
   });
 });
+it("rechecks private photo scope after object retrieval and never serves another outlet through the selector", async () => {
+  const f = await fixture();
+  const other = await fixture();
+  const asset = await uploadDishPhoto(
+    other.actor,
+    other.outlet.id,
+    await sharp({ create: { width: 10, height: 10, channels: 3, background: "blue" } })
+      .png()
+      .toBuffer(),
+    "Owned race test photograph"
+  );
+  await processOrg(other.outlet.organizationId);
+  await admin(async (_, p) => {
+    await p.query(
+      "insert into organization_members(id,organization_id,user_id,role) values($1,$2,$3,'admin')",
+      [crypto.randomUUID(), other.outlet.organizationId, f.actor.userId]
+    );
+  });
+  await expect(privateMedia(f.actor, f.outlet.id, asset.id)).rejects.toMatchObject({
+    statusCode: 404,
+  });
+  const storage = await import("../src/modules/media/storage");
+  const { vi } = await import("vitest");
+  const original = storage.getObject;
+  let entered!: () => void, release!: () => void;
+  const started = new Promise<void>((r) => (entered = r)),
+    gate = new Promise<void>((r) => (release = r));
+  const spy = vi.spyOn(storage, "getObject").mockImplementation(async (key) => {
+    const bytes = await original(key);
+    entered();
+    await gate;
+    return bytes;
+  });
+  try {
+    const reading = privateMedia(f.actor, other.outlet.id, asset.id).then(
+      () => null,
+      (e) => e
+    );
+    await started;
+    await admin(async (_, p) => {
+      await p.query(
+        "update organization_members set is_active=false where organization_id=$1 and user_id=$2",
+        [other.outlet.organizationId, f.actor.userId]
+      );
+    });
+    release();
+    expect(await reading).toMatchObject({ statusCode: 403 });
+  } finally {
+    release();
+    spy.mockRestore();
+  }
+});

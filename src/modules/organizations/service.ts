@@ -84,6 +84,12 @@ export function domainError(error: unknown): never {
     throw new ValidationError(
       "Invalid domain change. Check the account, scope and settings; currency changes with existing prices require repricing."
     );
+  if (code === "54000")
+    throw new AppError(
+      "Photo uploads are temporarily limited. Your existing photos are safe.",
+      "MEDIA_LIMIT",
+      503
+    );
   if (code === "53000")
     throw new AppError("Background processing is behind. Try again later.", "BACKLOG", 503);
   throw error;

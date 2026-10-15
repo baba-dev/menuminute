@@ -120,6 +120,7 @@ BEGIN
  IF p_action<>'revoke' THEN
  newid:=gen_random_uuid()::text;token:=gen_random_uuid()::text;
  INSERT INTO qr_codes(id,restaurant_id,table_id,label,destination_token,purpose) VALUES(newid,p_outlet,tid,COALESCE(p_data->>'label',q.label,'Menu QR'),token,'menu');
+ IF p_action='regenerate' AND q.destination_token=r.public_id THEN UPDATE restaurants SET public_id=token WHERE id=p_outlet;END IF;
  result:=jsonb_build_object('id',newid,'token',token);
  ELSE result:=jsonb_build_object('id',q.id,'revoked',true);END IF;
  PERFORM app_private.record_org_change(r.organization_id,'qr.'||p_action,p_outlet);
@@ -139,7 +140,7 @@ BEGIN
  CASE p_action
  WHEN 'reserve' THEN
  IF a.id IS NOT NULL THEN RAISE EXCEPTION 'Upload exists' USING ERRCODE='40001';END IF;
- IF (SELECT count(*) FROM dish_media WHERE outlet_id=p_outlet AND created_at>now()-interval '1 hour')>=30 OR COALESCE((SELECT sum(size_bytes) FROM dish_media WHERE outlet_id=p_outlet),0)+(p_data->>'sizeBytes')::int>(p_data->>'budget')::bigint THEN RAISE EXCEPTION 'Operational media budget reached' USING ERRCODE='53000';END IF;
+ IF (SELECT count(*) FROM dish_media WHERE outlet_id=p_outlet AND created_at>now()-interval '1 hour')>=30 OR COALESCE((SELECT sum(size_bytes) FROM dish_media WHERE outlet_id=p_outlet),0)+(p_data->>'sizeBytes')::int>(p_data->>'budget')::bigint THEN RAISE EXCEPTION 'Operational media budget reached' USING ERRCODE='54000';END IF;
  INSERT INTO dish_media(id,organization_id,outlet_id,actor_id,size_bytes,source_key,rights) VALUES(p_id,r.organization_id,p_outlet,current_setting('app.actor_id',true),(p_data->>'sizeBytes')::int,r.organization_id||'/'||p_id||'/original',p_data->>'rights');
  WHEN 'queue' THEN
  IF a.id IS NULL THEN RAISE EXCEPTION 'Unknown upload' USING ERRCODE='22023';END IF;

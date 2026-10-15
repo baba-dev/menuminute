@@ -454,3 +454,7 @@ body {
     break-inside: avoid;
   }
 }
+
+body.font-sans {
+  font-family: var(--font-dm), sans-serif;
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { QrCode, Download, Printer } from "lucide-react";
 type QR = {
   id: string;
@@ -21,6 +21,8 @@ export function QrManager({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
   const retry = useRef({ signature: "", key: "" });
   async function command(action: string, data: Record<string, unknown>) {
     const signature = JSON.stringify({ action, data });
@@ -39,6 +41,7 @@ export function QrManager({
       const q = await fetch("/api/qr", { headers: { "x-outlet-id": outletId } });
       if (!q.ok) throw new Error("Unable to refresh QR list");
       setCodes(await q.json());
+      retry.current = { signature: "", key: "" };
       setMessage(
         action === "create"
           ? "QR code created"
@@ -136,7 +139,7 @@ export function QrManager({
                   </button>
                 </div>
                 <small className="print-only">
-                  {typeof window === "undefined" ? "" : window.location.origin}/m/
+                  {origin}/m/
                   {q.destinationToken}
                 </small>
                 {canRevoke && (
