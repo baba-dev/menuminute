@@ -87,10 +87,12 @@ export async function putObject(key: string, body: Buffer) {
     return;
   }
   const file = path.join(root(), key);
-  await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
+  // MEDIA_ROOT must be pre-created with the shared setgid group; systemd sets UMask=0007.
+  // New nested directories inherit that group and remain private to web + worker.
+  await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o2770 });
   const temporary = file + "." + crypto.randomUUID() + ".tmp";
   try {
-    await fs.writeFile(temporary, body, { flag: "wx", mode: 0o600 });
+    await fs.writeFile(temporary, body, { flag: "wx", mode: 0o660 });
     await fs.rename(temporary, file);
   } finally {
     await fs.unlink(temporary).catch(() => {});
