@@ -96,7 +96,10 @@ for (const asset of manifest.assets) {
   }
 }
 
-if (thirdGroups.size !== 5 || [...thirdGroups].some((category) => manifest.groups[category] !== 10)) {
+if (
+  thirdGroups.size !== 5 ||
+  [...thirdGroups].some((category) => manifest.groups[category] !== 10)
+) {
   errors.push("Third-batch category totals mismatch");
 }
 
