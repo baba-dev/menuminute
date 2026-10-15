@@ -16,7 +16,8 @@
 Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
 instances, BullMQ and Better Auth database sessions. Launch supports dine-in and pickup for restaurants, takeout and cloud kitchens, with staff
 acceptance and payment at the restaurant/counter. Phase 1 converts foundation/menu services to PostgreSQL, Better Auth and scoped tenancy;
-orders/outbox remain subsequent slices. No production cutover has occurred. The audited host runs Ubuntu 24.04.4 LTS with
+Phase 2 adds organization/outlet management, scoped roles, durable projection jobs and explicit billing
+entitlements. Ordering/KDS remain subsequent slices. No production cutover has occurred. The audited host runs Ubuntu 24.04.4 LTS with
 4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
 [server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
 
