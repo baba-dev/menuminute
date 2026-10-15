@@ -27,6 +27,12 @@ if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
 const knownPaths = new Set();
 const knownKeys = new Set();
 const counted = new Map();
+const newGroups = new Set([
+  "high-demand-essentials",
+  "indo-chinese-mains-soups",
+  "north-indian-rajasthani",
+  "regional-restaurant-favorites",
+]);
 
 for (const asset of manifest.assets) {
   const key = asset.category + "/" + asset.slug;
@@ -81,7 +87,9 @@ for (const asset of manifest.assets) {
   if (thirdGroups.has(asset.category) && !asset.sha256) {
     errors.push("Missing third-batch SHA-256: " + asset.path);
   }
-  if (new Set(["high-demand-essentials","indo-chinese-mains-soups","north-indian-rajasthani","regional-restaurant-favorites"]).has(asset.category) && !/^[a-f0-9]{64}$/.test(asset.sha256 ?? "")) errors.push("Missing or malformed SHA-256 for new asset: " + asset.path);
+  if (newGroups.has(asset.category) && !/^[a-f0-9]{64}$/.test(asset.sha256 ?? "")) {
+    errors.push("Missing or malformed SHA-256 for new asset: " + asset.path);
+  }
   if (asset.sha256 && createHash("sha256").update(bytes).digest("hex") !== asset.sha256) {
     errors.push("SHA-256 mismatch: " + asset.path);
   }
