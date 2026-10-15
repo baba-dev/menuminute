@@ -10,7 +10,7 @@ const seen=new Set(); let errors=[];
 for (const asset of manifest.assets) {
   if (seen.has(asset.path)) errors.push("Duplicate path: "+asset.path);
   seen.add(asset.path);
-  const filename=join(root,"public",asset.path.replace(/^\\//,""));
+  const filename=join(root,"public",asset.path.slice(1));
   if (!existsSync(filename)) { errors.push("Missing: "+asset.path); continue; }
   const b=readFileSync(filename);
   if (b.length < 33 || b.subarray(0,8).toString("hex") !== "89504e470d0a1a0a" || b.toString("ascii",12,16)!=="IHDR") {
