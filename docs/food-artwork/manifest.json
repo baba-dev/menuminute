@@ -1,0 +1,375 @@
+{
+  "collection": "menu-minute-approved-dish-artwork",
+  "version": 1,
+  "assetCount": 36,
+  "sourceFormat": "AI-rendered reference boards (PNG)",
+  "exportFormat": "transparent PNG (RGBA), not native SVG",
+  "status": "draft-binary-import-pending",
+  "groups": {
+    "indian": 12,
+    "western": 12,
+    "italian": 12
+  },
+  "assets": [
+    {
+      "category": "indian",
+      "slug": "biryani",
+      "label": "Biryani",
+      "path": "/assets/food/dishes/indian/biryani.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "butter-chicken",
+      "label": "Butter Chicken",
+      "path": "/assets/food/dishes/indian/butter-chicken.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "masala-dosa",
+      "label": "Masala Dosa",
+      "path": "/assets/food/dishes/indian/masala-dosa.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "idli-sambar",
+      "label": "Idli Sambar",
+      "path": "/assets/food/dishes/indian/idli-sambar.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "paneer-tikka",
+      "label": "Paneer Tikka",
+      "path": "/assets/food/dishes/indian/paneer-tikka.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "samosa",
+      "label": "Samosa",
+      "path": "/assets/food/dishes/indian/samosa.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "chole-bhature",
+      "label": "Chole Bhature",
+      "path": "/assets/food/dishes/indian/chole-bhature.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "rajma-chawal",
+      "label": "Rajma Chawal",
+      "path": "/assets/food/dishes/indian/rajma-chawal.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "naan",
+      "label": "Naan",
+      "path": "/assets/food/dishes/indian/naan.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "dal-tadka",
+      "label": "Dal Tadka",
+      "path": "/assets/food/dishes/indian/dal-tadka.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "vada-pav",
+      "label": "Vada Pav",
+      "path": "/assets/food/dishes/indian/vada-pav.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "indian",
+      "slug": "gulab-jamun",
+      "label": "Gulab Jamun",
+      "path": "/assets/food/dishes/indian/gulab-jamun.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "burger",
+      "label": "Burger",
+      "path": "/assets/food/dishes/western/burger.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "steak",
+      "label": "Steak",
+      "path": "/assets/food/dishes/western/steak.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "sandwich",
+      "label": "Sandwich",
+      "path": "/assets/food/dishes/western/sandwich.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "caesar-salad",
+      "label": "Caesar Salad",
+      "path": "/assets/food/dishes/western/caesar-salad.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "fried-chicken",
+      "label": "Fried Chicken",
+      "path": "/assets/food/dishes/western/fried-chicken.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "french-fries",
+      "label": "French Fries",
+      "path": "/assets/food/dishes/western/french-fries.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "pancakes",
+      "label": "Pancakes",
+      "path": "/assets/food/dishes/western/pancakes.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "hot-dog",
+      "label": "Hot Dog",
+      "path": "/assets/food/dishes/western/hot-dog.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "mac-and-cheese",
+      "label": "Mac & Cheese",
+      "path": "/assets/food/dishes/western/mac-and-cheese.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "grilled-fish",
+      "label": "Grilled Fish",
+      "path": "/assets/food/dishes/western/grilled-fish.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "donut",
+      "label": "Donut",
+      "path": "/assets/food/dishes/western/donut.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "western",
+      "slug": "milkshake",
+      "label": "Milkshake",
+      "path": "/assets/food/dishes/western/milkshake.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "pizza-margherita",
+      "label": "Pizza Margherita",
+      "path": "/assets/food/dishes/italian/pizza-margherita.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "spaghetti",
+      "label": "Spaghetti",
+      "path": "/assets/food/dishes/italian/spaghetti.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "penne-alfredo",
+      "label": "Penne Alfredo",
+      "path": "/assets/food/dishes/italian/penne-alfredo.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "lasagna",
+      "label": "Lasagna",
+      "path": "/assets/food/dishes/italian/lasagna.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "risotto",
+      "label": "Risotto",
+      "path": "/assets/food/dishes/italian/risotto.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "ravioli",
+      "label": "Ravioli",
+      "path": "/assets/food/dishes/italian/ravioli.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "bruschetta",
+      "label": "Bruschetta",
+      "path": "/assets/food/dishes/italian/bruschetta.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "gnocchi",
+      "label": "Gnocchi",
+      "path": "/assets/food/dishes/italian/gnocchi.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "caprese-salad",
+      "label": "Caprese Salad",
+      "path": "/assets/food/dishes/italian/caprese-salad.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "focaccia",
+      "label": "Focaccia",
+      "path": "/assets/food/dishes/italian/focaccia.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "tiramisu",
+      "label": "Tiramisu",
+      "path": "/assets/food/dishes/italian/tiramisu.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    },
+    {
+      "category": "italian",
+      "slug": "gelato",
+      "label": "Gelato",
+      "path": "/assets/food/dishes/italian/gelato.png",
+      "width": 360,
+      "height": 280,
+      "format": "image/png",
+      "state": "pending-binary-import"
+    }
+  ]
+}
