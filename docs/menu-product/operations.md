@@ -47,6 +47,17 @@ The web and worker need the same explicit store configuration. Choose one:
   Do not configure R2 custom-domain/public URLs here. No provider calls occur without explicit mode
   and operator credentials. No paid fallback, inference or stock search is implemented.
 
+For the selected Oracle ARM64 local-media deployment, pre-create `MEDIA_ROOT` as
+`root:menuminute-media` mode `2770`, and add both service identities to that group.
+The local adapter creates nested directories with mode `2770` under the setgid root, and files
+with mode `0660`; systemd must set `UMask=0007` and
+`SupplementaryGroups=menuminute-media` for both processes. Under `ProtectSystem=strict`,
+only the web and worker's required private runtime directories are listed in `ReadWritePaths`.
+Do not put original media under a public or release directory, or give either process migration
+secrets. Pre-existing directories made under an older `0700` layout need an explicit audited
+migration; a new `mkdir(recursive)` does not repair them. Validate the real separate-account
+cross-read smoke test on the host prior to enabling uploads.
+
 Set `MEDIA_OUTLET_BUDGET_BYTES` explicitly for production (default local/test reservation 100 MiB).
 This is an operator storage protection, not a promised commercial plan quota. Reserve original bytes
 in SQL before storage writes; retained bytes count toward the budget, including failed uploads.
