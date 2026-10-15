@@ -85,12 +85,11 @@ use another architecture, but an x64 build does not satisfy the production relea
 
 CI runs on `ubuntu-24.04-arm` and verifies `process.arch === "arm64"` before installing dependencies.
 Use the packageManager-pinned pnpm version and a frozen lockfile. Install native dependencies
-(Next.js SWC, Sharp and the current SQLite scaffold) on the target architecture; never copy
+(Next.js SWC, Sharp and development-only SQLite import tooling) on the target architecture; never copy
 node_modules or `.next` output from AMD64/macOS. Keep caches separated by OS, architecture and
 Node major. Container builds, if introduced, must target `linux/arm64` and pass native runtime checks.
 
-Build and test outside the ERP host. The CI build is scaffold validation, not a PostgreSQL/Redis
-release or an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
+Build and test outside the ERP host. The CI suite validates PostgreSQL/Redis foundation behavior; it is not an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
 
 ## Product and design contract
 

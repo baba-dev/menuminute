@@ -68,6 +68,9 @@ export async function importSqlite(
     for (const table of ["users", "organizations", "restaurants", "subscription_plans"])
       if ((await c.query(`select 1 from ${table} limit 1`)).rowCount)
         throw new Error("Import target must be empty");
+    await c.query(
+      "alter table menu_categories disable trigger category_audit; alter table menu_items disable trigger item_audit"
+    );
     const metadata = (
       await c.query<{ table_name: string; column_name: string; data_type: string }>(
         "select table_name,column_name,data_type from information_schema.columns where table_schema='public'"
@@ -223,6 +226,9 @@ export async function importSqlite(
       throw new Error("Account reconciliation failed");
     report.organization_members = memberIds.length;
     report.accounts = accountIds.length;
+    await c.query(
+      "alter table menu_categories enable trigger category_audit; alter table menu_items enable trigger item_audit"
+    );
     await c.query("commit");
     return {
       counts: report,

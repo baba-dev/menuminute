@@ -51,6 +51,8 @@ export const authServer = betterAuth({
     },
   },
   advanced: {
+    disableOriginCheck: false,
+    disableCSRFCheck: false,
     useSecureCookies: env.NODE_ENV === "production",
     database: { generateId: () => crypto.randomUUID() },
   },

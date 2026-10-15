@@ -2,7 +2,7 @@
 
 Revised 2026-10-15 after the host audit. The selected server is the shared Oracle ERP host running
 **Ubuntu 24.04.4 LTS, ARM64/aarch64, 4 visible ARM cores and 23 GiB RAM**. The earlier AMD64 host
-choice is superseded. PostgreSQL/Redis remain the approved target; SQLite is scaffold-only.
+choice is superseded. Phase 1 implements PostgreSQL/Redis foundation configuration; SQLite is read-only import input.
 No deployment or server hardening has been performed by this PR.
 
 See [server inventory](server-inventory.md) for observations, confirmed cleanup and outstanding inputs.
@@ -20,19 +20,19 @@ and the actual Food Minutes domain/TLS. The last confirmed root free space is 43
 - Verify `process.platform` is linux and `process.arch` is arm64 before building. Cache keys include
   OS, architecture and Node major; never restore AMD64 node_modules or `.next` into ARM64 releases.
 - Verify Next.js SWC, Sharp and any other native module installs and runtime loads on ARM64/glibc.
-  The scaffold still uses native better-sqlite3 until the PostgreSQL migration is implemented.
+  The SQLite native package is development-only for explicit legacy import/tests.
 - If container packaging is introduced, target `linux/arm64` with compatible base images and a
   native smoke test. A cross-compiled image or x64-only test is not native release evidence.
 - Record commit/artifact SHA, architecture and toolchain. Produce one immutable release in external
   CI; do not run production builds or a self-hosted PR runner on the ERP machine.
 
-Current CI runs the existing scaffold checks on ARM64. It does not package/deploy releases or prove
-PostgreSQL/Redis readiness. Future release packaging must preserve these native architecture gates.
+Phase 1 CI runs PostgreSQL/Redis integration and standalone HTTPS browser checks on ARM64.
+It does not deploy releases or prove shared-ERP capacity. See [foundation status](foundation/phase-1.md).
 
 ## Target layout and ERP isolation
 
 - Share the existing Nginx entry point, using a separate approved domain/TLS virtual host.
-- Keep ERP on port 3000; proposed Food Minutes listener is 127.0.0.1:3001, subject to a fresh port check.
+- Keep ERP on port 3000; proposed Food Minutes listener is 127.0.0.1:3100, subject to a fresh port check.
 - PostgreSQL, Redis queue and Redis cache bound privately; no public database/Redis exposure.
 - Independent non-root systemd units for web, dispatcher and workers; separate credentials from ERP.
 - Releases under `/opt/menuminute/releases/<sha>` with a `current` symlink (proposed convention),

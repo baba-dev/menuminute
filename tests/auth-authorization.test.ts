@@ -17,7 +17,7 @@ async function request(path: string, body?: unknown, cookie?: string) {
   );
 }
 it("creates database sessions and revokes them without cached JWT authority", async () => {
-  const email = `${nanoid()}@auth.invalid`;
+  const email = `${nanoid()}@auth.invalid`.toLowerCase();
   const signup = await request("sign-up/email", {
     name: "Owner",
     email,
@@ -35,7 +35,7 @@ it("creates database sessions and revokes them without cached JWT authority", as
 });
 it("retains imported bcrypt credentials and rejects wrong passwords", async () => {
   const id = nanoid(),
-    email = `${id}@legacy.invalid`;
+    email = `${id}@legacy.invalid`.toLowerCase();
   await admin(async (_db, pool) => {
     await pool.query("insert into users(id,name,email) values($1,'Legacy',$2)", [id, email]);
     await pool.query(
@@ -53,7 +53,7 @@ it("rejects untrusted origins on authentication writes", async () => {
       headers: { origin: "https://untrusted.invalid", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Owner",
-        email: `${nanoid()}@auth.invalid`,
+        email: `${nanoid()}@auth.invalid`.toLowerCase(),
         password: "test-password-123",
       }),
     })

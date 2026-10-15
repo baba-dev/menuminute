@@ -67,25 +67,25 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON users,accounts,sessions,verifications,rate_
 
 CREATE TABLE app_private.provisioning_requests (outlet_id text PRIMARY KEY REFERENCES restaurants(id),actor_id text NOT NULL,input jsonb NOT NULL);
 
-CREATE FUNCTION app_private.provision_organization(outlet text,token text,input jsonb) RETURNS void
+CREATE FUNCTION app_private.provision_organization(outlet text,token text,request_input jsonb) RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE actor text:=current_setting('app.actor_id',true); org text:='org-'||outlet;
 BEGIN
  IF actor IS NULL OR NOT EXISTS(SELECT 1 FROM users WHERE id=actor) THEN RAISE EXCEPTION 'Unknown actor'; END IF;
- IF length(token)<12 OR length(input->>'name') NOT BETWEEN 2 AND 100 THEN RAISE EXCEPTION 'Invalid provisioning input'; END IF;
+ IF length(token)<12 OR length(request_input->>'name') NOT BETWEEN 2 AND 100 THEN RAISE EXCEPTION 'Invalid provisioning input'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended(outlet,0));
  IF EXISTS(SELECT 1 FROM app_private.provisioning_requests p WHERE p.outlet_id=outlet) THEN
-  IF NOT EXISTS(SELECT 1 FROM app_private.provisioning_requests p WHERE p.outlet_id=outlet AND p.actor_id=actor AND p.input=(input-'svgData')) THEN RAISE EXCEPTION 'Provisioning key conflict'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM app_private.provisioning_requests p WHERE p.outlet_id=outlet AND p.actor_id=actor AND p.input=(request_input-'svgData')) THEN RAISE EXCEPTION 'Provisioning key conflict'; END IF;
   RETURN;
  END IF;
- INSERT INTO organizations(id,name) VALUES(org,input->>'name');
+ INSERT INTO organizations(id,name) VALUES(org,request_input->>'name');
  INSERT INTO organization_members(id,organization_id,user_id,role) VALUES('member-'||outlet,org,actor,'owner');
  INSERT INTO restaurants(id,organization_id,public_id,name,slug,description,city,country,currency,timezone,outlet_type)
- VALUES(outlet,org,token,input->>'name',outlet,input->>'description',input->>'city',input->>'country',input->>'currency',input->>'timezone',input->>'outletType');
- INSERT INTO app_private.provisioning_requests(outlet_id,actor_id,input) VALUES(outlet,actor,input-'svgData');
- INSERT INTO brands(id,organization_id,name) VALUES('brand-'||outlet,org,input->>'name');
+ VALUES(outlet,org,token,request_input->>'name',outlet,request_input->>'description',request_input->>'city',request_input->>'country',request_input->>'currency',request_input->>'timezone',request_input->>'outletType');
+ INSERT INTO app_private.provisioning_requests(outlet_id,actor_id,input) VALUES(outlet,actor,request_input-'svgData');
+ INSERT INTO brands(id,organization_id,name) VALUES('brand-'||outlet,org,request_input->>'name');
  INSERT INTO brand_outlets(organization_id,brand_id,outlet_id) VALUES(org,'brand-'||outlet,outlet);
- INSERT INTO qr_codes(id,restaurant_id,destination_token,svg_data,label) VALUES('qr-'||outlet,outlet,token,input->>'svgData','Main Menu QR');
+ INSERT INTO qr_codes(id,restaurant_id,destination_token,svg_data,label) VALUES('qr-'||outlet,outlet,token,request_input->>'svgData','Main Menu QR');
 END $$;
 REVOKE ALL ON FUNCTION app_private.provision_organization(text,text,jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.provision_organization(text,text,jsonb) TO menuminute_app;

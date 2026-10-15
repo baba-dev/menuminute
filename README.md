@@ -4,8 +4,8 @@
 > Create digital menus, generate permanent QR codes for free forever, and scale into online ordering and kitchen display systems.
 
 [![CI](https://github.com/baba-dev/menuminute/actions/workflows/ci.yml/badge.svg)](https://github.com/baba-dev/menuminute/actions/workflows/ci.yml)
-[![Node.js](https://img.shields.io/badge/Node.js-LTS_v22%2B-green.svg)](https://nodejs.org/)
-[![Database](https://img.shields.io/badge/Database-SQLite_WAL-blue.svg)](https://sqlite.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-LTS_v24-green.svg)](https://nodejs.org/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
 [![ORM](https://img.shields.io/badge/ORM-Drizzle-orange.svg)](https://orm.drizzle.team/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -15,8 +15,8 @@
 
 Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
 instances, BullMQ and Better Auth database sessions. Launch supports dine-in and pickup for restaurants, takeout and cloud kitchens, with staff
-acceptance and payment at the restaurant/counter. The code below is still the SQLite/NextAuth Phase 0 scaffold;
-this update does not migrate or deploy it. The audited host runs Ubuntu 24.04.4 LTS with
+acceptance and payment at the restaurant/counter. Phase 1 converts foundation/menu services to PostgreSQL, Better Auth and scoped tenancy;
+orders/outbox remain subsequent slices. No production cutover has occurred. The audited host runs Ubuntu 24.04.4 LTS with
 4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
 [server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
 
@@ -61,20 +61,20 @@ Subscription collection, USD prices and exact plan quotas remain decisions.
 
 ## 🛠️ Technical Stack
 
-| Layer                | Technology                                           |
-| -------------------- | ---------------------------------------------------- |
-| **Framework**        | Next.js App Router (React 19)                        |
-| **Language**         | TypeScript (Strict mode enabled)                     |
-| **Styling**          | Tailwind CSS v4 with custom design tokens            |
-| **Icons**            | Lucide React + custom vector SVGs                    |
-| **Database**         | SQLite in WAL mode via `better-sqlite3`              |
-| **ORM**              | Drizzle ORM with versioned SQL migrations            |
-| **Validation**       | Zod v3                                               |
-| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)  |
-| **QR Generation**    | `qrcode` with high-density SVG & PNG output          |
-| **Image Processing** | Sharp with automatic dimension resizing              |
-| **Testing**          | Vitest + React Testing Library + Playwright          |
-| **Target Host**      | Ubuntu 24.04 ARM64; shared ERP host; Nginx + systemd |
+| Layer                | Technology                                            |
+| -------------------- | ----------------------------------------------------- |
+| **Framework**        | Next.js App Router (React 19)                         |
+| **Language**         | TypeScript (Strict mode enabled)                      |
+| **Styling**          | Tailwind CSS v4 with custom design tokens             |
+| **Icons**            | Lucide React + custom vector SVGs                     |
+| **Database**         | PostgreSQL via `pg` (SQLite import tool only)         |
+| **ORM**              | Drizzle ORM with versioned SQL migrations             |
+| **Validation**       | Zod v4                                                |
+| **Authentication**   | Better Auth database sessions; scrypt + legacy bcrypt |
+| **QR Generation**    | `qrcode` with high-density SVG & PNG output           |
+| **Image Processing** | Sharp with automatic dimension resizing               |
+| **Testing**          | Vitest + React Testing Library + Playwright           |
+| **Target Host**      | Ubuntu 24.04 ARM64; shared ERP host; Nginx + systemd  |
 
 ---
 
@@ -85,7 +85,7 @@ Subscription collection, USD prices and exact plan quotas remain decisions.
 ```bash
 git clone https://github.com/baba-dev/menuminute.git
 cd menuminute
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 ### 2. Environment Configuration
@@ -94,12 +94,17 @@ pnpm install
 cp .env.example .env.local
 ```
 
-### 3. Initialize SQLite Database & Seed Demo Restaurant
+### 3. Start isolated dependencies and apply reviewed migrations
 
 ```bash
-pnpm db:generate   # Generate Drizzle migration files
-pnpm db:migrate    # Apply migrations to data/menuminute.sqlite
-pnpm db:seed       # Idempotently seed demonstration restaurant
+pnpm infra:test:up
+set -a
+source .env.local
+set +a
+NODE_ENV=test pnpm exec tsx scripts/test-bootstrap.ts
+pnpm db:migrate
+# Optional explicit non-production demo:
+ALLOW_DEMO_SEED=true DEMO_PASSWORD="set-a-unique-local-password" pnpm db:seed
 ```
 
 ### 4. Start Local Development Server
@@ -136,7 +141,7 @@ src/
 │   ├── (dashboard)/      # Restaurant management portal
 │   ├── (public-menu)/    # Mobile-first customer menu view
 │   └── api/              # RESTful endpoints for menu and auth
-├── db/                   # Drizzle schema, migrations, and SQLite connection
+├── db/                   # PostgreSQL schema, migrations, and scoped transactions
 ├── lib/                  # Validated config, errors, utility helpers
 ├── modules/              # Core business services (menus, restaurants, qr, ai, media)
 └── styles/               # Design tokens and Tailwind CSS theme definitions
