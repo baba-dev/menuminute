@@ -88,3 +88,16 @@ Node major. Container builds, if introduced, must target `linux/arm64` and pass 
 
 Build and test outside the ERP host. The CI build is scaffold validation, not a PostgreSQL/Redis
 release or an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
+
+## Product and design contract
+
+Before implementation, read [approved product requirements](product-requirements.md),
+[product direction](product-direction.md), [design system](design-system.md),
+[buttons](button-options.md), [feedback/motion](feedback-and-motion.md),
+[AI/media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
+
+Use semantic theme tokens and shared shadcn/Radix primitives. Preserve Ink & Ember, Ember Flow
+for everyday actions, selected Ink Press emphasis and app-wide Light / Dark / System. Each feature
+PR identifies changed behavior, schema/migration requirements and acceptance evidence. Distinguish
+previews from implementation; final-SHA checks are required. Map existing order enums explicitly
+when adding pickup and expiry through reviewed migrations.
