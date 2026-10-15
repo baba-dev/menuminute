@@ -1,4 +1,8 @@
 import { it, expect, vi } from "vitest";
+import { promises as fs } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
 import { putObject, getObject } from "../src/modules/media/storage";
 it("signs bounded canonical R2 requests and rejects alternate endpoints without any provider network use", async () => {
   const calls: { url: string; options: RequestInit }[] = [];
@@ -32,5 +36,36 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
   } finally {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+  }
+});
+
+it("creates shared-group private local files and setgid directories under the production umask", async () => {
+  const base = await fs.mkdtemp(path.join(os.tmpdir(), "menuminute-media-"));
+  const previousUmask = process.umask(0o007);
+  vi.stubEnv("MEDIA_STORAGE", "local");
+  vi.stubEnv("MEDIA_ROOT", base);
+  try {
+    // Model the provisioned root: root:menuminute-media 2770 on the ARM64 VPS.
+    await fs.chmod(base, 0o2770);
+    const original = Buffer.from("private-original");
+    const derivative = Buffer.from("private-derivative");
+    await putObject("org-test/asset-test/original", original);
+    await putObject("org-test/asset-test/display.webp", derivative);
+    expect(await getObject("org-test/asset-test/original")).toEqual(original);
+    expect(await getObject("org-test/asset-test/display.webp")).toEqual(derivative);
+
+    const org = path.join(base, "org-test");
+    const asset = path.join(org, "asset-test");
+    for (const folder of [org, asset]) {
+      expect((await fs.stat(folder)).mode & 0o7777).toBe(0o2770);
+    }
+    for (const file of ["original", "display.webp"]) {
+      expect((await fs.stat(path.join(asset, file))).mode & 0o777).toBe(0o660);
+    }
+    expect((await fs.readdir(asset)).sort()).toEqual(["display.webp", "original"]);
+  } finally {
+    process.umask(previousUmask);
+    vi.unstubAllEnvs();
+    await fs.rm(base, { recursive: true, force: true });
   }
 });
