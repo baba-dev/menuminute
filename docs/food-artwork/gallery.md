@@ -1,10 +1,10 @@
-# Dish illustration gallery
+# Menu-Minute dish illustration gallery
 
-186 independently named 360 × 280 transparent RGBA PNG illustrations. The original 136 files are retained. The third batch contains 50 additional review-stage assets; these are raster artwork, not native SVG masters.
+**224 individually named transparent 360 × 280 RGBA PNG illustrations.** 186 earlier assets are retained, plus 38 unique dish cutouts from Sheets A–D (40 displayed cells, two repeated across A/B). These are raster assets, **not native editable SVG vectors**. Owner approval is required prior to runtime integration.
 
-All artwork is shown over both light and dark Ink & Ember surfaces for contrast review. Merchant images and production fallback behavior are not changed by this PR.
+Shared across light/dark themes. [Manifest](manifest.json) · [README](README.md). Sheet A's Veg Hakka Noodles and Chicken Fried Rice refer to Sheet B's canonical versions.
 
-## Indian dishes
+## Indian dishes (12)
 
 ### Biryani
 
@@ -54,7 +54,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Gulab Jamun](../../public/assets/food/dishes/indian/gulab-jamun.png)
 
-## Western dishes
+## Western dishes (12)
 
 ### Burger
 
@@ -104,7 +104,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Milkshake](../../public/assets/food/dishes/western/milkshake.png)
 
-## Italian dishes
+## Italian dishes (12)
 
 ### Pizza Margherita
 
@@ -154,7 +154,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Gelato](../../public/assets/food/dishes/italian/gelato.png)
 
-## North Indian Classics
+## North Indian Classics (10)
 
 ### Dal Makhani
 
@@ -196,7 +196,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Lassi](../../public/assets/food/dishes/north-indian-classics/lassi.png)
 
-## Street Food & Snacks
+## Street Food Snacks (10)
 
 ### Pav Bhaji
 
@@ -238,7 +238,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Khandvi](../../public/assets/food/dishes/street-food-snacks/khandvi.png)
 
-## South & Coastal Specials
+## South Coastal Specials (10)
 
 ### Medu Vada
 
@@ -280,7 +280,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Pesarattu](../../public/assets/food/dishes/south-coastal-specials/pesarattu.png)
 
-## East & Northeast Specials
+## East Northeast Specials (10)
 
 ### Litti Chokha
 
@@ -322,7 +322,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Thukpa](../../public/assets/food/dishes/east-northeast-specials/thukpa.png)
 
-## Indo-Chinese Starters
+## Indo Chinese Starters (10)
 
 ### Chilli Paneer Dry
 
@@ -364,109 +364,109 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Schezwan Momos](../../public/assets/food/dishes/indo-chinese-starters/schezwan-momos.png)
 
-## Tamil & Karnataka Fare
+## Tamil Karnataka Fare (10)
 
-### Puliyodarai · MM-IN-051
+### Puliyodarai
 
 ![Puliyodarai](../../public/assets/food/dishes/tamil-karnataka-fare/puliyodarai.png)
 
-### Bisi Bele Bath · MM-IN-052
+### Bisi Bele Bath
 
 ![Bisi Bele Bath](../../public/assets/food/dishes/tamil-karnataka-fare/bisi-bele-bath.png)
 
-### Ragi Mudde with Bassaru · MM-IN-053
+### Ragi Mudde with Bassaru
 
 ![Ragi Mudde with Bassaru](../../public/assets/food/dishes/tamil-karnataka-fare/ragi-mudde-with-bassaru.png)
 
-### Akki Roti · MM-IN-054
+### Akki Roti
 
 ![Akki Roti](../../public/assets/food/dishes/tamil-karnataka-fare/akki-roti.png)
 
-### Maddur Vada · MM-IN-055
+### Maddur Vada
 
 ![Maddur Vada](../../public/assets/food/dishes/tamil-karnataka-fare/maddur-vada.png)
 
-### Mangalore Buns · MM-IN-056
+### Mangalore Buns
 
 ![Mangalore Buns](../../public/assets/food/dishes/tamil-karnataka-fare/mangalore-buns.png)
 
-### Kori Rotti · MM-IN-057
+### Kori Rotti
 
 ![Kori Rotti](../../public/assets/food/dishes/tamil-karnataka-fare/kori-rotti.png)
 
-### Chicken Sukka · MM-IN-058
+### Chicken Sukka
 
 ![Chicken Sukka](../../public/assets/food/dishes/tamil-karnataka-fare/chicken-sukka.png)
 
-### Chow Chow Bath · MM-IN-059
+### Chow Chow Bath
 
 ![Chow Chow Bath](../../public/assets/food/dishes/tamil-karnataka-fare/chow-chow-bath.png)
 
-### Mysore Bonda · MM-IN-060
+### Mysore Bonda
 
 ![Mysore Bonda](../../public/assets/food/dishes/tamil-karnataka-fare/mysore-bonda.png)
 
-## Kerala Signatures
+## Kerala Signatures (10)
 
-### Appam with Vegetable Stew · MM-IN-061
+### Appam with Vegetable Stew
 
 ![Appam with Vegetable Stew](../../public/assets/food/dishes/kerala-signatures/appam-with-vegetable-stew.png)
 
-### Puttu Kadala Curry · MM-IN-062
+### Puttu Kadala Curry
 
 ![Puttu Kadala Curry](../../public/assets/food/dishes/kerala-signatures/puttu-kadala-curry.png)
 
-### Kerala Sadya · MM-IN-063
+### Kerala Sadya
 
 ![Kerala Sadya](../../public/assets/food/dishes/kerala-signatures/kerala-sadya.png)
 
-### Malabar Parotta with Chicken Curry · MM-IN-064
+### Malabar Parotta with Chicken Curry
 
 ![Malabar Parotta with Chicken Curry](../../public/assets/food/dishes/kerala-signatures/malabar-parotta-with-chicken-curry.png)
 
-### Karimeen Pollichathu · MM-IN-065
+### Karimeen Pollichathu
 
 ![Karimeen Pollichathu](../../public/assets/food/dishes/kerala-signatures/karimeen-pollichathu.png)
 
-### Meen Moilee · MM-IN-066
+### Meen Moilee
 
 ![Meen Moilee](../../public/assets/food/dishes/kerala-signatures/meen-moilee.png)
 
-### Kerala Beef Fry · MM-IN-067
+### Kerala Beef Fry
 
 ![Kerala Beef Fry](../../public/assets/food/dishes/kerala-signatures/kerala-beef-fry.png)
 
-### Erachi Pathiri · MM-IN-068
+### Erachi Pathiri
 
 ![Erachi Pathiri](../../public/assets/food/dishes/kerala-signatures/erachi-pathiri.png)
 
-### Pazham Pori · MM-IN-069
+### Pazham Pori
 
 ![Pazham Pori](../../public/assets/food/dishes/kerala-signatures/pazham-pori.png)
 
-### Avial · MM-IN-070
+### Avial
 
 ![Avial](../../public/assets/food/dishes/kerala-signatures/avial.png)
 
-## Andhra & Telangana Flavors
+## Andhra Telangana Flavors (10)
 
-### Gongura Pachadi · MM-IN-071
+### Gongura Pachadi
 
 ![Gongura Pachadi](../../public/assets/food/dishes/andhra-telangana-flavors/gongura-pachadi.png)
 
-### Gongura Mutton · MM-IN-072
+### Gongura Mutton
 
 ![Gongura Mutton](../../public/assets/food/dishes/andhra-telangana-flavors/gongura-mutton.png)
 
-### Pesarattu Upma · MM-IN-073
+### Pesarattu Upma
 
 ![Pesarattu Upma](../../public/assets/food/dishes/andhra-telangana-flavors/pesarattu-upma.png)
 
-### Royyala Iguru · MM-IN-074
+### Royyala Iguru
 
 ![Royyala Iguru](../../public/assets/food/dishes/andhra-telangana-flavors/royyala-iguru.png)
 
-### Gutti Vankaya Kura · MM-IN-075
+### Gutti Vankaya Kura
 
 ![Gutti Vankaya Kura](../../public/assets/food/dishes/andhra-telangana-flavors/gutti-vankaya-kura.png)
 
@@ -482,7 +482,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Kodi Vepudu](../../public/assets/food/dishes/andhra-telangana-flavors/kodi-vepudu.png)
 
-### Sarva Pindi · MM-IN-079
+### Sarva Pindi
 
 ![Sarva Pindi](../../public/assets/food/dishes/andhra-telangana-flavors/sarva-pindi.png)
 
@@ -490,21 +490,21 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Qubani ka Meetha](../../public/assets/food/dishes/andhra-telangana-flavors/qubani-ka-meetha.png)
 
-## Maharashtra Classics
+## Maharashtra Classics (10)
 
-### Thalipeeth · MM-IN-084
+### Thalipeeth
 
 ![Thalipeeth](../../public/assets/food/dishes/maharashtra-classics/thalipeeth.png)
 
-### Sabudana Khichdi · MM-IN-083
+### Sabudana Khichdi
 
 ![Sabudana Khichdi](../../public/assets/food/dishes/maharashtra-classics/sabudana-khichdi.png)
 
-### Pithla Bhakri · MM-IN-085
+### Pithla Bhakri
 
 ![Pithla Bhakri](../../public/assets/food/dishes/maharashtra-classics/pithla-bhakri.png)
 
-### Bharli Vangi · MM-IN-088
+### Bharli Vangi
 
 ![Bharli Vangi](../../public/assets/food/dishes/maharashtra-classics/bharli-vangi.png)
 
@@ -532,9 +532,9 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Zunka Bhakar](../../public/assets/food/dishes/maharashtra-classics/zunka-bhakar.png)
 
-## Gujarat & Goa Delights
+## Gujarat Goa Delights (10)
 
-### Undhiyu · MM-IN-094
+### Undhiyu
 
 ![Undhiyu](../../public/assets/food/dishes/gujarat-goa-delights/undhiyu.png)
 
@@ -554,7 +554,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Handvo](../../public/assets/food/dishes/gujarat-goa-delights/handvo.png)
 
-### Patra · MM-IN-097
+### Patra
 
 ![Patra](../../public/assets/food/dishes/gujarat-goa-delights/patra.png)
 
@@ -562,33 +562,29 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Khaman](../../public/assets/food/dishes/gujarat-goa-delights/khaman.png)
 
-### Goan Fish Curry · MM-IN-098
+### Goan Fish Curry
 
 ![Goan Fish Curry](../../public/assets/food/dishes/gujarat-goa-delights/goan-fish-curry.png)
 
-### Chicken Cafreal · MM-IN-100
+### Chicken Cafreal
 
 ![Chicken Cafreal](../../public/assets/food/dishes/gujarat-goa-delights/chicken-cafreal.png)
 
-### Bebinca · MM-IN-199
+### Bebinca
 
 ![Bebinca](../../public/assets/food/dishes/gujarat-goa-delights/bebinca.png)
 
-## Bengal & Odisha Delights
+## Bengal Odisha Delights (10)
 
-![Light mode preview](previews/third-50/preview-bengal-odisha-delights-light.jpg)
-
-![Dark mode preview](previews/third-50/preview-bengal-odisha-delights-dark.jpg)
-
-### Shorshe Ilish · MM-IN-101
+### Shorshe Ilish
 
 ![Shorshe Ilish](../../public/assets/food/dishes/bengal-odisha-delights/shorshe-ilish.png)
 
-### Chingri Malai Curry · MM-IN-103
+### Chingri Malai Curry
 
 ![Chingri Malai Curry](../../public/assets/food/dishes/bengal-odisha-delights/chingri-malai-curry.png)
 
-### Aloo Posto · MM-IN-105
+### Aloo Posto
 
 ![Aloo Posto](../../public/assets/food/dishes/bengal-odisha-delights/aloo-posto.png)
 
@@ -604,11 +600,11 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Mishti Pulao](../../public/assets/food/dishes/bengal-odisha-delights/mishti-pulao.png)
 
-### Dalma · MM-IN-111
+### Dalma
 
 ![Dalma](../../public/assets/food/dishes/bengal-odisha-delights/dalma.png)
 
-### Santula · MM-IN-114
+### Santula
 
 ![Santula](../../public/assets/food/dishes/bengal-odisha-delights/santula.png)
 
@@ -616,17 +612,13 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Chenna Tarkari](../../public/assets/food/dishes/bengal-odisha-delights/chenna-tarkari.png)
 
-### Chhena Poda · MM-IN-113
+### Chhena Poda
 
 ![Chhena Poda](../../public/assets/food/dishes/bengal-odisha-delights/chhena-poda.png)
 
-## Bihar & Jharkhand Classics
+## Bihar Jharkhand Classics (10)
 
-![Light mode preview](previews/third-50/preview-bihar-jharkhand-classics-light.jpg)
-
-![Dark mode preview](previews/third-50/preview-bihar-jharkhand-classics-dark.jpg)
-
-### Sattu Paratha · MM-IN-117
+### Sattu Paratha
 
 ![Sattu Paratha](../../public/assets/food/dishes/bihar-jharkhand-classics/sattu-paratha.png)
 
@@ -634,7 +626,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Champaran Mutton](../../public/assets/food/dishes/bihar-jharkhand-classics/champaran-mutton.png)
 
-### Dal Pitha · MM-IN-118
+### Dal Pitha
 
 ![Dal Pitha](../../public/assets/food/dishes/bihar-jharkhand-classics/dal-pitha.png)
 
@@ -650,7 +642,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Makhana Kheer](../../public/assets/food/dishes/bihar-jharkhand-classics/makhana-kheer.png)
 
-### Rugra Curry · MM-IN-120
+### Rugra Curry
 
 ![Rugra Curry](../../public/assets/food/dishes/bihar-jharkhand-classics/rugra-curry.png)
 
@@ -666,13 +658,9 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Tilkut](../../public/assets/food/dishes/bihar-jharkhand-classics/tilkut.png)
 
-## Northeast Treasures
+## Northeast Treasures (10)
 
-![Light mode preview](previews/third-50/preview-northeast-treasures-light.jpg)
-
-![Dark mode preview](previews/third-50/preview-northeast-treasures-dark.jpg)
-
-### Masor Tenga · MM-IN-135
+### Masor Tenga
 
 ![Masor Tenga](../../public/assets/food/dishes/northeast-treasures/masor-tenga.png)
 
@@ -684,19 +672,19 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Bai](../../public/assets/food/dishes/northeast-treasures/bai.png)
 
-### Tungrymbai · MM-IN-134
+### Tungrymbai
 
 ![Tungrymbai](../../public/assets/food/dishes/northeast-treasures/tungrymbai.png)
 
-### Dohneiiong · MM-IN-133
+### Dohneiiong
 
 ![Dohneiiong](../../public/assets/food/dishes/northeast-treasures/dohneiiong.png)
 
-### Eromba · MM-IN-126
+### Eromba
 
 ![Eromba](../../public/assets/food/dishes/northeast-treasures/eromba.png)
 
-### Singju · MM-IN-127
+### Singju
 
 ![Singju](../../public/assets/food/dishes/northeast-treasures/singju.png)
 
@@ -704,7 +692,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Smoked Pork with Axone](../../public/assets/food/dishes/northeast-treasures/smoked-pork-with-axone.png)
 
-### Chak Hao Kheer · MM-IN-128
+### Chak Hao Kheer
 
 ![Chak Hao Kheer](../../public/assets/food/dishes/northeast-treasures/chak-hao-kheer.png)
 
@@ -712,11 +700,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Duck with Bamboo Shoot](../../public/assets/food/dishes/northeast-treasures/duck-with-bamboo-shoot.png)
 
-## Himalayan Comforts
-
-![Light mode preview](previews/third-50/preview-himalayan-comforts-light.jpg)
-
-![Dark mode preview](previews/third-50/preview-himalayan-comforts-dark.jpg)
+## Himalayan Comforts (10)
 
 ### Thenthuk
 
@@ -726,7 +710,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Tingmo with Shapta](../../public/assets/food/dishes/himalayan-comforts/tingmo-with-shapta.png)
 
-### Sha Phaley · MM-IN-124
+### Sha Phaley
 
 ![Sha Phaley](../../public/assets/food/dishes/himalayan-comforts/sha-phaley.png)
 
@@ -734,7 +718,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Gyathuk](../../public/assets/food/dishes/himalayan-comforts/gyathuk.png)
 
-### Phagshapa · MM-IN-123
+### Phagshapa
 
 ![Phagshapa](../../public/assets/food/dishes/himalayan-comforts/phagshapa.png)
 
@@ -742,7 +726,7 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Sel Roti](../../public/assets/food/dishes/himalayan-comforts/sel-roti.png)
 
-### Gundruk Soup · MM-IN-125
+### Gundruk Soup
 
 ![Gundruk Soup](../../public/assets/food/dishes/himalayan-comforts/gundruk-soup.png)
 
@@ -758,13 +742,9 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Yomari](../../public/assets/food/dishes/himalayan-comforts/yomari.png)
 
-## Indo-Chinese Starters II
+## Indo Chinese Starters Ii (10)
 
-![Light mode preview](previews/third-50/preview-indo-chinese-starters-ii-light.jpg)
-
-![Dark mode preview](previews/third-50/preview-indo-chinese-starters-ii-dark.jpg)
-
-### Chilli Chicken Dry · MM-IN-144
+### Chilli Chicken Dry
 
 ![Chilli Chicken Dry](../../public/assets/food/dishes/indo-chinese-starters-ii/chilli-chicken-dry.png)
 
@@ -780,11 +760,11 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 
 ![Salt & Pepper Corn](../../public/assets/food/dishes/indo-chinese-starters-ii/salt-pepper-corn.png)
 
-### Crispy Chilli Baby Corn · MM-IN-148
+### Crispy Chilli Baby Corn
 
 ![Crispy Chilli Baby Corn](../../public/assets/food/dishes/indo-chinese-starters-ii/crispy-chilli-baby-corn.png)
 
-### Drums of Heaven · MM-IN-146
+### Drums of Heaven
 
 ![Drums of Heaven](../../public/assets/food/dishes/indo-chinese-starters-ii/drums-of-heaven.png)
 
@@ -803,4 +783,172 @@ All artwork is shown over both light and dark Ink & Ember surfaces for contrast 
 ### Crispy Spinach Corn
 
 ![Crispy Spinach Corn](../../public/assets/food/dishes/indo-chinese-starters-ii/crispy-spinach-corn.png)
+
+## Sheet A — High-Demand Essentials (8)
+
+[Light preview](previews/sheets-abcd/preview-high-demand-essentials-light.jpg) · [Dark preview](previews/sheets-abcd/preview-high-demand-essentials-dark.jpg)
+
+### Chicken Biryani
+
+![Chicken Biryani](../../public/assets/food/dishes/high-demand-essentials/chicken-biryani.png)
+
+### Plain Veg Dosa
+
+![Plain Veg Dosa](../../public/assets/food/dishes/high-demand-essentials/veg-dosa.png)
+
+### Chicken Kathi Roll
+
+![Chicken Kathi Roll](../../public/assets/food/dishes/high-demand-essentials/chicken-kathi-roll.png)
+
+### Chicken Nuggets
+
+![Chicken Nuggets](../../public/assets/food/dishes/high-demand-essentials/chicken-nuggets.png)
+
+### White Chocolate Cake
+
+![White Chocolate Cake](../../public/assets/food/dishes/high-demand-essentials/white-chocolate-cake.png)
+
+### Kaju Katli
+
+![Kaju Katli](../../public/assets/food/dishes/high-demand-essentials/kaju-katli.png)
+
+### Jalebi
+
+![Jalebi](../../public/assets/food/dishes/high-demand-essentials/jalebi.png)
+
+### Rasmalai
+
+![Rasmalai](../../public/assets/food/dishes/high-demand-essentials/rasmalai.png)
+
+## Sheet B — Indo-Chinese Mains & Soups (10)
+
+[Light preview](previews/sheets-abcd/preview-indo-chinese-mains-soups-light.jpg) · [Dark preview](previews/sheets-abcd/preview-indo-chinese-mains-soups-dark.jpg)
+
+### Veg Hakka Noodles
+
+![Veg Hakka Noodles](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-hakka-noodles.png)
+
+### Veg Schezwan Noodles
+
+![Veg Schezwan Noodles](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-schezwan-noodles.png)
+
+### Veg Schezwan Fried Rice
+
+![Veg Schezwan Fried Rice](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-schezwan-fried-rice.png)
+
+### Egg Fried Rice
+
+![Egg Fried Rice](../../public/assets/food/dishes/indo-chinese-mains-soups/egg-fried-rice.png)
+
+### Chicken Fried Rice
+
+![Chicken Fried Rice](../../public/assets/food/dishes/indo-chinese-mains-soups/chicken-fried-rice.png)
+
+### Veg Triple Schezwan Rice
+
+![Veg Triple Schezwan Rice](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-triple-schezwan-rice.png)
+
+### Veg American Chop Suey
+
+![Veg American Chop Suey](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-american-chop-suey.png)
+
+### Chicken Chop Suey
+
+![Chicken Chop Suey](../../public/assets/food/dishes/indo-chinese-mains-soups/chicken-chop-suey.png)
+
+### Veg Manchow Soup
+
+![Veg Manchow Soup](../../public/assets/food/dishes/indo-chinese-mains-soups/veg-manchow-soup.png)
+
+### Chicken Hot and Sour Soup
+
+![Chicken Hot and Sour Soup](../../public/assets/food/dishes/indo-chinese-mains-soups/chicken-hot-and-sour-soup.png)
+
+## Sheet C — North Indian & Rajasthani (10)
+
+[Light preview](previews/sheets-abcd/preview-north-indian-rajasthani-light.jpg) · [Dark preview](previews/sheets-abcd/preview-north-indian-rajasthani-dark.jpg)
+
+### Amritsari Kulcha
+
+![Amritsari Kulcha](../../public/assets/food/dishes/north-indian-rajasthani/amritsari-kulcha.png)
+
+### Makki di Roti & Sarson da Saag
+
+![Makki di Roti & Sarson da Saag](../../public/assets/food/dishes/north-indian-rajasthani/makki-di-roti-sarson-da-saag.png)
+
+### Rogan Josh
+
+![Rogan Josh](../../public/assets/food/dishes/north-indian-rajasthani/rogan-josh.png)
+
+### Galouti Kebab
+
+![Galouti Kebab](../../public/assets/food/dishes/north-indian-rajasthani/galouti-kebab.png)
+
+### Lucknowi Nihari
+
+![Lucknowi Nihari](../../public/assets/food/dishes/north-indian-rajasthani/lucknowi-nihari.png)
+
+### Dal Baati Churma
+
+![Dal Baati Churma](../../public/assets/food/dishes/north-indian-rajasthani/dal-baati-churma.png)
+
+### Gatte Ki Sabzi
+
+![Gatte Ki Sabzi](../../public/assets/food/dishes/north-indian-rajasthani/gatte-ki-sabzi.png)
+
+### Laal Maas
+
+![Laal Maas](../../public/assets/food/dishes/north-indian-rajasthani/laal-maas.png)
+
+### Pyaaz Kachori
+
+![Pyaaz Kachori](../../public/assets/food/dishes/north-indian-rajasthani/pyaaz-kachori.png)
+
+### Mirchi Vada
+
+![Mirchi Vada](../../public/assets/food/dishes/north-indian-rajasthani/mirchi-vada.png)
+
+## Sheet D — Regional Restaurant Favorites (10)
+
+[Light preview](previews/sheets-abcd/preview-regional-restaurant-favorites-light.jpg) · [Dark preview](previews/sheets-abcd/preview-regional-restaurant-favorites-dark.jpg)
+
+### Vegetable Kothu Parotta
+
+![Vegetable Kothu Parotta](../../public/assets/food/dishes/regional-restaurant-favorites/vegetable-kothu-parotta.png)
+
+### Parotta With Salna
+
+![Parotta With Salna](../../public/assets/food/dishes/regional-restaurant-favorites/parotta-with-salna.png)
+
+### Kuzhi Paniyaram
+
+![Kuzhi Paniyaram](../../public/assets/food/dishes/regional-restaurant-favorites/kuzhi-paniyaram.png)
+
+### Curd Rice
+
+![Curd Rice](../../public/assets/food/dishes/regional-restaurant-favorites/curd-rice.png)
+
+### Lemon Rice
+
+![Lemon Rice](../../public/assets/food/dishes/regional-restaurant-favorites/lemon-rice.png)
+
+### Bagara Baingan
+
+![Bagara Baingan](../../public/assets/food/dishes/regional-restaurant-favorites/bagara-baingan.png)
+
+### Mirchi Ka Salan
+
+![Mirchi Ka Salan](../../public/assets/food/dishes/regional-restaurant-favorites/mirchi-ka-salan.png)
+
+### Kothimbir Vadi
+
+![Kothimbir Vadi](../../public/assets/food/dishes/regional-restaurant-favorites/kothimbir-vadi.png)
+
+### Dal Dhokli
+
+![Dal Dhokli](../../public/assets/food/dishes/regional-restaurant-favorites/dal-dhokli.png)
+
+### Prawn Balchao
+
+![Prawn Balchao](../../public/assets/food/dishes/regional-restaurant-favorites/prawn-balchao.png)
 

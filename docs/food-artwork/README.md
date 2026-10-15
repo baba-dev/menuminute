@@ -1,25 +1,18 @@
-# Menu-Minute original dish artwork
+# Menu-Minute dish artwork — Draft review
 
-This Draft PR contains **186 separate 360 × 280 transparent RGBA PNG illustrations** across 18 collections. The original 136 asset paths and bytes remain unchanged; the third review batch adds 50 individually separated illustrations across five additional collections, each with its own light and dark preview.
+There are **224 separately named transparent 360×280 RGBA PNG illustrations across 22 collections**. The first 186 existing artwork files are unchanged. Sheets A–D added 38 unique images from 40 illustrated cells: two dishes (Veg Hakka Noodles and Chicken Fried Rice) appear on both A and B, with B as the canonical file.
 
-- [Browse all 186 labeled illustrations](gallery.md).
-- [Canonical asset manifest](manifest.json).
-- Preview pairs: `docs/food-artwork/previews/third-50/` (light on #fff, dark on #111).
-- Third-batch collections: `bengal-odisha-delights`, `bihar-jharkhand-classics`, `northeast-treasures`, `himalayan-comforts`, `indo-chinese-starters-ii`.
-- The third batch has 21 exact slug matches with Draft PR #16's India-200 CSV. The other 29 are **not assigned made-up dataset IDs**. Some are alternative names, alternate depictions, or dishes outside the selected CSV scope; resolve before using it as a canonical dataset mapping.
+- [Browse all artwork](gallery.md) · [canonical manifest](manifest.json)
+- New source groups: `high-demand-essentials (8)`, `indo-chinese-mains-soups (10)`, `north-indian-rajasthani (10)`, `regional-restaurant-favorites (10)`.
+- [Sheet A light preview](previews/sheets-abcd/preview-high-demand-essentials-light.jpg) · [dark](previews/sheets-abcd/preview-high-demand-essentials-dark.jpg)
+- [Sheet B light preview](previews/sheets-abcd/preview-indo-chinese-mains-soups-light.jpg) · [dark](previews/sheets-abcd/preview-indo-chinese-mains-soups-dark.jpg)
+- [Sheet C light preview](previews/sheets-abcd/preview-north-indian-rajasthani-light.jpg) · [dark](previews/sheets-abcd/preview-north-indian-rajasthani-dark.jpg)
+- [Sheet D light preview](previews/sheets-abcd/preview-regional-restaurant-favorites-light.jpg) · [dark](previews/sheets-abcd/preview-regional-restaurant-favorites-dark.jpg)
 
-## Accuracy and format
+## Source/QA
 
-The source sheets were AI-rendered **raster** artwork. Individual cutouts are actual PNG files with alpha, not editable native SVGs or image-embedded fake vectors. One canonical image per dish is used on both approved Ink & Ember light and dark surfaces; review colors and crops in both previews. Do not treat the artwork as ingredient, allergen, dietary, or religious-certification evidence.
+These are cutouts from original AI-generated raster contact sheets, **not native path-based SVGs** or SVG wrappers. Use the same transparent dish file against both Ink & Ember appearance surfaces. Confirm illustration-specific accuracy, small residual matte pixels, high-contrast outlines and apparent clipping at the contact-sheet edges. All new files carry per-file SHA-256 checksums in the manifest. The original sheets and extraction manifest are in the conversation review ZIP.
 
-All 50 new crops are **awaiting product-owner visual sign-off**. Inspect pale sauces and bread/rice dishes, perimeter/alpha masks, and the serving-bowl boundaries on dark surfaces. The source sheets and local review ZIP are retained in the conversation; the repository contains the individual assets and theme preview pairs.
+New artwork has exact matched `datasetId` from the separate 200-dish Draft PR #16 where available. Variants not listed in that CSV (Chicken Biryani, Plain Veg Dosa, Chicken Nuggets, White Chocolate Cake) are not assigned fictitious IDs. The Sheet C regional Makki da Saag combo uses the real dataset's alternate slug, and shared Sheet A/B duplicates have no repeated manifest entries. Do not update PR #16's status before owner review and merge agreement.
 
-## Verification before merging
-
-1. Run `node scripts/food-artwork/verify.mjs` (186 unique canonical paths, groups, file bytes, PNG signature, dimensions, RGBA type and checksums when present).
-2. Review the [gallery](gallery.md) and all ten light/dark third-batch comparison previews.
-3. Reconcile naming and alternatives against India-200 Draft PR #16 where exact dataset IDs are missing.
-4. Run fresh CI and require all applicable repository quality lanes to pass on the final head SHA.
-5. Request explicit owner approval before merging.
-
-**Asset-only Draft PR**: no runtime behavior, merchant-image priority, menu fallback, sold-out presentation, theme token, or production deployment change. Future fallback: merchant photo → merchant-selected illustration → appropriate dish/category illustration → neutral placeholder.
+Run `node scripts/food-artwork/verify.mjs`, require fresh CI on the final head, and visually approve all four sheets in both themes before merging. No runtime menu changes or auto-replacement of eatery-uploaded photography; do not infer dietary/allergen/certification data from an illustration.
