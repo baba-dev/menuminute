@@ -10,8 +10,8 @@ explicit eviction policy. Both have separate memory budgets/credentials. Postgre
 intent, so Redis restart/loss must be recoverable through durable work reconciliation.
 
 Reserve host memory for PostgreSQL, Redis, OS and connection bursts. Set service memory limits,
-worker concurrency and queue retention only after hardware discovery/load testing. Do not run
-Next.js production builds or a full observability stack on an undersized production machine.
+worker concurrency and queue retention after peak ERP discovery and shared-host load testing.
+Use the dated baseline in [server inventory](server-inventory.md); it is not a capacity guarantee. Build releases in external ARM64 CI rather than competing with the ERP on the production host.
 
 ## Degraded modes
 
@@ -50,7 +50,7 @@ of required work. Test logical recovery after accidental deletion as well as hos
 
 ## Release and rollback
 
-Build one immutable AMD64 artifact in CI. Back up, apply compatible reviewed migrations under a lock,
+Build one immutable ARM64 artifact in CI. Back up, apply compatible reviewed migrations under a lock,
 start release, run readiness and synthetic nonbillable smoke checks, then switch traffic. Keep old assets
 for rolling clients and coordinate Next.js deployment identity/shared cache when replicas arrive.
 Drain workers and SSE gracefully on termination; leases/retries handle interrupted work.
@@ -61,4 +61,4 @@ explicit recovery plan, not simply switching a symlink. Do not replay paid/provi
 ## Launch decisions still required
 
 Owner must select availability SLO, accepted data-loss window (RPO), recovery time (RTO), order/event
-retention and escalation contacts after server sizing. Single-host deployment is not high availability.
+retention and escalation contacts before launch. Single-host deployment is not high availability.

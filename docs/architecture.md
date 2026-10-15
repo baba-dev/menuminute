@@ -11,7 +11,7 @@ Status: approved target, 2026-10-15. Documentation does not implement the migrat
 | Jobs       | background_jobs schema; no durable order dispatcher        | PostgreSQL outbox/work records + BullMQ workers        |
 | Redis      | Not configured                                             | Separate queue and cache instances                     |
 | Orders/KDS | Schema and preview routes                                  | Reliable dine-in ordering, acceptance and recovery     |
-| Deployment | Earlier guide assumed ARM64                                | Linux AMD64; actual machine sizing to be measured      |
+| Deployment | Scaffold has no production deployment                      | Ubuntu 24.04 ARM64; shared audited ERP host            |
 | AI         | Interfaces returning null                                  | Quota-controlled asynchronous merchant-reviewed drafts |
 
 The approved design is a modular monolith with separately supervised web and worker processes.
@@ -82,7 +82,9 @@ outbox work; PostgreSQL writes can proceed subject to backlog limits and operato
 Cache failure permits bounded database fallback. AI/email/media failure never invalidates an order.
 See `operations.md` for degraded-mode rules and `order-reliability.md` for recovery.
 
-Start on one AMD64 host with independent service memory/concurrency budgets. This is not HA.
+Start on the shared ARM64 ERP host with independent service memory/concurrency budgets and
+separate application accounts, credentials and persistence. See [server inventory](server-inventory.md).
+Capacity must be validated alongside ERP peak traffic. This is not HA.
 Scale from measured dinner-time peaks: move the database/workers off-host, add web replicas,
 coordinate Next.js cache invalidation and deployment identity, then introduce database failover.
 Partition/archive history only after query plans and retention measurements justify it.

@@ -14,7 +14,7 @@ Approved by the product owner through 2026-10-15. Approval records the target, n
 | 008 | Transactional outbox and idempotent workers | Approved, pending   | Recoverable delivery; no cross-store atomicity assumption             |
 | 009 | Better Auth database sessions               | Approved, pending   | Explicit membership mapping, revocation and account migration         |
 | 010 | SSE with persisted-event recovery           | Approved, pending   | Pub/Sub is not durable delivery; polling fallback                     |
-| 011 | Linux AMD64 production                      | Approved            | Supersedes ARM64 documentation; hardware/OS capacity unverified       |
+| 011 | Linux ARM64 production                      | Approved            | Supersedes AMD64 host choice; audited shared Oracle ARM64 ERP host    |
 | 012 | Dine-in, guest ordering, pay at restaurant  | Approved            | Payment gateways and delivery deferred                                |
 | 013 | Ink & Ember UI                              | Approved direction  | Ember Flow routine actions; Ink Press tactile actions; A/B/C feedback |
 
@@ -40,11 +40,14 @@ accounts or rely on organization plugins as outlet authorization.
 **010:** Kitchen actions use regular HTTP requests; SSE covers downstream signals. Recovery uses
 durable ordered events and an authoritative open-order snapshot, with a specified retention gap path.
 
-**011:** Build and test Linux x64 native modules in an environment compatible with the actual host.
-No claim of 4 OCPUs/24 GB or specific Ubuntu version is supported by the current server information.
+**011 (revised 2026-10-15 after host audit):** Select the ARM64 ERP server rather than the
+resource-constrained AMD64 micro VM. Build/test native modules on Ubuntu 24.04 ARM64. The audit
+shows 4 visible ARM cores and 23 GiB usable RAM; the exact OCI shape/entitlement remains unconfirmed.
+See [server inventory](server-inventory.md). Earlier AMD64-only guidance is superseded.
 
 ## Unresolved operational inputs
 
-Record actual CPU/RAM/disk/OS, production domain, peak workload, restaurant count, retention,
+Host CPU/RAM/disk/OS are recorded in server-inventory.md. Confirm OCI shape/region, production
+domain, peak ERP and Food Minutes workload, restaurant count, retention,
 backup storage, availability SLO, RPO and RTO before sizing or production release. A copied table QR
 is public: launch uses staff acceptance; stronger physical table-session controls can be added later.

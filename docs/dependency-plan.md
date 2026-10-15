@@ -47,7 +47,7 @@ No online payment, SMS, delivery/maps or WhatsApp API is required for launch.
 
 1. Inspect current imports and migration impact; select compatible stable versions, not guessed pins.
 2. Verify registry provenance, maintenance, licenses, advisories and transitive/native dependencies.
-3. Validate Node/pnpm constraints and Linux AMD64 native binaries against deployment OS/libc.
+3. Validate Node/pnpm constraints and Linux ARM64 native binaries against deployment OS/libc.
 4. Pin direct runtime versions and lockfile; keep frozen installs in CI.
 5. Run integration/build tests before replacing existing dependencies. Do not mix Zod major versions
    or incompatible AI SDK/provider generations without adapter tests.

@@ -14,7 +14,7 @@ SQLite tests are baseline evidence only, not evidence for PostgreSQL transaction
 
 Required scenarios: schema from empty DB, upgrade/rehearsed data import, pooled tenant-context reuse,
 composite FK rejection, session revocation, password/account compatibility, public projection limits,
-background tenant scoping, denied missing production secrets and AMD64 native module build.
+background tenant scoping, denied missing production secrets and ARM64 native module build.
 
 ## Ordering and jobs
 
@@ -34,6 +34,7 @@ Use k6 from a separate load generator with reproducible dataset, machine specs, 
 traffic mix. Measure cached/uncached menu reads, order writes, transitions, long-lived connections,
 AI backlog and one noisy tenant. Test burst, sustained and overload conditions, then recovery.
 Track p50/p95/p99 latency, errors, duplicates, lost work, locks, pool wait, memory and oldest backlog.
+Run alongside representative ERP peak activity and measure both applications for regressions.
 Set numeric pass thresholds after sizing; no million-order throughput claim without this evidence.
 
 ## UI and providers
@@ -48,8 +49,8 @@ Never submit real restaurant orders in production as a smoke test.
 1. Formatting, lint and dependency/security checks.
 2. Typecheck and domain unit tests.
 3. PostgreSQL/Redis migration, isolation, concurrency and recovery tests.
-4. Linux AMD64 build and relevant Playwright checks.
+4. Linux ARM64 build and relevant Playwright checks.
 
-Run final checks on the reviewed SHA. Existing workflow still targets SQLite; changing CI belongs to
-the foundation implementation slice. Record commands, test counts and failures without claiming
+Run final checks on the reviewed SHA. Existing workflow runs on Ubuntu 24.04 ARM64 but still tests SQLite;
+PostgreSQL/Redis integration CI belongs to the foundation implementation slice. Record commands, test counts and failures without claiming
 unexecuted browser, provider or load tests passed.

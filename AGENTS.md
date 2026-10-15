@@ -8,8 +8,11 @@ the product planning context is Food Minutes. Do not rename the product incident
 - Read `docs/architecture.md`, `docs/domain-invariants.md`, and the relevant domain guide.
 - `docs/decisions.md` records approved target decisions; code may still implement the old scaffold.
 - `docs/implementation-plan.md` separates existing behavior from future acceptance gates.
-- Production is **Linux AMD64/x86_64**. CPU, RAM, disk, OS version and production domain
-  are not yet verified. Do not substitute Oracle Ampere/ARM assumptions.
+- Production targets **Linux ARM64/aarch64**, Ubuntu 24.04.4 LTS on the shared Oracle ERP
+  server: 4 visible ARM cores, 23 GiB RAM, 72 GB root filesystem. See
+  `docs/server-inventory.md` for the dated audit, constraints and outstanding launch inputs.
+- Build/test native dependencies on Linux ARM64; never deploy AMD64 node_modules or artifacts.
+  Protect the existing ERP; infrastructure changes require a reviewed coexistence/rollback plan.
 
 ## Required boundaries
 
@@ -29,7 +32,7 @@ the product planning context is Food Minutes. Do not rename the product incident
 2. State the affected invariant, intended behavior, failure behavior and acceptance evidence.
 3. Implement one complete slice with explicit migration and rollback considerations.
 4. Select compatible stable dependency versions and pin reproducibly. Review package provenance,
-   maintenance, license and native Linux AMD64 support; do not blindly install latest versions.
+   maintenance, license and native Linux ARM64 support; do not blindly install latest versions.
 5. Test changed invariants against real PostgreSQL/Redis when that infrastructure lands.
 6. Update current-status documentation when behavior changes; distinguish implemented from planned.
 7. Report exact commands, results and limitations. Never describe docs as deployed infrastructure.

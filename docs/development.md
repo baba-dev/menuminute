@@ -6,7 +6,7 @@
 
 ## 1. Prerequisites
 
-- **Node.js**: LTS release pinned in `.nvmrc` (v22+ supported; verified on v24 with prebuilt binaries)
+- **Node.js**: Node 24 LTS, selected in `.nvmrc` to match CI and the pnpm 11 toolchain
 - **Package Manager**: `pnpm` (v11+)
 - **Git**: v2.40+
 - **GitHub CLI**: `gh` (optional, for repo management)
@@ -21,7 +21,7 @@ git clone https://github.com/baba-dev/menuminute.git
 cd menuminute
 
 # 2. Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # 3. Configure local environment
 cp .env.example .env.local
@@ -73,3 +73,18 @@ The database seed provides a pre-configured restaurant owner account:
 | `pnpm db:migrate`    | Execute pending database migrations                       |
 | `pnpm db:seed`       | Idempotently seed demonstration restaurant and menu       |
 | `pnpm env:validate`  | Verify environment configuration variables                |
+
+## ARM64 build contract
+
+Production is Ubuntu 24.04 ARM64 on the shared ERP server; see
+[server inventory](server-inventory.md) and [deployment](deployment.md). Local development may
+use another architecture, but an x64 build does not satisfy the production release gate.
+
+CI runs on `ubuntu-24.04-arm` and verifies `process.arch === "arm64"` before installing dependencies.
+Use the packageManager-pinned pnpm version and a frozen lockfile. Install native dependencies
+(Next.js SWC, Sharp and the current SQLite scaffold) on the target architecture; never copy
+node_modules or `.next` output from AMD64/macOS. Keep caches separated by OS, architecture and
+Node major. Container builds, if introduced, must target `linux/arm64` and pass native runtime checks.
+
+Build and test outside the ERP host. The CI build is scaffold validation, not a PostgreSQL/Redis
+release or an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.

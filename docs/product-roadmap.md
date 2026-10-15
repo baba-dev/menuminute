@@ -10,7 +10,7 @@ and does not establish production reliability or measured capacity.
 
 Follow `implementation-plan.md` for engineering gates:
 
-1. PostgreSQL + Drizzle/pg, Better Auth database sessions, organization/outlet isolation and AMD64 CI.
+1. PostgreSQL + Drizzle/pg, Better Auth database sessions, organization/outlet isolation and ARM64 CI.
 2. Redis queue/cache separation, BullMQ and recoverable PostgreSQL outbox/work state.
 3. Restaurant onboarding, public QR menus, variants, validated media and publication.
 4. Dine-in guest ordering, staff acceptance, customer status and resilient KDS.

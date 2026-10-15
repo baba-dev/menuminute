@@ -25,7 +25,7 @@ schema and async services, composite tenant constraints, restricted runtime RLS 
 context. Replace JWT scaffold with Better Auth database sessions and explicit domain memberships.
 Preserve public QR identifiers and reconcile existing accounts/data before cutover. Remove private
 fallback-to-demo behavior. Provision Redis clients/config contracts and update CI to real dependencies.
-Acceptance: foundation scenarios in testing-strategy.md, complete migration rehearsal and AMD64 build.
+Acceptance: foundation scenarios in testing-strategy.md, complete migration rehearsal and ARM64 build.
 Exclude live ordering, paid provider enablement and visual redesign from this slice.
 
 ## Primer B: Durable jobs and outbox

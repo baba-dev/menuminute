@@ -13,10 +13,12 @@
 
 ## Approved architecture and implementation status
 
-Production targets **Linux AMD64/x86_64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
+Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
 instances, BullMQ and Better Auth database sessions. Launch ordering is dine-in with staff
 acceptance and pay at restaurant. The code below is still the SQLite/NextAuth Phase 0 scaffold;
-this documentation update does not migrate or deploy it. Server resources/OS are unverified.
+this update does not migrate or deploy it. The audited host runs Ubuntu 24.04.4 LTS with
+4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
+[server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
 
 Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
 [dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
@@ -39,20 +41,20 @@ and [AI development primers](docs/ai-development-primers.md). Contributors must 
 
 ## 🛠️ Technical Stack
 
-| Layer                | Technology                                                 |
-| -------------------- | ---------------------------------------------------------- |
-| **Framework**        | Next.js App Router (React 19)                              |
-| **Language**         | TypeScript (Strict mode enabled)                           |
-| **Styling**          | Tailwind CSS v4 with custom design tokens                  |
-| **Icons**            | Lucide React + custom vector SVGs                          |
-| **Database**         | SQLite in WAL mode via `better-sqlite3`                    |
-| **ORM**              | Drizzle ORM with versioned SQL migrations                  |
-| **Validation**       | Zod v3                                                     |
-| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)        |
-| **QR Generation**    | `qrcode` with high-density SVG & PNG output                |
-| **Image Processing** | Sharp with automatic dimension resizing                    |
-| **Testing**          | Vitest + React Testing Library + Playwright                |
-| **Target Host**      | Linux AMD64 target; Nginx + systemd (provisioning pending) |
+| Layer                | Technology                                           |
+| -------------------- | ---------------------------------------------------- |
+| **Framework**        | Next.js App Router (React 19)                        |
+| **Language**         | TypeScript (Strict mode enabled)                     |
+| **Styling**          | Tailwind CSS v4 with custom design tokens            |
+| **Icons**            | Lucide React + custom vector SVGs                    |
+| **Database**         | SQLite in WAL mode via `better-sqlite3`              |
+| **ORM**              | Drizzle ORM with versioned SQL migrations            |
+| **Validation**       | Zod v3                                               |
+| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)  |
+| **QR Generation**    | `qrcode` with high-density SVG & PNG output          |
+| **Image Processing** | Sharp with automatic dimension resizing              |
+| **Testing**          | Vitest + React Testing Library + Playwright          |
+| **Target Host**      | Ubuntu 24.04 ARM64; shared ERP host; Nginx + systemd |
 
 ---
 
@@ -146,7 +148,8 @@ pnpm test:e2e
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)
 - [Environment Variables](docs/environment.md)
-- [Production Deployment (Linux AMD64 target)](docs/deployment.md)
+- [Production Deployment (Linux ARM64 target)](docs/deployment.md)
+- [Audited ARM server and coexistence requirements](docs/server-inventory.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
 - [Architecture Decision Records (ADRs)](docs/decisions.md)
