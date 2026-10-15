@@ -1,6 +1,6 @@
 # AI development primers
 
-Read AGENTS.md first. These are implementation task contracts, not permission to deploy or spend.
+Read AGENTS.md and docs/product-requirements.md first. These are implementation task contracts, not permission to deploy or spend.
 
 ## Reusable task template
 
@@ -36,10 +36,12 @@ Separate queue/cache Redis policies. Inject crashes around enqueue and completio
 Redis and prove recoverable work returns. Avoid holding SQL transactions during external I/O.
 Acceptance: no required intent lost after Redis loss, duplicates safe and tenant scope preserved.
 
-## Primer C: Dine-in ordering and KDS
+## Primer C: Dine-in/pickup ordering and KDS
 
 Implement server-authoritative quotes, confirmation on price changes, scoped idempotent submissions,
-immutable snapshots, safe outlet/business-day numbering and atomic versioned transitions. Separate
+immutable snapshots, supported local currencies, safe outlet/business-day numbering and atomic
+versioned transitions including closing-time expiry versus acceptance. Support served/collected
+completion, separate repeat tickets and permanent QR identity independent of guest-session expiry. Separate
 submitted, accepted and paid concepts. Build SSE signals with durable cursor recovery/snapshot resync
 and polling fallback. Staff acceptance is required; copied QR URLs are not proof of physical presence.
 Acceptance: ordering race/recovery suite and guest/staff browser flows; AI outages do not break orders.

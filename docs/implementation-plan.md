@@ -7,7 +7,7 @@ Architecture approved 2026-10-15. This PR prepares architecture documentation an
 | A     | PostgreSQL, async services, tenant hierarchy/RLS, Better Auth and env/CI | Audited ARM64 host; coexistence planning | Migration/account reconciliation; isolation; ARM64 build    |
 | B     | Two Redis workloads, BullMQ, outbox and reconciliation                   | A transaction/tenant contracts           | Crash injection and queue-loss recovery                     |
 | C     | Published menus, R2 media and onboarding                                 | A; B for processing                      | Tenant-safe upload/publish; QR continuity; mobile menu      |
-| D     | Dine-in ordering and staff/KDS recovery                                  | A+B; usable menu                         | Duplicate/race/reconnect suite; no false acceptance         |
+| D     | Dine-in/pickup ordering, expiry and staff/KDS recovery                   | A+B; usable menu                         | Duplicate/race/reconnect suite; no false acceptance         |
 | E     | Merchant-reviewed AI and Ink & Ember refinement                          | Stable domain/UI contracts               | Provider quotas/fallbacks; accessibility and visual review  |
 | F     | Operational readiness and measured capacity                              | All launch slices                        | Restore drill, monitoring, load test and agreed SLO/RPO/RTO |
 
@@ -35,4 +35,15 @@ These are inspected planning observations, not a comprehensive audit or proof of
 Use the audited ARM64 host baseline in server-inventory.md. Confirm OCI shape/region, domain,
 ERP peak usage, expected peak diners/orders/SSE connections, retention,
 backup destination, escalation owner and SLO/RPO/RTO. Establish baseline failures before changing code.
-Launch uses staff acceptance and pay-at-restaurant; gateway billing/delivery scope requires a later decision.
+Launch uses dine-in/pickup, staff acceptance and pay-at-restaurant/counter. Platform subscriptions
+use USD/INR independently of supported local outlet currencies. Billing provider/delivery require a later decision.
+
+## Product contract gate
+
+Every slice follows [product requirements](product-requirements.md). Foundation includes multi-outlet
+organizations, scoped brand assignments, Owner and composable roles, plus platform/outlet currency
+separation. Menu work includes variants/add-ons, sold-out states and schedules. Ordering includes
+pickup, immutable snapshots and atomic closing-time expiry. Resolve complete UX, pickup details,
+complex modifier calculation examples and jurisdiction rules before their affected slices. Load
+fixtures start with 25 owners, 50 restaurants/outlets and menus, 1,000 orders/hour; define bursts,
+connections and latency thresholds before capacity acceptance.

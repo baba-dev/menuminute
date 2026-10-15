@@ -62,3 +62,11 @@ explicit recovery plan, not simply switching a symlink. Do not replay paid/provi
 
 Owner must select availability SLO, accepted data-loss window (RPO), recovery time (RTO), order/event
 retention and escalation contacts before launch. Single-host deployment is not high availability.
+
+## Initial workload and closing recovery
+
+Plan for 25 owners, 50 restaurants/outlets and menus, 1,000 orders/hour aggregate; establish burst,
+concurrent diner/staff/SSE and retention fixtures before sizing. Monitor pending acceptance/expiry,
+reconcile overdue pending orders after outages, and test acceptance rejection after deadline even
+without an expiry worker. See [product requirements](product-requirements.md). Growth remains
+subject to resources and measured shared-host behavior, not a seamless-capacity promise.

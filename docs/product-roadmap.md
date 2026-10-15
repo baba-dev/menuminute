@@ -12,8 +12,8 @@ Follow `implementation-plan.md` for engineering gates:
 
 1. PostgreSQL + Drizzle/pg, Better Auth database sessions, organization/outlet isolation and ARM64 CI.
 2. Redis queue/cache separation, BullMQ and recoverable PostgreSQL outbox/work state.
-3. Restaurant onboarding, public QR menus, variants, validated media and publication.
-4. Dine-in guest ordering, staff acceptance, customer status and resilient KDS.
+3. Outlet-type onboarding, scoped brands/outlets/roles, public QR menus, variants/add-ons, schedules and publication.
+4. Dine-in and pickup ordering for restaurants/takeout/cloud kitchens, closing-time expiry, staff acceptance and resilient KDS.
 5. Reviewed AI menu import, descriptions, translations and image suggestions; Ink & Ember refinement.
 6. Measured performance, tested restoration, operational alerts and commercial launch gates.
 
@@ -26,3 +26,11 @@ operations must be specified before a paid launch; a payment gateway is not impl
 
 Delivery, online diner payments, WhatsApp/SMS, multi-station routing and advanced analytics are later
 scope. Do not label these available until implemented and verified.
+
+## Approved launch envelope
+
+Read [product requirements](product-requirements.md). Worldwide scope, multiple outlets, local
+transaction currencies and USD/INR platform subscriptions supersede earlier narrow pilot assumptions.
+Target 25 owners, 50 restaurants/outlets and their menus, and 1,000 orders/hour, subject to measured
+capacity and ERP coexistence. Complete UX flows and jurisdiction calculation rules are required
+before affected implementation/release gates. Architecture documentation does not implement them.

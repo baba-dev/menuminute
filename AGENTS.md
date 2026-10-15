@@ -7,6 +7,8 @@ the product planning context is Food Minutes. Do not rename the product incident
 
 - Read `docs/architecture.md`, `docs/domain-invariants.md`, and the relevant domain guide.
 - `docs/decisions.md` records approved target decisions; code may still implement the old scaffold.
+- Read `docs/product-requirements.md` for approved hierarchy, roles, fulfillment, currencies and expiry.
+  USD/INR restrict platform subscription billing only; outlet transactions use supported local currencies.
 - `docs/implementation-plan.md` separates existing behavior from future acceptance gates.
 - Production targets **Linux ARM64/aarch64**, Ubuntu 24.04.4 LTS on the shared Oracle ERP
   server: 4 visible ARM cores, 23 GiB RAM, 72 GB root filesystem. See

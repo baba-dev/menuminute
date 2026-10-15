@@ -11,9 +11,10 @@ alone will not migrate the application. Keep the baseline reproducible until the
 ## PostgreSQL target
 
 - Drizzle pg-core schema and pg driver; async service interfaces and transaction-scoped clients.
-- Explicit organization/restaurant/outlet scope and composite unique/foreign-key constraints.
+- Explicit organization/brand/outlet scope, scoped brand-outlet assignments, menu assignments and
+  outlet service points; composite unique/foreign-key constraints. See [product requirements](product-requirements.md).
 - Orders with currency, immutable item/options/tax snapshots, version, acknowledgement and separate
-  payment state. Never cascade-delete business history when deleting menu/restaurant records.
+  payment state, fulfillment mode, service-session expiry and served/collected completion. Never cascade-delete business history when deleting menu/restaurant records.
 - Idempotency results, outbox delivery state, consumer receipts/work records and persisted KDS events.
 - Durable AI/media work and provider-attempt evidence remain in PostgreSQL; BullMQ is execution state.
 - timestamptz UTC instants; outlet IANA timezone for business dates and display numbers.
@@ -46,3 +47,12 @@ Workers also resolve tenant context. Test privileged/public access separately fr
 
 Production uses reviewed versioned migrations, one migration owner and a deployment migration lock.
 No db:push or automatic demo seed. Expand/contract changes preserve rolling-release compatibility.
+
+## Product schema requirements
+
+Separate platform USD/INR subscription currency from each outlet's supported local currency. Store
+currency exponent and historical snapshots explicitly. Model variants plus add-on groups, local
+schedules/date exceptions and price/availability overrides. Membership permissions compose within
+organization/assigned outlet scope. Pending expiry and acceptance compete transactionally; permanent
+QR identity is independent of temporary guest sessions. No merchant-facing maximum quantity cap;
+validate positive integral quantities, representability and arithmetic without hidden business caps.

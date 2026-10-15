@@ -10,12 +10,12 @@ Status: approved target, 2026-10-15. Documentation does not implement the migrat
 | Sessions   | NextAuth credentials + JWT                                 | Better Auth, database-backed revocable sessions        |
 | Jobs       | background_jobs schema; no durable order dispatcher        | PostgreSQL outbox/work records + BullMQ workers        |
 | Redis      | Not configured                                             | Separate queue and cache instances                     |
-| Orders/KDS | Schema and preview routes                                  | Reliable dine-in ordering, acceptance and recovery     |
+| Orders/KDS | Schema and preview routes                                  | Dine-in/pickup ordering, acceptance and recovery       |
 | Deployment | Scaffold has no production deployment                      | Ubuntu 24.04 ARM64; shared audited ERP host            |
 | AI         | Interfaces returning null                                  | Quota-controlled asynchronous merchant-reviewed drafts |
 
 The approved design is a modular monolith with separately supervised web and worker processes.
-Launch ordering is dine-in, guest checkout and pay at restaurant. Online payments, delivery,
+Launch supports dine-in and pickup, guest checkout and payment at restaurant/counter. Online payments, delivery,
 multi-station routing and autonomous AI actions are outside launch scope.
 
 ```mermaid
@@ -34,19 +34,22 @@ flowchart TD
 
 ## Modules and ownership
 
-| Module                    | Owns                                                              |
-| ------------------------- | ----------------------------------------------------------------- |
-| Identity                  | Authentication, sessions, invitation identity                     |
-| Organizations/restaurants | Memberships, outlets, table bindings and authorization policies   |
-| Menus                     | Categories, dishes, variants, availability and published versions |
-| Orders                    | Authoritative totals, snapshots, idempotency and lifecycle        |
-| Kitchen                   | Authorized views, acknowledgement and event recovery              |
-| Billing                   | Subscription entitlements; separate from diner payment state      |
-| Media/AI                  | Asset provenance, drafts, quotas and provider adapters            |
-| Infrastructure            | Pools, outbox delivery, jobs, configuration, telemetry            |
+| Module                    | Owns                                                                   |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Identity                  | Authentication, sessions, invitation identity                          |
+| Organizations/restaurants | Memberships, brands, outlet assignments, service points and policies   |
+| Menus                     | Categories, dishes, variants/add-ons, schedules and published versions |
+| Orders                    | Authoritative totals, snapshots, idempotency and lifecycle             |
+| Kitchen                   | Authorized views, acknowledgement and event recovery                   |
+| Billing                   | Subscription entitlements; separate from diner payment state           |
+| Media/AI                  | Asset provenance, drafts, quotas and provider adapters                 |
+| Infrastructure            | Pools, outbox delivery, jobs, configuration, telemetry                 |
 
-Organization -> restaurant -> outlet -> table is the target hierarchy. Map existing restaurant
-ownership explicitly during migration; avoid maintaining two unrelated membership authorities.
+Organization is the tenant boundary; brands and outlets have a scoped many-to-many relationship.
+Menus attach to authorized brand/outlet combinations and service points belong to outlets. Map
+existing restaurant ownership explicitly during migration; avoid unrelated membership authorities.
+See [approved product requirements](product-requirements.md) for roles, outlet-type onboarding,
+local currencies, closing-time expiry and the 25-owner / 50-outlet / 1,000-orders/hour launch envelope.
 Better Auth organizations may supply identity/membership records, while domain policy enforces
 restaurant/outlet access. Record the mapping in the authentication implementation PR.
 

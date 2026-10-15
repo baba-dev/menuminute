@@ -14,8 +14,8 @@
 ## Approved architecture and implementation status
 
 Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
-instances, BullMQ and Better Auth database sessions. Launch ordering is dine-in with staff
-acceptance and pay at restaurant. The code below is still the SQLite/NextAuth Phase 0 scaffold;
+instances, BullMQ and Better Auth database sessions. Launch supports dine-in and pickup for restaurants, takeout and cloud kitchens, with staff
+acceptance and payment at the restaurant/counter. The code below is still the SQLite/NextAuth Phase 0 scaffold;
 this update does not migrate or deploy it. The audited host runs Ubuntu 24.04.4 LTS with
 4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
 [server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
@@ -24,6 +24,11 @@ Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
 [dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
 and [AI development primers](docs/ai-development-primers.md). Contributors must read [AGENTS.md](AGENTS.md).
 
+See [approved product requirements](docs/product-requirements.md) for worldwide multi-outlet scope,
+outlet-type onboarding, role permissions, variants/add-ons, closing-time expiry and the initial
+25-owner / 50-restaurant / 1,000-orders-per-hour planning envelope. Platform subscriptions use
+USD/INR; outlets select supported local transaction currencies independently.
+
 ## 🍽️ Product Overview & Tiers
 
 - **Free Forever (Primary Customer Acquisition Channel)**:
@@ -31,7 +36,7 @@ and [AI development primers](docs/ai-development-primers.md). Contributors must 
   - Generate permanent QR codes that diners scan with zero registration required.
   - Unlimited menu items with real-time updates.
 - **Online Ordering — Planned ₹149/month (Phase C)**:
-  - Table-based QR ordering with mobile cart and submission.
+  - Dine-in/table and pickup ordering with mobile cart and staff acceptance.
   - Live order management for front-of-house staff.
 - **Kitchen Pro — Planned ₹299/month (Phase D)**:
   - Dedicated Kitchen Display System (KDS) tablet interface.
@@ -144,6 +149,10 @@ pnpm test:e2e
 
 ## 📚 Documentation Index
 
+- [Approved Product Requirements](docs/product-requirements.md)
+- [Product Direction](docs/product-direction.md)
+- [Design and Theme Contract](docs/design-system.md)
+- [Feedback and Motion](docs/feedback-and-motion.md)
 - [Architecture Guide](docs/architecture.md)
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)

@@ -4,8 +4,8 @@ Status: required for the ordering implementation; current routes are previews.
 
 ## Submission transaction
 
-1. Resolve public QR/table capability to active restaurant/outlet; enforce opening/order policy,
-   entitlement, payload/rate limits and table binding. Require staff acceptance at launch.
+1. Resolve public menu/QR capability to an active organization/brand/outlet and fulfillment mode; enforce opening/order policy,
+   entitlement, payload/rate limits and service-point binding where dine-in requires it. Require staff acceptance at launch.
 2. Validate a client-generated submission key scoped to the restaurant/outlet and guest session.
    Use a database uniqueness constraint and canonical request hash, including options/quantities.
 3. Revalidate current menu version, prices and availability. Changed totals require fresh customer
@@ -20,14 +20,14 @@ and distinct from opaque order IDs. Business date uses outlet timezone, not the 
 
 ## Fulfillment and payment
 
-Target fulfillment: pending -> accepted -> preparing -> ready -> served.
-Pending -> rejected/cancelled; accepted -> cancelled only under an explicit role/policy.
+Target fulfillment: pending -> accepted -> preparing -> ready -> served (dine-in) or collected (pickup).
+Pending -> rejected/cancelled/expired; accepted -> cancelled only under an explicit role/policy.
 Later cancellation requires a defined compensation and audit workflow; terminal states do not regress.
 The current scaffold uses confirmed/delivered: map these names explicitly during migration.
 
 Use expected version and valid prior status in the update predicate. Append actor/reason/event and
 increment version atomically; stale callers receive conflict and refresh. Pay-at-restaurant records
-use separate unpaid/paid/voided states with authorized audit; no payment-provider integration at launch.
+use separate unpaid/paid/voided states with authorized audit; no diner payment-provider integration at launch.
 
 ## Outbox -> BullMQ -> effect
 
@@ -60,3 +60,18 @@ Duplicate tap; concurrent same/different payload keys; commit followed by lost r
 staff transitions; worker crash before/after effect; lost Redis data after dispatch; SSE reconnect;
 expired cursor; price change; revoked staff access; wrong-outlet capability; database failure before
 commit. Validate invariants with the actual production database engine.
+
+## Closing, repeated orders and permanent QR
+
+Follow [product requirements](product-requirements.md): new/additional orders create separate tickets;
+submitted-order editing is deferred. Pending orders snapshot the outlet service-session closing
+instant in its IANA timezone, including overnight hours. Organization schedules are defaults, not
+one global expiry timestamp. Specify a cutoff for 24-hour service. Compare database time and stored
+deadline during acceptance and expiry using atomic expected-state/version updates. Recover missed
+expiry jobs after restart and reject overdue acceptance even if the worker is unavailable. Accepted
+work continues after closing. QR identity survives guest-session expiry; only explicit organization
+administrator deletion/regeneration revokes a printed token (suspension may disable access).
+
+Pickup follows preparation -> ready -> collected; diner payment remains separate. Customer contact,
+ASAP/scheduled pickup and missed-collection rules must be resolved in UX acceptance. Do not assume
+a table is required for pickup or a phone is required for dine-in.

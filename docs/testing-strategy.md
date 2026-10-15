@@ -54,3 +54,11 @@ Never submit real restaurant orders in production as a smoke test.
 Run final checks on the reviewed SHA. Existing workflow runs on Ubuntu 24.04 ARM64 but still tests SQLite;
 PostgreSQL/Redis integration CI belongs to the foundation implementation slice. Record commands, test counts and failures without claiming
 unexecuted browser, provider or load tests passed.
+
+## Product acceptance additions
+
+Exercise the [product requirement evidence](product-requirements.md): scoped brand/outlet links,
+role composition/delegation, outlet-type changes, dine-in versus pickup, modifiers/sold-out schedules,
+large quantities and overflow, independent subscription/local currencies, zero/three-decimal totals,
+closing/acceptance races, overnight/24-hour cutoffs and printed QR continuity/revocation. Use the
+25-owner / 50-restaurant / 1,000-orders-hour planning envelope with measured burst and SSE traffic.
