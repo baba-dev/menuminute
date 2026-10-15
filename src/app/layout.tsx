@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+import "@/styles/menu-product.css";
+import { ThemeControl, themeScript } from "@/components/menu-product/theme-control";
+const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-display",
 });
+const bodyFont = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm" });
 
 export const metadata: Metadata = {
   title: {
@@ -43,7 +46,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
+        <div className="appearance-bar">
+          <ThemeControl />
+        </div>
         {children}
         <Toaster richColors position="top-right" />
       </body>

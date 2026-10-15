@@ -1,3 +1,4 @@
+import { scheduleSchema } from "@/modules/menu-product/contracts";
 import { asc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createHash } from "node:crypto";
@@ -8,6 +9,12 @@ import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { generateMenuQrCode } from "@/modules/qr/service";
 import { currencyExponent } from "@/lib/money";
 export const createRestaurantSchema = z.object({
+  fulfillmentModes: z
+    .array(z.enum(["dine_in", "pickup"]))
+    .min(1)
+    .max(2)
+    .optional(),
+  menuSchedule: scheduleSchema.nullable().optional(),
   name: z.string().trim().min(2).max(100),
   description: z.string().max(500).optional(),
   city: z.string().max(100).optional(),

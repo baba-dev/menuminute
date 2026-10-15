@@ -1,19 +1,28 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ScheduleEditor } from "@/components/menu-product/schedule-editor";
+import type { Schedule } from "@/modules/menu-product/contracts";
 export function OnboardingForm() {
+  const [type, setType] = useState("restaurant"),
+    [modes, setModes] = useState(["dine_in"]),
+    [schedule, setSchedule] = useState<Schedule | null>(null);
   const router = useRouter();
   const [key] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   return (
     <form
-      className="space-y-4"
+      className="product stack"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
         setError("");
-        const values = Object.fromEntries(new FormData(e.currentTarget));
+        const values = {
+          ...Object.fromEntries(new FormData(e.currentTarget)),
+          fulfillmentModes: modes,
+          menuSchedule: schedule,
+        };
         try {
           const r = await fetch("/api/organizations", {
             method: "POST",
@@ -24,7 +33,7 @@ export function OnboardingForm() {
             setError("Could not create the outlet. Check its settings and try again.");
             return;
           }
-          router.push("/dashboard");
+          router.push("/dashboard/menu");
           router.refresh();
         } catch {
           setError("Connection failed. Please try again.");
@@ -47,7 +56,20 @@ export function OnboardingForm() {
         <label htmlFor="outletType" className="block">
           Outlet type
         </label>
-        <select id="outletType" name="outletType" className="block w-full rounded border p-2">
+        <select
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value);
+            setModes(
+              ["cafe", "takeout", "cloud_kitchen"].includes(e.target.value)
+                ? ["pickup"]
+                : ["dine_in"]
+            );
+          }}
+          id="outletType"
+          name="outletType"
+          className="block w-full rounded border p-2"
+        >
           {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((v) => (
             <option key={v} value={v}>
               {v.replaceAll("_", " ")}
@@ -95,11 +117,29 @@ export function OnboardingForm() {
           ))}
         </select>
       </div>
+      <section className="panel stack">
+        <h2>How do guests collect their food?</h2>
+        {["dine_in", "pickup"].map((m) => (
+          <label key={m} className="row">
+            <input
+              type="checkbox"
+              checked={modes.includes(m)}
+              disabled={m === "dine_in" && ["takeout", "cloud_kitchen"].includes(type)}
+              onChange={(e) =>
+                setModes(e.target.checked ? [...modes, m] : modes.filter((x) => x !== m))
+              }
+            />
+            {m === "dine_in" ? "Dine-in" : "Pickup"}
+          </label>
+        ))}
+        <p>You can change supported modes later without replacing the QR.</p>
+      </section>
+      <details className="panel">
+        <summary>Set the first menu’s service hours</summary>
+        <ScheduleEditor value={schedule} onChange={setSchedule} />
+      </details>
       {error && <p role="alert">{error}</p>}
-      <button
-        disabled={busy}
-        className="rounded bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
-      >
+      <button disabled={busy} className="ember">
         {busy ? "Creating…" : "Create organization and outlet"}
       </button>
     </form>

@@ -15,3 +15,5 @@ export * from "./audit";
 export * from "./tenancy";
 
 export * from "./core-domains";
+
+export * from "./menu-product";

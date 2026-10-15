@@ -47,6 +47,17 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     HOSTNAME: "127.0.0.1",
   },
 });
+const mediaWorker = spawn(process.execPath, ["dist/worker.mjs"], {
+  stdio: "inherit",
+  env: {
+    PATH: process.env.PATH,
+    NODE_ENV: "production",
+    WORKER_DATABASE_URL: workerUrl,
+    REDIS_QUEUE_URL: process.env.REDIS_QUEUE_URL,
+    MEDIA_ROOT: process.env.MEDIA_ROOT,
+    MEDIA_STORAGE: "local",
+  },
+});
 const server = https.createServer(
   {
     key: await readFile(path.join(dir, "key.pem")),
@@ -79,6 +90,7 @@ async function stop() {
   if (stopping) return;
   stopping = true;
   backend.kill("SIGTERM");
+  mediaWorker.kill("SIGTERM");
   server.close();
   await rm(dir, { recursive: true, force: true });
   process.exit(0);
