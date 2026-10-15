@@ -1,0 +1,38 @@
+name: Agent work package
+description: A bounded task with ownership, dependencies and acceptance evidence
+title: "[Work package] "
+body:
+  - type: markdown
+    attributes:
+      value: "Read AGENTS.md and docs/orchestration/agent-contract.md. Dependencies and inputs must be resolved before Ready."
+  - type: textarea
+    id: control
+    attributes:
+      label: Control and ownership
+      value: |
+        Status: Backlog
+        Phase / slice:
+        Lane / priority:
+        Integration owner:
+        Implementer session:
+        Independent reviewer:
+        Branch / starting SHA:
+        Blocked by (issue links / contract versions):
+        Reservations (paths, holder, start/expiry, acknowledgement):
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Task contract
+      description: Copy the full contract from docs/orchestration/agent-contract.md.
+      placeholder: Goal, current code, owned/excluded paths, input/output versions, failures, tenant scope, migrations and rollback.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Acceptance and handoff evidence
+      placeholder: Observable scenarios, exact commands/environment, decision gates and completion handoff.
+    validations:
+      required: true

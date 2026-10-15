@@ -55,3 +55,12 @@ the product planning context is Food Minutes. Do not rename the product incident
 Use small reviewable PRs. Include behavior, migration requirements, evidence and risks.
 A documentation approval is not proof that implementation gates passed. Merging and production
 release follow the task's authorization and the acceptance gates; do not deploy unfinished slices.
+
+## Development orchestration
+
+Read `docs/orchestration/README.md` before taking implementation work. Use a linked work-package
+issue with one named implementer, explicit dependencies and reserved write paths. Shared schema,
+lockfile, auth, layout and CI changes have one writer at a time. Publish producer contracts before
+parallel consumers; use isolated checkouts and supply the completion handoff. Logical lane ownership
+does not replace service authorization or independent review. See the orchestration ownership map,
+architecture contracts and delivery process for exact rules.

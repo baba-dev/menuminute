@@ -14,6 +14,13 @@ Architecture approved 2026-10-15. This PR prepares architecture documentation an
 Keep PRs small enough to review but deliver complete slices. Do not release partial order submission
 without acceptance/recovery. Security/observability accompany each slice, not a final cleanup phase.
 
+## Phase 0: development orchestration
+
+[The orchestration package](orchestration/README.md) precedes implementation slices A–F. It defines
+agent task/handoff contracts, single-writer reservations, architecture interfaces, dependency-linked
+GitHub work packages and final-SHA evidence. It does not renumber slices, migrate runtime code or
+prove launch readiness. [The backlog](orchestration/backlog.md) maps tasks to these slices.
+
 ## Initial code inventory requiring resolution in A
 
 - SQLite services are synchronous and require actual conversion, not a connection-string replacement.
