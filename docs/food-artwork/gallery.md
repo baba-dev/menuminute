@@ -951,4 +951,3 @@ Shared across light/dark themes. [Manifest](manifest.json) · [README](README.md
 ### Prawn Balchao
 
 ![Prawn Balchao](../../public/assets/food/dishes/regional-restaurant-favorites/prawn-balchao.png)
-

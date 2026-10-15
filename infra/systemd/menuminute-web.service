@@ -9,6 +9,7 @@ StartLimitBurst=5
 Type=simple
 User=menuminute
 Group=menuminute
+SupplementaryGroups=menuminute-media
 WorkingDirectory=/var/www/menuminute/current
 EnvironmentFile=/etc/menuminute/web.env
 Environment=NODE_ENV=production
@@ -19,12 +20,12 @@ Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
 KillSignal=SIGTERM
-UMask=0027
+UMask=0007
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/menuminute
+ReadWritePaths=/var/lib/menuminute/media /var/lib/menuminute/cache /var/lib/menuminute/tmp
 # Review against measured ERP peaks before installing. These are initial containment budgets.
 MemoryHigh=768M
 MemoryMax=1G

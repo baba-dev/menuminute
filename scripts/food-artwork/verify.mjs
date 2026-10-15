@@ -17,8 +17,8 @@ const thirdGroups = new Set([
   "indo-chinese-starters-ii",
 ]);
 
-if (manifest.assetCount !== 186 || manifest.assets.length !== manifest.assetCount) {
-  errors.push("Expected 186 manifest assets");
+if (manifest.assetCount !== 224 || manifest.assets.length !== manifest.assetCount) {
+  errors.push("Expected 224 manifest assets");
 }
 if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
   errors.push("Group totals disagree with assetCount");
@@ -27,6 +27,12 @@ if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
 const knownPaths = new Set();
 const knownKeys = new Set();
 const counted = new Map();
+const newGroups = new Set([
+  "high-demand-essentials",
+  "indo-chinese-mains-soups",
+  "north-indian-rajasthani",
+  "regional-restaurant-favorites",
+]);
 
 for (const asset of manifest.assets) {
   const key = asset.category + "/" + asset.slug;
@@ -81,13 +87,19 @@ for (const asset of manifest.assets) {
   if (thirdGroups.has(asset.category) && !asset.sha256) {
     errors.push("Missing third-batch SHA-256: " + asset.path);
   }
-  if (new Set(["high-demand-essentials","indo-chinese-mains-soups","north-indian-rajasthani","regional-restaurant-favorites"]).has(asset.category) && !/^[a-f0-9]{64}$/.test(asset.sha256 ?? "")) errors.push("Missing or malformed SHA-256 for new asset: " + asset.path);
+  const isNewAsset = newGroups.has(asset.category);
+  if (isNewAsset && !/^[a-f0-9]{64}$/.test(asset.sha256 ?? "")) {
+    errors.push("Missing or malformed SHA-256 for new asset: " + asset.path);
+  }
   if (asset.sha256 && createHash("sha256").update(bytes).digest("hex") !== asset.sha256) {
     errors.push("SHA-256 mismatch: " + asset.path);
   }
 }
 
-if (thirdGroups.size !== 5 || [...thirdGroups].some((category) => manifest.groups[category] !== 10)) {
+if (
+  thirdGroups.size !== 5 ||
+  [...thirdGroups].some((category) => manifest.groups[category] !== 10)
+) {
   errors.push("Third-batch category totals mismatch");
 }
 
@@ -114,5 +126,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  "Verified 186 named 360x280 RGBA PNG artwork files across " + groups.length + " categories."
+  "Verified 224 named 360x280 RGBA PNG artwork files across " + groups.length + " categories."
 );
