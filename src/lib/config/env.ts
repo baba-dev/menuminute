@@ -1,60 +1,64 @@
-/**
- * Environment configuration with validation.
- * Fails fast at startup if required variables are missing.
- */
 import { z } from "zod";
-
-const envSchema = z.object({
-  // Core
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  APP_URL: z.string().url().default("http://localhost:3000"),
-  DATABASE_URL: z.string().default("./data/menuminute.sqlite"),
-  AUTH_SECRET: z
-    .string()
-    .min(16, "AUTH_SECRET must be at least 16 characters")
-    .default("dev-secret-change-in-production-use-openssl-rand-base64-32"),
-
-  // AI Integrations (optional)
-  GEMINI_API_KEY: z.string().optional(),
-  NVIDIA_API_KEY: z.string().optional(),
-
-  // Cloudflare (optional)
-  CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
-  CLOUDFLARE_API_TOKEN: z.string().optional(),
-  R2_ACCESS_KEY_ID: z.string().optional(),
-  R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_BUCKET_NAME: z.string().default("menuminute-media"),
-  R2_ENDPOINT: z.string().optional(),
-
-  // Pexels (optional)
-  PEXELS_API_KEY: z.string().optional(),
-
-  // Feature Flags
-  AI_FEATURES_ENABLED: z
-    .string()
-    .transform((v) => v === "true")
-    .default("false"),
-  IMAGE_GENERATION_ENABLED: z
-    .string()
-    .transform((v) => v === "true")
-    .default("false"),
-});
-
-function parseEnv() {
-  const result = envSchema.safeParse(process.env);
-
-  if (!result.success) {
-    console.error("❌ Invalid environment configuration:\n", result.error.flatten().fieldErrors);
-    // In production, refuse to start
-    if (process.env["NODE_ENV"] === "production") {
-      process.exit(1);
+const pgUrl = z
+  .string()
+  .url()
+  .refine((v) => /^postgres(ql)?:\/\//.test(v), "PostgreSQL URL required");
+const redisUrl = z
+  .string()
+  .url()
+  .refine((v) => /^rediss?:\/\//.test(v), "Redis URL required");
+export const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    APP_URL: z.string().url(),
+    DATABASE_URL: pgUrl,
+    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
+    AUTH_SECRET: z.string().min(32),
+    REDIS_QUEUE_URL: redisUrl,
+    REDIS_CACHE_URL: redisUrl,
+    GEMINI_API_KEY: z.string().optional(),
+    NVIDIA_API_KEY: z.string().optional(),
+    CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+    CLOUDFLARE_API_TOKEN: z.string().optional(),
+    R2_ACCESS_KEY_ID: z.string().optional(),
+    R2_SECRET_ACCESS_KEY: z.string().optional(),
+    R2_BUCKET_NAME: z.string().default("menuminute-media"),
+    R2_ENDPOINT: z.string().optional(),
+    PEXELS_API_KEY: z.string().optional(),
+    AI_FEATURES_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
+    IMAGE_GENERATION_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
+  })
+  .superRefine((e, ctx) => {
+    if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
+      ctx.addIssue({
+        code: "custom",
+        path: ["REDIS_CACHE_URL"],
+        message: "Separate queue/cache instances required",
+      });
+    if (e.NODE_ENV === "production") {
+      if (new URL(e.APP_URL).protocol !== "https:")
+        ctx.addIssue({ code: "custom", path: ["APP_URL"], message: "Production HTTPS required" });
+      if (/secret|change|example|test|development|placeholder/i.test(e.AUTH_SECRET))
+        ctx.addIssue({
+          code: "custom",
+          path: ["AUTH_SECRET"],
+          message: "Generate a unique production secret",
+        });
     }
-  }
-
-  return result.success ? result.data : envSchema.parse(process.env);
+  });
+export function parseEnv(input: Record<string, unknown>) {
+  const result = envSchema.safeParse(input);
+  if (!result.success)
+    throw new Error(
+      `Invalid configuration: ${[...new Set(result.error.issues.map((i) => i.path.join(".")))].join(", ")}`
+    );
+  return result.data;
 }
-
-// Parse once — will throw if required fields are missing
-export const env = parseEnv();
-
+export const env = parseEnv(process.env);
 export type Env = z.infer<typeof envSchema>;

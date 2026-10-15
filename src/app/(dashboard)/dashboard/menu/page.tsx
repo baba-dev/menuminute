@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { getCategoriesByRestaurant, getMenuItemsByCategory } from "@/modules/menus/service";
@@ -10,7 +11,9 @@ export const metadata = {
 
 export default async function MenuPage() {
   const session = await auth();
-  const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+  if (!session?.user.id) redirect("/login");
+  const actor = { userId: session.user.id };
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId);
 
   if (!restaurant) {
     return (
@@ -23,8 +26,10 @@ export default async function MenuPage() {
     );
   }
 
-  const categories = getCategoriesByRestaurant(restaurant.id);
-  const items = categories.flatMap((cat) => getMenuItemsByCategory(cat.id, restaurant.id));
+  const categories = await getCategoriesByRestaurant(actor, restaurant.id);
+  const items = (
+    await Promise.all(categories.map((cat) => getMenuItemsByCategory(actor, cat.id, restaurant.id)))
+  ).flat();
 
   return (
     <MenuManager

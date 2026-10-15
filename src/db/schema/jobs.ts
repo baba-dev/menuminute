@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { timestamp, integer, pgTable, text, index } from "drizzle-orm/pg-core";
 
 // ─── Background Jobs ───────────────────────────────────────────────────────────
 
-export const backgroundJobs = sqliteTable(
+export const backgroundJobs = pgTable(
   "background_jobs",
   {
     id: text("id").primaryKey(),
@@ -17,14 +17,14 @@ export const backgroundJobs = sqliteTable(
     attempts: integer("attempts").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull().default(3),
     errorMessage: text("error_message"),
-    scheduledAt: integer("scheduled_at", { mode: "timestamp" })
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    startedAt: integer("started_at", { mode: "timestamp" }),
-    completedAt: integer("completed_at", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [index("jobs_status_idx").on(t.status, t.scheduledAt), index("jobs_type_idx").on(t.type)]
 );

@@ -164,6 +164,8 @@ pnpm test:e2e
 
 ## 📚 Documentation Index
 
+- [Phase 1 foundation status, cutover and infrastructure](docs/foundation/phase-1.md)
+
 - [Phase 0 Development Orchestration](docs/orchestration/README.md)
 - [Approved Product Requirements](docs/product-requirements.md)
 - [Product Direction](docs/product-direction.md)

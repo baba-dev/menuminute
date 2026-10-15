@@ -1,70 +1,62 @@
-import { describe, it, expect } from "vitest";
-import bcrypt from "bcryptjs";
-import { assertRestaurantAccess } from "../src/modules/restaurants/service";
-import { ForbiddenError } from "../src/lib/errors";
-import { getDb } from "../src/db";
-import { restaurants, restaurantMembers, users } from "../src/db/schema";
+import { it, expect } from "vitest";
+import { authServer } from "../src/lib/auth";
+import { admin } from "./helpers";
 import { nanoid } from "nanoid";
-
-describe("Authentication & Authorization Boundaries", () => {
-  it("should hash and verify passwords using bcrypt (12 rounds)", async () => {
-    const password = "my-secure-restaurant-password-123";
-    const hash = await bcrypt.hash(password, 12);
-
-    expect(hash).not.toBe(password);
-    expect(await bcrypt.compare(password, hash)).toBe(true);
-    expect(await bcrypt.compare("wrong-password", hash)).toBe(false);
+import bcrypt from "bcryptjs";
+async function request(path: string, body?: unknown, cookie?: string) {
+  return authServer.handler(
+    new Request(`http://localhost:3000/api/auth/${path}`, {
+      method: body ? "POST" : "GET",
+      headers: {
+        origin: "http://localhost:3000",
+        "content-type": "application/json",
+        ...(cookie ? { cookie } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    })
+  );
+}
+it("creates database sessions and revokes them without cached JWT authority", async () => {
+  const email = `${nanoid()}@auth.invalid`;
+  const signup = await request("sign-up/email", {
+    name: "Owner",
+    email,
+    password: "test-password-123",
   });
-
-  it("should enforce tenant boundaries and role requirements", () => {
-    const db = getDb();
-    const userId = `user-role-test-${nanoid(6)}`;
-    const restaurantId = `rest-role-test-${nanoid(6)}`;
-
-    // Create user
-    db.insert(users)
-      .values({
-        id: userId,
-        email: `role-${nanoid(6)}@test.com`,
-        name: "Staff Member",
-        role: "user",
-      })
-      .run();
-
-    // Create restaurant
-    db.insert(restaurants)
-      .values({
-        id: restaurantId,
-        publicId: `pub-role-${nanoid(6)}`,
-        name: "Role Test Kitchen",
-        slug: `role-test-kitchen-${nanoid(4)}`,
-        currency: "INR",
-      })
-      .run();
-
-    // User is NOT a member yet -> Should throw ForbiddenError
-    expect(() => {
-      assertRestaurantAccess(userId, restaurantId);
-    }).toThrow(ForbiddenError);
-
-    // Add user as "kitchen" role
-    db.insert(restaurantMembers)
-      .values({
-        id: nanoid(),
-        restaurantId,
-        userId,
-        role: "kitchen",
-      })
-      .run();
-
-    // Kitchen staff CAN access kitchen/staff tasks
-    expect(() => {
-      assertRestaurantAccess(userId, restaurantId, ["kitchen", "staff"]);
-    }).not.toThrow();
-
-    // Kitchen staff CANNOT perform "owner" only actions (e.g. billing deletion)
-    expect(() => {
-      assertRestaurantAccess(userId, restaurantId, ["owner"]);
-    }).toThrow(ForbiddenError);
+  expect(signup.status).toBe(200);
+  const cookie = signup.headers.get("set-cookie")!.split(";")[0]!;
+  expect((await request("get-session", undefined, cookie)).status).toBe(200);
+  const data = await (await request("get-session", undefined, cookie)).json();
+  expect(data.user.email).toBe(email);
+  await admin(async (_db, pool) => {
+    await pool.query("delete from sessions where user_id=$1", [data.user.id]);
   });
+  expect(await (await request("get-session", undefined, cookie)).json()).toBeNull();
+});
+it("retains imported bcrypt credentials and rejects wrong passwords", async () => {
+  const id = nanoid(),
+    email = `${id}@legacy.invalid`;
+  await admin(async (_db, pool) => {
+    await pool.query("insert into users(id,name,email) values($1,'Legacy',$2)", [id, email]);
+    await pool.query(
+      "insert into accounts(id,account_id,provider_id,user_id,password) values($1,$2,'credential',$2,$3)",
+      [nanoid(), id, await bcrypt.hash("legacy-password", 12)]
+    );
+  });
+  expect((await request("sign-in/email", { email, password: "legacy-password" })).status).toBe(200);
+  expect((await request("sign-in/email", { email, password: "wrong-password" })).status).toBe(401);
+});
+it("rejects untrusted origins on authentication writes", async () => {
+  const res = await authServer.handler(
+    new Request("http://localhost:3000/api/auth/sign-up/email", {
+      method: "POST",
+      headers: { origin: "https://untrusted.invalid", "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Owner",
+        email: `${nanoid()}@auth.invalid`,
+        password: "test-password-123",
+      }),
+    })
+  );
+  expect(res.status).toBe(403);
 });

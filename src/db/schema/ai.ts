@@ -1,11 +1,11 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { boolean, timestamp, integer, pgTable, text, index } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 import { users } from "./users";
 
 // ─── AI Usage Records ─────────────────────────────────────────────────────────
 
-export const aiUsageRecords = sqliteTable(
+export const aiUsageRecords = pgTable(
   "ai_usage_records",
   {
     id: text("id").primaryKey(),
@@ -26,13 +26,13 @@ export const aiUsageRecords = sqliteTable(
     // Token/credit usage
     tokensUsed: integer("tokens_used"),
     // Success or error
-    success: integer("success", { mode: "boolean" }).notNull().default(true),
+    success: boolean("success").notNull().default(true),
     errorMessage: text("error_message"),
     // Duration in ms
     durationMs: integer("duration_ms"),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("ai_usage_restaurant_idx").on(t.restaurantId),

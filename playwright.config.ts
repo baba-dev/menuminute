@@ -9,7 +9,8 @@ export default defineConfig({
   reporter: process.env["CI"] ? "github" : "html",
 
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "https://localhost:3443",
+    ignoreHTTPSErrors: true,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -26,9 +27,11 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "pnpm build && pnpm start",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env["CI"],
+    command: "node scripts/browser-server.mjs",
+    url: "https://localhost:3443/api/health/ready",
+    ignoreHTTPSErrors: true,
+    reuseExistingServer: false,
+
     timeout: 120 * 1000,
   },
 });

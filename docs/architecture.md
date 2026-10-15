@@ -1,18 +1,18 @@
 # Approved system architecture
 
-Status: approved target, 2026-10-15. Documentation does not implement the migration.
+Status: approved target, 2026-10-15. Phase 1 implementation is described in [foundation status](foundation/phase-1.md); ordering/outbox remain target work.
 
 ## Current scaffold versus target
 
-| Concern    | Current code                                               | Approved target                                        |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------------ |
-| Database   | better-sqlite3; synchronous services and SQLite migrations | PostgreSQL, Drizzle, pg; asynchronous transactions     |
-| Sessions   | NextAuth credentials + JWT                                 | Better Auth, database-backed revocable sessions        |
-| Jobs       | background_jobs schema; no durable order dispatcher        | PostgreSQL outbox/work records + BullMQ workers        |
-| Redis      | Not configured                                             | Separate queue and cache instances                     |
-| Orders/KDS | Schema and preview routes                                  | Dine-in/pickup ordering, acceptance and recovery       |
-| Deployment | Scaffold has no production deployment                      | Ubuntu 24.04 ARM64; shared audited ERP host            |
-| AI         | Interfaces returning null                                  | Quota-controlled asynchronous merchant-reviewed drafts |
+| Concern    | Current code                                        | Approved target                                        |
+| ---------- | --------------------------------------------------- | ------------------------------------------------------ |
+| Database   | PostgreSQL/pg; async foundation/menu services       | PostgreSQL, Drizzle, pg; asynchronous transactions     |
+| Sessions   | Better Auth database sessions                       | Better Auth, database-backed revocable sessions        |
+| Jobs       | background_jobs schema; no durable order dispatcher | PostgreSQL outbox/work records + BullMQ workers        |
+| Redis      | Bounded queue/cache Redis clients                   | Separate queue and cache instances                     |
+| Orders/KDS | Schema and preview routes                           | Dine-in/pickup ordering, acceptance and recovery       |
+| Deployment | Prepared ARM64 templates; not deployed              | Ubuntu 24.04 ARM64; shared audited ERP host            |
+| AI         | Interfaces returning null                           | Quota-controlled asynchronous merchant-reviewed drafts |
 
 The approved design is a modular monolith with separately supervised web and worker processes.
 Launch supports dine-in and pickup, guest checkout and payment at restaurant/counter. Online payments, delivery,

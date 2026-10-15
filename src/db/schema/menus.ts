@@ -1,10 +1,20 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  timestamp,
+  integer,
+  pgTable,
+  text,
+  index,
+  unique,
+  foreignKey,
+  check,
+} from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 
 // ─── Menu Categories ──────────────────────────────────────────────────────────
 
-export const menuCategories = sqliteTable(
+export const menuCategories = pgTable(
   "menu_categories",
   {
     id: text("id").primaryKey(),
@@ -15,15 +25,16 @@ export const menuCategories = sqliteTable(
     description: text("description"),
     imageUrl: text("image_url"),
     sortOrder: integer("sort_order").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
+    unique("category_outlet_unique").on(t.restaurantId, t.id),
     index("categories_restaurant_idx").on(t.restaurantId),
     index("categories_sort_idx").on(t.restaurantId, t.sortOrder),
   ]
@@ -31,7 +42,7 @@ export const menuCategories = sqliteTable(
 
 // ─── Menu Items ───────────────────────────────────────────────────────────────
 
-export const menuItems = sqliteTable(
+export const menuItems = pgTable(
   "menu_items",
   {
     id: text("id").primaryKey(),
@@ -47,24 +58,30 @@ export const menuItems = sqliteTable(
     pricePaise: integer("price_paise").notNull().default(0),
     imageUrl: text("image_url"),
     // Dietary flags
-    isVeg: integer("is_veg", { mode: "boolean" }),
-    isVegan: integer("is_vegan", { mode: "boolean" }),
-    isGlutenFree: integer("is_gluten_free", { mode: "boolean" }),
+    isVeg: boolean("is_veg"),
+    isVegan: boolean("is_vegan"),
+    isGlutenFree: boolean("is_gluten_free"),
     // Spice level: 0=none, 1=mild, 2=medium, 3=hot
     spiceLevel: integer("spice_level").default(0),
     // Featured item (shows prominently)
-    isFeatured: integer("is_featured", { mode: "boolean" }).notNull().default(false),
-    isAvailable: integer("is_available", { mode: "boolean" }).notNull().default(true),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    isAvailable: boolean("is_available").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
-    isDemoData: integer("is_demo_data", { mode: "boolean" }).notNull().default(false),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isDemoData: boolean("is_demo_data").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
+    unique("item_outlet_unique").on(t.restaurantId, t.id),
+    foreignKey({
+      columns: [t.restaurantId, t.categoryId],
+      foreignColumns: [menuCategories.restaurantId, menuCategories.id],
+    }),
+    check("item_price_nonnegative", sql`${t.pricePaise} >= 0`),
     index("items_restaurant_idx").on(t.restaurantId),
     index("items_category_idx").on(t.categoryId),
     index("items_sort_idx").on(t.categoryId, t.sortOrder),
@@ -74,7 +91,7 @@ export const menuItems = sqliteTable(
 // ─── Menu Item Variants ───────────────────────────────────────────────────────
 // e.g. Small / Medium / Large, Half / Full
 
-export const menuItemVariants = sqliteTable(
+export const menuItemVariants = pgTable(
   "menu_item_variants",
   {
     id: text("id").primaryKey(),
@@ -86,10 +103,14 @@ export const menuItemVariants = sqliteTable(
       .references(() => restaurants.id, { onDelete: "cascade" }),
     name: text("name").notNull(), // "Small", "Large", etc.
     pricePaise: integer("price_paise").notNull(), // price in minor units
-    isAvailable: integer("is_available", { mode: "boolean" }).notNull().default(true),
+    isAvailable: boolean("is_available").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => [
+    foreignKey({
+      columns: [t.restaurantId, t.menuItemId],
+      foreignColumns: [menuItems.restaurantId, menuItems.id],
+    }),
     index("variants_item_idx").on(t.menuItemId),
     index("variants_restaurant_idx").on(t.restaurantId),
   ]
@@ -97,7 +118,7 @@ export const menuItemVariants = sqliteTable(
 
 // ─── Menu Media ───────────────────────────────────────────────────────────────
 
-export const menuMedia = sqliteTable(
+export const menuMedia = pgTable(
   "menu_media",
   {
     id: text("id").primaryKey(),
@@ -125,10 +146,10 @@ export const menuMedia = sqliteTable(
     height: integer("height"),
     sizeBytes: integer("size_bytes"),
     mimeType: text("mime_type"),
-    isPrimary: integer("is_primary", { mode: "boolean" }).notNull().default(false),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("media_restaurant_idx").on(t.restaurantId),

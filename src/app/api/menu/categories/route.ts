@@ -1,37 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { requestContext, errorResponse } from "@/lib/request-context";
 import {
   getCategoriesByRestaurant,
   createCategory,
   createCategorySchema,
 } from "@/modules/menus/service";
-import { serializeError } from "@/lib/errors";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+    const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
-    }
-
-    const categories = getCategoriesByRestaurant(restaurant.id);
+    const categories = await getCategoriesByRestaurant(actor, restaurant.id);
     return NextResponse.json(categories);
   } catch (err) {
-    return NextResponse.json(serializeError(err), { status: 500 });
+    return errorResponse(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
-    }
+    const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
     const body = (await req.json()) as unknown;
     const parsed = createCategorySchema.safeParse(body);
@@ -43,9 +31,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const category = createCategory(restaurant.id, parsed.data);
+    const category = await createCategory(actor, restaurant.id, parsed.data);
     return NextResponse.json(category, { status: 201 });
   } catch (err) {
-    return NextResponse.json(serializeError(err), { status: 500 });
+    return errorResponse(err);
   }
 }

@@ -1,8 +1,7 @@
 # MenuMinute — Local Development Guide
 
-> Current scaffold instructions: SQLite + NextAuth. PostgreSQL/Redis/Better Auth are the
-> approved target, pending the foundation implementation. Do not use these commands as the
-> target production deployment. See [implementation plan](implementation-plan.md).
+> Phase 1 uses PostgreSQL, Better Auth and separate Redis workloads. See
+> [foundation status/cutover](foundation/phase-1.md). Docker is required for isolated local dependencies.
 
 ## 1. Prerequisites
 
@@ -26,12 +25,16 @@ pnpm install --frozen-lockfile
 # 3. Configure local environment
 cp .env.example .env.local
 
-# 4. Generate and run database migrations
-pnpm db:generate
+# 4. Start isolated dependencies and export CLI configuration
+pnpm infra:test:up
+set -a
+source .env.local
+set +a
+NODE_ENV=test pnpm exec tsx scripts/test-bootstrap.ts
 pnpm db:migrate
 
 # 5. Populate demonstration menu and user
-pnpm db:seed
+ALLOW_DEMO_SEED=true DEMO_PASSWORD="set-a-unique-local-password" pnpm db:seed
 
 # 6. Start development server
 pnpm dev
@@ -51,7 +54,7 @@ Visit:
 The database seed provides a pre-configured restaurant owner account:
 
 - **Email**: `demo@menuminute.com`
-- **Password**: `demo-password-change-me`
+- **Password**: the unique DEMO_PASSWORD you supplied to the explicit development seed
 - **Restaurant**: Spice Route Kitchen
 - **Public ID**: `demo-spice-route-kitchen-v1`
 

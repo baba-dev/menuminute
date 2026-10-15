@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Enable React strict mode for development warnings
   reactStrictMode: true,
+  output: "standalone",
 
   // Security headers
   async headers() {
@@ -44,7 +45,7 @@ const nextConfig: NextConfig = {
   },
 
   // External server packages (native modules)
-  serverExternalPackages: ["better-sqlite3", "sharp"],
+  serverExternalPackages: ["pg", "sharp"],
 
   // Experimental features
   experimental: {

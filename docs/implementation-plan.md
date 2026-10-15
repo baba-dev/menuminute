@@ -1,6 +1,6 @@
 # Implementation plan and acceptance gates
 
-Architecture approved 2026-10-15. This PR prepares architecture documentation and ARM64 CI alignment; runtime implementation follows.
+Architecture approved 2026-10-15. The Phase 1 branch implements foundation/menu PostgreSQL services, Better Auth, scoped tenancy and real dependency CI; production cutover remains gated. See [Phase 1 status](foundation/phase-1.md).
 
 | Slice | Deliverable                                                              | Dependency                               | Exit gate                                                   |
 | ----- | ------------------------------------------------------------------------ | ---------------------------------------- | ----------------------------------------------------------- |
@@ -21,7 +21,10 @@ agent task/handoff contracts, single-writer reservations, architecture interface
 GitHub work packages and final-SHA evidence. It does not renumber slices, migrate runtime code or
 prove launch readiness. [The backlog](orchestration/backlog.md) maps tasks to these slices.
 
-## Initial code inventory requiring resolution in A
+## Original scaffold inventory addressed by Phase 1
+
+The observations below describe the pre-conversion baseline, not the current branch. Foundation
+items are converted in Phase 1; target order/outbox lifecycle belongs to B/D.
 
 - SQLite services are synchronous and require actual conversion, not a connection-string replacement.
 - src/lib/auth.ts has JWT credentials despite an adapter claim in its header.

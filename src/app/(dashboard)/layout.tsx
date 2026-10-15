@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth, authServer } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import {
   QrCode,
@@ -15,7 +17,9 @@ import {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+  if (!session?.user.id) redirect("/login");
+  const actor = { userId: session.user.id };
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId);
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-100 md:flex-row">
@@ -146,7 +150,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <form
               action={async () => {
                 "use server";
-                await signOut({ redirectTo: "/login" });
+                await authServer.api.signOut({ headers: await headers() });
+                redirect("/login");
               }}
             >
               <button
