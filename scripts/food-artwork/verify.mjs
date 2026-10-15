@@ -1,67 +1,58 @@
 #!/usr/bin/env node
-// Validate all 36 standalone dish PNG assets.
+// Validate the 86 individually named dish PNG assets in the review branch.
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const manifestPath = join(root, "docs/food-artwork/manifest.json");
-const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-
-if (manifest.assets.length !== 36) {
-  throw new Error("Expected exactly 36 manifest entries");
-}
-
-const knownPaths = new Set();
+const manifest = JSON.parse(readFileSync(join(root, "docs/food-artwork/manifest.json"), "utf8"));
 const errors = [];
-
+const groups = Object.entries(manifest.groups);
+if (manifest.assetCount !== 86 || manifest.assets.length !== manifest.assetCount) {
+  errors.push("Expected 86 manifest assets");
+}
+if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
+  errors.push("Group totals disagree with assetCount");
+}
+const knownPaths = new Set();
+const knownKeys = new Set();
+const counted = new Map();
 for (const asset of manifest.assets) {
-  if (knownPaths.has(asset.path)) {
-    errors.push("Duplicate path: " + asset.path);
-  }
+  const key = asset.category + "/" + asset.slug;
+  if (knownPaths.has(asset.path)) errors.push("Duplicate path: " + asset.path);
+  if (knownKeys.has(key)) errors.push("Duplicate category/slug: " + key);
   knownPaths.add(asset.path);
-
-  const filename = join(root, "public", asset.path.slice(1));
-  if (!existsSync(filename)) {
-    errors.push("Missing: " + asset.path);
-    continue;
+  knownKeys.add(key);
+  counted.set(asset.category, (counted.get(asset.category) ?? 0) + 1);
+  if (!Object.hasOwn(manifest.groups, asset.category)) errors.push("Unknown category: " + key);
+  const expectedPath = "/assets/food/dishes/" + key + ".png";
+  if (asset.path !== expectedPath || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(asset.slug)) {
+    errors.push("Noncanonical asset path/slug: " + key);
   }
-
-  const bytes = readFileSync(filename);
-  const signature = bytes.subarray(0, 8).toString("hex");
-  const header = bytes.toString("ascii", 12, 16);
-
-  if (bytes.length < 33 || signature !== "89504e470d0a1a0a" || header !== "IHDR") {
-    errors.push("Invalid PNG: " + asset.path);
-    continue;
+  const file = join(root, "public", asset.path.slice(1));
+  if (!existsSync(file)) { errors.push("Missing: " + asset.path); continue; }
+  const bytes = readFileSync(file);
+  if (bytes.length < 33 || bytes.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a" || bytes.toString("ascii", 12, 16) !== "IHDR") {
+    errors.push("Invalid PNG: " + asset.path); continue;
   }
-
-  const width = bytes.readUInt32BE(16);
-  const height = bytes.readUInt32BE(20);
-  const colorType = bytes[25];
-
-  if (width !== 360 || height !== 280 || colorType !== 6) {
-    errors.push("Expected 360x280 RGBA PNG: " + asset.path);
+  const width = bytes.readUInt32BE(16), height = bytes.readUInt32BE(20), colorType = bytes[25];
+  if (width !== 360 || height !== 280 || colorType !== 6 ||
+      asset.width !== width || asset.height !== height || asset.format !== "image/png") {
+    errors.push("Expected 360x280 RGBA PNG with matching metadata: " + asset.path);
+  }
+  if (asset.sha256 && createHash("sha256").update(bytes).digest("hex") !== asset.sha256) {
+    errors.push("SHA-256 mismatch: " + asset.path);
   }
 }
-
-for (const category of ["indian", "western", "italian"]) {
-  const directory = join(root, "public/assets/food/dishes", category);
-  if (!existsSync(directory)) {
-    errors.push("Missing category directory: " + category);
-    continue;
-  }
-  for (const filename of readdirSync(directory)) {
-    const assetPath = "/assets/food/dishes/" + category + "/" + filename;
-    if (!knownPaths.has(assetPath)) {
-      errors.push("Unexpected file: " + assetPath);
-    }
+for (const [category, expected] of groups) {
+  if (counted.get(category) !== expected) errors.push("Category count mismatch: " + category);
+  const dir = join(root, "public/assets/food/dishes", category);
+  if (!existsSync(dir)) { errors.push("Missing category directory: " + category); continue; }
+  for (const filename of readdirSync(dir)) {
+    const path = "/assets/food/dishes/" + category + "/" + filename;
+    if (!knownPaths.has(path)) errors.push("Unexpected file: " + path);
   }
 }
-
-if (errors.length > 0) {
-  console.error(errors.join("\n"));
-  process.exit(1);
-}
-
-console.log("Verified 36 named 360x280 RGBA PNG artwork files.");
+if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
+console.log("Verified 86 named 360x280 RGBA PNG artwork files across " + groups.length + " categories.");
