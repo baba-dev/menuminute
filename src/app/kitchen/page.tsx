@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChefHat, ArrowLeft, Clock, Volume2, ShieldAlert } from "lucide-react";
 
@@ -6,7 +8,8 @@ export const metadata = {
   description: "Live order acceptance and preparation workflow for kitchen staff.",
 };
 
-export default function KitchenPage() {
+export default async function KitchenPage() {
+  if (!(await auth())?.user.id) redirect("/login");
   return (
     <div className="flex min-h-screen flex-col bg-stone-900 text-stone-100">
       {/* Top Bar */}

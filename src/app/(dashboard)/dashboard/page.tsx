@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
@@ -20,19 +21,23 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const session = await auth();
-  const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+  if (!session?.user.id) redirect("/login");
+  const actor = { userId: session.user.id };
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
 
   if (!restaurant) {
     return (
       <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center">
         <h2 className="text-lg font-bold text-stone-900">No Restaurant Configured</h2>
-        <p className="mt-1 text-sm text-stone-500">Please create your restaurant profile first.</p>
+        <Link href="/onboarding" className="mt-3 inline-block text-orange-600">
+          Create your first outlet
+        </Link>
       </div>
     );
   }
 
-  const categories = getCategoriesByRestaurant(restaurant.id);
-  const fullMenu = getFullMenu(restaurant.id);
+  const categories = await getCategoriesByRestaurant(actor, restaurant.id);
+  const fullMenu = await getFullMenu(actor, restaurant.id);
   const totalItems = fullMenu.reduce((acc, cat) => acc + cat.items.length, 0);
 
   return (

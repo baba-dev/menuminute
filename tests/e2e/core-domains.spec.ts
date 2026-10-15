@@ -1,0 +1,202 @@
+import { test, expect, type Page } from "@playwright/test";
+import { Pool } from "pg";
+import { hashPassword } from "better-auth/crypto";
+async function seed() {
+  const url = process.env["MIGRATION_DATABASE_URL"];
+  if (!url || new URL(url).pathname !== "/menuminute_test")
+    throw new Error("Isolated browser database required");
+  const pool = new Pool({ connectionString: url, max: 1 });
+  const id = crypto.randomUUID();
+  const email = `domain-${id}@browser.invalid`;
+  const password = "browser-domain-password";
+  const memberId = crypto.randomUUID();
+  const memberEmail = `member-${id}@browser.invalid`;
+  const first = crypto.randomUUID(),
+    second = crypto.randomUUID();
+  try {
+    const hash = await hashPassword(password);
+    const c = await pool.connect();
+    try {
+      await c.query("begin");
+      for (const [uid, mail, name] of [
+        [id, email, "Browser owner"],
+        [memberId, memberEmail, "Browser staff"],
+      ]) {
+        await c.query("insert into users(id,name,email) values($1,$2,$3)", [uid, name, mail]);
+        await c.query(
+          "insert into accounts(id,user_id,provider_id,account_id,password) values($1,$2,'credential',$2,$3)",
+          [crypto.randomUUID(), uid, hash]
+        );
+      }
+      await c.query("select set_config('app.actor_id',$1,true)", [id]);
+      for (const [outlet, name] of [
+        [first, "Alpha Domain"],
+        [second, "Beta Domain"],
+      ])
+        await c.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
+          outlet,
+          crypto.randomUUID(),
+          JSON.stringify({
+            name,
+            country: "IN",
+            currency: "INR",
+            timezone: "Asia/Kolkata",
+            outletType: "restaurant",
+          }),
+        ]);
+      await c.query("commit");
+    } finally {
+      c.release();
+    }
+  } finally {
+    await pool.end();
+  }
+  return {
+    email,
+    password,
+    memberEmail,
+    first,
+    second,
+    org: `org-${first}`,
+    otherOrg: `org-${second}`,
+  };
+}
+async function login(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+}
+test("organization and outlet management, scoped roles, billing and suspension recovery", async ({
+  page,
+}) => {
+  const f = await seed();
+  await login(page, f.email, f.password);
+  await page.getByRole("link", { name: "Organization & access" }).click();
+  await expect(page.getByRole("heading", { name: "Organization management" })).toBeVisible();
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  const rename = page
+    .getByRole("button", { name: "Save organization name" })
+    .locator("xpath=ancestor::form");
+  await rename.getByLabel("Organization name", { exact: true }).fill("Alpha Renamed");
+  await rename.getByRole("button", { name: "Save organization name" }).click();
+  await expect(rename.getByRole("status")).toHaveText("Saved");
+  const create = page
+    .getByRole("button", { name: "Create outlet", exact: true })
+    .locator("xpath=ancestor::form");
+  await create.getByLabel("Outlet name").fill("Scoped Pickup");
+  await create.getByLabel("Currency", { exact: true }).fill("OMR");
+  await create.getByLabel("Timezone").fill("Asia/Muscat");
+  await create.getByLabel("Outlet type").selectOption("cafe");
+  await create.getByLabel("Dine-in").uncheck();
+  await create.getByLabel("Pickup", { exact: true }).check();
+  await create.getByRole("button", { name: "Create outlet", exact: true }).click();
+  await expect(create.getByRole("status")).toHaveText("Saved");
+  const member = page
+    .getByRole("button", { name: "Save member", exact: true })
+    .locator("xpath=ancestor::form");
+  await member.getByLabel("Member email").fill(f.memberEmail);
+  await member.getByRole("button", { name: "Save member", exact: true }).click();
+  await expect(member.getByRole("status")).toHaveText("Saved");
+  const roles = page
+    .getByRole("button", { name: "Save outlet roles" })
+    .locator("xpath=ancestor::form");
+  await roles.getByLabel("Outlet", { exact: true }).selectOption({ label: "Scoped Pickup" });
+  await roles
+    .getByLabel("Member", { exact: true })
+    .selectOption({ label: `Browser staff (${f.memberEmail})` });
+  await roles.getByLabel("manager", { exact: true }).check();
+  await roles.getByRole("button", { name: "Save outlet roles" }).click();
+  await expect(roles.getByRole("status")).toHaveText("Saved");
+  const list = await page.request.get(`/api/organizations/${f.org}`);
+  const detail = await list.json();
+  const pickup = detail.outlets.find((o: { name: string }) => o.name === "Scoped Pickup");
+  await page.reload();
+  await page.getByLabel("Active outlet").selectOption(pickup.id);
+  await expect(page.getByLabel("Active outlet")).toHaveValue(pickup.id);
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: "Scoped Pickup", exact: true })).toBeVisible();
+  await page.goto("/dashboard/organization");
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await expect(page.getByRole("heading", { name: "Billing entitlements" })).toBeVisible();
+  await expect(page.getByText(/Public QR menus: free/)).toBeVisible();
+  const status = page
+    .getByRole("button", { name: "Suspend organization" })
+    .locator("xpath=ancestor::form");
+  await status.getByLabel("Confirm organization status change").check();
+  await status.getByRole("button", { name: "Suspend organization" }).click();
+  await expect(page.getByRole("button", { name: "Reactivate organization" })).toBeVisible();
+  await page.reload();
+  const reactivate = page
+    .getByRole("button", { name: "Reactivate organization" })
+    .locator("xpath=ancestor::form");
+  await reactivate.getByLabel("Confirm organization status change").check();
+  await reactivate.getByRole("button", { name: "Reactivate organization" }).click();
+  await expect(page.getByRole("button", { name: "Suspend organization" })).toBeVisible();
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await login(page, f.memberEmail, f.password);
+  await page.goto("/dashboard/organization");
+  await expect(
+    page.getByRole("heading", { name: "Settings: Scoped Pickup", exact: true })
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save member", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Billing entitlements" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Settings: Alpha Domain", exact: true })
+  ).toHaveCount(0);
+  const forbidden = await page.request.get(`/api/organizations/${f.otherOrg}`);
+  expect(forbidden.status()).toBe(403);
+});
+test("organization switching ignores a late response from the previous organization", async ({
+  page,
+}) => {
+  const f = await seed();
+  await login(page, f.email, f.password);
+  let resolve!: () => void;
+  const gate = new Promise<void>((r) => (resolve = r));
+  let intercepted!: () => void;
+  const started = new Promise<void>((r) => (intercepted = r));
+  await page.route(`**/api/organizations/${f.org}`, async (route) => {
+    const response = await route.fetch();
+    intercepted();
+    await gate;
+    await route.fulfill({ response });
+  });
+  await page.goto("/dashboard/organization");
+  await started;
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.otherOrg);
+  await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Beta Domain");
+  resolve();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Beta Domain");
+  const form = page
+    .getByRole("button", { name: "Save organization name" })
+    .locator("xpath=ancestor::form");
+  await form.getByLabel("Organization name", { exact: true }).fill("Beta Safely Renamed");
+  await form.getByRole("button", { name: "Save organization name" }).click();
+  await expect(form.getByRole("status")).toHaveText("Saved");
+  let releaseSave!: () => void;
+  let saveStarted!: () => void;
+  const saving = new Promise<void>((r) => (saveStarted = r));
+  const saveGate = new Promise<void>((r) => (releaseSave = r));
+  await page.route(`**/api/organizations/${f.otherOrg}`, async (route) => {
+    if (route.request().method() !== "PATCH") {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    saveStarted();
+    await saveGate;
+    await route.fulfill({ response });
+  });
+  await form.getByLabel("Organization name", { exact: true }).fill("Beta Background Save");
+  await form.getByRole("button", { name: "Save organization name" }).click();
+  await saving;
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  releaseSave();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Alpha Domain");
+  const unchanged = await page.request.get(`/api/organizations/${f.org}`);
+  expect((await unchanged.json()).organization.name).toBe("Alpha Domain");
+});

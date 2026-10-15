@@ -11,3 +11,9 @@ export * from "./media";
 export * from "./ai";
 export * from "./jobs";
 export * from "./audit";
+
+export * from "./tenancy";
+
+export * from "./core-domains";
+
+export * from "./menu-product";

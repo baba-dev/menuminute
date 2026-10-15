@@ -1,18 +1,18 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { timestamp, integer, pgTable, text, index } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 import { restaurantTables } from "./restaurants";
 import { menuItems, menuItemVariants } from "./menus";
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
-export const orders = sqliteTable(
+export const orders = pgTable(
   "orders",
   {
     id: text("id").primaryKey(),
     restaurantId: text("restaurant_id")
       .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
+      .references(() => restaurants.id, { onDelete: "restrict" }),
     tableId: text("table_id").references(() => restaurantTables.id, {
       onDelete: "set null",
     }),
@@ -32,12 +32,12 @@ export const orders = sqliteTable(
     notes: text("notes"),
     // Sequence number per restaurant per day (e.g. #42)
     orderNumber: integer("order_number").notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("orders_restaurant_idx").on(t.restaurantId),
@@ -48,13 +48,13 @@ export const orders = sqliteTable(
 
 // ─── Order Items ──────────────────────────────────────────────────────────────
 
-export const orderItems = sqliteTable(
+export const orderItems = pgTable(
   "order_items",
   {
     id: text("id").primaryKey(),
     orderId: text("order_id")
       .notNull()
-      .references(() => orders.id, { onDelete: "cascade" }),
+      .references(() => orders.id, { onDelete: "restrict" }),
     menuItemId: text("menu_item_id")
       .notNull()
       .references(() => menuItems.id, { onDelete: "restrict" }),
@@ -63,7 +63,7 @@ export const orderItems = sqliteTable(
     }),
     restaurantId: text("restaurant_id")
       .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
+      .references(() => restaurants.id, { onDelete: "restrict" }),
     // Snapshot of item at time of order (denormalized for historical accuracy)
     itemName: text("item_name").notNull(),
     variantName: text("variant_name"),
@@ -80,22 +80,22 @@ export const orderItems = sqliteTable(
 
 // ─── Order Status Events ───────────────────────────────────────────────────────
 
-export const orderStatusEvents = sqliteTable(
+export const orderStatusEvents = pgTable(
   "order_status_events",
   {
     id: text("id").primaryKey(),
     orderId: text("order_id")
       .notNull()
-      .references(() => orders.id, { onDelete: "cascade" }),
+      .references(() => orders.id, { onDelete: "restrict" }),
     restaurantId: text("restaurant_id")
       .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
+      .references(() => restaurants.id, { onDelete: "restrict" }),
     status: text("status").notNull(),
     note: text("note"),
     changedBy: text("changed_by"), // userId or "system"
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [index("status_events_order_idx").on(t.orderId)]
 );

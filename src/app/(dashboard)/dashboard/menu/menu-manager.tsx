@@ -1,4 +1,5 @@
 "use client";
+import { currencyExponent } from "@/lib/money";
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/utils";
@@ -397,7 +398,7 @@ export function MenuManager({ initialCategories, initialItems, currency }: MenuM
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step={1 / 10 ** (currencyExponent(currency) ?? 2)}
                   min="0"
                   required
                   placeholder="299"

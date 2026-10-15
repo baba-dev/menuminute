@@ -1,5 +1,9 @@
+import { ContextSwitcher } from "./context-switcher";
+import { getRestaurantsByUserId } from "@/modules/restaurants/service";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth, authServer } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import {
   QrCode,
@@ -15,7 +19,9 @@ import {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+  if (!session?.user.id) redirect("/login");
+  const actor = { userId: session.user.id };
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-100 md:flex-row">
@@ -70,6 +76,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         )}
 
+        <ContextSwitcher
+          outlets={await getRestaurantsByUserId(actor.userId)}
+          selected={restaurant?.id}
+        />
         {/* Navigation Links */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
           <Link
@@ -105,7 +115,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <span>Orders</span>
             </div>
             <span className="rounded border border-stone-200 bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
-              ₹149/mo
+              Planned
             </span>
           </Link>
 
@@ -118,10 +128,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <span>Kitchen Display</span>
             </div>
             <span className="rounded border border-stone-200 bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
-              ₹299/mo
+              Planned
             </span>
           </Link>
 
+          <Link
+            href="/dashboard/organization"
+            className="block rounded-lg px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100"
+          >
+            Organization & access
+          </Link>
           <Link
             href="/dashboard/settings"
             className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-100 hover:text-stone-900"
@@ -146,7 +162,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <form
               action={async () => {
                 "use server";
-                await signOut({ redirectTo: "/login" });
+                await authServer.api.signOut({ headers: await headers() });
+                redirect("/login");
               }}
             >
               <button

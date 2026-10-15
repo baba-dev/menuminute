@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { currencyExponent } from "./money";
 import { twMerge } from "tailwind-merge";
 
 /**
@@ -13,12 +14,14 @@ export function cn(...inputs: ClassValue[]) {
  * e.g. 29900 -> "₹299"
  */
 export function formatPrice(paise: number, currency: string = "INR"): string {
-  const amount = paise / 100;
+  const exponent = currencyExponent(currency);
+  if (exponent === null) throw new Error("Unsupported currency");
+  const amount = paise / 10 ** exponent;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: exponent,
   }).format(amount);
 }
 

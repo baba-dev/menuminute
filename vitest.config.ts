@@ -5,8 +5,18 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
+    environment: "node",
     globals: true,
+    env: {
+      APP_URL: "http://localhost:3000",
+      AUTH_SECRET: "isolated-test-key-with-at-least-32-characters",
+      DATABASE_URL:
+        process.env["DATABASE_URL"] ??
+        "postgresql://menuminute_app:local-test@127.0.0.1:5432/menuminute_test",
+      REDIS_QUEUE_URL: process.env["REDIS_QUEUE_URL"] ?? "redis://127.0.0.1:6379",
+      REDIS_CACHE_URL: process.env["REDIS_CACHE_URL"] ?? "redis://127.0.0.1:6380",
+    },
+    testTimeout: 15000,
     fileParallelism: false,
     setupFiles: ["./tests/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],

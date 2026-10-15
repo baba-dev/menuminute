@@ -1,6 +1,6 @@
 # Implementation plan and acceptance gates
 
-Architecture approved 2026-10-15. This PR prepares architecture documentation and ARM64 CI alignment; runtime implementation follows.
+Architecture approved 2026-10-15. The Phase 1 branch implements foundation/menu PostgreSQL services, Better Auth, scoped tenancy and real dependency CI; production cutover remains gated. See [Phase 1 status](foundation/phase-1.md).
 
 | Slice | Deliverable                                                              | Dependency                               | Exit gate                                                   |
 | ----- | ------------------------------------------------------------------------ | ---------------------------------------- | ----------------------------------------------------------- |
@@ -14,7 +14,27 @@ Architecture approved 2026-10-15. This PR prepares architecture documentation an
 Keep PRs small enough to review but deliver complete slices. Do not release partial order submission
 without acceptance/recovery. Security/observability accompany each slice, not a final cleanup phase.
 
-## Initial code inventory requiring resolution in A
+## Phase 0: development orchestration
+
+[The orchestration package](orchestration/README.md) precedes implementation slices A–F. It defines
+agent task/handoff contracts, single-writer reservations, architecture interfaces, dependency-linked
+GitHub work packages and final-SHA evidence. It does not renumber slices, migrate runtime code or
+prove launch readiness. [The backlog](orchestration/backlog.md) maps tasks to these slices.
+
+Phase 2 adds organization/outlet/brand administration, scoped permission commands, a PostgreSQL
+outbox with a BullMQ projection worker, and explicit entitlement windows. See [contracts](core-domains/contracts.md)
+and [operation/rollback](core-domains/operations.md). Ordering, KDS, payment collection and production
+release remain gated; no commercial pricing or trial/grace policy is introduced.
+
+Phase 3 adds the [free QR menu product](menu-product/contracts.md): versioned drafts/releases,
+scoped sharing, service schedules, reviewed private media, permanent QR lifecycle and public browsing.
+See [operation and rollback](menu-product/operations.md). Ordering and live provider/deployment gates
+remain separate.
+
+## Original scaffold inventory addressed by Phase 1
+
+The observations below describe the pre-conversion baseline, not the current branch. Foundation
+items are converted in Phase 1; target order/outbox lifecycle belongs to B/D.
 
 - SQLite services are synchronous and require actual conversion, not a connection-string replacement.
 - src/lib/auth.ts has JWT credentials despite an adapter claim in its header.

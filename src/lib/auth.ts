@@ -1,80 +1,66 @@
-/**
- * NextAuth v5 configuration.
- * Credentials provider for email/password authentication.
- * Uses Drizzle adapter with our SQLite database.
- */
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { nextCookies } from "better-auth/next-js";
+import { headers, cookies } from "next/headers";
 import { getDb } from "@/db";
-import { users } from "@/db/schema";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
+import { users, sessions, accounts, verificationTokens, rateLimits } from "@/db/schema";
+import { env } from "@/lib/config/env";
+import { hashPassword, verifyPassword } from "better-auth/crypto";
+import bcrypt from "bcryptjs";
+export const authServer = betterAuth({
+  appName: "MenuMinute",
+  baseURL: env.APP_URL,
+  secret: env.AUTH_SECRET,
+  trustedOrigins: [new URL(env.APP_URL).origin],
+  database: drizzleAdapter(getDb(), {
+    provider: "pg",
+    transaction: true,
+    schema: {
+      user: users,
+      session: sessions,
+      account: accounts,
+      verification: verificationTokens,
+      rateLimit: rateLimits,
+    },
+  }),
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+    password: {
+      hash: hashPassword,
+      verify: async ({ hash, password }) =>
+        /^\$2[aby]\$/.test(hash)
+          ? bcrypt.compare(password, hash)
+          : verifyPassword({ hash, password }),
+    },
+  },
   session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+    cookieCache: { enabled: false },
   },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: string }).role ?? "user";
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
-      }
-      return session;
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    window: 60,
+    max: 60,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 60, max: 5 },
     },
   },
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-        const db = getDb();
-
-        const user = db.select().from(users).where(eq(users.email, email)).get();
-
-        if (!user?.passwordHash) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        };
-      },
-    }),
-  ],
-  trustHost: true,
-  secret: process.env["AUTH_SECRET"],
+  advanced: {
+    disableOriginCheck: false,
+    disableCSRFCheck: false,
+    useSecureCookies: env.NODE_ENV === "production",
+    database: { generateId: () => crypto.randomUUID() },
+  },
+  plugins: [nextCookies()],
 });
-
-// Re-export for convenience
-export type { Session } from "next-auth";
+export async function auth() {
+  const session = await authServer.api.getSession({ headers: await headers() });
+  return session
+    ? { ...session, activeOutletId: (await cookies()).get("menuminute.outlet")?.value }
+    : null;
+}

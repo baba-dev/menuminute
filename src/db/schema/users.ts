@@ -1,90 +1,69 @@
-import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
-
-// ─── Users ────────────────────────────────────────────────────────────────────
-
-export const users = sqliteTable(
-  "users",
-  {
-    id: text("id").primaryKey(), // nanoid
-    email: text("email").notNull(),
-    emailVerified: integer("email_verified", { mode: "timestamp" }),
-    name: text("name"),
-    image: text("image"),
-    passwordHash: text("password_hash"), // null for OAuth users
-    role: text("role", { enum: ["superadmin", "user"] })
-      .notNull()
-      .default("user"),
-    isDemoData: integer("is_demo_data", { mode: "boolean" }).notNull().default(false),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-  },
-  (t) => [uniqueIndex("users_email_idx").on(t.email)]
-);
-
-// ─── Sessions ─────────────────────────────────────────────────────────────────
-
-export const sessions = sqliteTable(
+import { pgTable, text, timestamp, boolean, index, uniqueIndex, bigint } from "drizzle-orm/pg-core";
+const instant = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  isDemoData: boolean("is_demo_data").notNull().default(false),
+  createdAt: instant("created_at"),
+  updatedAt: instant("updated_at"),
+});
+export const sessions = pgTable(
   "sessions",
   {
     id: text("id").primaryKey(),
-    sessionToken: text("session_token").notNull(),
+    token: text("token").notNull().unique(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    expires: integer("expires", { mode: "timestamp" }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: instant("created_at"),
+    updatedAt: instant("updated_at"),
   },
-  (t) => [
-    uniqueIndex("sessions_token_idx").on(t.sessionToken),
-    index("sessions_user_idx").on(t.userId),
-  ]
+  (t) => [index("sessions_user_idx").on(t.userId)]
 );
-
-// ─── Accounts (OAuth) ─────────────────────────────────────────────────────────
-
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   "accounts",
   {
     id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    refreshToken: text("refresh_token"),
+    password: text("password"),
     accessToken: text("access_token"),
-    expiresAt: integer("expires_at"),
-    tokenType: text("token_type"),
-    scope: text("scope"),
+    refreshToken: text("refresh_token"),
     idToken: text("id_token"),
-    sessionState: text("session_state"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    createdAt: instant("created_at"),
+    updatedAt: instant("updated_at"),
   },
   (t) => [
-    uniqueIndex("accounts_provider_idx").on(t.provider, t.providerAccountId),
+    uniqueIndex("accounts_provider_idx").on(t.providerId, t.accountId),
     index("accounts_user_idx").on(t.userId),
   ]
 );
-
-// ─── Verification Tokens ───────────────────────────────────────────────────────
-
-export const verificationTokens = sqliteTable(
-  "verification_tokens",
-  {
-    identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: integer("expires", { mode: "timestamp" }).notNull(),
-  },
-  (t) => [uniqueIndex("verification_tokens_idx").on(t.identifier, t.token)]
-);
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
+export const verificationTokens = pgTable("verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: instant("created_at"),
+  updatedAt: instant("updated_at"),
+});
+export const rateLimits = pgTable("rate_limits", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: bigint("count", { mode: "number" }).notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
-export type Account = typeof accounts.$inferSelect;

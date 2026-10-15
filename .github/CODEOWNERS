@@ -1,0 +1,11 @@
+# Actual maintainer, not logical AI-session lanes. Last matching rule wins.
+# Review routing only; enforcement depends on repository branch protection.
+* @baba-dev
+/AGENTS.md @baba-dev
+/.github/ @baba-dev
+/docs/ @baba-dev
+/src/db/ @baba-dev
+/package.json @baba-dev
+/pnpm-lock.yaml @baba-dev
+/src/lib/auth.ts @baba-dev
+/src/lib/config/ @baba-dev
