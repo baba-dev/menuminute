@@ -1,69 +1,58 @@
-# MenuMinute — Database Documentation
+# Database migration and target schema
 
-## 1. Engine and Connection Strategy
+Status: approved PostgreSQL design; current code still uses better-sqlite3.
 
-MenuMinute uses **SQLite** driven by **`better-sqlite3`** and orchestrated with **`drizzle-orm`**.
+## Existing baseline
 
-### Production SQLite Configuration (Pragmas)
+`src/db/index.ts` opens SQLite WAL with synchronous=NORMAL. Schemas import sqlite-core and services
+use synchronous get/all/run methods. Existing migrations and tests are SQLite-specific. A URL change
+alone will not migrate the application. Keep the baseline reproducible until the replacement slice passes.
 
-In `src/db/index.ts`, the database connection enforces production-grade reliability:
+## PostgreSQL target
 
-- **`journal_mode = WAL`**: Write-Ahead Logging allows concurrent readers while a write transaction is executing.
-- **`foreign_keys = ON`**: Strict foreign key enforcement ensuring relational integrity.
-- **`busy_timeout = 5000`**: Busy timeout of 5,000 milliseconds to wait for concurrent writes instead of immediately throwing `SQLITE_BUSY`.
-- **`synchronous = NORMAL`**: Balances high write throughput with power-loss durability when in WAL mode.
-- **`cache_size = -65536`**: 64 MB in-memory page cache for high read speeds.
-- **`mmap_size = 134217728`**: 128 MB memory-mapped I/O for lightning-fast reads.
-- **`temp_store = MEMORY`**: Temporary tables and indices stored in memory for performant complex sorting.
+- Drizzle pg-core schema and pg driver; async service interfaces and transaction-scoped clients.
+- Explicit organization/brand/outlet scope, scoped brand-outlet assignments, menu assignments and
+  outlet service points; composite unique/foreign-key constraints. See [product requirements](product-requirements.md).
+- Orders with currency, immutable item/options/tax snapshots, version, acknowledgement and separate
+  payment state, fulfillment mode, service-session expiry and served/collected completion. Never cascade-delete business history when deleting menu/restaurant records.
+- Idempotency results, outbox delivery state, consumer receipts/work records and persisted KDS events.
+- Durable AI/media work and provider-attempt evidence remain in PostgreSQL; BullMQ is execution state.
+- timestamptz UTC instants; outlet IANA timezone for business dates and display numbers.
+- Integer minor-unit amounts with safe application serialization and checked arithmetic.
+- Index open-order filters and keyset pagination by tenant/outlet/time/ID. Review query plans with
+  representative volumes. Defer partitioning and search infrastructure until measured.
 
----
+## Tenant database protection
 
-## 2. Currency and Financial Integrity
+Enable RLS for tenant-owned tables with separate migration-owner and non-owner runtime roles.
+Runtime roles must not be superuser or BYPASSRLS. Apply appropriate FORCE ROW LEVEL SECURITY where
+owner access is relevant. Set verified tenant context transaction-locally and clear it by transaction
+end; test pool reuse across different tenants. Missing context denies access.
 
-All currency and financial figures (e.g. `pricePaise`, `monthlyPricePaise`, `subtotalPaise`, `totalPaise`) are stored as **64-bit integer minor units (paise / cents)** rather than floating-point numbers.
+Public menu/order requests use deliberately restricted policies/projections, not a global bypass.
+Workers also resolve tenant context. Test privileged/public access separately from tenant runtime.
 
-```text
-₹299.00  -->  29900 paise
-₹69.50   -->   6950 paise
-```
+## Migration sequence
 
-This completely eliminates IEEE 754 floating-point rounding errors.
+1. Inventory whether any real data/users exist; back up and restore-test before conversion.
+2. Define new schema and reviewed SQL migrations, tenant mappings, status mappings and currency rules.
+3. Provision isolated PostgreSQL and Redis for integration tests; port all synchronous callers.
+4. If data exists, export through a consistent SQLite backup, import to staging and reconcile table
+   counts, memberships, money totals, timestamps, references, tokens and password compatibility.
+5. Rehearse cutover with a write pause; final import, reconciliation, smoke checks, then switch traffic.
+   If no real data exists, document that evidence before choosing a clean development reset.
+6. Keep an immutable source snapshot. Before reopening writes, rollback can restore the prior app/data.
+   After new writes, use reconciliation/forward repair or a rehearsed reverse migration; never silently
+   roll back to stale SQLite and lose orders.
 
----
+Production uses reviewed versioned migrations, one migration owner and a deployment migration lock.
+No db:push or automatic demo seed. Expand/contract changes preserve rolling-release compatibility.
 
-## 3. Relational Schema Summary
+## Product schema requirements
 
-The database consists of 22 normalized tables:
-
-| Domain          | Table                      | Purpose                                                         |
-| --------------- | -------------------------- | --------------------------------------------------------------- |
-| **Identity**    | `users`                    | User accounts, credentials, system roles (`user`, `superadmin`) |
-|                 | `sessions`                 | Active JWT session records                                      |
-|                 | `accounts`                 | OAuth identity provider links                                   |
-|                 | `verification_tokens`      | Email verification & magic links                                |
-| **Restaurants** | `restaurants`              | Restaurant identity, branding tokens, slug, stable `publicId`   |
-|                 | `restaurant_members`       | Tenant membership (`owner`, `manager`, `staff`, `kitchen`)      |
-|                 | `outlets`                  | Physical branch locations                                       |
-|                 | `restaurant_tables`        | Dine-in tables with numbers & capacity                          |
-|                 | `qr_codes`                 | Permanent QR code tokens and scan analytics                     |
-| **Menus**       | `menu_categories`          | Menu sections with sort order                                   |
-|                 | `menu_items`               | Dishes, descriptions, prices, dietary flags, spice levels       |
-|                 | `menu_item_variants`       | Portions/sizes (Half/Full, Small/Large)                         |
-|                 | `menu_media`               | Media attachments with license & attribution provenance         |
-| **Orders**      | `orders`                   | Order headers with status and totals                            |
-|                 | `order_items`              | Line items with historical price snapshots                      |
-|                 | `order_status_events`      | Immutable audit trail of order status transitions               |
-| **Billing**     | `subscription_plans`       | Product tiers (`free`, `ordering`, `kitchen_pro`)               |
-|                 | `restaurant_subscriptions` | Active subscription status and billing periods                  |
-| **Media & AI**  | `media_assets`             | Central registry for local and R2 media files                   |
-|                 | `ai_usage_records`         | Token consumption tracking across AI providers                  |
-| **System**      | `background_jobs`          | Persistent async queue for processing & notifications           |
-|                 | `audit_logs`               | Security audit trail of administrative modifications            |
-
----
-
-## 4. Migration & Seed Operations
-
-- **Generate Migrations**: `pnpm db:generate` — generates deterministic SQL files in `src/db/migrations/`.
-- **Run Migrations**: `pnpm db:migrate` — applies pending migrations safely.
-- **Seed Development Data**: `pnpm db:seed` — idempotent script populating demo restaurant "Spice Route Kitchen".
+Separate platform USD/INR subscription currency from each outlet's supported local currency. Store
+currency exponent and historical snapshots explicitly. Model variants plus add-on groups, local
+schedules/date exceptions and price/availability overrides. Membership permissions compose within
+organization/assigned outlet scope. Pending expiry and acceptance compete transactionally; permanent
+QR identity is independent of temporary guest sessions. No merchant-facing maximum quantity cap;
+validate positive integral quantities, representability and arithmetic without hidden business caps.

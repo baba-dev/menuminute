@@ -16,7 +16,7 @@ concurrency:
 jobs:
   lint-and-format:
     name: Lint & Code Style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,7 +24,10 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
+
+      - name: Verify ARM64 runtime
+        run: node -e 'if (process.platform !== "linux" || process.arch !== "arm64") throw new Error("Linux ARM64 required"); console.log(process.platform, process.arch, process.version)'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -39,9 +42,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${ runner.os }}-pnpm-store-
+            ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -54,7 +57,7 @@ jobs:
 
   typecheck:
     name: TypeScript Strict Typecheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,7 +65,10 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
+
+      - name: Verify ARM64 runtime
+        run: node -e 'if (process.platform !== "linux" || process.arch !== "arm64") throw new Error("Linux ARM64 required"); console.log(process.platform, process.arch, process.version)'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -77,9 +83,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${ runner.os }}-pnpm-store-
+            ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -89,7 +95,7 @@ jobs:
 
   test:
     name: Unit & Integration Tests (SQLite)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,7 +103,10 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
+
+      - name: Verify ARM64 runtime
+        run: node -e 'if (process.platform !== "linux" || process.arch !== "arm64") throw new Error("Linux ARM64 required"); console.log(process.platform, process.arch, process.version)'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -112,9 +121,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${ runner.os }}-pnpm-store-
+            ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -127,8 +136,8 @@ jobs:
           AUTH_SECRET: ci-temporary-secret-minimum-sixteen-chars
 
   build:
-    name: Production Build
-    runs-on: ubuntu-latest
+    name: Production Build (ARM64)
+    runs-on: ubuntu-24.04-arm
     needs: [lint-and-format, typecheck, test]
     steps:
       - name: Checkout code
@@ -137,7 +146,10 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
+
+      - name: Verify ARM64 runtime
+        run: node -e 'if (process.platform !== "linux" || process.arch !== "arm64") throw new Error("Linux ARM64 required"); console.log(process.platform, process.arch, process.version)'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -152,9 +164,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${ runner.os }}-pnpm-store-
+            ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

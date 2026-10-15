@@ -1,8 +1,12 @@
 # MenuMinute — Local Development Guide
 
+> Current scaffold instructions: SQLite + NextAuth. PostgreSQL/Redis/Better Auth are the
+> approved target, pending the foundation implementation. Do not use these commands as the
+> target production deployment. See [implementation plan](implementation-plan.md).
+
 ## 1. Prerequisites
 
-- **Node.js**: LTS release pinned in `.nvmrc` (v22+ supported; verified on v24 with prebuilt binaries)
+- **Node.js**: Node 24 LTS, selected in `.nvmrc` to match CI and the pnpm 11 toolchain
 - **Package Manager**: `pnpm` (v11+)
 - **Git**: v2.40+
 - **GitHub CLI**: `gh` (optional, for repo management)
@@ -17,7 +21,7 @@ git clone https://github.com/baba-dev/menuminute.git
 cd menuminute
 
 # 2. Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # 3. Configure local environment
 cp .env.example .env.local
@@ -70,12 +74,30 @@ The database seed provides a pre-configured restaurant owner account:
 | `pnpm db:seed`       | Idempotently seed demonstration restaurant and menu       |
 | `pnpm env:validate`  | Verify environment configuration variables                |
 
----
+## ARM64 build contract
 
-## 5. Product and design contract
+Production is Ubuntu 24.04 ARM64 on the shared ERP server; see
+[server inventory](server-inventory.md) and [deployment](deployment.md). Local development may
+use another architecture, but an x64 build does not satisfy the production release gate.
 
-Before implementing a feature, read [product direction](product-direction.md), [design system](design-system.md), [feedback and motion](feedback-and-motion.md), [AI and media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
+CI runs on `ubuntu-24.04-arm` and verifies `process.arch === "arm64"` before installing dependencies.
+Use the packageManager-pinned pnpm version and a frozen lockfile. Install native dependencies
+(Next.js SWC, Sharp and the current SQLite scaffold) on the target architecture; never copy
+node_modules or `.next` output from AMD64/macOS. Keep caches separated by OS, architecture and
+Node major. Container builds, if introduced, must target `linux/arm64` and pass native runtime checks.
 
-Use semantic theme tokens and shared shadcn/Radix primitives. The approved visual system is Ink & Ember with Ember Flow for everyday actions and Ink Press for selected tactile emphasis. Read [the approved button contract](button-options.md). Implement and verify Light / Dark / System throughout the app; keep the earlier flat buttons excluded. Preserve the existing order enum mapping until a migration is justified.
+Build and test outside the ERP host. The CI build is scaffold validation, not a PostgreSQL/Redis
+release or an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
 
-Each feature PR should identify the phase, behavior changed, necessary schema/migration changes, applicable acceptance evidence and any provider/production dependency. Distinguish a preview from an implemented capability. Never claim a CI result from an earlier commit as verification of the current SHA.
+## Product and design contract
+
+Before implementation, read [approved product requirements](product-requirements.md),
+[product direction](product-direction.md), [design system](design-system.md),
+[buttons](button-options.md), [feedback/motion](feedback-and-motion.md),
+[AI/media policy](ai-and-media.md) and [roadmap](product-roadmap.md).
+
+Use semantic theme tokens and shared shadcn/Radix primitives. Preserve Ink & Ember, Ember Flow
+for everyday actions, selected Ink Press emphasis and app-wide Light / Dark / System. Each feature
+PR identifies changed behavior, schema/migration requirements and acceptance evidence. Distinguish
+previews from implementation; final-SHA checks are required. Map existing order enums explicitly
+when adding pickup and expiry through reviewed migrations.

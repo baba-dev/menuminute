@@ -33,7 +33,8 @@ Stock and generated assets are illustrative, not evidence of the restaurant's ac
 ## Cost and job control
 
 - Per-restaurant request and storage limits, provider quota accounting, bounded retries, caching and deduplication.
-- Background jobs persisted in SQLite, bounded concurrency and timeouts; no Redis requirement for V1.
+- Background intent/results persisted in PostgreSQL with transactional outbox and BullMQ on separate
+  Redis queue/cache workloads; bounded concurrency and timeouts. SQLite is scaffold-only.
 - Disabled provider or exhausted quota returns a useful manual path and local fallback.
 - No automatic paid fallback/overage. Meter storage, inference and egress-related operations before committing to free-tier marketing.
 - Strip unnecessary personal information from import prompts. Define retention/deletion for original uploads and job outputs before launch.

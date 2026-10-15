@@ -11,48 +11,70 @@
 
 ---
 
-## Product direction
+## Approved architecture and implementation status
 
-**A beautiful menu for every restaurant. A calmer service for every team.**
+Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
+instances, BullMQ and Better Auth database sessions. Launch supports dine-in and pickup for restaurants, takeout and cloud kitchens, with staff
+acceptance and payment at the restaurant/counter. The code below is still the SQLite/NextAuth Phase 0 scaffold;
+this update does not migrate or deploy it. The audited host runs Ubuntu 24.04.4 LTS with
+4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
+[server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
 
-For independent cafés, dhabas, bakeries and small restaurants: free permanent QR menus, with subscriptions for guest ordering and kitchen operations.
+Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
+[dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
+and [AI development primers](docs/ai-development-primers.md). Contributors must read [AGENTS.md](AGENTS.md).
 
-| Tier        | Pilot pricing hypothesis             | Outcome                                                                           |
-| ----------- | ------------------------------------ | --------------------------------------------------------------------------------- |
-| Free Menu   | ₹0                                   | Mobile menu, restaurant branding, categories/items, availability and permanent QR |
-| Ordering    | ₹149/outlet/month                    | Table ordering, guest cart, staff acceptance, tracking and history                |
-| Kitchen Pro | ₹299/outlet/month, includes Ordering | Dedicated kitchen board, timers, staff roles and reconnect recovery               |
+See [approved product requirements](docs/product-requirements.md) for worldwide multi-outlet scope,
+outlet-type onboarding, role permissions, variants/add-ons, closing-time expiry and the initial
+25-owner / 50-restaurant / 1,000-orders-per-hour planning envelope. Platform subscriptions use
+USD/INR; outlets select supported local transaction currencies independently.
 
-Prices are pilot hypotheses; paid workflows are planned. V1 guest payment is at the counter. Keep the free menu accessible when a paid plan ends. See [product direction](docs/product-direction.md) for exact boundaries and open launch decisions.
+## Approved design direction
 
-### Design direction: Ink & Ember
+Ink & Ember remains approved: vivid color on white, gold/orange on charcoal, expressive restaurant
+typography and selective chef's-note details. Use Ember Flow for everyday actions and Ink Press
+for selected tactile emphasis; both use gradients and intent-driven motion. Service Card is for
+routine dialogs, Ink Ticket for milestones and Chef's Note for optional guidance.
 
-The approved direction is **Ink & Ember**: vivid orange on white, gold/orange on charcoal, expressive restaurant typography and selective chef's-note details. Use **Ember Flow for everyday actions** and **Ink Press for selected stronger tactile emphasis**. Both use gradients and intent-driven motion; see the [approved button contract](docs/button-options.md). Popup hierarchy is also approved: **Service Card for routine dialogs, Ink Ticket for milestones, Chef's Note for optional guidance**. See [feedback and motion](docs/feedback-and-motion.md).
+Light / Dark / System is required app-wide, including marketing, authentication, guests, owner tools
+and kitchen. The starter UI is still orange/Inter, Orders/Kitchen are previews and AI is stubbed.
+See [design system](docs/design-system.md), [buttons](docs/button-options.md) and
+[feedback/motion](docs/feedback-and-motion.md) for preserved implementation contracts.
 
-**Light / Dark / System support is required app-wide**, including marketing, authentication, guest menus, owner tools and kitchen. See the [design system contract](docs/design-system.md).
+## 🍽️ Product Overview & Tiers
 
-The starter UI still uses orange/Inter. Orders and Kitchen are previews; AI services are stubs. This is not yet a live ordering or kitchen product.
-
-Start with [product direction](docs/product-direction.md), [design options](docs/design-options.md), [design system](docs/design-system.md), [AI and media policy](docs/ai-and-media.md) and [execution roadmap](docs/product-roadmap.md). The Ink & Ember theme and Ember Flow / Ink Press button hierarchy are approved. Implementation and component-state acceptance are the next Phase A work.
+- **Free Forever (Primary Customer Acquisition Channel)**:
+  - Create full digital menus with categories, dishes, descriptions, and dietary indicators.
+  - Generate permanent QR codes that diners scan with zero registration required.
+  - Unlimited menu items with real-time updates.
+- **Online Ordering — ₹149/outlet/month hypothesis**:
+  - Dine-in/table and pickup ordering with mobile cart and staff acceptance.
+  - Live order management for front-of-house staff.
+- **Kitchen Pro — ₹299/outlet/month hypothesis**:
+  - Dedicated Kitchen Display System (KDS) tablet interface.
+  - Order acceptance and preparation stages with audible notifications.
 
 ---
 
+Prices are hypotheses, not finalized paid offerings. Free menus remain accessible after a paid plan ends.
+Subscription collection, USD prices and exact plan quotas remain decisions.
+
 ## 🛠️ Technical Stack
 
-| Layer                | Technology                                                  |
-| -------------------- | ----------------------------------------------------------- |
-| **Framework**        | Next.js App Router (React 19)                               |
-| **Language**         | TypeScript (Strict mode enabled)                            |
-| **Styling**          | Tailwind CSS v4 with custom design tokens                   |
-| **Icons**            | Lucide React + custom vector SVGs                           |
-| **Database**         | SQLite in WAL mode via `better-sqlite3`                     |
-| **ORM**              | Drizzle ORM with versioned SQL migrations                   |
-| **Validation**       | Zod v3                                                      |
-| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)         |
-| **QR Generation**    | `qrcode` with high-density SVG & PNG output                 |
-| **Image Processing** | Sharp with automatic dimension resizing                     |
-| **Testing**          | Vitest + React Testing Library + Playwright                 |
-| **Target Host**      | Oracle Cloud Always Free ARM64 Ubuntu VPS (Nginx + systemd) |
+| Layer                | Technology                                           |
+| -------------------- | ---------------------------------------------------- |
+| **Framework**        | Next.js App Router (React 19)                        |
+| **Language**         | TypeScript (Strict mode enabled)                     |
+| **Styling**          | Tailwind CSS v4 with custom design tokens            |
+| **Icons**            | Lucide React + custom vector SVGs                    |
+| **Database**         | SQLite in WAL mode via `better-sqlite3`              |
+| **ORM**              | Drizzle ORM with versioned SQL migrations            |
+| **Validation**       | Zod v3                                               |
+| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)  |
+| **QR Generation**    | `qrcode` with high-density SVG & PNG output          |
+| **Image Processing** | Sharp with automatic dimension resizing              |
+| **Testing**          | Vitest + React Testing Library + Playwright          |
+| **Target Host**      | Ubuntu 24.04 ARM64; shared ERP host; Nginx + systemd |
 
 ---
 
@@ -142,17 +164,19 @@ pnpm test:e2e
 
 ## 📚 Documentation Index
 
+- [Approved Product Requirements](docs/product-requirements.md)
 - [Product Direction](docs/product-direction.md)
 - [Design Exploration and Recorded Decision](docs/design-options.md)
-- [Design System and Theme Requirements](docs/design-system.md)
+- [Design and Theme Contract](docs/design-system.md)
 - [Approved Buttons](docs/button-options.md)
-- [Feedback, Overlays and Motion](docs/feedback-and-motion.md)
 - [AI and Media Policy](docs/ai-and-media.md)
+- [Feedback and Motion](docs/feedback-and-motion.md)
 - [Architecture Guide](docs/architecture.md)
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)
 - [Environment Variables](docs/environment.md)
-- [Production Deployment (Oracle Cloud ARM64)](docs/deployment.md)
+- [Production Deployment (Linux ARM64 target)](docs/deployment.md)
+- [Audited ARM server and coexistence requirements](docs/server-inventory.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
 - [Architecture Decision Records (ADRs)](docs/decisions.md)

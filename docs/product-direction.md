@@ -1,12 +1,17 @@
 # MenuMinute — Product direction
 
-Direction baseline: 14 October 2026. Product scope is proposed in this PR; Ink & Ember and the Ember Flow / Ink Press gradient-button hierarchy are user-approved.
+Direction baseline: 15 October 2026. Read [approved product requirements](product-requirements.md)
+for the later owner-approved hierarchy, roles, worldwide scope, fulfillment and currencies. Ink & Ember
+and the Ember Flow / Ink Press gradient-button hierarchy remain approved; runtime work is pending.
 
 ## 1. Product promise
 
 **A beautiful menu for every restaurant. A calmer service for every team.**
 
-MenuMinute gives independent cafés, dhabas, bakeries and small restaurants a permanent QR menu at no subscription cost. Restaurants upgrade when they want guests to place orders and staff to manage service. Initial focus: Indian venues with roughly 5–30 tables, one outlet per initial workspace. The data model may support more; multi-outlet management is outside the first release.
+MenuMinute serves restaurants, diners, cafes, takeout, cloud kitchens, hotels and mixed food-service
+businesses worldwide with free permanent QR menus and paid ordering/kitchen tools. Multi-outlet
+organizations and scoped brands are launch requirements. Initial planning: 25 owners, 50 restaurants/
+outlets and menus, 1,000 orders/hour. The default brand/outlet is created automatically.
 
 Use **MenuMinute** consistently in code, documentation and interface copy. “Food Minutes” remains the project context, not a second customer-facing name. Domain and trademark clearance are still launch tasks.
 
@@ -17,7 +22,7 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 | Decision                                                              | Provenance / treatment                                                                 |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Permanent free QR menus; subscriptions for ordering and kitchen tools | Earlier user-selected commercial model                                                 |
-| Next.js, shadcn/ui, SQLite, Oracle free VPS                           | Earlier user-preferred stack; retained                                                 |
+| Next.js, shadcn/ui, PostgreSQL/Redis, Oracle ARM64                    | SQLite superseded; see architecture and decisions                                      |
 | ₹149 Ordering and ₹299 Kitchen Pro per month                          | Earlier assistant proposals; retained as pilot price hypotheses                        |
 | Ink & Ember (Collection 02)                                           | User-approved; Ember Flow everyday / Ink Press tactile emphasis; flat buttons excluded |
 | Typography                                                            | Ink & Ember: Bricolage Grotesque, DM Sans, Kalam for decorative notes                  |
@@ -39,13 +44,16 @@ The free menu must remain useful after a paid subscription ends: the existing pr
 
 Free does not promise unlimited storage, AI calls or support. There is no proposed item-count paywall for the core menu. Define measured upload/storage limits before public launch and disclose them. Validate the ₹149/₹299 economics against support, storage, backups, billing costs and conversion. Tax treatment, annual pricing, trial/grace length and exact quotas remain commercial launch decisions; do not invent them in pricing UI.
 
-Restaurant subscriptions: planned Razorpay integration, with signed, idempotent webhook processing and server-side entitlements. Guest payment: pay at counter in V1. Showing an order as Served must not imply payment received. Do not build a diner payment gateway into the first release.
+Platform subscriptions accept USD/INR; collection provider remains a decision. Outlet transactions
+use any supported local currency, selected by the merchant. Guest payment: pay at restaurant/counter
+in V1. Do not infer a selected gateway from the earlier Razorpay proposal. Showing an order as Served must not imply payment received. Do not build a diner payment gateway into the first release.
 
 ## 4. Main journeys
 
 ### Restaurant owner
 
-Register → restaurant details → create categories/items manually or review an import → preview mobile menu → publish → download QR → print and share.
+Register → organization → outlet type → country/timezone/local currency → fulfillment/hours →
+menu setup or reviewed import → preview/publish → QR. UI follows outlet type and staff permissions.
 
 Menu Studio is the primary workspace: category navigation, an efficient editable list and a live mobile preview on desktop. On mobile, switch explicitly between Edit and Preview. Owners can mark an item sold out quickly. Show saved, saving and failed states; never hide a failed save behind a success toast.
 
@@ -61,7 +69,8 @@ A printed table QR identifies a table; it is not proof that the guest is physica
 
 ### Service and kitchen staff
 
-New order → Accepted → Preparing → Ready → Served. Staff can reject an unaccepted order with a reason; cancellation of accepted work requires an authorized role and reason. Payment is a separate concern.
+New order → Accepted → Preparing → Ready → Served (dine-in) or Collected (pickup).
+Pending orders expire at the outlet service-session close; accepted work continues. Staff can reject an unaccepted order with a reason; cancellation of accepted work requires an authorized role and reason. Payment is a separate concern.
 
 | UI label             | Existing schema value | Planned rule                                   |
 | -------------------- | --------------------- | ---------------------------------------------- |
@@ -72,7 +81,7 @@ New order → Accepted → Preparing → Ready → Served. Staff can reject an u
 | Served               | `delivered`           | Terminal fulfillment state                     |
 | Cancelled / Rejected | `cancelled`           | Terminal; distinguish reason in event history  |
 
-Preserve existing enum values unless a migration is explicitly justified. Only allow defined forward transitions; terminal states cannot silently reopen. Commit status changes and append-only events together. Check expected status/version so two devices cannot overwrite each other. The ordinary Ordering staff list supports the complete lifecycle; Kitchen Pro adds a specialized preparation interface, not the only way to finish orders.
+Map existing enum values explicitly; add expiry and pickup outcomes through a reviewed migration. Only allow defined forward transitions; terminal states cannot silently reopen. Commit status changes and append-only events together. Check expected status/version so two devices cannot overwrite each other. The ordinary Ordering staff list supports the complete lifecycle; Kitchen Pro adds a specialized preparation interface, not the only way to finish orders.
 
 ## 5. Reliability contract
 
@@ -95,9 +104,11 @@ R2 stores media; it is not an image generation API. NVIDIA trial access must not
 
 ## 7. Exclusions and pilot success
 
-Defer full POS, inventory, accounting, delivery fleet/aggregator integration, guest online payments, thermal printer integrations, multi-station routing, advanced reports, multi-outlet operations and conversational/voice ordering.
+Defer full POS, inventory, accounting, delivery fleet/aggregator integration, guest online payments, thermal printer integrations, multi-station routing, advanced reports and conversational/voice ordering. Multi-outlet operations
+and pickup/cloud-kitchen workflows are now included.
 
-Pilot with 3–5 independent venues before broad launch. Measure time to first published menu, QR-to-menu success, order submission success, duplicate/lost tickets, reconnect recovery, staff training effort, weekly active venues and willingness to pay. A useful target is first menu publication within ten minutes using an existing menu; validate it rather than advertise it as a proven result.
+Initial capacity planning is 25 owners, 50 restaurants/outlets and menus, 1,000 orders/hour.
+A smaller usability cohort can precede that envelope without reducing approved product scope. Measure time to first published menu, QR-to-menu success, order submission success, duplicate/lost tickets, reconnect recovery, staff training effort, weekly active venues and willingness to pay. A useful target is first menu publication within ten minutes using an existing menu; validate it rather than advertise it as a proven result.
 
 Launch requires usable mobile flows, tenant-isolation tests, order integrity, backup restore evidence and measured load on the actual VPS. “Oracle free” is a hosting target, not an uptime or permanent capacity guarantee.
 
@@ -112,3 +123,12 @@ Light / Dark / System is required across public pages, authentication, onboardin
 ## 9. Approved popup hierarchy
 
 The user approved **A routine / B milestones / C optional guidance**: Service Card for everyday dialogs, Ink Ticket for occasional milestones and Chef's Note for optional contextual guidance. Keep alerts/errors at the affected task scope, with persistent recovery for uncertain orders or kitchen disconnection. See the [feedback and motion contract](feedback-and-motion.md). This is a design decision; implementation and verification remain Phase A work.
+
+## Later product rules
+
+The [approved requirements](product-requirements.md) define variants plus add-ons, no business
+quantity cap, visible disabled Sold Out dishes, schedules, immutable order snapshots, separate repeat
+tickets, idempotent recovery, permissioned cancellation and no offline order replay. Permanent QR
+identity survives renames, menu/type/plan changes until explicit administrator revocation. The full
+role matrix, shared-brand outlet model and independent platform/local currencies override earlier
+assumptions. Complete UX and jurisdiction-specific money rules remain implementation gates.

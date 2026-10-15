@@ -118,3 +118,12 @@ Verify 360, 390, 768, 1024 and 1440px layouts; 200% text zoom; keyboard-only use
 Target WCAG 2.2 AA: ordinary text 4.5:1, large text and required non-text boundaries 3:1. Validate rendered states including opacity, not only palette pairs. A dark kitchen screenshot alone does not satisfy the app-wide requirement.
 
 Reference: [shadcn semantic theming](https://ui.shadcn.com/docs/theming).
+
+## Outlet-specific experience
+
+Apply [product requirements](product-requirements.md): onboarding asks outlet type; navigation and
+ticket actions emphasize dine-in, pickup or shared-brand cloud-kitchen work within role permissions.
+Mixed outlets label fulfillment; pickup completes as Collected. Sold-out dishes remain visible with
+greyed imagery, Sold Out overlay and accessible text, including image fallbacks. Currency formatting
+uses outlet-local currency independently of platform USD/INR billing. Complete UX review remains a
+separate gate; keep all approved Ink & Ember, theme, button and feedback contracts above.

@@ -1,74 +1,36 @@
-# MenuMinute — Execution roadmap
+# Product roadmap
 
-Direction baseline: 14 October 2026. Read [product direction](product-direction.md) and [design system](design-system.md) first. Phases describe required outcomes, not a claim of production readiness.
+## Current baseline
 
-## Phase 0 — Existing foundation
+The repository contains a Phase 0 SQLite/NextAuth scaffold: menus, QR generation, owner management,
+order schemas/preview pages, AI stubs and baseline CI. This is not the approved production architecture
+and does not establish production reliability or measured capacity.
 
-The starter repository contains Next.js/TypeScript, SQLite/Drizzle migrations and seed data, authentication and tenant service scaffolding, menu category/item CRUD, a public menu, QR generation, tests and CI configuration. Orders and Kitchen are preview routes; AI services are stubs and the R2 adapter is planned. Current UI is orange/Inter. Existing test files and earlier commit reports are not a substitute for running checks on the final implementation SHA.
+## Approved delivery sequence
 
-## Phase A — Design foundation and complete free menu
+Follow `implementation-plan.md` for engineering gates:
 
-- Implement the approved Ink & Ember system: Ember Flow for everyday gradient actions, Ink Press for selected tactile emphasis. Refine complete state tokens and a focused prototype; the earlier flat buttons and other base-theme candidates are excluded.
-- Implement the approved A/B/C popup hierarchy, scoped alerts, compact toasts, form errors, recovery states and motion/reduced-motion behavior from [feedback-and-motion.md](feedback-and-motion.md).
-- Implement the accepted shared shadcn/Radix components and layout shells with app-wide Light / Dark / System support, including marketing, authentication, guests, owner tools, overlays and kitchen.
-- Complete onboarding, restaurant details, category/item editing, variants, availability, accessible reordering and menu publication states.
-- Implement Menu Studio desktop editor/preview and mobile Edit/Preview.
-- Provide logo/cover uploads, responsive menu images and local SVG fallbacks.
-- Deliver stable public menu URLs, downloadable SVG/PNG QR and branded printable PDF.
-- Run early owner tests: create, publish, scan, edit without reprinting.
+1. PostgreSQL + Drizzle/pg, Better Auth database sessions, organization/outlet isolation and ARM64 CI.
+2. Redis queue/cache separation, BullMQ and recoverable PostgreSQL outbox/work state.
+3. Outlet-type onboarding, scoped brands/outlets/roles, public QR menus, variants/add-ons, schedules and publication.
+4. Dine-in and pickup ordering for restaurants/takeout/cloud kitchens, closing-time expiry, staff acceptance and resilient KDS.
+5. Reviewed AI menu import, descriptions, translations and image suggestions; Ink & Ember refinement.
+6. Measured performance, tested restoration, operational alerts and commercial launch gates.
 
-Gate: complete manual flow with no provider keys; tested tenant isolation; validated mobile/keyboard/zoom behavior; actual phone scan and printed QR checks; no order/PWA claims for preview features.
+## Commercial scope
 
-## Phase B — Optional assisted setup
+Free permanent QR menus remain the acquisition product. Subscription entitlements enable ordering
+and KDS. Earlier INR 149/299 figures are planning assumptions, not validated pricing or a payment
+integration commitment. Launch diners pay at restaurant. Restaurant SaaS billing collection/renewal
+operations must be specified before a paid launch; a payment gateway is not implicitly selected.
 
-- R2 storage adapter with bounded uploads, derivatives and deletion rules.
-- Gemini OCR import, descriptions and reviewed translations.
-- Owner-approved curated/Pexels image suggestions with provenance.
-- Quotas, durable jobs, retry limits and manual fallback. Generated imagery is optional and gated separately.
+Delivery, online diner payments, WhatsApp/SMS, multi-station routing and advanced analytics are later
+scope. Do not label these available until implemented and verified.
 
-Gate: imports remain editable drafts; no invented prices/allergens; exhausted quota cannot trigger spend; approved images survive deployment; missing provider has no effect on Phase A.
+## Approved launch envelope
 
-This phase improves onboarding and may run alongside free-menu pilots. It must not delay a reliable ordering pilot.
-
-## Phase C — Ordering and subscription entitlement
-
-- Table management and scoped table QR sessions.
-- Guest cart, variant selection, server price/availability validation and idempotent submission.
-- Staff order list, acceptance and full fulfillment lifecycle, guest-scoped tracking and history.
-- Durable events, SSE reconnect/snapshot and polling fallback.
-- Razorpay restaurant subscriptions with verified webhook processing and plan enforcement.
-- Pay-at-counter guest flow; separate fulfillment from payment.
-- Expiry disables new orders while preserving free menu access and controlled completion of active tickets.
-
-Gate: duplicate-submit, cross-tenant access, stale-price, sold-out, invalid-table, rejected-order, concurrent action and subscription-expiry tests pass. No diner payment gateway or delivery integration.
-
-Pilot Ordering at the proposed ₹149/outlet/month only after pricing terms and costs are validated.
-
-## Phase D — Kitchen Pro and paid pilot
-
-- One kitchen queue, touch-friendly ticket board, elapsed timers and role-scoped staff access.
-- New/Accepted/Preparing/Ready views, visible connection health, bounded reconnect recovery.
-- Sound enable/mute, visible new-ticket cues and appropriate device-session revocation.
-- Installable PWA shell with explicit offline/stale behavior; no offline order replay.
-- Basic counts and preparation-time summaries from durable events.
-
-Gate: kitchen survives app restart/reconnect without lost/duplicate tickets; simultaneous staff actions reconcile; muted sound still leaves visible cues; physical phone/tablet usability validated. Pilot Kitchen Pro at the proposed ₹299/outlet/month after commercial validation.
-
-Multi-station routing is explicitly deferred.
-
-## Production gates — Start in A, required before any public/paid pilot
-
-Do not leave operational correctness until after feature development.
-
-- Actual Oracle ARM64 deployment rehearsal, Nginx/systemd, HTTPS, persistent data/media outside release folders.
-- Measured SQLite lock behavior and request latency on the target machine; bounded worker concurrency.
-- Offsite backups and demonstrated restore; proposed pilot targets RPO ≤1 hour, RTO ≤4 hours, verified before promised.
-- Health checks, disk alerts, failed-job visibility, retention and account deletion policy.
-- Tenant access, session security, rate limits and upload hardening.
-- Final-SHA lint/format/typecheck/tests/build; targeted guest/owner/kitchen browser coverage; CI must be green before release.
-
-## After pilot evidence
-
-Multi-outlet management, multi-station routing, thermal printing, integrations, advanced reporting, inventory/POS/accounting, diner online payment and voice/conversational ordering require separate scope decisions. No ₹599 tier is committed.
-
-Track pilot publication time, staff effort, reliable order completion, conversion and support cost. Fix observed workflow friction before adding another subsystem.
+Read [product requirements](product-requirements.md). Worldwide scope, multiple outlets, local
+transaction currencies and USD/INR platform subscriptions supersede earlier narrow pilot assumptions.
+Target 25 owners, 50 restaurants/outlets and their menus, and 1,000 orders/hour, subject to measured
+capacity and ERP coexistence. Complete UX flows and jurisdiction calculation rules are required
+before affected implementation/release gates. Architecture documentation does not implement them.

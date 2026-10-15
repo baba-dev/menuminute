@@ -1,51 +1,33 @@
-# MenuMinute — Environment Configuration Guide
+# Environment contracts
 
-## 1. Overview
+## Current scaffold
 
-MenuMinute uses runtime environment variable validation implemented via **Zod** in `src/lib/config/env.ts`. The application validates all required variables at boot time and fails fast if critical configuration is missing.
+`.env.example` and `src/lib/config/env.ts` still configure SQLite paths and NextAuth. Follow
+`development.md` to run that baseline. The names below are a proposed target contract and are not
+accepted runtime configuration until the foundation PR updates the schema, examples and tests.
 
-Copy `.env.example` to `.env.local` for local development.
+| Target variable                                | Purpose / requirement                                       |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| APP_URL                                        | Canonical public HTTPS origin in production                 |
+| DATABASE_URL                                   | PostgreSQL runtime-role connection URL                      |
+| MIGRATION_DATABASE_URL                         | Separate migration-owner URL; deploy job only               |
+| DATABASE_POOL_MAX                              | Validated per-process pool budget                           |
+| REDIS_QUEUE_URL                                | Dedicated BullMQ non-evicting instance                      |
+| REDIS_CACHE_URL                                | Dedicated cache/limits instance                             |
+| AUTH_SECRET / AUTH_BASE_URL                    | Map explicitly to Better Auth options during implementation |
+| TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY      | Public widget key / server-only verification key            |
+| R2_ENDPOINT / R2_BUCKET_NAME                   | Object endpoint and bucket                                  |
+| R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY        | Scoped server-only credentials                              |
+| GEMINI_API_KEY / NVIDIA_API_KEY                | Optional selected-provider credentials                      |
+| CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN   | Optional Workers AI credentials                             |
+| PEXELS_API_KEY / RESEND_API_KEY                | Optional stock/email provider credentials                   |
+| AI_FEATURES_ENABLED / IMAGE_GENERATION_ENABLED | Default off; quota and entitlement still required           |
 
----
+Set explicit connection/request timeouts and pool/concurrency limits in validated configuration.
+Implementation may rename variables for SDK conventions, but must update the schema, examples,
+operations guide and CI together. Do not expose secrets through NEXT_PUBLIC variables.
 
-## 2. Variables Reference
-
-### Core Application (Required)
-
-| Variable       | Description                                               | Default / Example                      |
-| -------------- | --------------------------------------------------------- | -------------------------------------- |
-| `APP_URL`      | Root public URL of the application (no trailing slash)    | `http://localhost:3000`                |
-| `DATABASE_URL` | Relative or absolute path to the SQLite database file     | `./data/menuminute.sqlite`             |
-| `AUTH_SECRET`  | NextAuth cryptographic signing key (min 16 chars)         | Generate via `openssl rand -base64 32` |
-| `NODE_ENV`     | Runtime environment (`development`, `test`, `production`) | `development`                          |
-
-### AI Providers (Optional — Phase B)
-
-| Variable         | Description                                                    |
-| ---------------- | -------------------------------------------------------------- |
-| `GEMINI_API_KEY` | Google Gemini API key for OCR menu import and text enhancement |
-| `NVIDIA_API_KEY` | NVIDIA NIM API key for dish illustration generation            |
-
-### Cloudflare Integration (Optional — Phase B)
-
-| Variable                | Description                                                       |
-| ----------------------- | ----------------------------------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account Identifier                                     |
-| `CLOUDFLARE_API_TOKEN`  | API token with Workers AI and R2 permissions                      |
-| `R2_ACCESS_KEY_ID`      | S3-compatible R2 storage access key                               |
-| `R2_SECRET_ACCESS_KEY`  | S3-compatible R2 storage secret                                   |
-| `R2_BUCKET_NAME`        | R2 bucket name (`menuminute-media`)                               |
-| `R2_ENDPOINT`           | R2 endpoint URL (`https://<account-id>.r2.cloudflarestorage.com`) |
-
-### Stock Photography (Optional — Phase B)
-
-| Variable         | Description                                          |
-| ---------------- | ---------------------------------------------------- |
-| `PEXELS_API_KEY` | Pexels API key for curated licensed dish photography |
-
-### Feature Flags
-
-| Variable                   | Default | Purpose                                   |
-| -------------------------- | ------- | ----------------------------------------- |
-| `AI_FEATURES_ENABLED`      | `false` | Enables AI OCR import and text completion |
-| `IMAGE_GENERATION_ENABLED` | `false` | Enables AI dish image generation          |
+Missing required production values must fail startup without printing them. Missing optional AI
+keys disables the feature. Readiness reports dependency status without leaking connection strings.
+Store production secrets outside the repository and application releases with restrictive permissions.
+Do not copy demo passwords, development defaults or CI test secrets into production.
