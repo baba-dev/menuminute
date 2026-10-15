@@ -1,5 +1,9 @@
 # MenuMinute — Local Development Guide
 
+> Current scaffold instructions: SQLite + NextAuth. PostgreSQL/Redis/Better Auth are the
+> approved target, pending the foundation implementation. Do not use these commands as the
+> target production deployment. See [implementation plan](implementation-plan.md).
+
 ## 1. Prerequisites
 
 - **Node.js**: LTS release pinned in `.nvmrc` (v22+ supported; verified on v24 with prebuilt binaries)

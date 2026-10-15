@@ -1,70 +1,28 @@
-# MenuMinute — Product Roadmap
+# Product roadmap
 
-## Phase Overview
+## Current baseline
 
-MenuMinute follows a disciplined phased execution roadmap. Each phase delivers a complete, verifiable product milestone without premature complexity.
+The repository contains a Phase 0 SQLite/NextAuth scaffold: menus, QR generation, owner management,
+order schemas/preview pages, AI stubs and baseline CI. This is not the approved production architecture
+and does not establish production reliability or measured capacity.
 
----
+## Approved delivery sequence
 
-### Phase 0: Foundation and Working Skeleton (Completed ✅)
+Follow `implementation-plan.md` for engineering gates:
 
-- Clean Next.js App Router, TypeScript strict mode, and Tailwind v4 setup.
-- SQLite + Drizzle ORM foundation with WAL mode, foreign keys, and versioned migrations.
-- Complete 22-table normalized schema.
-- Idempotent seed script with realistic Indian restaurant demonstration data.
-- Stable, permanent QR code generation linked to opaque tokens (`publicId`).
-- Public mobile-first customer menu view (`/m/[publicMenuId]`).
-- Authenticated owner dashboard with Menu Management CRUD vertical slice.
-- Preview routes for upcoming Ordering (`/dashboard/orders`) and Kitchen (`/kitchen`).
-- Comprehensive unit and integration test suite via Vitest.
-- GitHub Actions CI workflow with least-privilege permissions.
+1. PostgreSQL + Drizzle/pg, Better Auth database sessions, organization/outlet isolation and AMD64 CI.
+2. Redis queue/cache separation, BullMQ and recoverable PostgreSQL outbox/work state.
+3. Restaurant onboarding, public QR menus, variants, validated media and publication.
+4. Dine-in guest ordering, staff acceptance, customer status and resilient KDS.
+5. Reviewed AI menu import, descriptions, translations and image suggestions; Ink & Ember refinement.
+6. Measured performance, tested restoration, operational alerts and commercial launch gates.
 
----
+## Commercial scope
 
-### Phase A: Restaurant Onboarding & Complete Free QR Menus
+Free permanent QR menus remain the acquisition product. Subscription entitlements enable ordering
+and KDS. Earlier INR 149/299 figures are planning assumptions, not validated pricing or a payment
+integration commitment. Launch diners pay at restaurant. Restaurant SaaS billing collection/renewal
+operations must be specified before a paid launch; a payment gateway is not implicitly selected.
 
-- Interactive restaurant self-onboarding wizard (create restaurant profile, address, currency).
-- Category reordering (drag-and-drop sort order).
-- Dish variant builder (e.g. Half / Full, Small / Medium / Large).
-- Printable QR PDF templates with restaurant branding.
-- Restaurant logo & cover image uploads with Sharp thumbnail generation.
-
----
-
-### Phase B: Smart Menu Import & Dish Photography
-
-- Google Gemini Vision OCR menu import from photographed physical menus.
-- Gemini text enhancement for appetizing dish descriptions.
-- Multi-lingual menu translation (English, Hindi, regional Indian languages).
-- Pexels stock photography search and integration with photographer attribution.
-- Cloudflare R2 media storage adapter for production asset hosting.
-
----
-
-### Phase C: Online Ordering & Subscriptions (₹149/month)
-
-- Table-based QR ordering with URL token table binding.
-- Customer cart and order submission without registration.
-- Live order management dashboard for waitstaff.
-- Order status notifications and customer tracking page.
-- Razorpay subscription integration for ₹149/mo plan.
-
----
-
-### Phase D: Kitchen Display System (Kitchen Pro — ₹299/month)
-
-- Dedicated Kitchen Display System (KDS) tablet and touch interface (`/kitchen`).
-- Order acceptance, preparation, and completion lifecycle.
-- Audible kitchen chimes on new ticket receipt.
-- Multi-station routing (Bar, Tandoor, Main Kitchen).
-- Daily operational and preparation time analytics.
-
----
-
-### Phase E: Production Hardening & Commercial Launch
-
-- Oracle Cloud ARM64 Ubuntu deployment with systemd supervision.
-- Nginx reverse proxy with automated Let's Encrypt SSL.
-- Automated daily SQLite WAL backups to offsite storage.
-- End-to-end monitoring, health check alerts, and error tracking.
-- Public beta launch.
+Delivery, online diner payments, WhatsApp/SMS, multi-station routing and advanced analytics are later
+scope. Do not label these available until implemented and verified.

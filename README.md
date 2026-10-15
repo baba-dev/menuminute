@@ -11,6 +11,17 @@
 
 ---
 
+## Approved architecture and implementation status
+
+Production targets **Linux AMD64/x86_64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
+instances, BullMQ and Better Auth database sessions. Launch ordering is dine-in with staff
+acceptance and pay at restaurant. The code below is still the SQLite/NextAuth Phase 0 scaffold;
+this documentation update does not migrate or deploy it. Server resources/OS are unverified.
+
+Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
+[dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
+and [AI development primers](docs/ai-development-primers.md). Contributors must read [AGENTS.md](AGENTS.md).
+
 ## 🍽️ Product Overview & Tiers
 
 - **Free Forever (Primary Customer Acquisition Channel)**:
@@ -28,20 +39,20 @@
 
 ## 🛠️ Technical Stack
 
-| Layer                | Technology                                                  |
-| -------------------- | ----------------------------------------------------------- |
-| **Framework**        | Next.js App Router (React 19)                               |
-| **Language**         | TypeScript (Strict mode enabled)                            |
-| **Styling**          | Tailwind CSS v4 with custom design tokens                   |
-| **Icons**            | Lucide React + custom vector SVGs                           |
-| **Database**         | SQLite in WAL mode via `better-sqlite3`                     |
-| **ORM**              | Drizzle ORM with versioned SQL migrations                   |
-| **Validation**       | Zod v3                                                      |
-| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)         |
-| **QR Generation**    | `qrcode` with high-density SVG & PNG output                 |
-| **Image Processing** | Sharp with automatic dimension resizing                     |
-| **Testing**          | Vitest + React Testing Library + Playwright                 |
-| **Target Host**      | Oracle Cloud Always Free ARM64 Ubuntu VPS (Nginx + systemd) |
+| Layer                | Technology                                                 |
+| -------------------- | ---------------------------------------------------------- |
+| **Framework**        | Next.js App Router (React 19)                              |
+| **Language**         | TypeScript (Strict mode enabled)                           |
+| **Styling**          | Tailwind CSS v4 with custom design tokens                  |
+| **Icons**            | Lucide React + custom vector SVGs                          |
+| **Database**         | SQLite in WAL mode via `better-sqlite3`                    |
+| **ORM**              | Drizzle ORM with versioned SQL migrations                  |
+| **Validation**       | Zod v3                                                     |
+| **Authentication**   | NextAuth v5 (JWT sessions, bcrypt password hashing)        |
+| **QR Generation**    | `qrcode` with high-density SVG & PNG output                |
+| **Image Processing** | Sharp with automatic dimension resizing                    |
+| **Testing**          | Vitest + React Testing Library + Playwright                |
+| **Target Host**      | Linux AMD64 target; Nginx + systemd (provisioning pending) |
 
 ---
 
@@ -135,7 +146,7 @@ pnpm test:e2e
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)
 - [Environment Variables](docs/environment.md)
-- [Production Deployment (Oracle Cloud ARM64)](docs/deployment.md)
+- [Production Deployment (Linux AMD64 target)](docs/deployment.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
 - [Architecture Decision Records (ADRs)](docs/decisions.md)

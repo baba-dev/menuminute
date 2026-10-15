@@ -1,157 +1,41 @@
-# MenuMinute — Deployment Guide (Oracle Cloud ARM64 Ubuntu VPS)
+# Deployment target: Linux AMD64
 
-## 1. Target Infrastructure Overview
+Approved 2026-10-15. The server is **AMD64/x86_64**, not ARM64. Earlier Ampere hardware/OS sizing
+and SQLite deployment instructions are superseded. No deployment has been performed by this plan.
 
-- **Hosting Platform**: Oracle Cloud Always Free Tier (Ampere ARM64 Compute Instance)
-- **Specifications**: 4 OCPUs, 24 GB RAM, 200 GB Block Storage
-- **Operating System**: Ubuntu 24.04 LTS (aarch64 / ARM64)
-- **Web Server / Reverse Proxy**: Nginx with Let's Encrypt SSL
-- **Process Supervisor**: Linux `systemd`
-- **Database Engine**: Persistent SQLite on NVMe storage with WAL mode
+## Verify before provisioning
 
----
+Record `uname -m` (expected x86_64), OS/libc, CPU, RAM, disk/free space, Node/pnpm support,
+network/firewall and the actual public domain. Do not assume a specific Ubuntu release or free-tier size.
+Build native dependencies, including Sharp, in Linux AMD64 with compatible runtime libraries.
 
-## 2. Server Architecture
+## Target layout
 
-```text
-               Internet (:443 HTTPS)
-                         │
-                         ▼
-             ┌─────────────────────────┐
-             │   Nginx Reverse Proxy   │
-             │   (SSL Termination)     │
-             └───────────┬─────────────┘
-                         │ Proxy Pass (HTTP :3000)
-                         ▼
-             ┌─────────────────────────┐
-             │     MenuMinute App      │
-             │  (Node.js / systemd)    │
-             └───────────┬─────────────┘
-                         │
-                         ▼
-        ┌───────────────────────────────────┐
-        │ /var/lib/menuminute/data/          │
-        │ └── menuminute.sqlite (WAL Mode)  │
-        └───────────────────────────────────┘
-```
+- Nginx with TLS in front of a private Next.js listener.
+- PostgreSQL, Redis queue and Redis cache bound privately; no public 5432/6379 exposure.
+- Independent systemd units for web, dispatcher and workers; deployed artifacts root-owned/read-only.
+- Releases under `/opt/menuminute/releases/<sha>` with a `current` symlink (proposed convention).
+- Secrets under `/etc/menuminute/`; runtime temp/cache directories explicitly writable.
+- PostgreSQL/Redis persistence outside releases; uploaded production assets in R2.
 
----
+Configure NoNewPrivileges and appropriate filesystem restrictions with explicitly allowed runtime
+writes. A release directory writable by the app is not an immutable deployment. Test Next.js cache
+paths before enabling read-only protection. Do not copy the superseded single SQLite systemd unit.
 
-## 3. Deployment Directory Layout
+## Proxy and live updates
 
-To protect the persistent database during zero-downtime releases, persistent data must reside outside the application release directory:
+Preserve verified host/protocol headers, trust only the configured proxy chain, enforce request limits
+and allow long-lived SSE responses with buffering/cache disabled on the authorized events route.
+Set heartbeats/timeouts and graceful reload behavior. Never publicly cache private dashboards/events.
 
-- **Application Directory**: `/opt/menuminute/app`
-- **Persistent Data Directory**: `/var/lib/menuminute/data`
-- **Persistent Uploads Directory**: `/var/lib/menuminute/uploads`
-- **Database Path**: `DATABASE_URL=/var/lib/menuminute/data/menuminute.sqlite`
+## Release gate
 
----
+1. Compatible stable dependencies pinned; frozen install and Linux AMD64 build pass.
+2. PostgreSQL migration/cutover and restore rehearsal pass on representative data.
+3. Separate Redis policy/persistence checks and queue-loss recovery pass.
+4. Tenant/session/guest capability and ordering failure tests pass.
+5. Backups, external alerts, SLO/RPO/RTO and operator escalation are configured and verified.
+6. Run immutable artifact health checks before traffic; retain an explicitly compatible rollback.
 
-## 4. Systemd Service Unit (`/etc/systemd/system/menuminute.service`)
-
-```ini
-[Unit]
-Description=MenuMinute Restaurant SaaS Application
-After=network.target
-
-[Service]
-Type=simple
-User=menuminute
-WorkingDirectory=/opt/menuminute/app
-EnvironmentFile=/etc/menuminute/production.env
-ExecStart=/usr/bin/node /opt/menuminute/app/node_modules/next/dist/bin/next start -p 3000
-Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=menuminute
-
-# Sandboxing & Security
-NoNewPrivileges=true
-ProtectSystem=full
-ProtectHome=true
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target
-```
-
----
-
-## 5. Nginx Configuration (`/etc/nginx/sites-available/menuminute.conf`)
-
-```nginx
-server {
-    listen 80;
-    server_name menuminute.com www.menuminute.com;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name menuminute.com www.menuminute.com;
-
-    # SSL Certificates (managed via Certbot)
-    ssl_certificate /etc/letsencrypt/live/menuminute.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/menuminute.com/privkey.pem;
-
-    # Performance & Caching
-    client_max_body_size 10M;
-
-    # Static Assets Cache
-    location /_next/static/ {
-        alias /opt/menuminute/app/.next/static/;
-        expires 365d;
-        access_log off;
-    }
-
-    # Public Uploads
-    location /uploads/ {
-        alias /var/lib/menuminute/uploads/;
-        expires 30d;
-        access_log off;
-    }
-
-    # Application Proxy
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
----
-
-## 6. SQLite Backup Strategy (Online Backups)
-
-Because SQLite operates in WAL mode, backups can be performed online without shutting down the service or blocking read queries:
-
-```bash
-#!/bin/bash
-# /opt/menuminute/scripts/backup.sh
-BACKUP_DIR="/var/backups/menuminute"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DB_FILE="/var/lib/menuminute/data/menuminute.sqlite"
-TARGET="$BACKUP_DIR/menuminute_$TIMESTAMP.sqlite"
-
-mkdir -p "$BACKUP_DIR"
-sqlite3 "$DB_FILE" ".backup '$TARGET'"
-gzip -9 "$TARGET"
-
-# Retain 30 days of daily backups
-find "$BACKUP_DIR" -type f -name "*.sqlite.gz" -mtime +30 -delete
-```
-
-Schedule via crontab:
-
-```cron
-0 3 * * * /opt/menuminute/scripts/backup.sh
-```
+Actual service units, resource limits, domains and commands belong in the implementation/provisioning
+PR after discovery. This guide deliberately contains no guessed production hosts or secrets.

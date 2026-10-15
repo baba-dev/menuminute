@@ -1,74 +1,46 @@
-# MenuMinute — Security & Authorization Architecture
+# Security model and launch gates
 
-## 1. Security Model Overview
+Status: target requirements, not a completed security audit.
 
-MenuMinute adheres to strict defense-in-depth security principles across authentication, session management, input validation, and multi-tenant isolation.
+## Observed scaffold gaps
 
----
+The current src/lib/auth.ts uses credentials and JWT sessions, not the claimed database adapter.
+The environment schema contains a default development secret. getDefaultOrActiveRestaurant can
+fall back to demo/any active restaurant. These must not become production authorization behavior.
+Restaurant creation currently performs multiple writes around QR generation without one transaction;
+the foundation implementation must make provisioning recoverable and atomic where appropriate.
 
-## 2. Authentication & Authorization
+## Trust boundaries
 
-- **Session Security**: NextAuth v5 JWT sessions encrypted and signed with HMAC SHA-256 via `AUTH_SECRET`.
-- **Password Hashing**: Strong one-way password hashing using `bcryptjs` with salt rounds set to 12.
-- **Server-Side Enforcement**: Authorization checks are performed on the server inside services and route handlers; UI components are not relied upon for security boundaries.
-- **Role Hierarchy**:
-  - `owner`: Full administrative rights, billing management, deletion.
-  - `manager`: Menu and staff management.
-  - `staff`: Order viewing and status updates.
-  - `kitchen`: Kitchen Display System interface access.
+- Browser, public QR URL, imported menu file, external API output and queue payload are untrusted.
+- Resolve identities and current outlet memberships on the server; authorize every service operation.
+- Better Auth database sessions support revocation; protected mutations also require origin/CSRF
+  protection. Audit OAuth linking, invitation acceptance, account recovery and admin escalation.
+- Use PostgreSQL RLS and composite tenant constraints as defense in depth, not substitutes for policy.
+- Public QR tokens identify tables, not diner identity or physical presence. Staff acceptance limits
+  impact; rate limits and opaque tracking capabilities prevent enumeration and trivial replay.
 
----
+## Controls to implement
 
-## 3. Multi-Tenant Isolation
+- Deny missing production secrets/configuration; separate dev/test seeds from production.
+- Explicit trusted origins/hosts and proxy chain. Do not trust arbitrary forwarded IP headers.
+- Secure HttpOnly session cookies, suitable SameSite, TLS, CSP and output escaping.
+- MFA policy for owner/admin operations and verified enrollment/recovery; test all enabled sign-in
+  paths because a plugin's presence alone does not enforce MFA everywhere.
+- Redis/PostgreSQL private listeners, least-privilege credentials and encrypted off-host connections.
+- Layered endpoint/session/tenant/IP limits. Challenge suspicious writes; no challenge on normal menu
+  browsing. Specify outage policy per operation rather than global fail-open.
+- Upload size/pixel/type limits, safe decode/re-encode, private originals and controlled publication.
+  Remote imports must prevent SSRF, including redirects/private destinations and DNS re-resolution.
+- Tenant-scoped R2 paths and authorized asset lookup; never trust an arbitrary object key.
+- Minimize customer data; define retention, access and deletion rules before launch. Preserve necessary
+  order audit history without retaining unnecessary personal data.
+- Redact cookies, tokens, provider keys, passwords and customer notes from logs/error reporting.
+- Audit membership, pricing, entitlements, acceptance, payment marking and administrative actions.
 
-Every database query in the data access layer (`src/modules/*`) strictly scopes records by the authenticated user's `restaurantId`:
+## Evidence
 
-```typescript
-// Enforces tenant isolation
-export function getMenuItemsByCategory(categoryId: string, restaurantId: string): MenuItem[] {
-  return db
-    .select()
-    .from(menuItems)
-    .where(
-      and(
-        eq(menuItems.categoryId, categoryId),
-        eq(menuItems.restaurantId, restaurantId) // Tenant boundary
-      )
-    )
-    .all();
-}
-```
-
-Direct object references (IDOR vulnerabilities) are prevented by verifying that the requesting session belongs to the tenant owning the resource.
-
----
-
-## 4. Input Validation & Sanitization
-
-- All API inputs are strictly parsed using **Zod** schemas before execution.
-- Extraneous fields are stripped automatically.
-- Prices are validated as non-negative and converted directly to integer minor units (paise) to prevent fractional manipulation.
-
----
-
-## 5. Security Headers (Configured in `next.config.ts`)
-
-- `X-Frame-Options: DENY` (prevents clickjacking)
-- `X-Content-Type-Options: nosniff` (prevents MIME sniffing)
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains` (enforces HTTPS)
-- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
-
----
-
-## 6. Safe Error Handling
-
-Errors returned to clients never leak database stack traces, file paths, or private configuration. In production, unhandled exceptions return a standardized payload:
-
-```json
-{
-  "message": "An unexpected error occurred"
-}
-```
-
-Validation errors provide structured field error maps without exposing internal internals.
+Cross-tenant ID swapping through reads/writes, joins, uploads, jobs, caches and live subscriptions;
+revocation on existing SSE streams; pooled database context leakage; CSRF and origin checks; forged QR
+bindings; brute force; oversized media; unsafe remote URLs; expired capabilities and safe error output.
+A green unit suite is not a penetration test or proof of compliance.

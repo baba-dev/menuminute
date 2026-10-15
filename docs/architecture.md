@@ -1,71 +1,97 @@
-# MenuMinute — Architecture Documentation
+# Approved system architecture
 
-## 1. High-Level System Architecture
+Status: approved target, 2026-10-15. Documentation does not implement the migration.
 
-MenuMinute is designed as a **modular monolith** running Next.js App Router with TypeScript on Node.js. It adheres strictly to modern web architecture principles:
+## Current scaffold versus target
 
-- **Server-Side Rendering (SSR) & Server Components by Default**: All data fetching, authorization assertions, and query executions occur exclusively on the server.
-- **Client Components on Demand**: Interactivity (modals, client forms, toasts) is isolated to leaf client components (e.g. `MenuManager`).
-- **Single-Process Lightweight Infrastructure**: Powered by SQLite via `better-sqlite3` and `drizzle-orm`, eliminating external database connection latency, connection pooling overhead, and complex infrastructure requirements.
-- **Tenant Isolation**: Strict logical multi-tenancy where every query scopes data to the authenticated restaurant tenant (`restaurantId`).
+| Concern    | Current code                                               | Approved target                                        |
+| ---------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| Database   | better-sqlite3; synchronous services and SQLite migrations | PostgreSQL, Drizzle, pg; asynchronous transactions     |
+| Sessions   | NextAuth credentials + JWT                                 | Better Auth, database-backed revocable sessions        |
+| Jobs       | background_jobs schema; no durable order dispatcher        | PostgreSQL outbox/work records + BullMQ workers        |
+| Redis      | Not configured                                             | Separate queue and cache instances                     |
+| Orders/KDS | Schema and preview routes                                  | Reliable dine-in ordering, acceptance and recovery     |
+| Deployment | Earlier guide assumed ARM64                                | Linux AMD64; actual machine sizing to be measured      |
+| AI         | Interfaces returning null                                  | Quota-controlled asynchronous merchant-reviewed drafts |
+
+The approved design is a modular monolith with separately supervised web and worker processes.
+Launch ordering is dine-in, guest checkout and pay at restaurant. Online payments, delivery,
+multi-station routing and autonomous AI actions are outside launch scope.
 
 ```mermaid
-graph TD
-    Client["Browser / Mobile Device"] -->|HTTP / HTTPS| Nginx["Nginx Reverse Proxy"]
-    Nginx -->|Port 3000| NextApp["Next.js App Router (Node.js LTS)"]
-    NextApp --> Auth["NextAuth v5 (JWT Sessions)"]
-    NextApp --> Modules["Domain Modules (Menus, QR, Orders, Media)"]
-    Modules --> Drizzle["Drizzle ORM"]
-    Drizzle --> SQLite[("SQLite Database (WAL Mode)")]
-    Modules --> Sharp["Sharp Image Processor"]
-    Modules --> QR["QR Code Generator (SVG / PNG)"]
+flowchart TD
+    B["Diners and restaurant staff"] --> E["CDN and Nginx"]
+    E --> W["Next.js web"]
+    E --> M["Published media"]
+    W --> P[("PostgreSQL")]
+    W --> C[("Redis cache")]
+    P --> D["Outbox dispatcher"]
+    D --> Q[("Redis queue")]
+    Q --> J["BullMQ workers"]
+    J --> P
+    J --> X["AI, R2 and email APIs"]
 ```
 
----
+## Modules and ownership
 
-## 2. Directory Structure
+| Module                    | Owns                                                              |
+| ------------------------- | ----------------------------------------------------------------- |
+| Identity                  | Authentication, sessions, invitation identity                     |
+| Organizations/restaurants | Memberships, outlets, table bindings and authorization policies   |
+| Menus                     | Categories, dishes, variants, availability and published versions |
+| Orders                    | Authoritative totals, snapshots, idempotency and lifecycle        |
+| Kitchen                   | Authorized views, acknowledgement and event recovery              |
+| Billing                   | Subscription entitlements; separate from diner payment state      |
+| Media/AI                  | Asset provenance, drafts, quotas and provider adapters            |
+| Infrastructure            | Pools, outbox delivery, jobs, configuration, telemetry            |
 
-```text
-src/
-  app/
-    (marketing)/         # Marketing landing page, pricing, demo
-    (auth)/              # Login, register, session callbacks
-    (dashboard)/         # Restaurant administrative portal (Overview, Menu, QR, Orders, Settings)
-    (public-menu)/       # Customer-facing public menu view (/m/[publicMenuId])
-    api/                 # REST endpoints for auth, menu CRUD, and media
-  components/
-    ui/                  # Design system primitives & tokens
-    shared/              # Reusable layout and navigation components
-  modules/
-    auth/                # User authorization & session helpers
-    restaurants/         # Tenant retrieval and tenant assertions
-    menus/               # Category & item services with validation
-    qr/                  # High-density SVG & PNG QR code generator
-    orders/              # Order lifecycle & state machines (Phase C)
-    kitchen/             # Kitchen Display System workflows (Phase D)
-    billing/             # Subscription tiers & entitlements
-    ai/                  # Provider-agnostic AI interfaces (Phase B)
-    media/               # Storage adapters & image processing pipeline
-  db/
-    schema/              # Type-safe Drizzle schema definitions
-    migrations/          # Versioned SQL migrations generated by drizzle-kit
-    index.ts             # Singleton connection & production SQLite pragmas
-  lib/
-    config/              # Validated environment configuration (Zod)
-    errors/              # Typed AppError hierarchy and safe serialisation
-    utils/               # Formatting (currency, slugs, classnames)
-  styles/
-    globals.css          # Design tokens & Tailwind v4 theme definitions
-```
+Organization -> restaurant -> outlet -> table is the target hierarchy. Map existing restaurant
+ownership explicitly during migration; avoid maintaining two unrelated membership authorities.
+Better Auth organizations may supply identity/membership records, while domain policy enforces
+restaurant/outlet access. Record the mapping in the authentication implementation PR.
 
----
+## Request and data boundaries
 
-## 3. Image Resolution Strategy (Phase B Pipeline)
+Public menu reads resolve a stable token into a published tenant/outlet-scoped projection.
+Authenticated writes resolve session membership on the server. Guest order writes use an
+explicit scoped public capability and ordering policy, never a freely chosen tenant ID.
 
-When a dish is displayed on the customer menu, MenuMinute resolves image assets using a strict fallback hierarchy:
+Published menu cache keys include restaurant, outlet, locale and menu version. Private responses
+are not publicly cached. Menu publishing commits version changes and invalidation intent together;
+checkout always revalidates authoritative prices and availability.
 
-1. **Restaurant-Uploaded Photograph**: Original high-resolution photo processed via Sharp (capped at 2000px, JPEG quality 85).
-2. **Approved Reusable Dish-Image Library**: Curated internal library of common dish photography.
-3. **Licensed Pexels Stock-Photo Suggestion**: Free-tier licensed photos via Pexels API with mandatory photographer attribution.
-4. **AI-Generated Illustrative Image**: Controlled image synthesis via NVIDIA NIM / Cloudflare Workers AI.
-5. **Local Category SVG Fallback**: Lightweight custom SVG illustrations (beverages, desserts, breads, starters, etc.).
+Use bounded pg pools per process. Set request, statement and idle-transaction timeouts. Compute
+the total pool budget across replicas, workers and maintenance with database headroom.
+No provider HTTP call inside an order transaction.
+
+## Live kitchen updates
+
+SSE sends tenant/outlet-scoped signals. Redis Pub/Sub is only an accelerator. Persist events in
+PostgreSQL; reconnect fetches missed events and reconciles open orders. Use an ordered per-outlet
+cursor allocated under a transaction-scoped serialization mechanism, not a timestamp or an
+unqualified database sequence whose allocation order can differ from commit order. Define
+retention, cursor expiry and full-resync behavior. Polling provides a fallback.
+
+SSE authenticates subscriptions, rechecks revoked sessions, limits connections, sends heartbeats
+and disables proxy buffering. A chime or delivered event is not kitchen acceptance.
+
+## Failure boundaries and growth
+
+PostgreSQL failure rejects new order writes safely. Redis queue failure leaves durable pending
+outbox work; PostgreSQL writes can proceed subject to backlog limits and operator policy.
+Cache failure permits bounded database fallback. AI/email/media failure never invalidates an order.
+See `operations.md` for degraded-mode rules and `order-reliability.md` for recovery.
+
+Start on one AMD64 host with independent service memory/concurrency budgets. This is not HA.
+Scale from measured dinner-time peaks: move the database/workers off-host, add web replicas,
+coordinate Next.js cache invalidation and deployment identity, then introduce database failover.
+Partition/archive history only after query plans and retention measurements justify it.
+Millions of stored orders is not a tested throughput guarantee.
+
+## Reading order
+
+1. `decisions.md` and `dependency-plan.md`
+2. `domain-invariants.md` and `order-reliability.md`
+3. `security.md`, `database.md` and `environment.md`
+4. `operations.md`, `deployment.md` and `testing-strategy.md`
+5. `ai-development-primers.md`, `design-system.md` and `implementation-plan.md`
