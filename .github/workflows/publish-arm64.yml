@@ -25,6 +25,15 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       RELEASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+      APP_URL: https://food.bababuilds.com
+      DATABASE_URL: postgresql://menuminute_app:isolated-ci-build-password@127.0.0.1:5432/menuminute_build
+      AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+      REDIS_QUEUE_URL: redis://127.0.0.1:6379
+      REDIS_CACHE_URL: redis://127.0.0.1:6380
+      MEDIA_STORAGE: local
+      MEDIA_ROOT: /var/lib/menuminute/media
+      MEDIA_OUTLET_BUDGET_BYTES: 104857600
+      BETTER_AUTH_TELEMETRY: "0"
     steps:
       - uses: actions/checkout@v4
         with:
