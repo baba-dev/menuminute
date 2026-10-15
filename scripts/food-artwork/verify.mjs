@@ -41,10 +41,10 @@ for (const asset of manifest.assets) {
       asset.width !== width || asset.height !== height || asset.format !== "image/png") {
     errors.push("Expected 360x280 RGBA PNG with matching metadata: " + asset.path);
   }
-  if (asset.gitBlobSha && createHash("sha1").update("blob " + bytes.length + "\\0").update(bytes).digest("hex") !== asset.gitBlobSha) {
+  if (asset.gitBlobSha && createHash("sha1").update("blob " + bytes.length + "\0").update(bytes).digest("hex") !== asset.gitBlobSha) {
     errors.push("Git blob SHA mismatch: " + asset.path);
   }
-  if (asset.datasetId && !/^MM-IN-\\d{3}$/.test(asset.datasetId)) errors.push("Invalid dataset ID: " + asset.path);
+  if (asset.datasetId && !/^MM-IN-\d{3}$/.test(asset.datasetId)) errors.push("Invalid dataset ID: " + asset.path);
   if (asset.sha256 && createHash("sha256").update(bytes).digest("hex") !== asset.sha256) {
     errors.push("SHA-256 mismatch: " + asset.path);
   }
