@@ -14,6 +14,7 @@ env:
   AUTH_SECRET: isolated-ci-key-with-at-least-thirty-two-characters
   DATABASE_URL: postgresql://menuminute_app:isolated-ci-app-password@127.0.0.1:5432/menuminute_test
   MIGRATION_DATABASE_URL: postgresql://foundation_owner:isolated-ci-owner-password@127.0.0.1:5432/menuminute_test
+  WORKER_DATABASE_URL: postgresql://menuminute_worker:isolated-ci-worker-password@127.0.0.1:5432/menuminute_test
   REDIS_QUEUE_URL: redis://127.0.0.1:6379
   REDIS_CACHE_URL: redis://127.0.0.1:6380
   BETTER_AUTH_TELEMETRY: "0"
@@ -97,6 +98,7 @@ jobs:
           NODE_ENV: production
           APP_URL: https://menuminute.invalid
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+      - run: pnpm build:worker
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - if: failure()

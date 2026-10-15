@@ -15,6 +15,20 @@
       "when": 1792073927502,
       "tag": "0001_tenant_security",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792081473995,
+      "tag": "0002_odd_darkstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792081473996,
+      "tag": "0003_core_security",
+      "breakpoints": true
     }
   ]
 }

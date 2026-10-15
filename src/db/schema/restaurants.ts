@@ -21,6 +21,7 @@ export const restaurants = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: "restrict" }),
     timezone: text("timezone").notNull().default("Asia/Kolkata"),
+    fulfillmentModes: text("fulfillment_modes").array().notNull().default(["dine_in"]),
     outletType: text("outlet_type").notNull().default("restaurant"),
     isPublished: boolean("is_published").notNull().default(false),
     // Stable opaque public identifier — never changes even if name/slug changes

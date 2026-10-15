@@ -1,3 +1,5 @@
+import { listOrganizations } from "@/modules/organizations/service";
+import { requestActor } from "@/lib/request-context";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
@@ -20,6 +22,14 @@ export async function POST(req: Request) {
       z.string().uuid().parse(req.headers.get("idempotency-key"))
     );
     return NextResponse.json({ outletId: outlet.id }, { status: 201 });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    return NextResponse.json(await listOrganizations(await requestActor(req)));
   } catch (e) {
     return errorResponse(e);
   }

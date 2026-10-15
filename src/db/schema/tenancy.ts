@@ -1,9 +1,18 @@
-import { pgTable, text, boolean, timestamp, unique, foreignKey } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  boolean,
+  timestamp,
+  unique,
+  foreignKey,
+  integer,
+} from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { restaurants } from "./restaurants";
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  version: integer("version").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -29,8 +29,13 @@ execFileSync(
 );
 await cp("public", ".next/standalone/public", { recursive: true });
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true });
-const { MIGRATION_DATABASE_URL: ownerUrl, ...runtimeEnv } = process.env;
+const {
+  MIGRATION_DATABASE_URL: ownerUrl,
+  WORKER_DATABASE_URL: workerUrl,
+  ...runtimeEnv
+} = process.env;
 void ownerUrl;
+void workerUrl;
 const backend = spawn(process.execPath, [".next/standalone/server.js"], {
   stdio: "inherit",
   env: {

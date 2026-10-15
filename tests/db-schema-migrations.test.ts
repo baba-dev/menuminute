@@ -10,6 +10,6 @@ it("applies reviewed migrations idempotently and keeps tenant RLS enabled", asyn
     );
     expect(r.rows).toHaveLength(6);
     expect(r.rows.every((row) => row.relrowsecurity)).toBe(true);
-    expect((await pool.query("select * from drizzle.foundation_migrations")).rowCount).toBe(2);
+    expect((await pool.query("select * from drizzle.foundation_migrations")).rowCount).toBe(4);
   });
 });
