@@ -34,9 +34,31 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: false
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check code formatting (Prettier)
+        run: pnpm format:check
+
+      - name: Validate approved dish artwork assets
+        run: node scripts/food-artwork/verify.mjs
+
+      - name: Lint source code (ESLint)
+        run: pnpm lint
+
   typecheck:
     name: TypeScript Strict Typecheck
     runs-on: ubuntu-24.04-arm
