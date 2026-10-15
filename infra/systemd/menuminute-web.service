@@ -1,0 +1,36 @@
+[Unit]
+Description=MenuMinute web (ARM64)
+After=network-online.target postgresql.service redis-menuminute-queue.service redis-menuminute-cache.service
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=menuminute
+Group=menuminute
+WorkingDirectory=/var/www/menuminute/current
+EnvironmentFile=/etc/menuminute/web.env
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=3100
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/menuminute
+# Review against measured ERP peaks before installing. These are initial containment budgets.
+MemoryHigh=768M
+MemoryMax=1G
+CPUQuota=150%
+TasksMax=256
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

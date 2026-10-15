@@ -1,49 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { requestContext, errorResponse } from "@/lib/request-context";
 import {
   createMenuItem,
   createMenuItemSchema,
   getCategoriesByRestaurant,
   getMenuItemsByCategory,
 } from "@/modules/menus/service";
-import { serializeError } from "@/lib/errors";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
-    }
+    const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
 
     if (categoryId) {
-      const items = getMenuItemsByCategory(categoryId, restaurant.id);
+      const items = await getMenuItemsByCategory(actor, categoryId, restaurant.id);
       return NextResponse.json(items);
     }
 
     // Return all items grouped
-    const categories = getCategoriesByRestaurant(restaurant.id);
-    const allItems = categories.flatMap((cat) => getMenuItemsByCategory(cat.id, restaurant.id));
+    const categories = await getCategoriesByRestaurant(actor, restaurant.id);
+    const allItems = (
+      await Promise.all(
+        categories.map((cat) => getMenuItemsByCategory(actor, cat.id, restaurant.id))
+      )
+    ).flat();
 
     return NextResponse.json(allItems);
   } catch (err) {
-    return NextResponse.json(serializeError(err), { status: 500 });
+    return errorResponse(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
-    }
+    const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
     const body = (await req.json()) as unknown;
     const parsed = createMenuItemSchema.safeParse(body);
@@ -55,9 +47,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const item = createMenuItem(restaurant.id, parsed.data);
+    const item = await createMenuItem(actor, restaurant.id, parsed.data);
     return NextResponse.json(item, { status: 201 });
   } catch (err) {
-    return NextResponse.json(serializeError(err), { status: 500 });
+    return errorResponse(err);
   }
 }

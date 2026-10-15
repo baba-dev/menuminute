@@ -11,3 +11,5 @@ export * from "./media";
 export * from "./ai";
 export * from "./jobs";
 export * from "./audit";
+
+export * from "./tenancy";

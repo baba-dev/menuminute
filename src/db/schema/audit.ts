@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { timestamp, pgTable, text, index } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────
 
-export const auditLogs = sqliteTable(
+export const auditLogs = pgTable(
   "audit_logs",
   {
     id: text("id").primaryKey(),
@@ -23,9 +23,9 @@ export const auditLogs = sqliteTable(
     // Request context
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("audit_logs_user_idx").on(t.userId),

@@ -1,56 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { it, expect } from "vitest";
+import { fixture, admin } from "./helpers";
+import { getPublicMenu } from "../src/modules/restaurants/service";
 import { generateMenuQrCode } from "../src/modules/qr/service";
-import { getRestaurantByPublicId } from "../src/modules/restaurants/service";
-import { getDb } from "../src/db";
-import { restaurants } from "../src/db/schema";
-import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
-
-describe("Stable Public-Menu QR Destinations", () => {
-  it("should generate valid SVG and PNG data URL for destination token", async () => {
-    const token = "demo-spice-route-kitchen-v1";
-    const result = await generateMenuQrCode(token);
-
-    expect(result.destinationUrl).toContain(`/m/${token}`);
-    expect(result.svgData).toContain("<svg");
-    expect(result.dataUrl).toMatch(/^data:image\/png;base64,/);
+it("preserves printed QR identity through renames and revokes explicitly", async () => {
+  const { outlet } = await fixture();
+  const qr = await generateMenuQrCode(outlet.publicId);
+  expect(qr.destinationUrl).toBe(`http://localhost:3000/m/${outlet.publicId}`);
+  expect(qr.svgData).toContain("<svg");
+  await admin(async (_db, pool) => {
+    await pool.query(
+      "update restaurants set name='Renamed',slug='changed-'||id,is_published=true where id=$1",
+      [outlet.id]
+    );
   });
-
-  it("should ensure QR resolution remains intact when restaurant name/slug changes", () => {
-    const db = getDb();
-    const originalPublicId = `stable-qr-token-${nanoid(8)}`;
-    const originalSlug = `original-cafe-${nanoid(4)}`;
-
-    // Create restaurant
-    const rest = db
-      .insert(restaurants)
-      .values({
-        id: nanoid(),
-        publicId: originalPublicId,
-        name: "Original Cafe Name",
-        slug: originalSlug,
-        currency: "INR",
-      })
-      .returning()
-      .get();
-
-    // 1. Initial resolution by publicId succeeds
-    const foundInitial = getRestaurantByPublicId(originalPublicId);
-    expect(foundInitial?.id).toBe(rest.id);
-    expect(foundInitial?.name).toBe("Original Cafe Name");
-
-    // 2. Restaurant rebrands: updates name and slug
-    db.update(restaurants)
-      .set({
-        name: "Rebranded Grand Bistro",
-        slug: `rebranded-bistro-${nanoid(4)}`,
-      })
-      .where(eq(restaurants.id, rest.id))
-      .run();
-
-    // 3. QR code with original opaque token STILL resolves to the same restaurant
-    const foundAfterRebrand = getRestaurantByPublicId(originalPublicId);
-    expect(foundAfterRebrand?.id).toBe(rest.id);
-    expect(foundAfterRebrand?.name).toBe("Rebranded Grand Bistro");
+  expect((await getPublicMenu(outlet.publicId))?.restaurant.name).toBe("Renamed");
+  await admin(async (_db, pool) => {
+    await pool.query("update qr_codes set is_active=false where restaurant_id=$1", [outlet.id]);
   });
+  expect(await getPublicMenu(outlet.publicId)).toBeNull();
 });

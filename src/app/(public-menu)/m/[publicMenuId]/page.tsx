@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { getRestaurantByPublicId } from "@/modules/restaurants/service";
-import { getFullMenu } from "@/modules/menus/service";
+import { getPublicMenu } from "@/modules/restaurants/service";
 import { formatPrice } from "@/lib/utils";
 import { QrCode, Phone, MapPin, Sparkles, Flame, Leaf } from "lucide-react";
 
@@ -10,9 +9,12 @@ interface PublicMenuPageProps {
   }>;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: PublicMenuPageProps) {
   const { publicMenuId } = await params;
-  const restaurant = getRestaurantByPublicId(publicMenuId);
+  const projection = await getPublicMenu(publicMenuId);
+  const restaurant = projection?.restaurant;
 
   if (!restaurant) {
     return {
@@ -28,13 +30,14 @@ export async function generateMetadata({ params }: PublicMenuPageProps) {
 
 export default async function PublicMenuPage({ params }: PublicMenuPageProps) {
   const { publicMenuId } = await params;
-  const restaurant = getRestaurantByPublicId(publicMenuId);
+  const projection = await getPublicMenu(publicMenuId);
+  const restaurant = projection?.restaurant;
 
   if (!restaurant) {
     notFound();
   }
 
-  const menu = getFullMenu(restaurant.id);
+  const menu = projection!.menu;
 
   return (
     <div className="min-h-screen bg-stone-50 pb-20 text-stone-900">
@@ -137,6 +140,24 @@ export default async function PublicMenuPage({ params }: PublicMenuPageProps) {
                       className="flex flex-col justify-between rounded-xl border border-stone-200 bg-white p-4 shadow-xs transition-shadow hover:shadow-sm"
                     >
                       <div>
+                        {item.imageUrl && (
+                          <div className="relative mb-3 overflow-hidden rounded-lg">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={item.imageUrl}
+                              alt={item.name}
+                              className={`h-36 w-full object-cover ${item.isAvailable ? "" : "opacity-60 grayscale"}`}
+                            />
+                            {!item.isAvailable && (
+                              <span className="absolute inset-0 flex items-center justify-center bg-black/30 font-bold text-white">
+                                Sold Out
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {!item.isAvailable && !item.imageUrl && (
+                          <p className="mb-2 font-semibold text-stone-600">Sold Out</p>
+                        )}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-1.5">
                             {item.isVeg !== null && item.isVeg !== undefined && (

@@ -1,29 +1,29 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { boolean, timestamp, integer, pgTable, text, index } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 
 // ─── Subscription Plans ───────────────────────────────────────────────────────
 
-export const subscriptionPlans = sqliteTable("subscription_plans", {
+export const subscriptionPlans = pgTable("subscription_plans", {
   id: text("id").primaryKey(),
   name: text("name").notNull(), // "free", "ordering", "kitchen_pro"
   displayName: text("display_name").notNull(),
   // Monthly price in minor units (paise)
   monthlyPricePaise: integer("monthly_price_paise").notNull().default(0),
   features: text("features"), // JSON array of feature keys
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
 // ─── Restaurant Subscriptions ──────────────────────────────────────────────────
 
-export const restaurantSubscriptions = sqliteTable(
+export const restaurantSubscriptions = pgTable(
   "restaurant_subscriptions",
   {
     id: text("id").primaryKey(),
     restaurantId: text("restaurant_id")
       .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
+      .references(() => restaurants.id, { onDelete: "restrict" }),
     planId: text("plan_id")
       .notNull()
       .references(() => subscriptionPlans.id),
@@ -32,15 +32,15 @@ export const restaurantSubscriptions = sqliteTable(
     })
       .notNull()
       .default("active"),
-    currentPeriodStart: integer("current_period_start", { mode: "timestamp" }),
-    currentPeriodEnd: integer("current_period_end", { mode: "timestamp" }),
-    cancelledAt: integer("cancelled_at", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
+    currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [index("subscriptions_restaurant_idx").on(t.restaurantId)]
 );

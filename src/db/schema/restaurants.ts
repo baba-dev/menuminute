@@ -1,13 +1,28 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
-import { users } from "./users";
+import {
+  boolean,
+  timestamp,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+  index,
+  unique,
+} from "drizzle-orm/pg-core";
+import { organizations } from "./tenancy";
 
 // ─── Restaurants ──────────────────────────────────────────────────────────────
 
-export const restaurants = sqliteTable(
+export const restaurants = pgTable(
   "restaurants",
   {
-    id: text("id").primaryKey(), // nanoid
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    timezone: text("timezone").notNull().default("Asia/Kolkata"),
+    outletType: text("outlet_type").notNull().default("restaurant"),
+    isPublished: boolean("is_published").notNull().default(false),
     // Stable opaque public identifier — never changes even if name/slug changes
     publicId: text("public_id").notNull(),
     name: text("name").notNull(),
@@ -31,92 +46,38 @@ export const restaurants = sqliteTable(
     // Currency — ISO 4217 code (INR, USD, etc.)
     currency: text("currency").notNull().default("INR"),
     // Status
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    isDemoData: integer("is_demo_data", { mode: "boolean" }).notNull().default(false),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isActive: boolean("is_active").notNull().default(true),
+    isDemoData: boolean("is_demo_data").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
+    unique("restaurants_org_id_unique").on(t.organizationId, t.id),
     uniqueIndex("restaurants_public_id_idx").on(t.publicId),
     uniqueIndex("restaurants_slug_idx").on(t.slug),
   ]
 );
 
-// ─── Restaurant Memberships ────────────────────────────────────────────────────
-
-export const restaurantMembers = sqliteTable(
-  "restaurant_members",
-  {
-    id: text("id").primaryKey(),
-    restaurantId: text("restaurant_id")
-      .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: text("role", {
-      enum: ["owner", "manager", "staff", "kitchen"],
-    })
-      .notNull()
-      .default("staff"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    invitedAt: integer("invited_at", { mode: "timestamp" }),
-    joinedAt: integer("joined_at", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-  },
-  (t) => [
-    uniqueIndex("restaurant_members_unique_idx").on(t.restaurantId, t.userId),
-    index("restaurant_members_restaurant_idx").on(t.restaurantId),
-    index("restaurant_members_user_idx").on(t.userId),
-  ]
-);
-
-// ─── Outlets (Physical Locations / Branches) ───────────────────────────────────
-
-export const outlets = sqliteTable(
-  "outlets",
-  {
-    id: text("id").primaryKey(),
-    restaurantId: text("restaurant_id")
-      .notNull()
-      .references(() => restaurants.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    addressLine1: text("address_line1"),
-    city: text("city"),
-    phone: text("phone"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-  },
-  (t) => [index("outlets_restaurant_idx").on(t.restaurantId)]
-);
-
 // ─── Restaurant Tables ─────────────────────────────────────────────────────────
 
-export const restaurantTables = sqliteTable(
+export const restaurantTables = pgTable(
   "restaurant_tables",
   {
     id: text("id").primaryKey(),
     restaurantId: text("restaurant_id")
       .notNull()
       .references(() => restaurants.id, { onDelete: "cascade" }),
-    outletId: text("outlet_id").references(() => outlets.id, {
-      onDelete: "set null",
-    }),
     tableNumber: text("table_number").notNull(),
     label: text("label"), // "Window Seat", "Rooftop", etc.
     capacity: integer("capacity"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("tables_restaurant_idx").on(t.restaurantId),
@@ -126,7 +87,7 @@ export const restaurantTables = sqliteTable(
 
 // ─── QR Codes ─────────────────────────────────────────────────────────────────
 
-export const qrCodes = sqliteTable(
+export const qrCodes = pgTable(
   "qr_codes",
   {
     id: text("id").primaryKey(),
@@ -145,10 +106,10 @@ export const qrCodes = sqliteTable(
     destinationToken: text("destination_token").notNull(),
     svgData: text("svg_data"), // cached SVG string
     scanCount: integer("scan_count").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     uniqueIndex("qr_destination_idx").on(t.destinationToken),
@@ -160,7 +121,7 @@ export const qrCodes = sqliteTable(
 
 export type Restaurant = typeof restaurants.$inferSelect;
 export type NewRestaurant = typeof restaurants.$inferInsert;
-export type RestaurantMember = typeof restaurantMembers.$inferSelect;
-export type Outlet = typeof outlets.$inferSelect;
+
+export type Outlet = Restaurant;
 export type RestaurantTable = typeof restaurantTables.$inferSelect;
 export type QrCode = typeof qrCodes.$inferSelect;
