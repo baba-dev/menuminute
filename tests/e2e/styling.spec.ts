@@ -7,7 +7,10 @@ test("production homepage applies Tailwind utilities and responsive navigation",
 
   // Text-only smoke checks pass even when the Tailwind compiler is disconnected.
   const action = page.getByRole("link", { name: "Create your free menu", exact: true }).first();
-  await expect(action).toHaveCSS("display", "inline-flex");
+  // A flex item is blockified: the inline-flex utility computes to flex here.
+  // Keep checking the generated utility styles, not the authored display token.
+  await expect(action).toHaveClass(/\binline-flex\b/);
+  await expect(action).toHaveCSS("display", "flex");
   await expect(action).toHaveCSS("padding-top", "16px");
   await expect(action).toHaveCSS("padding-left", "32px");
   await expect(action).toHaveCSS("border-radius", "16px");
@@ -37,7 +40,7 @@ test("production homepage applies Tailwind utilities and responsive navigation",
   await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
   await expect(page.getByRole("navigation")).toHaveCSS("background-color", "rgb(32, 32, 32)");
   await expect(heading).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(action).toHaveCSS("display", "inline-flex");
+  await expect(action).toHaveCSS("display", "flex");
   await page.reload();
   await expect(page.getByRole("navigation")).toHaveCSS("background-color", "rgb(32, 32, 32)");
   await page.getByLabel("Appearance", { exact: true }).selectOption("light");
