@@ -5,6 +5,16 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
 
+  // Tailwind's CSS import needs compilation in both next dev and next build.
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
+  },
+
   // Security headers
   async headers() {
     return [
