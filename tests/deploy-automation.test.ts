@@ -3,10 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const deploy = readFileSync(path.resolve(".github/workflows/deploy-vps.yml"), "utf8");
-const publisher = readFileSync(
-  path.resolve(".github/workflows/publish-arm64.yml"),
-  "utf8"
-);
+const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml"), "utf8");
 const helper = readFileSync(path.resolve("infra/deploy/menuminute-release"), "utf8");
 
 describe("main-only continuous delivery gates", () => {
