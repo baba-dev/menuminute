@@ -14,7 +14,7 @@ WorkingDirectory=/var/www/menuminute/worker-current
 # Only WORKER_DATABASE_URL and REDIS_QUEUE_URL. No auth secret, web URL or migration credential.
 EnvironmentFile=/etc/menuminute/worker.env
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/node dist/worker.mjs
+ExecStart=/opt/menuminute/node24/bin/node dist/worker.mjs
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=35
