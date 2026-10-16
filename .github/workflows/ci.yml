@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Inspect CD test format delta (temporary)
+        run: pnpm exec prettier tests/deploy-automation.test.ts | diff -u tests/deploy-automation.test.ts - || true
+
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
