@@ -134,11 +134,15 @@ systemctl restart menuminute-web.service menuminute-worker.service
 ready=false
 for i in {1..15}; do
   if systemctl is-active --quiet menuminute-web.service &&
-     systemctl is-active --quiet menuminute-worker.service &&
-     curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready |
-       grep -q '"status":"ready"'; then
-    ready=true
-    break
+     systemctl is-active --quiet menuminute-worker.service; then
+    body="$(curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready)" || {
+      sleep 2
+      continue
+    }
+    if [[ "$body" == *'"status":"ready"'* ]]; then
+      ready=true
+      break
+    fi
   fi
   sleep 2
 done
