@@ -68,7 +68,7 @@ rules; do not flush the firewall. Verify SSH/Tailscale and recovery-console acce
 ## Proposed Food Minutes coexistence
 
 - Separate non-root account, systemd units, secrets, release tree and persistent data from ERP.
-- Proposed web binding: 127.0.0.1:3001; confirm free at provisioning. ERP keeps port 3000.
+- Proposed web binding: 127.0.0.1:3100, matching committed systemd/Nginx templates; confirm free at provisioning. ERP keeps port 3000.
 - Separate PostgreSQL role/database and separate queue/cache Redis processes with private listeners.
   Confirm ports and existing ERP storage dependencies before provisioning.
 - Explicit per-service memory/CPU limits, bounded pg pools, worker concurrency and queue retention.
