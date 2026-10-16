@@ -1,8 +1,12 @@
 name: Deploy verified MenuMinute ARM64 release
 
-# Manual until the first production cutover and rollback drill are accepted.
-# Stage first (activate=false), review migrations/backups, then activate.
+# After successful main CI and immutable ARM64 release publication, stage
+# automatically without switching live traffic. Promotion remains a manual,
+# release-specific, root-approved action until a full cutover drill is accepted.
 on:
+  workflow_run:
+    workflows: ["Publish verified ARM64 artifact"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       release_sha:
@@ -24,14 +28,24 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
+    # Reject PR publisher runs, failed/skipped publishers, forks and non-main.
+    # Publisher is the second workflow in main CI -> publish -> stage chain.
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'workflow_run' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.head_repository.full_name == github.repository)
+      }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     environment: production
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE_SHA: ${{ inputs.release_sha }}
-      ACTIVATE: ${{ inputs.activate }}
+      RELEASE_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.release_sha || github.event.workflow_run.head_sha }}
+      ACTIVATE: ${{ github.event_name == 'workflow_dispatch' && inputs.activate || false }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
@@ -124,7 +138,7 @@ jobs:
           REMOTE
 
       - name: Activate only after approved cutover
-        if: inputs.activate
+        if: github.event_name == 'workflow_dispatch' && inputs.activate
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -138,8 +152,8 @@ jobs:
       - name: Job summary
         if: success()
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          ACTIVATE: ${{ inputs.activate }}
+          RELEASE_SHA: ${{ env.RELEASE_SHA }}
+          ACTIVATE: ${{ env.ACTIVATE }}
         run: |
           {
             echo "### MenuMinute ARM64 release"
