@@ -1,6 +1,8 @@
 # MenuMinute: GitHub Actions -> shared ARM64 VPS
 
-This deployment path is **manual by default**. It uses the immutable ARM64
+This is the **optional subsequent-release** deployment path; the 2026-10-16 first install was
+performed manually, with live deployment SHA and filesystem contract recorded in
+[production runbook](production-runbook.md). This deployment path is **manual by default**. It uses the immutable ARM64
 artifact from successful `main` CI; it never builds on the ERP VPS. PRs cannot
 deploy. Staging does not restart units, touch nginx, modify the ERP, or run SQL.
 Activation requires both the GitHub `production` environment gate and a separate
@@ -30,7 +32,7 @@ committed systemd and Nginx templates; the earlier 3001 in server inventory is
 superseded. Confirm actual domain, Nginx routing and TLS independently. No
 firewall change is required to make port 3100 public; it must stay on loopback.
 
-Before an activation, provision PostgreSQL (separate owner/app/worker roles),
+Before an activation, verify the already-provisioned PostgreSQL (separate owner/app/worker roles),
 two loopback Redis instances (queue 6381, cache 6382), off-host backups and
 a successful restore rehearsal. `infra/compose.test.yml` is **not** production
 infrastructure. Never use the CI demo secrets in production.
@@ -100,10 +102,13 @@ still invokes a different Node binary. Changes to units, the dedicated
 TLS-enabled Nginx site and production env files are separate operator
 decisions, never GitHub Actions writes.
 
-Create root-owned `/etc/menuminute/web.env` and
+Preserve existing root-owned `/etc/menuminute/web.env` and
 `/etc/menuminute/worker.env` in systemd `EnvironmentFile` format with mode
-0600; put **only** the migration-owner `MIGRATION_DATABASE_URL` in
-`/etc/menuminute/migration.env` (mode 0600, shell-compatible assignment).
+0600. The first provisioning placed the migration-owner URL in
+`/etc/menuminute/migration-db.env`; this *optional* deploy workflow's invocation expects
+`/etc/menuminute/migration.env`. The operator must deliberately provision/validate the latter
+as a root-only 0600 **shell-compatible assignment with only MIGRATION_DATABASE_URL** if choosing
+that path; do not assume it is installed or substitute a runtime-role URL.
 The runtime roles must have neither migration-owner credentials nor
 SUPERUSER/BYPASSRLS privileges.
 
@@ -218,6 +223,13 @@ the prior MenuMinute application links and restarts its units on an activation
 failure. **It never rolls back database migrations or data.** Revert only to
 a schema-compatible prior application; once new writes occur, a DB restore
 is not an automatic rollback. Review proxy/public TLS and ERP after success.
+
+**Manual-install handoff:** the already-live initial SHA was extracted before this helper was
+installed and therefore may lack its required `.release-archive-sha256` file. Do **not** use the
+helper to overwrite that existing release or invent metadata. Once the restricted deploy account,
+incoming path, helper, permissions and GitHub environment are independently provisioned, stage the
+**next** verified SHA as a new release and approve it explicitly. Installing this workflow source in
+a PR does not mean the VPS helper or GitHub production secrets are configured.
 
 The script retains staged releases for rollback and does no automatic deletion.
 Implement a separate reviewed retention policy after disk monitoring is live.

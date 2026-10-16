@@ -1,9 +1,11 @@
 # Deployment target: Linux ARM64
 
-Revised 2026-10-15 after the host audit. The selected server is the shared Oracle ERP host running
-**Ubuntu 24.04.4 LTS, ARM64/aarch64, 4 visible ARM cores and 23 GiB RAM**. The earlier AMD64 host
-choice is superseded. Phase 1 implements PostgreSQL/Redis foundation configuration; SQLite is read-only import input.
-No deployment or server hardening has been performed by this PR.
+The shared Oracle ERP host is **Linux ARM64/aarch64, 4 visible ARM cores and 23 GiB RAM**.
+The earlier AMD64 host choice is superseded. **Initial production activation was verified on
+2026-10-16**, not performed by this documentation change. For current confirmed paths, the initial
+live artifact and outstanding production acceptance gates, read [the canonical production runbook](production-runbook.md)
+before these general deployment contracts. Phase 1 implements PostgreSQL/Redis foundation
+configuration; SQLite is read-only import input.
 
 See [server inventory](server-inventory.md) for observations, confirmed cleanup and outstanding inputs.
 
@@ -11,7 +13,7 @@ See [server inventory](server-inventory.md) for observations, confirmed cleanup 
 
 Recheck `uname -m` (expected aarch64), OS/libc, free storage, resource pressure and ports. Confirm
 OCI shape/region, security lists/NSGs, ERP peak load, ERP database dependencies, Node/pnpm versions
-and the actual Food Minutes domain/TLS. The last confirmed root free space is 43 GB.
+and the actual Food Minutes domain/TLS. At 2026-10-16 public activation the root had approximately 46 GB free; recheck before each release.
 
 ## Native ARM64 build contract
 
@@ -37,7 +39,8 @@ It does not deploy releases or prove shared-ERP capacity. See [foundation status
 - Independent non-root systemd units for web, dispatcher and workers; separate credentials from ERP.
 - Releases under `/var/www/menuminute/releases/<sha>` with `current` and `worker-current` symlinks (matching committed units),
   root-owned/read-only at runtime. Secrets under `/etc/menuminute/`.
-- PostgreSQL/Redis persistence outside releases; uploaded production assets in R2.
+- PostgreSQL/Redis persistence and **local private uploaded media** outside releases at
+  `/var/lib/menuminute/media`; private Cloudflare R2 is used for encrypted restic backups only.
 - Set tested resource limits and reserve ERP/OS capacity; see [operations](operations.md).
 
 Use a private, root-owned Node 24 binary at `/opt/menuminute/node24/bin/node` for the
@@ -68,8 +71,9 @@ Validate Nginx configuration and verify ERP health before and after a reload.
 6. Backups, external alerts, SLO/RPO/RTO and operator escalation are configured and verified.
 7. Run immutable artifact health checks before traffic; retain an explicitly compatible rollback.
 
-Actual service units, measured limits, app domain and deployment commands belong in the reviewed
-implementation/provisioning PR. A successful scaffold CI build does not authorize a production cutover.
+The actual installed systemd units, deployed SHA, production hostname and paths are recorded in
+[the runbook](production-runbook.md). A new successful CI build or artifact publication never
+authorizes a VPS cutover on its own.
 
 ## CI reference
 
