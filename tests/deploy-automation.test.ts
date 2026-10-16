@@ -26,9 +26,7 @@ describe("main-only continuous delivery gates", () => {
   });
 
   it("does not allow automated publication to authorize production activation", () => {
-    expect(deploy).toContain(
-      "if: github.event_name == 'workflow_dispatch' && inputs.activate"
-    );
+    expect(deploy).toContain("if: github.event_name == 'workflow_dispatch' && inputs.activate");
     expect(deploy).toContain("default: false");
     expect(deploy).toContain("environment: production");
     expect(helper).toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
