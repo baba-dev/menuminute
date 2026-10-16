@@ -50,6 +50,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Preview normalized deployment runbook
+        run: |
+          echo PRETTIER_RUNBOOK_BASE64_BEGIN
+          pnpm exec prettier docs/deployment-actions.md | base64 -w0
+          echo
+          echo PRETTIER_RUNBOOK_BASE64_END
+
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
