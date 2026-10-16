@@ -50,7 +50,9 @@ it("normalizes a root-private extraction into a root-owned release readable by r
 it("checks actual service-user access before switching live pointers and resets a failed rollback", () => {
   const normalized = helper.indexOf('chmod -R u=rwX,go=rX "$temp/content"');
   const published = helper.indexOf('mv -T -- "$temp/content" "$release"');
-  const preflight = helper.indexOf('runtime_access_ok || {\n  echo "Runtime accounts cannot enter/read');
+  const preflight = helper.indexOf(
+    'runtime_access_ok || {\n  echo "Runtime accounts cannot enter/read'
+  );
   const switchIndex = helper.indexOf('switched=true\nswitch_link "$web_link"');
   const rollbackReset = helper.indexOf(
     "systemctl reset-failed menuminute-web.service menuminute-worker.service"
