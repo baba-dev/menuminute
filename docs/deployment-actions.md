@@ -133,14 +133,20 @@ PM2, service-manager or Nginx permissions. The account may write only its
 incoming artifact and its own SSH home. Do not run a self-hosted Actions runner
 on the shared ERP host.
 
-Install the Ubuntu `rsync` package once (`command -v rsync`; if absent,
-`sudo apt-get update && sudo apt-get install -y rsync`). The GitHub-hosted
-runner also verifies `rsync` availability. Upload uses `--append-verify`,
-`--partial`, a 120-second I/O idle timeout, SSH keepalives, and progress logs;
-a previously interrupted archive is resumed without restarting from byte zero.
-The stage script still copies the artifact to a root-controlled directory and
-checks its published SHA-256 before extracting anything. Never remove an
-in-progress incoming archive or start competing deployments.
+The repository's release assets are public. GitHub Actions first verifies
+the immutable release tag, full SHA and the published archive checksum on its
+runner; it then asks the dedicated SSH account to **pull that exact asset over
+GitHub HTTPS directly to the VPS** using curl. SSH transports only the small
+command, not the large archive. The URL is derived from the trusted repository
+name and verified release SHA. No GitHub token is stored on the VPS.
+The HTTPS transfer uses `--continue-at -` to resume an interrupted incoming
+archive, has a slow-transfer timeout, only follows HTTPS redirects and checks
+its expected byte length. The root-owned staging helper independently copies
+and SHA-256-verifies the full archive before extraction. An interrupted partial
+file must not be removed or overwritten by a competing transfer; if HTTP
+Range resumption fails, check that no writer remains before examining it.
+The previous SSH/rsync push transport is superseded; `rsync` is not needed
+for this workflow.
 
 ## 3. One dedicated SSH key and host pin
 
@@ -182,8 +188,8 @@ for PR CI or the ARM64 publisher.
 In **Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**,
 select `main` and enter the exact 40-character SHA of a published ARM64
 release. First run with `activate=false`; this verifies release tag/target,
-downloads the artifact and checksum, verifies SHA-256 on the runner, resumes/transfers the
-archive via pinned SSH/rsync, verifies the digest on the server, checks ARM64/Node
+downloads the artifact and checksum, verifies SHA-256 on the runner, pulls the archive directly over GitHub HTTPS under the deploy account after
+a short pinned SSH command, verifies the digest on the server, checks ARM64/Node
 and native modules, then stages it under
 `/var/www/menuminute/releases/<full-SHA>`. It does not move `current`.
 
@@ -231,10 +237,12 @@ Implement a separate reviewed retention policy after disk monitoring is live.
   as an automatic workaround.
 - Checksum mismatch or wrong tag: abort, do not bypass it or manually extract.
 - Any host-key mismatch: abort; verify host identity out of band.
-- Upload stalls: compare incoming file byte counts at two sample times, inspect
-  `ss -tinp` and SSH/SFTP process state, and read the first transport error.
-  An interrupted upload can resume on a subsequent stage-only workflow run;
-  do not cancel a progressing transfer or run two uploads simultaneously.
+- HTTPS pull stalls: compare incoming file byte counts at two sample times and
+  inspect the first curl transport error. An interrupted transfer can resume
+  on a subsequent stage-only run; do not run two downloads simultaneously.
+- A previous SCP/rsync partial archive for the *same* immutable asset may also
+  be resumed via HTTPS Range, subject to the full root-owned SHA-256 check.
+  If the server refuses a range, fail rather than accept unverified bytes.
 - If a live data migration changes schema incompatibly, resolve forward rather
   than reverting DB blindly. Preserve ERP independently.
 
