@@ -31,3 +31,22 @@ Missing required production values must fail startup without printing them. Miss
 keys disables the feature. Readiness reports dependency status without leaking connection strings.
 Store production secrets outside the repository and application releases with restrictive permissions.
 Do not copy demo passwords, development defaults or CI test secrets into production.
+
+## Current production credential placement (2026-10-16)
+
+The deployed web/worker environment files are root:root mode 0600 at
+`/etc/menuminute/web.env` and `/etc/menuminute/worker.env`. Separate initial-provisioning
+connection inputs exist at `/etc/menuminute/{migration-db,web-db,worker-db,redis-queue,redis-cache}.env`.
+They are **not** interchangeable with the optional newer Actions deployment runbook's
+`/etc/menuminute/migration.env`: provision that optional file deliberately from the approved
+migration-owner credential if adopting that workflow; do not assume it already exists. Never copy
+or show values to agents/CI. Production Redis queue/cache listen on ports 6381/6382 with their
+already-provisioned independent ACL identities; 6379/6380 in CI are isolated synthetic test values.
+Web uses its restricted application DB role, both Redis connections, auth secret and local media;
+worker gets only its restricted worker DB URL, queue URL and local media config. Never provide
+migration owner/auth secret to worker, or R2 restic credentials to either service.
+
+Live originals and derivatives use `MEDIA_STORAGE=local` and
+`MEDIA_ROOT=/var/lib/menuminute/media`, **not** an application R2 media bucket. R2 restic settings
+are private root-only at `/etc/menuminute/backup/`. The current paths, installed Node/runtime
+and evidence status are described in [production runbook](production-runbook.md).

@@ -18,9 +18,11 @@ instances, BullMQ and Better Auth database sessions. Launch supports dine-in and
 acceptance and payment at the restaurant/counter. Phase 1 converts foundation/menu services to PostgreSQL, Better Auth and scoped tenancy;
 Phase 2 adds organization/outlet management, scoped roles, durable projection jobs and explicit billing
 entitlements. Phase 3 adds versioned Menu Studio, reviewed media, permanent service-point QR codes
-and the public menu product. Ordering/KDS remain subsequent slices. No production cutover has occurred. The audited host runs Ubuntu 24.04.4 LTS with
-4 visible ARM cores, 23 GiB RAM and 43 GB free disk after confirmed cleanup. See
-[server inventory](docs/server-inventory.md) for shared-ERP constraints and outstanding inputs.
+and the public menu product. Ordering/KDS remain subsequent slices. The initial Free QR Menu web/worker release was activated on the shared Oracle ARM64 host on
+2026-10-16. Public HTTPS readiness and signup were verified; the full production media/QR flow,
+nightly backup operation, external alerting and capacity sign-off remain open. The audited host
+has 4 visible ARM cores and 23 GiB RAM. See the [production runbook](docs/production-runbook.md)
+for actual paths, deployed SHA, live status and shared-ERP protections.
 
 Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
 [dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
@@ -80,6 +82,18 @@ Subscription collection, USD prices and exact plan quotas remain decisions.
 
 ---
 
+## Production deployment and release safety
+
+The live origin is [food.bababuilds.com](https://food.bababuilds.com), with a separate
+ERP-preserving Nginx virtual host. Runtime media is **local private shared-group storage**;
+Cloudflare R2 is used for **encrypted off-host backups**, not live media. Source merges and
+new GitHub release artifacts do **not** automatically deploy to the VPS. The operator reviews
+backups, SQL compatibility, ERP health and the exact SHA before activating any new version.
+
+Start with the [production source-of-truth runbook](docs/production-runbook.md), then consult the
+[ARM64 deployment contract](docs/deployment.md) and [optional staged Actions deployment](docs/deployment-actions.md).
+Do not follow first-install examples on an already-live host or change `/usr/bin/node` used by ERP.
+
 ## 🚀 Quick Start Guide
 
 ### 1. Clone & Install Dependencies
@@ -119,9 +133,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🔑 Demo Access Credentials
+## 🔑 Local test/demo access only
 
-The database seed provides a pre-configured demo restaurant owner account:
+The explicit **non-production** demo seed provides a local restaurant owner account. Never run it
+against production or interpret this account as an actual merchant:
 
 - **Login URL**: [http://localhost:3000/login](http://localhost:3000/login)
 - **Email**: `demo@menuminute.com`
@@ -187,7 +202,9 @@ pnpm test:e2e
 - [Database & Schema](docs/database.md)
 - [Development Workflow](docs/development.md)
 - [Environment Variables](docs/environment.md)
+- [Production operations source of truth: paths, release, checks and rollback](docs/production-runbook.md)
 - [Production Deployment (Linux ARM64 target)](docs/deployment.md)
+- [Manual, approval-gated GitHub Actions VPS deployment](docs/deployment-actions.md)
 - [Audited ARM server and coexistence requirements](docs/server-inventory.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
