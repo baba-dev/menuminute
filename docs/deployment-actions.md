@@ -83,7 +83,7 @@ sudo install -o root -g root -m 0750 /tmp/menuminute-release /usr/local/sbin/men
 sudo visudo -f /etc/sudoers.d/menuminute-deploy
 ```
 
-Insert this *single allowlisted command* in that sudoers file, then
+Insert this _single allowlisted command_ in that sudoers file, then
 `sudo chmod 0440 /etc/sudoers.d/menuminute-deploy` and
 `sudo visudo -cf /etc/sudoers.d/menuminute-deploy`:
 
@@ -122,12 +122,12 @@ console or a previously trusted connection, not by accepting an unverified
 In **Settings -> Environments -> production**, restrict deployment branches to
 `main`, add a required reviewer when available, and set:
 
-| Type | Name | Value |
-|---|---|---|
-| Secret | `VPS_HOST` | Verified host DNS name or IPv4 address |
-| Secret | `VPS_SSH_KEY` | Complete dedicated private key, including markers |
-| Secret | `VPS_SSH_KNOWN_HOSTS` | Independently verified OpenSSH known_hosts line |
-| Variable | `VPS_PORT` | SSH port; defaults to 22 |
+| Type     | Name                  | Value                                             |
+| -------- | --------------------- | ------------------------------------------------- |
+| Secret   | `VPS_HOST`            | Verified host DNS name or IPv4 address            |
+| Secret   | `VPS_SSH_KEY`         | Complete dedicated private key, including markers |
+| Secret   | `VPS_SSH_KNOWN_HOSTS` | Independently verified OpenSSH known_hosts line   |
+| Variable | `VPS_PORT`            | SSH port; defaults to 22                          |
 
 Do not put database, Redis or Better Auth credentials in GitHub Actions.
 They remain on the server under `/etc/menuminute`. No SSH secrets are needed
