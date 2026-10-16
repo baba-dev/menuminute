@@ -16,7 +16,8 @@ From a trusted administrator session on the **selected Oracle ARM64 host**:
 
 ```bash
 uname -m                         # aarch64
-/usr/bin/node -p 'process.version + " " + process.arch' # v24 ... arm64
+/usr/bin/node -p 'process.version + " " + process.arch' # ERP baseline, do not replace
+/opt/menuminute/node24/bin/node -p 'process.version + " " + process.arch' # v24 arm64 once installed
 df -h /                           # maintain >=4GiB free for staging, much more for runtime
 ss -ltnp | grep -E ':(3000|3100|6381|6382)\b' || true
 systemctl is-active nginx
@@ -44,8 +45,9 @@ sudo id menuminute
 sudo id menuminute-worker
 sudo getent group menuminute-media
 # The three runtime identities above must be provisioned separately.
-sudo useradd --system --create-home --home-dir /var/lib/menuminute/deploy \
-  --shell /bin/bash menuminute-deploy
+# If the deploy account already exists, preserve it; do not recreate/reset its SSH keys.
+id menuminute-deploy || sudo useradd --system --user-group --create-home \
+  --home-dir /var/lib/menuminute/deploy --shell /bin/bash menuminute-deploy
 sudo install -d -o root -g root -m 0755 /var/www/menuminute /var/www/menuminute/releases
 sudo install -d -o root -g root -m 0755 /var/lib/menuminute
 sudo install -d -o menuminute-deploy -g menuminute-deploy -m 0700 /var/lib/menuminute/incoming
@@ -59,11 +61,44 @@ sudo install -d -o root -g root -m 0700 \
 
 For `/var/lib/menuminute/media`, configure the shared `menuminute-media`
 group and permissions according to the real storage provider; do not open
-world-writable access. The server must have Node 24 ARM64 accessible at
-`/usr/bin/node` (not only an interactive nvm shell). Install and review the
-web/worker systemd templates and the dedicated, TLS-enabled Nginx site
-**once**, in a separate provisioning change. Do not let Actions edit
-systemd unit definitions, Nginx or production env files.
+world-writable access. Do not replace the shared `/usr/bin/node`: the
+existing ERP is on Node 20. MenuMinute uses a **private, root-owned Node 24**
+at `/opt/menuminute/node24/bin/node` for staging and its web/worker
+systemd units. This avoids a global Node/package-manager update.
+
+Install a pinned official Linux ARM64 runtime alongside the existing one;
+verify the downloaded archive against the publisher's SHA-256 manifest.
+This example uses Node v24.22.0 (2026-10-14); review the version and
+trusted Node.js publisher origin before executing:
+
+```bash
+set -euo pipefail
+ver=v24.22.0
+archive="node-${ver}-linux-arm64.tar.xz"
+tmp="$(mktemp -d)"
+trap 'rm -rf -- "$tmp"' EXIT
+curl -fsSLo "$tmp/$archive" "https://nodejs.org/dist/$ver/$archive"
+curl -fsSLo "$tmp/SHASUMS256.txt" "https://nodejs.org/dist/$ver/SHASUMS256.txt"
+(cd "$tmp"; grep -F "  $archive" SHASUMS256.txt | sha256sum -c -)
+test ! -e /opt/menuminute/node24 && test ! -L /opt/menuminute/node24
+sudo install -d -o root -g root -m 0755 /opt/menuminute
+sudo tar -xJf "$tmp/$archive" -C /opt/menuminute --no-same-owner
+sudo mv "/opt/menuminute/node-$ver-linux-arm64" "/opt/menuminute/node-$ver"
+sudo ln -s "/opt/menuminute/node-$ver" /opt/menuminute/node24
+/opt/menuminute/node24/bin/node -p 'process.version + " " + process.arch'
+/usr/bin/node -v  # Unchanged shared ERP runtime
+```
+
+For an existing live MenuMinute instance, **do not install/overwrite the
+systemd units while preparing the SSH deploy account**. Inspect
+`systemctl cat menuminute-web.service menuminute-worker.service` and the
+existing rollback/startup arrangements first. Before activation, review and
+install the updated web/worker unit templates (or targeted ExecStart
+overrides) with this private Node 24 path, perform `systemctl daemon-reload`
+and test compatibility with the old release. Activation refuses a unit that
+still invokes a different Node binary. Changes to units, the dedicated
+TLS-enabled Nginx site and production env files are separate operator
+decisions, never GitHub Actions writes.
 
 Create root-owned `/etc/menuminute/web.env` and
 `/etc/menuminute/worker.env` in systemd `EnvironmentFile` format with mode
@@ -143,9 +178,8 @@ archive via pinned SSH, verifies the digest on the server, checks ARM64/Node
 and native modules, then stages it under
 `/var/www/menuminute/releases/<full-SHA>`. It does not move `current`.
 
-**Example currently published release (2026-10-16):**
-`f2cf1fc44a8f12645c18236bbb835b9e65c5ed02`.
-Always check whether a newer main release supersedes this before deployment.
+Use the latest successfully published main release from the repository's Releases
+page. Always use its full 40-character target commit SHA, not a short tag.
 
 Before activation: confirm an encrypted off-host backup/restore point, review
 the release SQL and backward compatibility, provision the two systemd units
@@ -156,7 +190,7 @@ One operator-only invocation after reviewing `migration.env`:
 
 ```bash
 SHA=FULL_VERIFIED_40_CHARACTER_SHA
-sudo bash -c 'set -a; source /etc/menuminute/migration.env; cd "$1"; exec /usr/bin/node dist/db-migrate.mjs' \
+sudo bash -c 'set -a; source /etc/menuminute/migration.env; cd "$1"; exec /opt/menuminute/node24/bin/node dist/db-migrate.mjs' \
   _ "/var/www/menuminute/releases/$SHA"
 ```
 
