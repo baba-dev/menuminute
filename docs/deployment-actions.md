@@ -103,9 +103,8 @@ TLS-enabled Nginx site and production env files are separate operator
 decisions, never GitHub Actions writes.
 
 Preserve existing root-owned `/etc/menuminute/web.env` and
-`/etc/menuminute/worker.env` in systemd `EnvironmentFile` format with mode
-0600. The first provisioning placed the migration-owner URL in
-`/etc/menuminute/migration-db.env`; this *optional* deploy workflow's invocation expects
+`/etc/menuminute/worker.env` in systemd `EnvironmentFile` format with mode 0600. The first provisioning placed the migration-owner URL in
+`/etc/menuminute/migration-db.env`; this _optional_ deploy workflow's invocation expects
 `/etc/menuminute/migration.env`. The operator must deliberately provision/validate the latter
 as a root-only 0600 **shell-compatible assignment with only MIGRATION_DATABASE_URL** if choosing
 that path; do not assume it is installed or substitute a runtime-role URL.

@@ -50,11 +50,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Temporary Markdown formatter diagnostic (remove before merge)
-        run: |
-          pnpm exec prettier --write docs/deployment-actions.md docs/production-runbook.md
-          git diff -- docs/deployment-actions.md docs/production-runbook.md
-
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
