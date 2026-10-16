@@ -144,8 +144,9 @@ GitHub HTTPS directly to the VPS** using curl. SSH transports only the small
 command, not the large archive. The URL is derived from the trusted repository
 name and verified release SHA. No GitHub token is stored on the VPS.
 The HTTPS transfer uses `--continue-at -` to resume an interrupted incoming
-archive, has a slow-transfer timeout, only follows HTTPS redirects and checks
-its expected byte length. The root-owned staging helper independently copies
+archive, skips HTTP downloading when the archive already has its expected size
+(to avoid a Range-at-EOF HTTP 416 on repeat activation), has a slow-transfer
+timeout, only follows HTTPS redirects and checks its expected byte length. The root-owned staging helper independently copies
 and SHA-256-verifies the full archive before extraction. An interrupted partial
 file must not be removed or overwritten by a competing transfer; if HTTP
 Range resumption fails, check that no writer remains before examining it.

@@ -97,13 +97,24 @@ jobs:
           [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
             echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
           }
-          # Reuses a previous incomplete upload by requesting an HTTPS byte range.
-          # HTTP resume failures fail closed; never silently accept changed bytes.
-          curl --fail --location --show-error --progress-bar \
-            --proto '=https' --proto-redir '=https' \
-            --retry 4 --retry-all-errors --retry-delay 3 \
-            --connect-timeout 15 --speed-limit 32768 --speed-time 90 \
-            --continue-at - --output "$archive" "$url"
+          # A repeated stage/activation run may find a complete prior archive.
+          # Do not send a Range request starting at EOF (some CDNs return 416).
+          # Incomplete files resume via HTTPS; overlong files fail closed.
+          current_bytes=0
+          if [[ -f "$archive" ]]; then
+            current_bytes="$(stat -c %s "$archive")"
+          fi
+          if (( current_bytes > expected_bytes )); then
+            echo "Incoming archive exceeds expected size" >&2; exit 1
+          elif (( current_bytes == expected_bytes )); then
+            echo "Archive already fully downloaded; verifying staged release"
+          else
+            curl --fail --location --show-error --progress-bar \
+              --proto '=https' --proto-redir '=https' \
+              --retry 4 --retry-all-errors --retry-delay 3 \
+              --connect-timeout 15 --speed-limit 32768 --speed-time 90 \
+              --continue-at - --output "$archive" "$url"
+          fi
           [[ "$(stat -c %s "$archive")" == "$expected_bytes" ]] || {
             echo "Downloaded archive size mismatch" >&2; exit 1;
           }
