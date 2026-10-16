@@ -1,0 +1,119 @@
+name: Deploy verified MenuMinute ARM64 release
+
+# Manual until the first production cutover and rollback drill are accepted.
+# Stage first (activate=false), review migrations/backups, then activate.
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: "Full 40-character SHA of a successfully published main release"
+        required: true
+        type: string
+      activate:
+        description: "Activate staged release (requires a root-owned per-SHA approval marker)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: menuminute-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: production
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      ACTIVATE: ${{ inputs.activate }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+    steps:
+      - name: Verify immutable main release identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Expected a full lowercase commit SHA" >&2; exit 1; }
+          short="${RELEASE_SHA:0:12}"
+          tag="arm64-$short"
+          target="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq '.target_commitish')"
+          [[ "$target" == "$RELEASE_SHA" ]] || { echo "Release target does not match requested SHA" >&2; exit 1; }
+          tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha')"
+          [[ "$tag_sha" == "$RELEASE_SHA" ]] || { echo "Release tag moved or points elsewhere" >&2; exit 1; }
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" \
+            --pattern "menuminute-$short-linux-arm64.tar.gz" \
+            --pattern "menuminute-$short-linux-arm64.tar.gz.sha256" --dir "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP"
+          sha256sum -c "menuminute-$short-linux-arm64.tar.gz.sha256"
+          digest="$(cut -d' ' -f1 "menuminute-$short-linux-arm64.tar.gz.sha256")"
+          [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          echo "DEPLOY_ARCHIVE=$RUNNER_TEMP/menuminute-$short-linux-arm64.tar.gz" >> "$GITHUB_ENV"
+          echo "DEPLOY_DIGEST=$digest" >> "$GITHUB_ENV"
+
+      - name: Configure pinned SSH host identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ && "$VPS_PORT" =~ ^[0-9]{1,5}$ ]] || {
+            echo "Invalid host/port configuration" >&2; exit 1;
+          }
+          [[ -n "$VPS_SSH_KEY" && -n "$VPS_SSH_KNOWN_HOSTS" ]] || {
+            echo "Missing production environment secrets" >&2; exit 1;
+          }
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/id_deploy"
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
+          ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
+          echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
+
+      - name: Upload and stage checked release on VPS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # No root SSH and no build/package installation on the ERP machine.
+          scp -i "$HOME/.ssh/id_deploy" -P "$VPS_PORT" \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
+            "$DEPLOY_ARCHIVE" "menuminute-deploy@$VPS_HOST:/var/lib/menuminute/incoming/$RELEASE_SHA.tar.gz"
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
+            "menuminute-deploy@$VPS_HOST" \
+            "sudo -n /usr/local/sbin/menuminute-release stage $RELEASE_SHA $DEPLOY_DIGEST"
+
+      - name: Activate only after approved cutover
+        if: inputs.activate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
+            "menuminute-deploy@$VPS_HOST" \
+            "sudo -n /usr/local/sbin/menuminute-release activate $RELEASE_SHA $DEPLOY_DIGEST"
+          echo "Release activation completed after VPS and ERP checks."
+
+      - name: Job summary
+        if: success()
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          ACTIVATE: ${{ inputs.activate }}
+        run: |
+          {
+            echo "### MenuMinute ARM64 release"
+            echo "Commit: \`$RELEASE_SHA\`"
+            if [[ "$ACTIVATE" == true ]]; then
+              echo "Activated; verified local MenuMinute readiness and ERP HTTP health."
+            else
+              echo "Checksum-verified artifact staged; **no live service changed**."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
