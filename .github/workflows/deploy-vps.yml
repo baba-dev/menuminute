@@ -75,31 +75,42 @@ jobs:
           ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
           echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
 
-      - name: Upload and stage checked release on VPS
+      - name: Pull and stage checked release on VPS
         shell: bash
         run: |
           set -Eeuo pipefail
-          # A dropped SSH upload must not start the 214 MB artifact from zero again.
-          # No root SSH or build/package installation on the ERP machine.
-          command -v rsync >/dev/null || { echo "rsync missing on GitHub runner" >&2; exit 1; }
+          # SSH carries only a short, pinned command. Public GitHub HTTPS carries
+          # the large archive directly to the VPS; no root SSH or server build.
+          short="${RELEASE_SHA:0:12}"
+          bytes="$(stat -c %s "$DEPLOY_ARCHIVE")"
+          [[ "$bytes" =~ ^[0-9]+$ && "$bytes" -gt 0 ]] || exit 1
+          url="https://github.com/$GITHUB_REPOSITORY/releases/download/arm64-$short/menuminute-$short-linux-arm64.tar.gz"
           ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
             -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
             "menuminute-deploy@$VPS_HOST" \
-            'command -v rsync >/dev/null || { echo "Install rsync on VPS before deployment" >&2; exit 1; }'
-          # --append-verify safely resumes a partial SCP/rsync file, then verifies
-          # its whole-file rsync checksum. The audited staging helper separately
-          # enforces the published SHA-256 against a root-owned copy.
-          rsync --partial --append-verify --timeout=120 --info=progress2 \
-            -e "ssh -i $HOME/.ssh/id_deploy -p $VPS_PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12 -o ServerAliveInterval=15 -o ServerAliveCountMax=4" \
-            "$DEPLOY_ARCHIVE" "menuminute-deploy@$VPS_HOST:/var/lib/menuminute/incoming/$RELEASE_SHA.tar.gz"
-          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
-            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
-            -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
-            "menuminute-deploy@$VPS_HOST" \
-            "sudo -n /usr/local/sbin/menuminute-release stage $RELEASE_SHA $DEPLOY_DIGEST"
+            "bash -s -- '$RELEASE_SHA' '$DEPLOY_DIGEST' '$bytes' '$url'" <<'REMOTE'
+          set -Eeuo pipefail
+          sha="$1"; digest="$2"; expected_bytes="$3"; url="$4"
+          archive="/var/lib/menuminute/incoming/$sha.tar.gz"
+          [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
+            echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
+          }
+          # Reuses a previous incomplete upload by requesting an HTTPS byte range.
+          # HTTP resume failures fail closed; never silently accept changed bytes.
+          curl --fail --location --show-error --progress-bar \
+            --proto '=https' --proto-redir '=https' \
+            --retry 4 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 15 --speed-limit 32768 --speed-time 90 \
+            --continue-at - --output "$archive" "$url"
+          [[ "$(stat -c %s "$archive")" == "$expected_bytes" ]] || {
+            echo "Downloaded archive size mismatch" >&2; exit 1;
+          }
+          # The root-owned deploy helper copies and SHA-256-verifies the whole
+          # artifact against the authenticated release digest before extraction.
+          sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"
+          REMOTE
 
       - name: Activate only after approved cutover
         if: inputs.activate
