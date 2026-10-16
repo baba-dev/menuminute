@@ -2,11 +2,15 @@
 
 This is the **optional subsequent-release** deployment path; the 2026-10-16 first install was
 performed manually, with live deployment SHA and filesystem contract recorded in
-[production runbook](production-runbook.md). This deployment path is **manual by default**. It uses the immutable ARM64
-artifact from successful `main` CI; it never builds on the ERP VPS. PRs cannot
-deploy. Staging does not restart units, touch nginx, modify the ERP, or run SQL.
-Activation requires both the GitHub `production` environment gate and a separate
-root-owned per-SHA approval marker on the VPS.
+[production runbook](production-runbook.md). This deployment path stages automatically after successful `main` CI **and**
+publication of the immutable ARM64 release; it never builds on the ERP VPS.
+PRs cannot stage/deploy. Staging does not restart units, touch nginx, modify
+ERP, or run SQL. **Live activation is separately operator-initiated**, requiring
+the GitHub `production` environment gate and a root-owned, release-specific
+approval marker on the VPS. If the production environment requires reviewers,
+even automatic staging will queue for its existing GitHub approval; use a
+separately provisioned staging environment with its own credentials only after
+an explicit security review, not by weakening the production gate.
 
 The deployment script and workflow live at
 `infra/deploy/menuminute-release` and `.github/workflows/deploy-vps.yml`.
@@ -188,18 +192,28 @@ Do not put database, Redis or Better Auth credentials in GitHub Actions.
 They remain on the server under `/etc/menuminute`. No SSH secrets are needed
 for PR CI or the ARM64 publisher.
 
-## 4. Stage -> review -> activate
+## 4. CI -> publish -> automatically stage -> review -> activate
 
-In **Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**,
-select `main` and enter the exact 40-character SHA of a published ARM64
-release. First run with `activate=false`; this verifies release tag/target,
-downloads the artifact and checksum, verifies SHA-256 on the runner, pulls the archive directly over GitHub HTTPS under the deploy account after
-a short pinned SSH command, verifies the digest on the server, checks ARM64/Node
-and native modules, then stages it under
-`/var/www/menuminute/releases/<full-SHA>`. It does not move `current`.
+A push to `main` runs all four CI lanes. Successful CI causes the publisher
+to package and publish an immutable ARM64 prerelease tagged `arm64-<short-SHA>`.
+**Only successful, same-repository `main` publisher runs that themselves came
+from `workflow_run` trigger automatic stage-only deployment**. A PR publisher,
+a failed/skipped publisher, a fork and a non-main run cannot enter the deploy job.
+This is the third workflow in the supported CI -> publish -> stage chain.
 
-Use the latest successfully published main release from the repository's Releases
-page. Always use its full 40-character target commit SHA, not a short tag.
+The deployment verifies the full release tag/target, downloads the archive and
+checksum, verifies SHA-256 on the runner, pulls the archive directly over GitHub
+HTTPS on the VPS using a short pinned SSH command, then verifies digest,
+ARM64/Node, native modules and the actual web/worker accounts' read/traversal
+permissions under `/var/www/menuminute/releases/<full-SHA>`. Repeated stages
+reuse an existing complete archive. **Automatic staging never switches either
+live symlink, restarts services, runs SQL or creates the approval marker.**
+
+To stage an older published release on demand, use
+**Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**, choose
+`main`, enter its exact 40-character SHA and set `activate=false`. An
+environment reviewer approval may still be required before this deploy job
+runs. Always use the full target SHA of a published release, not a short tag.
 
 Before activation: confirm an encrypted off-host backup/restore point, review
 the release SQL and backward compatibility, provision the two systemd units
@@ -220,8 +234,8 @@ After migration/backup approval, create a one-release, root-owned gate:
 sudo install -o root -g root -m 0600 /dev/null "/etc/menuminute/approved-releases/$SHA"
 ```
 
-Run the same workflow again with `activate=true` and the same full SHA.
-It re-verifies/releases and stages idempotently, checks the approval marker,
+To promote a reviewed staged release, run the same workflow manually on `main` with `activate=true` and the same full SHA. Automatic `workflow_run` events are explicitly forbidden from executing the activation step.
+It re-verifies/releases and stages idempotently, checks the approval marker and actual runtime-user access,
 validates Nginx and ERP localhost HTTP, atomically updates MenuMinute web and
 worker links, restarts **only** the two MenuMinute units, verifies both units,
 `127.0.0.1:3100/api/health/ready` and ERP HTTP after cutover. It restores
@@ -260,3 +274,18 @@ Implement a separate reviewed retention policy after disk monitoring is live.
 
 This is a deployment mechanism, not proof of production readiness, off-host
 backups, load testing, restored data or app-domain TLS.
+
+### Cutover incident safeguard (2026-10-16)
+
+The first attempted activation of `a74adfe4f6a24648e90e953090afb6ee4dabf2df`
+failed with systemd `200/CHDIR`: the then-current stage helper published
+root-owned `0750` directories because of `umask 027`, so neither service user
+could enter the new release. The old application links were restored but systemd
+had exhausted its restart limit. PR #32 fixes new releases' code/assets modes,
+adds real service-account traversal/read preflight **before** changing the live
+links, and resets only MenuMinute's failed state on rollback. An existing staged
+release is not silently rewritten: the operator must repair that exact
+checksum-verified release's code/assets permissions and validate both runtime
+accounts, never modify the old release or private env files. Keep activation
+approval revoked until all preflight and backup gates pass. Do not retry a
+failed activation blindly; establish old-release health first.
