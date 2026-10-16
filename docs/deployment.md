@@ -40,6 +40,11 @@ It does not deploy releases or prove shared-ERP capacity. See [foundation status
 - PostgreSQL/Redis persistence outside releases; uploaded production assets in R2.
 - Set tested resource limits and reserve ERP/OS capacity; see [operations](operations.md).
 
+Use a private, root-owned Node 24 binary at `/opt/menuminute/node24/bin/node` for the
+MenuMinute deploy helper, web unit, worker unit and migration runner. Do not replace
+`/usr/bin/node`, which is used by the colocated ERP on Node 20. Review any installed
+unit differences and the previous application's rollback compatibility before restart.
+
 Configure NoNewPrivileges and appropriate filesystem restrictions with explicitly allowed runtime
 writes. Test Next.js cache paths before read-only protection. Do not copy the superseded SQLite unit.
 Preserve ERP services/data; harden its root-run app and wildcard listener only in a reviewed maintenance
