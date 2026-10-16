@@ -50,9 +50,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Inspect markdown format delta (temporary)
-        run: pnpm exec prettier docs/deployment-actions.md | diff -u docs/deployment-actions.md - || true
-
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
