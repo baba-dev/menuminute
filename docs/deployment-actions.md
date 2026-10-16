@@ -240,7 +240,7 @@ Implement a separate reviewed retention policy after disk monitoring is live.
 - HTTPS pull stalls: compare incoming file byte counts at two sample times and
   inspect the first curl transport error. An interrupted transfer can resume
   on a subsequent stage-only run; do not run two downloads simultaneously.
-- A previous SCP/rsync partial archive for the *same* immutable asset may also
+- A previous SCP/rsync partial archive for the _same_ immutable asset may also
   be resumed via HTTPS Range, subject to the full root-owned SHA-256 check.
   If the server refuses a range, fail rather than accept unverified bytes.
 - If a live data migration changes schema incompatibly, resolve forward rather
