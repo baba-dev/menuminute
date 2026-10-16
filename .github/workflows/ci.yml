@@ -50,9 +50,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Inspect release-test format delta (temporary)
-        run: pnpm exec prettier tests/release-permissions.test.ts | diff -u tests/release-permissions.test.ts - || true
-
       - name: Check code formatting (Prettier)
         run: pnpm format:check
 
