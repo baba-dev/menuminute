@@ -36,9 +36,29 @@ verify_release() {
      -f "$release/dist/db-migrate.mjs" && -f "$release/src/db/migrations/meta/_journal.json" ]] || return 1
 }
 
+# Root can read a broken 0750 release; verify the two *actual* service users
+# can enter their WorkingDirectory and read the main entry points before any
+# application symlink is changed. This guards against systemd 200/CHDIR.
+runtime_access_ok() {
+  runuser -u menuminute -- sh -c '
+    cd "$1" &&
+    test -r .next/standalone/server.js &&
+    test -r .next/standalone/.next/BUILD_ID
+  ' _ "$release" &&
+  runuser -u menuminute-worker -- sh -c '
+    cd "$1" &&
+    test -r dist/worker.mjs &&
+    test -r node_modules/bullmq/package.json
+  ' _ "$release"
+}
+
 if [[ "$mode" == stage ]]; then
   if [[ -e "$release" ]]; then
-    verify_release && { echo "Already staged: $sha"; exit 0; }
+    if verify_release; then
+      runtime_access_ok || { echo "Staged release is unreadable by runtime service users" >&2; exit 1; }
+      echo "Already staged: $sha"
+      exit 0
+    fi
     echo "Existing release directory has a different identity; refusing overwrite" >&2
     exit 1
   fi
@@ -73,13 +93,23 @@ if [[ "$mode" == stage ]]; then
   ln -s "$data/cache" "$temp/content/.next/standalone/.next/cache"
   printf '%s\n' "$digest" > "$temp/content/.release-archive-sha256"
   chown -R root:root "$temp/content"
-  chmod -R go-w "$temp/content"
+  # The global umask 027 makes a newly-created release root:root 0750 and
+  # extracted files 0640. Both service accounts then fail 200/CHDIR/read.
+  # This archive contains only published app code/assets (never env/secrets):
+  # normalize directory traversal and file reads; preserve executable bits.
+  # GNU chmod -R does not dereference symlinks encountered inside the tree,
+  # including the intentionally shared persistent .next/cache target.
+  chmod -R u=rwX,go=rX "$temp/content"
   mv -T -- "$temp/content" "$release"
+  runtime_access_ok || { echo "Staged release is unreadable by runtime service users" >&2; exit 1; }
   echo "Verified native ARM64 release staged: $sha"
   exit 0
 fi
 
 verify_release || { echo "Staged release identity verification failed" >&2; exit 1; }
+runtime_access_ok || {
+  echo "Runtime accounts cannot enter/read the staged release; refusing cutover" >&2; exit 1;
+}
 [[ -f "/etc/menuminute/approved-releases/$sha" ]] || {
   echo "Operator release/migration approval marker is missing" >&2; exit 1;
 }
@@ -127,7 +157,17 @@ restore_previous() {
     if [[ -n "$old_web" ]]; then
       switch_link "$web_link" "$old_web"
       switch_link "$worker_link" "$old_worker"
-      systemctl restart menuminute-web.service menuminute-worker.service || true
+      # A failed new release may have exhausted StartLimitBurst. Clear only
+      # these two MenuMinute units before restoring the previous application.
+      systemctl reset-failed menuminute-web.service menuminute-worker.service || true
+      if ! systemctl restart menuminute-web.service menuminute-worker.service; then
+        echo "Emergency: previous MenuMinute services failed to restart" >&2
+      fi
+      if ! systemctl is-active --quiet menuminute-web.service ||
+         ! systemctl is-active --quiet menuminute-worker.service ||
+         ! curl --silent --fail --max-time 8 http://127.0.0.1:3100/api/health/ready >/dev/null; then
+        echo "Emergency: previous MenuMinute release health is NOT verified" >&2
+      fi
     else
       rm -f -- "$web_link" "$worker_link"
       systemctl stop menuminute-web.service menuminute-worker.service || true
