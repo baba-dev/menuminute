@@ -10,6 +10,7 @@ mode="$1"; sha="$2"; digest="$3"
 [[ "$mode" == stage || "$mode" == activate ]] || exit 2
 [[ "$sha" =~ ^[0-9a-f]{40}$ && "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid release identity" >&2; exit 2; }
 
+node24=/opt/menuminute/node24/bin/node
 root=/var/www/menuminute
 data=/var/lib/menuminute
 release="$root/releases/$sha"
@@ -21,7 +22,8 @@ exec 9>"$lock"
 flock -n 9 || { echo "Another MenuMinute deployment is running" >&2; exit 1; }
 
 [[ "$(uname -m)" == aarch64 ]] || { echo "Native ARM64 host required" >&2; exit 1; }
-[[ "$(node -p 'process.versions.node.split(".")[0] + ":" + process.arch')" == "24:arm64" ]] || {
+[[ -x "$node24" ]] || { echo "Private MenuMinute Node 24 is missing" >&2; exit 1; }
+[[ "$("$node24" -p 'process.versions.node.split(".")[0] + ":" + process.arch')" == "24:arm64" ]] || {
   echo "Node 24 ARM64 required on host" >&2; exit 1;
 }
 [[ -d "$root/releases" && -d "$data/incoming" ]] || { echo "Run the server bootstrap first" >&2; exit 1; }
@@ -60,9 +62,9 @@ if [[ "$mode" == stage ]]; then
      -f "$temp/content/dist/db-migrate.mjs" ]] || { echo "Incomplete release" >&2; exit 1; }
   (
     cd "$temp/content"
-    /usr/bin/node -e 'require("pg"); require("bullmq"); require("sharp")'
-    /usr/bin/node --check dist/worker.mjs
-    /usr/bin/node --check dist/db-migrate.mjs
+    "$node24" -e 'require("pg"); require("bullmq"); require("sharp")'
+    "$node24" --check dist/worker.mjs
+    "$node24" --check dist/db-migrate.mjs
   )
   [[ -d "$data/cache" && -d "$temp/content/.next/standalone/.next" ]] || {
     echo "Provision /var/lib/menuminute/cache before staging" >&2; exit 1;
@@ -86,6 +88,12 @@ verify_release || { echo "Staged release identity verification failed" >&2; exit
 }
 systemctl cat menuminute-web.service >/dev/null
 systemctl cat menuminute-worker.service >/dev/null
+# Do not redirect live traffic into a release started with the old ERP Node runtime.
+for unit in menuminute-web.service menuminute-worker.service; do
+  systemctl show "$unit" --property=ExecStart --value | grep -Fq "$node24" || {
+    echo "$unit must use the private MenuMinute Node 24 before activation" >&2; exit 1;
+  }
+done
 nginx -t >/dev/null
 [[ ! -e "$web_link" || -L "$web_link" ]] || { echo "current must be a symlink" >&2; exit 1; }
 [[ ! -e "$worker_link" || -L "$worker_link" ]] || { echo "worker-current must be a symlink" >&2; exit 1; }

@@ -15,7 +15,7 @@ EnvironmentFile=/etc/menuminute/web.env
 Environment=NODE_ENV=production
 Environment=HOSTNAME=127.0.0.1
 Environment=PORT=3100
-ExecStart=/usr/bin/node .next/standalone/server.js
+ExecStart=/opt/menuminute/node24/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
