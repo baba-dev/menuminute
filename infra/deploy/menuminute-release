@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# Installed once as root: /usr/local/sbin/menuminute-release (root:root, 0750).
+# The SSH deploy account can only invoke this audited entry point through sudo.
+set -Eeuo pipefail
+umask 027
+
+[[ "$EUID" -eq 0 ]] || { echo "Root is required" >&2; exit 1; }
+[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|activate SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
+mode="$1"; sha="$2"; digest="$3"
+[[ "$mode" == stage || "$mode" == activate ]] || exit 2
+[[ "$sha" =~ ^[0-9a-f]{40}$ && "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid release identity" >&2; exit 2; }
+
+root=/var/www/menuminute
+data=/var/lib/menuminute
+release="$root/releases/$sha"
+incoming="$data/incoming/$sha.tar.gz"
+web_link="$root/current"
+worker_link="$root/worker-current"
+lock=/run/lock/menuminute-release.lock
+exec 9>"$lock"
+flock -n 9 || { echo "Another MenuMinute deployment is running" >&2; exit 1; }
+
+[[ "$(uname -m)" == aarch64 ]] || { echo "Native ARM64 host required" >&2; exit 1; }
+[[ "$(node -p 'process.versions.node.split(".")[0] + ":" + process.arch')" == "24:arm64" ]] || {
+  echo "Node 24 ARM64 required on host" >&2; exit 1;
+}
+[[ -d "$root/releases" && -d "$data/incoming" ]] || { echo "Run the server bootstrap first" >&2; exit 1; }
+
+verify_release() {
+  [[ -d "$release" && ! -L "$release" ]] || { echo "Release is not staged" >&2; return 1; }
+  [[ "$(cat "$release/RELEASE-SHA")" == "$sha" ]] || return 1
+  [[ "$(cat "$release/.release-archive-sha256")" == "$digest" ]] || return 1
+  [[ -f "$release/.next/standalone/server.js" && -f "$release/dist/worker.mjs" &&
+     -f "$release/dist/db-migrate.mjs" && -f "$release/src/db/migrations/meta/_journal.json" ]] || return 1
+}
+
+if [[ "$mode" == stage ]]; then
+  if [[ -e "$release" ]]; then
+    verify_release && { echo "Already staged: $sha"; exit 0; }
+    echo "Existing release directory has a different identity; refusing overwrite" >&2
+    exit 1
+  fi
+  [[ -f "$incoming" && ! -L "$incoming" ]] || { echo "Uploaded artifact not found" >&2; exit 1; }
+  [[ "$(stat -c %U "$incoming")" == menuminute-deploy ]] || { echo "Unexpected artifact owner" >&2; exit 1; }
+  available="$(df -Pm "$root" | awk 'NR==2 {print $4}')"
+  [[ "$available" =~ ^[0-9]+$ && "$available" -ge 4096 ]] || {
+    echo "At least 4 GiB free disk is required for safe staging" >&2; exit 1;
+  }
+  temp="$(mktemp -d "$root/releases/.stage.XXXXXXXX")"
+  trap 'rm -rf -- "$temp"' EXIT
+  # Copy away from deploy-user-writable incoming before verification/extraction.
+  cp -- "$incoming" "$temp/archive.tar.gz"
+  [[ "$(sha256sum "$temp/archive.tar.gz" | cut -d" " -f1)" == "$digest" ]] || {
+    echo "Release checksum mismatch" >&2; exit 1;
+  }
+  mkdir "$temp/content"
+  tar -xzf "$temp/archive.tar.gz" --no-same-owner --no-same-permissions -C "$temp/content"
+  [[ "$(cat "$temp/content/RELEASE-SHA")" == "$sha" ]] || { echo "Release SHA mismatch" >&2; exit 1; }
+  [[ -f "$temp/content/.next/standalone/server.js" && -f "$temp/content/dist/worker.mjs" &&
+     -f "$temp/content/dist/db-migrate.mjs" ]] || { echo "Incomplete release" >&2; exit 1; }
+  (
+    cd "$temp/content"
+    /usr/bin/node -e 'require("pg"); require("bullmq"); require("sharp")'
+    /usr/bin/node --check dist/worker.mjs
+    /usr/bin/node --check dist/db-migrate.mjs
+  )
+  [[ -d "$data/cache" && -d "$temp/content/.next/standalone/.next" ]] || {
+    echo "Provision /var/lib/menuminute/cache before staging" >&2; exit 1;
+  }
+  rm -rf -- "$temp/content/.next/standalone/.next/cache"
+  ln -s "$data/cache" "$temp/content/.next/standalone/.next/cache"
+  printf '%s\n' "$digest" > "$temp/content/.release-archive-sha256"
+  chown -R root:root "$temp/content"
+  chmod -R go-w "$temp/content"
+  mv -T -- "$temp/content" "$release"
+  echo "Verified native ARM64 release staged: $sha"
+  exit 0
+fi
+
+verify_release || { echo "Staged release identity verification failed" >&2; exit 1; }
+[[ -f "/etc/menuminute/approved-releases/$sha" ]] || {
+  echo "Operator release/migration approval marker is missing" >&2; exit 1;
+}
+[[ -f /etc/menuminute/web.env && -f /etc/menuminute/worker.env ]] || {
+  echo "Runtime environment files are not provisioned" >&2; exit 1;
+}
+systemctl cat menuminute-web.service >/dev/null
+systemctl cat menuminute-worker.service >/dev/null
+nginx -t >/dev/null
+[[ ! -e "$web_link" || -L "$web_link" ]] || { echo "current must be a symlink" >&2; exit 1; }
+[[ ! -e "$worker_link" || -L "$worker_link" ]] || { echo "worker-current must be a symlink" >&2; exit 1; }
+old_web="$(readlink "$web_link" || true)"
+old_worker="$(readlink "$worker_link" || true)"
+[[ "$old_web" == "$old_worker" ]] || { echo "Web and worker releases are out of sync" >&2; exit 1; }
+if [[ -n "$old_web" ]]; then
+  [[ "$old_web" == "$root/releases/"* && -d "$old_web" ]] || {
+    echo "Existing release path is unexpected" >&2; exit 1;
+  }
+fi
+
+erp_healthy() {
+  local status
+  status="$(curl -sS -o /dev/null --max-time 7 -w '%{http_code}' http://127.0.0.1:3000/)" || return 1
+  [[ "$status" =~ ^[23][0-9]{2}$ ]]
+}
+erp_healthy || { echo "ERP preflight failed; no changes applied" >&2; exit 1; }
+
+switch_link() {
+  local link="$1" target="$2" next="${1}.next.$$"
+  ln -s "$target" "$next"
+  mv -Tf -- "$next" "$link"
+}
+
+switched=false
+restore_previous() {
+  trap - ERR
+  if [[ "$switched" == true ]]; then
+    echo "Release activation failed; restoring previous application links" >&2
+    if [[ -n "$old_web" ]]; then
+      switch_link "$web_link" "$old_web"
+      switch_link "$worker_link" "$old_worker"
+      systemctl restart menuminute-web.service menuminute-worker.service || true
+    else
+      rm -f -- "$web_link" "$worker_link"
+      systemctl stop menuminute-web.service menuminute-worker.service || true
+    fi
+  fi
+}
+trap restore_previous ERR
+switched=true
+switch_link "$web_link" "$release"
+switch_link "$worker_link" "$release"
+systemctl restart menuminute-web.service menuminute-worker.service
+ready=false
+for i in {1..15}; do
+  if systemctl is-active --quiet menuminute-web.service &&
+     systemctl is-active --quiet menuminute-worker.service &&
+     curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready |
+       grep -q '"status":"ready"'; then
+    ready=true
+    break
+  fi
+  sleep 2
+done
+[[ "$ready" == true ]] || { echo "MenuMinute readiness failed" >&2; false; }
+erp_healthy || { echo "ERP postflight failed" >&2; false; }
+trap - ERR
+echo "Activated release $sha; ERP preflight/postflight and MenuMinute readiness passed"
