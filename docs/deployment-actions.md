@@ -133,6 +133,15 @@ PM2, service-manager or Nginx permissions. The account may write only its
 incoming artifact and its own SSH home. Do not run a self-hosted Actions runner
 on the shared ERP host.
 
+Install the Ubuntu `rsync` package once (`command -v rsync`; if absent,
+`sudo apt-get update && sudo apt-get install -y rsync`). The GitHub-hosted
+runner also verifies `rsync` availability. Upload uses `--append-verify`,
+`--partial`, a 120-second I/O idle timeout, SSH keepalives, and progress logs;
+a previously interrupted archive is resumed without restarting from byte zero.
+The stage script still copies the artifact to a root-controlled directory and
+checks its published SHA-256 before extracting anything. Never remove an
+in-progress incoming archive or start competing deployments.
+
 ## 3. One dedicated SSH key and host pin
 
 Generate an **independent** key on a trusted administrator workstation (not
@@ -173,8 +182,8 @@ for PR CI or the ARM64 publisher.
 In **Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**,
 select `main` and enter the exact 40-character SHA of a published ARM64
 release. First run with `activate=false`; this verifies release tag/target,
-downloads the artifact and checksum, verifies SHA-256 on the runner, copies the
-archive via pinned SSH, verifies the digest on the server, checks ARM64/Node
+downloads the artifact and checksum, verifies SHA-256 on the runner, resumes/transfers the
+archive via pinned SSH/rsync, verifies the digest on the server, checks ARM64/Node
 and native modules, then stages it under
 `/var/www/menuminute/releases/<full-SHA>`. It does not move `current`.
 
@@ -222,6 +231,10 @@ Implement a separate reviewed retention policy after disk monitoring is live.
   as an automatic workaround.
 - Checksum mismatch or wrong tag: abort, do not bypass it or manually extract.
 - Any host-key mismatch: abort; verify host identity out of band.
+- Upload stalls: compare incoming file byte counts at two sample times, inspect
+  `ss -tinp` and SSH/SFTP process state, and read the first transport error.
+  An interrupted upload can resume on a subsequent stage-only workflow run;
+  do not cancel a progressing transfer or run two uploads simultaneously.
 - If a live data migration changes schema incompatibly, resolve forward rather
   than reverting DB blindly. Preserve ERP independently.
 
