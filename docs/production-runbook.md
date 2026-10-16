@@ -10,6 +10,34 @@ Last operator evidence: **2026-10-16**. This is the canonical account of the **d
 - Four reported encrypted R2 recovery snapshots: `d34bc7fd` baseline, `b15886c2` pre-migration, `56d74aa4` post-six-migration, `a9e93de1` configuration. A nightly backup script/service/timer was proposed later, but installation, execution, restore with live customer data, pruning and external alerting **have not been confirmed**. Do not call those gates passed.
 - Repository `main` can move ahead of the **deployed** SHA. A successful PR merge or a new published ARM64 artifact does not change the live process or authorize a VPS activation. Check the two live symlinks before reporting the deployed version.
 
+## 2026-10-16 failed cutover containment (operator verification required)
+
+An attempted Actions activation of staged SHA `a74adfe4f6a24648e90e953090afb6ee4dabf2df`
+failed at 17:20 UTC: both MenuMinute units exited `200/CHDIR` with
+`Permission denied` on their `WorkingDirectory`. The original staging helper
+used `umask 027`, publishing root:root release directories without the traverse
+permission required by the separate web/worker service users. The helper restored
+both links to `a259f77c559da6b79f35de0b4ca42ef679840b8d`, but five
+failed starts had exhausted systemd `StartLimitBurst`, preventing the rollback
+restart. ERP remained HTTP 200. **Do not assume MenuMinute service recovery
+until fresh readiness is reported.**
+
+First verify both live pointers target the previous release, then run
+`systemctl reset-failed menuminute-web.service menuminute-worker.service` and
+`systemctl start menuminute-web.service menuminute-worker.service`; verify both
+active, loopback readiness and ERP 200. Do not change ERP, flush Redis, run DB
+migrations or re-trigger activation to recover this failure.
+
+The corrected helper normalizes root-owned published code/assets to readable
+`0755` directories / `0644` ordinary files (retaining required executable
+bits and not following the persistent cache symlink), checks actual service-user
+directory traversal and entry-point readability before changing either live
+link, and clears the two MenuMinute systemd start-rate-limit failures before
+attempting rollback. Existing staged SHA directories are not silently rewritten.
+A qualified operator must repair the permissions on the **exact verified staged
+release** and confirm both service-user checks before authorizing another
+cutover. Keep root-only environment files under `/etc/menuminute` private.
+
 ## Host map and immutable boundaries
 
 | Purpose                        | Production host path / identity                                                                                    | Contract                                                                                                                      |
