@@ -110,7 +110,8 @@ export default function HomePage() {
 
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-stone-600 sm:text-xl">
             Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers
-            scan and browse — no app download required. Ordering and Kitchen Pro are in development; the free menu works independently.
+            scan and browse — no app download required. Ordering and Kitchen Pro are in development;
+            the free menu works independently.
           </p>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
@@ -163,8 +164,8 @@ export default function HomePage() {
               Start free. Grow as you need.
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-stone-600">
-              Begin with a free digital menu today. Ordering and kitchen products are upcoming; their
-              subscription terms have not been finalized.
+              Begin with a free digital menu today. Ordering and kitchen products are upcoming;
+              their subscription terms have not been finalized.
             </p>
           </div>
 
@@ -209,7 +210,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Ready to go digital?</h2>
           <p className="text-brand-100 mb-8 text-lg">
-            Create your outlet, add dishes, review your menu and print a permanent QR when you publish.
+            Create your outlet, add dishes, review your menu and print a permanent QR when you
+            publish.
           </p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link
