@@ -13,7 +13,7 @@ describe("fail-closed automatic release activation", () => {
     expect(helper).toContain("runuser -u menuminute-worker -- sh -c");
     expect(helper).toContain("runtime_access_ok ||");
     expect(workflow).toContain("menuminute-release --version");
-    expect(workflow).toContain('= 3 && sudo -n /usr/local/sbin/menuminute-release $mode');
+    expect(workflow).toContain("= 3 && sudo -n /usr/local/sbin/menuminute-release $mode");
   });
 
   it("validates archive members before extraction", () => {
@@ -64,11 +64,14 @@ describe("fail-closed automatic release activation", () => {
     );
     expect(helper).toContain('[[ "$mode" == recover ]]');
     expect(helper).toContain("Schema-incompatible automatic recovery refused");
-    const trap = helper.split("restore_previous() {")[1].split("trap restore_previous ERR")[0];
+    const trap = helper.split("restore_previous() {")[1]!.split("trap restore_previous ERR")[0]!;
     expect(trap).toContain('if ! migration_trees_identical "$old_web" "$release"; then');
-    expect(trap.indexOf('if ! migration_trees_identical "$old_web" "$release"; then'))
-      .toBeLessThan(trap.indexOf('switch_link "$web_link" "$old_web"'));
-    expect(trap).toContain("Refusing automatic restoration to a potentially schema-incompatible previous release");
+    expect(trap.indexOf('if ! migration_trees_identical "$old_web" "$release"; then')).toBeLessThan(
+      trap.indexOf('switch_link "$web_link" "$old_web"')
+    );
+    expect(trap).toContain(
+      "Refusing automatic restoration to a potentially schema-incompatible previous release"
+    );
     expect(helper).toContain('"$rollback_root/$sha"');
     expect(helper).toContain('if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]');
     expect(helper).not.toContain("DROP DATABASE");

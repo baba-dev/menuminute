@@ -380,7 +380,6 @@ preserving database/media and ERP. The [baseline](ci-cd-baseline.md) measures
 historical staging, not verified live. Measure from the main push through
 successful public SHA verification, counting queue delay separately.
 
-
 ### Post-merge staging and rollback safety hotfix
 
 The CI/CD 2.0 first post-merge run failed before SSH because release identity
@@ -392,7 +391,7 @@ A superseded release at the final `production` job recheck fails that GitHub
 job rather than writing a successful production deployment without a cutover.
 This is an intentionally fail-closed, not a verified-live, outcome.
 
-Helper v3 adds the migration-tree compatibility check to the *immediate*
+Helper v3 adds the migration-tree compatibility check to the _immediate_
 activation-failure ERR trap. If a manually approved migration changed that
 tree, do not auto-restore the old app or SQL/data; emit an emergency operator
 instruction. Existing automatic recover continues to require matching trees.
