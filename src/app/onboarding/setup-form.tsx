@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScheduleEditor } from "@/components/menu-product/schedule-editor";
 import type { Schedule } from "@/modules/menu-product/contracts";
@@ -8,29 +8,43 @@ export function OnboardingForm() {
     [modes, setModes] = useState(["dine_in"]),
     [schedule, setSchedule] = useState<Schedule | null>(null);
   const router = useRouter();
-  const [key] = useState(() => crypto.randomUUID());
+  // A lost response must retry with the same key; changed settings require a new key.
+  const retry = useRef({ signature: "", key: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   return (
     <form
       className="product stack"
+      aria-busy={busy}
       onSubmit={async (e) => {
         e.preventDefault();
-        setBusy(true);
+        if (busy) return;
         setError("");
+        if (modes.length === 0) {
+          setError("Select at least one fulfillment mode.");
+          return;
+        }
+        setBusy(true);
         const values = {
           ...Object.fromEntries(new FormData(e.currentTarget)),
           fulfillmentModes: modes,
           menuSchedule: schedule,
         };
+        const signature = JSON.stringify(values);
+        if (retry.current.signature !== signature)
+          retry.current = { signature, key: crypto.randomUUID() };
         try {
           const r = await fetch("/api/organizations", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Idempotency-Key": key },
-            body: JSON.stringify(values),
+            headers: { "Content-Type": "application/json", "Idempotency-Key": retry.current.key },
+            body: signature,
           });
           if (!r.ok) {
-            setError("Could not create the outlet. Check its settings and try again.");
+            setError(
+              r.status === 409
+                ? "These details changed while the request was being processed. Review and retry."
+                : "Could not create the outlet. Your entries are preserved. Review and retry."
+            );
             return;
           }
           router.push("/dashboard/menu");
@@ -42,6 +56,10 @@ export function OnboardingForm() {
         }
       }}
     >
+      <div className="panel stack">
+        <span className="eyebrow">Step 1 · Your business</span>
+        <p>Name your outlet and select the type that best describes it. Each outlet has its own menu settings.</p>
+      </div>
       <label className="block">
         Outlet name
         <input
@@ -76,6 +94,10 @@ export function OnboardingForm() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="panel stack">
+        <span className="eyebrow">Step 2 · Local settings</span>
+        <p>Confirm the outlet country, transaction currency and IANA timezone. These are independent of your platform billing currency.</p>
       </div>
       <label className="block">
         Country code
@@ -118,6 +140,7 @@ export function OnboardingForm() {
         </select>
       </div>
       <section className="panel stack">
+        <span className="eyebrow">Step 3 · Service</span>
         <h2>How do guests collect their food?</h2>
         {["dine_in", "pickup"].map((m) => (
           <label key={m} className="row">
@@ -135,11 +158,12 @@ export function OnboardingForm() {
         <p>You can change supported modes later without replacing the QR.</p>
       </section>
       <details className="panel">
-        <summary>Set the first menu’s service hours</summary>
+        <summary>Step 4 · Set the first menu’s service hours (optional)</summary>
         <ScheduleEditor value={schedule} onChange={setSchedule} />
       </details>
-      {error && <p role="alert">{error}</p>}
-      <button disabled={busy} className="ember">
+      {error && <p role="alert" className="error" tabIndex={-1}>{error}</p>}
+      <p>Next: Menu Studio, draft preview and explicit publication. Your permanent QR will not be rotated by menu edits.</p>
+      <button disabled={busy || modes.length === 0} className="ember">
         {busy ? "Creating…" : "Create organization and outlet"}
       </button>
     </form>
