@@ -552,7 +552,10 @@ export function MenuStudio({
                                 <div className="dish-editor stack" key={dish.id}>
                                   <div className="row between">
                                     <span className="eyebrow">Dish {di + 1}</span>
-                                    <div className="row" aria-label={`Reorder ${dish.name || "untitled dish"}`}>
+                                    <div
+                                      className="row"
+                                      aria-label={`Reorder ${dish.name || "untitled dish"}`}
+                                    >
                                       <button
                                         type="button"
                                         aria-label={`Move dish ${di + 1} up`}
@@ -802,7 +805,10 @@ export function MenuStudio({
                                                       updateGroup({
                                                         options: g.options.map((item, n) =>
                                                           n === oi
-                                                            ? { ...item, isAvailable: e.target.checked }
+                                                            ? {
+                                                                ...item,
+                                                                isAvailable: e.target.checked,
+                                                              }
                                                             : item
                                                         ),
                                                       })
