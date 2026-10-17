@@ -58,7 +58,10 @@ export function OnboardingForm() {
     >
       <div className="panel stack">
         <span className="eyebrow">Step 1 · Your business</span>
-        <p>Name your outlet and select the type that best describes it. Each outlet has its own menu settings.</p>
+        <p>
+          Name your outlet and select the type that best describes it. Each outlet has its own menu
+          settings.
+        </p>
       </div>
       <label className="block">
         Outlet name
@@ -97,7 +100,10 @@ export function OnboardingForm() {
       </div>
       <div className="panel stack">
         <span className="eyebrow">Step 2 · Local settings</span>
-        <p>Confirm the outlet country, transaction currency and IANA timezone. These are independent of your platform billing currency.</p>
+        <p>
+          Confirm the outlet country, transaction currency and IANA timezone. These are independent
+          of your platform billing currency.
+        </p>
       </div>
       <label className="block">
         Country code
@@ -161,8 +167,15 @@ export function OnboardingForm() {
         <summary>Step 4 · Set the first menu’s service hours (optional)</summary>
         <ScheduleEditor value={schedule} onChange={setSchedule} />
       </details>
-      {error && <p role="alert" className="error" tabIndex={-1}>{error}</p>}
-      <p>Next: Menu Studio, draft preview and explicit publication. Your permanent QR will not be rotated by menu edits.</p>
+      {error && (
+        <p role="alert" className="error" tabIndex={-1}>
+          {error}
+        </p>
+      )}
+      <p>
+        Next: Menu Studio, draft preview and explicit publication. Your permanent QR will not be
+        rotated by menu edits.
+      </p>
       <button disabled={busy || modes.length === 0} className="ember">
         {busy ? "Creating…" : "Create organization and outlet"}
       </button>
