@@ -12,7 +12,6 @@ import {
   ShoppingBag,
   Settings,
   ChefHat,
-  ExternalLink,
   LogOut,
   Store,
 } from "lucide-react";
@@ -54,23 +53,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold text-stone-900">{restaurant.name}</p>
                 <p className="truncate text-[10px] text-stone-500">
-                  {restaurant.currency} • Free Tier
+                  {restaurant.currency} • Menu management
                 </p>
               </div>
             </div>
 
             <div className="mt-2.5 flex items-center justify-between border-t border-stone-200 pt-2">
               <Link
-                href={`/m/${restaurant.publicId}`}
-                target="_blank"
+                href="/dashboard/menu"
                 className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 transition-colors hover:text-orange-700"
               >
-                <span>Live Menu</span>
-                <ExternalLink className="h-3 w-3" />
+                <span>Open Menu Studio</span>
               </Link>
 
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-                Active
+              <span className="rounded-full border border-stone-300 px-2 py-0.5 text-[10px] font-medium text-stone-600">
+                Selected outlet
               </span>
             </div>
           </div>
