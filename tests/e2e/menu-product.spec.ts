@@ -157,7 +157,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
     )
     .toBe("ready");
   await page.getByRole("button", { name: "Refresh photo status" }).click();
-  await expect(page.getByText("Private preview only. Approval does not publish your menu.")).toBeVisible();
+  await expect(
+    page.getByText("Private preview only. Approval does not publish your menu.")
+  ).toBeVisible();
   await page.getByRole("button", { name: "Approve photo", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Photo approved" })).toBeVisible();
   await page.getByRole("button", { name: "Dishes", exact: true }).click();
