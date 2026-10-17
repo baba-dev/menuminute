@@ -124,6 +124,18 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   expect((await page.request.get(`/api/public-menu/${f.token}`)).status()).toBe(404);
   await page.getByRole("button", { name: "Media", exact: true }).click();
   await page.getByLabel("Dish photograph", { exact: true }).setInputFiles({
+    name: "oversized.png",
+    mimeType: "image/png",
+    buffer: Buffer.alloc(5 * 1024 * 1024 + 1),
+  });
+  await page
+    .getByLabel("Rights or source confirmation")
+    .fill("I own this restaurant test photograph");
+  await page.getByRole("button", { name: "Upload photo", exact: true }).click();
+  await expect(page.locator(".product [role='alert']")).toContainText(
+    "The photo is larger than 5 MiB"
+  );
+  await page.getByLabel("Dish photograph", { exact: true }).setInputFiles({
     name: "dish.png",
     mimeType: "image/png",
     buffer: await sharp({ create: { width: 640, height: 480, channels: 3, background: "#ed872c" } })
@@ -145,6 +157,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
     )
     .toBe("ready");
   await page.getByRole("button", { name: "Refresh photo status" }).click();
+  await expect(page.getByText("Private preview only. Approval does not publish your menu.")).toBeVisible();
   await page.getByRole("button", { name: "Approve photo", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Photo approved" })).toBeVisible();
   await page.getByRole("button", { name: "Dishes", exact: true }).click();
