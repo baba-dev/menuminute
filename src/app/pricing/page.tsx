@@ -101,7 +101,8 @@ export default function PricingPage() {
         <div className="mb-16 text-center">
           <h1 className="mb-4 text-4xl font-bold text-stone-900">Simple, transparent pricing</h1>
           <p className="mx-auto max-w-2xl text-xl text-stone-600">
-            Free QR menus are available now. Ordering and Kitchen Pro pricing and subscription terms are not finalized.
+            Free QR menus are available now. Ordering and Kitchen Pro pricing and subscription terms
+            are not finalized.
           </p>
         </div>
 
