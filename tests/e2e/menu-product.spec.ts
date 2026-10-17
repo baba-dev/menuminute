@@ -174,6 +174,16 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code created");
   const rows = await (await page.request.get("/api/qr")).json();
   const q = rows.find((q: { label: string }) => q.label === "Patio menu");
+  const patioCard = page
+    .getByRole("heading", { name: "Patio menu", exact: true })
+    .locator("xpath=ancestor::section");
+  await page.evaluate(() => {
+    window.print = () => {};
+  });
+  await patioCard.getByRole("button", { name: "Print", exact: true }).click();
+  await expect(patioCard).toHaveAttribute("data-print-target", "true");
+  await expect(patioCard.locator("xpath=..")).toHaveAttribute("data-print-selected", "true");
+  await expect(patioCard.locator("code")).toContainText("/m/");
   const download = await page.request.get(`/api/qr/${q.id}/download`);
   expect(download.status()).toBe(200);
   expect(download.headers()["content-type"]).toBe("image/png");

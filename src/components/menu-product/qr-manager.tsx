@@ -1,5 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { flushSync } from "react-dom";
+import styles from "./qr-print.module.css";
 import { QrCode, Download, Printer } from "lucide-react";
 type QR = {
   id: string;
@@ -22,8 +24,14 @@ export function QrManager({
   const [codes, setCodes] = useState(initial),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
+    [printId, setPrintId] = useState<string | null>(null),
     [error, setError] = useState("");
   const retry = useRef({ signature: "", key: "" });
+  useEffect(() => {
+    const clearPrintSelection = () => setPrintId(null);
+    window.addEventListener("afterprint", clearPrintSelection);
+    return () => window.removeEventListener("afterprint", clearPrintSelection);
+  }, []);
   async function command(action: string, data: Record<string, unknown>) {
     const signature = JSON.stringify({ action, data });
     if (signature !== retry.current.signature)
@@ -104,9 +112,14 @@ export function QrManager({
           Create QR code
         </button>
       </form>
-      <div className="columns">
+      <div className={`columns ${styles.cards}`} data-print-selected={printId !== null}>
         {codes.map((q) => (
-          <section className="panel stack" key={q.id}>
+          <section
+            className={`panel stack ${styles.card}`}
+            data-print-target={printId === q.id}
+            data-qr-active={q.isActive}
+            key={q.id}
+          >
             <div className="row between">
               <h2>{q.label ?? "Menu QR"}</h2>
               <span className="badge">{q.isActive ? "Active" : "Revoked"}</span>
@@ -122,8 +135,8 @@ export function QrManager({
                     alt={`${q.label ?? "Menu"} QR code`}
                   />
                 </div>
-                <a href={`/m/${q.destinationToken}`} target="_blank" className="action">
-                  Open public menu
+                <a href={`/m/${encodeURIComponent(q.destinationToken)}`} target="_blank" rel="noopener noreferrer" className="action">
+                  Open QR destination
                 </a>
                 <div className="row">
                   <a href={`/api/qr/${q.id}/download`} className="action">
@@ -133,14 +146,21 @@ export function QrManager({
                   <a href={`/api/qr/${q.id}/download?format=svg`} className="action">
                     Download SVG
                   </a>
-                  <button type="button" onClick={() => window.print()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Commit selection synchronously before the browser snapshots the print tree.
+                      flushSync(() => setPrintId(q.id));
+                      window.print();
+                    }}
+                  >
                     <Printer size={16} />
                     Print
                   </button>
                 </div>
-                <small className="print-only">
-                  {origin}/m/
-                  {q.destinationToken}
+                <small className={styles.url}>
+                  Printed fallback URL:{" "}
+                  <code>{new URL(`/m/${encodeURIComponent(q.destinationToken)}`, origin).toString()}</code>
                 </small>
                 {canRevoke && (
                   <div className="row no-print">

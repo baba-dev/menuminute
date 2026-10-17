@@ -1,0 +1,43 @@
+/* A browser print operation targets one active QR at a time; Ctrl+P can print all active codes. */
+.cards {
+  align-items: start;
+}
+.card {
+  min-width: 0;
+}
+.url {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--mm-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.url code {
+  user-select: all;
+  font: inherit;
+}
+@media print {
+  .cards {
+    display: block !important;
+  }
+  .cards > .card {
+    width: 100%;
+    max-width: 110mm;
+    margin: 0 auto 8mm;
+    padding: 7mm;
+    color: #111 !important;
+    background: #fff !important;
+    border: 1px solid #333;
+    break-inside: avoid;
+  }
+  .cards > .card[data-qr-active="false"] {
+    display: none !important;
+  }
+  .cards[data-print-selected="true"] > .card[data-print-target="false"] {
+    display: none !important;
+  }
+  .url {
+    color: #111;
+    font-size: 9pt;
+  }
+}
