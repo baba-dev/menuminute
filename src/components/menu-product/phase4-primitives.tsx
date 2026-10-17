@@ -12,35 +12,21 @@ export function EmberButton({
   type = "button",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { intent?: EmberIntent }) {
-  return (
-    <button
-      {...props}
-      type={type}
-      className={`mm-action mm-action--${intent} ${className}`.trim()}
-    />
-  );
+  const buttonClass = `mm-action mm-action--${intent} ${className}`.trim();
+  return <button {...props} type={type} className={buttonClass} />;
 }
 
 /** Routine forms and decisions: no automatic success or destructive confirmation. */
-export function ServiceCard({
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
+export function ServiceCard({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={`mm-service-card ${className}`.trim()} />;
 }
 
 /** Reserve the ticket treatment for first publication and other real milestones. */
-export function InkTicket({
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
+export function InkTicket({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={`mm-ink-ticket ${className}`.trim()} />;
 }
 
 /** Optional, dismissible guidance only; never error, price or mandatory instructions. */
-export function ChefNote({
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLElement>) {
+export function ChefNote({ className = "", ...props }: HTMLAttributes<HTMLElement>) {
   return <aside {...props} className={`mm-chef-note ${className}`.trim()} />;
 }
