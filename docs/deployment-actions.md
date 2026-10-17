@@ -1,16 +1,12 @@
 # MenuMinute: GitHub Actions -> shared ARM64 VPS
 
-This is the **optional subsequent-release** deployment path; the 2026-10-16 first install was
-performed manually, with live deployment SHA and filesystem contract recorded in
-[production runbook](production-runbook.md). This deployment path stages automatically after successful `main` CI **and**
-publication of the immutable ARM64 release; it never builds on the ERP VPS.
-PRs cannot stage/deploy. Staging does not restart units, touch nginx, modify
-ERP, or run SQL. **Live activation is separately operator-initiated**, requiring
-the GitHub `production` environment gate and a root-owned, release-specific
-approval marker on the VPS. If the production environment requires reviewers,
-even automatic staging will queue for its existing GitHub approval; use a
-separately provisioned staging environment with its own credentials only after
-an explicit security review, not by weakening the production gate.
+This is the **subsequent-release** deployment path; the 2026-10-16 first install was performed
+manually, with live deployment SHA and filesystem contract recorded in
+[production runbook](production-runbook.md). After successful `main` CI and publication of the
+immutable ARM64 release, the workflow verifies that the run is still the latest `main`, stages it,
+and automatically activates it only when the running and candidate migration trees are identical.
+It never builds on the ERP VPS. PRs cannot stage/deploy. It never runs SQL migrations; a
+migration-changing release remains staged for the manual, root-marker-gated activation path. Staging uses a dedicated `production-staging` environment. Only an eligible cutover runs in the GitHub `production` environment; its configured review gate, exact-SHA, ERP and MenuMinute readiness checks still apply.
 
 The deployment script and workflow live at
 `infra/deploy/menuminute-release` and `.github/workflows/deploy-vps.yml`.
@@ -134,8 +130,11 @@ Insert this _single allowlisted command_ in that sudoers file, then
 menuminute-deploy ALL=(root) NOPASSWD: /usr/local/sbin/menuminute-release *
 ```
 
-The audited script rejects any mode other than `stage`/`activate`, validates
-full commit/checksum hex, confines its paths to MenuMinute, and uses `flock`.
+The audited v2 script allows only `stage`, `eligibility`, `activate`,
+`autoactivate`, `verify` and schema-compatible `recover`, validates full commit/checksum hex, confines its
+paths to MenuMinute, and uses `flock`. Install this helper from the merged PR
+commit before automatic activation is enabled; the source change alone does
+not replace the root-owned VPS copy.
 Never give the deploy account blanket sudo, root SSH, password login, git push,
 PM2, service-manager or Nginx permissions. The account may write only its
 incoming artifact and its own SSH home. Do not run a self-hosted Actions runner
@@ -178,7 +177,7 @@ console or a previously trusted connection, not by accepting an unverified
 `ssh-keyscan` result. GitHub known_hosts entry: `hostname ssh-ed25519 AAAA...`
 (or `[hostname]:PORT ssh-ed25519 AAAA...` when port is not 22).
 
-In **Settings -> Environments -> production**, restrict deployment branches to
+In **Settings -> Environments -> production-staging** and **production**, restrict deployment branches to
 `main`, add a required reviewer when available, and set:
 
 | Type     | Name                  | Value                                             |
@@ -192,22 +191,26 @@ Do not put database, Redis or Better Auth credentials in GitHub Actions.
 They remain on the server under `/etc/menuminute`. No SSH secrets are needed
 for PR CI or the ARM64 publisher.
 
-## 4. CI -> publish -> automatically stage -> review -> activate
+## 4. CI -> publish -> stage -> verified automatic activation
 
-A push to `main` runs all four CI lanes. Successful CI causes the publisher
-to package and publish an immutable ARM64 prerelease tagged `arm64-<short-SHA>`.
+A push to `main` runs four parallel CI lanes and a final aggregate gate. The
+build/browser lane packages the production compilation once; successful CI
+causes the publisher to consume that exact archive and publish an immutable ARM64 prerelease tagged `arm64-<short-SHA>`.
 **Only successful, same-repository `main` publisher runs that themselves came
-from `workflow_run` trigger automatic stage-only deployment**. A PR publisher,
-a failed/skipped publisher, a fork and a non-main run cannot enter the deploy job.
-This is the third workflow in the supported CI -> publish -> stage chain.
+from `workflow_run` trigger automatic stage and activation**. A PR, failed/skipped publisher, fork or non-main run cannot enter staging. The
+publisher uploads a source-run-ID/full-SHA/digest handoff; deploy reauthenticates
+that CI run and the final gate instead of trusting the publisher workflow head SHA.
+This is the third workflow in the supported CI -> publish -> stage -> activate chain.
 
 The deployment verifies the full release tag/target, downloads the archive and
 checksum, verifies SHA-256 on the runner, pulls the archive directly over GitHub
 HTTPS on the VPS using a short pinned SSH command, then verifies digest,
 ARM64/Node, native modules and the actual web/worker accounts' read/traversal
-permissions under `/var/www/menuminute/releases/<full-SHA>`. Repeated stages
-reuse an existing complete archive. **Automatic staging never switches either
-live symlink, restarts services, runs SQL or creates the approval marker.**
+permissions under `/var/www/menuminute/releases/<full-SHA>`. Repeated stages reuse an existing
+complete archive. Before automatic activation, the root helper verifies the current release is
+healthy and both migration trees are real directories with identical contents. It then switches both
+links atomically, restarts only MenuMinute, and verifies readiness plus ERP health. A stale run or
+changed migration tree leaves the live release unchanged.
 
 To stage an older published release on demand, use
 **Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**, choose
@@ -215,11 +218,11 @@ To stage an older published release on demand, use
 environment reviewer approval may still be required before this deploy job
 runs. Always use the full target SHA of a published release, not a short tag.
 
-Before activation: confirm an encrypted off-host backup/restore point, review
-the release SQL and backward compatibility, provision the two systemd units
-and the production Nginx site, verify ERP health, and apply only explicitly
-approved migrations from this exact staged release. The bundled migration
-runner is locked/checksummed, but **deployment never runs it automatically**.
+For a migration-changing release, confirm an encrypted off-host backup/restore point, review the
+release SQL and backward compatibility, provision the two systemd units and the production Nginx
+site, verify ERP health, and apply only explicitly approved migrations from this exact staged
+release. The bundled migration runner is locked/checksummed, but **deployment never runs it
+automatically**.
 One operator-only invocation after reviewing `migration.env`:
 
 ```bash
@@ -234,7 +237,11 @@ After migration/backup approval, create a one-release, root-owned gate:
 sudo install -o root -g root -m 0600 /dev/null "/etc/menuminute/approved-releases/$SHA"
 ```
 
-To promote a reviewed staged release, run the same workflow manually on `main` with `activate=true` and the same full SHA. Automatic `workflow_run` events are explicitly forbidden from executing the activation step.
+To promote a migration-changing or rollback release, run the same workflow manually on `main` with
+`activate=true` and the same full SHA after creating the root-owned marker. Automatic activation does
+not create or bypass that marker for this manual path. The automatic path rechecks `main` after
+staging; a merge racing that final check may still require a later run because GitHub ref reads are
+not an atomic deployment lock.
 It re-verifies/releases and stages idempotently, checks the approval marker and actual runtime-user access,
 validates Nginx and ERP localhost HTTP, atomically updates MenuMinute web and
 worker links, restarts **only** the two MenuMinute units, verifies both units,
@@ -289,3 +296,86 @@ checksum-verified release's code/assets permissions and validate both runtime
 accounts, never modify the old release or private env files. Keep activation
 approval revoked until all preflight and backup gates pass. Do not retry a
 failed activation blindly; establish old-release health first.
+
+## 6. CI/CD 2.0 pipeline and rollout
+
+```mermaid
+flowchart LR
+  A[Main push] --> B[Four parallel ARM64 CI lanes]
+  B --> C{Aggregate quality gate}
+  C -->|Pass| D[Reuse CI-built archive]
+  D --> E[Immutable Release and provenance handoff]
+  E --> F[Authenticated production-staging]
+  F --> G{Latest main and migrations unchanged?}
+  G -->|No SQL changes| H[Production environment approval rules]
+  G -->|Changed SQL| I[Staged: manual review required]
+  H --> J[Root-owned helper v2 cutover]
+  J --> K[Loopback and public SHA verification]
+  K -->|Pass| L[Verified live application]
+  K -->|Fail| M[Compatible application recovery]
+```
+
+**GitHub configuration:** provision `VPS_HOST`, `VPS_SSH_KEY` and
+`VPS_SSH_KNOWN_HOSTS` as separate environment secrets in both
+`production-staging` and `production`; provision `VPS_PORT` as an
+environment variable (default 22). Restrict both environments to `main`.
+The staging environment should not mark production live; production's actual
+activation job declares `environment.name: production` and
+`environment.url: https://food.bababuilds.com`. Preserve any required
+reviewers. Such a configured reviewer makes the otherwise unattended path
+require approval; do not bypass it to improve timing. The source
+`GITHUB_TOKEN` requires read for CI artifacts and contents, with write
+contents **only** in the publisher job. No production database/Redis secrets
+are uploaded to GitHub.
+
+**One-time helper upgrade (operator only, after PR is fully reviewed and merged):**
+Check the installed helper first using
+`sudo /usr/local/sbin/menuminute-release --version`; helper v2 is mandatory.
+Choose the final verified **merge** SHA, not this PR's intermediate head.
+Get its helper blob SHA independently using
+`git ls-tree <FULL_MERGE_SHA> infra/deploy/menuminute-release` from a trusted
+clone or GitHub's Git Trees API. Compare the downloaded file with that exact
+expected blob via `git hash-object` before installation. Review its diff and
+shell syntax and retain the old installed copy:
+
+```bash
+set -Eeuo pipefail
+MERGE_SHA=REPLACE_WITH_REVIEWED_40_CHARACTER_MAIN_SHA
+EXPECTED_BLOB=REPLACE_WITH_INDEPENDENTLY_VERIFIED_HELPER_BLOB_SHA
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+curl --fail --location --silent --show-error --proto '=https' --proto-redir '=https' \
+  "https://raw.githubusercontent.com/baba-dev/menuminute/$MERGE_SHA/infra/deploy/menuminute-release" -o "$tmp"
+test "$(git hash-object "$tmp")" = "$EXPECTED_BLOB"
+bash -n "$tmp"
+sudo cp -a /usr/local/sbin/menuminute-release /usr/local/sbin/menuminute-release.previous
+sudo install -o root -g root -m 0750 "$tmp" /usr/local/sbin/menuminute-release
+test "$(sudo /usr/local/sbin/menuminute-release --version)" = 2
+```
+
+Do not silently assume the source version replaces the VPS control plane.
+Retain root-owned approval markers and sudoers allowlisting; never broaden
+the deploy account's system privileges. Existing production installs,
+Node 24, PostgreSQL roles, media, rollback releases, Nginx, Redis and ERP
+are not upgraded by ordinary app delivery. First-time provisioning or systemd,
+Nginx and control-plane changes require a separate administrator review.
+
+**Outcome semantics:** successful automatic migration-free releases get a
+verified live deployment only after loopback and public homepage, login and
+uncached `/api/health/ready` pass with the expected release SHA. Changed
+migration trees yield exactly **Staged — manual migration review and approval
+required.** A superseded run leaves live symlinks unchanged; manual
+`workflow_dispatch` stage-only never claims deployment. For a compatible
+automatic release that fails public checks, root-owned `recover` may restore
+only the previously verified paired application release. It never rewinds
+migrations, data, queues, media or customer writes.
+
+**Troubleshooting:** check the source CI ID and handoff if provenance fails;
+compare latest `main` before re-running a superseded deployment; install
+helper v2 if its version check fails; inspect changed migration trees before
+an explicit manual migration; use `journalctl` for only the two MenuMinute
+units if readiness fails; treat public release-SHA mismatch as stale routing or
+cache, not success. Reconcile any failed automatic recovery manually while
+preserving database/media and ERP. The [baseline](ci-cd-baseline.md) measures
+historical staging, not verified live. Measure from the main push through
+successful public SHA verification, counting queue delay separately.

@@ -82,9 +82,16 @@ lists `ubuntu-24.04-arm` as a native ARM64 runner. Verify availability when impl
 
 ## Verified artifact -> VPS deployment
 
-The manual, production-environment-gated Actions workflow stages the exact successfully
-published ARM64 release with SHA-256 verification and pinned SSH host identity. It
-only activates on explicit request after a separate root-owned per-SHA operator
-approval, migration/backup review and ERP preflight. See [Actions VPS deployment
-runbook](deployment-actions.md). The workflow cannot provision the host, modify
-Nginx/ERP, or automatically run/roll back database migrations.
+The four native CI lanes run in parallel, with a final aggregate gate. The
+successful main run uploads the exact compiled/tested ARM64 release. The
+publisher verifies the source run, checksum, embedded identity and main SHA;
+it does not rebuild. Its authenticated handoff drives a separately reported
+staging environment. Only a healthy migration-compatible candidate reaches
+the `production` activation job with the native
+[application link](https://food.bababuilds.com). Public readiness includes the
+expected release identity. Migration-changing releases remain stage-only until
+root-approved manual SQL migration and activation. Never use production database
+credentials from GitHub Actions, update shared ERP services, or build on VPS.
+See [Actions deployment](deployment-actions.md) and
+[production runbook](production-runbook.md). This source-level behavior requires
+a separately reviewed helper v2 installation and GitHub Environment configuration.

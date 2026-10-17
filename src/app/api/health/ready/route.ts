@@ -13,7 +13,12 @@ export async function GET() {
   const redis = await redisHealth();
   const ready = database && redis.queue && redis.cache;
   return Response.json(
-    { status: ready ? "ready" : "unavailable", database, redis },
+    {
+      status: ready ? "ready" : "unavailable",
+      database,
+      redis,
+      release: process.env.NEXT_PUBLIC_RELEASE_SHA ?? null,
+    },
     { status: ready ? 200 : 503, headers: { "Cache-Control": "no-store" } }
   );
 }

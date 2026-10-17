@@ -86,12 +86,15 @@ Subscription collection, USD prices and exact plan quotas remain decisions.
 
 The live origin is [food.bababuilds.com](https://food.bababuilds.com), with a separate
 ERP-preserving Nginx virtual host. Runtime media is **local private shared-group storage**;
-Cloudflare R2 is used for **encrypted off-host backups**, not live media. Source merges and
-new GitHub release artifacts do **not** automatically deploy to the VPS. The operator reviews
-backups, SQL compatibility, ERP health and the exact SHA before activating any new version.
+Cloudflare R2 is used for **encrypted off-host backups**, not live media. After a successful merge,
+native ARM64 CI publishes an immutable release and the deploy workflow automatically stages and
+activates the latest verified `main` build when the running and candidate migration trees are
+identical. Releases with migration changes remain staged for explicit operator review; the workflow
+never runs SQL migrations. The GitHub `production` environment gate, ERP/readiness checks and
+exact-SHA verification still apply.
 
 Start with the [production source-of-truth runbook](docs/production-runbook.md), then consult the
-[ARM64 deployment contract](docs/deployment.md) and [optional staged Actions deployment](docs/deployment-actions.md).
+[ARM64 deployment contract](docs/deployment.md) and [CI/CD 2.0: automatic safe releases and manual migration path](docs/deployment-actions.md).
 Do not follow first-install examples on an already-live host or change `/usr/bin/node` used by ERP.
 
 ## 🚀 Quick Start Guide
@@ -204,8 +207,22 @@ pnpm test:e2e
 - [Environment Variables](docs/environment.md)
 - [Production operations source of truth: paths, release, checks and rollback](docs/production-runbook.md)
 - [Production Deployment (Linux ARM64 target)](docs/deployment.md)
-- [Manual, approval-gated GitHub Actions VPS deployment](docs/deployment-actions.md)
+- [GitHub Actions CI/CD 2.0: automated safe deployment](docs/deployment-actions.md)
 - [Audited ARM server and coexistence requirements](docs/server-inventory.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
 - [Architecture Decision Records (ADRs)](docs/decisions.md)
+
+### CI/CD 2.0 release status
+
+The native ARM64 CI runs quality, TypeScript, isolated PostgreSQL/Redis integration
+and production build/browser checks in parallel. A final aggregate gate requires
+all four to pass on the same SHA. The CI-tested production archive is the sole
+input to immutable publication (no publisher rebuild). Its authenticated
+publication handoff drives staging; the separate GitHub `production` activation
+job exposes [the live application](https://food.bababuilds.com) and verifies
+the public SHA. Stage-only results never count as verified deployment.
+Migration-changing releases require operator SQL review, backup and the
+existing root-owned approval marker. See [deployment actions](docs/deployment-actions.md)
+and the [measured pre-change baseline](docs/ci-cd-baseline.md). Repository code
+alone does not update the installed VPS helper or establish live deployment.

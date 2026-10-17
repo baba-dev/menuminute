@@ -4,10 +4,17 @@
 set -Eeuo pipefail
 umask 027
 
+if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
+  echo 2
+  exit 0
+fi
+
 [[ "$EUID" -eq 0 ]] || { echo "Root is required" >&2; exit 1; }
-[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|activate SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
+[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|activate|autoactivate|verify|recover SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
 mode="$1"; sha="$2"; digest="$3"
-[[ "$mode" == stage || "$mode" == activate ]] || exit 2
+[[ "$mode" == stage || "$mode" == eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == verify || "$mode" == recover ]] || {
+  echo "Unsupported release mode; install the reviewed current helper" >&2; exit 2;
+}
 [[ "$sha" =~ ^[0-9a-f]{40}$ && "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid release identity" >&2; exit 2; }
 
 node24=/opt/menuminute/node24/bin/node
@@ -75,6 +82,52 @@ if [[ "$mode" == stage ]]; then
   [[ "$(sha256sum "$temp/archive.tar.gz" | cut -d" " -f1)" == "$digest" ]] || {
     echo "Release checksum mismatch" >&2; exit 1;
   }
+  # Validate every path and link target before GNU tar sees the archive.
+  # Reject traversal, absolute links, special files, symlink-parent extraction,
+  # duplicate entries and unbounded expansion. Relative pnpm links are allowed.
+  python3 - "$temp/archive.tar.gz" <<'ARCHIVE'
+import sys, tarfile, posixpath
+members = {}
+total = 0
+with tarfile.open(sys.argv[1], "r:gz") as archive:
+    for member in archive:
+        raw = member.name
+        path = posixpath.normpath(raw)
+        if raw.startswith("/") or ".." in raw.split("/") or path.startswith("../"):
+            raise SystemExit("Unsafe archive member path")
+        if path == ".":
+            if not member.isdir():
+                raise SystemExit("Invalid archive root")
+            continue
+        if path in members or len(members) >= 250000 or member.mode & 0o6000:
+            raise SystemExit("Duplicate, oversized or privileged archive entry")
+        if not (member.isfile() or member.isdir() or member.issym() or member.islnk()):
+            raise SystemExit("Archive contains special file")
+        parent = posixpath.dirname(path)
+        while parent not in ("", "."):
+            if parent in members and members[parent].issym():
+                raise SystemExit("Archive writes through symlink parent")
+            parent = posixpath.dirname(parent)
+        if member.issym() or member.islnk():
+            link = member.linkname
+            target = posixpath.normpath(
+                link if member.islnk() else posixpath.join(posixpath.dirname(path), link)
+            )
+            if not link or link.startswith("/") or target == ".." or target.startswith("../"):
+                raise SystemExit("Archive link escapes release root")
+            if member.islnk() and (target not in members or not members[target].isfile()):
+                raise SystemExit("Hardlink must reference an earlier regular file")
+        total += member.size if member.isfile() else 0
+        if total > 3 * 1024**3:
+            raise SystemExit("Archive expands past 3 GiB")
+        members[path] = member
+    for path, member in members.items():
+        parent = posixpath.dirname(path)
+        while parent not in ("", "."):
+            if parent in members and members[parent].issym():
+                raise SystemExit("Symlink parent detected")
+            parent = posixpath.dirname(parent)
+ARCHIVE
   mkdir "$temp/content"
   tar -xzf "$temp/archive.tar.gz" --no-same-owner --no-same-permissions -C "$temp/content"
   [[ "$(cat "$temp/content/RELEASE-SHA")" == "$sha" ]] || { echo "Release SHA mismatch" >&2; exit 1; }
@@ -110,9 +163,11 @@ verify_release || { echo "Staged release identity verification failed" >&2; exit
 runtime_access_ok || {
   echo "Runtime accounts cannot enter/read the staged release; refusing cutover" >&2; exit 1;
 }
-[[ -f "/etc/menuminute/approved-releases/$sha" ]] || {
-  echo "Operator release/migration approval marker is missing" >&2; exit 1;
-}
+if [[ "$mode" == activate ]]; then
+  [[ -f "/etc/menuminute/approved-releases/$sha" ]] || {
+    echo "Operator release/migration approval marker is missing" >&2; exit 1;
+  }
+fi
 [[ -f /etc/menuminute/web.env && -f /etc/menuminute/worker.env ]] || {
   echo "Runtime environment files are not provisioned" >&2; exit 1;
 }
@@ -134,6 +189,32 @@ if [[ -n "$old_web" ]]; then
   [[ "$old_web" == "$root/releases/"* && -d "$old_web" ]] || {
     echo "Existing release path is unexpected" >&2; exit 1;
   }
+  old_sha="${old_web##*/}"
+  [[ "$old_sha" =~ ^[0-9a-f]{40}$ && "$(cat "$old_web/RELEASE-SHA")" == "$old_sha" ]] || {
+    echo "Existing release identity cannot be established" >&2; exit 1;
+  }
+fi
+
+# The owner authorized continuous activation on 2026-10-17. Automatic releases
+# must use the same migration files as the running application. SQL changes
+# retain the separate reviewed migration + per-SHA manual activation path.
+if [[ "$mode" == autoactivate || "$mode" == eligibility ]]; then
+  [[ -n "$old_web" && -d "$old_web/src/db/migrations" &&
+     -d "$release/src/db/migrations" &&
+     ! -L "$old_web/src/db/migrations" && ! -L "$release/src/db/migrations" ]] || {
+    echo "Automatic activation requires an existing release with migration history" >&2; exit 1;
+  }
+  diff -qr -- "$old_web/src/db/migrations" "$release/src/db/migrations" >/dev/null || {
+    echo "STAGED_MANUAL: Migration files changed; operator review required" >&2
+    if [[ "$mode" == eligibility ]]; then exit 20; fi
+    exit 1
+  }
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  baseline="$(curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready)"
+  [[ "$baseline" == *'"status":"ready"'* ]] || {
+    echo "Current release is not ready; refusing automatic cutover" >&2; exit 1;
+  }
 fi
 
 erp_healthy() {
@@ -143,12 +224,91 @@ erp_healthy() {
 }
 erp_healthy || { echo "ERP preflight failed; no changes applied" >&2; exit 1; }
 
+if [[ "$mode" == eligibility ]]; then
+  echo "ELIGIBLE: unchanged migrations, healthy existing release and ERP"
+  exit 0
+fi
+if [[ "$mode" == verify ]]; then
+  [[ "$old_web" == "$release" && "$old_worker" == "$release" ]] || {
+    echo "Web/worker active SHA differs from expected release" >&2; exit 1;
+  }
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3100/api/health/live |
+    python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "alive"'
+  curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3100/api/health/ready |
+    python3 -c 'import json,sys; j=json.load(sys.stdin); assert j["status"]=="ready" and j["database"] and j["redis"]["queue"] and j["redis"]["cache"]'
+  echo "VERIFIED: $sha; MenuMinute web, worker, PostgreSQL, queue/cache and ERP ready"
+  exit 0
+fi
+
+# A successful automatic cutover retains one strictly application-only recovery
+# pointer. Never infer compatibility for migrations or restore business data.
+rollback_root="$data/rollback-pointers"
+if [[ "$mode" == recover ]]; then
+  [[ "$old_web" == "$release" && "$old_worker" == "$release" ]] || {
+    echo "Candidate is no longer the active paired release" >&2; exit 1;
+  }
+  pointer="$rollback_root/$sha"
+  [[ -f "$pointer" && ! -L "$pointer" && "$(stat -c '%U:%a' "$pointer")" == "root:600" ]] || {
+    echo "Missing verified root-owned automatic rollback pointer" >&2; exit 1;
+  }
+  previous_sha="$(cat "$pointer")"
+  [[ "$previous_sha" =~ ^[0-9a-f]{40}$ && "$previous_sha" != "$sha" ]] || exit 1
+  previous="$root/releases/$previous_sha"
+  [[ -d "$previous" && ! -L "$previous" && "$(cat "$previous/RELEASE-SHA")" == "$previous_sha" ]] || exit 1
+  diff -qr -- "$previous/src/db/migrations" "$release/src/db/migrations" >/dev/null || {
+    echo "Schema-incompatible automatic recovery refused" >&2; exit 1;
+  }
+fi
+
 switch_link() {
   local link="$1" target="$2" next="${1}.next.$$"
   ln -s "$target" "$next"
   mv -Tf -- "$next" "$link"
 }
 
+if [[ "$mode" == recover ]]; then
+  # Only the previously verified compatible application can be restored.
+  switch_link "$web_link" "$previous"
+  switch_link "$worker_link" "$previous"
+  systemctl reset-failed menuminute-web.service menuminute-worker.service
+  systemctl restart menuminute-web.service menuminute-worker.service
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  recovered=false
+  for i in {1..10}; do
+    if curl --silent --show-error --fail --max-time 4 http://127.0.0.1:3100/api/health/ready |
+      python3 -c 'import json,sys; j=json.load(sys.stdin); assert j["status"]=="ready" and j["database"] and j["redis"]["queue"] and j["redis"]["cache"]' 2>/dev/null; then
+      recovered=true
+      break
+    fi
+    sleep 2
+  done
+  [[ "$recovered" == true ]] && erp_healthy || { echo "Emergency: application recovery failed verification" >&2; exit 1; }
+  echo "RECOVERED: restored previously healthy compatible release $previous_sha"
+  exit 0
+fi
+
+# Repeated delivery of the already-live release performs verification only.
+if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]; then
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready |
+    python3 -c 'import json,sys; assert json.load(sys.stdin)["status"]=="ready"'
+  echo "ALREADY_ACTIVE: $sha"
+  exit 0
+fi
+if [[ "$mode" == autoactivate ]]; then
+  install -d -o root -g root -m 0700 "$rollback_root"
+  pointer="$rollback_root/$sha"
+  [[ ! -L "$pointer" ]] || { echo "Unsafe rollback pointer" >&2; exit 1; }
+  printf '%s\n' "$old_sha" > "$pointer"
+  chown root:root "$pointer"
+  chmod 0600 "$pointer"
+fi
+
+echo "PREVIOUS_RELEASE=${old_sha:-none}"
 switched=false
 restore_previous() {
   trap - ERR
@@ -159,7 +319,9 @@ restore_previous() {
       switch_link "$worker_link" "$old_worker"
       # A failed new release may have exhausted StartLimitBurst. Clear only
       # these two MenuMinute units before restoring the previous application.
-      systemctl reset-failed menuminute-web.service menuminute-worker.service || true
+      if ! systemctl reset-failed menuminute-web.service menuminute-worker.service; then
+        echo "WARNING: Could not clear MenuMinute restart limit" >&2
+      fi
       if ! systemctl restart menuminute-web.service menuminute-worker.service; then
         echo "Emergency: previous MenuMinute services failed to restart" >&2
       fi
@@ -196,5 +358,8 @@ for i in {1..15}; do
 done
 [[ "$ready" == true ]] || { echo "MenuMinute readiness failed" >&2; false; }
 erp_healthy || { echo "ERP postflight failed" >&2; false; }
+# Both identities are checked while rollback protection is still active.
+test "$(cat "$web_link/RELEASE-SHA")" = "$sha"
+test "$(cat "$worker_link/RELEASE-SHA")" = "$sha"
 trap - ERR
 echo "Activated release $sha; ERP preflight/postflight and MenuMinute readiness passed"
