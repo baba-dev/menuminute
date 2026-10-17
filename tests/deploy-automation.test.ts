@@ -2,56 +2,73 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+const ci = readFileSync(path.resolve(".github/workflows/ci.yml"), "utf8");
 const deploy = readFileSync(path.resolve(".github/workflows/deploy-vps.yml"), "utf8");
 const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml"), "utf8");
-const helper = readFileSync(path.resolve("infra/deploy/menuminute-release"), "utf8");
+const packageScript = readFileSync(
+  path.resolve("infra/deploy/package-release.sh"),
+  "utf8"
+);
 
-describe("main-only continuous delivery gates", () => {
-  it("stages only after the successful main CI release publisher, never after a PR", () => {
+describe("provenance-bound main-only production delivery", () => {
+  it("parallelizes four mandatory CI lanes and fails closed at the final gate", () => {
+    expect(ci).toContain("Required CI quality gate");
+    expect(ci).toContain("needs: [quality, typecheck, test, build]");
+    expect(ci).toContain('test "$result" = success');
+    expect(ci).not.toContain("needs: [quality, typecheck, test]\n");
+    expect(ci).toContain("pnpm install --frozen-lockfile");
+  });
+
+  it("packages the exact pre-seed production compilation once", () => {
+    expect(ci.indexOf("Compile production artifact before browser fixtures")).toBeLessThan(
+      ci.indexOf("pnpm db:seed")
+    );
+    expect(ci).toContain('bash infra/deploy/package-release.sh "$GITHUB_SHA"');
+    expect(packageScript).not.toContain("pnpm build\n");
+    expect(packageScript).toContain("pnpm install --prod --frozen-lockfile");
+    expect(packageScript).toContain("RELEASE-SHA");
+    expect(packageScript).toContain("sha256sum --check --strict");
+    expect(publisher).not.toContain("pnpm build");
+    expect(publisher).toContain("run-id: ${{ github.event.workflow_run.id }}");
+  });
+
+  it("rejects PR/failed CI for publication and binds the source run", () => {
     expect(publisher).toContain("workflows: [CI]");
     expect(publisher).toContain("github.event.workflow_run.conclusion == 'success'");
     expect(publisher).toContain("github.event.workflow_run.event == 'push'");
     expect(publisher).toContain("github.event.workflow_run.head_branch == 'main'");
-    expect(deploy).toContain('workflows: ["Publish verified ARM64 artifact"]');
-    expect(deploy).toContain("github.event.workflow_run.conclusion == 'success'");
-    expect(deploy).toContain("github.event.workflow_run.event == 'workflow_run'");
-    expect(deploy).toContain("github.event.workflow_run.head_branch == 'main'");
-    expect(deploy).toContain(
-      "github.event.workflow_run.head_repository.full_name == github.repository"
-    );
-    expect(deploy).toContain(
-      "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'"
-    );
-    expect(deploy).toContain("github.event.workflow_run.head_sha");
+    expect(publisher).toContain("Required CI quality gate");
+    expect(publisher).toContain("published-source.json");
+    expect(publisher).toContain("source_ci_run_id");
+    expect(publisher).not.toContain("workflow_dispatch:");
   });
 
-  it("autoactivates only the current verified main release and keeps manual approval", () => {
-    expect(deploy).toContain("Select latest automatic release");
-    expect(deploy).toContain(
-      'latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq \'.object.sha\')"'
-    );
-    expect(deploy).toContain("Superseded release");
-    expect(deploy).toContain(
-      "if: steps.current.outputs.deploy == 'true' && (github.event_name == 'workflow_run' || inputs.activate)"
-    );
-    expect(deploy).toContain("mode=autoactivate");
-    expect(deploy).toContain("default: false");
-    expect(deploy).toContain("environment: production");
-    expect(helper).toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
-    expect(helper).toContain('if [[ "$mode" == autoactivate ]]; then');
-    expect(helper).toContain(
-      'diff -qr -- "$old_web/src/db/migrations" "$release/src/db/migrations"'
-    );
-    expect(helper).toContain("runtime_access_ok ||");
+  it("does not trust the publisher's workflow_run.head_sha as the source SHA", () => {
+    expect(deploy).toContain("published-source.json");
+    expect(deploy).toContain('sha="$(jq -r .source_sha published-source.json)"');
+    expect(deploy).not.toContain("github.event.workflow_run.head_sha");
+    expect(deploy).toContain(".head_repository.full_name == $repo");
+    expect(deploy).toContain("Required CI quality gate");
+    expect(deploy).toContain("source_ci_run_id");
+  });
+
+  it("staging cannot be reported as an activated production deployment", () => {
+    expect(deploy).toContain("name: production-staging");
+    expect(deploy).toContain("name: production");
+    expect(deploy).toContain("url: https://food.bababuilds.com");
+    expect(deploy).toContain("Staged — manual migration review and approval required.");
+    expect(deploy).toContain("Not yet deployed.");
+    expect(deploy).toContain("needs.stage.outputs.eligible == 'true'");
+    expect(deploy).toContain("Public HTTPS, dependency and route verification");
+    expect(deploy).toContain("Push-to-verified-public elapsed");
+  });
+
+  it("keeps pinned SSH and only calls the root-owned allowlisted helper", () => {
+    expect(deploy).toContain("StrictHostKeyChecking=yes");
+    expect(deploy).toContain("VPS_SSH_KNOWN_HOSTS");
+    expect(deploy).toContain("/usr/local/sbin/menuminute-release --version");
+    expect(deploy).toContain("sudo -n /usr/local/sbin/menuminute-release stage");
     expect(deploy).not.toContain("touch /etc/menuminute/approved-releases");
     expect(deploy).not.toContain("db-migrate.mjs");
-  });
-
-  it("checks immutable artifact identity and reuses already-downloaded bytes", () => {
-    expect(deploy).toContain('[[ "$target" == "$RELEASE_SHA" ]]');
-    expect(deploy).toContain('[[ "$tag_sha" == "$RELEASE_SHA" ]]');
-    expect(deploy).toContain('sha256sum -c "menuminute-$short-linux-arm64.tar.gz.sha256"');
-    expect(deploy).toContain("Archive already fully downloaded; verifying staged release");
-    expect(deploy).toContain('sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"');
   });
 });
