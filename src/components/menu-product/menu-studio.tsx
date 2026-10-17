@@ -973,7 +973,7 @@ export function MenuStudio({
                               body: file,
                             });
                             await refreshMedia();
-                            setMessage("Photo queued. Refresh after processing to review it.");
+                            setMessage("Photo queued privately. Refresh after processing to review it.");
                           });
                         }}
                       >
