@@ -10,37 +10,37 @@ Current production evidence: [CI 39036913738](https://github.com/baba-dev/menumi
 
 ### Source-observed route and component inventory
 
-| Surface | Existing entry point | Phase 4 change |
-| --- | --- | --- |
-| Registration/login/onboarding | `src/app/register`, `login`, `onboarding/setup-form.tsx` | A02: guidance and safe retry |
-| Dashboard | `src/app/(dashboard)/dashboard/page.tsx` | A03: replace obsolete `getFullMenu`/category counters with canonical versioned menu state; only label a QR/menu live when truly active |
-| Outlet context/sidebar | `src/app/(dashboard)/layout.tsx`, `context-switcher.tsx` | A03: unified Ink & Ember |
-| Menu Studio | `src/components/menu-product/menu-studio.tsx` | A04a/b: improve existing editor; no parallel second editor |
-| Public menu | `src/components/menu-product/public-menu.tsx` | A05: presentation, mobile/a11y, existing no-order public semantics |
-| QR manager | `src/components/menu-product/qr-manager.tsx` | A06: printing/presentation, unchanged QR identity |
-| Reviewed media | Existing `src/modules/media`, Menu Studio media tab | A07: workflow UX; no automatic paid provider |
-| Marketing/pricing | `src/app/page.tsx`, `src/app/pricing/page.tsx` | A09: remove unfinalized prices/misleading claims |
-| Shared UI | `src/styles/globals.css`, `menu-product.css` | A01: canonical Ink & Ember tokens/primitives |
+| Surface                       | Existing entry point                                     | Phase 4 change                                                                                                                         |
+| ----------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Registration/login/onboarding | `src/app/register`, `login`, `onboarding/setup-form.tsx` | A02: guidance and safe retry                                                                                                           |
+| Dashboard                     | `src/app/(dashboard)/dashboard/page.tsx`                 | A03: replace obsolete `getFullMenu`/category counters with canonical versioned menu state; only label a QR/menu live when truly active |
+| Outlet context/sidebar        | `src/app/(dashboard)/layout.tsx`, `context-switcher.tsx` | A03: unified Ink & Ember                                                                                                               |
+| Menu Studio                   | `src/components/menu-product/menu-studio.tsx`            | A04a/b: improve existing editor; no parallel second editor                                                                             |
+| Public menu                   | `src/components/menu-product/public-menu.tsx`           | A05: presentation, mobile/a11y, existing no-order public semantics                                                                     |
+| QR manager                    | `src/components/menu-product/qr-manager.tsx`             | A06: printing/presentation, unchanged QR identity                                                                                      |
+| Reviewed media                | Existing `src/modules/media`, Menu Studio media tab      | A07: workflow UX; no automatic paid provider                                                                                           |
+| Marketing/pricing             | `src/app/page.tsx`, `src/app/pricing/page.tsx`           | A09: remove unfinalized prices/misleading claims                                                                                       |
+| Shared UI                     | `src/styles/globals.css`, `menu-product.css`             | A01: canonical Ink & Ember tokens/primitives                                                                                           |
 
 The older `src/app/(dashboard)/dashboard/menu/menu-manager.tsx` and related `src/modules/menus` are legacy compatibility surfaces. Never delete old tables/service/data based solely on UI cleanup. Public menu already uses a 30-second no-store refresh, an offline/stale label, and suppresses unentitled ordering; keep these. Media privately stores originals, outputs reviewed derivatives, and permits only approved published references. Local media is `/var/lib/menuminute/media`; R2 holds encrypted off-host restic backups, not live media.
 
 ## Dependencies, issues and proposed exclusive writes
 
-| Wave | Work | Issue | Exclusive area; coordinate before shared changes |
-| --- | --- | --- | --- |
-| 0 | A00 baseline | #38 | This document, issue bookkeeping |
-| 1 | A01 design foundation | #39 | global/product CSS and **new** shared UI primitives |
-| 2 | A02 guided onboarding | #40 | onboarding files |
-| 2 | A03 canonical dashboard | #41 | dashboard page/layout and context switcher |
-| 2 | A04a publish-safe editor | #42 | Menu Studio component (sole writer) |
-| 3 | A04b dish editor | #43 | same Menu Studio, **only after A04a handoff** |
-| 2 | A05 guest menu | #44 | PublicMenu component and dedicated style/test paths |
-| 2 | A06 QR printing | #45 | QR Manager component, QR page and dedicated print styles |
-| 3 | A07 media UI | #46 | media-only components/tests; Menu Studio after sole-writer handoff from A04 |
-| continuous | A08 QA | #47 | separate phase-4 tests and acceptance evidence; coordinate shared fixtures |
-| 2 | A09 honest marketing | #48 | homepage/pricing pages |
-| final | A10 operations | #49 | operational evidence/runbook only, separate operator-backed host actions |
-| final | A11 rollout/handoff | #50 | docs/release evidence after all gates |
+| Wave       | Work                     | Issue | Exclusive area; coordinate before shared changes                            |
+| ---------- | ------------------------ | ----- | --------------------------------------------------------------------------- |
+| 0          | A00 baseline             | #38   | This document, issue bookkeeping                                            |
+| 1          | A01 design foundation    | #39   | global/product CSS and **new** shared UI primitives                         |
+| 2          | A02 guided onboarding    | #40   | onboarding files                                                            |
+| 2          | A03 canonical dashboard  | #41   | dashboard page/layout and context switcher                                  |
+| 2          | A04a publish-safe editor | #42   | Menu Studio component (sole writer)                                         |
+| 3          | A04b dish editor         | #43   | same Menu Studio, **only after A04a handoff**                               |
+| 2          | A05 guest menu           | #44   | PublicMenu component and dedicated style/test paths                         |
+| 2          | A06 QR printing          | #45   | QR Manager component, QR page and dedicated print styles                    |
+| 3          | A07 media UI             | #46   | media-only components/tests; Menu Studio after sole-writer handoff from A04 |
+| continuous | A08 QA                   | #47   | separate phase-4 tests and acceptance evidence; coordinate shared fixtures  |
+| 2          | A09 honest marketing     | #48   | homepage/pricing pages                                                      |
+| final      | A10 operations           | #49   | operational evidence/runbook only, separate operator-backed host actions    |
+| final      | A11 rollout/handoff      | #50   | docs/release evidence after all gates                                       |
 
 A01 follows A00; A02/A03/A04a/A05/A06/A09 follow A01. A04b and A07 follow A04a and require sequential Menu Studio reservations. A08 scenario preparation can start early but full pass needs integrated features. A10 needs functional acceptance, A11 needs A08 and A10.
 
