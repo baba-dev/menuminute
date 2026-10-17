@@ -86,9 +86,12 @@ Subscription collection, USD prices and exact plan quotas remain decisions.
 
 The live origin is [food.bababuilds.com](https://food.bababuilds.com), with a separate
 ERP-preserving Nginx virtual host. Runtime media is **local private shared-group storage**;
-Cloudflare R2 is used for **encrypted off-host backups**, not live media. Source merges and
-new GitHub release artifacts do **not** automatically deploy to the VPS. The operator reviews
-backups, SQL compatibility, ERP health and the exact SHA before activating any new version.
+Cloudflare R2 is used for **encrypted off-host backups**, not live media. After a successful merge,
+native ARM64 CI publishes an immutable release and the deploy workflow automatically stages and
+activates the latest verified `main` build when the running and candidate migration trees are
+identical. Releases with migration changes remain staged for explicit operator review; the workflow
+never runs SQL migrations. The GitHub `production` environment gate, ERP/readiness checks and
+exact-SHA verification still apply.
 
 Start with the [production source-of-truth runbook](docs/production-runbook.md), then consult the
 [ARM64 deployment contract](docs/deployment.md) and [optional staged Actions deployment](docs/deployment-actions.md).

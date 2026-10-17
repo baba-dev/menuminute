@@ -25,13 +25,26 @@ describe("main-only continuous delivery gates", () => {
     expect(deploy).toContain("github.event.workflow_run.head_sha");
   });
 
-  it("does not allow automated publication to authorize production activation", () => {
-    expect(deploy).toContain("if: github.event_name == 'workflow_dispatch' && inputs.activate");
+  it("autoactivates only the current verified main release and keeps manual approval", () => {
+    expect(deploy).toContain("Select latest automatic release");
+    expect(deploy).toContain(
+      'latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq \'.object.sha\')"'
+    );
+    expect(deploy).toContain("Superseded release");
+    expect(deploy).toContain(
+      "if: steps.current.outputs.deploy == 'true' && (github.event_name == 'workflow_run' || inputs.activate)"
+    );
+    expect(deploy).toContain("mode=autoactivate");
     expect(deploy).toContain("default: false");
     expect(deploy).toContain("environment: production");
     expect(helper).toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
+    expect(helper).toContain('if [[ "$mode" == autoactivate ]]; then');
+    expect(helper).toContain(
+      'diff -qr -- "$old_web/src/db/migrations" "$release/src/db/migrations"'
+    );
     expect(helper).toContain("runtime_access_ok ||");
     expect(deploy).not.toContain("touch /etc/menuminute/approved-releases");
+    expect(deploy).not.toContain("db-migrate.mjs");
   });
 
   it("checks immutable artifact identity and reuses already-downloaded bytes", () => {

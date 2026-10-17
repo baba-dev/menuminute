@@ -7,7 +7,7 @@ the product planning context is Food Minutes. Do not rename the product incident
 
 - Read `docs/architecture.md`, `docs/domain-invariants.md`, and the relevant domain guide.
 - For any production, release, monitoring or migration work, read `docs/production-runbook.md` first;
-  `docs/deployment-actions.md` documents the optional manual approval-gated subsequent-release workflow.
+  `docs/deployment-actions.md` documents the subsequent-release workflow and its manual migration path.
   Recorded live host state takes precedence over older proposed layouts or local CI defaults.
 - `docs/decisions.md` records approved target decisions; code may still implement the old scaffold.
 - Read `docs/product-requirements.md` for approved hierarchy, roles, fulfillment, currencies and expiry.
@@ -59,8 +59,10 @@ the product planning context is Food Minutes. Do not rename the product incident
 
 ## Production change ownership
 
-- A PR merge is **not** a deployment. Final native ARM64 CI on the latest SHA, artifact digest,
-  separate operator approval, backup and migration compatibility are required before production.
+- A PR merge is **not by itself** a deployment. Final native ARM64 CI on the latest SHA, artifact
+  digest, the configured production environment gate, ERP/readiness checks and migration
+  compatibility are required. The approved continuous path may activate only when migration trees
+  are unchanged; schema changes still require the reviewed operator migration/activation path.
 - Deploy **only** the reviewed full 40-character SHA, with consistent `current` and `worker-current`
   symlinks; worker and web must share exact storage configuration. Existing manually installed release
   must not be overwritten by optional Actions staging helper or misidentified as helper-staged.

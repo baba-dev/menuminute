@@ -1,16 +1,13 @@
 # MenuMinute: GitHub Actions -> shared ARM64 VPS
 
-This is the **optional subsequent-release** deployment path; the 2026-10-16 first install was
-performed manually, with live deployment SHA and filesystem contract recorded in
-[production runbook](production-runbook.md). This deployment path stages automatically after successful `main` CI **and**
-publication of the immutable ARM64 release; it never builds on the ERP VPS.
-PRs cannot stage/deploy. Staging does not restart units, touch nginx, modify
-ERP, or run SQL. **Live activation is separately operator-initiated**, requiring
-the GitHub `production` environment gate and a root-owned, release-specific
-approval marker on the VPS. If the production environment requires reviewers,
-even automatic staging will queue for its existing GitHub approval; use a
-separately provisioned staging environment with its own credentials only after
-an explicit security review, not by weakening the production gate.
+This is the **subsequent-release** deployment path; the 2026-10-16 first install was performed
+manually, with live deployment SHA and filesystem contract recorded in
+[production runbook](production-runbook.md). After successful `main` CI and publication of the
+immutable ARM64 release, the workflow verifies that the run is still the latest `main`, stages it,
+and automatically activates it only when the running and candidate migration trees are identical.
+It never builds on the ERP VPS. PRs cannot stage/deploy. It never runs SQL migrations; a
+migration-changing release remains staged for the manual, root-marker-gated activation path. The
+GitHub `production` environment gate, exact-SHA, ERP and MenuMinute readiness checks still apply.
 
 The deployment script and workflow live at
 `infra/deploy/menuminute-release` and `.github/workflows/deploy-vps.yml`.
@@ -192,22 +189,24 @@ Do not put database, Redis or Better Auth credentials in GitHub Actions.
 They remain on the server under `/etc/menuminute`. No SSH secrets are needed
 for PR CI or the ARM64 publisher.
 
-## 4. CI -> publish -> automatically stage -> review -> activate
+## 4. CI -> publish -> stage -> verified automatic activation
 
 A push to `main` runs all four CI lanes. Successful CI causes the publisher
 to package and publish an immutable ARM64 prerelease tagged `arm64-<short-SHA>`.
 **Only successful, same-repository `main` publisher runs that themselves came
-from `workflow_run` trigger automatic stage-only deployment**. A PR publisher,
+from `workflow_run` trigger automatic stage and activation**. A PR publisher,
 a failed/skipped publisher, a fork and a non-main run cannot enter the deploy job.
-This is the third workflow in the supported CI -> publish -> stage chain.
+This is the third workflow in the supported CI -> publish -> stage -> activate chain.
 
 The deployment verifies the full release tag/target, downloads the archive and
 checksum, verifies SHA-256 on the runner, pulls the archive directly over GitHub
 HTTPS on the VPS using a short pinned SSH command, then verifies digest,
 ARM64/Node, native modules and the actual web/worker accounts' read/traversal
-permissions under `/var/www/menuminute/releases/<full-SHA>`. Repeated stages
-reuse an existing complete archive. **Automatic staging never switches either
-live symlink, restarts services, runs SQL or creates the approval marker.**
+permissions under `/var/www/menuminute/releases/<full-SHA>`. Repeated stages reuse an existing
+complete archive. Before automatic activation, the root helper verifies the current release is
+healthy and both migration trees are real directories with identical contents. It then switches both
+links atomically, restarts only MenuMinute, and verifies readiness plus ERP health. A stale run or
+changed migration tree leaves the live release unchanged.
 
 To stage an older published release on demand, use
 **Actions -> Deploy verified MenuMinute ARM64 release -> Run workflow**, choose
@@ -215,11 +214,11 @@ To stage an older published release on demand, use
 environment reviewer approval may still be required before this deploy job
 runs. Always use the full target SHA of a published release, not a short tag.
 
-Before activation: confirm an encrypted off-host backup/restore point, review
-the release SQL and backward compatibility, provision the two systemd units
-and the production Nginx site, verify ERP health, and apply only explicitly
-approved migrations from this exact staged release. The bundled migration
-runner is locked/checksummed, but **deployment never runs it automatically**.
+For a migration-changing release, confirm an encrypted off-host backup/restore point, review the
+release SQL and backward compatibility, provision the two systemd units and the production Nginx
+site, verify ERP health, and apply only explicitly approved migrations from this exact staged
+release. The bundled migration runner is locked/checksummed, but **deployment never runs it
+automatically**.
 One operator-only invocation after reviewing `migration.env`:
 
 ```bash
@@ -234,7 +233,11 @@ After migration/backup approval, create a one-release, root-owned gate:
 sudo install -o root -g root -m 0600 /dev/null "/etc/menuminute/approved-releases/$SHA"
 ```
 
-To promote a reviewed staged release, run the same workflow manually on `main` with `activate=true` and the same full SHA. Automatic `workflow_run` events are explicitly forbidden from executing the activation step.
+To promote a migration-changing or rollback release, run the same workflow manually on `main` with
+`activate=true` and the same full SHA after creating the root-owned marker. Automatic activation does
+not create or bypass that marker for this manual path. The automatic path rechecks `main` after
+staging; a merge racing that final check may still require a later run because GitHub ref reads are
+not an atomic deployment lock.
 It re-verifies/releases and stages idempotently, checks the approval marker and actual runtime-user access,
 validates Nginx and ERP localhost HTTP, atomically updates MenuMinute web and
 worker links, restarts **only** the two MenuMinute units, verifies both units,

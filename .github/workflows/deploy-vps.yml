@@ -1,8 +1,8 @@
 name: Deploy verified MenuMinute ARM64 release
 
-# After successful main CI and immutable ARM64 release publication, stage
-# automatically without switching live traffic. Promotion remains a manual,
-# release-specific, root-approved action until a full cutover drill is accepted.
+# Successful main CI -> immutable ARM64 publication -> stage -> activate.
+# Automatic activation requires unchanged migration files; SQL changes retain
+# the operator-approved manual path. Never change live services for stale runs.
 on:
   workflow_run:
     workflows: ["Publish verified ARM64 artifact"]
@@ -45,13 +45,28 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.release_sha || github.event.workflow_run.head_sha }}
-      ACTIVATE: ${{ github.event_name == 'workflow_dispatch' && inputs.activate || false }}
+      ACTIVATE: ${{ github.event_name == 'workflow_run' || inputs.activate || false }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
       VPS_PORT: ${{ vars.VPS_PORT || '22' }}
     steps:
+      - name: Select latest automatic release
+        id: current
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$latest" != "$RELEASE_SHA" ]]; then
+              echo "Superseded release $RELEASE_SHA; main is $latest. No deployment."
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
       - name: Verify immutable main release identity
+        if: steps.current.outputs.deploy == 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -73,6 +88,7 @@ jobs:
           echo "DEPLOY_DIGEST=$digest" >> "$GITHUB_ENV"
 
       - name: Configure pinned SSH host identity
+        if: steps.current.outputs.deploy == 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -90,6 +106,7 @@ jobs:
           echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
 
       - name: Pull and stage checked release on VPS
+        if: steps.current.outputs.deploy == 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -137,16 +154,27 @@ jobs:
           sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"
           REMOTE
 
-      - name: Activate only after approved cutover
-        if: github.event_name == 'workflow_dispatch' && inputs.activate
+      - name: Activate verified release
+        if: steps.current.outputs.deploy == 'true' && (github.event_name == 'workflow_run' || inputs.activate)
         shell: bash
         run: |
           set -Eeuo pipefail
+          mode=activate
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            # Recheck after download/staging: main may have advanced meanwhile.
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$latest" != "$RELEASE_SHA" ]]; then
+              echo "Superseded during staging; leaving live release unchanged."
+              echo "ACTIVATION_SKIPPED=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            mode=autoactivate
+          fi
           ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
             -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
             "menuminute-deploy@$VPS_HOST" \
-            "sudo -n /usr/local/sbin/menuminute-release activate $RELEASE_SHA $DEPLOY_DIGEST"
+            "sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST"
           echo "Release activation completed after VPS and ERP checks."
 
       - name: Job summary
@@ -158,7 +186,11 @@ jobs:
           {
             echo "### MenuMinute ARM64 release"
             echo "Commit: \`$RELEASE_SHA\`"
-            if [[ "$ACTIVATE" == true ]]; then
+            if [[ "${{ steps.current.outputs.deploy }}" != true ]]; then
+              echo "Superseded release; main advanced before staging. Live services unchanged."
+            elif [[ "${ACTIVATION_SKIPPED:-false}" == true ]]; then
+              echo "Superseded during staging; live services unchanged."
+            elif [[ "$ACTIVATE" == true ]]; then
               echo "Activated; verified local MenuMinute readiness and ERP HTTP health."
             else
               echo "Checksum-verified artifact staged; **no live service changed**."
