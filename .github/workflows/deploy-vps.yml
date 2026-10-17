@@ -44,6 +44,10 @@ jobs:
       sha: ${{ steps.source.outputs.sha }}
       ci_id: ${{ steps.source.outputs.ci_id }}
       ci_created_at: ${{ steps.source.outputs.ci_created_at }}
+      ci_seconds: ${{ steps.source.outputs.ci_seconds }}
+      ci_queue_seconds: ${{ steps.source.outputs.ci_queue_seconds }}
+      packaging_seconds: ${{ steps.source.outputs.packaging_seconds }}
+      publication_seconds: ${{ steps.source.outputs.publication_seconds }}
       digest: ${{ steps.artifact.outputs.digest }}
       eligible: ${{ steps.policy.outputs.eligible }}
       staging_seconds: ${{ steps.transport.outputs.staging_seconds }}
@@ -75,7 +79,11 @@ jobs:
               .publisher_run_id == $publisher and
               (.source_sha | test("^[0-9a-f]{40}$")) and
               (.source_ci_run_id | type == "number") and
-              (.artifact_sha256 | test("^[0-9a-f]{64}$"))
+              (.artifact_sha256 | test("^[0-9a-f]{64}$")) and
+              (.ci_duration_seconds | type == "number") and
+              (.ci_queue_seconds | type == "number") and
+              (.packaging_seconds | type == "number") and
+              (.publication_seconds | type == "number")
             ' published-source.json >/dev/null
             sha="$(jq -r .source_sha published-source.json)"
             echo "sha=$sha" >> "$GITHUB_OUTPUT"
@@ -91,6 +99,10 @@ jobs:
               jq -se '([.[].jobs[] | select(.name == "Required CI quality gate" and .conclusion == "success")] | length) == 1' >/dev/null
             echo "ci_id=$ci_id" >> "$GITHUB_OUTPUT"
             echo "ci_created_at=$(jq -r .source_ci_created_at published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "ci_seconds=$(jq -r .ci_duration_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "ci_queue_seconds=$(jq -r .ci_queue_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "packaging_seconds=$(jq -r .packaging_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "publication_seconds=$(jq -r .publication_seconds published-source.json)" >> "$GITHUB_OUTPUT"
           fi
           [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Full SHA required" >&2; exit 1; }
           if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
@@ -292,6 +304,10 @@ jobs:
       DEPLOY_DIGEST: ${{ needs.stage.outputs.digest }}
       SOURCE_CI_RUN_ID: ${{ needs.stage.outputs.ci_id }}
       SOURCE_CI_CREATED_AT: ${{ needs.stage.outputs.ci_created_at }}
+      CI_SECONDS: ${{ needs.stage.outputs.ci_seconds }}
+      CI_QUEUE_SECONDS: ${{ needs.stage.outputs.ci_queue_seconds }}
+      PACKAGING_SECONDS: ${{ needs.stage.outputs.packaging_seconds }}
+      PUBLICATION_SECONDS: ${{ needs.stage.outputs.publication_seconds }}
       STAGING_SECONDS: ${{ needs.stage.outputs.staging_seconds }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -417,6 +433,10 @@ jobs:
             echo "| Verified artifact checksum | \`$DEPLOY_DIGEST\` |"
             echo "| Source CI | [run $SOURCE_CI_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID) |"
             echo "| Completed UTC | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+            echo "| CI execution | ${CI_SECONDS:-not recorded} seconds |"
+            echo "| GitHub CI queue | ${CI_QUEUE_SECONDS:-not recorded} seconds |"
+            echo "| Artifact packaging | ${PACKAGING_SECONDS:-not recorded} seconds |"
+            echo "| Release publication | ${PUBLICATION_SECONDS:-not recorded} seconds |"
             echo "| Staging | ${STAGING_SECONDS:-not recorded} seconds |"
             echo "| Activation | ${ACTIVATION_SECONDS:-not completed} seconds |"
             echo "| Public verification | ${VERIFY_SECONDS:-not completed} seconds |"

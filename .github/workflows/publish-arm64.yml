@@ -32,17 +32,29 @@ jobs:
         run: |
           set -Eeuo pipefail
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ && "$SOURCE_CI_RUN_ID" =~ ^[0-9]+$ ]]
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID" |
-            jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$RELEASE_SHA" '
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID" > "$RUNNER_TEMP/source-ci.json"
+          jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$RELEASE_SHA" '
               .name == "CI" and .path == ".github/workflows/ci.yml" and
               .head_repository.full_name == $repo and .head_sha == $sha and
               .event == "push" and .head_branch == "main" and
               .status == "completed" and .conclusion == "success"
-            ' >/dev/null
+            ' "$RUNNER_TEMP/source-ci.json" >/dev/null
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID/jobs?per_page=100" |
             jq -se '([.[].jobs[] | select(.name == "Required CI quality gate" and .conclusion == "success")] | length) == 1' >/dev/null
           latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
           test "$latest" = "$RELEASE_SHA" || { echo "Superseded before publication"; exit 1; }
+          source_start="$(date -d "$(jq -r .created_at "$RUNNER_TEMP/source-ci.json")" +%s)"
+          source_running="$(date -d "$(jq -r .run_started_at "$RUNNER_TEMP/source-ci.json")" +%s)"
+          source_end="$(date -d "$(jq -r .updated_at "$RUNNER_TEMP/source-ci.json")" +%s)"
+          echo "CI_SECONDS=$(( source_end - source_running ))" >> "$GITHUB_ENV"
+          echo "CI_QUEUE_SECONDS=$(( source_running - source_start ))" >> "$GITHUB_ENV"
+          package_times="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID/jobs?per_page=100" |
+            jq -r '.jobs[] | select(.name == "Production Build & Browser (ARM64)") | .steps[] |
+              select(.name == "Package exact tested ARM64 build") | [.started_at,.completed_at] | @tsv')"
+          [[ -n "$package_times" ]] || { echo "Missing exact CI packaging timing" >&2; exit 1; }
+          read -r package_start package_end <<< "$package_times"
+          echo "PACKAGING_SECONDS=$(( $(date -d "$package_end" +%s) - $(date -d "$package_start" +%s) ))" >> "$GITHUB_ENV"
+          echo "PUBLISH_CREATED_AT=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq '.created_at')" >> "$GITHUB_ENV"
 
       - name: Download exact successfully tested CI artifact
         uses: actions/download-artifact@v4
@@ -77,11 +89,18 @@ jobs:
           target="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq '.target_commitish')"
           ref="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha')"
           test "$target" = "$RELEASE_SHA" && test "$ref" = "$RELEASE_SHA"
+          publish_seconds="$(( $(date -u +%s) - $(date -d "$PUBLISH_CREATED_AT" +%s) ))"
           jq -n --arg sha "$RELEASE_SHA" --arg run "$SOURCE_CI_RUN_ID" \
             --arg created "$SOURCE_CI_CREATED_AT" --arg published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg digest "$digest" --arg tag "$tag" --arg archive "$archive" \
             --argjson bytes "$(stat -c %s "$archive")" --arg publisher "$GITHUB_RUN_ID" \
-            '{source_sha:$sha,source_ci_run_id:($run|tonumber),source_ci_created_at:$created,published_at:$published,artifact_sha256:$digest,artifact_name:$archive,artifact_bytes:$bytes,release_tag:$tag,publisher_run_id:($publisher|tonumber)}' > published-source.json
+            --argjson ci_seconds "$CI_SECONDS" --argjson queue_seconds "$CI_QUEUE_SECONDS" \
+            --argjson packaging_seconds "$PACKAGING_SECONDS" --argjson publish_seconds "$publish_seconds" \
+            '{source_sha:$sha,source_ci_run_id:($run|tonumber),source_ci_created_at:$created,
+              ci_duration_seconds:$ci_seconds,ci_queue_seconds:$queue_seconds,
+              packaging_seconds:$packaging_seconds,publication_seconds:$publish_seconds,
+              published_at:$published,artifact_sha256:$digest,artifact_name:$archive,
+              artifact_bytes:$bytes,release_tag:$tag,publisher_run_id:($publisher|tonumber)}' > published-source.json
           echo "Published [$tag](https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag) from [CI run $SOURCE_CI_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID) with digest \`$digest\`." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload authenticated publication handoff
