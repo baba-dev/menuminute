@@ -69,6 +69,9 @@ jobs:
           bash -n infra/deploy/menuminute-release
           bash -n infra/deploy/package-release.sh
 
+      - name: Verify India dish illustration backlog
+        run: node scripts/food-artwork/verify-india-backlog.mjs
+
       - name: Lint source code (ESLint)
         run: pnpm lint
 
