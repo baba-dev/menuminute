@@ -28,8 +28,7 @@ export function dashboardSummary(
   return {
     draftCount: rows.filter(
       (row) =>
-        !row.archived &&
-        (row.publishedRevision === null || row.revision > row.publishedRevision)
+        !row.archived && (row.publishedRevision === null || row.revision > row.publishedRevision)
     ).length,
     publishedMenuCount: published.length,
     publishedCategoryCount: visibleCategories.length,
