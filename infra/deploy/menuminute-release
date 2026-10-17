@@ -10,9 +10,9 @@ if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
 fi
 
 [[ "$EUID" -eq 0 ]] || { echo "Root is required" >&2; exit 1; }
-[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|activate|autoactivate|verify SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
+[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|activate|autoactivate|verify|recover SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
 mode="$1"; sha="$2"; digest="$3"
-[[ "$mode" == stage || "$mode" == eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == verify ]] || {
+[[ "$mode" == stage || "$mode" == eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == verify || "$mode" == recover ]] || {
   echo "Unsupported release mode; install the reviewed current helper" >&2; exit 2;
 }
 [[ "$sha" =~ ^[0-9a-f]{40}$ && "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid release identity" >&2; exit 2; }
@@ -242,11 +242,71 @@ if [[ "$mode" == verify ]]; then
   exit 0
 fi
 
+# A successful automatic cutover retains one strictly application-only recovery
+# pointer. Never infer compatibility for migrations or restore business data.
+rollback_root="$data/rollback-pointers"
+if [[ "$mode" == recover ]]; then
+  [[ "$old_web" == "$release" && "$old_worker" == "$release" ]] || {
+    echo "Candidate is no longer the active paired release" >&2; exit 1;
+  }
+  pointer="$rollback_root/$sha"
+  [[ -f "$pointer" && ! -L "$pointer" && "$(stat -c '%U:%a' "$pointer")" == "root:600" ]] || {
+    echo "Missing verified root-owned automatic rollback pointer" >&2; exit 1;
+  }
+  previous_sha="$(cat "$pointer")"
+  [[ "$previous_sha" =~ ^[0-9a-f]{40}$ && "$previous_sha" != "$sha" ]] || exit 1
+  previous="$root/releases/$previous_sha"
+  [[ -d "$previous" && ! -L "$previous" && "$(cat "$previous/RELEASE-SHA")" == "$previous_sha" ]] || exit 1
+  diff -qr -- "$previous/src/db/migrations" "$release/src/db/migrations" >/dev/null || {
+    echo "Schema-incompatible automatic recovery refused" >&2; exit 1;
+  }
+fi
+
 switch_link() {
   local link="$1" target="$2" next="${1}.next.$$"
   ln -s "$target" "$next"
   mv -Tf -- "$next" "$link"
 }
+
+if [[ "$mode" == recover ]]; then
+  # Only the previously verified compatible application can be restored.
+  switch_link "$web_link" "$previous"
+  switch_link "$worker_link" "$previous"
+  systemctl reset-failed menuminute-web.service menuminute-worker.service
+  systemctl restart menuminute-web.service menuminute-worker.service
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  recovered=false
+  for i in {1..10}; do
+    if curl --silent --show-error --fail --max-time 4 http://127.0.0.1:3100/api/health/ready |
+      python3 -c 'import json,sys; j=json.load(sys.stdin); assert j["status"]=="ready" and j["database"] and j["redis"]["queue"] and j["redis"]["cache"]' 2>/dev/null; then
+      recovered=true
+      break
+    fi
+    sleep 2
+  done
+  [[ "$recovered" == true ]] && erp_healthy || { echo "Emergency: application recovery failed verification" >&2; exit 1; }
+  echo "RECOVERED: restored previously healthy compatible release $previous_sha"
+  exit 0
+fi
+
+# Repeated delivery of the already-live release performs verification only.
+if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]; then
+  systemctl is-active --quiet menuminute-web.service
+  systemctl is-active --quiet menuminute-worker.service
+  curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready |
+    python3 -c 'import json,sys; assert json.load(sys.stdin)["status"]=="ready"'
+  echo "ALREADY_ACTIVE: $sha"
+  exit 0
+fi
+if [[ "$mode" == autoactivate ]]; then
+  install -d -o root -g root -m 0700 "$rollback_root"
+  pointer="$rollback_root/$sha"
+  [[ ! -L "$pointer" ]] || { echo "Unsafe rollback pointer" >&2; exit 1; }
+  printf '%s\n' "$old_sha" > "$pointer"
+  chown root:root "$pointer"
+  chmod 0600 "$pointer"
+fi
 
 switched=false
 restore_previous() {
@@ -298,7 +358,8 @@ done
 [[ "$ready" == true ]] || { echo "MenuMinute readiness failed" >&2; false; }
 erp_healthy || { echo "ERP postflight failed" >&2; false; }
 trap - ERR
-echo "Activated release $sha; ERP preflight/postflight and MenuMinute readiness passed"
-# Verify activation marker without mutating the previous root-owned release.
+# Both identities are checked while rollback protection is still active.
 test "$(cat "$web_link/RELEASE-SHA")" = "$sha"
 test "$(cat "$worker_link/RELEASE-SHA")" = "$sha"
+trap - ERR
+echo "Activated release $sha; ERP preflight/postflight and MenuMinute readiness passed"
