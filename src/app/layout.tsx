@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | MenuMinute",
   },
   description:
-    "Create beautiful digital menus and QR codes for free. Accept online orders and manage your kitchen — built for restaurants of all sizes.",
+    "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
   authors: [{ name: "MenuMinute" }],
   creator: "MenuMinute",

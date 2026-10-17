@@ -5,33 +5,33 @@ import { CheckCircle, QrCode } from "lucide-react";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing for restaurants of all sizes. Start free, upgrade when you're ready.",
+    "Free permanent QR menus today. Upcoming ordering and kitchen plans have no finalized prices.",
 };
 
 const plans = [
   {
     name: "Free Forever",
-    price: "₹0",
+    price: "Free",
     period: "forever",
     description: "Everything you need to go digital with a beautiful QR menu.",
     cta: "Get started free",
     ctaHref: "/register",
     primary: false,
     features: [
-      "Unlimited menu items",
+      "Categories, dishes and descriptions",
       "Menu categories and variants",
       "Item photos and descriptions",
       "Permanent QR code",
       "Mobile-optimised menu view",
       "No customer registration",
-      "Custom branding",
+      "Restaurant identity",
     ],
   },
   {
     name: "Online Ordering",
-    price: "₹149",
-    period: "per month",
-    description: "Accept orders directly from tables. Real-time management included.",
+    price: "TBA",
+    period: "Terms pending",
+    description: "Planned: dine-in and pickup with merchant acceptance. Not available yet.",
     cta: "Coming soon",
     ctaHref: "#",
     primary: true,
@@ -47,9 +47,9 @@ const plans = [
   },
   {
     name: "Kitchen Pro",
-    price: "₹299",
-    period: "per month",
-    description: "A complete kitchen and operations platform for growing restaurants.",
+    price: "TBA",
+    period: "Terms pending",
+    description: "Planned kitchen tickets and preparation workflow. Not available yet.",
     cta: "Coming soon",
     ctaHref: "#",
     primary: false,
@@ -101,7 +101,7 @@ export default function PricingPage() {
         <div className="mb-16 text-center">
           <h1 className="mb-4 text-4xl font-bold text-stone-900">Simple, transparent pricing</h1>
           <p className="mx-auto max-w-2xl text-xl text-stone-600">
-            Start free. Upgrade only when you&apos;re ready for more. No hidden fees.
+            Free QR menus are available now. Ordering and Kitchen Pro pricing and subscription terms are not finalized.
           </p>
         </div>
 
@@ -140,18 +140,21 @@ export default function PricingPage() {
               <p className={`mb-6 text-sm ${plan.primary ? "text-brand-100" : "text-stone-600"}`}>
                 {plan.description}
               </p>
-              <Link
-                href={plan.ctaHref}
-                className={`mb-8 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
-                  plan.primary
-                    ? "text-brand-700 hover:bg-brand-50 bg-white"
-                    : plan.soon
-                      ? "cursor-not-allowed bg-stone-100 text-stone-400"
-                      : "bg-brand-600 hover:bg-brand-700 text-white"
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              {plan.soon ? (
+                <span
+                  aria-disabled="true"
+                  className="mb-8 block w-full cursor-not-allowed rounded-xl bg-stone-100 py-3 text-center text-sm font-semibold text-stone-600"
+                >
+                  Coming soon · pricing pending
+                </span>
+              ) : (
+                <Link
+                  href={plan.ctaHref}
+                  className="bg-brand-600 hover:bg-brand-700 mb-8 block w-full rounded-xl py-3 text-center text-sm font-semibold text-white transition-colors"
+                >
+                  {plan.cta}
+                </Link>
+              )}
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5 text-sm">
