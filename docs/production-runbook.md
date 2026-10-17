@@ -66,10 +66,10 @@ The source systemd templates use `/usr/bin/node` as an initial placeholder; the 
 ## Release channels and agent/operator responsibilities
 
 1. Agent creates a scoped PR from current `main`, documents migration compatibility and rollback, runs tests, and **does not use production credentials or the VPS for CI**.
-2. All four native `ubuntu-24.04-arm` checks must pass on the final PR SHA: Lint & Code Style; TypeScript Strict Typecheck; PostgreSQL & Redis Integration; Production Build & Browser. Do not merge a predecessor SHA's green checks.
-3. A successful **push-to-main CI** allows `.github/workflows/publish-arm64.yml` to publish `arm64-<first-12-sha>` with a native ARM64 archive and adjacent SHA-256 file. Successful same-repository main publisher completion triggers automatic checksum-verified staging and, when the candidate is still the latest `main` and its migration tree exactly matches the running release, activation. PR-triggered packaging is only a smoke test. Migration-changing releases remain on the manual path; no workflow path runs SQL automatically.
+2. All four native `ubuntu-24.04-arm` checks plus their aggregate quality gate must pass on the final PR SHA: Lint & Code Style; TypeScript Strict Typecheck; PostgreSQL & Redis Integration; Production Build & Browser. Do not merge a predecessor SHA's green checks.
+3. A successful **push-to-main CI** packages the tested production build once and allows `.github/workflows/publish-arm64.yml` to publish `arm64-<first-12-sha>` with a native ARM64 archive and adjacent SHA-256 file. Successful same-repository main publisher completion triggers automatic checksum-verified staging and, when the candidate is still the latest `main` and its migration tree exactly matches the running release, activation. PR-triggered packaging is only a smoke test. Migration-changing releases remain on the manual path; no workflow path runs SQL automatically.
 4. **Manual first-install path** already used on the host: verify archive SHA-256 and embedded full commit, extract root-owned `releases/<SHA>`, validate production modules, link persistent cache, provision private Node/systemd/env, perform backup -> migration -> backup under migration-owner, then explicitly switch both links/start MenuMinute units. Do not repeat first-install steps destructively on an already-live host.
-5. **Actions path:** `.github/workflows/deploy-vps.yml` accepts a successful main publisher `workflow_run` for verified automatic activation, or a manual `workflow_dispatch` on `main`; it uses the GitHub `production` environment, pinned SSH host identity, restricted `menuminute-deploy` account, a direct verified public GitHub HTTPS pull (no rsync), and root-installed `infra/deploy/menuminute-release`. Automatic activation fails closed on changed, unreadable or symlinked migration trees and does not create an approval marker. Manual `activate=true` with the root-owned per-SHA approval marker remains the path for reviewed migration changes and rollback. It never touches Nginx, ERP, or automatically applies/rolls back migrations. Review `docs/deployment-actions.md`; GitHub source changes are not themselves evidence of VPS installation.
+5. **Actions path:** `.github/workflows/deploy-vps.yml` accepts a successful main publisher `workflow_run` for verified automatic activation, or a manual `workflow_dispatch` on `main`; it separates `production-staging` from the URL-linked `production` activation environment, uses pinned SSH host identity, restricted `menuminute-deploy` account, a direct verified public GitHub HTTPS pull (no rsync), and root-installed `infra/deploy/menuminute-release`. Automatic activation fails closed on changed, unreadable or symlinked migration trees and does not create an approval marker. Manual `activate=true` with the root-owned per-SHA approval marker remains the path for reviewed migration changes and rollback. It never touches Nginx, ERP, or automatically applies/rolls back migrations. Review `docs/deployment-actions.md`; GitHub source changes are not themselves evidence of VPS installation.
 6. **Manual-to-Actions handoff and failed first activation:** the initial live `a259f77...` release has no helper-issued `.release-archive-sha256` marker; never overwrite or invent one. Stage a distinct immutable SHA through the helper. The `a74adfe...` stage succeeded, but its first activation failed with `200/CHDIR`; the verified archive stayed intact, both pointers were restored to the original SHA, and the operator subsequently recovered both services. PR #32 fixed permission normalization, real runtime-user preflight and rollback start-limit handling. The operator installed that root-owned helper from pinned `364f3a5...`, verified/normalized only staged `a74adfe...`, confirmed web and worker user access, reran idempotent stage, and reported web/worker active, readiness healthy and ERP 200. Approval was revoked: do not infer that a new activation succeeded.
 7. Before automatic activation: full SHA/tag/checksum/source verification; current ERP 200; MenuMinute loopback readiness 200; adequate disk/ERP headroom; and an unchanged migration tree are required. For a migration-changing or rollback release, additionally require an encrypted off-host backup and tested recovery point, additive/checksummed migration and compatibility review, operator approval, and manual SQL application with the migration owner before atomically switching matching web/worker symlinks and restarting **only** MenuMinute services.
 8. After activation: `/api/health/live` 200, `/api/health/ready` 200 with database/queue/cache true, worker active, localhost listener only, public Cloudflare TLS 0 and ready 200, homepage/auth/tenant/media/QR smoke, ERP 200. Capture SHA, release/backup IDs, migration count and smoke outcome in release handoff.
@@ -110,3 +110,30 @@ The nightly script `/usr/local/sbin/menuminute-nightly-backup` and `menuminute-b
 - Do not run destructive cache/queue flushes, migrations or cleanup on the shared ERP host. Keep immutable prior releases until approved retention and recovery conditions are met.
 
 Related contracts: [Actions deployment](deployment-actions.md), [architecture](architecture.md), [operations](operations.md), [server inventory](server-inventory.md), [environment](environment.md), [Phase 3 media](menu-product/operations.md), and [agent rules](../AGENTS.md).
+
+## CI/CD 2.0 operator handoff (source change, not verified VPS state)
+
+The main CI artifact contains only allowlisted native ARM64 runtime outputs,
+reviewed SQL migrations and production dependencies. Publication verifies
+the original successful main CI run ID and final aggregate quality gate;
+deploy checks the publisher's provenance artifact, rather than trusting
+a downstream workflow SHA. The stage job uses `production-staging`. Only
+an eligible cutover appears in the `production` GitHub environment with
+https://food.bababuilds.com as the application URL. A readiness response
+with a missing/mismatched public release SHA is **not** verified live.
+Automatic recovery restores only the previously healthy schema-compatible
+web/worker application if a post-cutover public check fails.
+
+The installed root-owned helper must explicitly report version **2** before
+using this design. The one-time audited upgrade and GitHub secret/variable
+names are recorded in [deployment-actions](deployment-actions.md).
+The original helper's presence does not establish support for eligibility,
+verification or recovery. Retain the prior helper as a root-owned backup;
+do not modify global Node, systemd services, shared Nginx, PostgreSQL,
+Redis, ERP, persistent media or migration ownership from Actions.
+
+Run statuses must distinguish staged/manual-review, superseded, verified
+activation, recovered application and failed/unverified. Record the exact
+main SHA, immutable release, checksum, CI ID, timestamps, both symlinks,
+public SHA, service and ERP outcomes after any deployment. No source-only PR
+asserts that the VPS upgrade or a production cutover has occurred.

@@ -59,7 +59,7 @@ the product planning context is Food Minutes. Do not rename the product incident
 
 ## Production change ownership
 
-- A PR merge is **not by itself** a deployment. Final native ARM64 CI on the latest SHA, artifact
+- A PR merge is **not by itself** a deployment. Final native ARM64 CI on the latest SHA (all four lanes and aggregate gate), artifact
   digest, the configured production environment gate, ERP/readiness checks and migration
   compatibility are required. The approved continuous path may activate only when migration trees
   are unchanged; schema changes still require the reviewed operator migration/activation path.
@@ -85,3 +85,19 @@ lockfile, auth, layout and CI changes have one writer at a time. Publish produce
 parallel consumers; use isolated checkouts and supply the completion handoff. Logical lane ownership
 does not replace service authorization or independent review. See the orchestration ownership map,
 architecture contracts and delivery process for exact rules.
+
+## Continuous delivery invariants
+
+PRs may test packaging but cannot publish, receive production secrets, or activate.
+The main publisher consumes the exact verified CI artifact and records the source
+CI run ID and full SHA in the handoff; never trust the downstream
+`workflow_run.head_sha` as the source identity. Staging uses the
+`production-staging` environment and is **not** a live deployment. Only an
+eligible activation job uses the `production` environment and advertises
+https://food.bababuilds.com. Automatic deployment requires helper v2 installed
+root-owned, matching migration trees and the latest main SHA immediately before
+cutover. The helper must verify both service users, source archive and paired
+runtime identities. Public-readiness release identity must equal the candidate
+SHA. A failed public check may restore only a verified schema-compatible
+application release, never SQL or customer data. Preserve GitHub Environment
+protections; a configured required reviewer remains an explicit operator gate.
