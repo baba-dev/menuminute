@@ -131,8 +131,11 @@ Insert this _single allowlisted command_ in that sudoers file, then
 menuminute-deploy ALL=(root) NOPASSWD: /usr/local/sbin/menuminute-release *
 ```
 
-The audited script rejects any mode other than `stage`/`activate`, validates
-full commit/checksum hex, confines its paths to MenuMinute, and uses `flock`.
+The audited script rejects any mode other than `stage`, `activate` or the
+guarded `autoactivate` path, validates full commit/checksum hex, confines its
+paths to MenuMinute, and uses `flock`. Install this helper from the merged PR
+commit before automatic activation is enabled; the source change alone does
+not replace the root-owned VPS copy.
 Never give the deploy account blanket sudo, root SSH, password login, git push,
 PM2, service-manager or Nginx permissions. The account may write only its
 incoming artifact and its own SSH home. Do not run a self-hosted Actions runner
