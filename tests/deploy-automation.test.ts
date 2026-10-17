@@ -5,10 +5,7 @@ import { describe, expect, it } from "vitest";
 const ci = readFileSync(path.resolve(".github/workflows/ci.yml"), "utf8");
 const deploy = readFileSync(path.resolve(".github/workflows/deploy-vps.yml"), "utf8");
 const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml"), "utf8");
-const packageScript = readFileSync(
-  path.resolve("infra/deploy/package-release.sh"),
-  "utf8"
-);
+const packageScript = readFileSync(path.resolve("infra/deploy/package-release.sh"), "utf8");
 
 describe("provenance-bound main-only production delivery", () => {
   it("parallelizes four mandatory CI lanes and fails closed at the final gate", () => {

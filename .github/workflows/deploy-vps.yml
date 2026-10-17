@@ -132,7 +132,6 @@ jobs:
             test "$(jq -r .artifact_bytes published-source.json)" = "$(stat -c %s "$RUNNER_TEMP/menuminute-$short-linux-arm64.tar.gz")"
           fi
 
-
       - name: Configure pinned SSH host identity
         if: steps.source.outputs.superseded != 'true'
         shell: bash
@@ -150,7 +149,6 @@ jobs:
           chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
           ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
           echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
-
 
       - name: Pull and stage checked release on VPS
         if: steps.source.outputs.superseded != 'true'
@@ -203,7 +201,6 @@ jobs:
           # artifact against the authenticated release digest before extraction.
           sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"
           REMOTE
-
 
       - name: Confirm staged automatic-activation policy
         if: steps.source.outputs.superseded != 'true'
@@ -266,7 +263,6 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-
   activate:
     name: Activate and publicly verify production
     needs: stage
@@ -303,7 +299,6 @@ jobs:
           chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
           ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
           echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
-
 
       - name: Exact main recheck and root-owned cutover
         id: cutover

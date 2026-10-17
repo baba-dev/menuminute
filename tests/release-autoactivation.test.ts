@@ -16,7 +16,7 @@ describe("fail-closed automatic release activation", () => {
   });
 
   it("validates archive members before extraction", () => {
-    expect(helper.indexOf("python3 - \"$temp/archive.tar.gz\"")).toBeLessThan(
+    expect(helper.indexOf('python3 - "$temp/archive.tar.gz"')).toBeLessThan(
       helper.indexOf('tar -xzf "$temp/archive.tar.gz"')
     );
     expect(helper).toContain("Unsafe archive member path");
@@ -39,8 +39,8 @@ describe("fail-closed automatic release activation", () => {
   });
 
   it("requires healthy current MenuMinute and ERP before cutting over", () => {
-    expect(helper).toContain('http://127.0.0.1:3100/api/health/ready');
-    expect(helper).toContain('http://127.0.0.1:3000/');
+    expect(helper).toContain("http://127.0.0.1:3100/api/health/ready");
+    expect(helper).toContain("http://127.0.0.1:3000/");
     expect(helper).toContain('erp_healthy || { echo "ERP preflight failed');
     expect(helper).toContain('erp_healthy || { echo "ERP postflight failed');
     expect(workflow).toContain("Exact main recheck and root-owned cutover");
@@ -58,7 +58,9 @@ describe("fail-closed automatic release activation", () => {
   it("restores paired web/worker pointers without database rollback", () => {
     expect(helper).toContain('switch_link "$web_link" "$old_web"');
     expect(helper).toContain('switch_link "$worker_link" "$old_worker"');
-    expect(helper).toContain("systemctl reset-failed menuminute-web.service menuminute-worker.service");
+    expect(helper).toContain(
+      "systemctl reset-failed menuminute-web.service menuminute-worker.service"
+    );
     expect(helper).toContain('[[ "$mode" == recover ]]');
     expect(helper).toContain("Schema-incompatible automatic recovery refused");
     expect(helper).toContain('"$rollback_root/$sha"');
