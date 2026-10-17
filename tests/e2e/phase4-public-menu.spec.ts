@@ -10,7 +10,9 @@ test("a revoked public QR response clears previously rendered dishes instead of 
     route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
   );
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
-  await expect(page.getByText("This menu is no longer available. Please ask the staff.")).toBeVisible();
+  await expect(
+    page.getByText("This menu is no longer available. Please ask the staff.")
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Paneer Tikka" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "No dishes in this service" })).toBeVisible();
 });
