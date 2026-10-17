@@ -60,6 +60,26 @@ describe("provenance-bound main-only production delivery", () => {
     expect(deploy).toContain("Push-to-verified-public elapsed");
   });
 
+
+  it("reads the publisher handoff from the workspace after moving to RUNNER_TEMP", () => {
+    const verify = deploy.split("      - name: Verify immutable main release identity")[1]
+      .split("      - name: Configure pinned SSH host identity")[0];
+    expect(verify).toContain('cd "$RUNNER_TEMP"');
+    expect(verify).toContain('handoff="$GITHUB_WORKSPACE/published-source.json"');
+    expect(verify).toContain('test -s "$handoff"');
+    expect(verify).toContain('jq -r .artifact_sha256 "$handoff"');
+    expect(verify).toContain('jq -r .artifact_name "$handoff"');
+    expect(verify).toContain('jq -r .artifact_bytes "$handoff"');
+    expect(verify).not.toContain('jq -r .artifact_sha256 published-source.json');
+  });
+
+  it("marks a superseded production attempt as failed rather than successfully deployed", () => {
+    const cutover = deploy.split("      - name: Exact main recheck and root-owned cutover")[1]
+      .split("      - name: Public HTTPS, dependency and route verification")[0];
+    expect(cutover).toContain("Superseded immediately before production activation");
+    expect(cutover).toMatch(/echo "superseded=true" >> "\$GITHUB_OUTPUT"\s+# A production job must not be marked successful when nothing was deployed\.\s+exit 1/);
+  });
+
   it("keeps pinned SSH and only calls the root-owned allowlisted helper", () => {
     expect(deploy).toContain("StrictHostKeyChecking=yes");
     expect(deploy).toContain("VPS_SSH_KNOWN_HOSTS");

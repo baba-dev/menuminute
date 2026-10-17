@@ -130,7 +130,7 @@ Insert this _single allowlisted command_ in that sudoers file, then
 menuminute-deploy ALL=(root) NOPASSWD: /usr/local/sbin/menuminute-release *
 ```
 
-The audited v2 script allows only `stage`, `eligibility`, `activate`,
+The audited v3 script allows only `stage`, `eligibility`, `activate`,
 `autoactivate`, `verify` and schema-compatible `recover`, validates full commit/checksum hex, confines its
 paths to MenuMinute, and uses `flock`. Install this helper from the merged PR
 commit before automatic activation is enabled; the source change alone does
@@ -309,7 +309,7 @@ flowchart LR
   F --> G{Latest main and migrations unchanged?}
   G -->|No SQL changes| H[Production environment approval rules]
   G -->|Changed SQL| I[Staged: manual review required]
-  H --> J[Root-owned helper v2 cutover]
+  H --> J[Root-owned helper v3 cutover]
   J --> K[Loopback and public SHA verification]
   K -->|Pass| L[Verified live application]
   K -->|Fail| M[Compatible application recovery]
@@ -330,7 +330,7 @@ are uploaded to GitHub.
 
 **One-time helper upgrade (operator only, after PR is fully reviewed and merged):**
 Check the installed helper first using
-`sudo /usr/local/sbin/menuminute-release --version`; helper v2 is mandatory.
+`sudo /usr/local/sbin/menuminute-release --version`; helper v3 is mandatory for the corrected workflow. Existing v2 installs must remain in place until this hotfix is reviewed and the v3 blob is independently verified.
 Choose the final verified **merge** SHA, not this PR's intermediate head.
 Get its helper blob SHA independently using
 `git ls-tree <FULL_MERGE_SHA> infra/deploy/menuminute-release` from a trusted
@@ -350,7 +350,7 @@ test "$(git hash-object "$tmp")" = "$EXPECTED_BLOB"
 bash -n "$tmp"
 sudo cp -a /usr/local/sbin/menuminute-release /usr/local/sbin/menuminute-release.previous
 sudo install -o root -g root -m 0750 "$tmp" /usr/local/sbin/menuminute-release
-test "$(sudo /usr/local/sbin/menuminute-release --version)" = 2
+test "$(sudo /usr/local/sbin/menuminute-release --version)" = 3
 ```
 
 Do not silently assume the source version replaces the VPS control plane.
@@ -379,3 +379,27 @@ cache, not success. Reconcile any failed automatic recovery manually while
 preserving database/media and ERP. The [baseline](ci-cd-baseline.md) measures
 historical staging, not verified live. Measure from the main push through
 successful public SHA verification, counting queue delay separately.
+
+
+### Post-merge staging and rollback safety hotfix
+
+The CI/CD 2.0 first post-merge run failed before SSH because release identity
+verification used a relative `published-source.json` after changing directory
+to `$RUNNER_TEMP`. Resolve it from `$GITHUB_WORKSPACE`, keep the archive in
+`$RUNNER_TEMP`, and validate digest, filename and byte length together.
+
+A superseded release at the final `production` job recheck fails that GitHub
+job rather than writing a successful production deployment without a cutover.
+This is an intentionally fail-closed, not a verified-live, outcome.
+
+Helper v3 adds the migration-tree compatibility check to the *immediate*
+activation-failure ERR trap. If a manually approved migration changed that
+tree, do not auto-restore the old app or SQL/data; emit an emergency operator
+instruction. Existing automatic recover continues to require matching trees.
+
+**Upgrade order:** Keep the `production-staging` environment approval gate
+in place; review the hotfix PR and its complete CI; independently verify the
+final reviewed v3 helper Git blob; back up and install it as root:root 0750
+on the VPS; verify the deploy account sees `--version` = `3`; only then
+merge/allow the next main publisher to stage. Never use `main` as an unpinned
+source URL while installing the helper. A normal PR CI never activates production.
