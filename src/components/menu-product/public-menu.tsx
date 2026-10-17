@@ -27,7 +27,15 @@ export function PublicMenu({
           cache: "no-store",
         });
         if (!r.ok) {
-          if (!stopped) setStatus("This menu is no longer available. Please ask the staff.");
+          if (!stopped) {
+            if (r.status === 404 || r.status === 410) {
+              // Revoked/deleted QR must not leave stale published dishes on screen.
+              setData((previous) => ({ ...previous, menus: [] }));
+              setStatus("This menu is no longer available. Please ask the staff.");
+            } else {
+              setStatus("Menu updates could not be checked. This view may be outdated.");
+            }
+          }
           return;
         }
         const next = await r.json();
@@ -197,7 +205,12 @@ export function PublicMenu({
                                 {i.variants.length ? "From " : ""}
                                 {formatPrice(
                                   i.variants.length
-                                    ? Math.min(...i.variants.map((v) => v.priceMinor))
+                                    ? Math.min(
+                                        ...(i.variants.some((v) => v.isAvailable)
+                                          ? i.variants.filter((v) => v.isAvailable)
+                                          : i.variants
+                                        ).map((v) => v.priceMinor)
+                                      )
                                     : i.priceMinor,
                                   m.view.currency
                                 )}
