@@ -61,8 +61,14 @@ describe("merchant dashboard published-source summary", () => {
       publishedDishCount: 2,
       hasPublicMenu: true,
     });
-    expect(dashboardSummary([], codes.map((q) => ({ ...q, isActive: false })), {
-      menus: [{ document: { categories: [{ items: [{}] }] } }],
-    }).hasPublicMenu).toBe(false);
+    expect(
+      dashboardSummary(
+        [],
+        codes.map((q) => ({ ...q, isActive: false })),
+        {
+          menus: [{ document: { categories: [{ items: [{}] }] } }],
+        }
+      ).hasPublicMenu
+    ).toBe(false);
   });
 });
