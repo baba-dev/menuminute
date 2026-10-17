@@ -46,6 +46,7 @@ jobs:
       ci_created_at: ${{ steps.source.outputs.ci_created_at }}
       digest: ${{ steps.artifact.outputs.digest }}
       eligible: ${{ steps.policy.outputs.eligible }}
+      staging_seconds: ${{ steps.transport.outputs.staging_seconds }}
     env:
       GH_TOKEN: ${{ github.token }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -152,9 +153,19 @@ jobs:
 
       - name: Pull and stage checked release on VPS
         if: steps.source.outputs.superseded != 'true'
+        id: transport
         shell: bash
         run: |
           set -Eeuo pipefail
+          stage_start="$(date -u +%s)"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$latest" != "$RELEASE_SHA" ]]; then
+              echo "superseded=true" >> "$GITHUB_OUTPUT"
+              echo "Superseded before staging; no live release changed"
+              exit 0
+            fi
+          fi
           # SSH carries only a short, pinned command. Public GitHub HTTPS carries
           # the large archive directly to the VPS; no root SSH or server build.
           short="${RELEASE_SHA:0:12}"
@@ -201,9 +212,10 @@ jobs:
           # artifact against the authenticated release digest before extraction.
           sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"
           REMOTE
+          echo "staging_seconds=$(( $(date -u +%s) - stage_start ))" >> "$GITHUB_OUTPUT"
 
       - name: Confirm staged automatic-activation policy
-        if: steps.source.outputs.superseded != 'true'
+        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
         id: policy
         env:
           AUTO: ${{ github.event_name == 'workflow_run' }}
@@ -241,7 +253,8 @@ jobs:
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
           MANUAL_REQUIRED: ${{ steps.policy.outputs.manual_required }}
-          SUPERSEDED_BEFORE: ${{ steps.source.outputs.superseded }}
+          SUPERSEDED_BEFORE: ${{ steps.source.outputs.superseded || steps.transport.outputs.superseded }}
+          STAGING_SECONDS: ${{ steps.transport.outputs.staging_seconds }}
           SUPERSEDED_AFTER: ${{ steps.policy.outputs.superseded }}
           ELIGIBLE: ${{ steps.policy.outputs.eligible }}
         run: |
@@ -252,6 +265,7 @@ jobs:
             echo "| SHA | \`$SOURCE_SHA\` |"
             echo "| Release | [arm64-${SOURCE_SHA:0:12}](https://github.com/$GITHUB_REPOSITORY/releases/tag/arm64-${SOURCE_SHA:0:12}) |"
             echo "| Digest | \`${DEPLOY_DIGEST:-not downloaded}\` |"
+            echo "| Staging elapsed | ${STAGING_SECONDS:-not started} seconds |"
             if [[ "$MANUAL_REQUIRED" == true ]]; then
               echo "| Outcome | Staged — manual migration review and approval required. Not deployed. |"
             elif [[ "$SUPERSEDED_BEFORE" == true || "$SUPERSEDED_AFTER" == true ]]; then
@@ -278,6 +292,7 @@ jobs:
       DEPLOY_DIGEST: ${{ needs.stage.outputs.digest }}
       SOURCE_CI_RUN_ID: ${{ needs.stage.outputs.ci_id }}
       SOURCE_CI_CREATED_AT: ${{ needs.stage.outputs.ci_created_at }}
+      STAGING_SECONDS: ${{ needs.stage.outputs.staging_seconds }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
@@ -315,8 +330,21 @@ jobs:
             fi
             mode=autoactivate
           fi
-          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 2 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"
-          echo "activated=true" >> "$GITHUB_OUTPUT"
+          started="$(date -u +%s)"
+          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 2 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
+            echo "activated=true" >> "$GITHUB_OUTPUT"
+            echo "activation_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Cutover/verification failed; requesting compatible recovery if candidate became live"
+            if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+              if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release recover $RELEASE_SHA $DEPLOY_DIGEST"; then
+                echo "rollback=verified" >> "$GITHUB_OUTPUT"
+              else
+                echo "rollback=not-applicable-or-failed; operator review required" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+            exit 1
+          fi
       - name: Public HTTPS, dependency and route verification
         if: steps.cutover.outputs.activated == 'true'
         id: public
@@ -374,6 +402,8 @@ jobs:
           VERIFIED: ${{ steps.public.outputs.verified }}
           ROLLBACK: ${{ steps.public.outputs.rollback }}
           VERIFY_SECONDS: ${{ steps.public.outputs.verification_seconds }}
+          ACTIVATION_SECONDS: ${{ steps.cutover.outputs.activation_seconds }}
+          CUTOVER_ROLLBACK: ${{ steps.cutover.outputs.rollback }}
         run: |
           {
             echo "## MenuMinute production deployment"
@@ -387,8 +417,10 @@ jobs:
             echo "| Verified artifact checksum | \`$DEPLOY_DIGEST\` |"
             echo "| Source CI | [run $SOURCE_CI_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID) |"
             echo "| Completed UTC | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+            echo "| Staging | ${STAGING_SECONDS:-not recorded} seconds |"
+            echo "| Activation | ${ACTIVATION_SECONDS:-not completed} seconds |"
             echo "| Public verification | ${VERIFY_SECONDS:-not completed} seconds |"
-            echo "| Rollback | ${ROLLBACK:-not required or activation failed before public check} |"
+            echo "| Rollback | ${ROLLBACK:-${CUTOVER_ROLLBACK:-not required}} |"
             if [[ "$SUPERSEDED" == true ]]; then
               echo "| Outcome | Superseded; no live cutover |"
             elif [[ "$CUTOVER" == true && "$VERIFIED" == true ]]; then
