@@ -5,7 +5,7 @@ set -Eeuo pipefail
 umask 027
 
 if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
-  echo 2
+  echo 3
   exit 0
 fi
 
@@ -195,6 +195,15 @@ if [[ -n "$old_web" ]]; then
   }
 fi
 
+# Migration files are the only supported proof for automatic application-only
+# restoration. Missing, symlinked, unreadable or changed trees are NOT proof.
+migration_trees_identical() {
+  local previous="$1" candidate="$2"
+  [[ -d "$previous/src/db/migrations" && -d "$candidate/src/db/migrations" &&
+     ! -L "$previous/src/db/migrations" && ! -L "$candidate/src/db/migrations" ]] &&
+    diff -qr -- "$previous/src/db/migrations" "$candidate/src/db/migrations" >/dev/null
+}
+
 # The owner authorized continuous activation on 2026-10-17. Automatic releases
 # must use the same migration files as the running application. SQL changes
 # retain the separate reviewed migration + per-SHA manual activation path.
@@ -204,7 +213,7 @@ if [[ "$mode" == autoactivate || "$mode" == eligibility ]]; then
      ! -L "$old_web/src/db/migrations" && ! -L "$release/src/db/migrations" ]] || {
     echo "Automatic activation requires an existing release with migration history" >&2; exit 1;
   }
-  diff -qr -- "$old_web/src/db/migrations" "$release/src/db/migrations" >/dev/null || {
+  migration_trees_identical "$old_web" "$release" || {
     echo "STAGED_MANUAL: Migration files changed; operator review required" >&2
     if [[ "$mode" == eligibility ]]; then exit 20; fi
     exit 1
@@ -257,7 +266,7 @@ if [[ "$mode" == recover ]]; then
   [[ "$previous_sha" =~ ^[0-9a-f]{40}$ && "$previous_sha" != "$sha" ]] || exit 1
   previous="$root/releases/$previous_sha"
   [[ -d "$previous" && ! -L "$previous" && "$(cat "$previous/RELEASE-SHA")" == "$previous_sha" ]] || exit 1
-  diff -qr -- "$previous/src/db/migrations" "$release/src/db/migrations" >/dev/null || {
+  migration_trees_identical "$previous" "$release" || {
     echo "Schema-incompatible automatic recovery refused" >&2; exit 1;
   }
 fi
@@ -313,8 +322,14 @@ switched=false
 restore_previous() {
   trap - ERR
   if [[ "$switched" == true ]]; then
-    echo "Release activation failed; restoring previous application links" >&2
     if [[ -n "$old_web" ]]; then
+      # Manual activation may follow an irreversible database migration. The
+      # ERR trap must obey the same compatibility policy as explicit recover.
+      if ! migration_trees_identical "$old_web" "$release"; then
+        echo "EMERGENCY: Refusing automatic restoration to a potentially schema-incompatible previous release. Inspect MenuMinute links/services and resolve forward; database and data were not rolled back." >&2
+        return 0
+      fi
+      echo "Release activation failed; restoring schema-compatible previous application links" >&2
       switch_link "$web_link" "$old_web"
       switch_link "$worker_link" "$old_worker"
       # A failed new release may have exhausted StartLimitBurst. Clear only
