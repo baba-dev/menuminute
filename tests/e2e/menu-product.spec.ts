@@ -132,9 +132,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
     .getByLabel("Rights or source confirmation")
     .fill("I own this restaurant test photograph");
   await page.getByRole("button", { name: "Upload photo", exact: true }).click();
-  await expect(page.locator(".product [role='alert']")).toContainText(
-    "Photo exceeds 5 MiB"
-  );
+  await expect(page.locator(".product [role='alert']")).toContainText("Photo exceeds 5 MiB");
   await page.getByLabel("Dish photograph", { exact: true }).setInputFiles({
     name: "dish.png",
     mimeType: "image/png",
