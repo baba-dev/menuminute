@@ -151,6 +151,10 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await page.getByRole("button", { name: "Confirm publication" }).click();
   await expect(page.getByText("Your menu is live.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Manage permanent QR codes" })).toHaveAttribute(
+    "href",
+    "/dashboard/qr-codes"
+  );
   const guest = await page.context().newPage();
   await guest.goto(`/m/${f.token}`);
   await expect(guest.getByRole("heading", { name: "Signature thali" })).toBeVisible();

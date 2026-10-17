@@ -172,9 +172,9 @@ export function MenuStudio({
           .join("; ")
       );
     const result = await command("save", { document: parsed.data });
+    await load(detail.id);
     setDirty(false);
     setMessage("Draft saved. Publish when ready.");
-    await load(detail.id);
     return result.revision as number;
   }
   async function run(work: () => Promise<void>) {
@@ -264,10 +264,12 @@ export function MenuStudio({
                 headers,
                 body: JSON.stringify({ key: creationKey.current }),
               });
-              creationKey.current = id();
               const next = await json("/api/catalog");
               setList(next);
               await load(result.menuId);
+              // Do not rotate a successful request identity until reconciliation completes.
+              // If the list/load response was lost, retry with the same key, not a duplicate menu.
+              creationKey.current = id();
               setMessage("Menu draft created");
             })
           }
@@ -302,8 +304,8 @@ export function MenuStudio({
             <strong>Your menu is live.</strong>
             <p>Your printed QR stays the same. Changes are ready for guests.</p>
           </div>
-          <a className="action ember" href={`/m/${outlet.publicId}`} target="_blank">
-            View public menu
+          <a className="action ember" href="/dashboard/qr-codes">
+            Manage permanent QR codes
           </a>
           <button type="button" onClick={() => setMilestone(false)}>
             Dismiss
@@ -326,7 +328,9 @@ export function MenuStudio({
                 {detail.archived
                   ? "Archived"
                   : detail.publishedRevision
-                    ? "Published · draft editable"
+                    ? detail.revision > detail.publishedRevision
+                      ? "Published · unpublished draft changes"
+                      : "Published · draft editable"
                     : "Draft"}
               </span>
               <span className="badge">Revision {detail.revision}</span>
@@ -1140,7 +1144,7 @@ export function MenuStudio({
               )}
             </div>
             <aside className="preview-phone no-print">
-              <span className="eyebrow">Live draft preview</span>
+              <span className="eyebrow">Private draft preview</span>
               <h2>{doc.name}</h2>
               <small>
                 {outlet.currency} · {outlet.timezone}
