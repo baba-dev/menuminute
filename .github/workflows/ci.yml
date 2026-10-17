@@ -153,6 +153,7 @@ jobs:
         env:
           NODE_ENV: production
           APP_URL: https://food.bababuilds.com
+          NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
       - run: pnpm build:worker
       - run: pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs

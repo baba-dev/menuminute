@@ -308,6 +308,7 @@ if [[ "$mode" == autoactivate ]]; then
   chmod 0600 "$pointer"
 fi
 
+echo "PREVIOUS_RELEASE=${old_sha:-none}"
 switched=false
 restore_previous() {
   trap - ERR
@@ -357,7 +358,6 @@ for i in {1..15}; do
 done
 [[ "$ready" == true ]] || { echo "MenuMinute readiness failed" >&2; false; }
 erp_healthy || { echo "ERP postflight failed" >&2; false; }
-trap - ERR
 # Both identities are checked while rollback protection is still active.
 test "$(cat "$web_link/RELEASE-SHA")" = "$sha"
 test "$(cat "$worker_link/RELEASE-SHA")" = "$sha"
