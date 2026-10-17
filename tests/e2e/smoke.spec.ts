@@ -18,9 +18,9 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
     );
     await expect(page.getByText("Free Forever")).toBeVisible();
     await expect(page.getByText("Online Ordering")).toBeVisible();
-    await expect(page.getByText("Kitchen Pro")).toBeVisible();
-    await expect(page.getByText("₹149")).toBeVisible();
-    await expect(page.getByText("₹299")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Kitchen Pro", exact: true })).toBeVisible();
+    await expect(page.getByText("TBA", { exact: true })).toHaveCount(2);
+    await expect(page.getByText("Coming soon · pricing pending")).toHaveCount(2);
   });
 
   test("Demo page displays live QR code and sample showcase", async ({ page }) => {
