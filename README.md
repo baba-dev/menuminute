@@ -24,6 +24,8 @@ nightly backup operation, external alerting and capacity sign-off remain open. T
 has 4 visible ARM cores and 23 GiB RAM. See the [production runbook](docs/production-runbook.md)
 for actual paths, deployed SHA, live status and shared-ERP protections.
 
+Phase 4 merchant-readiness work is tracked by [execution epic #37](https://github.com/baba-dev/menuminute/issues/37) and [the scoped plan](docs/orchestration/phase-4.md). Its [acceptance matrix](docs/orchestration/phase-4-acceptance.md) separates integrated CI from the [operator-backed production checks](docs/orchestration/phase-4-ops-evidence.md); do not label Phase 4 complete solely on merged PRs or a deployment badge.
+
 Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
 [dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
 and [AI development primers](docs/ai-development-primers.md). Contributors must read [AGENTS.md](AGENTS.md).
@@ -41,7 +43,9 @@ for selected tactile emphasis; both use gradients and intent-driven motion. Serv
 routine dialogs, Ink Ticket for milestones and Chef's Note for optional guidance.
 
 Light / Dark / System is required app-wide, including marketing, authentication, guests, owner tools
-and kitchen. The starter UI is still orange/Inter, Orders/Kitchen are previews and AI is stubbed.
+and future kitchen surfaces. Phase 4 adds shared Ink & Ember primitives and improves current free-menu
+surfaces; older scaffold layouts need explicit visual acceptance. Orders/Kitchen remain previews and AI
+is stubbed.
 See [design system](docs/design-system.md), [buttons](docs/button-options.md) and
 [feedback/motion](docs/feedback-and-motion.md) for preserved implementation contracts.
 
