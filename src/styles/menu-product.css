@@ -492,13 +492,18 @@ body.font-sans {
   padding: 0.65rem 1.1rem;
   border: 1px solid var(--mm-border);
   border-radius: 13px;
-  font: 650 0.875rem/1.4 var(--font-dm), sans-serif;
+  font:
+    650 0.875rem/1.4 var(--font-dm),
+    sans-serif;
   text-decoration: none;
   text-align: center;
   background: var(--mm-surface);
   color: var(--mm-foreground);
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease;
 }
 .mm-action--flow,
 .product .mm-action--flow {
