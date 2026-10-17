@@ -65,20 +65,22 @@ export function PublicMenu({
     ...m,
     view: projectMenu(m.document, data.outlet.timezone, new Date(data.now), m.overrides),
   }));
+  const normalizedSearch = search.trim().toLowerCase();
+  const matches = (
+    item: { name: string; description: string; dietary: readonly string[] },
+    categoryName: string
+  ) =>
+    (!normalizedSearch ||
+      `${item.name} ${item.description} ${categoryName}`
+        .toLowerCase()
+        .includes(normalizedSearch)) &&
+    (diet === "all" || item.dietary.includes(diet));
   const shown = docs.reduce(
-    (n, m) =>
-      n +
-      m.view.categories.reduce(
-        (sum, c) =>
-          sum +
-          c.items.filter(
-            (i) =>
-              (!search ||
-                `${i.name} ${i.description} ${c.name}`
-                  .toLowerCase()
-                  .includes(search.toLowerCase())) &&
-              (diet === "all" || i.dietary.includes(diet as "vegan"))
-          ).length,
+    (count, menu) =>
+      count +
+      menu.view.categories.reduce(
+        (total, category) =>
+          total + category.items.filter((item) => matches(item, category.name)).length,
         0
       ),
     0
@@ -134,13 +136,18 @@ export function PublicMenu({
           </div>
           <nav aria-label="Menu categories" className="scroll-links">
             {docs.flatMap((m) =>
-              m.view.categories.map((c) => (
-                <a className="action" key={m.id + c.id} href={`#c-${m.id}-${c.id}`}>
-                  {c.name}
-                </a>
-              ))
+              m.view.categories
+                .filter((c) => c.items.some((i) => matches(i, c.name)))
+                .map((c) => (
+                  <a className="action" key={m.id + c.id} href={`#c-${m.id}-${c.id}`}>
+                    {c.name}
+                  </a>
+                ))
             )}
           </nav>
+          <p className="quiet" role="status">
+            {shown} {shown === 1 ? "dish" : "dishes"} shown
+          </p>
         </div>
         {status && (
           <p role="status" className="error">
@@ -161,14 +168,7 @@ export function PublicMenu({
                 </span>
               </div>
               {m.view.categories.map((c) => {
-                const items = c.items.filter(
-                  (i) =>
-                    (!search ||
-                      `${i.name} ${i.description} ${c.name}`
-                        .toLowerCase()
-                        .includes(search.toLowerCase())) &&
-                    (diet === "all" || i.dietary.includes(diet as "vegan"))
-                );
+                const items = c.items.filter((i) => matches(i, c.name));
                 if (!items.length) return null;
                 return (
                   <section key={c.id} id={`c-${m.id}-${c.id}`} className="stack">
