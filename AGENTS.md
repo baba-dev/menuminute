@@ -13,6 +13,9 @@ the product planning context is Food Minutes. Do not rename the product incident
 - Read `docs/product-requirements.md` for approved hierarchy, roles, fulfillment, currencies and expiry.
   USD/INR restrict platform subscription billing only; outlet transactions use supported local currencies.
 - `docs/implementation-plan.md` separates existing behavior from future acceptance gates.
+- Phase 4: read `docs/orchestration/phase-4.md`, `docs/orchestration/phase-4-acceptance.md`,
+  and `docs/orchestration/phase-4-ops-evidence.md`. A merged PR or successful CI does not
+  close operator-backed host, restored SQL+private media, off-host alerts or ERP coexistence gates.
 - Production targets **Linux ARM64/aarch64**, Ubuntu 24.04.4 LTS on the shared Oracle ERP
   server: 4 visible ARM cores, 23 GiB RAM, 72 GB root filesystem. See
   `docs/server-inventory.md` for the dated audit, constraints and outstanding launch inputs.
