@@ -8,7 +8,7 @@ permissions:
   contents: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   APP_URL: http://localhost:3000
   AUTH_SECRET: isolated-ci-key-with-at-least-thirty-two-characters
@@ -30,6 +30,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -43,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-node24-pnpm-store-
 
@@ -70,6 +71,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -86,6 +88,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -101,12 +104,12 @@ jobs:
   build:
     name: Production Build & Browser (ARM64)
     runs-on: ubuntu-24.04-arm
-    needs: [quality, typecheck, test]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -117,19 +120,40 @@ jobs:
         env:
           NODE_ENV: test
       - run: pnpm db:migrate
+      - name: Compile production artifact before browser fixtures
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          APP_URL: https://food.bababuilds.com
+          AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+      - run: pnpm build:worker
+      - run: pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs
       - run: pnpm db:seed
         env:
           NODE_ENV: test
           ALLOW_DEMO_SEED: "true"
           DEMO_PASSWORD: isolated-browser-password
-      - run: pnpm build
-        env:
-          NODE_ENV: production
-          APP_URL: https://menuminute.invalid
-          AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
-      - run: pnpm build:worker
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - name: Package exact tested ARM64 build
+        if: success()
+        run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
+      - name: Upload main production archive
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: menuminute-release-${{ github.sha }}
+          path: |
+            menuminute-*-linux-arm64.tar.gz
+            menuminute-*-linux-arm64.tar.gz.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -138,3 +162,22 @@ jobs:
           retention-days: 7
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v
+
+  gate:
+    name: Required CI quality gate
+    if: always()
+    needs: [quality, typecheck, test, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require all mandatory lanes
+        env:
+          QUALITY: ${{ needs.quality.result }}
+          TYPECHECK: ${{ needs.typecheck.result }}
+          TEST: ${{ needs.test.result }}
+          BUILD: ${{ needs.build.result }}
+        run: |
+          set -euo pipefail
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD"; do
+            test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
+          done
+          echo "All four lanes passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
