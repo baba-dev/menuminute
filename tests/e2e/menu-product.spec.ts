@@ -114,7 +114,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByRole("button", { name: "Add add-on group", exact: true }).click();
   await page.getByLabel("Add-on name 1", { exact: true }).fill("Extra bread");
   await page.getByLabel("Add-on price 1", { exact: true }).fill("0.500");
-  const extras = page.getByLabel("Add-on group 1").locator("xpath=ancestor::div[contains(@class,'panel')]");
+  const extras = page
+    .getByLabel("Add-on group 1")
+    .locator("xpath=ancestor::div[contains(@class,'panel')]");
   await extras.getByRole("checkbox", { name: "Available", exact: true }).uncheck();
   await extras.getByRole("checkbox", { name: "Available", exact: true }).check();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
