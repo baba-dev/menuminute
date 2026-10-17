@@ -953,8 +953,17 @@ export function MenuStudio({
                         onSubmit={(e) => {
                           e.preventDefault();
                           const f = new FormData(e.currentTarget);
-                          const file = f.get("photo") as File;
+                          const file = f.get("photo");
                           void run(async () => {
+                            if (!(file instanceof File) || !file.size) {
+                              throw new Error("Choose a JPEG, PNG or WebP photograph.");
+                            }
+                            if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                              throw new Error("Use a JPEG, PNG or WebP photograph.");
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                              throw new Error("Photo exceeds 5 MiB. Choose a smaller file.");
+                            }
                             await json("/api/media", {
                               method: "POST",
                               headers: {
@@ -965,7 +974,9 @@ export function MenuStudio({
                               body: file,
                             });
                             await refreshMedia();
-                            setMessage("Photo queued. Refresh after processing to review it.");
+                            setMessage(
+                              "Photo queued privately. Refresh after processing to review it."
+                            );
                           });
                         }}
                       >
@@ -1006,7 +1017,14 @@ export function MenuStudio({
                                 : "Processing photo"}
                           </strong>
 
-                          {a.lastError && <p>{a.lastError}</p>}
+                          <p>
+                            {a.approvedAt
+                              ? "Approved for selection in Menu Studio. Publish the draft to update the guest view."
+                              : a.status === "ready"
+                                ? "Private preview only. Approval does not publish your menu."
+                                : "The existing guest menu and photographs are unchanged."}
+                          </p>
+                          {a.lastError && <p role="status">{a.lastError}</p>}
                           {a.status === "ready" && (
                             <>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
