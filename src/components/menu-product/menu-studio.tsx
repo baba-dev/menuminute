@@ -955,14 +955,15 @@ export function MenuStudio({
                           const f = new FormData(e.currentTarget);
                           const file = f.get("photo");
                           void run(async () => {
-                            if (!(file instanceof File) || !file.size)
+                            if (!(file instanceof File) || !file.size) {
                               throw new Error("Choose a JPEG, PNG or WebP photograph.");
-                            if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
+                            }
+                            if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
                               throw new Error("Use a JPEG, PNG or WebP photograph.");
-                            if (file.size > 5 * 1024 * 1024)
-                              throw new Error(
-                                "The photo is larger than 5 MiB. Choose a smaller file."
-                              );
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                              throw new Error("Photo exceeds 5 MiB. Choose a smaller file.");
+                            }
                             await json("/api/media", {
                               method: "POST",
                               headers: {
