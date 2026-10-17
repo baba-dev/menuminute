@@ -42,10 +42,30 @@ export default async function DashboardPage() {
   const stats = dashboardSummary(menus, codes, publicProjection);
   const menuHref = primaryQr ? `/m/${encodeURIComponent(primaryQr.destinationToken)}` : null;
   const cards = [
-    { label: "Published menus", value: stats.publishedMenuCount, hint: "Guest-visible releases", Icon: BookOpen },
-    { label: "Published categories", value: stats.publishedCategoryCount, hint: "From current releases", Icon: Layers },
-    { label: "Published dishes", value: stats.publishedDishCount, hint: "Not unsaved edits", Icon: UtensilsCrossed },
-    { label: "Active menu QR codes", value: stats.activeQrCount, hint: "Permanent menu links", Icon: QrCode },
+    {
+      label: "Published menus",
+      value: stats.publishedMenuCount,
+      hint: "Guest-visible releases",
+      Icon: BookOpen,
+    },
+    {
+      label: "Published categories",
+      value: stats.publishedCategoryCount,
+      hint: "From current releases",
+      Icon: Layers,
+    },
+    {
+      label: "Published dishes",
+      value: stats.publishedDishCount,
+      hint: "Not unsaved edits",
+      Icon: UtensilsCrossed,
+    },
+    {
+      label: "Active menu QR codes",
+      value: stats.activeQrCount,
+      hint: "Permanent menu links",
+      Icon: QrCode,
+    },
   ];
 
   return (
@@ -54,9 +74,7 @@ export default async function DashboardPage() {
         <div className="grid min-w-0 gap-2">
           <span className="eyebrow">Your selected outlet</span>
           <h1 className="break-words">{outlet.name}</h1>
-          <p>
-            {[outlet.city, outlet.currency, outlet.timezone].filter(Boolean).join(" · ")}
-          </p>
+          <p>{[outlet.city, outlet.currency, outlet.timezone].filter(Boolean).join(" · ")}</p>
           {outlet.isDemoData && <span className="badge w-fit">Demo outlet</span>}
         </div>
         <Link href="/dashboard/menu" className="mm-action mm-action--flow shrink-0">
@@ -82,13 +100,18 @@ export default async function DashboardPage() {
               <span className="eyebrow">Ready for guests</span>
               <h2>Published menu ready</h2>
               <p>
-                Guests see the committed published release. Saving a draft will not change it
-                until you publish again.
+                Guests see the committed published release. Saving a draft will not change it until
+                you publish again.
               </p>
             </div>
             <div className="row">
               {menuHref && (
-                <Link href={menuHref} target="_blank" rel="noopener noreferrer" className="mm-action mm-action--press">
+                <Link
+                  href={menuHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mm-action mm-action--press"
+                >
                   View public menu <ExternalLink size={16} aria-hidden="true" />
                 </Link>
               )}
@@ -134,8 +157,8 @@ export default async function DashboardPage() {
           <div>
             <h2>Permanent QR codes</h2>
             <p>
-              Download PNG/SVG or print service-point codes. Printed links survive menu edits;
-              only explicit revocation/regeneration changes their identity.
+              Download PNG/SVG or print service-point codes. Printed links survive menu edits; only
+              explicit revocation/regeneration changes their identity.
             </p>
           </div>
           <Link href="/dashboard/qr-codes" className="mm-action mm-action--quiet w-fit">
