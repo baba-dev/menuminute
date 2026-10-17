@@ -35,7 +35,9 @@ test("failed outlet setup keeps the retry key for identical input and changes it
   const submit = page.getByRole("button", { name: "Create organization and outlet" });
   await page.getByLabel("Outlet name").fill("Phase Four Kitchen");
   await submit.click();
-  await expect(page.locator('form[aria-busy] [role="alert"]')).toContainText("Your entries are preserved");
+  await expect(page.locator('form[aria-busy] [role="alert"]')).toContainText(
+    "Your entries are preserved"
+  );
   await expect(page.getByLabel("Outlet name")).toHaveValue("Phase Four Kitchen");
 
   await page.getByLabel("Outlet name").fill("Phase Four Kitchen Updated");
