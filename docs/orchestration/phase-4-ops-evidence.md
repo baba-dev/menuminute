@@ -22,7 +22,7 @@ df -h / /var/lib/menuminute/media
 df -i / /var/lib/menuminute/media
 ```
 
-Use `/usr/local/sbin/menuminute-restic snapshots` with the existing protected wrapper (do not print auth variables, backup credentials or `r2.json`). Document observed repository location, latest snapshot age, database and media payload presence, retention and exit status only. The existing runbook lists older snapshots; snapshot *existence* alone is not a proven recovery point.
+Use `/usr/local/sbin/menuminute-restic snapshots` with the existing protected wrapper (do not print auth variables, backup credentials or `r2.json`). Document observed repository location, latest snapshot age, database and media payload presence, retention and exit status only. The existing runbook lists older snapshots; snapshot _existence_ alone is not a proven recovery point.
 
 ## Functional acceptance on a controlled test outlet
 
@@ -36,21 +36,21 @@ Use `/usr/local/sbin/menuminute-restic snapshots` with the existing protected wr
 ## Recovery and alert evidence gate
 
 - Operator agrees consistent SQL+private-media snapshot strategy: PostgreSQL custom-format dump and filesystem traversal taken separately are not atomic. Define write barrier or proven reconciliation; do not invent an RPO/RTO.
-- In **isolated disposable** resources, restore matching SQL *and* media (plus safely provisioned application configuration/compatible SHA), rehydrate required PostgreSQL privileges, and prove draft/published/QR/media correctness. Never restore into live production and never run an unreviewed migration on production.
+- In **isolated disposable** resources, restore matching SQL _and_ media (plus safely provisioned application configuration/compatible SHA), rehydrate required PostgreSQL privileges, and prove draft/published/QR/media correctness. Never restore into live production and never run an unreviewed migration on production.
 - Verify timer installation, next fire, successful recent service execution and nightly failure handling. Prove off-host alert delivery by approved non-destructive synthetic failure/test message; no secret material committed or shared to CI.
 - Capture before/after CPU/RAM/disk/WAL and ERP health, with quantified thresholds and owner sign-off. Pass criteria depend on actual measured host usage, not an unmeasured scale assertion.
 
 ## Release evidence ledger
 
-| Evidence | Status | Required proof |
-| --- | --- | --- |
-| Four ARM64 CI lanes + quality gate on *integrated final SHA* | Pending | Exact Actions URL, SHA and all conclusions |
-| Immutable artifact, checksum and exact public deployment SHA | Pending | Publisher/deployer URL, links and public readiness |
-| Unchanged migration guard / operator-only migration | Pending | Helper decision and migration-tree comparison |
-| ERP coexistence after release | Pending | Actual ERP 200 and basic resource capture |
-| Authenticated owner/media/QR live smoke | Pending | Controlled private evidence |
-| Nightly backup + external alert | Unconfirmed | Host timer/journal and off-host alert receipt |
-| Isolated SQL + matching media restore | Unconfirmed | Dated successful disposable restore evidence |
-| Launch-readiness sign-off | Blocked | All above verified; no automatic closure |
+| Evidence                                                     | Status      | Required proof                                     |
+| ------------------------------------------------------------ | ----------- | -------------------------------------------------- |
+| Four ARM64 CI lanes + quality gate on _integrated final SHA_ | Pending     | Exact Actions URL, SHA and all conclusions         |
+| Immutable artifact, checksum and exact public deployment SHA | Pending     | Publisher/deployer URL, links and public readiness |
+| Unchanged migration guard / operator-only migration          | Pending     | Helper decision and migration-tree comparison      |
+| ERP coexistence after release                                | Pending     | Actual ERP 200 and basic resource capture          |
+| Authenticated owner/media/QR live smoke                      | Pending     | Controlled private evidence                        |
+| Nightly backup + external alert                              | Unconfirmed | Host timer/journal and off-host alert receipt      |
+| Isolated SQL + matching media restore                        | Unconfirmed | Dated successful disposable restore evidence       |
+| Launch-readiness sign-off                                    | Blocked     | All above verified; no automatic closure           |
 
 Manual and automatic activation must follow `docs/production-runbook.md` and `docs/deployment-actions.md`. Explicitly mark any unperformed item pending. A10 remains open until an authorized operator supplies verifiable evidence.
