@@ -104,6 +104,8 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByRole("button", { name: "Add dish", exact: true }).click();
   await page.getByLabel("Dish name 1.1", { exact: true }).fill("Signature thali");
   await page.getByLabel("Dish price 1.1", { exact: true }).fill("12.500");
+  await expect(page.getByRole("button", { name: "Move dish 1 up" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Move dish 1 down" })).toBeDisabled();
   await page.getByLabel("vegetarian", { exact: true }).check();
   await page.getByText("Variants & add-ons", { exact: true }).click();
   await page.getByRole("button", { name: "Add variant", exact: true }).click();
@@ -112,6 +114,11 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByRole("button", { name: "Add add-on group", exact: true }).click();
   await page.getByLabel("Add-on name 1", { exact: true }).fill("Extra bread");
   await page.getByLabel("Add-on price 1", { exact: true }).fill("0.500");
+  const extras = page
+    .getByLabel("Add-on group 1")
+    .locator("xpath=ancestor::div[contains(@class,'panel')]");
+  await extras.getByRole("checkbox", { name: "Available", exact: true }).uncheck();
+  await extras.getByRole("checkbox", { name: "Available", exact: true }).check();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   expect((await page.request.get(`/api/public-menu/${f.token}`)).status()).toBe(404);
