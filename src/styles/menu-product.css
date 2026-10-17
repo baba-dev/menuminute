@@ -460,7 +460,6 @@ body.font-sans {
   font-family: var(--font-dm), sans-serif;
 }
 
-
 /* Phase 4: canonical Ink & Ember primitives.
    Shared by public, merchant and guest surfaces, including outside .product. */
 :root {
@@ -532,8 +531,14 @@ body.font-sans {
   outline-offset: 3px;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .mm-action:not(:disabled):hover { filter: brightness(1.04); transform: translateY(-1px); }
-  .mm-action--press:not(:disabled):active { box-shadow: 1px 1px 0 var(--mm-foreground); transform: translate(2px, 2px); }
+  .mm-action:not(:disabled):hover {
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+  }
+  .mm-action--press:not(:disabled):active {
+    box-shadow: 1px 1px 0 var(--mm-foreground);
+    transform: translate(2px, 2px);
+  }
 }
 .mm-action:disabled,
 .product .mm-action:disabled,
@@ -561,14 +566,24 @@ body.font-sans {
   background: var(--mm-soft-surface);
   border-left: 4px solid var(--mm-focus);
 }
-.mm-service-card :where(h2,h3),
-.mm-ink-ticket :where(h2,h3) {
+.mm-service-card :where(h2, h3),
+.mm-ink-ticket :where(h2, h3) {
   font-family: var(--font-display), sans-serif;
 }
 @media (prefers-reduced-motion: reduce) {
-  .mm-action { transition: none !important; animation: none !important; }
+  .mm-action {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 @media print {
-  .mm-action { display: none !important; }
-  .mm-service-card, .mm-ink-ticket, .mm-chef-note { box-shadow: none; break-inside: avoid; }
+  .mm-action {
+    display: none !important;
+  }
+  .mm-service-card,
+  .mm-ink-ticket,
+  .mm-chef-note {
+    box-shadow: none;
+    break-inside: avoid;
+  }
 }
