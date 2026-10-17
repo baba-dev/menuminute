@@ -64,8 +64,10 @@ jobs:
       - name: Validate approved dish artwork assets
         run: node scripts/food-artwork/verify.mjs
 
-      - name: Check VPS deployment script syntax
-        run: bash -n infra/deploy/menuminute-release
+      - name: Check deployment and packaging shell syntax
+        run: |
+          bash -n infra/deploy/menuminute-release
+          bash -n infra/deploy/package-release.sh
 
       - name: Lint source code (ESLint)
         run: pnpm lint
