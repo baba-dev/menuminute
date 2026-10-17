@@ -5,7 +5,7 @@ import { QrCode, Smartphone, ChefHat, ArrowRight, CheckCircle, Star } from "luci
 export const metadata: Metadata = {
   title: "MenuMinute — Free QR Menus for Restaurants",
   description:
-    "Create beautiful digital menus and QR codes for free. Accept online orders and manage your kitchen — built for restaurants of all sizes.",
+    "Create and publish a free digital menu with permanent QR codes. Online ordering and Kitchen Pro are in development.",
 };
 
 const features = [
@@ -21,8 +21,8 @@ const features = [
     icon: Smartphone,
     title: "Online Ordering",
     description:
-      "Let customers order directly from their table. Real-time order management and customer tracking built in.",
-    badge: "₹149/month",
+      "Planned: table and pickup orders with merchant acceptance. Not available in the free QR menu today.",
+    badge: "In development",
     badgeColor: "bg-brand-100 text-brand-700",
     soon: true,
   },
@@ -30,21 +30,21 @@ const features = [
     icon: ChefHat,
     title: "Kitchen Pro",
     description:
-      "Live kitchen dashboard with order workflow, audible notifications, staff management and operational reports.",
-    badge: "₹299/month",
+      "Planned: recoverable kitchen tickets and preparation workflow. Not yet available.",
+    badge: "In development",
     badgeColor: "bg-stone-100 text-stone-700",
     soon: true,
   },
 ];
 
 const freeFeatures = [
-  "Unlimited menu items",
+  "Categories, dishes and descriptions",
   "Menu categories and variants",
   "Item photos and descriptions",
   "Permanent QR code generation",
   "Mobile-optimised customer view",
   "No customer registration required",
-  "Custom restaurant branding",
+  "Your restaurant identity",
 ];
 
 export default function HomePage() {
@@ -110,8 +110,8 @@ export default function HomePage() {
 
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-stone-600 sm:text-xl">
             Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers
-            scan and browse — no app download required. Upgrade when you&apos;re ready for online
-            ordering and kitchen management.
+            scan and browse — no app download required. Ordering and Kitchen Pro are in development;
+            the free menu works independently.
           </p>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
@@ -164,8 +164,8 @@ export default function HomePage() {
               Start free. Grow as you need.
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-stone-600">
-              Begin with a free digital menu. Add online ordering and a kitchen dashboard when your
-              restaurant is ready to scale.
+              Begin with a free digital menu today. Ordering and kitchen products are upcoming;
+              their subscription terms have not been finalized.
             </p>
           </div>
 
@@ -210,8 +210,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Ready to go digital?</h2>
           <p className="text-brand-100 mb-8 text-lg">
-            Join restaurants that have already made the switch to digital menus. It takes less than
-            5 minutes to set up.
+            Create your outlet, add dishes, review your menu and print a permanent QR when you
+            publish.
           </p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link
