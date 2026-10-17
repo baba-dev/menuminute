@@ -17,7 +17,6 @@ test("a revoked public QR response clears previously rendered dishes instead of 
   await expect(page.getByRole("heading", { name: "No dishes in this service" })).toBeVisible();
 });
 
-
 test("search hides dead category anchors and restores navigation when filters clear", async ({
   page,
 }) => {
