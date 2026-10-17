@@ -30,7 +30,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -71,7 +70,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -88,7 +86,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
@@ -109,7 +106,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
       - uses: pnpm/action-setup@v4
         with:
