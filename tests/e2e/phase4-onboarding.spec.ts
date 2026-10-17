@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("failed outlet setup keeps the retry key for identical input and changes it for edited input", async ({
   page,
 }) => {
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const email = `phase4-${crypto.randomUUID()}@browser.invalid`;
   await page.goto("/register");
   await page.getByLabel("Your name").fill("Phase Four Owner");
@@ -34,12 +35,12 @@ test("failed outlet setup keeps the retry key for identical input and changes it
   const submit = page.getByRole("button", { name: "Create organization and outlet" });
   await page.getByLabel("Outlet name").fill("Phase Four Kitchen");
   await submit.click();
-  await expect(page.getByRole("alert")).toContainText("Your entries are preserved");
+  await expect(page.locator('form[aria-busy] [role="alert"]')).toContainText("Your entries are preserved");
   await expect(page.getByLabel("Outlet name")).toHaveValue("Phase Four Kitchen");
 
   await page.getByLabel("Outlet name").fill("Phase Four Kitchen Updated");
   await submit.click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.locator('form[aria-busy] [role="alert"]')).toBeVisible();
   await submit.click();
   await expect(page).toHaveURL(/\/dashboard\/menu/);
 
