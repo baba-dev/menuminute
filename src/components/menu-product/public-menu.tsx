@@ -4,6 +4,7 @@ import { UtensilsCrossed, Search, Leaf, Clock } from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
+import { DishDetail } from "./dish-detail";
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
   initial,
@@ -18,6 +19,10 @@ export function PublicMenu({
     [search, setSearch] = useState(""),
     [diet, setDiet] = useState("all"),
     [status, setStatus] = useState("");
+  const [detail, setDetail] = useState<{
+    dish: Parameters<typeof DishDetail>[0]["dish"];
+    currency: string;
+  } | null>(null);
   useEffect(() => {
     if (!token || preview) return;
     let stopped = false;
@@ -31,6 +36,7 @@ export function PublicMenu({
             if (r.status === 404 || r.status === 410) {
               // Revoked/deleted QR must not leave stale published dishes on screen.
               setData((previous) => ({ ...previous, menus: [] }));
+              setDetail(null);
               setStatus("This menu is no longer available. Please ask the staff.");
             } else {
               setStatus("Menu updates could not be checked. This view may be outdated.");
@@ -90,7 +96,7 @@ export function PublicMenu({
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>
-      <div className="public-shell stack">
+      <div className="public-shell stack editorial-menu">
         <header className="hero">
           <div className="stack">
             <span className="eyebrow">Made to be savoured · Digital menu</span>
@@ -226,6 +232,14 @@ export function PublicMenu({
                                 </span>
                               ))}
                             </div>
+                            <button
+                              className="dish-explore"
+                              type="button"
+                              onClick={() => setDetail({ dish: i, currency: m.view.currency })}
+                              aria-label={`View ${i.name} details`}
+                            >
+                              View dish <span aria-hidden="true">↗</span>
+                            </button>
                             {(i.variants.length > 0 || i.addOnGroups.length > 0) && (
                               <details>
                                 <summary>Variants & add-ons</summary>
@@ -285,6 +299,13 @@ export function PublicMenu({
             </div>
           )}
         </main>
+        {detail && (
+          <DishDetail
+            dish={detail.dish}
+            currency={detail.currency}
+            onClose={() => setDetail(null)}
+          />
+        )}
         <footer className="row between">
           <small>
             Dietary information is supplied by the restaurant. Ask staff about allergens.
