@@ -135,7 +135,12 @@ export function QrManager({
                     alt={`${q.label ?? "Menu"} QR code`}
                   />
                 </div>
-                <a href={`/m/${encodeURIComponent(q.destinationToken)}`} target="_blank" rel="noopener noreferrer" className="action">
+                <a
+                  href={`/m/${encodeURIComponent(q.destinationToken)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="action"
+                >
                   Open QR destination
                 </a>
                 <div className="row">
@@ -160,7 +165,9 @@ export function QrManager({
                 </div>
                 <small className={styles.url}>
                   Printed fallback URL:{" "}
-                  <code>{new URL(`/m/${encodeURIComponent(q.destinationToken)}`, origin).toString()}</code>
+                  <code>
+                    {new URL(`/m/${encodeURIComponent(q.destinationToken)}`, origin).toString()}
+                  </code>
                 </small>
                 {canRevoke && (
                   <div className="row no-print">
