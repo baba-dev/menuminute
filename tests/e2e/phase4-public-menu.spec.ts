@@ -31,3 +31,17 @@ test("search hides dead category anchors and restores navigation when filters cl
   await expect(links.first()).toBeVisible();
   await expect(page.getByText("0 dishes shown", { exact: true })).toHaveCount(0);
 });
+
+test("editorial dish detail is an accessible read-only sheet and returns focus to the guest menu", async ({ page }) => {
+  await page.goto("/m/demo-spice-route-kitchen-v1");
+  const trigger = page.getByRole("button", { name: "View Paneer Tikka details" });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+  const detail = page.getByRole("dialog", { name: "Paneer Tikka" });
+  await expect(detail).toBeVisible();
+  await expect(detail.getByText("Back to menu")).toBeVisible();
+  await expect(detail.getByRole("button", { name: /checkout|place order/i })).toHaveCount(0);
+  await detail.getByRole("button", { name: "Back to menu" }).click();
+  await expect(detail).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
