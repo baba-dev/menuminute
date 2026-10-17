@@ -215,6 +215,15 @@ export function MenuStudio({
     [categories[ci], categories[target]] = [categories[target]!, categories[ci]!];
     change({ ...doc, categories });
   }
+  function moveDish(ci: number, di: number, delta: number) {
+    updateCategory(ci, (category) => {
+      const items = [...category.items];
+      const target = di + delta;
+      if (target < 0 || target >= items.length) return category;
+      [items[di], items[target]] = [items[target]!, items[di]!];
+      return { ...category, items };
+    });
+  }
   return (
     <div className="product stack">
       <header className="row between">
@@ -541,6 +550,27 @@ export function MenuStudio({
                               </label>
                               {c.items.map((dish, di) => (
                                 <div className="dish-editor stack" key={dish.id}>
+                                  <div className="row between">
+                                    <span className="eyebrow">Dish {di + 1}</span>
+                                    <div className="row" aria-label={`Reorder ${dish.name || "untitled dish"}`}>
+                                      <button
+                                        type="button"
+                                        aria-label={`Move dish ${di + 1} up`}
+                                        disabled={di === 0}
+                                        onClick={() => moveDish(ci, di, -1)}
+                                      >
+                                        <ArrowUp size={16} aria-hidden="true" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label={`Move dish ${di + 1} down`}
+                                        disabled={di === c.items.length - 1}
+                                        onClick={() => moveDish(ci, di, 1)}
+                                      >
+                                        <ArrowDown size={16} aria-hidden="true" />
+                                      </button>
+                                    </div>
+                                  </div>
                                   <div className="columns">
                                     <Field
                                       label={`Dish name ${ci + 1}.${di + 1}`}
@@ -764,6 +794,22 @@ export function MenuStudio({
                                                     })
                                                   }
                                                 />
+                                                <label>
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={o.isAvailable}
+                                                    onChange={(e) =>
+                                                      updateGroup({
+                                                        options: g.options.map((item, n) =>
+                                                          n === oi
+                                                            ? { ...item, isAvailable: e.target.checked }
+                                                            : item
+                                                        ),
+                                                      })
+                                                    }
+                                                  />
+                                                  Available
+                                                </label>
                                                 <button
                                                   type="button"
                                                   onClick={() =>
