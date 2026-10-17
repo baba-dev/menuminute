@@ -459,3 +459,136 @@ body {
 body.font-sans {
   font-family: var(--font-dm), sans-serif;
 }
+
+/* Phase 4: canonical Ink & Ember primitives.
+   Shared by public, merchant and guest surfaces, including outside .product. */
+:root {
+  --mm-surface: #ffffff;
+  --mm-foreground: #171717;
+  --mm-soft-surface: #f5f5f5;
+  --mm-secondary: #555555;
+  --mm-border: #d7d7d7;
+  --mm-focus: #a83500;
+  --mm-gradient: linear-gradient(120deg, #ff5b1a, #ff8a1e 55%, #ffd046);
+  --mm-gradient-ink: #211600;
+}
+:root[data-theme="dark"] {
+  --mm-surface: #202020;
+  --mm-foreground: #ffffff;
+  --mm-soft-surface: #2c2c2c;
+  --mm-secondary: #bebebe;
+  --mm-border: #505050;
+  --mm-focus: #ffc83d;
+  --mm-gradient: linear-gradient(120deg, #ffd54b, #ffb52c 55%, #ff7a1a);
+}
+.mm-action,
+.product .mm-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--mm-border);
+  border-radius: 13px;
+  font:
+    650 0.875rem/1.4 var(--font-dm),
+    sans-serif;
+  text-decoration: none;
+  text-align: center;
+  background: var(--mm-surface);
+  color: var(--mm-foreground);
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease;
+}
+.mm-action--flow,
+.product .mm-action--flow {
+  background: var(--mm-gradient);
+  color: var(--mm-gradient-ink);
+  border-color: #835300;
+}
+.mm-action--press,
+.product .mm-action--press {
+  border-radius: 9px;
+  background: var(--mm-gradient);
+  color: var(--mm-gradient-ink);
+  border-color: var(--mm-foreground);
+  box-shadow: 3px 3px 0 var(--mm-foreground);
+}
+.mm-action--quiet,
+.product .mm-action--quiet {
+  background: var(--mm-soft-surface);
+  color: var(--mm-foreground);
+}
+.mm-action--danger,
+.product .mm-action--danger {
+  background: #b42318;
+  border-color: #b42318;
+  color: #ffffff;
+}
+.mm-action:focus-visible,
+.product .mm-action:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .mm-action:not(:disabled):hover {
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+  }
+  .mm-action--press:not(:disabled):active {
+    box-shadow: 1px 1px 0 var(--mm-foreground);
+    transform: translate(2px, 2px);
+  }
+}
+.mm-action:disabled,
+.product .mm-action:disabled,
+.mm-action[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.mm-service-card,
+.mm-ink-ticket,
+.mm-chef-note {
+  color: var(--mm-foreground);
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border-radius: 14px;
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+}
+.mm-ink-ticket {
+  border: 2px solid var(--mm-focus);
+  border-radius: 9px;
+  box-shadow: 4px 4px 0 var(--mm-foreground);
+}
+.mm-chef-note {
+  background: var(--mm-soft-surface);
+  border-left: 4px solid var(--mm-focus);
+}
+.mm-service-card :where(h2, h3),
+.mm-ink-ticket :where(h2, h3) {
+  font-family: var(--font-display), sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-action {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media print {
+  .mm-action {
+    display: none !important;
+  }
+  .mm-service-card,
+  .mm-ink-ticket,
+  .mm-chef-note {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
