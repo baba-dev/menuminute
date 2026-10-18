@@ -402,3 +402,13 @@ final reviewed v3 helper Git blob; back up and install it as root:root 0750
 on the VPS; verify the deploy account sees `--version` = `3`; only then
 merge/allow the next main publisher to stage. Never use `main` as an unpinned
 source URL while installing the helper. A normal PR CI never activates production.
+
+## Proposed successor: unattended migrations (helper v4; not proof of installation)
+
+[Automatic migration deployment contract](automatic-migration-deployment.md) replaces the
+per-SHA approval gate after the one-time reviewed helper v4 installation and provisioned
+migration-owner/restic credentials. Prior v3 instructions above are retained as historic
+operator evidence and are not the v4 automatic path. A green main push uses append-only
+migration lineage verification, fresh verified off-host backup, bundled checksummed migration
+runner and public SHA verification. Missing prerequisites fail closed instead of producing a
+successfully staged-only run. Do not assume the root-owned installed copy has changed on merge.
