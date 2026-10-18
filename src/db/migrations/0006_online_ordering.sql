@@ -99,6 +99,16 @@ BEGIN
  IF NOT FOUND THEN RAISE EXCEPTION 'Outlet unavailable' USING ERRCODE='22023'; END IF;
  SELECT * INTO o FROM organizations WHERE id=r.organization_id AND is_active FOR SHARE;
  IF NOT FOUND THEN RAISE EXCEPTION 'Organization unavailable' USING ERRCODE='22023'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(r.id||':'||v_key,0));
+ SELECT * INTO prior FROM orders WHERE restaurant_id=r.id AND client_submission_key=v_key FOR UPDATE;
+ IF FOUND THEN
+   IF prior.request_hash IS DISTINCT FROM p_payload->>'requestHash' THEN
+     RAISE EXCEPTION 'Submission key reused with different cart' USING ERRCODE='22023';
+   END IF;
+   RETURN jsonb_build_object('orderId',prior.id,'trackingToken',prior.tracking_token,
+   'orderNumber',prior.order_number,'status',prior.status,'totalMinor',prior.total_minor,
+   'currency',prior.currency,'isDuplicate',true);
+ END IF;
  IF NOT EXISTS(SELECT 1 FROM entitlement_grants g WHERE g.organization_id=o.id AND g.capability='ordering.new'
  AND g.revoked_at IS NULL AND g.starts_at<=clock_timestamp() AND g.ends_at>clock_timestamp()) THEN
    RAISE EXCEPTION 'Online ordering is not enabled for this outlet' USING ERRCODE='42501';
@@ -111,15 +121,9 @@ BEGIN
     OR md5((v_catalog->'menus')::text) IS DISTINCT FROM p_payload->>'catalogFingerprint' THEN
    RAISE EXCEPTION 'The menu changed; please review your cart' USING ERRCODE='40001';
  END IF;
- PERFORM pg_advisory_xact_lock(hashtextextended(r.id||':'||v_key,0));
- SELECT * INTO prior FROM orders WHERE restaurant_id=r.id AND client_submission_key=v_key FOR UPDATE;
- IF FOUND THEN
-   IF prior.request_hash IS DISTINCT FROM p_payload->>'requestHash' THEN
-     RAISE EXCEPTION 'Submission key reused with different cart' USING ERRCODE='22023';
-   END IF;
-   RETURN jsonb_build_object('orderId',prior.id,'trackingToken',prior.tracking_token,
-   'orderNumber',prior.order_number,'status',prior.status,'totalMinor',prior.total_minor,
-   'currency',prior.currency,'isDuplicate',true);
+ IF (p_payload->>'expiresAt')::timestamptz<=clock_timestamp() OR
+    (p_payload->>'expiresAt')::timestamptz>clock_timestamp()+interval '2 hours' THEN
+   RAISE EXCEPTION 'Invalid service expiry' USING ERRCODE='22023';
  END IF;
  IF jsonb_typeof(p_payload->'items') IS DISTINCT FROM 'array' OR jsonb_array_length(p_payload->'items') NOT BETWEEN 1 AND 50 THEN
    RAISE EXCEPTION 'Invalid items' USING ERRCODE='22023';
@@ -145,7 +149,7 @@ BEGIN
  VALUES(v_id,r.id,CASE WHEN p_payload->>'fulfillmentMode'='dine_in' THEN q.table_id ELSE NULL END,
  NULLIF(p_payload->>'customerName',''),NULLIF(p_payload->>'customerPhone',''),p_payload->>'fulfillmentMode',
  'pending','unpaid',r.currency,v_sum,0,v_sum,v_sum,0,v_sum,NULLIF(p_payload->>'notes',''),
- v_key,p_payload->>'requestHash',v_tracking,clock_timestamp()+interval '2 hours',v_date,v_number,1);
+ v_key,p_payload->>'requestHash',v_tracking,(p_payload->>'expiresAt')::timestamptz,v_date,v_number,1);
  FOR v_item IN SELECT value FROM jsonb_array_elements(p_payload->'items') LOOP
    INSERT INTO order_items(id,order_id,restaurant_id,menu_item_id,dish_id,variant_id,item_name,
      variant_name,selected_options,unit_price_minor,total_minor,unit_price_paise,total_paise,quantity,notes)
@@ -306,3 +310,23 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.record_order_payment(text,text,integer,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.record_order_payment(text,text,integer,text,text) TO menuminute_app;
+
+-- Idempotency recovery happens before menu repricing; a lost successful response remains recoverable.
+CREATE FUNCTION app_private.lookup_guest_submission(p_token text,p_key text,p_hash text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE v orders%ROWTYPE;
+BEGIN
+ SELECT ord.* INTO v FROM orders ord JOIN qr_codes q ON q.restaurant_id=ord.restaurant_id
+ JOIN restaurants r ON r.id=q.restaurant_id JOIN organizations org ON org.id=r.organization_id
+ WHERE q.destination_token=p_token AND q.is_active AND r.is_active AND org.is_active
+ AND ord.client_submission_key=p_key;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ IF v.request_hash IS DISTINCT FROM p_hash THEN
+   RAISE EXCEPTION 'Submission key reused with different cart' USING ERRCODE='22023';
+ END IF;
+ RETURN jsonb_build_object('orderId',v.id,'trackingToken',v.tracking_token,
+ 'orderNumber',v.order_number,'status',v.status,'totalMinor',v.total_minor,
+ 'currency',v.currency,'isDuplicate',true);
+END $$;
+REVOKE ALL ON FUNCTION app_private.lookup_guest_submission(text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.lookup_guest_submission(text,text,text) TO menuminute_app;

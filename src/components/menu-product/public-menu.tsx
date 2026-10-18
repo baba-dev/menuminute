@@ -25,27 +25,32 @@ export function PublicMenu({
   const [status, setStatus] = useState("");
 
   // Online Ordering Cart & Customization State
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined" || !token) return [];
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartHydrated, setCartHydrated] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !token) { setCartHydrated(true); return; }
     try {
       const stored = sessionStorage.getItem(`cart_${token}`);
-      return stored ? JSON.parse(stored) : [];
+      const parsed = stored ? JSON.parse(stored) : [];
+      setCartItems(Array.isArray(parsed) ? parsed : []);
     } catch {
-      return [];
+      setCartItems([]);
+    } finally {
+      setCartHydrated(true);
     }
-  });
+  }, [token]);
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
 
   // Sync cart to sessionStorage
   useEffect(() => {
-    if (typeof window === "undefined" || !token) return;
+    if (typeof window === "undefined" || !token || !cartHydrated) return;
     try {
       sessionStorage.setItem(`cart_${token}`, JSON.stringify(cartItems));
     } catch {
       // Ignore storage quota errors
     }
-  }, [cartItems, token]);
+  }, [cartItems, token, cartHydrated]);
 
   useEffect(() => {
     if (!token || preview) return;

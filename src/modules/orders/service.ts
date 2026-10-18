@@ -4,6 +4,7 @@ import { getPool } from "@/db";
 import { orders, orderItems, restaurants, type SelectedOptionSnapshot } from "@/db/schema";
 import { publicProduct } from "@/modules/menu-product/service";
 import { projectMenu } from "@/modules/menu-product/projector";
+import { availableNow } from "@/modules/menu-product/contracts";
 import { withOutlet, type Actor, type Permission } from "@/modules/tenancy/service";
 import {
   ConflictError,
@@ -22,6 +23,22 @@ import {
 
 export async function submitGuestOrder(token: string, raw: unknown) {
   const input = orderSubmissionSchema.parse(raw);
+  const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+  // A committed submission must be recoverable even if the menu changes after an HTTP response is lost.
+  try {
+    const existing = await getPool().query<{ data: {
+      orderId: string; trackingToken: string; orderNumber: number; status: OrderStatus;
+      totalMinor: number; currency: string; isDuplicate: boolean;
+    } | null }>(
+      "select app_private.lookup_guest_submission($1,$2,$3) as data",
+      [token, input.clientSubmissionKey, requestHash]
+    );
+    if (existing.rows[0]?.data) return existing.rows[0].data;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Submission key reused"))
+      throw new ConflictError("Submission key reused with a different cart.");
+    throw error;
+  }
 
   // 1. Resolve menu product and active outlet configuration
   const data = await publicProduct(token);
@@ -178,11 +195,34 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     throw new ForbiddenError("Online ordering requires a published versioned menu.");
   }
 
-  const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+  // Snapshot the earliest selected item's closing boundary, capped at a two-hour default.
+  const selectedDishIds = new Set(input.items.map((item) => item.dishId));
+  const schedules = data.menus.flatMap((menu) =>
+    menu.document.categories.flatMap((category) =>
+      category.items.filter((item) => selectedDishIds.has(item.id)).map((item) => ({
+        menu: menu.document.schedule,
+        dish: item.schedule,
+      }))
+    )
+  );
+  let expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  if (schedules.some((s) => s.menu || s.dish)) {
+    for (let minute = 1; minute <= 120; minute++) {
+      const instant = new Date(now.getTime() + minute * 60000);
+      if (schedules.some((s) =>
+        !availableNow(s.menu, outlet.timezone, instant) ||
+        !availableNow(s.dish, outlet.timezone, instant)
+      )) {
+        expiresAt = instant;
+        break;
+      }
+    }
+  }
   const payload = {
     ...input,
     requestHash,
     catalogFingerprint: data.catalogFingerprint,
+    expiresAt: expiresAt.toISOString(),
     currency: outlet.currency,
     subtotalMinor,
     taxMinor,
