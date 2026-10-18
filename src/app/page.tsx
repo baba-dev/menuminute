@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { QrCode, Smartphone, ChefHat, ArrowRight, CheckCircle, Star } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -96,46 +97,43 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-4 pt-20 pb-24 sm:px-6 sm:pt-28 sm:pb-32 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="border-brand-200 bg-brand-50 text-brand-700 mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium">
-            <Star className="fill-brand-500 text-brand-500 h-3.5 w-3.5" />
-            Free QR menus for every restaurant
+      {/* Food Orbit: one focal illustration, complementary copy and unchanged public claims. */}
+      <section className="food-orbit-hero relative isolate overflow-hidden px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16 lg:px-8">
+        <div className="mx-auto grid max-w-7xl items-center gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.38fr)] xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,.53fr)]">
+          <div className="relative z-10 mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-1.5 text-sm font-semibold food-orbit-hero__eyebrow dark:border-amber-800">
+              <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+              Free QR menus for every restaurant
+            </div>
+            <h1 className="food-orbit-hero__heading mb-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Your menu, beautifully digital. <span className="food-orbit-hero__eyebrow">Free forever.</span>
+            </h1>
+            <p className="mb-8 max-w-xl text-base leading-relaxed text-stone-600 dark:text-stone-300 sm:text-lg">
+              Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers scan and browse — no app download required.
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row lg:flex-col lg:items-start xl:flex-row xl:justify-start xl:items-stretch">
+              <Link
+                href="/register"
+                className="bg-brand-600 hover:bg-brand-700 inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-semibold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Create your free menu <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/demo"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-8 py-4 text-base font-semibold text-stone-700 transition-all hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-800 dark:text-white"
+              >
+                <QrCode className="h-4 w-4" aria-hidden="true" /> View live demo
+              </Link>
+            </div>
           </div>
-
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
-            Your menu, beautifully digital. <span className="text-brand-600">Free forever.</span>
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-stone-600 sm:text-xl">
-            Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers
-            scan and browse — no app download required. Ordering and Kitchen Pro are in development;
-            the free menu works independently.
-          </p>
-
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href="/register"
-              className="bg-brand-600 hover:bg-brand-700 inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-semibold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              Create your free menu
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/demo"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-8 py-4 text-base font-semibold text-stone-700 transition-all hover:bg-stone-50"
-            >
-              <QrCode className="h-4 w-4" />
-              View live demo
-            </Link>
+          <div className="food-orbit-hero__art" data-testid="food-orbit-hero-art">
+            <FoodOrbit />
           </div>
-        </div>
-
-        {/* Background decoration */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="bg-brand-200/30 absolute top-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl" />
-          <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-orange-100/50 blur-3xl" />
+          <aside className="hidden flex-col gap-8 xl:flex" aria-label="Free menu highlights">
+            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">✳</span><p>One permanent QR. Beautiful menus.</p></div>
+            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">↗</span><p>No guest signup needed.</p></div>
+            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">✦</span><p>Made for real restaurants.</p></div>
+          </aside>
         </div>
       </section>
 
