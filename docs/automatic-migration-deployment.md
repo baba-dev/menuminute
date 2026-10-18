@@ -1,6 +1,6 @@
 # Unattended main-to-production deployment (helper v4)
 
-**Policy:** After the exact `main` push passes all four mandatory CI lanes, the publisher creates the immutable ARM64 artifact. The deploy workflow stages it, checks current `main`, and, if eligible, calls the restricted root-owned helper with `autoactivate`. The helper applies a *new append-only* PostgreSQL migration when present, without asking for a per-SHA approval marker or an operator console round trip. Manual `workflow_dispatch activate=true` uses the same policy, not an unsafe bypass.
+**Policy:** After the exact `main` push passes all four mandatory CI lanes, the publisher creates the immutable ARM64 artifact. The deploy workflow stages it, checks current `main`, and, if eligible, calls the restricted root-owned helper with `autoactivate`. The helper applies a _new append-only_ PostgreSQL migration when present, without asking for a per-SHA approval marker or an operator console round trip. Manual `workflow_dispatch activate=true` uses the same policy, not an unsafe bypass.
 
 ## One-time server prerequisites — not performed by a source PR
 
