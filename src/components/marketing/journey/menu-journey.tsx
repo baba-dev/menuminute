@@ -52,7 +52,7 @@ function CreateArtwork() {
             fontWeight="800"
             fontFamily="Arial, sans-serif"
           >
-            TODAY'S MENU
+            TODAY&apos;S MENU
           </text>
           <path d="M100 94h151" stroke="var(--mj-rule)" strokeWidth="2" />
           <ellipse
@@ -565,7 +565,7 @@ export function MenuJourney() {
           </ul>
         </div>
 
-        <nav className="mj-links" aria-label="Explore MenuMinute">
+        <div className="mj-links">
           <Link className="mj-link mj-link-primary" href="/register">
             <span>
               <small>YOUR NEXT STEP</small>
@@ -584,11 +584,11 @@ export function MenuJourney() {
             <span>
               <small>THE ROAD AHEAD</small>
               <strong>Ordering &amp; kitchen plans</strong>
-              <span className="mj-soon">In development</span>
+              <span className="mj-soon">Planned feature</span>
             </span>
             <ArrowUpRight size={21} strokeWidth={2} aria-hidden="true" />
           </Link>
-        </nav>
+        </div>
       </div>
     </section>
   );
