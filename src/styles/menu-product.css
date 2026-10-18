@@ -61,8 +61,7 @@ body {
   color: var(--muted);
 }
 .product button,
-.product .action,
-.appearance select {
+.product .action {
   min-height: 44px;
 }
 .product button,
@@ -104,8 +103,7 @@ body {
   opacity: 0.55;
   cursor: wait;
 }
-.product :focus-visible,
-.appearance select:focus-visible {
+.product :focus-visible {
   outline: 3px solid var(--ember);
   outline-offset: 3px;
 }
@@ -118,8 +116,7 @@ body {
 }
 .product input:not([type="checkbox"]),
 .product textarea,
-.product select,
-.appearance select {
+.product select {
   width: 100%;
   background: var(--paper);
   border: 1px solid var(--line);
@@ -326,24 +323,26 @@ body {
   padding: 1rem;
   background: var(--panel);
 }
-.appearance {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--muted);
+.mm-theme-toggle {
+  border: 1px solid var(--mm-border, #d7d7d7);
+  background: transparent;
+  color: var(--mm-foreground, #171717);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+  cursor: pointer;
 }
-.appearance select {
-  width: auto;
-  font-size: 0.8rem;
+.mm-theme-toggle:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
 }
-.appearance-bar {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
-  background: var(--paper);
-  border-bottom: 1px solid var(--decorative);
+.mm-theme-toggle:focus-visible {
+  outline: 3px solid var(--mm-focus, #a83500);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-theme-toggle {
+    transition: none;
+  }
 }
 .product .skip-link {
   position: fixed;
@@ -438,7 +437,6 @@ body {
   }
 }
 @media print {
-  .appearance-bar,
   .product button,
   .product .no-print,
   .product nav {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeControl } from "@/components/menu-product/theme-control";
 import { QrCode, ArrowRight, Smartphone, Eye, Sparkles } from "lucide-react";
 import { generateMenuQrCode } from "@/modules/qr/service";
 
@@ -25,10 +26,11 @@ export default async function DemoPage() {
               </div>
               <span className="text-lg font-bold text-stone-900">MenuMinute</span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <ThemeControl />
               <Link
                 href="/login"
-                className="text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="hidden text-sm font-medium text-stone-600 hover:text-stone-900 sm:inline"
               >
                 Sign in
               </Link>
@@ -36,7 +38,8 @@ export default async function DemoPage() {
                 href="/register"
                 className="bg-brand-600 hover:bg-brand-700 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
               >
-                Get started free
+                <span className="sm:hidden">Start free</span>
+                <span className="hidden sm:inline">Get started free</span>
               </Link>
             </div>
           </div>
