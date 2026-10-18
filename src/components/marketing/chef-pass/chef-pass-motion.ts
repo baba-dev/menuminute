@@ -23,8 +23,7 @@ const COLORS = {
 } as const;
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
-const fade = (time: number, start: number, end: number) =>
-  clamp((time - start) / (end - start));
+const fade = (time: number, start: number, end: number) => clamp((time - start) / (end - start));
 
 /** The completion markers belong to the actual stations: Drinks, Grill, Tandoor. */
 export function chefPassStage(timeMs: number) {
@@ -66,11 +65,7 @@ export function renderChefPass(svg: SVGSVGElement, timeMs: number, theme: PassTh
     const status = t < start ? "QUEUED" : t < end ? "PREPARING" : "COMPLETE";
     const progress = t < start ? 0 : t > end ? 1 : fade(t, start, end);
     const color =
-      status === "COMPLETE"
-        ? colors.green
-        : status === "QUEUED"
-          ? colors.warning
-          : colors.ember;
+      status === "COMPLETE" ? colors.green : status === "QUEUED" ? colors.warning : colors.ember;
     const background = status === "COMPLETE" ? colors.greenbg : colors.warnbg;
     const label = find(id + "-label");
     if (label) label.textContent = status;
@@ -94,7 +89,8 @@ export function renderChefPass(svg: SVGSVGElement, timeMs: number, theme: PassTh
   const top = find("handoff-top");
   const bottom = find("handoff-bottom");
   const note = find("expo-note");
-  if (top) top.textContent = released ? "RELEASED" : completed === 3 ? "CONFIRM HANDOFF" : "NOT READY";
+  if (top)
+    top.textContent = released ? "RELEASED" : completed === 3 ? "CONFIRM HANDOFF" : "NOT READY";
   if (bottom)
     bottom.textContent = released
       ? "BY EXPEDITOR"

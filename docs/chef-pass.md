@@ -1,6 +1,6 @@
 # Marketing Section 5 — The Chef's Pass
 
-Original approved MenuMinute illustration for the public homepage. This is a *planned Kitchen Pro experience*, not a production KDS, and its tickets/states are static review fixtures. The section follows the live homepage Order Conveyor and precedes product comparisons.
+Original approved MenuMinute illustration for the public homepage. This is a _planned Kitchen Pro experience_, not a production KDS, and its tickets/states are static review fixtures. The section follows the live homepage Order Conveyor and precedes product comparisons.
 
 - The four embedded SVGs are the original approved 1440×790 dark/light and separately composed 430×900 portrait dark/light assets. Their strings are trusted compile-time literals, have no scripts, external images, external network calls or user content, and are scoped to this marketing component.
 - The deterministic 8.5-second illustration preserves independent Grill/Tandoor/Drinks progression and an authorized expeditor's explicit final confirmation: Drinks completes first, Grill next, Tandoor last. Partial station work never causes the illustrative whole order to be released.

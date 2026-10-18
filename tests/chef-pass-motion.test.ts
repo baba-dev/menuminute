@@ -16,9 +16,7 @@ const label = (svg: SVGSVGElement, name: string) =>
 describe("The Chef's Pass fixture is operationally honest", () => {
   it("retains the approved 8.5-second narrative", () => {
     expect(CHEF_PASS_DURATION_MS).toBe(8500);
-    expect([0, 1000, 3700, 7080, 8040, 8500].map(chefPassStage)).toEqual([
-      0, 1, 2, 3, 4, 4,
-    ]);
+    expect([0, 1000, 3700, 7080, 8040, 8500].map(chefPassStage)).toEqual([0, 1, 2, 3, 4, 4]);
   });
   it("finishes Drinks first without releasing an incomplete order", () => {
     const svg = scene();

@@ -6,7 +6,9 @@ test("Chef's Pass is Section 5, after Order Conveyor, and truthfully advertises 
   await page.goto("/");
   const pass = page.getByTestId("chef-pass");
   await expect(pass).toBeVisible();
-  await expect(pass.getByRole("heading", { name: /One order. Every station. In sync/i })).toBeVisible();
+  await expect(
+    pass.getByRole("heading", { name: /One order. Every station. In sync/i })
+  ).toBeVisible();
   await expect(pass.getByText("KITCHEN PRO · IN DEVELOPMENT")).toBeVisible();
   await expect(pass.getByRole("link", { name: /Explore future plans/i })).toHaveAttribute(
     "href",
@@ -27,10 +29,10 @@ test("Chef's Pass is Section 5, after Order Conveyor, and truthfully advertises 
     const next = document.querySelector(".ma-product-features");
     return Boolean(
       previous &&
-        pass &&
-        next &&
-        previous.compareDocumentPosition(pass) & Node.DOCUMENT_POSITION_FOLLOWING &&
-        pass.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING
+      pass &&
+      next &&
+      previous.compareDocumentPosition(pass) & Node.DOCUMENT_POSITION_FOLLOWING &&
+      pass.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING
     );
   });
   expect(order).toBe(true);
@@ -78,7 +80,7 @@ test("Desktop Chef's Pass has working pause and replay controls", async ({ page 
   const pause = pass.getByRole("button", { name: "Pause Chef's Pass animation" });
   await expect(pause).toBeEnabled({ timeout: 5000 });
   await pause.click();
-  await expect(pass.getByRole("button", { name: "Play Chef's Pass animation" })).toBeEnabled();
+  await expect(pass.getByRole("button", { name: /^Play Chef's Pass animation$/ })).toBeEnabled();
   await pass.getByRole("button", { name: "Replay Chef's Pass animation" }).click();
   await expect(pass).toHaveAttribute("data-phase", "0");
 });

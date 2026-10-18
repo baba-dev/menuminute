@@ -14,12 +14,7 @@ import {
   Timer,
   Wifi,
 } from "lucide-react";
-import {
-  DARK_DESKTOP,
-  DARK_MOBILE,
-  LIGHT_DESKTOP,
-  LIGHT_MOBILE,
-} from "./chef-pass-art";
+import { DARK_DESKTOP, DARK_MOBILE, LIGHT_DESKTOP, LIGHT_MOBILE } from "./chef-pass-art";
 import { CHEF_PASS_DURATION_MS, chefPassStage, renderChefPass } from "./chef-pass-motion";
 import "./chef-pass.css";
 
