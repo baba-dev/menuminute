@@ -1,48 +1,40 @@
 import { test, expect } from "@playwright/test";
 
-test("production homepage applies Tailwind utilities and responsive navigation", async ({
-  page,
-}) => {
+test("homepage has integrated responsive navigation, centered copy and compiled theme styles", async ({ page }) => {
   await page.goto("/");
-
-  // Text-only smoke checks pass even when the Tailwind compiler is disconnected.
-  const action = page.getByRole("link", { name: "Create your free menu", exact: true }).first();
-  // A flex item is blockified: the inline-flex utility computes to flex here.
-  // Keep checking the generated utility styles, not the authored display token.
-  await expect(action).toHaveClass(/\binline-flex\b/);
-  await expect(action).toHaveCSS("display", "flex");
-  await expect(action).toHaveCSS("padding-top", "16px");
-  await expect(action).toHaveCSS("padding-left", "32px");
-  await expect(action).toHaveCSS("border-radius", "16px");
-  await expect(action).toHaveCSS("color", "rgb(33, 22, 0)");
-  await expect(action).toHaveCSS("background-image", /linear-gradient/);
-
+  const hero = page.locator(".food-orbit-hero");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
   const heading = page.getByRole("heading", { level: 1 });
+  await expect(heading).toContainText("Your menu, beautifully digital.");
+  await expect(heading).toContainText("Free forever.");
+  await expect(hero).toContainText("Build your restaurant menu");
+  await expect(nav).toHaveCSS("position", "relative");
+  await expect(page.locator(".appearance-bar, .appearance")).toHaveCount(0);
+  await expect(page.locator(".food-orbit-hero__divider")).toBeVisible();
   const width = page.viewportSize()!.width;
-  await expect(heading).toHaveCSS(
-    "font-size",
-    width >= 1024 ? "60px" : width >= 640 ? "48px" : "36px"
-  );
-  const mobileAction = page
-    .getByRole("navigation")
-    .getByRole("link", { name: "Get started", exact: true });
-  const desktopAction = page
-    .getByRole("navigation")
-    .getByRole("link", { name: "Get started free", exact: true });
+  await expect(heading).toHaveCSS("font-size", width >= 1024 ? "60px" : width >= 640 ? "48px" : "36px");
   if (width < 768) {
-    await expect(mobileAction).toBeVisible();
-    await expect(desktopAction).toBeHidden();
+    await expect(nav.getByLabel("Open navigation menu")).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Get started free" })).toBeHidden();
+    await nav.getByLabel("Open navigation menu").click();
+    await expect(nav.getByRole("link", { name: "Get started free" })).toBeVisible();
   } else {
-    await expect(mobileAction).toBeHidden();
-    await expect(desktopAction).toBeVisible();
+    await expect(nav.getByLabel("Open navigation menu")).toBeHidden();
+    await expect(nav.getByRole("link", { name: "Get started free" })).toBeVisible();
   }
-
-  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
-  await expect(page.getByRole("navigation")).toHaveCSS("background-color", "rgb(32, 32, 32)");
-  await expect(heading).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(action).toHaveCSS("display", "flex");
+  const selected = await page.locator("html").getAttribute("data-theme");
+  await nav.getByRole("button", { name: selected === "dark" ? "Switch to light mode" : "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", selected === "dark" ? "light" : "dark");
+  await expect(heading).toHaveCSS("color", selected === "dark" ? "rgb(23, 23, 23)" : "rgb(255, 255, 255)");
   await page.reload();
-  await expect(page.getByRole("navigation")).toHaveCSS("background-color", "rgb(32, 32, 32)");
-  await page.getByLabel("Appearance", { exact: true }).selectOption("light");
-  await expect(heading).not.toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", selected === "dark" ? "light" : "dark");
+});
+
+test("homepage has no horizontal overflow at phone, tablet and desktop widths", async ({ page }) => {
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.getByTestId("food-orbit-hero-art")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), `overflow at ${width}px`).toBe(true);
+  }
 });
