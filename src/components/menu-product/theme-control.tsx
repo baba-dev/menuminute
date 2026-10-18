@@ -40,7 +40,11 @@ export function ThemeControl() {
         setResolved(next);
       }}
     >
-      {isDark ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
+      {isDark ? (
+        <Sun className="h-5 w-5" aria-hidden="true" />
+      ) : (
+        <Moon className="h-5 w-5" aria-hidden="true" />
+      )}
     </button>
   );
 }
@@ -52,7 +56,13 @@ export function ThemeSync() {
     const sync = () => {
       const selected = localStorage.getItem("menuminute.appearance") ?? "system";
       document.documentElement.dataset.theme =
-        selected === "system" ? (query.matches ? "dark" : "light") : selected === "dark" ? "dark" : "light";
+        selected === "system"
+          ? query.matches
+            ? "dark"
+            : "light"
+          : selected === "dark"
+            ? "dark"
+            : "light";
     };
     query.addEventListener("change", sync);
     window.addEventListener("storage", sync);
