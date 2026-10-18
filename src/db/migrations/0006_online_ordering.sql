@@ -54,6 +54,9 @@ REVOKE ALL ON FUNCTION app_private.next_order_number(text, date) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.next_order_number(text, date) TO menuminute_app;
 
 
+-- Versioned menu dishes are JSON-document identities, not necessarily legacy menu_items rows.
+ALTER TABLE order_items ALTER COLUMN menu_item_id DROP NOT NULL;
+
 -- New ordering contract: preserve existing history and use narrowly scoped SECURITY DEFINER commands.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS request_hash text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS business_date date;
@@ -153,7 +156,7 @@ BEGIN
  FOR v_item IN SELECT value FROM jsonb_array_elements(p_payload->'items') LOOP
    INSERT INTO order_items(id,order_id,restaurant_id,menu_item_id,dish_id,variant_id,item_name,
      variant_name,selected_options,unit_price_minor,total_minor,unit_price_paise,total_paise,quantity,notes)
-   VALUES(gen_random_uuid()::text,v_id,r.id,v_item->>'dishId',v_item->>'dishId',
+   VALUES(gen_random_uuid()::text,v_id,r.id,NULL,v_item->>'dishId',
    NULLIF(v_item->>'variantId',''),v_item->>'dishName',NULLIF(v_item->>'variantName',''),
    COALESCE(v_item->'selectedOptions','[]'::jsonb),(v_item->>'unitPriceMinor')::integer,
    (v_item->>'totalMinor')::integer,(v_item->>'unitPriceMinor')::integer,
