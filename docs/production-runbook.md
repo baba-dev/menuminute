@@ -137,3 +137,12 @@ activation, recovered application and failed/unverified. Record the exact
 main SHA, immutable release, checksum, CI ID, timestamps, both symlinks,
 public SHA, service and ERP outcomes after any deployment. No source-only PR
 asserts that the VPS upgrade or a production cutover has occurred.
+
+## 2026-10-18 source proposal (not operator-confirmed VPS change)
+
+The unattended migration v4 proposal is documented in
+[automatic-migration-deployment.md](automatic-migration-deployment.md). It replaces the
+per-release operator marker with root-owned automatic backup and checksummed SQL execution
+only after an independently reviewed one-time helper installation. The last operator evidence
+above remains authoritative until live verification; do not infer helper v4, a working backup
+pipeline, ordering migration 0006 or public Food Orbit activation from repository changes.
