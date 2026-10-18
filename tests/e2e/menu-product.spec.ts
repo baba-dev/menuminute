@@ -178,8 +178,10 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   const guest = await page.context().newPage();
   await guest.goto(`/m/${f.token}`);
   await expect(guest.getByRole("heading", { name: "Signature thali" })).toBeVisible();
-  await guest.getByText("Variants & add-ons", { exact: true }).click();
+  // The QR-only tier displays variants and add-ons read-only, without paid checkout.
+  await expect(guest.getByText("Variants & add-ons", { exact: true })).toBeVisible();
   await expect(guest.getByText(/Regular.*15/)).toBeVisible();
+  await expect(guest.getByRole("button", { name: "Add", exact: true })).toBeDisabled();
   await expect(guest.getByText("Sold Out", { exact: true })).toHaveCount(0);
   await page.getByLabel("Sold out", { exact: true }).check();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
