@@ -70,15 +70,29 @@ export function OrderTracker({
   token: string;
 }) {
   const [data, setData] = useState<TrackingData | null>(null);
+  const [capability, setCapability] = useState(trackingToken);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    let value = trackingToken;
+    try {
+      const key = `order_${token}_${orderId}`;
+      if (value) sessionStorage.setItem(key, value);
+      else value = sessionStorage.getItem(key) ?? "";
+      if (trackingToken && typeof window !== "undefined") {
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+      }
+    } catch { /* Private mode may disable session storage */ }
+    setCapability(value);
+  }, [trackingToken, token, orderId]);
 
   const fetchTracking = async () => {
     try {
       const res = await fetch(
         `/api/public-orders/${encodeURIComponent(orderId)}?token=${encodeURIComponent(token)}`,
-        { cache: "no-store", headers: { "x-tracking-token": trackingToken } }
+        { cache: "no-store", headers: { "x-tracking-token": capability } }
       );
       if (!res.ok) {
         throw new Error("Unable to load order status.");
@@ -98,10 +112,11 @@ export function OrderTracker({
   };
 
   useEffect(() => {
+    if (!capability) { setIsLoading(false); setError("Private order access is unavailable in this browser."); return; }
     fetchTracking();
     timerRef.current = setInterval(fetchTracking, 4000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = null; };
-  }, [orderId, trackingToken, token]);
+  }, [orderId, capability, token]);
 
   if (isLoading && !data) {
     return (

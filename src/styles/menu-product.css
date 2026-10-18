@@ -880,3 +880,10 @@ body.font-sans {
 .stepper-step.completed .step-title {
   font-weight: 650;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse, .spin, .customizer-overlay, .cart-overlay, .customizer-sheet, .cart-drawer {
+    animation: none !important;
+  }
+  .cart-bar-button, .option-card { transition: none !important; }
+}

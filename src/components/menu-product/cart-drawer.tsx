@@ -119,7 +119,7 @@ export function CartDrawer({
               <div className="stack" style={{ gap: "0.1rem", textAlign: "left" }}>
                 <span style={{ fontWeight: 750, fontSize: "0.95rem" }}>View Your Order</span>
                 <small style={{ opacity: 0.85 }}>
-                  {point ? `${point} · Dine In` : fulfillmentMode === "pickup" ? "Pickup" : "Dine In"}
+                  {fulfillmentMode === "pickup" ? "Pickup" : point ? `${point} · Dine In` : "Dine In"}
                 </small>
               </div>
             </div>
@@ -324,9 +324,18 @@ export function CartDrawer({
               </div>
 
               {errorMessage && (
-                <p className="error" role="alert">
-                  {errorMessage}
-                </p>
+                <div className="stack" role="alert">
+                  <p className="error">{errorMessage}</p>
+                  {errorMessage.toLowerCase().includes("price") && (
+                    <button
+                      type="button"
+                      className="action"
+                      onClick={() => { onClearCart(); window.location.reload(); }}
+                    >
+                      Refresh menu and reset the outdated cart
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 

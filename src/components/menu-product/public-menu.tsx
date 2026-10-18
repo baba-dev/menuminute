@@ -154,7 +154,8 @@ export function PublicMenu({
 
   const handleOrderSubmitted = (result: { orderId: string; trackingToken: string }) => {
     if (token) {
-      router.push(`/m/${token}/orders/${result.orderId}?trackingToken=${result.trackingToken}`);
+      try { sessionStorage.setItem(`order_${token}_${result.orderId}`, result.trackingToken); } catch { /* Storage unavailable */ }
+      router.push(`/m/${token}/orders/${result.orderId}`);
     }
   };
 
