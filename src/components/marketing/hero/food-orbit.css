@@ -279,13 +279,17 @@
     stroke-dashoffset: 0;
   }
 }
-/* The surrounding homepage hero complements rather than competes with its central illustration. */
+/* The artwork is physically centered: equally sized supporting columns flank its stage. */
 .food-orbit-hero {
-  background: var(--color-background);
+  background: #fff;
   color: var(--mm-foreground, #171717);
+}
+:root[data-theme="dark"] .food-orbit-hero {
+  background: #111;
 }
 .food-orbit-hero__heading {
   color: var(--mm-foreground, #171717);
+  font-family: var(--font-display), sans-serif;
 }
 .food-orbit-hero__eyebrow {
   color: #a83500;
@@ -293,29 +297,75 @@
 :root[data-theme="dark"] .food-orbit-hero__eyebrow {
   color: #ffc83d;
 }
+.food-orbit-hero__description {
+  color: var(--mm-secondary, #555);
+}
+.food-orbit-hero__micro {
+  color: var(--mm-secondary, #555);
+}
+.food-orbit-hero__cta {
+  background: var(--mm-gradient);
+  color: var(--mm-gradient-ink, #211600);
+  box-shadow: 0 7px 0 -3px rgb(131 63 12 / 18%);
+}
+.food-orbit-hero__cta:focus-visible,
+.food-orbit-hero__secondary:focus-visible {
+  outline: 3px solid var(--mm-focus, #a83500);
+  outline-offset: 3px;
+}
+.food-orbit-hero__secondary {
+  background: var(--mm-surface, #fff);
+  border-color: var(--mm-border, #d7d7d7);
+  color: var(--mm-foreground, #171717);
+}
+.food-orbit-hero__secondary:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
 .food-orbit-hero__art {
   position: relative;
-  min-width: 0;
   width: 100%;
   max-width: 790px;
   margin-inline: auto;
 }
 .food-orbit-hero__note {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--mm-secondary, #555);
-  max-width: 130px;
+  border-left: 2px solid var(--mm-border, #d7d7d7);
+  padding-left: 18px;
+  color: var(--mm-foreground, #171717);
 }
-.food-orbit-hero__notes {
-  display: none;
+.food-orbit-hero__note p {
+  margin-block: 5px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.food-orbit-hero__note small {
+  display: block;
+  max-width: 180px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--mm-secondary, #555);
+}
+.food-orbit-hero__index {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #a83500;
+}
+:root[data-theme="dark"] .food-orbit-hero__index {
+  color: #ffc83d;
 }
 @media (min-width: 1280px) {
-  .food-orbit-hero__notes {
-    display: flex;
-    position: absolute;
-    inset: 18% -7% auto auto;
-    flex-direction: column;
-    gap: 28px;
-    pointer-events: none;
+  .food-orbit-hero__art {
+    width: min(116%, 820px);
+    max-width: none;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .food-orbit-hero__cta {
+    transition: none;
+  }
+  .food-orbit-hero__cta:hover {
+    transform: none;
   }
 }
