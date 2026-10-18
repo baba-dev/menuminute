@@ -9,6 +9,7 @@ describe("Online Ordering Contracts & Validation", () => {
     const valid = {
       clientSubmissionKey: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       fulfillmentMode: "dine_in",
+      quotedTotalMinor: 28000,
       customerName: "Alex Doe",
       customerPhone: "+1234567890",
       notes: "Table by the window",
