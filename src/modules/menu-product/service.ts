@@ -144,6 +144,7 @@ export async function mediaList(actor: Actor, outletId: string) {
 }
 export type PublicProduct = {
   outlet: {
+    id: string;
     name: string;
     currency: string;
     timezone: string;
@@ -153,6 +154,7 @@ export type PublicProduct = {
     versioned: boolean;
   };
   point: string | null;
+  catalogFingerprint: string;
   now: string;
   menus: {
     id: string;
@@ -164,11 +166,12 @@ export type PublicProduct = {
 };
 export async function publicProduct(token: string): Promise<PublicProduct | null> {
   if (!z.string().min(1).max(128).safeParse(token).success) return null;
-  const r = await getPool().query<{ data: PublicProduct | null }>(
-    "select app_private.free_menu_public($1) as data",
+  const r = await getPool().query<{ data: PublicProduct | null; fingerprint: string | null }>(
+    "with p as (select app_private.free_menu_public($1) as data) select data, md5((data->'menus')::text) as fingerprint from p",
     [token]
   );
   const data = r.rows[0]?.data;
+  if (data) data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
   if (!data) return null;
   if (!data.outlet.versioned) {
     const legacy = await getPublicMenu(token);

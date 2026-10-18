@@ -10,6 +10,12 @@ export const orderItemSubmissionSchema = z.object({
         optionId: z.string().min(1).max(128),
       })
     )
+    .max(150)
+    .superRefine((items, ctx) => {
+      const keys = items.map((item) => item.groupId + ":" + item.optionId);
+      if (new Set(keys).size !== keys.length)
+        ctx.addIssue({ code: "custom", message: "Duplicate add-on option" });
+    })
     .default([]),
   quantity: z.number().int().min(1).max(99),
   itemNotes: z.string().trim().max(200).optional(),
@@ -17,6 +23,7 @@ export const orderItemSubmissionSchema = z.object({
 
 export const orderSubmissionSchema = z.object({
   clientSubmissionKey: z.string().uuid(),
+  quotedTotalMinor: z.number().int().min(0).max(2147483647),
   fulfillmentMode: z.enum(["dine_in", "pickup"]).default("dine_in"),
   customerName: z.string().trim().max(80).optional().default(""),
   customerPhone: z.string().trim().max(30).optional().default(""),

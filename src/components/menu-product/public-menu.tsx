@@ -364,6 +364,7 @@ export function PublicMenu({
 
       {/* Item Customizer Modal */}
       <ItemCustomizer
+        key={customizingDish?.id ?? "empty"}
         dish={customizingDish}
         currency={data.outlet.currency}
         isOpen={!!customizingDish}

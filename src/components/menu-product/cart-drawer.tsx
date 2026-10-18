@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem } from "./item-customizer";
@@ -36,6 +36,10 @@ export function CartDrawer({
   const [customerPhone, setCustomerPhone] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionKeyRef = useRef<string>("");
+  useEffect(() => {
+    submissionKeyRef.current = "";
+  }, [items, fulfillmentMode, customerName, customerPhone, orderNotes]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -48,7 +52,8 @@ export function CartDrawer({
     setErrorMessage(null);
 
     try {
-      const clientSubmissionKey = crypto.randomUUID();
+      const clientSubmissionKey = submissionKeyRef.current || crypto.randomUUID();
+      submissionKeyRef.current = clientSubmissionKey;
 
       const response = await fetch("/api/public-orders", {
         method: "POST",
@@ -56,6 +61,7 @@ export function CartDrawer({
         body: JSON.stringify({
           token,
           clientSubmissionKey,
+          quotedTotalMinor: subtotalMinor,
           fulfillmentMode,
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),

@@ -78,7 +78,7 @@ export function LiveOrdersBoard({
   const [rejectingOrder, setRejectingOrder] = useState<MerchantOrder | null>(null);
   const [declineReason, setDeclineReason] = useState("Kitchen is currently busy");
 
-  const prevPendingCountRef = useRef(0);
+  const prevPendingIdsRef = useRef<Set<string> | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -91,11 +91,15 @@ export function LiveOrdersBoard({
       const data: MerchantOrder[] = await res.json();
 
       // Check if new pending orders arrived
-      const currentPendingCount = data.filter((o) => o.status === "pending").length;
-      if (soundEnabled && currentPendingCount > prevPendingCountRef.current) {
+      const pendingIds = new Set(data.filter((o) => o.status === "pending").map((o) => o.id));
+      if (
+        soundEnabled &&
+        prevPendingIdsRef.current &&
+        [...pendingIds].some((id) => !prevPendingIdsRef.current?.has(id))
+      ) {
         playOrderChime();
       }
-      prevPendingCountRef.current = currentPendingCount;
+      prevPendingIdsRef.current = pendingIds;
 
       setOrders(data);
       setErrorMessage(null);
@@ -430,10 +434,10 @@ export function LiveOrdersBoard({
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleTransition(order, "ready")}
+                      onClick={() => handleTransition(order, order.status === "accepted" ? "preparing" : "ready")}
                       className="flex items-center gap-1 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-orange-700"
                     >
-                      <Utensils size={13} /> Mark Ready
+                      <Utensils size={13} /> {order.status === "accepted" ? "Start Preparing" : "Mark Ready"}
                     </button>
                   </div>
                 </div>

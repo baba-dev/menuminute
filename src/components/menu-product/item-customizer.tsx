@@ -317,7 +317,7 @@ export function ItemCustomizer({
             <button
               type="button"
               className="action icon-btn"
-              onClick={() => setQuantity((q) => Math.min(20, q + 1))}
+              onClick={() => setQuantity((q) => Math.min(99, q + 1))}
               aria-label="Increase quantity"
             >
               <Plus size={16} />
