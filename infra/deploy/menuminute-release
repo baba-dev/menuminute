@@ -260,9 +260,16 @@ PY
        "$(stat -c '%U:%a' "$owner_env")" == root:600 ]] || {
       echo "AUTO_MIGRATION_SETUP_REQUIRED: Provision root-only migration.env" >&2; exit 1;
     }
-    [[ -x "$backup_tool" ]] && command -v pg_dump >/dev/null &&
-      command -v pg_restore >/dev/null || {
-      echo "AUTO_MIGRATION_SETUP_REQUIRED: PostgreSQL clients and off-host restic wrapper required" >&2; exit 1;
+    [[ -f "$backup_tool" && ! -L "$backup_tool" && -x "$backup_tool" &&
+       "$(stat -c %U "$backup_tool")" == root ]] || {
+      echo "AUTO_MIGRATION_SETUP_REQUIRED: Root-owned regular off-host restic wrapper required" >&2; exit 1;
+    }
+    backup_mode="$(stat -c %a "$backup_tool")"
+    [[ "$backup_mode" =~ ^[0-7]{3,4}$ ]] && (( (8#$backup_mode & 8#022) == 0 )) || {
+      echo "Off-host backup wrapper must not be writable by group/others" >&2; exit 1;
+    }
+    command -v pg_dump >/dev/null && command -v pg_restore >/dev/null || {
+      echo "AUTO_MIGRATION_SETUP_REQUIRED: PostgreSQL dump and restore clients required" >&2; exit 1;
     }
   fi
 fi
