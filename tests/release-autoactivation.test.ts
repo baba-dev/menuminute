@@ -31,9 +31,9 @@ describe("fail-closed automatic release activation", () => {
     expect(helper).toContain('-d "$old_web/src/db/migrations"');
     expect(helper).toContain('! -L "$old_web/src/db/migrations"');
     expect(helper).toContain('"$release/src/db/migrations"');
-    expect(helper).toContain('root.is_symlink()');
-    expect(helper).toContain('candidate[:len(previous)] != previous');
-    expect(helper).toContain('path.read_bytes() != other.read_bytes()');
+    expect(helper).toContain("root.is_symlink()");
+    expect(helper).toContain("candidate[:len(previous)] != previous");
+    expect(helper).toContain("path.read_bytes() != other.read_bytes()");
     expect(helper).toContain('raise SystemExit("Missing regular SQL migration: " + name)');
     expect(helper).toContain("systemctl is-active --quiet menuminute-web.service");
     expect(helper).toContain("systemctl is-active --quiet menuminute-worker.service");
@@ -52,16 +52,18 @@ describe("fail-closed automatic release activation", () => {
 
   it("backs up remotely before automatic staged SQL and needs no per-SHA operator marker", () => {
     expect(helper).not.toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
-    expect(helper).toContain('mode=autoactivate');
-    expect(helper).toContain('owner_env=/etc/menuminute/migration.env');
-    expect(helper).toContain('backup_tool=/usr/local/sbin/menuminute-restic');
+    expect(helper).toContain("mode=autoactivate");
+    expect(helper).toContain("owner_env=/etc/menuminute/migration.env");
+    expect(helper).toContain("backup_tool=/usr/local/sbin/menuminute-restic");
     expect(helper).toContain('pg_restore -l "$backup_dir/database.dump"');
     expect(helper).toContain('"$backup_tool" backup --tag "$tag" "$backup_dir" "$data/media"');
-    expect(helper).toContain('OFF_HOST_PREDEPLOY_BACKUP_VERIFIED');
-    expect(helper.indexOf('OFF_HOST_PREDEPLOY_BACKUP_VERIFIED')).toBeLessThan(
+    expect(helper).toContain("OFF_HOST_PREDEPLOY_BACKUP_VERIFIED");
+    expect(helper.indexOf("OFF_HOST_PREDEPLOY_BACKUP_VERIFIED")).toBeLessThan(
       helper.indexOf('(cd "$release" && "$node24" dist/db-migrate.mjs)')
     );
-    expect(helper).toContain('if [[ "$mode" == autoactivate && "$migration_change" == unchanged ]]');
+    expect(helper).toContain(
+      'if [[ "$mode" == autoactivate && "$migration_change" == unchanged ]]'
+    );
     expect(workflow).toContain("mode=autoactivate");
     expect(workflow).not.toContain("mode=activate");
     expect(workflow).not.toContain("manual_required=true");
