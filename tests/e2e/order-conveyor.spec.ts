@@ -81,7 +81,9 @@ test("Conveyor animation is one-shot, viewport-triggered and replayable", async 
   await page.goto("/");
   const conveyor = page.getByTestId("order-conveyor");
   await conveyor.scrollIntoViewIfNeeded();
-  const svg = conveyor.locator(".oc-desktop-art svg");
+  const svg = conveyor.locator(
+    page.viewportSize()!.width <= 680 ? ".oc-mobile-art svg" : ".oc-desktop-art svg"
+  );
   await expect(svg).toHaveClass(/oc-play/);
   await expect(conveyor).toHaveAttribute("data-state", /playing|complete/);
   const replay = conveyor.getByRole("button", { name: "Replay Order Conveyor animation" });
