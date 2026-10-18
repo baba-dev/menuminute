@@ -316,7 +316,8 @@ export function PublicMenu({
                                   <small className="quiet">Variants & add-ons</small>
                                   {i.variants.map((variant) => (
                                     <small key={variant.id}>
-                                      {variant.name} · {formatPrice(variant.priceMinor, m.view.currency)}
+                                      {variant.name} ·{" "}
+                                      {formatPrice(variant.priceMinor, m.view.currency)}
                                     </small>
                                   ))}
                                   {i.addOnGroups.map((group) => (
@@ -324,7 +325,8 @@ export function PublicMenu({
                                       <small className="quiet">{group.name}</small>
                                       {group.options.map((option) => (
                                         <small key={option.id}>
-                                          {option.name} · {formatPrice(option.priceMinor, m.view.currency)}
+                                          {option.name} ·{" "}
+                                          {formatPrice(option.priceMinor, m.view.currency)}
                                         </small>
                                       ))}
                                     </div>
