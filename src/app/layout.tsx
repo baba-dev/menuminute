@@ -5,7 +5,6 @@ import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
 import "@/styles/menu-product.css";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
@@ -51,9 +50,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
-        <div className="appearance-bar">
-          <ThemeControl />
-        </div>
         {children}
         <Toaster richColors position="top-right" />
       </body>
