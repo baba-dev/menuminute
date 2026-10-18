@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getGuestOrderTracking } from "@/modules/orders/service";
 import { errorResponse } from "@/lib/request-context";
 import { UnauthorizedError } from "@/lib/errors";
+import { enforcePublicOrderLimit } from "@/modules/orders/rate-limit";
 
 export async function GET(
   req: Request,
@@ -20,6 +21,13 @@ export async function GET(
       throw new UnauthorizedError("Tracking token required");
     }
 
+    try {
+      if (!(await enforcePublicOrderLimit("tracking", token, req))) {
+        return NextResponse.json({ message: "Tracking limit reached" }, { status: 429 });
+      }
+    } catch {
+      return NextResponse.json({ message: "Tracking temporarily unavailable" }, { status: 503 });
+    }
     const data = await getGuestOrderTracking(token, orderId, trackingToken);
 
     return NextResponse.json(data, {
