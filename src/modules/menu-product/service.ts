@@ -167,7 +167,11 @@ export type PublicProduct = {
 };
 export async function publicProduct(token: string): Promise<PublicProduct | null> {
   if (!z.string().min(1).max(128).safeParse(token).success) return null;
-  const r = await getPool().query<{ data: PublicProduct | null; fingerprint: string | null; ordering_enabled: boolean }>(
+  const r = await getPool().query<{
+    data: PublicProduct | null;
+    fingerprint: string | null;
+    ordering_enabled: boolean;
+  }>(
     "with p as (select app_private.free_menu_public($1) as data) select data, md5((data->'menus')::text) as fingerprint, app_private.public_ordering_enabled($1) as ordering_enabled from p",
     [token]
   );

@@ -183,7 +183,11 @@ export function PublicMenu({
               {data.outlet.isDemoData && <span className="badge">Sample Menu</span>}
               {preview && <span className="badge">Draft preview — not public</span>}
             </div>
-            <p>{data.outlet.orderingEnabled ? "Explore our dishes. Add to your order and pay with the restaurant team." : "Explore our digital menu. Online ordering is not enabled for this outlet."}</p>
+            <p>
+              {data.outlet.orderingEnabled
+                ? "Explore our dishes. Add to your order and pay with the restaurant team."
+                : "Explore our digital menu. Online ordering is not enabled for this outlet."}
+            </p>
           </div>
           <UtensilsCrossed className="hero-mark" aria-hidden="true" />
         </header>
@@ -325,7 +329,9 @@ export function PublicMenu({
                                   fontSize: "0.85rem",
                                   gap: "0.3rem",
                                 }}
-                                disabled={i.soldOut || !i.open || preview || !data.outlet.orderingEnabled}
+                                disabled={
+                                  i.soldOut || !i.open || preview || !data.outlet.orderingEnabled
+                                }
                                 onClick={() => setCustomizingDish(i)}
                               >
                                 <Plus size={14} /> Add
