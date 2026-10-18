@@ -56,7 +56,7 @@ jobs:
             echo "::group::Pinned Prettier differences"
             pnpm exec prettier --write . >/dev/null
             git --no-pager diff --check
-            git --no-pager diff -- .github/workflows/ docs/ README.md AGENTS.md tests/
+            git --no-pager diff -- .github/workflows/ docs/ README.md AGENTS.md src/ tests/
             echo "::endgroup::"
             exit 1
           fi
@@ -68,6 +68,9 @@ jobs:
         run: |
           bash -n infra/deploy/menuminute-release
           bash -n infra/deploy/package-release.sh
+
+      - name: Validate unattended migration deployment policy
+        run: python3 tests/deploy/migration-policy.py
 
       - name: Lint source code (ESLint)
         run: pnpm lint

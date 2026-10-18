@@ -8,8 +8,8 @@ import { EmberButton } from "./phase4-primitives";
 
 type Dish = MenuDocument["categories"][number]["items"][number] & { open: boolean };
 /**
- * Editorial guest details are deliberately read-only until the canonical ordering service
- * and region-specific calculation policy are approved. No fake checkout or hidden paid offer.
+ * Editorial information surface, separate from the existing authorized Add/customizer path.
+ * Showing item information must not manufacture an order, quote, tax or paid entitlement.
  */
 export function DishDetail({
   dish,
@@ -86,7 +86,7 @@ export function DishDetail({
               {dish.addOnGroups.map((g) => (
                 <section key={g.id} aria-label={g.name}>
                   <h3>{g.name}</h3>
-                  <p className="quiet">Choose {g.min}–{g.max} when ordering with staff.</p>
+                  <p className="quiet">Choose {g.min}–{g.max} for this dish.</p>
                   {g.options.map((o) => (
                     <p className="row between" key={o.id}>
                       <span>{o.name}{!o.isAvailable ? " · Sold Out" : ""}</span>
@@ -98,7 +98,7 @@ export function DishDetail({
             </div>
           )}
           {!dish.open && <p className="error">Outside this dish's service hours.</p>}
-          <p className="dish-detail-disclaimer">Prices and dietary labels are provided by the restaurant. Please ask staff about allergens and ordering.</p>
+          <p className="dish-detail-disclaimer">Prices and dietary labels are supplied by the restaurant. Ask staff about allergens; if online ordering is enabled, use Add on the menu to customize.</p>
           <EmberButton intent="flow" onClick={() => ref.current?.close()}>
             Back to menu
           </EmberButton>

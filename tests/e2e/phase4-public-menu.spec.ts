@@ -32,7 +32,9 @@ test("search hides dead category anchors and restores navigation when filters cl
   await expect(page.getByText("0 dishes shown", { exact: true })).toHaveCount(0);
 });
 
-test("editorial dish detail is an accessible read-only sheet and returns focus to the guest menu", async ({ page }) => {
+test("editorial dish detail is an accessible read-only sheet and returns focus to the guest menu", async ({
+  page,
+}) => {
   await page.goto("/m/demo-spice-route-kitchen-v1");
   const trigger = page.getByRole("button", { name: "View Paneer Tikka details" });
   await expect(trigger).toBeVisible();

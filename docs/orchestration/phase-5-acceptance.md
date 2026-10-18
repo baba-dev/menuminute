@@ -51,5 +51,5 @@ Parent [#67](https://github.com/baba-dev/menuminute/issues/67), continuous QA [P
 
 - [ ] Phase 4 operational sign-off, affected-region calculation/commercial/entitlement decisions and Phase 5 full QA complete before enabling public ordering/KDS.
 - [ ] One integrated final main SHA with four lanes+aggregate passed, publisher archive/digest and exact web+worker/public SHA; only schema-compatible unchanged-migration latest-main release may autoactivate.
-- [ ] Additive SQL migrations reviewed/backup/approved/applied by operator; no CI auto migration, no irreversible destructive rewrite of legacy orders or active menu/QR; rollback/forward-repair documented.
+- [ ] For migration-changing builds, use only the currently audited v4 root-controlled append-only automatic migration path after verified new off-host predeploy PostgreSQL/private-media backup and dedicated migration owner; check its prerequisites and logs. No destructive rewrite of legacy orders or active menu/QR; no automatic SQL rollback; forward-repair documented.
 - [ ] Post-release owner/staff/guest/two-station/expeditor controlled smoke; backup/restore/alerts/ERP and headroom still valid; new orders fail closed if entitlement or regional sales rule missing. If any checkbox lacks verifiable evidence, leave P5-09 open and feature flags disabled.

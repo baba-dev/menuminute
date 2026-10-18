@@ -14,8 +14,8 @@ test("production homepage applies Tailwind utilities and responsive navigation",
   await expect(action).toHaveCSS("padding-top", "16px");
   await expect(action).toHaveCSS("padding-left", "32px");
   await expect(action).toHaveCSS("border-radius", "16px");
-  await expect(action).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(action).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(action).toHaveCSS("color", "rgb(33, 22, 0)");
+  await expect(action).toHaveCSS("background-image", /linear-gradient/);
 
   const heading = page.getByRole("heading", { level: 1 });
   const width = page.viewportSize()!.width;

@@ -1,11 +1,24 @@
 import { describe, it, expect } from "vitest";
-import { advanceStationWork, assignStationWork, canExpeditorRelease, releaseFromExpeditor, stationSummary } from "../src/modules/kitchen/workflow";
+import {
+  advanceStationWork,
+  assignStationWork,
+  canExpeditorRelease,
+  releaseFromExpeditor,
+  stationSummary,
+} from "../src/modules/kitchen/workflow";
 function base() {
   return assignStationWork({
-    organizationId: "org1", outletId: "outlet1", orderId: "order1",
-    lines: [{ id: "paneer", dishName: "Paneer", quantity: 2 }, { id: "naan", dishName: "Naan", quantity: 1 }],
-    routes: [{ lineId: "paneer", stationIds: ["grill", "expo-prep"], ruleVersion: 1 },
-      { lineId: "naan", stationIds: ["tandoor"], ruleVersion: 1 }],
+    organizationId: "org1",
+    outletId: "outlet1",
+    orderId: "order1",
+    lines: [
+      { id: "paneer", dishName: "Paneer", quantity: 2 },
+      { id: "naan", dishName: "Naan", quantity: 1 },
+    ],
+    routes: [
+      { lineId: "paneer", stationIds: ["grill", "expo-prep"], ruleVersion: 1 },
+      { lineId: "naan", stationIds: ["tandoor"], ruleVersion: 1 },
+    ],
   });
 }
 describe("multi-station kitchen reducer (contract producer)", () => {
@@ -21,7 +34,9 @@ describe("multi-station kitchen reducer (contract producer)", () => {
     let s = base();
     for (const item of s.work) {
       s = advanceStationWork(s, { workId: item.id, expectedVersion: 0, action: "start" });
-      expect(() => advanceStationWork(s, { workId: item.id, expectedVersion: 0, action: "start" })).toThrow("changed");
+      expect(() =>
+        advanceStationWork(s, { workId: item.id, expectedVersion: 0, action: "start" })
+      ).toThrow("changed");
       s = advanceStationWork(s, { workId: item.id, expectedVersion: 1, action: "complete" });
       if (item !== base().work[base().work.length - 1]) expect(s.released).toBe(false);
     }
@@ -29,12 +44,30 @@ describe("multi-station kitchen reducer (contract producer)", () => {
     expect(() => releaseFromExpeditor(s, 0)).toThrow("changed");
     const released = releaseFromExpeditor(s, s.version);
     expect(released.released).toBe(true);
-    expect(() => advanceStationWork(released, { workId: released.work[0]!.id, expectedVersion: 2, action: "start" })).toThrow("already");
+    expect(() =>
+      advanceStationWork(released, {
+        workId: released.work[0]!.id,
+        expectedVersion: 2,
+        action: "start",
+      })
+    ).toThrow("already");
   });
   it("rejects duplicate/unknown routing and cancelled work cannot silently count as done", () => {
-    expect(() => assignStationWork({ organizationId: "a", outletId: "b", orderId: "c", lines: [{ id: "l", dishName: "Dish", quantity: 1 }], routes: [{ lineId: "l", stationIds: ["a", "a"], ruleVersion: 1 }] })).toThrow("twice");
+    expect(() =>
+      assignStationWork({
+        organizationId: "a",
+        outletId: "b",
+        orderId: "c",
+        lines: [{ id: "l", dishName: "Dish", quantity: 1 }],
+        routes: [{ lineId: "l", stationIds: ["a", "a"], ruleVersion: 1 }],
+      })
+    ).toThrow("twice");
     const s = base();
-    const cancelled = advanceStationWork(s, { workId: s.work[0]!.id, expectedVersion: 0, action: "cancel" });
+    const cancelled = advanceStationWork(s, {
+      workId: s.work[0]!.id,
+      expectedVersion: 0,
+      action: "cancel",
+    });
     expect(canExpeditorRelease(cancelled)).toBe(false);
     expect(() => releaseFromExpeditor(cancelled, cancelled.version)).toThrow("Every required");
   });

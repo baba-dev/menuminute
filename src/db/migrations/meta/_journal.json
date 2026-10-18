@@ -43,6 +43,13 @@
       "when": 1792084629512,
       "tag": "0005_menu_security",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792339200000,
+      "tag": "0006_online_ordering",
+      "breakpoints": true
     }
   ]
 }

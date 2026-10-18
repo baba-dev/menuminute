@@ -13,7 +13,7 @@ on:
         required: true
         type: string
       activate:
-        description: "Manual activation requires the root-owned per-SHA marker"
+        description: "Activate the verified release using the same unattended migration/backup path"
         required: true
         type: boolean
         default: false
@@ -200,8 +200,8 @@ jobs:
           [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
             echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
           }
-          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 3 || {
-            echo "Install reviewed root-owned MenuMinute helper v2 before automatic rollout" >&2; exit 1;
+          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 4 || {
+            echo "AUTO_MIGRATION_SETUP_REQUIRED: Install reviewed root-owned helper v4 (one-time operator bootstrap)" >&2; exit 1;
           }
           # A repeated stage/activation run may find a complete prior archive.
           # Do not send a Range request starting at EOF (some CDNs return 416).
@@ -230,7 +230,7 @@ jobs:
           REMOTE
           echo "staging_seconds=$(( $(date -u +%s) - stage_start ))" >> "$GITHUB_OUTPUT"
 
-      - name: Confirm staged automatic-activation policy
+      - name: Confirm unattended activation eligibility
         if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
         id: policy
         env:
@@ -239,10 +239,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           echo "eligible=false" >> "$GITHUB_OUTPUT"
-          if [[ "$AUTO" != true ]]; then
-            if [[ "$MANUAL_ACTIVATE" == true ]]; then
-              echo "eligible=true" >> "$GITHUB_OUTPUT"
-            fi
+          if [[ "$AUTO" != true && "$MANUAL_ACTIVATE" != true ]]; then
             exit 0
           fi
           latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
@@ -251,24 +248,12 @@ jobs:
             echo "Superseded during staging; live services unchanged" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          if output="$(ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST" 2>&1)"; then
-            printf '%s\n' "$output"
-            echo "eligible=true" >> "$GITHUB_OUTPUT"
-          else
-            code=$?
-            printf '%s\n' "$output"
-            if [[ "$code" -eq 20 ]]; then
-              echo "manual_required=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "Automatic eligibility failed ($code); not an approved manual stage" >&2
-            exit "$code"
-          fi
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST"
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
       - name: Staging report
         if: always()
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
-          MANUAL_REQUIRED: ${{ steps.policy.outputs.manual_required }}
           SUPERSEDED_BEFORE: ${{ steps.source.outputs.superseded || steps.transport.outputs.superseded }}
           STAGING_SECONDS: ${{ steps.transport.outputs.staging_seconds }}
           SUPERSEDED_AFTER: ${{ steps.policy.outputs.superseded }}
@@ -282,9 +267,7 @@ jobs:
             echo "| Release | [arm64-${SOURCE_SHA:0:12}](https://github.com/$GITHUB_REPOSITORY/releases/tag/arm64-${SOURCE_SHA:0:12}) |"
             echo "| Digest | \`${DEPLOY_DIGEST:-not downloaded}\` |"
             echo "| Staging elapsed | ${STAGING_SECONDS:-not started} seconds |"
-            if [[ "$MANUAL_REQUIRED" == true ]]; then
-              echo "| Outcome | Staged — manual migration review and approval required. Not deployed. |"
-            elif [[ "$SUPERSEDED_BEFORE" == true || "$SUPERSEDED_AFTER" == true ]]; then
+            if [[ "$SUPERSEDED_BEFORE" == true || "$SUPERSEDED_AFTER" == true ]]; then
               echo "| Outcome | Superseded; not deployed. |"
             elif [[ "$ELIGIBLE" == true ]]; then
               echo "| Outcome | Staged; eligible for separate production activation. Not yet deployed. |"
@@ -298,7 +281,7 @@ jobs:
     needs: stage
     if: needs.stage.result == 'success' && needs.stage.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 30
     environment:
       name: production
       url: https://food.bababuilds.com
@@ -340,7 +323,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ && "$DEPLOY_DIGEST" =~ ^[0-9a-f]{64}$ ]]
-          mode=activate
+          mode=autoactivate
           if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
             latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
             if [[ "$latest" != "$RELEASE_SHA" ]]; then
@@ -349,10 +332,9 @@ jobs:
               # A production job must not be marked successful when nothing was deployed.
               exit 1
             fi
-            mode=autoactivate
           fi
           started="$(date -u +%s)"
-          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 3 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
+          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 4 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
             echo "activated=true" >> "$GITHUB_OUTPUT"
             echo "activation_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
           else

@@ -420,6 +420,7 @@ export function MenuStudio({
                   initial={{
                     outlet: { ...outlet, versioned: true, isDemoData: false },
                     point: null,
+                    catalogFingerprint: "",
                     now: new Date().toISOString(),
                     menus: [
                       {

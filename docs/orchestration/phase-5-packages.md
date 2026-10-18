@@ -51,3 +51,7 @@ Real screenshots **inside each source PR**, not a separate sign-off document. At
 ## PR and handoff format
 
 Each issue moves Backlog -> Ready only after: named session and separate reviewer; final predecessor SHA/contract; exact claimed file paths and UTC expiry <=24h; current start SHA, isolated branch/worktree; affected user state and failure behavior; tenant/role/entitlement checks; additive migration/rollback; commands/evidence; no-active-writer conflict. End with changed files, exported contracts, executed real tests, screenshot URLs, what remains unverified, and explicit reservation release. Never call docs-only PR runtime completion or public activation. No merges without required final-head four-lane native ARM64 CI and quality gate.
+
+## Current integration handoff (2026-10-18)
+
+The core order/cart/merchant/guest-tracking producer from merged #79 is the single source of operational truth. Integrate any Phase 5 quote contract only through the existing transactional submission and price-change flow, never as a competing endpoint. The independent multi-station reducer in #78 is not persistence, station authorization, event replay or Kitchen Pro release. Current deployment follows #82's v4 root helper and off-host predeploy backup for append-only migrations; Phase 4 operator evidence and Phase 5 full acceptance are still required.

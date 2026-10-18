@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { QrCode, Smartphone, ChefHat, ArrowRight, CheckCircle, Star } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -96,46 +97,68 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-4 pt-20 pb-24 sm:px-6 sm:pt-28 sm:pb-32 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="border-brand-200 bg-brand-50 text-brand-700 mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium">
-            <Star className="fill-brand-500 text-brand-500 h-3.5 w-3.5" />
-            Free QR menus for every restaurant
+      {/* Food Orbit is the centered focal point, with copy and benefits as supporting elements. */}
+      <section className="food-orbit-hero relative isolate overflow-hidden px-4 py-12 sm:px-6 sm:py-16 xl:px-8">
+        <div className="food-orbit-hero__layout mx-auto grid max-w-[1500px] items-center gap-4 xl:min-h-[710px] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.78fr)_minmax(0,1fr)] xl:gap-0">
+          <div className="food-orbit-hero__intro relative z-10 mx-auto max-w-xl text-center xl:mx-0 xl:pl-4 xl:text-left">
+            <p className="food-orbit-hero__eyebrow mb-5 inline-flex items-center gap-2 rounded-full border border-current/20 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase">
+              <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+              Fresh ideas. Free QR menus.
+            </p>
+            <h1 className="food-orbit-hero__heading mb-6 text-4xl leading-[1.06] font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Your menu, beautifully digital.{" "}
+              <span className="food-orbit-hero__eyebrow">Free forever.</span>
+            </h1>
+            <p className="food-orbit-hero__description mx-auto mb-8 max-w-lg text-base leading-relaxed sm:text-lg xl:mx-0">
+              Build your restaurant menu, publish it and share one permanent QR code. Guests scan
+              and browse without downloading an app or signing up.
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row xl:flex-wrap xl:justify-start">
+              <Link
+                href="/register"
+                className="food-orbit-hero__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-bold transition-transform hover:-translate-y-0.5"
+              >
+                Create your free menu <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/demo"
+                className="food-orbit-hero__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border px-7 py-4 text-base font-semibold transition-colors"
+              >
+                <QrCode className="h-4 w-4" aria-hidden="true" /> View live demo
+              </Link>
+            </div>
+            <p className="food-orbit-hero__micro mt-5 text-xs font-medium">
+              No credit card. No guest account. Your restaurant stays the star.
+            </p>
           </div>
-
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
-            Your menu, beautifully digital. <span className="text-brand-600">Free forever.</span>
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-stone-600 sm:text-xl">
-            Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers
-            scan and browse — no app download required. Ordering and Kitchen Pro are in development;
-            the free menu works independently.
-          </p>
-
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href="/register"
-              className="bg-brand-600 hover:bg-brand-700 inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-semibold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              Create your free menu
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/demo"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-8 py-4 text-base font-semibold text-stone-700 transition-all hover:bg-stone-50"
-            >
-              <QrCode className="h-4 w-4" />
-              View live demo
-            </Link>
+          <div
+            className="food-orbit-hero__stage relative z-0 mx-auto w-full min-w-0"
+            data-testid="food-orbit-hero-art"
+          >
+            <div className="food-orbit-hero__art">
+              <FoodOrbit />
+            </div>
           </div>
-        </div>
-
-        {/* Background decoration */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="bg-brand-200/30 absolute top-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl" />
-          <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-orange-100/50 blur-3xl" />
+          <aside
+            className="food-orbit-hero__benefits hidden flex-col gap-10 pl-6 xl:flex"
+            aria-label="Free menu highlights"
+          >
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__index">01 / CREATE</span>
+              <p className="font-semibold">Your restaurant. Your menu.</p>
+              <small>Add dishes and preview before publishing.</small>
+            </div>
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__index">02 / DISPLAY</span>
+              <p className="font-semibold">A QR that lasts.</p>
+              <small>Permanent menu links, made for the table.</small>
+            </div>
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__index">03 / EXPLORE</span>
+              <p className="font-semibold">Simply scan and browse.</p>
+              <small>No customer registration required.</small>
+            </div>
+          </aside>
         </div>
       </section>
 

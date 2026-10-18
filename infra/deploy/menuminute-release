@@ -5,13 +5,15 @@ set -Eeuo pipefail
 umask 027
 
 if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
-  echo 3
+  echo 4
   exit 0
 fi
 
 [[ "$EUID" -eq 0 ]] || { echo "Root is required" >&2; exit 1; }
 [[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|activate|autoactivate|verify|recover SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
 mode="$1"; sha="$2"; digest="$3"
+# Legacy manual activation now takes the same checked, unattended path.
+[[ "$mode" != activate ]] || mode=autoactivate
 [[ "$mode" == stage || "$mode" == eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == verify || "$mode" == recover ]] || {
   echo "Unsupported release mode; install the reviewed current helper" >&2; exit 2;
 }
@@ -163,11 +165,6 @@ verify_release || { echo "Staged release identity verification failed" >&2; exit
 runtime_access_ok || {
   echo "Runtime accounts cannot enter/read the staged release; refusing cutover" >&2; exit 1;
 }
-if [[ "$mode" == activate ]]; then
-  [[ -f "/etc/menuminute/approved-releases/$sha" ]] || {
-    echo "Operator release/migration approval marker is missing" >&2; exit 1;
-  }
-fi
 [[ -f /etc/menuminute/web.env && -f /etc/menuminute/worker.env ]] || {
   echo "Runtime environment files are not provisioned" >&2; exit 1;
 }
@@ -195,8 +192,10 @@ if [[ -n "$old_web" ]]; then
   }
 fi
 
-# Migration files are the only supported proof for automatic application-only
-# restoration. Missing, symlinked, unreadable or changed trees are NOT proof.
+# Only append-only, checksummed migration histories may deploy unattended.
+# Existing migration SQL and metadata cannot be rewritten or removed. A new
+# journal entry requires a new SQL file, and the runner locks/checksums every
+# transaction. Never infer compatibility from just a changed tree hash.
 migration_trees_identical() {
   local previous="$1" candidate="$2"
   [[ -d "$previous/src/db/migrations" && -d "$candidate/src/db/migrations" &&
@@ -204,26 +203,75 @@ migration_trees_identical() {
     diff -qr -- "$previous/src/db/migrations" "$candidate/src/db/migrations" >/dev/null
 }
 
-# The owner authorized continuous activation on 2026-10-17. Automatic releases
-# must use the same migration files as the running application. SQL changes
-# retain the separate reviewed migration + per-SHA manual activation path.
+migration_change=unchanged
 if [[ "$mode" == autoactivate || "$mode" == eligibility ]]; then
   [[ -n "$old_web" && -d "$old_web/src/db/migrations" &&
-     -d "$release/src/db/migrations" &&
-     ! -L "$old_web/src/db/migrations" && ! -L "$release/src/db/migrations" ]] || {
-    echo "Automatic activation requires an existing release with migration history" >&2; exit 1;
+     ! -L "$old_web/src/db/migrations" ]] || {
+    echo "An existing immutable migration history is required" >&2; exit 1;
   }
-  migration_trees_identical "$old_web" "$release" || {
-    echo "STAGED_MANUAL: Migration files changed; operator review required" >&2
-    if [[ "$mode" == eligibility ]]; then exit 20; fi
-    exit 1
-  }
+  migration_change="$(python3 - "$old_web/src/db/migrations" "$release/src/db/migrations" <<'PY'
+import json, pathlib, re, sys
+old, new = map(pathlib.Path, sys.argv[1:])
+def read_history(root):
+    if not root.is_dir() or root.is_symlink():
+        raise SystemExit("Missing or linked migration root")
+    journal = root / "meta/_journal.json"
+    if journal.is_symlink() or not journal.is_file():
+        raise SystemExit("Missing regular migration journal")
+    entries = json.loads(journal.read_text())["entries"]
+    names = [entry["tag"] for entry in entries]
+    if not names or len(names) != len(set(names)) or any(
+        not re.fullmatch(r"[0-9]{4}_[A-Za-z0-9_]+", name) for name in names
+    ):
+        raise SystemExit("Invalid migration journal")
+    for name in names:
+        sql = root / (name + ".sql")
+        if sql.is_symlink() or not sql.is_file() or not sql.stat().st_size:
+            raise SystemExit("Missing regular SQL migration: " + name)
+    return names
+previous, candidate = read_history(old), read_history(new)
+if candidate[:len(previous)] != previous:
+    raise SystemExit("Migration journal is not append-only")
+for path in old.rglob("*"):
+    rel = path.relative_to(old)
+    if rel == pathlib.Path("meta/_journal.json"):
+        continue
+    other = new / rel
+    if path.is_symlink() or other.is_symlink():
+        raise SystemExit("Migration history contains a symlink")
+    if path.is_dir():
+        if not other.is_dir():
+            raise SystemExit("Existing migration directory removed")
+    elif not path.is_file() or not other.is_file() or path.read_bytes() != other.read_bytes():
+        raise SystemExit("Existing migration content modified or removed: " + str(rel))
+print("changed" if len(candidate) > len(previous) else "unchanged")
+PY
+)"
   systemctl is-active --quiet menuminute-web.service
   systemctl is-active --quiet menuminute-worker.service
   baseline="$(curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready)"
   [[ "$baseline" == *'"status":"ready"'* ]] || {
     echo "Current release is not ready; refusing automatic cutover" >&2; exit 1;
   }
+  if [[ "$migration_change" == changed ]]; then
+    owner_env=/etc/menuminute/migration.env
+    backup_tool=/usr/local/sbin/menuminute-restic
+    [[ -f "$owner_env" && ! -L "$owner_env" &&
+       "$(stat -c '%U:%a' "$owner_env")" == root:600 ]] || {
+      echo "AUTO_MIGRATION_SETUP_REQUIRED: Provision root-only migration.env" >&2; exit 1;
+    }
+    [[ -f "$backup_tool" && ! -L "$backup_tool" && -x "$backup_tool" &&
+       "$(stat -c %U "$backup_tool")" == root ]] || {
+      echo "AUTO_MIGRATION_SETUP_REQUIRED: Root-owned regular off-host restic wrapper required" >&2; exit 1;
+    }
+    backup_mode="$(stat -c %a "$backup_tool")"
+    [[ "$backup_mode" =~ ^[0-7]{3,4}$ ]] && (( (8#$backup_mode & 8#022) == 0 )) || {
+      echo "Off-host backup wrapper must not be writable by group/others" >&2; exit 1;
+    }
+    command -v pg_dump >/dev/null && command -v pg_restore >/dev/null || {
+      echo "AUTO_MIGRATION_SETUP_REQUIRED: PostgreSQL dump and restore clients required" >&2; exit 1;
+    }
+  fi
 fi
 
 erp_healthy() {
@@ -234,7 +282,7 @@ erp_healthy() {
 erp_healthy || { echo "ERP preflight failed; no changes applied" >&2; exit 1; }
 
 if [[ "$mode" == eligibility ]]; then
-  echo "ELIGIBLE: unchanged migrations, healthy existing release and ERP"
+  echo "ELIGIBLE: append-only migration history ($migration_change), healthy existing release and ERP"
   exit 0
 fi
 if [[ "$mode" == verify ]]; then
@@ -251,8 +299,8 @@ if [[ "$mode" == verify ]]; then
   exit 0
 fi
 
-# A successful automatic cutover retains one strictly application-only recovery
-# pointer. Never infer compatibility for migrations or restore business data.
+# Only migration-free automatic cutovers retain an application-only recovery
+# pointer. Never roll back SQL, new business data, or a migration-changing app.
 rollback_root="$data/rollback-pointers"
 if [[ "$mode" == recover ]]; then
   [[ "$old_web" == "$release" && "$old_worker" == "$release" ]] || {
@@ -308,7 +356,64 @@ if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]; then
   echo "ALREADY_ACTIVE: $sha"
   exit 0
 fi
-if [[ "$mode" == autoactivate ]]; then
+# Migration-changing releases are backed up off-host *before* applying new SQL.
+# Backups are encrypted by the provisioned restic wrapper. A new remote snapshot
+# must be visible; a locally written dump or a stale snapshot is not sufficient.
+# Rollback of migrated SQL/data is never automatic.
+if [[ "$mode" == autoactivate && "$migration_change" == changed ]]; then
+  backup_dir="$(mktemp -d "$data/.predeploy.XXXXXXXX")"
+  chmod 0700 "$backup_dir"
+  trap 'rm -rf -- "$backup_dir"' EXIT
+  printf 'candidate=%s\nprevious=%s\narchive_sha256=%s\n' "$sha" "$old_sha" "$digest" > "$backup_dir/release.txt"
+  cp -- /etc/menuminute/web.env /etc/menuminute/worker.env "$backup_dir/"
+  set -a
+  # Root-controlled, mode 0600 file; never load this in the runtime services or Actions.
+  source "$owner_env"
+  set +a
+  [[ "$MIGRATION_DATABASE_URL" =~ ^postgres(ql)?:// ]] || {
+    echo "Invalid explicit migration-owner URL" >&2; exit 1;
+  }
+  python3 - "$backup_dir/database.dump" <<'PY'
+import os, subprocess, sys
+from urllib.parse import urlsplit, unquote, parse_qs
+url = urlsplit(os.environ["MIGRATION_DATABASE_URL"])
+if (url.scheme not in ("postgres", "postgresql") or not url.hostname or
+    unquote(url.username or "") != "menuminute_owner" or
+    unquote(url.path.lstrip("/")) != "menuminute"):
+    raise SystemExit("Migration connection must be the dedicated MenuMinute owner/database")
+env = os.environ.copy()
+env.pop("MIGRATION_DATABASE_URL", None)
+env.update(PGHOST=url.hostname, PGPORT=str(url.port or 5432),
+           PGUSER=unquote(url.username), PGPASSWORD=unquote(url.password or ""),
+           PGDATABASE=unquote(url.path.lstrip("/")), PGCONNECT_TIMEOUT="5")
+options = parse_qs(url.query)
+if "sslmode" in options:
+    env["PGSSLMODE"] = options["sslmode"][0]
+subprocess.run(["pg_dump", "--format=custom", "--no-owner", "--no-acl",
+                "--file", sys.argv[1]], env=env, check=True)
+PY
+  test -s "$backup_dir/database.dump"
+  pg_restore -l "$backup_dir/database.dump" >/dev/null
+  # The encrypted backup wrapper never inherits the migration-owner URL.
+  unset MIGRATION_DATABASE_URL
+  tag="menuminute-predeploy-$sha"
+  before="$("$backup_tool" snapshots --json --tag "$tag" | python3 -c 'import json,sys; print(" ".join(sorted(s["id"] for s in json.load(sys.stdin))))')"
+  # Capture the private media pool as well as the DB and stable environment.
+  "$backup_tool" backup --tag "$tag" "$backup_dir" "$data/media"
+  after="$("$backup_tool" snapshots --json --tag "$tag" | python3 -c 'import json,sys; print(" ".join(sorted(s["id"] for s in json.load(sys.stdin))))')"
+  [[ -n "$after" && "$after" != "$before" ]] || {
+    echo "No new off-host snapshot verified; migration blocked" >&2; exit 1;
+  }
+  echo "OFF_HOST_PREDEPLOY_BACKUP_VERIFIED: $tag"
+  set -a
+  source "$owner_env"
+  set +a
+  (cd "$release" && "$node24" dist/db-migrate.mjs)
+  unset MIGRATION_DATABASE_URL
+  echo "AUTOMATIC_MIGRATIONS_APPLIED: $sha"
+fi
+
+if [[ "$mode" == autoactivate && "$migration_change" == unchanged ]]; then
   install -d -o root -g root -m 0700 "$rollback_root"
   pointer="$rollback_root/$sha"
   [[ ! -L "$pointer" ]] || { echo "Unsafe rollback pointer" >&2; exit 1; }
