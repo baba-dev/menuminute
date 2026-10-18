@@ -110,14 +110,20 @@ export default function HomePage() {
               <span className="food-orbit-hero__eyebrow">Free forever.</span>
             </h1>
             <p className="food-orbit-hero__description mx-auto mb-8 max-w-lg text-base leading-relaxed sm:text-lg xl:mx-0">
-              Build your restaurant menu, publish it and share one permanent QR code.
-              Guests scan and browse without downloading an app or signing up.
+              Build your restaurant menu, publish it and share one permanent QR code. Guests scan
+              and browse without downloading an app or signing up.
             </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row xl:justify-start xl:flex-wrap">
-              <Link href="/register" className="food-orbit-hero__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-bold transition-transform hover:-translate-y-0.5">
+            <div className="flex flex-col justify-center gap-3 sm:flex-row xl:flex-wrap xl:justify-start">
+              <Link
+                href="/register"
+                className="food-orbit-hero__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-bold transition-transform hover:-translate-y-0.5"
+              >
                 Create your free menu <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <Link href="/demo" className="food-orbit-hero__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border px-7 py-4 text-base font-semibold transition-colors">
+              <Link
+                href="/demo"
+                className="food-orbit-hero__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border px-7 py-4 text-base font-semibold transition-colors"
+              >
                 <QrCode className="h-4 w-4" aria-hidden="true" /> View live demo
               </Link>
             </div>
@@ -125,10 +131,18 @@ export default function HomePage() {
               No credit card. No guest account. Your restaurant stays the star.
             </p>
           </div>
-          <div className="food-orbit-hero__stage relative z-0 mx-auto w-full min-w-0" data-testid="food-orbit-hero-art">
-            <div className="food-orbit-hero__art"><FoodOrbit /></div>
+          <div
+            className="food-orbit-hero__stage relative z-0 mx-auto w-full min-w-0"
+            data-testid="food-orbit-hero-art"
+          >
+            <div className="food-orbit-hero__art">
+              <FoodOrbit />
+            </div>
           </div>
-          <aside className="food-orbit-hero__benefits hidden flex-col gap-10 pl-6 xl:flex" aria-label="Free menu highlights">
+          <aside
+            className="food-orbit-hero__benefits hidden flex-col gap-10 pl-6 xl:flex"
+            aria-label="Free menu highlights"
+          >
             <div className="food-orbit-hero__note">
               <span className="food-orbit-hero__index">01 / CREATE</span>
               <p className="font-semibold">Your restaurant. Your menu.</p>
