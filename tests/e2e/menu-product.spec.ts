@@ -260,6 +260,10 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
     page.getByRole("heading", { name: /An intentionally long dish name/ })
   ).toBeVisible();
   await page.evaluate(() => localStorage.setItem("menuminute.appearance", "system"));
+  // A same-tab localStorage write does not emit a storage event. Reload as a returning guest
+  // would, verify the saved System preference, then exercise both OS media transitions.
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.emulateMedia({ colorScheme: "light" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.emulateMedia({ colorScheme: "dark" });
