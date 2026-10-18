@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   ShoppingBag,
   Clock,
@@ -13,7 +13,6 @@ import {
   XCircle,
   AlertTriangle,
   User,
-  Phone,
   CreditCard,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -81,7 +80,7 @@ export function LiveOrdersBoard({
 
   const prevPendingIdsRef = useRef<Set<string> | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setIsRefreshing(true);
       const res = await fetch(`/api/organizations/${organizationId}/outlets/${outletId}/orders`, {
@@ -108,13 +107,19 @@ export function LiveOrdersBoard({
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [organizationId, outletId, soundEnabled]);
 
   useEffect(() => {
-    fetchOrders();
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) void fetchOrders();
+    });
     const interval = setInterval(fetchOrders, 5000);
-    return () => clearInterval(interval);
-  }, [organizationId, outletId, soundEnabled]);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [fetchOrders]);
 
   const handleTransition = async (
     order: MerchantOrder,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -69,28 +69,35 @@ export function OrderTracker({
   trackingToken: string;
   token: string;
 }) {
+  const snapshot = useCallback(() => {
+    try {
+      return sessionStorage.getItem(`order_${token}_${orderId}`) ?? "";
+    } catch {
+      return "";
+    }
+  }, [token, orderId]);
+  const savedCapability = useSyncExternalStore(
+    () => () => {},
+    snapshot,
+    () => ""
+  );
+  const capability = trackingToken || savedCapability;
   const [data, setData] = useState<TrackingData | null>(null);
-  const [capability, setCapability] = useState(trackingToken);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    let value = trackingToken;
+    if (!trackingToken) return;
     try {
-      const key = `order_${token}_${orderId}`;
-      if (value) sessionStorage.setItem(key, value);
-      else value = sessionStorage.getItem(key) ?? "";
-      if (trackingToken && typeof window !== "undefined") {
-        window.history.replaceState(window.history.state, "", window.location.pathname);
-      }
+      sessionStorage.setItem(`order_${token}_${orderId}`, trackingToken);
+      window.history.replaceState(window.history.state, "", window.location.pathname);
     } catch {
-      /* Private mode may disable session storage */
+      // Private mode may disable session storage.
     }
-    setCapability(value);
   }, [trackingToken, token, orderId]);
 
-  const fetchTracking = async () => {
+  const fetchTracking = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/public-orders/${encodeURIComponent(orderId)}?token=${encodeURIComponent(token)}`,
@@ -114,23 +121,23 @@ export function OrderTracker({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId, capability, token]);
 
   useEffect(() => {
-    if (!capability) {
-      setIsLoading(false);
-      setError("Private order access is unavailable in this browser.");
-      return;
-    }
-    fetchTracking();
+    if (!capability) return;
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) void fetchTracking();
+    });
     timerRef.current = setInterval(fetchTracking, 4000);
     return () => {
+      active = false;
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [orderId, capability, token]);
+  }, [capability, fetchTracking]);
 
-  if (isLoading && !data) {
+  if (capability && isLoading && !data) {
     return (
       <div
         className="product"
@@ -149,14 +156,14 @@ export function OrderTracker({
     );
   }
 
-  if (!data) {
+  if (!capability || !data) {
     return (
       <div className="product" style={{ minHeight: "100vh", padding: "2rem" }}>
         <div className="public-shell stack">
           <div className="panel stack" style={{ textAlign: "center", padding: "2.5rem 1.5rem" }}>
             <AlertCircle size={36} style={{ color: "var(--danger)", margin: "0 auto" }} />
             <h2>Order Details Unavailable</h2>
-            <p className="quiet">{error || "Could not locate this order."}</p>
+            <p className="quiet">{error || (!capability ? "Private order access is unavailable in this browser." : "Could not locate this order.")}</p>
             <Link
               href={`/m/${token}`}
               className="action ember"

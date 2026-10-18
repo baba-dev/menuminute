@@ -28,19 +28,24 @@ export function PublicMenu({
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartHydrated, setCartHydrated] = useState(false);
   useEffect(() => {
-    if (typeof window === "undefined" || !token) {
-      setCartHydrated(true);
-      return;
-    }
-    try {
-      const stored = sessionStorage.getItem(`cart_${token}`);
-      const parsed = stored ? JSON.parse(stored) : [];
-      setCartItems(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setCartItems([]);
-    } finally {
-      setCartHydrated(true);
-    }
+    if (!token) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      try {
+        const stored = sessionStorage.getItem(`cart_${token}`);
+        const parsed = stored ? JSON.parse(stored) : [];
+        setCartItems(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setCartItems([]);
+      } finally {
+        setCartHydrated(true);
+      }
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [token]);
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
