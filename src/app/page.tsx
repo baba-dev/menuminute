@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { MenuJourney } from "@/components/marketing/journey/menu-journey";
+import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { QrCode, Smartphone, ChefHat, ArrowRight, Menu } from "lucide-react";
 
@@ -129,8 +130,11 @@ export default function HomePage() {
       {/* A three-stage illustrated story, following the Food Orbit hero. */}
       <MenuJourney />
 
-      {/* Features */}
-      <section className="px-4 py-20 sm:px-6 lg:px-8">
+      {/* Editorial preview of planned smart import; no inference runs on this page. */}
+      <MenuAlchemy />
+
+      {/* Product choices after the illustrated onboarding story. */}
+      <section className="ma-product-features px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold text-stone-900 sm:text-4xl">
