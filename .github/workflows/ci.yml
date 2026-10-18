@@ -56,7 +56,7 @@ jobs:
             echo "::group::Pinned Prettier differences"
             pnpm exec prettier --write . >/dev/null
             git --no-pager diff --check
-            git --no-pager diff -- src/app/page.tsx tests/e2e/food-orbit.spec.ts
+            git --no-pager diff -- .github/workflows/ docs/ README.md AGENTS.md tests/
             echo "::endgroup::"
             exit 1
           fi
