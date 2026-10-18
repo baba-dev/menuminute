@@ -1,19 +1,26 @@
-# Food Orbit — homepage artwork handoff
+# Food Orbit — homepage artwork and release handoff
 
-Issue #80 · design direction: owner-selected **Concept F**. Source: \`src/components/marketing/hero/food-orbit.tsx\`; styling: \`food-orbit.css\`; integration: \`src/app/page.tsx\`.
+Issue #80; PR #81. Owner-selected direction: **Concept F — The Food Orbit**.
 
-## Artwork and functionality
+- Original layered SVG: `src/components/marketing/hero/food-orbit.tsx`
+- Motion, theme and hero styles: `src/components/marketing/hero/food-orbit.css`
+- Public homepage integration: `src/app/page.tsx`
+- Browser tests: `tests/e2e/food-orbit.spec.ts` and the relevant styling/marketing suites
 
-Original native SVG paths with individually composed pizza, coffee, biryani-style rice bowl, layered dessert, mobile menu mockup, decorative/non-scannable QR table sign, ingredient details and hand-drawn orbital paths. The phone depicts **Free QR Menu browsing only**—no unlaunched ordering, KDS, promises about actual dishes, dietary data or prices. The decorative QR glyph has no implied destination: use the actual /demo link to test a working QR.
+## Product-accurate artwork
 
-The nine visual bands are atmosphere, outer orbit, rear ingredients, inner orbit, phone, three primary food illustrations, table sign, foreground garnish and interface highlights. CSS custom properties adapt to the theme-script-managed \`data-theme=light|dark\`; food maintains its natural colors. No base64, external imagery or paid provider. No migrations, service/API/QR identity changes or dependencies.
+Original native SVG paths depict pizza, coffee, rice bowl, cake, a stylized Free QR Menu phone, independently moving ingredients/steam/orbital paths and a decorative, **non-scannable** QR sign. The actual working QR is accessed through the unchanged `/demo` link. The screen does not suggest unreleased ordering/KDS, invented dish prices or dietary/allergen claims. No raster wrappers, external artwork requests or provider billing.
 
-Motion: drawn path, staggered entrances, short phone overshoot, calm floating with independent tempos, steam-path animation. Pointer fine/hover devices get frame-limited \`--near-_\`, \`--mid-_\`, \`--far-*\` parallax. IntersectionObserver and document visibility pause ambient motion; listeners and rAF are cleaned up. Reduced motion renders the final static composition immediately. The illustration itself has a single accessible title/description and no focusable controls.
+## Final hero layout
 
-The homepage retains existing free product statements, /register and /demo actions and coming-soon cards. No shared globals or deployed asset replacement.
+At >=1280px the animated SVG occupies the true middle grid column, with identically sized left and right support columns. The left column has the headline, clear free-product value proposition and functional `/register` and `/demo` CTAs; the right column explains Create / Display / Explore. The primary CTA uses the approved Ink & Ember gradient with dark foreground. Below desktop, copy and actions precede the centered art; narrow mobile crops minor peripheral detail while retaining the phone and food. Light canvas is white; dark canvas is charcoal. Food stays naturally colored. The rest of the public homepage and the development labels remain unchanged.
 
-## Acceptance and evidence
+## Animation and accessibility
 
-Required: \`pnpm install --frozen-lockfile\`, \`pnpm lint\`, \`pnpm typecheck\`, \`pnpm test\`, \`pnpm build\`, and \`pnpm exec playwright test tests/e2e/food-orbit.spec.ts tests/e2e/phase4-marketing.spec.ts tests/e2e/styling.spec.ts\` against the branch head. Confirm 360/390/768/1024/1440px, Light/Dark/System, zoom, keyboard, reduced-motion, mobile touch, actual screenshot visual review and no overflow. Visual acceptance and four native ARM64 CI lanes must be observed before merging; an open PR is not deployed production code.
+Nine bands: atmosphere, outer orbit, rear food, inner orbit, phone, primary food, table sign, foreground ingredients and highlights. Drawing paths, staggered entrances, gentle ambient float and steam use CSS. Desktop fine-pointer parallax is bounded and frame-limited via `--near-x` / `--near-y`, `--mid-x` / `--mid-y` and `--far-x` / `--far-y`. Offscreen/hidden content pauses; cleanup disconnects observers/listeners and animation frames. `prefers-reduced-motion: reduce` displays complete static art immediately. The illustration is a single labeled SVG with no focusable controls. Primary actions remain in normal page flow.
 
-Rollback: revert this isolated marketing change, with no database rollback. Do not merge this visual slice as a substitute for Phase 4 operator-backed sign-off.
+## Validation and activation
+
+Required on the **final PR head**: frozen-lockfile install; Prettier/lint; strict typecheck; PostgreSQL/Redis integration; production ARM64 build and Playwright; aggregate quality gate. Browser tests explicitly cover all 360/390/768/1024/1440 widths, center placement at 1440, theme persistence, reduced motion, CTA targets, ordering/price claim safety, and no horizontal overflow. Independent visual acceptance of both themes is also required.
+
+No schema, migration, server config, auth, billing, QR identity, ordering or worker changes. The previous passing CI on `0573f50e13cea009a27579baf6c4c40a8eb57060` is **superseded** by the final amended commit and cannot authorize merging on its own. Merge does not equal activation: the latest-main native ARM64 publisher, checksum-verified stage, unchanged-migration guard, production environment review (if configured), ERP health and exact public release SHA must all succeed. Rollback is a compatible application release, not a data rollback. Phase 4 operator/backup/restore/ERP gates remain separate.
