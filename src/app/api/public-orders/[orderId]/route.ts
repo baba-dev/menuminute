@@ -14,9 +14,9 @@ export async function GET(
 
     const token = z.string().min(1).max(128).parse(url.searchParams.get("token"));
     const trackingToken =
-      url.searchParams.get("trackingToken") || req.headers.get("x-tracking-token");
+      req.headers.get("x-tracking-token") || url.searchParams.get("trackingToken");
 
-    if (!trackingToken) {
+    if (!trackingToken || trackingToken.length > 128) {
       throw new UnauthorizedError("Tracking token required");
     }
 

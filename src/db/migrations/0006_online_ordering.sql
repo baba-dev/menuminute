@@ -252,7 +252,7 @@ DECLARE v record; v_count integer:=0;
 BEGIN
  FOR v IN SELECT ord.id,ord.restaurant_id,ord.version,r.organization_id FROM orders ord
  JOIN restaurants r ON r.id=ord.restaurant_id WHERE ord.status='pending' AND ord.expires_at<=clock_timestamp()
- ORDER BY ord.expires_at FOR UPDATE OF ord SKIP LOCKED LIMIT 50 LOOP
+ ORDER BY ord.expires_at LIMIT 50 FOR UPDATE OF ord SKIP LOCKED LOOP
    UPDATE orders SET status='expired',version=v.version+1,updated_at=clock_timestamp() WHERE id=v.id;
    INSERT INTO order_status_events(id,order_id,restaurant_id,from_status,to_status,status,note,actor_type)
    VALUES(gen_random_uuid()::text,v.id,v.restaurant_id,'pending','expired','expired','Acceptance window elapsed','system');

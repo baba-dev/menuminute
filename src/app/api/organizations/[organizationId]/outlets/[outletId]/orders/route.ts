@@ -8,11 +8,11 @@ export async function GET(
 ) {
   try {
     const actor = await requestActor(req);
-    const { outletId } = await context.params;
+    const { organizationId, outletId } = await context.params;
     const url = new URL(req.url);
     const statusFilter = url.searchParams.get("status") || undefined;
 
-    const orders = await listOutletOrders(actor, outletId, statusFilter);
+    const orders = await listOutletOrders(actor, outletId, statusFilter, organizationId);
 
     return NextResponse.json(orders, {
       status: 200,

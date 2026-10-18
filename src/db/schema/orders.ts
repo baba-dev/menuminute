@@ -7,6 +7,7 @@ import {
   index,
   uniqueIndex,
   jsonb,
+  date,
 } from "drizzle-orm/pg-core";
 import { restaurants, restaurantTables } from "./restaurants";
 
@@ -70,6 +71,8 @@ export const orders = pgTable(
 
     // Scoped client idempotency key & opaque guest tracking capability
     clientSubmissionKey: text("client_submission_key"),
+    requestHash: text("request_hash"),
+    businessDate: date("business_date"),
     trackingToken: text("tracking_token"),
 
     // Closing instant deadline for automatic expiry of unaccepted pending orders
