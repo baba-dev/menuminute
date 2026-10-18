@@ -7,15 +7,29 @@ import { ConflictError, ValidationError } from "@/lib/errors";
  * persist changes with audit/outbox. The reducer itself never authorizes a browser or writes Redis.
  */
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
-const line = z.object({ id, dishName: z.string().min(1).max(100), quantity: z.number().int().positive().safe() }).strict();
-const route = z.object({ lineId: id, stationIds: z.array(id).min(1).max(16), ruleVersion: z.number().int().positive() }).strict();
-export const kitchenAssignmentSchema = z.object({
-  organizationId: id,
-  outletId: id,
-  orderId: id,
-  lines: z.array(line).min(1).max(100),
-  routes: z.array(route).min(1).max(100),
-}).strict();
+const line = z
+  .object({
+    id,
+    dishName: z.string().min(1).max(100),
+    quantity: z.number().int().positive().safe(),
+  })
+  .strict();
+const route = z
+  .object({
+    lineId: id,
+    stationIds: z.array(id).min(1).max(16),
+    ruleVersion: z.number().int().positive(),
+  })
+  .strict();
+export const kitchenAssignmentSchema = z
+  .object({
+    organizationId: id,
+    outletId: id,
+    orderId: id,
+    lines: z.array(line).min(1).max(100),
+    routes: z.array(route).min(1).max(100),
+  })
+  .strict();
 
 export type WorkState = "queued" | "preparing" | "complete" | "cancelled";
 export type StationWork = {
@@ -31,7 +45,12 @@ export type StationWork = {
   state: WorkState;
   version: number;
 };
-export type ExpoState = { orderId: string; work: StationWork[]; released: boolean; version: number };
+export type ExpoState = {
+  orderId: string;
+  work: StationWork[];
+  released: boolean;
+  version: number;
+};
 export function assignStationWork(raw: unknown): ExpoState {
   const data = kitchenAssignmentSchema.parse(raw);
   const lines = new Map(data.lines.map((l) => [l.id, l]));
@@ -63,7 +82,11 @@ export function assignStationWork(raw: unknown): ExpoState {
   }
   return { orderId: data.orderId, work, released: false, version: 0 };
 }
-export type StationCommand = { workId: string; expectedVersion: number; action: "start" | "complete" | "cancel" };
+export type StationCommand = {
+  workId: string;
+  expectedVersion: number;
+  action: "start" | "complete" | "cancel";
+};
 export function advanceStationWork(state: ExpoState, command: StationCommand): ExpoState {
   if (state.released) throw new ConflictError("The order has already been released by expeditor");
   const existing = state.work.find((w) => w.id === command.workId);
@@ -72,18 +95,28 @@ export function advanceStationWork(state: ExpoState, command: StationCommand): E
   const allowed =
     (command.action === "start" && existing.state === "queued") ||
     (command.action === "complete" && existing.state === "preparing") ||
-    (command.action === "cancel" && (existing.state === "queued" || existing.state === "preparing"));
+    (command.action === "cancel" &&
+      (existing.state === "queued" || existing.state === "preparing"));
   if (!allowed) throw new ConflictError("Invalid station transition");
-  const next: WorkState = command.action === "start" ? "preparing" : command.action === "complete" ? "complete" : "cancelled";
+  const next: WorkState =
+    command.action === "start"
+      ? "preparing"
+      : command.action === "complete"
+        ? "complete"
+        : "cancelled";
   return {
     ...state,
     version: state.version + 1,
-    work: state.work.map((w) => w.id === existing.id ? { ...w, state: next, version: w.version + 1 } : w),
+    work: state.work.map((w) =>
+      w.id === existing.id ? { ...w, state: next, version: w.version + 1 } : w
+    ),
   };
 }
 /** Cancelled work cannot silently make a guest order Ready; a separately audited reroute is required. */
 export function canExpeditorRelease(state: ExpoState): boolean {
-  return !state.released && state.work.length > 0 && state.work.every((w) => w.state === "complete");
+  return (
+    !state.released && state.work.length > 0 && state.work.every((w) => w.state === "complete")
+  );
 }
 export function releaseFromExpeditor(state: ExpoState, expectedVersion: number): ExpoState {
   if (state.version !== expectedVersion) throw new ConflictError("Kitchen ticket changed");
@@ -98,7 +131,9 @@ export function stationSummary(state: ExpoState, stationId: string) {
     queued: work.filter((w) => w.state === "queued").length,
     preparing: work.filter((w) => w.state === "preparing").length,
     complete: work.filter((w) => w.state === "complete").length,
-    outstandingQuantity: work.filter((w) => w.state !== "complete" && w.state !== "cancelled")
-      .reduce((sum, w) => sum + BigInt(w.quantity), 0n).toString(),
+    outstandingQuantity: work
+      .filter((w) => w.state !== "complete" && w.state !== "cancelled")
+      .reduce((sum, w) => sum + BigInt(w.quantity), 0n)
+      .toString(),
   };
 }

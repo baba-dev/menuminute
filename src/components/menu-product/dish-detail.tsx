@@ -39,7 +39,11 @@ export function DishDetail({
         <div className="dish-detail-art">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={dish.mediaId ? `/api/public-media/${dish.mediaId}?size=thumb` : "/icons/category-default.svg"}
+            src={
+              dish.mediaId
+                ? `/api/public-media/${dish.mediaId}?size=thumb`
+                : "/icons/category-default.svg"
+            }
             alt={dish.mediaId ? dish.name : "Dish illustration"}
             onError={(e) => {
               e.currentTarget.onerror = null;
@@ -53,12 +57,19 @@ export function DishDetail({
         <div className="stack dish-detail-copy">
           <div className="row between">
             <span className="eyebrow">From this kitchen</span>
-            <button className="dish-close" type="button" aria-label="Close dish details" onClick={() => ref.current?.close()}>
+            <button
+              className="dish-close"
+              type="button"
+              aria-label="Close dish details"
+              onClick={() => ref.current?.close()}
+            >
               <X size={20} aria-hidden="true" />
             </button>
           </div>
           <h2 id="dish-detail-title">{dish.name}</h2>
-          <p>{dish.description || "Ask the restaurant team for more information about this dish."}</p>
+          <p>
+            {dish.description || "Ask the restaurant team for more information about this dish."}
+          </p>
           <strong className="dish-detail-price">
             {availableVariants.length ? "From " : ""}
             {formatPrice(displayedPrice, currency)}
@@ -77,7 +88,10 @@ export function DishDetail({
                   <h3>Sizes and variants</h3>
                   {dish.variants.map((v) => (
                     <p key={v.id} className="row between">
-                      <span>{v.name}{!v.isAvailable ? " · Sold Out" : ""}</span>
+                      <span>
+                        {v.name}
+                        {!v.isAvailable ? " · Sold Out" : ""}
+                      </span>
                       <span className="money">{formatPrice(v.priceMinor, currency)}</span>
                     </p>
                   ))}
@@ -86,10 +100,15 @@ export function DishDetail({
               {dish.addOnGroups.map((g) => (
                 <section key={g.id} aria-label={g.name}>
                   <h3>{g.name}</h3>
-                  <p className="quiet">Choose {g.min}–{g.max} for this dish.</p>
+                  <p className="quiet">
+                    Choose {g.min}–{g.max} for this dish.
+                  </p>
                   {g.options.map((o) => (
                     <p className="row between" key={o.id}>
-                      <span>{o.name}{!o.isAvailable ? " · Sold Out" : ""}</span>
+                      <span>
+                        {o.name}
+                        {!o.isAvailable ? " · Sold Out" : ""}
+                      </span>
                       <span className="money">+{formatPrice(o.priceMinor, currency)}</span>
                     </p>
                   ))}
@@ -98,7 +117,10 @@ export function DishDetail({
             </div>
           )}
           {!dish.open && <p className="error">Outside this dish's service hours.</p>}
-          <p className="dish-detail-disclaimer">Prices and dietary labels are supplied by the restaurant. Ask staff about allergens; if online ordering is enabled, use Add on the menu to customize.</p>
+          <p className="dish-detail-disclaimer">
+            Prices and dietary labels are supplied by the restaurant. Ask staff about allergens; if
+            online ordering is enabled, use Add on the menu to customize.
+          </p>
           <EmberButton intent="flow" onClick={() => ref.current?.close()}>
             Back to menu
           </EmberButton>

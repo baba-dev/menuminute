@@ -11,9 +11,7 @@ import { currencyExponent } from "@/lib/money";
  * Pricing jurisdictions and commercial entitlements remain separate release gates.
  */
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
-const selectedGroup = z
-  .object({ groupId: id, optionIds: z.array(id).max(100) })
-  .strict();
+const selectedGroup = z.object({ groupId: id, optionIds: z.array(id).max(100) }).strict();
 export const quoteInputSchema = z
   .object({
     menuId: id,
@@ -75,7 +73,9 @@ export function quotePublishedSelection(
   const m = publicMenu.menus.find((menu) => menu.id === input.menuId);
   if (!m) throw new ValidationError("The selected menu is unavailable");
   if (m.revision !== input.expectedRevision)
-    throw new ConflictError("The published menu changed. Review its current prices and availability.");
+    throw new ConflictError(
+      "The published menu changed. Review its current prices and availability."
+    );
   const doc = projectMenu(m.document, publicMenu.outlet.timezone, instant, m.overrides);
   if (!doc.open) throw new ConflictError("This menu is outside its scheduled service");
   if (doc.currency !== publicMenu.outlet.currency)
@@ -96,7 +96,10 @@ export function quotePublishedSelection(
     const variant = dish.variants.find((v) => v.id === selection.variantId);
     if (selection.variantId !== null && (!variant || !variant.isAvailable))
       throw new ConflictError("The selected variant is unavailable");
-    unique(selection.groups.map((g) => g.groupId), "Duplicate add-on group");
+    unique(
+      selection.groups.map((g) => g.groupId),
+      "Duplicate add-on group"
+    );
     for (const selected of selection.groups) {
       if (!dish.addOnGroups.some((g) => g.id === selected.groupId))
         throw new ValidationError("Unknown add-on group");
@@ -114,7 +117,12 @@ export function quotePublishedSelection(
           throw new ConflictError("An add-on is unavailable. Review your selection.");
         const price = validMinor(option.priceMinor);
         unit += price;
-        options.push({ groupId: group.id, id: option.id, name: option.name, priceMinor: String(price) });
+        options.push({
+          groupId: group.id,
+          id: option.id,
+          name: option.name,
+          priceMinor: String(price),
+        });
       }
     }
     const lineTotal = unit * BigInt(selection.quantity);

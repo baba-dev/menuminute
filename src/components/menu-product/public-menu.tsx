@@ -81,7 +81,11 @@ export function PublicMenu({
               setDetail(null);
               setCustomizingDish(null);
               setCartItems([]);
-              try { sessionStorage.removeItem(`cart_${token}`); } catch { /* Storage may be unavailable. */ }
+              try {
+                sessionStorage.removeItem(`cart_${token}`);
+              } catch {
+                /* Storage may be unavailable. */
+              }
               setStatus("This menu is no longer available. Please ask the staff.");
             } else {
               setStatus("Menu updates could not be checked. This view may be outdated.");
@@ -431,11 +435,7 @@ export function PublicMenu({
       </div>
 
       {detail && (
-        <DishDetail
-          dish={detail.dish}
-          currency={detail.currency}
-          onClose={() => setDetail(null)}
-        />
+        <DishDetail dish={detail.dish} currency={detail.currency} onClose={() => setDetail(null)} />
       )}
 
       {/* Item Customizer Modal */}
