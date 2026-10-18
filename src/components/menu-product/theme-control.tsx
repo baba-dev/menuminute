@@ -44,3 +44,22 @@ export function ThemeControl() {
     </button>
   );
 }
+
+/** Keep System mode responsive even on routes without a visible theme toggle. */
+export function ThemeSync() {
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => {
+      const selected = localStorage.getItem("menuminute.appearance") ?? "system";
+      document.documentElement.dataset.theme =
+        selected === "system" ? (query.matches ? "dark" : "light") : selected === "dark" ? "dark" : "light";
+    };
+    query.addEventListener("change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      query.removeEventListener("change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+  return null;
+}
