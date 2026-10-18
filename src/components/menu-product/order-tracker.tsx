@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -72,12 +72,13 @@ export function OrderTracker({
   const [data, setData] = useState<TrackingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchTracking = async () => {
     try {
       const res = await fetch(
-        `/api/public-orders/${encodeURIComponent(orderId)}?token=${encodeURIComponent(token)}&trackingToken=${encodeURIComponent(trackingToken)}`,
-        { cache: "no-store" }
+        `/api/public-orders/${encodeURIComponent(orderId)}?token=${encodeURIComponent(token)}`,
+        { cache: "no-store", headers: { "x-tracking-token": trackingToken } }
       );
       if (!res.ok) {
         throw new Error("Unable to load order status.");
@@ -85,6 +86,10 @@ export function OrderTracker({
       const json = await res.json();
       setData(json);
       setError(null);
+      if (["served", "collected", "rejected", "cancelled", "expired"].includes(json.order.status) && timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error loading tracking");
     } finally {
@@ -94,8 +99,8 @@ export function OrderTracker({
 
   useEffect(() => {
     fetchTracking();
-    const interval = setInterval(fetchTracking, 4000);
-    return () => clearInterval(interval);
+    timerRef.current = setInterval(fetchTracking, 4000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = null; };
   }, [orderId, trackingToken, token]);
 
   if (isLoading && !data) {
@@ -109,7 +114,7 @@ export function OrderTracker({
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <div className="product" style={{ minHeight: "100vh", padding: "2rem" }}>
         <div className="public-shell stack">
@@ -186,6 +191,7 @@ export function OrderTracker({
           </span>
         </div>
 
+        {error && <p role="status" className="error">Connection interrupted. Showing the last confirmed order status.</p>}
         {/* Hero Card */}
         <div className="panel stack" style={{ gap: "0.75rem", borderTop: "4px solid var(--ember)" }}>
           <div className="row between" style={{ alignItems: "flex-start" }}>

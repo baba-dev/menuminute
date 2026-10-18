@@ -12,7 +12,6 @@ import {
   RefreshCw,
   XCircle,
   AlertTriangle,
-  CreditCard,
   User,
   Phone,
 } from "lucide-react";
@@ -145,7 +144,7 @@ export function LiveOrdersBoard({
       setRejectingOrder(null);
       await fetchOrders();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Error transitioning order");
+      setErrorMessage(err instanceof Error ? err.message : "Error transitioning order");
     }
   };
 
@@ -501,17 +500,7 @@ export function LiveOrdersBoard({
                         {isPickup ? "Mark Collected" : "Mark Served"}
                       </button>
 
-                      {order.paymentStatus !== "paid" && (
-                        <button
-                          type="button"
-                          onClick={() => handleTransition(order, completionStatus, undefined, "paid")}
-                          className="flex items-center gap-1 rounded-xl border border-stone-300 bg-stone-50 px-2.5 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                          title="Complete and mark payment received"
-                        >
-                          <CreditCard size={13} />
-                          <span>Paid</span>
-                        </button>
-                      )}
+
                     </div>
                   </div>
                 );

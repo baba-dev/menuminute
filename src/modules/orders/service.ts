@@ -27,7 +27,6 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   if (!data) throw new NotFoundError("Menu or service point unavailable");
 
   const outlet = data.outlet;
-  const outletId = outlet.id;
 
   // 2. Validate requested fulfillment mode against outlet settings
   if (
@@ -40,6 +39,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     );
   }
 
+  // Revalidate at the trusted server boundary before final transactional commit.
   // 4. Project live menu categories and dishes for server-side price & availability verification
   const now = new Date(data.now);
   const projectedMenus = data.menus.map((m) =>
