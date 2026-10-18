@@ -377,8 +377,10 @@ if [[ "$mode" == autoactivate && "$migration_change" == changed ]]; then
 import os, subprocess, sys
 from urllib.parse import urlsplit, unquote, parse_qs
 url = urlsplit(os.environ["MIGRATION_DATABASE_URL"])
-if url.scheme not in ("postgres", "postgresql") or not url.hostname or not url.username or not url.path.lstrip("/"):
-    raise SystemExit("Invalid migration-owner connection")
+if (url.scheme not in ("postgres", "postgresql") or not url.hostname or
+    unquote(url.username or "") != "menuminute_owner" or
+    unquote(url.path.lstrip("/")) != "menuminute"):
+    raise SystemExit("Migration connection must be the dedicated MenuMinute owner/database")
 env = os.environ.copy()
 env.pop("MIGRATION_DATABASE_URL", None)
 env.update(PGHOST=url.hostname, PGPORT=str(url.port or 5432),
@@ -392,6 +394,8 @@ subprocess.run(["pg_dump", "--format=custom", "--no-owner", "--no-acl",
 PY
   test -s "$backup_dir/database.dump"
   pg_restore -l "$backup_dir/database.dump" >/dev/null
+  # The encrypted backup wrapper never inherits the migration-owner URL.
+  unset MIGRATION_DATABASE_URL
   tag="menuminute-predeploy-$sha"
   before="$("$backup_tool" snapshots --json --tag "$tag" | python3 -c 'import json,sys; print(" ".join(sorted(s["id"] for s in json.load(sys.stdin))))')"
   # Capture the private media pool as well as the DB and stable environment.
@@ -401,6 +405,9 @@ PY
     echo "No new off-host snapshot verified; migration blocked" >&2; exit 1;
   }
   echo "OFF_HOST_PREDEPLOY_BACKUP_VERIFIED: $tag"
+  set -a
+  source "$owner_env"
+  set +a
   (cd "$release" && "$node24" dist/db-migrate.mjs)
   unset MIGRATION_DATABASE_URL
   echo "AUTOMATIC_MIGRATIONS_APPLIED: $sha"
