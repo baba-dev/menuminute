@@ -8,12 +8,12 @@ const helper = readFileSync(path.resolve("infra/deploy/menuminute-release"), "ut
 describe("fail-closed automatic release activation", () => {
   it("requires a versioned root-owned helper and verifies both runtime accounts", () => {
     expect(helper).toContain('if [[ "${1:-}" == --version');
-    expect(helper).toContain("echo 3");
+    expect(helper).toContain("echo 4");
     expect(helper).toContain("runuser -u menuminute -- sh -c");
     expect(helper).toContain("runuser -u menuminute-worker -- sh -c");
     expect(helper).toContain("runtime_access_ok ||");
     expect(workflow).toContain("menuminute-release --version");
-    expect(workflow).toContain("= 3 && sudo -n /usr/local/sbin/menuminute-release $mode");
+    expect(workflow).toContain("= 4 && sudo -n /usr/local/sbin/menuminute-release $mode");
   });
 
   it("validates archive members before extraction", () => {
@@ -27,16 +27,18 @@ describe("fail-closed automatic release activation", () => {
     expect(helper).toContain("Release checksum mismatch");
   });
 
-  it("blocks changed, symlinked or missing migration trees", () => {
+  it("allows only append-only SQL migration histories and rejects missing or linked trees", () => {
     expect(helper).toContain('-d "$old_web/src/db/migrations"');
-    expect(helper).toContain('-d "$release/src/db/migrations"');
     expect(helper).toContain('! -L "$old_web/src/db/migrations"');
-    expect(helper).toContain('! -L "$release/src/db/migrations"');
-    expect(helper).toContain("diff -qr --");
-    expect(helper).toContain("STAGED_MANUAL:");
-    expect(helper).toContain("exit 20");
+    expect(helper).toContain('"$release/src/db/migrations"');
+    expect(helper).toContain('root.is_symlink()');
+    expect(helper).toContain('candidate[:len(previous)] != previous');
+    expect(helper).toContain('path.read_bytes() != other.read_bytes()');
+    expect(helper).toContain('raise SystemExit("Missing regular SQL migration: " + name)');
     expect(helper).toContain("systemctl is-active --quiet menuminute-web.service");
     expect(helper).toContain("systemctl is-active --quiet menuminute-worker.service");
+    expect(helper).not.toContain("STAGED_MANUAL:");
+    expect(helper).not.toContain("exit 20");
   });
 
   it("requires healthy current MenuMinute and ERP before cutting over", () => {
@@ -48,12 +50,21 @@ describe("fail-closed automatic release activation", () => {
     expect(workflow).toContain("Superseded during staging");
   });
 
-  it("preserves manual approval and never executes SQL migrations", () => {
-    expect(helper).toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
-    expect(helper).toContain('if [[ "$mode" == activate ]]');
-    expect(workflow).toContain("mode=activate");
+  it("backs up remotely before automatic staged SQL and needs no per-SHA operator marker", () => {
+    expect(helper).not.toContain('[[ -f "/etc/menuminute/approved-releases/$sha" ]]');
+    expect(helper).toContain('mode=autoactivate');
+    expect(helper).toContain('owner_env=/etc/menuminute/migration.env');
+    expect(helper).toContain('backup_tool=/usr/local/sbin/menuminute-restic');
+    expect(helper).toContain('pg_restore -l "$backup_dir/database.dump"');
+    expect(helper).toContain('"$backup_tool" backup --tag "$tag" "$backup_dir" "$data/media"');
+    expect(helper).toContain('OFF_HOST_PREDEPLOY_BACKUP_VERIFIED');
+    expect(helper.indexOf('OFF_HOST_PREDEPLOY_BACKUP_VERIFIED')).toBeLessThan(
+      helper.indexOf('(cd "$release" && "$node24" dist/db-migrate.mjs)')
+    );
+    expect(helper).toContain('if [[ "$mode" == autoactivate && "$migration_change" == unchanged ]]');
     expect(workflow).toContain("mode=autoactivate");
-    expect(workflow).not.toContain("pnpm db:migrate");
+    expect(workflow).not.toContain("mode=activate");
+    expect(workflow).not.toContain("manual_required=true");
   });
 
   it("restores paired web/worker pointers without database rollback", () => {
