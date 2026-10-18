@@ -41,12 +41,12 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Apply pinned formatting on this same-repository PR branch
         run: |
-          pnpm exec prettier --write src/components/menu-product/order-tracker.tsx
-          git add src/components/menu-product/order-tracker.tsx
+          pnpm exec prettier --write tests/e2e/online-ordering.spec.ts
+          git add tests/e2e/online-ordering.spec.ts
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "style(ordering): normalize tracking component formatting"
+            git commit -m "style(ordering): normalize browser acceptance formatting"
             git push origin HEAD:feat/online-ordering-core
           fi
 
