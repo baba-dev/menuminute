@@ -53,7 +53,11 @@ describe("provenance-bound main-only production delivery", () => {
     expect(deploy).toContain("name: production-staging");
     expect(deploy).toContain("name: production");
     expect(deploy).toContain("url: https://food.bababuilds.com");
-    expect(deploy).toContain("Staged — manual migration review and approval required.");
+    expect(deploy).not.toContain("Staged — manual migration review and approval required.");
+    expect(deploy).toContain("Confirm unattended activation eligibility");
+    expect(deploy).toContain(
+      "Staged; eligible for separate production activation. Not yet deployed."
+    );
     expect(deploy).toContain("Not yet deployed.");
     expect(deploy).toContain("needs.stage.outputs.eligible == 'true'");
     expect(deploy).toContain("Public HTTPS, dependency and route verification");

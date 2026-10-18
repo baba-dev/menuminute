@@ -92,10 +92,14 @@ The live origin is [food.bababuilds.com](https://food.bababuilds.com), with a se
 ERP-preserving Nginx virtual host. Runtime media is **local private shared-group storage**;
 Cloudflare R2 is used for **encrypted off-host backups**, not live media. After a successful merge,
 native ARM64 CI publishes an immutable release and the deploy workflow automatically stages and
-activates the latest verified `main` build when the running and candidate migration trees are
-identical. Releases with migration changes remain staged for explicit operator review; the workflow
-never runs SQL migrations. The GitHub `production` environment gate, ERP/readiness checks and
-exact-SHA verification still apply.
+activates the latest verified `main` build, including append-only migrations, once the reviewed
+root-owned **helper v4** and the root-only migration-owner/off-host restic prerequisites are installed.
+A migration-changing release first creates and verifies a new encrypted remote backup, then applies
+the exact staged checksummed SQL before switching both services. No per-SHA operator marker is needed.
+Failed prerequisites or migrations fail the deployment rather than silently claiming it is live.
+The GitHub `production` environment, ERP/readiness checks and exact-SHA verification still apply.
+See [unattended migration deployment](docs/automatic-migration-deployment.md) for the one-time
+bootstrap and forward-only recovery contract.
 
 Start with the [production source-of-truth runbook](docs/production-runbook.md), then consult the
 [ARM64 deployment contract](docs/deployment.md) and [CI/CD 2.0: automatic safe releases and manual migration path](docs/deployment-actions.md).
@@ -226,7 +230,7 @@ input to immutable publication (no publisher rebuild). Its authenticated
 publication handoff drives staging; the separate GitHub `production` activation
 job exposes [the live application](https://food.bababuilds.com) and verifies
 the public SHA. Stage-only results never count as verified deployment.
-Migration-changing releases require operator SQL review, backup and the
-existing root-owned approval marker. See [deployment actions](docs/deployment-actions.md)
+Migration-changing releases use the versioned automatic migration path with a fresh verified
+off-host snapshot; helper v4, migration-owner env and restic provisioning are one-time root tasks. See [deployment actions](docs/deployment-actions.md)
 and the [measured pre-change baseline](docs/ci-cd-baseline.md). Repository code
 alone does not update the installed VPS helper or establish live deployment.
