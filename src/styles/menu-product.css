@@ -592,3 +592,323 @@ body.font-sans {
     break-inside: avoid;
   }
 }
+
+/* ─── Online Ordering & Live Tracking (Ink & Ember) ────────────────────────── */
+
+.sticky-cart-bar {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+.cart-bar-button {
+  pointer-events: auto;
+  width: 100%;
+  min-height: 54px;
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.15s;
+}
+
+.cart-bar-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.cart-bar-button:active {
+  transform: translateY(1px);
+}
+
+.cart-badge-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Customizer & Cart Overlays */
+.customizer-overlay,
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.customizer-sheet,
+.cart-drawer {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 24px 24px 0 0;
+  max-height: 88vh;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.customizer-header,
+.cart-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--decorative);
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 10;
+}
+
+.customizer-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  gap: 1.25rem;
+}
+
+.customizer-footer,
+.cart-footer {
+  padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--decorative);
+  background: var(--paper);
+}
+
+.section-title {
+  font-weight: 750;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.option-card {
+  border: 1px solid var(--decorative);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: var(--panel);
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+.option-card:hover {
+  border-color: var(--line);
+}
+
+.option-card.selected {
+  border-color: var(--ember);
+  background: rgba(255, 138, 30, 0.08);
+}
+
+.option-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-input {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.field-input:focus {
+  outline: 2px solid var(--ember);
+}
+
+.cart-item-card {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--decorative);
+}
+
+.alert-notice {
+  background: rgba(255, 138, 30, 0.1);
+  border-left: 4px solid var(--ember);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--ink);
+}
+
+/* Order Tracker Status Styles */
+.tracker-status-box {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+}
+
+.tracker-status-box p {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.9rem;
+}
+
+.tracker-status-box.pending {
+  background: rgba(255, 138, 30, 0.12);
+  border: 1px solid var(--ember);
+  color: var(--ink);
+}
+
+.tracker-status-box.accepted {
+  background: rgba(6, 115, 69, 0.12);
+  border: 1px solid var(--success);
+  color: var(--ink);
+}
+
+.tracker-status-box.preparing {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid #3b82f6;
+  color: var(--ink);
+}
+
+.tracker-status-box.ready {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: var(--ink);
+}
+
+.tracker-status-box.done {
+  background: var(--panel);
+  border: 1px solid var(--decorative);
+  color: var(--ink);
+}
+
+.tracker-status-box.rejected {
+  background: rgba(180, 35, 24, 0.12);
+  border: 1px solid var(--danger);
+  color: var(--ink);
+}
+
+.pulse {
+  animation: subtlePulse 2s infinite ease-in-out;
+}
+
+@keyframes subtlePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 91, 26, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 91, 26, 0);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Stepper Track */
+.stepper-step {
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.step-indicator {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--decorative);
+  color: var(--muted);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+.stepper-step.active .step-indicator {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255, 91, 26, 0.4);
+}
+
+.stepper-step.completed .step-indicator {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+
+.stepper-step.active .step-title {
+  font-weight: 750;
+  color: var(--ember);
+}
+
+.stepper-step.completed .step-title {
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .spin,
+  .customizer-overlay,
+  .cart-overlay,
+  .customizer-sheet,
+  .cart-drawer {
+    animation: none !important;
+  }
+  .cart-bar-button,
+  .option-card {
+    transition: none !important;
+  }
+}

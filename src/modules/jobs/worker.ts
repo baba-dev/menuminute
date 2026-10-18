@@ -63,6 +63,7 @@ export type ClaimedEvent = {
   attempts: number;
   lease_token: string;
   delivery_sequence: number;
+  type: string;
 };
 export async function claimEvents(pool: Pool, limit = 25): Promise<ClaimedEvent[]> {
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw new Error("Invalid batch size");
@@ -73,7 +74,7 @@ export async function claimEvents(pool: Pool, limit = 25): Promise<ClaimedEvent[
       `with exhausted as(select id from outbox_events where status in ('pending','dispatched') and attempts>=max_attempts and next_attempt_at<=now() and (lease_until is null or lease_until<=now()) for update skip locked limit 50) update outbox_events e set status='failed',last_error='attempts_exhausted',lease_token=null,lease_until=null from exhausted where e.id=exhausted.id`
     );
     const r = await client.query<ClaimedEvent>(
-      `with due as(select id from outbox_events where status in ('pending','dispatched') and attempts<max_attempts and next_attempt_at<=now() and (lease_until is null or lease_until<=now()) order by next_attempt_at,id for update skip locked limit $1) update outbox_events e set attempts=e.attempts+1,delivery_sequence=e.delivery_sequence+1,lease_token=gen_random_uuid()::text,lease_until=now()+interval '30 seconds',next_attempt_at=now()+interval '30 seconds' from due where e.id=due.id returning e.id,e.organization_id,e.attempts,e.lease_token,e.delivery_sequence`,
+      `with due as(select id from outbox_events where status in ('pending','dispatched') and attempts<max_attempts and next_attempt_at<=now() and (lease_until is null or lease_until<=now()) order by next_attempt_at,id for update skip locked limit $1) update outbox_events e set attempts=e.attempts+1,delivery_sequence=e.delivery_sequence+1,lease_token=gen_random_uuid()::text,lease_until=now()+interval '30 seconds',next_attempt_at=now()+interval '30 seconds' from due where e.id=due.id returning e.id,e.organization_id,e.attempts,e.lease_token,e.delivery_sequence,e.type`,
       [limit]
     );
     await client.query("COMMIT");
@@ -97,7 +98,7 @@ export async function dispatchOnce(pool: Pool, queue: Enqueuer) {
   for (const event of events) {
     try {
       await queue.add(
-        "organization.changed",
+        event.type,
         {
           eventId: event.id,
           organizationId: event.organization_id,
@@ -173,38 +174,63 @@ export async function consumeEvent(
       data.deliverySequence > event.delivery_sequence
     )
       throw new Error("Delivery scope mismatch");
+    const isOrderEvent = [
+      "order.created",
+      "order.status_changed",
+      "order.payment_changed",
+    ].includes(event.type);
+    const receiptConsumer = isOrderEvent ? "order-event-v1" : consumerName;
     if (
       (
         await client.query("select 1 from consumer_receipts where event_id=$1 and consumer=$2", [
           event.id,
-          consumerName,
+          receiptConsumer,
         ])
       ).rowCount
     ) {
       await client.query("COMMIT");
       return false;
     }
-    if (event.type !== "organization.changed" || event.schema_version !== 1) {
+    if (event.schema_version !== 1) {
       permanent = true;
-      throw new Error("Unsupported durable event");
+      throw new Error("Unsupported durable event schema");
     }
-    const payload = snapshotSchema.safeParse(event.payload);
-    if (
-      !payload.success ||
-      payload.data.organizationId !== event.organization_id ||
-      payload.data.version !== event.aggregate_version
-    ) {
-      permanent = true;
-      throw new Error("Invalid durable event");
+    if (isOrderEvent) {
+      const payload = z
+        .object({
+          orderId: z.string().min(1).max(128),
+        })
+        .passthrough()
+        .safeParse(event.payload);
+      if (!payload.success || event.aggregate_version < 1) {
+        permanent = true;
+        throw new Error("Invalid ordering event");
+      }
+      // The durable record is the notification source; the live board reconciles
+      // against PostgreSQL. Never acknowledge a forged queue body instead of the row.
+    } else {
+      if (event.type !== "organization.changed") {
+        permanent = true;
+        throw new Error("Unsupported durable event");
+      }
+      const payload = snapshotSchema.safeParse(event.payload);
+      if (
+        !payload.success ||
+        payload.data.organizationId !== event.organization_id ||
+        payload.data.version !== event.aggregate_version
+      ) {
+        permanent = true;
+        throw new Error("Invalid durable event");
+      }
+      await client.query(
+        `insert into domain_projections(organization_id,version,snapshot) values($1,$2,$3) on conflict(organization_id) do update set version=excluded.version,snapshot=excluded.snapshot,updated_at=now() where domain_projections.version<excluded.version`,
+        [event.organization_id, event.aggregate_version, JSON.stringify(payload.data)]
+      );
     }
-    await client.query(
-      `insert into domain_projections(organization_id,version,snapshot) values($1,$2,$3) on conflict(organization_id) do update set version=excluded.version,snapshot=excluded.snapshot,updated_at=now() where domain_projections.version<excluded.version`,
-      [event.organization_id, event.aggregate_version, JSON.stringify(payload.data)]
-    );
     if (afterEffect) await afterEffect();
     await client.query(
       "insert into consumer_receipts(event_id,consumer,organization_id) values($1,$2,$3)",
-      [event.id, consumerName, event.organization_id]
+      [event.id, receiptConsumer, event.organization_id]
     );
     await client.query(
       "update outbox_events set status='completed',completed_at=now(),lease_token=null,lease_until=null,last_error=null where id=$1",
@@ -253,6 +279,7 @@ export async function startWorker(
     if (stopping || pending) return;
     pending = pool
       .query("select app_private.reconcile_media_uploads()")
+      .then(() => pool.query("select app_private.expire_pending_orders()"))
       .then(() => dispatchOnce(pool, producer))
       .catch(() => console.error("Durable dispatcher unavailable"))
       .finally(() => {
