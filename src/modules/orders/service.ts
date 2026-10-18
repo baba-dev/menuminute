@@ -6,12 +6,7 @@ import { publicProduct } from "@/modules/menu-product/service";
 import { projectMenu } from "@/modules/menu-product/projector";
 import { availableNow } from "@/modules/menu-product/contracts";
 import { withOutlet, type Actor, type Permission } from "@/modules/tenancy/service";
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-} from "@/lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import {
   orderSubmissionSchema,
   orderTransitionSchema,
@@ -20,8 +15,13 @@ import {
 } from "./contracts";
 
 function mapOrderDatabaseError(error: unknown): never {
-  if (error instanceof ConflictError || error instanceof ForbiddenError ||
-      error instanceof ValidationError || error instanceof NotFoundError) throw error;
+  if (
+    error instanceof ConflictError ||
+    error instanceof ForbiddenError ||
+    error instanceof ValidationError ||
+    error instanceof NotFoundError
+  )
+    throw error;
   const cause = error instanceof Error && error.cause ? error.cause : error;
   const code = cause && typeof cause === "object" && "code" in cause ? String(cause.code) : "";
   const message = cause instanceof Error ? cause.message : "";
@@ -29,9 +29,12 @@ function mapOrderDatabaseError(error: unknown): never {
     throw new ConflictError("Order data changed. Refresh and retry with the correct cart.");
   }
   if (code === "42501") throw new ForbiddenError("Order operation is not permitted.");
-  if (code === "22023") throw new ValidationError(
-    message.includes("Invalid") || message.includes("unavailable") ? message : "Invalid order operation."
-  );
+  if (code === "22023")
+    throw new ValidationError(
+      message.includes("Invalid") || message.includes("unavailable")
+        ? message
+        : "Invalid order operation."
+    );
   throw error;
 }
 
@@ -42,13 +45,21 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   // A committed submission must be recoverable even if the menu changes after an HTTP response is lost.
   try {
-    const existing = await getPool().query<{ data: {
-      orderId: string; trackingToken: string; orderNumber: number; status: OrderStatus;
-      totalMinor: number; currency: string; isDuplicate: boolean;
-    } | null }>(
-      "select app_private.lookup_guest_submission($1,$2,$3) as data",
-      [token, input.clientSubmissionKey, requestHash]
-    );
+    const existing = await getPool().query<{
+      data: {
+        orderId: string;
+        trackingToken: string;
+        orderNumber: number;
+        status: OrderStatus;
+        totalMinor: number;
+        currency: string;
+        isDuplicate: boolean;
+      } | null;
+    }>("select app_private.lookup_guest_submission($1,$2,$3) as data", [
+      token,
+      input.clientSubmissionKey,
+      requestHash,
+    ]);
     if (existing.rows[0]?.data) return existing.rows[0].data;
   } catch (error) {
     if (error instanceof Error && error.message.includes("Submission key reused"))
@@ -110,11 +121,13 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     }
 
     const validPairs = new Set(
-      dish.addOnGroups.flatMap((group) =>
-        group.options.map((option) => group.id + ":" + option.id)
-      )
+      dish.addOnGroups.flatMap((group) => group.options.map((option) => group.id + ":" + option.id))
     );
-    if (requestedItem.selectedAddOns.some((choice) => !validPairs.has(choice.groupId + ":" + choice.optionId))) {
+    if (
+      requestedItem.selectedAddOns.some(
+        (choice) => !validPairs.has(choice.groupId + ":" + choice.optionId)
+      )
+    ) {
       throw new ValidationError("An unknown add-on was selected.");
     }
 
@@ -141,9 +154,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     let addOnsPriceMinor = 0;
 
     for (const group of dish.addOnGroups) {
-      const chosenForGroup = requestedItem.selectedAddOns.filter(
-        (a) => a.groupId === group.id
-      );
+      const chosenForGroup = requestedItem.selectedAddOns.filter((a) => a.groupId === group.id);
 
       if (chosenForGroup.length < group.min) {
         throw new ValidationError(
@@ -164,9 +175,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
           );
         }
         if (!option.isAvailable) {
-          throw new ConflictError(
-            `Option "${option.name}" for "${dish.name}" is sold out.`
-          );
+          throw new ConflictError(`Option "${option.name}" for "${dish.name}" is sold out.`);
         }
         addOnsPriceMinor += option.priceMinor;
         selectedOptionsList.push({
@@ -215,20 +224,25 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   const selectedDishIds = new Set(input.items.map((item) => item.dishId));
   const schedules = data.menus.flatMap((menu) =>
     menu.document.categories.flatMap((category) =>
-      category.items.filter((item) => selectedDishIds.has(item.id)).map((item) => ({
-        menu: menu.document.schedule,
-        dish: item.schedule,
-      }))
+      category.items
+        .filter((item) => selectedDishIds.has(item.id))
+        .map((item) => ({
+          menu: menu.document.schedule,
+          dish: item.schedule,
+        }))
     )
   );
   let expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
   if (schedules.some((s) => s.menu || s.dish)) {
     for (let minute = 1; minute <= 120; minute++) {
       const instant = new Date(now.getTime() + minute * 60000);
-      if (schedules.some((s) =>
-        !availableNow(s.menu, outlet.timezone, instant) ||
-        !availableNow(s.dish, outlet.timezone, instant)
-      )) {
+      if (
+        schedules.some(
+          (s) =>
+            !availableNow(s.menu, outlet.timezone, instant) ||
+            !availableNow(s.dish, outlet.timezone, instant)
+        )
+      ) {
         expiresAt = instant;
         break;
       }
@@ -256,22 +270,27 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     })),
   };
   try {
-    const result = await getPool().query<{ data: {
-      orderId: string;
-      trackingToken: string;
-      orderNumber: number;
-      status: OrderStatus;
-      totalMinor: number;
-      currency: string;
-      isDuplicate: boolean;
-    } }>("select app_private.submit_guest_order($1,$2::jsonb) as data", [
+    const result = await getPool().query<{
+      data: {
+        orderId: string;
+        trackingToken: string;
+        orderNumber: number;
+        status: OrderStatus;
+        totalMinor: number;
+        currency: string;
+        isDuplicate: boolean;
+      };
+    }>("select app_private.submit_guest_order($1,$2::jsonb) as data", [
       token,
       JSON.stringify(payload),
     ]);
     return result.rows[0]!.data;
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message.includes("menu changed") || error.message.includes("Submission key reused")) {
+      if (
+        error.message.includes("menu changed") ||
+        error.message.includes("Submission key reused")
+      ) {
         throw new ConflictError(error.message);
       }
       if (error.message.includes("not enabled for this outlet")) {
@@ -284,11 +303,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
 
 // ─── Guest Order Tracking ─────────────────────────────────────────────────────
 
-export async function getGuestOrderTracking(
-  token: string,
-  orderId: string,
-  trackingToken: string
-) {
+export async function getGuestOrderTracking(token: string, orderId: string, trackingToken: string) {
   const result = await getPool().query<{ data: unknown | null }>(
     "select app_private.track_guest_order($1,$2,$3) as data",
     [token, orderId, trackingToken]
@@ -308,8 +323,10 @@ export async function listOutletOrders(
 ) {
   return withOutlet(actor, outletId, "orders.read", async (tx) => {
     if (organizationId) {
-      const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
-        .from(restaurants).where(eq(restaurants.id, outletId));
+      const [outlet] = await tx
+        .select({ organizationId: restaurants.organizationId })
+        .from(restaurants)
+        .where(eq(restaurants.id, outletId));
       if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
     }
     const filters: Record<string, (typeof orders.$inferSelect)["status"][]> = {
@@ -317,13 +334,21 @@ export async function listOutletOrders(
       completed: ["served", "collected"],
       cancelled: ["rejected", "cancelled", "expired"],
     };
-    const statuses = statusFilter ? (filters[statusFilter] ?? [statusFilter as (typeof orders.$inferSelect)["status"]]) : null;
+    const statuses = statusFilter
+      ? (filters[statusFilter] ?? [statusFilter as (typeof orders.$inferSelect)["status"]])
+      : null;
     const predicate = statuses
       ? and(eq(orders.restaurantId, outletId), inArray(orders.status, statuses))
       : eq(orders.restaurantId, outletId);
-    const canPay = await tx.execute<{ allowed: boolean }>(sql`select app_private.can_outlet(${outletId},\'billing.manage\') as allowed`);
-    const rows = await tx.select().from(orders)
-      .where(predicate).orderBy(desc(orders.createdAt)).limit(100);
+    const canPay = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.can_outlet(${outletId},\'billing.manage\') as allowed`
+    );
+    const rows = await tx
+      .select()
+      .from(orders)
+      .where(predicate)
+      .orderBy(desc(orders.createdAt))
+      .limit(100);
     const orderIds = rows.map((order) => order.id);
     const items = orderIds.length
       ? await tx.select().from(orderItems).where(inArray(orderItems.orderId, orderIds))
@@ -380,18 +405,22 @@ export async function transitionOutletOrder(
 
   return withOutlet(actor, outletId, requiredPermission, async (tx) => {
     if (organizationId) {
-      const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
-        .from(restaurants).where(eq(restaurants.id, outletId));
+      const [outlet] = await tx
+        .select({ organizationId: restaurants.organizationId })
+        .from(restaurants)
+        .where(eq(restaurants.id, outletId));
       if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
     }
-    const result = await tx.execute<{ data: {
-      success?: boolean;
-      expired?: boolean;
-      orderId?: string;
-      previousStatus?: string;
-      currentStatus?: string;
-      version?: number;
-    } }>(sql`select app_private.transition_order(
+    const result = await tx.execute<{
+      data: {
+        success?: boolean;
+        expired?: boolean;
+        orderId?: string;
+        previousStatus?: string;
+        currentStatus?: string;
+        version?: number;
+      };
+    }>(sql`select app_private.transition_order(
       ${outletId},${orderId},${input.targetStatus},${input.expectedVersion},${input.reason ?? ""}
     ) as data`);
     return result.rows[0]!.data;
@@ -407,15 +436,19 @@ export async function recordOutletOrderPayment(
 ) {
   const input = orderPaymentSchema.parse(raw);
   return withOutlet(actor, outletId, "billing.manage", async (tx) => {
-    const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
-      .from(restaurants).where(eq(restaurants.id, outletId));
+    const [outlet] = await tx
+      .select({ organizationId: restaurants.organizationId })
+      .from(restaurants)
+      .where(eq(restaurants.id, outletId));
     if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
-    const result = await tx.execute<{ data: {
-      success: boolean;
-      orderId: string;
-      paymentStatus: string;
-      version: number;
-    } }>(sql`select app_private.record_order_payment(
+    const result = await tx.execute<{
+      data: {
+        success: boolean;
+        orderId: string;
+        paymentStatus: string;
+        version: number;
+      };
+    }>(sql`select app_private.record_order_payment(
       ${outletId},${orderId},${input.expectedVersion},${input.paymentStatus},${input.paymentMethod}
     ) as data`);
     return result.rows[0]!.data;

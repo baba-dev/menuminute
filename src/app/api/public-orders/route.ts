@@ -23,7 +23,10 @@ export async function POST(req: Request) {
     const token = z.string().min(1).max(128).parse(body.token);
     try {
       if (!(await enforcePublicOrderLimit("submit", token, req))) {
-        return NextResponse.json({ message: "Order submission limit reached. Please try again shortly." }, { status: 429 });
+        return NextResponse.json(
+          { message: "Order submission limit reached. Please try again shortly." },
+          { status: 429 }
+        );
       }
     } catch {
       return NextResponse.json({ message: "Ordering temporarily unavailable" }, { status: 503 });

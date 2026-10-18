@@ -12,10 +12,6 @@ export default async function OrderTrackingPage({ params, searchParams }: Props)
   const { trackingToken } = await searchParams;
 
   return (
-    <OrderTracker
-      orderId={orderId}
-      token={publicMenuId}
-      trackingToken={trackingToken || ""}
-    />
+    <OrderTracker orderId={orderId} token={publicMenuId} trackingToken={trackingToken || ""} />
   );
 }

@@ -121,9 +121,7 @@ export function ItemCustomizer({
     for (const group of activeDish.addOnGroups) {
       const chosen = selectedOptions[group.id] || [];
       if (chosen.length < group.min) {
-        setValidationError(
-          `Please select at least ${group.min} choice(s) for "${group.name}".`
-        );
+        setValidationError(`Please select at least ${group.min} choice(s) for "${group.name}".`);
         return;
       }
     }
@@ -160,12 +158,19 @@ export function ItemCustomizer({
   };
 
   return (
-    <div className="customizer-overlay" role="dialog" aria-modal="true" aria-labelledby="customizer-title">
+    <div
+      className="customizer-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="customizer-title"
+    >
       <div className="customizer-sheet stack">
         <div className="customizer-header row between">
           <div className="stack" style={{ gap: "0.2rem" }}>
             <span className="eyebrow">Customize Your Order</span>
-            <h2 id="customizer-title" style={{ margin: 0 }}>{activeDish.name}</h2>
+            <h2 id="customizer-title" style={{ margin: 0 }}>
+              {activeDish.name}
+            </h2>
           </div>
           <button
             type="button"
@@ -180,7 +185,9 @@ export function ItemCustomizer({
 
         <div className="customizer-body stack">
           {activeDish.description && (
-            <p className="quiet" style={{ fontSize: "0.95rem" }}>{activeDish.description}</p>
+            <p className="quiet" style={{ fontSize: "0.95rem" }}>
+              {activeDish.description}
+            </p>
           )}
 
           {activeDish.dietary.length > 0 && (
@@ -220,7 +227,9 @@ export function ItemCustomizer({
                             setValidationError(null);
                           }}
                         />
-                        <span>{v.name} {!v.isAvailable && "(Sold out)"}</span>
+                        <span>
+                          {v.name} {!v.isAvailable && "(Sold out)"}
+                        </span>
                       </div>
                       <span className="money">{formatPrice(v.priceMinor, currency)}</span>
                     </label>
@@ -243,7 +252,9 @@ export function ItemCustomizer({
                     </small>
                   </div>
                   {g.min > 0 && chosen.length < g.min && (
-                    <span className="badge" style={{ color: "var(--ember)" }}>Required</span>
+                    <span className="badge" style={{ color: "var(--ember)" }}>
+                      Required
+                    </span>
                   )}
                   {chosen.length >= g.min && (
                     <span className="badge" style={{ color: "var(--success)" }}>
@@ -266,10 +277,14 @@ export function ItemCustomizer({
                             disabled={!opt.isAvailable}
                             onChange={() => handleToggleAddOn(g.id, opt.id, g.max)}
                           />
-                          <span>{opt.name} {!opt.isAvailable && "(Sold out)"}</span>
+                          <span>
+                            {opt.name} {!opt.isAvailable && "(Sold out)"}
+                          </span>
                         </div>
                         <span className="money">
-                          {opt.priceMinor > 0 ? `+${formatPrice(opt.priceMinor, currency)}` : "Free"}
+                          {opt.priceMinor > 0
+                            ? `+${formatPrice(opt.priceMinor, currency)}`
+                            : "Free"}
                         </span>
                       </label>
                     );

@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  orderSubmissionSchema,
-  orderTransitionSchema,
-} from "../src/modules/orders/contracts";
+import { orderSubmissionSchema, orderTransitionSchema } from "../src/modules/orders/contracts";
 
 describe("Online Ordering Contracts & Validation", () => {
   it("validates a complete guest order submission schema", () => {

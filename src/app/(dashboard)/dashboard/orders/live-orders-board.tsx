@@ -84,10 +84,9 @@ export function LiveOrdersBoard({
   const fetchOrders = async () => {
     try {
       setIsRefreshing(true);
-      const res = await fetch(
-        `/api/organizations/${organizationId}/outlets/${outletId}/orders`,
-        { cache: "no-store" }
-      );
+      const res = await fetch(`/api/organizations/${organizationId}/outlets/${outletId}/orders`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to load orders");
       const data: MerchantOrder[] = await res.json();
 
@@ -177,17 +176,13 @@ export function LiveOrdersBoard({
   const activeOrders = orders.filter((o) =>
     ["pending", "accepted", "preparing", "ready"].includes(o.status)
   );
-  const completedOrders = orders.filter((o) =>
-    ["served", "collected"].includes(o.status)
-  );
+  const completedOrders = orders.filter((o) => ["served", "collected"].includes(o.status));
   const cancelledOrders = orders.filter((o) =>
     ["rejected", "cancelled", "expired"].includes(o.status)
   );
 
   const pendingOrders = activeOrders.filter((o) => o.status === "pending");
-  const inKitchenOrders = activeOrders.filter((o) =>
-    ["accepted", "preparing"].includes(o.status)
-  );
+  const inKitchenOrders = activeOrders.filter((o) => ["accepted", "preparing"].includes(o.status));
   const readyOrders = activeOrders.filter((o) => o.status === "ready");
 
   const displayedOrders =
@@ -309,7 +304,7 @@ export function LiveOrdersBoard({
           {/* Column 1: Pending Acceptance (Urgent) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              <h2 className="flex items-center gap-2 text-xs font-bold tracking-wider text-amber-700 uppercase dark:text-amber-400">
                 <Clock size={15} />
                 <span>Pending Acceptance</span>
               </h2>
@@ -352,7 +347,7 @@ export function LiveOrdersBoard({
                   )}
 
                   {order.notes && (
-                    <div className="rounded-lg bg-stone-50 p-2 text-xs italic text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                    <div className="rounded-lg bg-stone-50 p-2 text-xs text-stone-600 italic dark:bg-stone-800 dark:text-stone-300">
                       “{order.notes}”
                     </div>
                   )}
@@ -363,7 +358,9 @@ export function LiveOrdersBoard({
                       <div key={i.id} className="flex justify-between text-xs">
                         <span className="text-stone-800 dark:text-stone-200">
                           <strong>{i.quantity}×</strong> {i.itemName}
-                          {i.variantName && <span className="text-stone-500"> ({i.variantName})</span>}
+                          {i.variantName && (
+                            <span className="text-stone-500"> ({i.variantName})</span>
+                          )}
                         </span>
                         <span className="font-semibold text-stone-700 dark:text-stone-300">
                           {formatPrice(i.totalMinor, currency)}
@@ -402,7 +399,7 @@ export function LiveOrdersBoard({
           {/* Column 2: In the Kitchen (Accepted / Preparing) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              <h2 className="flex items-center gap-2 text-xs font-bold tracking-wider text-blue-700 uppercase dark:text-blue-400">
                 <ChefHat size={15} />
                 <span>In Preparation</span>
               </h2>
@@ -430,7 +427,7 @@ export function LiveOrdersBoard({
                         {order.fulfillmentMode === "pickup" ? "Takeaway / Pickup" : "Dine In"}
                       </p>
                     </div>
-                    <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                    <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800 uppercase dark:bg-blue-950 dark:text-blue-300">
                       {order.status}
                     </span>
                   </div>
@@ -442,13 +439,15 @@ export function LiveOrdersBoard({
                         <span className="font-bold text-stone-900 dark:text-stone-100">
                           {i.quantity}× {i.itemName}
                         </span>
-                        {i.variantName && <span className="text-stone-500"> ({i.variantName})</span>}
+                        {i.variantName && (
+                          <span className="text-stone-500"> ({i.variantName})</span>
+                        )}
                         {i.selectedOptions.length > 0 && (
                           <p className="text-[10px] text-stone-400">
                             Add-ons: {i.selectedOptions.map((o) => o.optionName).join(", ")}
                           </p>
                         )}
-                        {i.notes && <p className="italic text-stone-500">Note: {i.notes}</p>}
+                        {i.notes && <p className="text-stone-500 italic">Note: {i.notes}</p>}
                       </div>
                     ))}
                   </div>
@@ -459,10 +458,13 @@ export function LiveOrdersBoard({
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleTransition(order, order.status === "accepted" ? "preparing" : "ready")}
+                      onClick={() =>
+                        handleTransition(order, order.status === "accepted" ? "preparing" : "ready")
+                      }
                       className="flex items-center gap-1 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-orange-700"
                     >
-                      <Utensils size={13} /> {order.status === "accepted" ? "Start Preparing" : "Mark Ready"}
+                      <Utensils size={13} />{" "}
+                      {order.status === "accepted" ? "Start Preparing" : "Mark Ready"}
                     </button>
                   </div>
                 </div>
@@ -473,7 +475,7 @@ export function LiveOrdersBoard({
           {/* Column 3: Ready for Pickup/Serving */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              <h2 className="flex items-center gap-2 text-xs font-bold tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
                 <CheckCircle2 size={15} />
                 <span>Ready for Table / Pickup</span>
               </h2>
@@ -505,7 +507,7 @@ export function LiveOrdersBoard({
                           {isPickup ? "Ready for Counter Pickup" : "Ready to Serve to Table"}
                         </p>
                       </div>
-                      <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase dark:bg-emerald-950 dark:text-emerald-300">
                         Ready
                       </span>
                     </div>
@@ -536,9 +538,6 @@ export function LiveOrdersBoard({
                           <span>Record Paid</span>
                         </button>
                       )}
-
-
-
                     </div>
                   </div>
                 );
@@ -566,7 +565,7 @@ export function LiveOrdersBoard({
                     <span className="font-bold text-stone-900 dark:text-white">
                       Order #{order.orderNumber}
                     </span>
-                    <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[10px] font-bold uppercase text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+                    <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[10px] font-bold text-stone-700 uppercase dark:bg-stone-800 dark:text-stone-300">
                       {order.status}
                     </span>
                     <span className="text-xs text-stone-400">
@@ -588,7 +587,10 @@ export function LiveOrdersBoard({
                     {formatPrice(order.totalMinor, currency)}
                   </span>
                   <p className="text-[10px] text-stone-400">
-                    {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(order.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
               </div>
@@ -615,7 +617,10 @@ export function LiveOrdersBoard({
                 "Restaurant is closing for service",
                 "Other kitchen reason",
               ].map((reason) => (
-                <label key={reason} className="flex items-center gap-2 text-xs text-stone-700 dark:text-stone-300">
+                <label
+                  key={reason}
+                  className="flex items-center gap-2 text-xs text-stone-700 dark:text-stone-300"
+                >
                   <input
                     type="radio"
                     name="declineReason"

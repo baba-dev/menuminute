@@ -28,7 +28,10 @@ export function PublicMenu({
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartHydrated, setCartHydrated] = useState(false);
   useEffect(() => {
-    if (typeof window === "undefined" || !token) { setCartHydrated(true); return; }
+    if (typeof window === "undefined" || !token) {
+      setCartHydrated(true);
+      return;
+    }
     try {
       const stored = sessionStorage.getItem(`cart_${token}`);
       const parsed = stored ? JSON.parse(stored) : [];
@@ -154,7 +157,11 @@ export function PublicMenu({
 
   const handleOrderSubmitted = (result: { orderId: string; trackingToken: string }) => {
     if (token) {
-      try { sessionStorage.setItem(`order_${token}_${result.orderId}`, result.trackingToken); } catch { /* Storage unavailable */ }
+      try {
+        sessionStorage.setItem(`order_${token}_${result.orderId}`, result.trackingToken);
+      } catch {
+        /* Storage unavailable */
+      }
       router.push(`/m/${token}/orders/${result.orderId}`);
     }
   };
@@ -305,7 +312,10 @@ export function PublicMenu({
                             </div>
 
                             {/* Add to Cart CTA Button */}
-                            <div className="row between" style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
+                            <div
+                              className="row between"
+                              style={{ marginTop: "auto", paddingTop: "0.5rem" }}
+                            >
                               <button
                                 type="button"
                                 className="action"

@@ -63,8 +63,10 @@ export type OrderStatus =
 
 export type PaymentStatus = "unpaid" | "paid" | "voided";
 
-export const orderPaymentSchema = z.object({
-  expectedVersion: z.number().int().min(1),
-  paymentStatus: z.enum(["paid", "voided"]),
-  paymentMethod: z.enum(["cash", "card", "other"]),
-}).strict();
+export const orderPaymentSchema = z
+  .object({
+    expectedVersion: z.number().int().min(1),
+    paymentStatus: z.enum(["paid", "voided"]),
+    paymentMethod: z.enum(["cash", "card", "other"]),
+  })
+  .strict();

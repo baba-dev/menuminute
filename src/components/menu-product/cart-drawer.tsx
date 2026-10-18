@@ -26,7 +26,11 @@ export function CartDrawer({
   onUpdateQuantity: (index: number, newQty: number) => void;
   onRemoveItem: (index: number) => void;
   onClearCart: () => void;
-  onOrderSubmitted: (result: { orderId: string; trackingToken: string; orderNumber: number }) => void;
+  onOrderSubmitted: (result: {
+    orderId: string;
+    trackingToken: string;
+    orderNumber: number;
+  }) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [fulfillmentMode, setFulfillmentMode] = useState<"dine_in" | "pickup">(() => {
@@ -119,7 +123,11 @@ export function CartDrawer({
               <div className="stack" style={{ gap: "0.1rem", textAlign: "left" }}>
                 <span style={{ fontWeight: 750, fontSize: "0.95rem" }}>View Your Order</span>
                 <small style={{ opacity: 0.85 }}>
-                  {fulfillmentMode === "pickup" ? "Pickup" : point ? `${point} · Dine In` : "Dine In"}
+                  {fulfillmentMode === "pickup"
+                    ? "Pickup"
+                    : point
+                      ? `${point} · Dine In`
+                      : "Dine In"}
                 </small>
               </div>
             </div>
@@ -136,13 +144,20 @@ export function CartDrawer({
 
       {/* Slide-Up Full Cart Drawer */}
       {isOpen && (
-        <div className="cart-overlay" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
+        <div
+          className="cart-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cart-drawer-title"
+        >
           <div className="cart-drawer stack">
             {/* Header */}
             <div className="cart-header row between">
               <div className="stack" style={{ gap: "0.2rem" }}>
                 <span className="eyebrow">{outletName}</span>
-                <h2 id="cart-drawer-title" style={{ margin: 0 }}>Review Your Order</h2>
+                <h2 id="cart-drawer-title" style={{ margin: 0 }}>
+                  Review Your Order
+                </h2>
               </div>
               <button
                 type="button"
@@ -186,7 +201,11 @@ export function CartDrawer({
               ) : (
                 <div className="row" style={{ gap: "0.5rem" }}>
                   <span className="badge">
-                    {point ? `${point} · Dine In` : fulfillmentMode === "pickup" ? "Takeaway / Pickup" : "Dine In"}
+                    {point
+                      ? `${point} · Dine In`
+                      : fulfillmentMode === "pickup"
+                        ? "Takeaway / Pickup"
+                        : "Dine In"}
                   </span>
                 </div>
               )}
@@ -196,7 +215,11 @@ export function CartDrawer({
             <div className="cart-body stack" style={{ flex: 1, overflowY: "auto", gap: "0.8rem" }}>
               <div className="cart-items stack" style={{ gap: "0.75rem" }}>
                 {items.map((item, index) => (
-                  <div key={index} className="cart-item-card row between" style={{ alignItems: "flex-start" }}>
+                  <div
+                    key={index}
+                    className="cart-item-card row between"
+                    style={{ alignItems: "flex-start" }}
+                  >
                     <div className="stack" style={{ gap: "0.25rem", flex: 1 }}>
                       <div className="row between">
                         <strong style={{ fontSize: "1rem" }}>{item.dishName}</strong>
@@ -226,8 +249,14 @@ export function CartDrawer({
                       )}
 
                       {/* Stepper + Remove */}
-                      <div className="row between" style={{ marginTop: "0.4rem", alignItems: "center" }}>
-                        <div className="stepper row" style={{ gap: "0.4rem", alignItems: "center" }}>
+                      <div
+                        className="row between"
+                        style={{ marginTop: "0.4rem", alignItems: "center" }}
+                      >
+                        <div
+                          className="stepper row"
+                          style={{ gap: "0.4rem", alignItems: "center" }}
+                        >
                           <button
                             type="button"
                             className="action icon-btn"
@@ -237,7 +266,9 @@ export function CartDrawer({
                           >
                             <Minus size={14} />
                           </button>
-                          <span style={{ fontWeight: 700, minWidth: "1.2rem", textAlign: "center" }}>
+                          <span
+                            style={{ fontWeight: 700, minWidth: "1.2rem", textAlign: "center" }}
+                          >
                             {item.quantity}
                           </span>
                           <button
@@ -254,7 +285,11 @@ export function CartDrawer({
                         <button
                           type="button"
                           className="icon-btn"
-                          style={{ color: "var(--danger)", border: "none", background: "transparent" }}
+                          style={{
+                            color: "var(--danger)",
+                            border: "none",
+                            background: "transparent",
+                          }}
                           onClick={() => onRemoveItem(index)}
                           aria-label="Remove item"
                         >
@@ -309,9 +344,18 @@ export function CartDrawer({
                   <span>Taxes</span>
                   <small className="quiet">Included in price</small>
                 </div>
-                <div className="row between" style={{ borderTop: "1px solid var(--line)", paddingTop: "0.4rem", fontWeight: 800 }}>
+                <div
+                  className="row between"
+                  style={{
+                    borderTop: "1px solid var(--line)",
+                    paddingTop: "0.4rem",
+                    fontWeight: 800,
+                  }}
+                >
                   <span>Total</span>
-                  <span className="money" style={{ fontSize: "1.2rem" }}>{formatPrice(subtotalMinor, currency)}</span>
+                  <span className="money" style={{ fontSize: "1.2rem" }}>
+                    {formatPrice(subtotalMinor, currency)}
+                  </span>
                 </div>
               </div>
 
@@ -319,7 +363,9 @@ export function CartDrawer({
               <div className="alert-notice stack" style={{ gap: "0.2rem" }}>
                 <strong>Important Dining Information</strong>
                 <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.4 }}>
-                  Submitting your order sends it directly to our team. An order being submitted does not mean the restaurant has accepted it yet. You will see live confirmation once the kitchen acknowledges your ticket. Payment is completed at the counter.
+                  Submitting your order sends it directly to our team. An order being submitted does
+                  not mean the restaurant has accepted it yet. You will see live confirmation once
+                  the kitchen acknowledges your ticket. Payment is completed at the counter.
                 </p>
               </div>
 
@@ -330,7 +376,10 @@ export function CartDrawer({
                     <button
                       type="button"
                       className="action"
-                      onClick={() => { onClearCart(); window.location.reload(); }}
+                      onClick={() => {
+                        onClearCart();
+                        window.location.reload();
+                      }}
                     >
                       Refresh menu and reset the outdated cart
                     </button>
@@ -348,7 +397,9 @@ export function CartDrawer({
                 disabled={isSubmitting || items.length === 0}
                 onClick={handleSubmitOrder}
               >
-                {isSubmitting ? "Sending to Kitchen..." : `Send Order · ${formatPrice(subtotalMinor, currency)}`}
+                {isSubmitting
+                  ? "Sending to Kitchen..."
+                  : `Send Order · ${formatPrice(subtotalMinor, currency)}`}
               </button>
             </div>
           </div>

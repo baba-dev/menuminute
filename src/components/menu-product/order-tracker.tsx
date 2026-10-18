@@ -84,7 +84,9 @@ export function OrderTracker({
       if (trackingToken && typeof window !== "undefined") {
         window.history.replaceState(window.history.state, "", window.location.pathname);
       }
-    } catch { /* Private mode may disable session storage */ }
+    } catch {
+      /* Private mode may disable session storage */
+    }
     setCapability(value);
   }, [trackingToken, token, orderId]);
 
@@ -100,7 +102,10 @@ export function OrderTracker({
       const json = await res.json();
       setData(json);
       setError(null);
-      if (["served", "collected", "rejected", "cancelled", "expired"].includes(json.order.status) && timerRef.current) {
+      if (
+        ["served", "collected", "rejected", "cancelled", "expired"].includes(json.order.status) &&
+        timerRef.current
+      ) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
@@ -112,15 +117,30 @@ export function OrderTracker({
   };
 
   useEffect(() => {
-    if (!capability) { setIsLoading(false); setError("Private order access is unavailable in this browser."); return; }
+    if (!capability) {
+      setIsLoading(false);
+      setError("Private order access is unavailable in this browser.");
+      return;
+    }
     fetchTracking();
     timerRef.current = setInterval(fetchTracking, 4000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = null; };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
   }, [orderId, capability, token]);
 
   if (isLoading && !data) {
     return (
-      <div className="product" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        className="product"
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div className="panel quiet stack" style={{ alignItems: "center", padding: "2rem" }}>
           <RefreshCw className="spin" size={24} />
           <p>Connecting to kitchen...</p>
@@ -137,7 +157,11 @@ export function OrderTracker({
             <AlertCircle size={36} style={{ color: "var(--danger)", margin: "0 auto" }} />
             <h2>Order Details Unavailable</h2>
             <p className="quiet">{error || "Could not locate this order."}</p>
-            <Link href={`/m/${token}`} className="action ember" style={{ alignSelf: "center", marginTop: "1rem" }}>
+            <Link
+              href={`/m/${token}`}
+              className="action ember"
+              style={{ alignSelf: "center", marginTop: "1rem" }}
+            >
               <ArrowLeft size={16} /> Return to Menu
             </Link>
           </div>
@@ -147,7 +171,8 @@ export function OrderTracker({
   }
 
   const { order, outlet, items } = data;
-  const isTerminalNegative = order.status === "rejected" || order.status === "cancelled" || order.status === "expired";
+  const isTerminalNegative =
+    order.status === "rejected" || order.status === "cancelled" || order.status === "expired";
 
   const steps = [
     {
@@ -195,10 +220,17 @@ export function OrderTracker({
 
   return (
     <div className="product">
-      <div className="public-shell stack" style={{ maxWidth: "600px", margin: "0 auto", paddingBottom: "3rem" }}>
+      <div
+        className="public-shell stack"
+        style={{ maxWidth: "600px", margin: "0 auto", paddingBottom: "3rem" }}
+      >
         {/* Top bar with back to menu link */}
         <div className="row between" style={{ alignItems: "center", paddingTop: "1rem" }}>
-          <Link href={`/m/${token}`} className="action" style={{ minHeight: "36px", padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
+          <Link
+            href={`/m/${token}`}
+            className="action"
+            style={{ minHeight: "36px", padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
+          >
             <ArrowLeft size={15} /> Back to Menu
           </Link>
           <span className="badge">
@@ -206,9 +238,16 @@ export function OrderTracker({
           </span>
         </div>
 
-        {error && <p role="status" className="error">Connection interrupted. Showing the last confirmed order status.</p>}
+        {error && (
+          <p role="status" className="error">
+            Connection interrupted. Showing the last confirmed order status.
+          </p>
+        )}
         {/* Hero Card */}
-        <div className="panel stack" style={{ gap: "0.75rem", borderTop: "4px solid var(--ember)" }}>
+        <div
+          className="panel stack"
+          style={{ gap: "0.75rem", borderTop: "4px solid var(--ember)" }}
+        >
           <div className="row between" style={{ alignItems: "flex-start" }}>
             <div className="stack" style={{ gap: "0.2rem" }}>
               <span className="eyebrow">{outlet.name}</span>
@@ -219,7 +258,10 @@ export function OrderTracker({
                 {order.status}
               </span>
               <small className="quiet">
-                {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(order.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </small>
             </div>
           </div>
@@ -230,7 +272,10 @@ export function OrderTracker({
               <Clock size={20} className="pulse-icon" />
               <div>
                 <strong>Order Sent to Restaurant</strong>
-                <p>Waiting for the team to accept. Submitting does not guarantee acceptance until confirmed.</p>
+                <p>
+                  Waiting for the team to accept. Submitting does not guarantee acceptance until
+                  confirmed.
+                </p>
               </div>
             </div>
           )}
@@ -260,7 +305,11 @@ export function OrderTracker({
               <Utensils size={20} />
               <div>
                 <strong>Order Ready!</strong>
-                <p>{order.fulfillmentMode === "pickup" ? "Please collect your order at the counter." : "Your dishes are being brought to your table."}</p>
+                <p>
+                  {order.fulfillmentMode === "pickup"
+                    ? "Please collect your order at the counter."
+                    : "Your dishes are being brought to your table."}
+                </p>
               </div>
             </div>
           )}
@@ -280,7 +329,10 @@ export function OrderTracker({
               <AlertCircle size={20} />
               <div>
                 <strong>Order {order.status === "rejected" ? "Declined" : "Cancelled"}</strong>
-                <p>{order.rejectionReason || "The restaurant was unable to accept this order at this time. Please speak to staff."}</p>
+                <p>
+                  {order.rejectionReason ||
+                    "The restaurant was unable to accept this order at this time. Please speak to staff."}
+                </p>
               </div>
             </div>
           )}
@@ -314,12 +366,18 @@ export function OrderTracker({
         <div className="panel stack" style={{ gap: "0.75rem" }}>
           <div className="row between" style={{ alignItems: "center" }}>
             <span className="section-title">Items in This Order</span>
-            <span className="badge">{items.length} {items.length === 1 ? "dish" : "dishes"}</span>
+            <span className="badge">
+              {items.length} {items.length === 1 ? "dish" : "dishes"}
+            </span>
           </div>
 
           <div className="stack" style={{ gap: "0.75rem" }}>
             {items.map((i) => (
-              <div key={i.id} className="row between" style={{ borderBottom: "1px solid var(--decorative)", paddingBottom: "0.5rem" }}>
+              <div
+                key={i.id}
+                className="row between"
+                style={{ borderBottom: "1px solid var(--decorative)", paddingBottom: "0.5rem" }}
+              >
                 <div className="stack" style={{ gap: "0.2rem" }}>
                   <div className="row" style={{ gap: "0.5rem" }}>
                     <span style={{ fontWeight: 700 }}>{i.quantity}×</span>
@@ -331,7 +389,11 @@ export function OrderTracker({
                       Add-ons: {i.selectedOptions.map((o) => o.optionName).join(", ")}
                     </small>
                   )}
-                  {i.notes && <small style={{ fontStyle: "italic", color: "var(--muted)" }}>Note: {i.notes}</small>}
+                  {i.notes && (
+                    <small style={{ fontStyle: "italic", color: "var(--muted)" }}>
+                      Note: {i.notes}
+                    </small>
+                  )}
                 </div>
                 <span className="money">{formatPrice(i.totalMinor, outlet.currency)}</span>
               </div>
@@ -339,7 +401,10 @@ export function OrderTracker({
           </div>
 
           {/* Pricing Totals */}
-          <div className="stack" style={{ gap: "0.3rem", borderTop: "1px solid var(--line)", paddingTop: "0.5rem" }}>
+          <div
+            className="stack"
+            style={{ gap: "0.3rem", borderTop: "1px solid var(--line)", paddingTop: "0.5rem" }}
+          >
             <div className="row between">
               <span>Subtotal</span>
               <span className="money">{formatPrice(order.subtotalMinor, outlet.currency)}</span>
@@ -371,7 +436,11 @@ export function OrderTracker({
         </div>
 
         {/* Order More CTA */}
-        <Link href={`/m/${token}`} className="action" style={{ textAlign: "center", justifyContent: "center", minHeight: "48px" }}>
+        <Link
+          href={`/m/${token}`}
+          className="action"
+          style={{ textAlign: "center", justifyContent: "center", minHeight: "48px" }}
+        >
           <ShoppingBag size={16} /> Order Additional Items
         </Link>
       </div>

@@ -174,7 +174,11 @@ export async function consumeEvent(
       data.deliverySequence > event.delivery_sequence
     )
       throw new Error("Delivery scope mismatch");
-    const isOrderEvent = ["order.created", "order.status_changed", "order.payment_changed"].includes(event.type);
+    const isOrderEvent = [
+      "order.created",
+      "order.status_changed",
+      "order.payment_changed",
+    ].includes(event.type);
     const receiptConsumer = isOrderEvent ? "order-event-v1" : consumerName;
     if (
       (
@@ -192,9 +196,12 @@ export async function consumeEvent(
       throw new Error("Unsupported durable event schema");
     }
     if (isOrderEvent) {
-      const payload = z.object({
-        orderId: z.string().min(1).max(128),
-      }).passthrough().safeParse(event.payload);
+      const payload = z
+        .object({
+          orderId: z.string().min(1).max(128),
+        })
+        .passthrough()
+        .safeParse(event.payload);
       if (!payload.success || event.aggregate_version < 1) {
         permanent = true;
         throw new Error("Invalid ordering event");

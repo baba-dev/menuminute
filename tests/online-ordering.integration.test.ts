@@ -21,22 +21,28 @@ async function publishedOutlet(entitled = true) {
       document: {
         name: "Order test menu",
         currency: f.outlet.currency,
-        categories: [{
-          id: "food",
-          name: "Food",
-          items: [{
-            id: "plate",
-            name: "Paneer Plate",
-            priceMinor: 12500,
-            addOnGroups: [{
-              id: "extras",
-              name: "Extras",
-              min: 0,
-              max: 1,
-              options: [{ id: "bread", name: "Bread", priceMinor: 1500 }],
-            }],
-          }],
-        }],
+        categories: [
+          {
+            id: "food",
+            name: "Food",
+            items: [
+              {
+                id: "plate",
+                name: "Paneer Plate",
+                priceMinor: 12500,
+                addOnGroups: [
+                  {
+                    id: "extras",
+                    name: "Extras",
+                    min: 0,
+                    max: 1,
+                    options: [{ id: "bread", name: "Bread", priceMinor: 1500 }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   });
@@ -69,11 +75,13 @@ function submission(key = crypto.randomUUID()) {
     clientSubmissionKey: key,
     quotedTotalMinor: 14000,
     fulfillmentMode: "dine_in",
-    items: [{
-      dishId: "plate",
-      quantity: 1,
-      selectedAddOns: [{ groupId: "extras", optionId: "bread" }],
-    }],
+    items: [
+      {
+        dishId: "plate",
+        quantity: 1,
+        selectedAddOns: [{ groupId: "extras", optionId: "bread" }],
+      },
+    ],
   };
 }
 
@@ -95,7 +103,11 @@ describe("Core online ordering restricted-role integration", () => {
     const order = await submitGuestOrder(point.token!, submission());
     expect(order.status).toBe("pending");
     expect(order.totalMinor).toBe(14000);
-    const details = await getGuestOrderTracking(point.token!, order.orderId, order.trackingToken) as {
+    const details = (await getGuestOrderTracking(
+      point.token!,
+      order.orderId,
+      order.trackingToken
+    )) as {
       order: { status: string };
       items: Array<{ itemName: string; selectedOptions: unknown[] }>;
     };
@@ -106,8 +118,14 @@ describe("Core online ordering restricted-role integration", () => {
     expect(rows.find((r) => r.id === order.orderId)?.tableId).toBeTruthy();
     expect(JSON.stringify(rows)).not.toContain(order.trackingToken);
     await expect(listOutletOrders(f.actor, f.outlet.id, "active", "wrong-org")).rejects.toThrow();
-    await expect(getGuestOrderTracking(f.outlet.publicId, order.orderId, "bad-token")).rejects.toThrow();
-    await expect(getPool().query("insert into orders(id,restaurant_id,order_number) values('forbidden','not-real',1)")).rejects.toThrow();
+    await expect(
+      getGuestOrderTracking(f.outlet.publicId, order.orderId, "bad-token")
+    ).rejects.toThrow();
+    await expect(
+      getPool().query(
+        "insert into orders(id,restaurant_id,order_number) values('forbidden','not-real',1)"
+      )
+    ).rejects.toThrow();
   });
 
   it("reconciles duplicate and concurrent submissions without duplicating committed orders", async () => {
@@ -122,53 +140,79 @@ describe("Core online ordering restricted-role integration", () => {
     const again = await submitGuestOrder(f.outlet.publicId, payload);
     expect(again.orderId).toBe(both[0]!.orderId);
     expect(again.isDuplicate).toBe(true);
-    await expect(submitGuestOrder(f.outlet.publicId, {
-      ...payload,
-      notes: "Different cart",
-    })).rejects.toThrow();
-    const rows = await admin(async (_, pool) => pool.query(
-      "select id from orders where restaurant_id=$1 and client_submission_key=$2",
-      [f.outlet.id, payload.clientSubmissionKey]
-    ));
+    await expect(
+      submitGuestOrder(f.outlet.publicId, {
+        ...payload,
+        notes: "Different cart",
+      })
+    ).rejects.toThrow();
+    const rows = await admin(async (_, pool) =>
+      pool.query("select id from orders where restaurant_id=$1 and client_submission_key=$2", [
+        f.outlet.id,
+        payload.clientSubmissionKey,
+      ])
+    );
     expect(rows.rowCount).toBe(1);
   });
 
   it("enforces pricing, add-ons, staff state/version transitions and separates finance permission", async () => {
     const f = await publishedOutlet();
-    await expect(submitGuestOrder(f.outlet.publicId, {
-      ...submission(),
-      quotedTotalMinor: 12500,
-    })).rejects.toMatchObject({ statusCode: 409 });
-    await expect(submitGuestOrder(f.outlet.publicId, {
-      ...submission(),
-      items: [{ dishId: "plate", quantity: 1, selectedAddOns: [{ groupId: "other", optionId: "bread" }] }],
-    })).rejects.toThrow();
+    await expect(
+      submitGuestOrder(f.outlet.publicId, {
+        ...submission(),
+        quotedTotalMinor: 12500,
+      })
+    ).rejects.toMatchObject({ statusCode: 409 });
+    await expect(
+      submitGuestOrder(f.outlet.publicId, {
+        ...submission(),
+        items: [
+          {
+            dishId: "plate",
+            quantity: 1,
+            selectedAddOns: [{ groupId: "other", optionId: "bread" }],
+          },
+        ],
+      })
+    ).rejects.toThrow();
     const order = await submitGuestOrder(f.outlet.publicId, submission());
-    await expect(transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "accepted",
-      paymentStatus: "paid",
-      expectedVersion: 1,
-    })).rejects.toThrow("Payment updates require");
+    await expect(
+      transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
+        targetStatus: "accepted",
+        paymentStatus: "paid",
+        expectedVersion: 1,
+      })
+    ).rejects.toThrow("Payment updates require");
     const accept = await transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "accepted", expectedVersion: 1,
+      targetStatus: "accepted",
+      expectedVersion: 1,
     });
     expect(accept.currentStatus).toBe("accepted");
-    await expect(transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "ready", expectedVersion: 2,
-    })).rejects.toThrow();
-    await expect(transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "preparing", expectedVersion: 1,
-    })).rejects.toThrow();
+    await expect(
+      transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
+        targetStatus: "ready",
+        expectedVersion: 2,
+      })
+    ).rejects.toThrow();
+    await expect(
+      transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
+        targetStatus: "preparing",
+        expectedVersion: 1,
+      })
+    ).rejects.toThrow();
     const prep = await transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "preparing", expectedVersion: 2,
+      targetStatus: "preparing",
+      expectedVersion: 2,
     });
     expect(prep.currentStatus).toBe("preparing");
     const ready = await transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "ready", expectedVersion: 3,
+      targetStatus: "ready",
+      expectedVersion: 3,
     });
     expect(ready.currentStatus).toBe("ready");
     const served = await transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
-      targetStatus: "served", expectedVersion: 4,
+      targetStatus: "served",
+      expectedVersion: 4,
     });
     expect(served.currentStatus).toBe("served");
   });

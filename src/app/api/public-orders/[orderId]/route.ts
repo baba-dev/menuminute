@@ -5,10 +5,7 @@ import { errorResponse } from "@/lib/request-context";
 import { UnauthorizedError } from "@/lib/errors";
 import { enforcePublicOrderLimit } from "@/modules/orders/rate-limit";
 
-export async function GET(
-  req: Request,
-  context: { params: Promise<{ orderId: string }> }
-) {
+export async function GET(req: Request, context: { params: Promise<{ orderId: string }> }) {
   try {
     const { orderId } = await context.params;
     const url = new URL(req.url);

@@ -614,7 +614,9 @@ body.font-sans {
   border-radius: 16px;
   padding: 0.75rem 1.25rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s;
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.15s;
 }
 
 .cart-bar-button:hover {
@@ -712,7 +714,9 @@ body.font-sans {
   padding: 0.75rem 1rem;
   cursor: pointer;
   background: var(--panel);
-  transition: border-color 0.12s, background-color 0.12s;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
 }
 
 .option-card:hover {
@@ -813,7 +817,8 @@ body.font-sans {
 }
 
 @keyframes subtlePulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(255, 91, 26, 0.35);
   }
   50% {
@@ -826,18 +831,30 @@ body.font-sans {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* Stepper Track */
@@ -882,8 +899,16 @@ body.font-sans {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pulse, .spin, .customizer-overlay, .cart-overlay, .customizer-sheet, .cart-drawer {
+  .pulse,
+  .spin,
+  .customizer-overlay,
+  .cart-overlay,
+  .customizer-sheet,
+  .cart-drawer {
     animation: none !important;
   }
-  .cart-bar-button, .option-card { transition: none !important; }
+  .cart-bar-button,
+  .option-card {
+    transition: none !important;
+  }
 }

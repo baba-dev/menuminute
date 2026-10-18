@@ -12,7 +12,11 @@ export async function POST(
     const body = await req.json();
 
     const result = await transitionOutletOrder(actor, outletId, orderId, body, organizationId);
-    if (result.expired) return NextResponse.json({ message: "The order acceptance window has expired." }, { status: 409 });
+    if (result.expired)
+      return NextResponse.json(
+        { message: "The order acceptance window has expired." },
+        { status: 409 }
+      );
 
     return NextResponse.json(result, {
       status: 200,
