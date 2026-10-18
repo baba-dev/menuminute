@@ -1,0 +1,33 @@
+name: Temporary Menu Journey formatter
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format-journey:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/public-menu-journey-section'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - name: Apply pinned Prettier to only this PR's added files
+        run: |
+          pnpm exec prettier --write src/components/marketing/journey/menu-journey.tsx src/components/marketing/journey/menu-journey.css tests/e2e/menu-journey.spec.ts
+          git diff --check
+          if ! git diff --quiet -- src/components/marketing/journey/menu-journey.tsx src/components/marketing/journey/menu-journey.css tests/e2e/menu-journey.spec.ts; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add src/components/marketing/journey/menu-journey.tsx src/components/marketing/journey/menu-journey.css tests/e2e/menu-journey.spec.ts
+            git commit -m 'style(marketing): apply pinned Prettier to Menu Journey'
+            git push origin HEAD:${{ github.head_ref }}
+          fi
