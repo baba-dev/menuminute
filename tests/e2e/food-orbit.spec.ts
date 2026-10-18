@@ -71,13 +71,15 @@ test("reduced motion shows the complete final artwork and does not animate", asy
   await expect(art).toHaveAttribute("data-paused", "true");
 });
 
-test("the artwork is centered on desktop while primary actions remain interactive", async ({ page }) => {
+test("the artwork is centered on desktop while primary actions remain interactive", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const art = page.getByTestId("food-orbit-hero-art");
   const box = await art.boundingBox();
   expect(box).not.toBeNull();
-  expect(Math.abs((box!.x + box!.width / 2) - 720)).toBeLessThan(32);
+  expect(Math.abs(box!.x + box!.width / 2 - 720)).toBeLessThan(32);
   const primary = page.getByRole("link", { name: "Create your free menu", exact: true }).first();
   const demo = page.getByRole("link", { name: "View live demo", exact: true }).first();
   await expect(primary).toBeVisible();
