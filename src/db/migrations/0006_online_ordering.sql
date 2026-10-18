@@ -265,3 +265,44 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.expire_pending_orders() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.expire_pending_orders() TO menuminute_worker;
+
+
+-- Financial state is never a side effect of a kitchen transition.
+CREATE FUNCTION app_private.record_order_payment(
+ p_outlet text,p_order text,p_expected integer,p_status text,p_method text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE v orders%ROWTYPE; v_org text;
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+ OR NOT app_private.can_outlet(p_outlet,'billing.manage') THEN
+   RAISE EXCEPTION 'Finance permission required' USING ERRCODE='42501';
+ END IF;
+ IF p_status NOT IN ('paid','voided') OR p_method NOT IN ('cash','card','other') THEN
+   RAISE EXCEPTION 'Invalid payment transition' USING ERRCODE='22023';
+ END IF;
+ SELECT * INTO v FROM orders WHERE id=p_order AND restaurant_id=p_outlet FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Order unavailable' USING ERRCODE='22023'; END IF;
+ IF v.version<>p_expected OR v.payment_status<>'unpaid' THEN
+   RAISE EXCEPTION 'Stale payment state' USING ERRCODE='40001';
+ END IF;
+ IF p_status='paid' AND v.status NOT IN ('ready','served','collected') THEN
+   RAISE EXCEPTION 'Order is not ready for settlement' USING ERRCODE='22023';
+ END IF;
+ IF p_status='voided' AND v.status NOT IN ('rejected','cancelled','expired') THEN
+   RAISE EXCEPTION 'Only cancelled orders may void an unpaid balance' USING ERRCODE='22023';
+ END IF;
+ SELECT organization_id INTO v_org FROM restaurants WHERE id=p_outlet;
+ UPDATE orders SET payment_status=p_status,version=v.version+1,updated_at=clock_timestamp()
+ WHERE id=v.id AND version=p_expected AND restaurant_id=p_outlet AND payment_status='unpaid';
+ IF NOT FOUND THEN RAISE EXCEPTION 'Stale payment state' USING ERRCODE='40001'; END IF;
+ INSERT INTO domain_audit(id,organization_id,actor_id,action,details)
+ VALUES(gen_random_uuid()::text,v_org,current_setting('app.actor_id',true),'order.payment',
+ jsonb_build_object('orderId',v.id,'outletId',p_outlet,'from','unpaid','to',p_status,
+ 'method',p_method,'totalMinor',v.total_minor,'currency',v.currency,'version',v.version+1));
+ INSERT INTO outbox_events(id,organization_id,outlet_id,type,schema_version,aggregate_version,payload)
+ VALUES(gen_random_uuid()::text,v_org,p_outlet,'order.payment_changed',1,v.version+1,
+ jsonb_build_object('orderId',v.id,'paymentStatus',p_status));
+ RETURN jsonb_build_object('success',true,'orderId',v.id,'paymentStatus',p_status,'version',v.version+1);
+END $$;
+REVOKE ALL ON FUNCTION app_private.record_order_payment(text,text,integer,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.record_order_payment(text,text,integer,text,text) TO menuminute_app;
