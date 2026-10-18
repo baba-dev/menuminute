@@ -1,14 +1,7 @@
-import { sql, eq, and, desc } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import { getDb, getPool } from "@/db";
-import {
-  orders,
-  orderItems,
-  orderStatusEvents,
-  outboxEvents,
-  restaurants,
-  type SelectedOptionSnapshot,
-} from "@/db/schema";
+import { sql, eq, and, desc, inArray } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { getPool } from "@/db";
+import { orders, orderItems, restaurants, type SelectedOptionSnapshot } from "@/db/schema";
 import { publicProduct } from "@/modules/menu-product/service";
 import { projectMenu } from "@/modules/menu-product/projector";
 import { withOutlet, type Actor, type Permission } from "@/modules/tenancy/service";
@@ -21,8 +14,6 @@ import {
 import {
   orderSubmissionSchema,
   orderTransitionSchema,
-  type OrderSubmissionInput,
-  type OrderTransitionInput,
   type OrderStatus,
 } from "./contracts";
 
@@ -49,33 +40,6 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     );
   }
 
-  const db = getDb();
-
-  // 3. Check Idempotency: Has this submission key already been committed?
-  const existing = (
-    await db
-      .select()
-      .from(orders)
-      .where(
-        and(
-          eq(orders.restaurantId, outletId),
-          eq(orders.clientSubmissionKey, input.clientSubmissionKey)
-        )
-      )
-  )[0];
-
-  if (existing) {
-    return {
-      orderId: existing.id,
-      trackingToken: existing.trackingToken!,
-      orderNumber: existing.orderNumber,
-      status: existing.status,
-      totalMinor: existing.totalMinor,
-      currency: existing.currency,
-      isDuplicate: true,
-    };
-  }
-
   // 4. Project live menu categories and dishes for server-side price & availability verification
   const now = new Date(data.now);
   const projectedMenus = data.menus.map((m) =>
@@ -84,6 +48,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
 
   const allCategories = projectedMenus.flatMap((m) => m.categories);
   const allDishes = allCategories.flatMap((c) => c.items);
+  const dishLookup = new Map(allDishes.map((dish) => [dish.id, dish]));
 
   type PreparedItem = {
     dishId: string;
@@ -101,13 +66,22 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   let subtotalMinor = 0;
 
   for (const requestedItem of input.items) {
-    const dish = allDishes.find((d) => d.id === requestedItem.dishId);
+    const dish = dishLookup.get(requestedItem.dishId);
     if (!dish) {
       throw new ValidationError(`Dish "${requestedItem.dishId}" is not currently on the menu.`);
     }
 
     if (dish.soldOut || !dish.open) {
       throw new ConflictError(`"${dish.name}" is currently sold out or outside service hours.`);
+    }
+
+    const validPairs = new Set(
+      dish.addOnGroups.flatMap((group) =>
+        group.options.map((option) => group.id + ":" + option.id)
+      )
+    );
+    if (requestedItem.selectedAddOns.some((choice) => !validPairs.has(choice.groupId + ":" + choice.optionId))) {
+      throw new ValidationError("An unknown add-on was selected.");
     }
 
     let unitBasePrice = dish.priceMinor;
@@ -193,118 +167,62 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   const taxMinor = 0;
   const totalMinor = subtotalMinor + taxMinor;
 
-  const orderId = `ord-${nanoid()}`;
-  const trackingToken = `trk-${nanoid()}`;
+  if (!Number.isSafeInteger(totalMinor) || totalMinor > 2147483647) {
+    throw new ValidationError("Order total exceeds supported amount.");
+  }
+  if (input.quotedTotalMinor !== totalMinor) {
+    throw new ConflictError("Your cart price has changed. Please review the updated menu.");
+  }
+  if (!outlet.versioned) {
+    throw new ForbiddenError("Online ordering requires a published versioned menu.");
+  }
 
-  // Session expiry snapshot (2 hours default or closing instant)
-  const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
-
-  // 5. Commit atomically in transaction
-  return db.transaction(async (tx) => {
-    // Generate safe daily order sequence
-    let orderNum = 1;
-    try {
-      const res = await tx.execute<{ next_order_number: number }>(
-        sql`SELECT app_private.next_order_number(${outletId}, CURRENT_DATE) as next_order_number`
-      );
-      if (res.rows[0]?.next_order_number) {
-        orderNum = res.rows[0].next_order_number;
+  const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+  const payload = {
+    ...input,
+    requestHash,
+    catalogFingerprint: data.catalogFingerprint,
+    currency: outlet.currency,
+    subtotalMinor,
+    taxMinor,
+    totalMinor,
+    items: preparedItems.map((item) => ({
+      dishId: item.dishId,
+      dishName: item.dishName,
+      variantId: item.variantId ?? null,
+      variantName: item.variantName ?? null,
+      selectedOptions: item.selectedOptions,
+      unitPriceMinor: item.unitPriceMinor,
+      totalMinor: item.totalMinor,
+      quantity: item.quantity,
+      notes: item.notes ?? null,
+    })),
+  };
+  try {
+    const result = await getPool().query<{ data: {
+      orderId: string;
+      trackingToken: string;
+      orderNumber: number;
+      status: OrderStatus;
+      totalMinor: number;
+      currency: string;
+      isDuplicate: boolean;
+    } }>("select app_private.submit_guest_order($1,$2::jsonb) as data", [
+      token,
+      JSON.stringify(payload),
+    ]);
+    return result.rows[0]!.data;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("menu changed") || error.message.includes("Submission key reused")) {
+        throw new ConflictError(error.message);
       }
-    } catch {
-      // Fallback if app_private counter is unavailable in non-migrated environment
-      const countRes = await tx
-        .select({ count: sql<number>`count(*)` })
-        .from(orders)
-        .where(eq(orders.restaurantId, outletId));
-      orderNum = Number(countRes[0]?.count ?? 0) + 1;
+      if (error.message.includes("not enabled for this outlet")) {
+        throw new ForbiddenError("Online ordering is not enabled for this outlet.");
+      }
     }
-
-    // Insert Order
-    await tx.insert(orders).values({
-      id: orderId,
-      restaurantId: outletId,
-      customerName: input.customerName || null,
-      customerPhone: input.customerPhone || null,
-      fulfillmentMode: input.fulfillmentMode,
-      status: "pending",
-      paymentStatus: "unpaid",
-      currency: outlet.currency,
-      subtotalMinor,
-      taxMinor,
-      totalMinor,
-      subtotalPaise: subtotalMinor,
-      taxPaise: taxMinor,
-      totalPaise: totalMinor,
-      notes: input.notes || null,
-      clientSubmissionKey: input.clientSubmissionKey,
-      trackingToken,
-      expiresAt,
-      orderNumber: orderNum,
-      version: 1,
-    });
-
-    // Insert Order Items
-    for (const item of preparedItems) {
-      await tx.insert(orderItems).values({
-        id: `itm-${nanoid()}`,
-        orderId,
-        restaurantId: outletId,
-        dishId: item.dishId,
-        variantId: item.variantId ?? null,
-        itemName: item.dishName,
-        variantName: item.variantName ?? null,
-        selectedOptions: item.selectedOptions,
-        unitPriceMinor: item.unitPriceMinor,
-        totalMinor: item.totalMinor,
-        unitPricePaise: item.unitPriceMinor,
-        totalPaise: item.totalMinor,
-        quantity: item.quantity,
-        notes: item.notes || null,
-      });
-    }
-
-    // Insert Initial Status Event
-    await tx.insert(orderStatusEvents).values({
-      id: `evt-${nanoid()}`,
-      orderId,
-      restaurantId: outletId,
-      fromStatus: null,
-      toStatus: "pending",
-      status: "pending",
-      note: "Order submitted by guest",
-      actorType: "guest",
-      actorId: null,
-    });
-
-    // Insert Outbox Event for background processing
-    await tx.insert(outboxEvents).values({
-      id: `out-${nanoid()}`,
-      organizationId: `org-${outletId}`,
-      outletId,
-      type: "order.created",
-      schemaVersion: 1,
-      aggregateVersion: 1,
-      payload: {
-        orderId,
-        orderNumber: orderNum,
-        totalMinor,
-        currency: outlet.currency,
-        itemsCount: preparedItems.length,
-        fulfillmentMode: input.fulfillmentMode,
-      },
-      status: "pending",
-    });
-
-    return {
-      orderId,
-      trackingToken,
-      orderNumber: orderNum,
-      status: "pending" as OrderStatus,
-      totalMinor,
-      currency: outlet.currency,
-      isDuplicate: false,
-    };
-  });
+    throw error;
+  }
 }
 
 // ─── Guest Order Tracking ─────────────────────────────────────────────────────
@@ -314,77 +232,13 @@ export async function getGuestOrderTracking(
   orderId: string,
   trackingToken: string
 ) {
-  const data = await publicProduct(token);
-  if (!data) throw new NotFoundError("Menu or restaurant unavailable");
-
-  const db = getDb();
-  const orderRow = (
-    await db
-      .select()
-      .from(orders)
-      .where(
-        and(
-          eq(orders.id, orderId),
-          eq(orders.restaurantId, data.outlet.id),
-          eq(orders.trackingToken, trackingToken)
-        )
-      )
-  )[0];
-
-  if (!orderRow) {
-    throw new NotFoundError("Order tracking capability not found");
-  }
-
-  const items = await db
-    .select()
-    .from(orderItems)
-    .where(eq(orderItems.orderId, orderId));
-
-  const events = await db
-    .select()
-    .from(orderStatusEvents)
-    .where(eq(orderStatusEvents.orderId, orderId))
-    .orderBy(orderStatusEvents.createdAt);
-
-  return {
-    order: {
-      id: orderRow.id,
-      orderNumber: orderRow.orderNumber,
-      status: orderRow.status,
-      paymentStatus: orderRow.paymentStatus,
-      fulfillmentMode: orderRow.fulfillmentMode,
-      currency: orderRow.currency,
-      subtotalMinor: orderRow.subtotalMinor,
-      taxMinor: orderRow.taxMinor,
-      totalMinor: orderRow.totalMinor,
-      notes: orderRow.notes,
-      rejectionReason: orderRow.rejectionReason,
-      createdAt: orderRow.createdAt,
-      updatedAt: orderRow.updatedAt,
-      point: data.point,
-    },
-    outlet: {
-      name: data.outlet.name,
-      currency: data.outlet.currency,
-    },
-    items: items.map((i) => ({
-      id: i.id,
-      itemName: i.itemName,
-      variantName: i.variantName,
-      selectedOptions: i.selectedOptions,
-      unitPriceMinor: i.unitPriceMinor,
-      totalMinor: i.totalMinor,
-      quantity: i.quantity,
-      notes: i.notes,
-    })),
-    events: events.map((e) => ({
-      id: e.id,
-      fromStatus: e.fromStatus,
-      toStatus: e.toStatus,
-      note: e.note,
-      createdAt: e.createdAt,
-    })),
-  };
+  const result = await getPool().query<{ data: unknown | null }>(
+    "select app_private.track_guest_order($1,$2,$3) as data",
+    [token, orderId, trackingToken]
+  );
+  const data = result.rows[0]?.data;
+  if (!data) throw new NotFoundError("Order tracking capability not found");
+  return data;
 }
 
 // ─── Merchant Order Management ────────────────────────────────────────────────
@@ -392,45 +246,57 @@ export async function getGuestOrderTracking(
 export async function listOutletOrders(
   actor: Actor,
   outletId: string,
-  statusFilter?: string
+  statusFilter?: string,
+  organizationId?: string
 ) {
   return withOutlet(actor, outletId, "orders.read", async (tx) => {
-    let query = tx
-      .select()
-      .from(orders)
-      .where(eq(orders.restaurantId, outletId))
-      .orderBy(desc(orders.createdAt))
-      .limit(100);
-
-    const rows = await query;
-
-    const filtered = statusFilter
-      ? rows.filter((r) => {
-          if (statusFilter === "active") {
-            return ["pending", "accepted", "preparing", "ready"].includes(r.status);
-          }
-          if (statusFilter === "completed") {
-            return ["served", "collected"].includes(r.status);
-          }
-          if (statusFilter === "cancelled") {
-            return ["rejected", "cancelled", "expired"].includes(r.status);
-          }
-          return r.status === statusFilter;
-        })
-      : rows;
-
-    const orderIds = filtered.map((o) => o.id);
-    const items =
-      orderIds.length > 0
-        ? await tx
-            .select()
-            .from(orderItems)
-            .where(sql`${orderItems.orderId} = ANY(${orderIds})`)
-        : [];
-
-    return filtered.map((o) => ({
-      ...o,
-      items: items.filter((i) => i.orderId === o.id),
+    if (organizationId) {
+      const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
+        .from(restaurants).where(eq(restaurants.id, outletId));
+      if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
+    }
+    const filters: Record<string, (typeof orders.$inferSelect)["status"][]> = {
+      active: ["pending", "accepted", "preparing", "ready"],
+      completed: ["served", "collected"],
+      cancelled: ["rejected", "cancelled", "expired"],
+    };
+    const statuses = statusFilter ? (filters[statusFilter] ?? [statusFilter as (typeof orders.$inferSelect)["status"]]) : null;
+    const predicate = statuses
+      ? and(eq(orders.restaurantId, outletId), inArray(orders.status, statuses))
+      : eq(orders.restaurantId, outletId);
+    const rows = await tx.select().from(orders)
+      .where(predicate).orderBy(desc(orders.createdAt)).limit(100);
+    const orderIds = rows.map((order) => order.id);
+    const items = orderIds.length
+      ? await tx.select().from(orderItems).where(inArray(orderItems.orderId, orderIds))
+      : [];
+    const byOrder = new Map<string, typeof items>();
+    for (const item of items) {
+      const group = byOrder.get(item.orderId) ?? [];
+      group.push(item);
+      byOrder.set(item.orderId, group);
+    }
+    return rows.map((order) => ({
+      id: order.id,
+      restaurantId: order.restaurantId,
+      tableId: order.tableId,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      fulfillmentMode: order.fulfillmentMode,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      currency: order.currency,
+      subtotalMinor: order.subtotalMinor,
+      taxMinor: order.taxMinor,
+      totalMinor: order.totalMinor,
+      notes: order.notes,
+      rejectionReason: order.rejectionReason,
+      orderNumber: order.orderNumber,
+      version: order.version,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      expiresAt: order.expiresAt,
+      items: byOrder.get(order.id) ?? [],
     }));
   });
 }
@@ -439,107 +305,36 @@ export async function transitionOutletOrder(
   actor: Actor,
   outletId: string,
   orderId: string,
-  raw: unknown
+  raw: unknown,
+  organizationId?: string
 ) {
   const input = orderTransitionSchema.parse(raw);
-
-  // Map required permission based on target status
+  if (input.paymentStatus) {
+    throw new ValidationError("Payment updates require a separate authorized finance workflow.");
+  }
   let requiredPermission: Permission = "orders.accept";
   if (input.targetStatus === "preparing") requiredPermission = "orders.prepare";
-  else if (input.targetStatus === "ready" || input.targetStatus === "served" || input.targetStatus === "collected")
+  else if (["ready", "served", "collected"].includes(input.targetStatus))
     requiredPermission = "orders.complete";
-  else if (input.targetStatus === "rejected" || input.targetStatus === "cancelled")
+  else if (["rejected", "cancelled"].includes(input.targetStatus))
     requiredPermission = "orders.cancel";
 
   return withOutlet(actor, outletId, requiredPermission, async (tx) => {
-    const order = (
-      await tx
-        .select()
-        .from(orders)
-        .where(and(eq(orders.id, orderId), eq(orders.restaurantId, outletId)))
-    )[0];
-
-    if (!order) throw new NotFoundError("Order");
-
-    // Check optimistic version concurrency
-    if (order.version !== input.expectedVersion) {
-      throw new ConflictError(
-        "This order was updated by another staff member. Please refresh."
-      );
+    if (organizationId) {
+      const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
+        .from(restaurants).where(eq(restaurants.id, outletId));
+      if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
     }
-
-    // State machine validation
-    const current = order.status;
-    const target = input.targetStatus;
-
-    const validTransitions: Record<string, string[]> = {
-      pending: ["accepted", "rejected"],
-      accepted: ["preparing", "cancelled"],
-      preparing: ["ready", "cancelled"],
-      ready: ["served", "collected", "cancelled"],
-    };
-
-    const allowedNext = validTransitions[current] || [];
-    if (!allowedNext.includes(target)) {
-      throw new ValidationError(
-        `Invalid status transition from "${current}" to "${target}".`
-      );
-    }
-
-    const nextVersion = order.version + 1;
-    const updateData: Partial<typeof orders.$inferInsert> = {
-      status: target,
-      version: nextVersion,
-      updatedAt: new Date(),
-    };
-
-    if (input.paymentStatus) {
-      updateData.paymentStatus = input.paymentStatus;
-    }
-
-    if (target === "rejected" || target === "cancelled") {
-      updateData.rejectionReason = input.reason || null;
-    }
-
-    await tx.update(orders).set(updateData).where(eq(orders.id, orderId));
-
-    // Audit status event
-    await tx.insert(orderStatusEvents).values({
-      id: `evt-${nanoid()}`,
-      orderId,
-      restaurantId: outletId,
-      fromStatus: current,
-      toStatus: target,
-      status: target,
-      note: input.reason || `Status updated to ${target} by staff`,
-      actorType: "staff",
-      actorId: actor.userId,
-    });
-
-    // Outbox event
-    await tx.insert(outboxEvents).values({
-      id: `out-${nanoid()}`,
-      organizationId: `org-${outletId}`,
-      outletId,
-      type: "order.status_changed",
-      schemaVersion: 1,
-      aggregateVersion: nextVersion,
-      payload: {
-        orderId,
-        fromStatus: current,
-        toStatus: target,
-        paymentStatus: input.paymentStatus || order.paymentStatus,
-        reason: input.reason || null,
-      },
-      status: "pending",
-    });
-
-    return {
-      success: true,
-      orderId,
-      previousStatus: current,
-      currentStatus: target,
-      version: nextVersion,
-    };
+    const result = await tx.execute<{ data: {
+      success?: boolean;
+      expired?: boolean;
+      orderId?: string;
+      previousStatus?: string;
+      currentStatus?: string;
+      version?: number;
+    } }>(sql`select app_private.transition_order(
+      ${outletId},${orderId},${input.targetStatus},${input.expectedVersion},${input.reason ?? ""}
+    ) as data`);
+    return result.rows[0]!.data;
   });
 }
