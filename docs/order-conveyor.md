@@ -3,6 +3,7 @@
 Status: original Direction B artwork approved for homepage inclusion. This is a **future ordering concept preview**; it does not submit orders, show a live payment gateway, or enable ordering entitlements.
 
 ## Integration
+
 - Component: `src/components/marketing/order-conveyor/order-conveyor.tsx`
 - CSS: `src/components/marketing/order-conveyor/order-conveyor.css`
 - Trusted inline artwork strings: `src/components/marketing/order-conveyor/order-conveyor-art.ts`
@@ -16,4 +17,5 @@ Accessibility: the illustration is presented once by its surrounding role=img la
 Scope boundary: future dine-in/pickup, guest basket, request, merchant acceptance. No online payment, courier delivery, working preview checkout, staff API or commercial price claim. Links use current /pricing and /register pages. No new dependencies.
 
 ## Gate
+
 Run native ARM64 CI: formatting/lint, strict TypeScript, real PostgreSQL and Redis integration, production build plus Playwright, and aggregate gate. After merging, separately verify main SHA CI, immutable artifact publication, VPS staging/eligibility, activation and public HTTPS readiness; do not infer activation from PR merge.

@@ -144,11 +144,13 @@ export function OrderConveyor() {
         <header className="oc-intro">
           <span className="oc-eyebrow">04 / WHAT&apos;S COOKING NEXT</span>
           <span className="oc-roadmap">ONLINE ORDERING · IN DEVELOPMENT</span>
-          <h2 id="order-conveyor-heading">From craving to <em>counter.</em></h2>
+          <h2 id="order-conveyor-heading">
+            From craving to <em>counter.</em>
+          </h2>
           <p className="oc-lead">Your menu could soon do more than look delicious.</p>
           <p className="oc-description">
-            We&apos;re building an effortless way for guests to choose their favourites,
-            customise dishes and send dine-in or pickup requests directly to your restaurant.
+            We&apos;re building an effortless way for guests to choose their favourites, customise
+            dishes and send dine-in or pickup requests directly to your restaurant.
           </p>
         </header>
 
@@ -188,8 +190,13 @@ export function OrderConveyor() {
         <div className="oc-capabilities" aria-label="Planned ordering capabilities">
           {capabilities.map(({ title, detail, Icon }) => (
             <div className="oc-capability" key={title}>
-              <span className="oc-capability-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span>
-              <span><strong>{title}</strong><small>{detail}</small></span>
+              <span className="oc-capability-icon">
+                <Icon size={21} strokeWidth={1.8} aria-hidden="true" />
+              </span>
+              <span>
+                <strong>{title}</strong>
+                <small>{detail}</small>
+              </span>
             </div>
           ))}
         </div>
@@ -197,7 +204,10 @@ export function OrderConveyor() {
         <div className="oc-outro">
           <div>
             <h3>Great food deserves an easier way to order.</h3>
-            <p>Online Ordering is in development and is not yet available for purchase. Start with a free QR menu today.</p>
+            <p>
+              Online Ordering is in development and is not yet available for purchase. Start with a
+              free QR menu today.
+            </p>
           </div>
           <div className="oc-links">
             <Link className="oc-primary" href="/pricing">

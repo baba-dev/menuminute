@@ -26,10 +26,13 @@ test("Section 4 follows smart import and advertises only planned ordering", asyn
     const conveyor = document.querySelector(".order-conveyor");
     const products = document.querySelector(".ma-product-features");
     return Boolean(
-      journey && alchemy && conveyor && products &&
-      (journey.compareDocumentPosition(alchemy) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-      (alchemy.compareDocumentPosition(conveyor) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-      (conveyor.compareDocumentPosition(products) & Node.DOCUMENT_POSITION_FOLLOWING)
+      journey &&
+      alchemy &&
+      conveyor &&
+      products &&
+      journey.compareDocumentPosition(alchemy) & Node.DOCUMENT_POSITION_FOLLOWING &&
+      alchemy.compareDocumentPosition(conveyor) & Node.DOCUMENT_POSITION_FOLLOWING &&
+      conveyor.compareDocumentPosition(products) & Node.DOCUMENT_POSITION_FOLLOWING
     );
   });
   expect(correctOrder).toBe(true);
@@ -52,7 +55,9 @@ test("Conveyor uses a separate phone composition, follows theme, and preserves r
       await expect(conveyor.locator(".oc-desktop-art svg")).toBeVisible();
       await expect(conveyor.locator(".oc-mobile-art svg")).toBeHidden();
     }
-    await expect(conveyor.getByRole("button", { name: "Replay Order Conveyor animation" })).toBeDisabled();
+    await expect(
+      conveyor.getByRole("button", { name: "Replay Order Conveyor animation" })
+    ).toBeDisabled();
     await expect(conveyor.getByText("Static preview for reduced motion")).toBeVisible();
     const svg = conveyor.locator(width <= 680 ? ".oc-mobile-art svg" : ".oc-desktop-art svg");
     await expect(svg.locator(".oc-merchant-accepted")).toHaveCSS("opacity", "1");
@@ -60,9 +65,13 @@ test("Conveyor uses a separate phone composition, follows theme, and preserves r
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
     );
     expect(overflow, `horizontal overflow at ${width}px`).toBe(false);
-    await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = "dark";
+    });
     await expect(svg).toHaveAttribute("data-theme", "dark");
-    await page.evaluate(() => { document.documentElement.dataset.theme = "light"; });
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = "light";
+    });
     await expect(svg).toHaveAttribute("data-theme", "light");
   }
 });
@@ -80,5 +89,7 @@ test("Conveyor animation is one-shot, viewport-triggered and replayable", async 
   await replay.click();
   await expect(conveyor).toHaveAttribute("data-state", "playing");
   await expect(svg).toHaveClass(/oc-play/);
-  expect(await svg.evaluate((element) => element.getAnimations({ subtree: true }).length)).toBeGreaterThan(0);
+  expect(
+    await svg.evaluate((element) => element.getAnimations({ subtree: true }).length)
+  ).toBeGreaterThan(0);
 });
