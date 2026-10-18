@@ -327,16 +327,22 @@ body {
   border: 1px solid var(--mm-border, #d7d7d7);
   background: transparent;
   color: var(--mm-foreground, #171717);
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
   cursor: pointer;
 }
-.mm-theme-toggle:hover { background: var(--mm-soft-surface, #f5f5f5); }
+.mm-theme-toggle:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
 .mm-theme-toggle:focus-visible {
   outline: 3px solid var(--mm-focus, #a83500);
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .mm-theme-toggle { transition: none; }
+  .mm-theme-toggle {
+    transition: none;
+  }
 }
 .product .skip-link {
   position: fixed;
