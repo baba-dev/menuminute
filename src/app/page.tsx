@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
-import { QrCode, Smartphone, ChefHat, ArrowRight, CheckCircle, Star } from "lucide-react";
+import { MenuJourney } from "@/components/marketing/journey/menu-journey";
+import { QrCode, Smartphone, ChefHat, ArrowRight, Star } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "MenuMinute — Free QR Menus for Restaurants",
@@ -36,16 +37,6 @@ const features = [
     badgeColor: "bg-stone-100 text-stone-700",
     soon: true,
   },
-];
-
-const freeFeatures = [
-  "Categories, dishes and descriptions",
-  "Menu categories and variants",
-  "Item photos and descriptions",
-  "Permanent QR code generation",
-  "Mobile-optimised customer view",
-  "No customer registration required",
-  "Your restaurant identity",
 ];
 
 export default function HomePage() {
@@ -162,22 +153,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Free features list */}
-      <section className="border-y border-stone-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-center text-sm font-semibold tracking-wider text-stone-500 uppercase">
-            Everything in the free plan
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {freeFeatures.map((feature) => (
-              <div key={feature} className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
-                <span className="text-sm text-stone-700">{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* From your kitchen to their fingertips: replaces the old free-plan checklist. */}
+      <MenuJourney />
 
       {/* Features */}
       <section className="px-4 py-20 sm:px-6 lg:px-8">
