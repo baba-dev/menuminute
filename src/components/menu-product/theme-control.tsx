@@ -64,6 +64,7 @@ export function ThemeSync() {
             ? "dark"
             : "light";
     };
+    queueMicrotask(sync);
     query.addEventListener("change", sync);
     window.addEventListener("storage", sync);
     return () => {
