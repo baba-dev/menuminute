@@ -58,6 +58,9 @@ describe("fail-closed automatic release activation", () => {
     expect(helper).toContain('pg_restore -l "$backup_dir/database.dump"');
     expect(helper).toContain('"$backup_tool" backup --tag "$tag" "$backup_dir" "$data/media"');
     expect(helper).toContain("OFF_HOST_PREDEPLOY_BACKUP_VERIFIED");
+    expect(helper).toContain('unquote(url.username or "") != "menuminute_owner"');
+    expect(helper).toContain('unquote(url.path.lstrip("/")) != "menuminute"');
+    expect(helper).toContain("unset MIGRATION_DATABASE_URL");
     expect(helper.indexOf("OFF_HOST_PREDEPLOY_BACKUP_VERIFIED")).toBeLessThan(
       helper.indexOf('(cd "$release" && "$node24" dist/db-migrate.mjs)')
     );
