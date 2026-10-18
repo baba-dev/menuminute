@@ -4,6 +4,7 @@ import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { MenuJourney } from "@/components/marketing/journey/menu-journey";
 import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
 import { OrderConveyor } from "@/components/marketing/order-conveyor/order-conveyor";
+import { ChefPass } from "@/components/marketing/chef-pass/chef-pass";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { QrCode, Smartphone, ChefHat, ArrowRight, Menu } from "lucide-react";
 
@@ -136,6 +137,9 @@ export default function HomePage() {
 
       {/* Section 4: illustrated preview of future dine-in and pickup ordering. */}
       <OrderConveyor />
+
+      {/* Section 5: illustrated multi-station Kitchen Pro concept, not a live KDS. */}
+      <ChefPass />
 
       {/* Product choices after the illustrated onboarding story. */}
       <section className="ma-product-features px-4 py-20 sm:px-6 lg:px-8">
