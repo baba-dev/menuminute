@@ -310,6 +310,27 @@ export function PublicMenu({
                               </span>
                             </div>
                             {i.description && <p>{i.description}</p>}
+                            {!data.outlet.orderingEnabled &&
+                              (i.variants.length > 0 || i.addOnGroups.length > 0) && (
+                                <div className="stack" aria-label={`Options for ${i.name}`}>
+                                  <small className="quiet">Variants & add-ons</small>
+                                  {i.variants.map((variant) => (
+                                    <small key={variant.id}>
+                                      {variant.name} · {formatPrice(variant.priceMinor, m.view.currency)}
+                                    </small>
+                                  ))}
+                                  {i.addOnGroups.map((group) => (
+                                    <div key={group.id} className="stack">
+                                      <small className="quiet">{group.name}</small>
+                                      {group.options.map((option) => (
+                                        <small key={option.id}>
+                                          {option.name} · {formatPrice(option.priceMinor, m.view.currency)}
+                                        </small>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             {!i.open && <span className="badge">Outside service time</span>}
                             <div className="row">
                               {i.dietary.map((d) => (
