@@ -116,7 +116,7 @@ export function DishDetail({
               ))}
             </div>
           )}
-          {!dish.open && <p className="error">Outside this dish's service hours.</p>}
+          {!dish.open && <p className="error">Outside this dish’s service hours.</p>}
           <p className="dish-detail-disclaimer">
             Prices and dietary labels are supplied by the restaurant. Ask staff about allergens; if
             online ordering is enabled, use Add on the menu to customize.
