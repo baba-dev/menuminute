@@ -6,8 +6,7 @@ const smooth = (value: number) => {
   return t * t * (3 - 2 * t);
 };
 const ease = (value: number) => 1 - Math.pow(1 - clamp(value), 3);
-const segment = (time: number, start: number, end: number) =>
-  clamp((time - start) / (end - start));
+const segment = (time: number, start: number, end: number) => clamp((time - start) / (end - start));
 
 export function alchemyStage(timeMs: number) {
   const time = Math.max(0, Math.min(ALCHEMY_DURATION_MS, timeMs)) / 1000;
@@ -20,8 +19,7 @@ export function renderAlchemy(svg: SVGSVGElement, timeMs: number, moving = false
   const get = (id: string) => svg.querySelector<SVGElement>(`[id="${id}"]`);
   const attr = (id: string, name: string, value: string | number) =>
     get(id)?.setAttribute(name, String(value));
-  const opacity = (id: string, value: number) =>
-    attr(id, "opacity", clamp(value).toFixed(4));
+  const opacity = (id: string, value: number) => attr(id, "opacity", clamp(value).toFixed(4));
   const move = (id: string, x: number, y: number) =>
     attr(id, "transform", `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
   const intro = ease(segment(seconds, 0, 1.2));
@@ -32,16 +30,11 @@ export function renderAlchemy(svg: SVGSVGElement, timeMs: number, moving = false
     `translate(123 ${(106 + 30 * (1 - intro) + bob).toFixed(2)}) rotate(${-4 - 2 * (1 - intro)} 169 255)`
   );
   opacity("menuGroup", 0.05 + 0.95 * intro);
-  opacity(
-    "camera",
-    smooth(segment(seconds, 1, 1.45)) *
-      (1 - smooth(segment(seconds, 4, 4.42)))
-  );
+  opacity("camera", smooth(segment(seconds, 1, 1.45)) * (1 - smooth(segment(seconds, 4, 4.42))));
   const scan = smooth(segment(seconds, 1.22, 4.08));
   opacity(
     "scanner",
-    smooth(segment(seconds, 1.18, 1.43)) *
-      (1 - smooth(segment(seconds, 4.04, 4.32)))
+    smooth(segment(seconds, 1.18, 1.43)) * (1 - smooth(segment(seconds, 4.04, 4.32)))
   );
   const y = 169 + 275 * scan;
   attr("scanGlow", "y", y - 26);
@@ -50,16 +43,10 @@ export function renderAlchemy(svg: SVGSVGElement, timeMs: number, moving = false
   attr("scanLine", "y2", y);
   opacity(
     "lens",
-    smooth(segment(seconds, 2.05, 2.45)) *
-      (1 - smooth(segment(seconds, 5.2, 5.85))) *
-      0.83
+    smooth(segment(seconds, 2.05, 2.45)) * (1 - smooth(segment(seconds, 5.2, 5.85))) * 0.83
   );
   attr("lensArc", "transform", `rotate(${(-99 + seconds * 25).toFixed(2)} 690 373)`);
-  opacity(
-    "microBits",
-    smooth(segment(seconds, 2, 3)) *
-      (1 - smooth(segment(seconds, 5.6, 6.8)))
-  );
+  opacity("microBits", smooth(segment(seconds, 2, 3)) * (1 - smooth(segment(seconds, 5.6, 6.8))));
   for (let i = 0; i < 3; i++) {
     const appear = 2.48 + i * 0.55;
     const leave = 4.4 + i * 0.3;
@@ -68,16 +55,10 @@ export function renderAlchemy(svg: SVGSVGElement, timeMs: number, moving = false
       smooth(segment(seconds, appear, appear + 0.48)) *
         (1 - smooth(segment(seconds, leave, leave + 0.45)))
     );
-    const chipY =
-      [214, 330, 446][i]! +
-      (1 - ease(segment(seconds, appear, appear + 0.55))) * 17;
+    const chipY = [214, 330, 446][i]! + (1 - ease(segment(seconds, appear, appear + 0.55))) * 17;
     move(`chip-${i}`, 547, chipY);
   }
-  attr(
-    "routeDraw",
-    "stroke-dashoffset",
-    470 * (1 - ease(segment(seconds, 3.78, 5.88)))
-  );
+  attr("routeDraw", "stroke-dashoffset", 470 * (1 - ease(segment(seconds, 3.78, 5.88))));
   for (let i = 0; i < 3; i++) {
     const start = 4.24 + i * 0.38;
     const progress = segment(seconds, start, start + 1.05);
@@ -89,8 +70,7 @@ export function renderAlchemy(svg: SVGSVGElement, timeMs: number, moving = false
     move(`flight-${i}`, x, flightY);
     opacity(
       `flight-${i}`,
-      smooth(segment(progress, 0, 0.16)) *
-        (1 - smooth(segment(progress, 0.77, 1)))
+      smooth(segment(progress, 0, 0.16)) * (1 - smooth(segment(progress, 0.77, 1)))
     );
   }
   const board = smooth(segment(seconds, 3.78, 4.42));

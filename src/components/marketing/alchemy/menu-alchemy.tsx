@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Camera, Check, Pause, Play, RotateCcw, ScanText, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  Check,
+  Pause,
+  Play,
+  RotateCcw,
+  ScanText,
+  Sparkles,
+} from "lucide-react";
 import { MENU_ALCHEMY_SVG } from "./alchemy-artwork";
 import { ALCHEMY_DURATION_MS, alchemyStage, renderAlchemy } from "./alchemy-motion";
 import "./menu-alchemy.css";
@@ -174,7 +183,10 @@ export function MenuAlchemy() {
           </p>
         </header>
 
-        <div className="ma-stage" aria-label="Illustrated preview of the proposed menu import experience">
+        <div
+          className="ma-stage"
+          aria-label="Illustrated preview of the proposed menu import experience"
+        >
           <div
             ref={artRef}
             className="ma-desktop-art"
@@ -202,7 +214,9 @@ export function MenuAlchemy() {
             </div>
             <div className="ma-mobile-board">
               <div className="ma-mobile-board-head">
-                <span>Menu Studio <small>THE SPICE HOUSE</small></span>
+                <span>
+                  Menu Studio <small>THE SPICE HOUSE</small>
+                </span>
                 <small>DRAFT</small>
               </div>
               <strong>Your imported dishes</strong>
@@ -211,11 +225,16 @@ export function MenuAlchemy() {
                   <div className={`ma-dish-art ma-dish-art--${dish.art}`}>
                     {dish.art === "paneer" ? "▣" : dish.art === "dal" ? "◉" : "◕"}
                   </div>
-                  <div><b>{dish.name}</b><small>{dish.category} · Image suggested</small></div>
+                  <div>
+                    <b>{dish.name}</b>
+                    <small>{dish.category} · Image suggested</small>
+                  </div>
                   <strong>{dish.price}</strong>
                 </div>
               ))}
-              <div className="ma-mobile-review"><Check size={16} /> Ready for your finishing touch</div>
+              <div className="ma-mobile-review">
+                <Check size={16} /> Ready for your finishing touch
+              </div>
             </div>
           </div>
         </div>
@@ -235,12 +254,18 @@ export function MenuAlchemy() {
             </button>
             <button
               type="button"
-              onClick={() => (playing ? controlsRef.current?.pause() : controlsRef.current?.resume())}
+              onClick={() =>
+                playing ? controlsRef.current?.pause() : controlsRef.current?.resume()
+              }
               disabled={reduced}
               aria-label={playing ? "Pause illustration" : "Play illustration"}
               title={playing ? "Pause illustration" : "Play illustration"}
             >
-              {playing ? <Pause size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
+              {playing ? (
+                <Pause size={17} aria-hidden="true" />
+              ) : (
+                <Play size={17} aria-hidden="true" />
+              )}
               <span>{playing ? "Pause" : "Play"}</span>
             </button>
           </div>
@@ -249,18 +274,29 @@ export function MenuAlchemy() {
 
         <div className="ma-outro">
           <div className="ma-path">
-            <span><Camera size={17} aria-hidden="true" /> Photograph</span>
+            <span>
+              <Camera size={17} aria-hidden="true" /> Photograph
+            </span>
             <i aria-hidden="true" />
-            <span><ScanText size={17} aria-hidden="true" /> Organize</span>
+            <span>
+              <ScanText size={17} aria-hidden="true" /> Organize
+            </span>
             <i aria-hidden="true" />
-            <span><Check size={17} aria-hidden="true" /> Review</span>
+            <span>
+              <Check size={17} aria-hidden="true" /> Review
+            </span>
           </div>
           <h3>From your first photograph to your first digital menu.</h3>
-          <p>Your dishes. Your prices. Your finishing touch. Nothing is published without your approval.</p>
+          <p>
+            Your dishes. Your prices. Your finishing touch. Nothing is published without your
+            approval.
+          </p>
           <Link className="ma-cta" href="/register">
             Create your free menu today <ArrowRight size={18} aria-hidden="true" />
           </Link>
-          <p className="ma-cta-note">Manual menu creation is available now; smart photo import is in development.</p>
+          <p className="ma-cta-note">
+            Manual menu creation is available now; smart photo import is in development.
+          </p>
         </div>
       </div>
     </section>

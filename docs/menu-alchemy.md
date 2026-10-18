@@ -6,7 +6,7 @@ A planned-feature, illustrative nine-second motion composition after the existin
 - `alchemy-motion.ts` renders the approved deterministic stages using one requestAnimationFrame clock, bounded deltas and element queries scoped to the artwork instance.
 - The initial and no-JavaScript state shows the completed illustration. Once sufficiently visible, motion starts once, pauses offscreen/on hidden tabs, resumes when appropriate, and has explicit pause/replay controls.
 - Reduced-motion mode shows the completed static scene. An alternate vertical HTML illustration preserves legible dish names and prices at phone sizes; it uses the same staged state.
-- The section truthfully labels smart image/PDF import as *coming soon*. It links to the available manual Free QR Menu onboarding, not to a nonexistent import route.
+- The section truthfully labels smart image/PDF import as _coming soon_. It links to the available manual Free QR Menu onboarding, not to a nonexistent import route.
 - New assets and styles are scoped. There are no changes to schema, AI provider integrations, menu authorizations, entitlements or deployment workflows.
 
 ## Release verification

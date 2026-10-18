@@ -134,7 +134,9 @@
   font-size: 0.83rem;
   font-weight: 720;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
 }
 .ma-controls button:hover:not(:disabled) {
   border-color: var(--ma-accent);
@@ -207,7 +209,9 @@
   color: #211600;
   background: linear-gradient(110deg, #ff5b1a 0%, #ff8a1e 56%, #ffd046 100%);
   box-shadow: 0 5px 0 -3px rgb(131 63 12 / 24%);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 :root[data-theme="dark"] .ma-cta {
   background: linear-gradient(110deg, #ffd54b, #ffb52c 55%, #ff7a1a);
@@ -278,7 +282,9 @@
     border-radius: 15px;
     transform: rotate(-2deg);
     box-shadow: 0 14px 32px rgb(74 41 16 / 10%);
-    transition: transform 600ms ease, opacity 600ms ease;
+    transition:
+      transform 600ms ease,
+      opacity 600ms ease;
   }
   .ma-mobile-flourish {
     color: var(--ma-accent);
@@ -347,7 +353,9 @@
     border: 1.5px solid var(--ma-edge);
     background: var(--ma-paper);
     box-shadow: 0 14px 32px rgb(74 41 16 / 10%);
-    transition: opacity 500ms ease, transform 500ms ease;
+    transition:
+      opacity 500ms ease,
+      transform 500ms ease;
   }
   .ma-mobile-board-head {
     display: flex;
