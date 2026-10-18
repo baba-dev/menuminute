@@ -56,30 +56,61 @@ export default function HomePage() {
       <section className="food-orbit-hero relative isolate overflow-hidden">
         <nav aria-label="Main navigation" className="food-orbit-hero__nav relative z-20">
           <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-            <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="MenuMinute home">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2.5"
+              aria-label="MenuMinute home"
+            >
+              <span className="bg-brand-600 flex h-9 w-9 items-center justify-center rounded-xl">
                 <QrCode className="h-4 w-4 text-white" aria-hidden="true" />
               </span>
-              <span className="food-orbit-hero__brand text-lg font-extrabold tracking-tight">MenuMinute</span>
+              <span className="food-orbit-hero__brand text-lg font-extrabold tracking-tight">
+                MenuMinute
+              </span>
             </Link>
             <div className="hidden items-center gap-5 md:flex lg:gap-7">
-              <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">Pricing</Link>
-              <Link href="/demo" className="food-orbit-hero__nav-link text-sm font-medium">Demo</Link>
-              <Link href="/login" className="food-orbit-hero__nav-link text-sm font-medium">Sign in</Link>
-              <Link href="/register" className="food-orbit-hero__nav-cta inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold">Get started free</Link>
+              <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">
+                Pricing
+              </Link>
+              <Link href="/demo" className="food-orbit-hero__nav-link text-sm font-medium">
+                Demo
+              </Link>
+              <Link href="/login" className="food-orbit-hero__nav-link text-sm font-medium">
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="food-orbit-hero__nav-cta inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold"
+              >
+                Get started free
+              </Link>
               <ThemeControl />
             </div>
             <div className="flex items-center gap-2 md:hidden">
               <ThemeControl />
               <details className="food-orbit-hero__mobile-menu relative">
-                <summary aria-label="Open navigation menu" className="food-orbit-hero__icon-button flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl">
+                <summary
+                  aria-label="Open navigation menu"
+                  className="food-orbit-hero__icon-button flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl"
+                >
                   <Menu className="h-5 w-5" aria-hidden="true" />
                 </summary>
                 <div className="food-orbit-hero__mobile-panel absolute top-full right-0 z-30 mt-2 flex w-52 flex-col gap-1 rounded-2xl border p-2 shadow-xl">
-                  <Link href="/pricing" className="food-orbit-hero__mobile-link">Pricing</Link>
-                  <Link href="/demo" className="food-orbit-hero__mobile-link">Demo</Link>
-                  <Link href="/login" className="food-orbit-hero__mobile-link">Sign in</Link>
-                  <Link href="/register" className="food-orbit-hero__nav-cta mt-1 rounded-xl px-4 py-3 text-center text-sm font-bold">Get started free</Link>
+                  <Link href="/pricing" className="food-orbit-hero__mobile-link">
+                    Pricing
+                  </Link>
+                  <Link href="/demo" className="food-orbit-hero__mobile-link">
+                    Demo
+                  </Link>
+                  <Link href="/login" className="food-orbit-hero__mobile-link">
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="food-orbit-hero__nav-cta mt-1 rounded-xl px-4 py-3 text-center text-sm font-bold"
+                  >
+                    Get started free
+                  </Link>
                 </div>
               </details>
             </div>
@@ -92,7 +123,9 @@ export default function HomePage() {
             <span className="food-orbit-hero__accent block">Free forever.</span>
           </h1>
           <div className="food-orbit-hero__stage w-full min-w-0" data-testid="food-orbit-hero-art">
-            <div className="food-orbit-hero__art"><FoodOrbit /></div>
+            <div className="food-orbit-hero__art">
+              <FoodOrbit />
+            </div>
           </div>
           <p className="food-orbit-hero__description max-w-2xl text-base leading-relaxed sm:text-lg">
             Build your restaurant menu, publish it and share one permanent QR code. Guests scan and
