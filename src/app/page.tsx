@@ -98,20 +98,22 @@ export default function HomePage() {
       </nav>
 
       {/* Food Orbit: one focal illustration, complementary copy and unchanged public claims. */}
-      <section className="food-orbit-hero relative isolate overflow-hidden px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16 lg:px-8">
+      <section className="food-orbit-hero relative isolate overflow-hidden px-4 pt-12 pb-12 sm:px-6 sm:pt-16 sm:pb-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl items-center gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.38fr)] xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,.53fr)]">
           <div className="relative z-10 mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-1.5 text-sm font-semibold food-orbit-hero__eyebrow dark:border-amber-800">
+            <div className="food-orbit-hero__eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-1.5 text-sm font-semibold dark:border-amber-800">
               <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
               Free QR menus for every restaurant
             </div>
             <h1 className="food-orbit-hero__heading mb-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Your menu, beautifully digital. <span className="food-orbit-hero__eyebrow">Free forever.</span>
+              Your menu, beautifully digital.{" "}
+              <span className="food-orbit-hero__eyebrow">Free forever.</span>
             </h1>
-            <p className="mb-8 max-w-xl text-base leading-relaxed text-stone-600 dark:text-stone-300 sm:text-lg">
-              Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers scan and browse — no app download required.
+            <p className="mb-8 max-w-xl text-base leading-relaxed text-stone-600 sm:text-lg dark:text-stone-300">
+              Create a stunning digital menu in minutes. Generate a permanent QR code. Let customers
+              scan and browse — no app download required.
             </p>
-            <div className="flex flex-col justify-center gap-4 sm:flex-row lg:flex-col lg:items-start xl:flex-row xl:justify-start xl:items-stretch">
+            <div className="flex flex-col justify-center gap-4 sm:flex-row lg:flex-col lg:items-start xl:flex-row xl:items-stretch xl:justify-start">
               <Link
                 href="/register"
                 className="bg-brand-600 hover:bg-brand-700 inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-semibold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
@@ -130,9 +132,24 @@ export default function HomePage() {
             <FoodOrbit />
           </div>
           <aside className="hidden flex-col gap-8 xl:flex" aria-label="Free menu highlights">
-            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">✳</span><p>One permanent QR. Beautiful menus.</p></div>
-            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">↗</span><p>No guest signup needed.</p></div>
-            <div className="food-orbit-hero__note"><span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">✦</span><p>Made for real restaurants.</p></div>
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">
+                ✳
+              </span>
+              <p>One permanent QR. Beautiful menus.</p>
+            </div>
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">
+                ↗
+              </span>
+              <p>No guest signup needed.</p>
+            </div>
+            <div className="food-orbit-hero__note">
+              <span className="food-orbit-hero__eyebrow text-xl" aria-hidden="true">
+                ✦
+              </span>
+              <p>Made for real restaurants.</p>
+            </div>
           </aside>
         </div>
       </section>
