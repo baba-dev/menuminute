@@ -8,7 +8,7 @@ Original native SVG paths with individually composed pizza, coffee, biryani-styl
 
 The nine visual bands are atmosphere, outer orbit, rear ingredients, inner orbit, phone, three primary food illustrations, table sign, foreground garnish and interface highlights. CSS custom properties adapt to the theme-script-managed \`data-theme=light|dark\`; food maintains its natural colors. No base64, external imagery or paid provider. No migrations, service/API/QR identity changes or dependencies.
 
-Motion: drawn path, staggered entrances, short phone overshoot, calm floating with independent tempos, steam-path animation. Pointer fine/hover devices get frame-limited \`--near-*\`, \`--mid-*\`, \`--far-*\` parallax. IntersectionObserver and document visibility pause ambient motion; listeners and rAF are cleaned up. Reduced motion renders the final static composition immediately. The illustration itself has a single accessible title/description and no focusable controls.
+Motion: drawn path, staggered entrances, short phone overshoot, calm floating with independent tempos, steam-path animation. Pointer fine/hover devices get frame-limited \`--near-_\`, \`--mid-_\`, \`--far-*\` parallax. IntersectionObserver and document visibility pause ambient motion; listeners and rAF are cleaned up. Reduced motion renders the final static composition immediately. The illustration itself has a single accessible title/description and no focusable controls.
 
 The homepage retains existing free product statements, /register and /demo actions and coming-soon cards. No shared globals or deployed asset replacement.
 
