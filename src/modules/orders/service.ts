@@ -19,6 +19,22 @@ import {
   type OrderStatus,
 } from "./contracts";
 
+function mapOrderDatabaseError(error: unknown): never {
+  if (error instanceof ConflictError || error instanceof ForbiddenError ||
+      error instanceof ValidationError || error instanceof NotFoundError) throw error;
+  const cause = error instanceof Error && error.cause ? error.cause : error;
+  const code = cause && typeof cause === "object" && "code" in cause ? String(cause.code) : "";
+  const message = cause instanceof Error ? cause.message : "";
+  if (code === "40001" || message.includes("Submission key reused")) {
+    throw new ConflictError("Order data changed. Refresh and retry with the correct cart.");
+  }
+  if (code === "42501") throw new ForbiddenError("Order operation is not permitted.");
+  if (code === "22023") throw new ValidationError(
+    message.includes("Invalid") || message.includes("unavailable") ? message : "Invalid order operation."
+  );
+  throw error;
+}
+
 // ─── Guest Order Submission ───────────────────────────────────────────────────
 
 export async function submitGuestOrder(token: string, raw: unknown) {
@@ -37,7 +53,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
   } catch (error) {
     if (error instanceof Error && error.message.includes("Submission key reused"))
       throw new ConflictError("Submission key reused with a different cart.");
-    throw error;
+    mapOrderDatabaseError(error);
   }
 
   // 1. Resolve menu product and active outlet configuration
@@ -262,7 +278,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
         throw new ForbiddenError("Online ordering is not enabled for this outlet.");
       }
     }
-    throw error;
+    mapOrderDatabaseError(error);
   }
 }
 
@@ -379,7 +395,7 @@ export async function transitionOutletOrder(
       ${outletId},${orderId},${input.targetStatus},${input.expectedVersion},${input.reason ?? ""}
     ) as data`);
     return result.rows[0]!.data;
-  });
+  }).catch(mapOrderDatabaseError);
 }
 
 export async function recordOutletOrderPayment(
@@ -403,5 +419,5 @@ export async function recordOutletOrderPayment(
       ${outletId},${orderId},${input.expectedVersion},${input.paymentStatus},${input.paymentMethod}
     ) as data`);
     return result.rows[0]!.data;
-  });
+  }).catch(mapOrderDatabaseError);
 }
