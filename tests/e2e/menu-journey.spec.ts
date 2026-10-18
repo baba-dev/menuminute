@@ -23,7 +23,7 @@ test("homepage replaces the free checklist with the three-stage Menu Journey", a
     "href",
     "/pricing"
   );
-  await expect(journey.getByText("In development")).toBeVisible();
+  await expect(journey.getByText("Planned feature")).toBeVisible();
   await expect(page.getByTestId("food-orbit")).toBeVisible();
   await expect(page.getByText("Everything in the free plan")).toHaveCount(0);
 });
