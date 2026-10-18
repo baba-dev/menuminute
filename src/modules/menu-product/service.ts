@@ -147,6 +147,7 @@ export type PublicProduct = {
     id: string;
     name: string;
     currency: string;
+    orderingEnabled?: boolean;
     timezone: string;
     outletType: string;
     fulfillmentModes: string[];
@@ -166,12 +167,15 @@ export type PublicProduct = {
 };
 export async function publicProduct(token: string): Promise<PublicProduct | null> {
   if (!z.string().min(1).max(128).safeParse(token).success) return null;
-  const r = await getPool().query<{ data: PublicProduct | null; fingerprint: string | null }>(
-    "with p as (select app_private.free_menu_public($1) as data) select data, md5((data->'menus')::text) as fingerprint from p",
+  const r = await getPool().query<{ data: PublicProduct | null; fingerprint: string | null; ordering_enabled: boolean }>(
+    "with p as (select app_private.free_menu_public($1) as data) select data, md5((data->'menus')::text) as fingerprint, app_private.public_ordering_enabled($1) as ordering_enabled from p",
     [token]
   );
   const data = r.rows[0]?.data;
-  if (data) data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
+  if (data) {
+    data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
+    data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
+  }
   if (!data) return null;
   if (!data.outlet.versioned) {
     const legacy = await getPublicMenu(token);

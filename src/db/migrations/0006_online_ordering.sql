@@ -333,3 +333,19 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.lookup_guest_submission(text,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.lookup_guest_submission(text,text,text) TO menuminute_app;
+
+
+-- The free QR catalog stays public, but only active paid ordering exposes checkout.
+CREATE FUNCTION app_private.public_ordering_enabled(p_token text)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+ SELECT EXISTS(
+   SELECT 1 FROM qr_codes q JOIN restaurants r ON r.id=q.restaurant_id
+   JOIN organizations org ON org.id=r.organization_id
+   JOIN entitlement_grants g ON g.organization_id=org.id AND g.capability='ordering.new'
+   WHERE q.destination_token=p_token AND q.is_active AND r.is_active AND r.is_published
+   AND org.is_active AND g.revoked_at IS NULL AND g.starts_at<=statement_timestamp()
+   AND g.ends_at>statement_timestamp()
+ )
+$$;
+REVOKE ALL ON FUNCTION app_private.public_ordering_enabled(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.public_ordering_enabled(text) TO menuminute_app;

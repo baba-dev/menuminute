@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { admin, fixture } from "./helpers";
 import { applyEntitlement } from "../src/modules/billing/operator";
-import { commandMenu, qrCommand } from "../src/modules/menu-product/service";
+import { commandMenu, qrCommand, publicProduct } from "../src/modules/menu-product/service";
 import {
   submitGuestOrder,
   getGuestOrderTracking,
@@ -88,6 +88,7 @@ function submission(key = crypto.randomUUID()) {
 describe("Core online ordering restricted-role integration", () => {
   it("requires an explicit ordering entitlement and preserves the free menu", async () => {
     const f = await publishedOutlet(false);
+    expect((await publicProduct(f.outlet.publicId))?.outlet.orderingEnabled).toBe(false);
     await expect(submitGuestOrder(f.outlet.publicId, submission())).rejects.toMatchObject({
       statusCode: 403,
     });
