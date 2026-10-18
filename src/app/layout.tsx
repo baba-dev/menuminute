@@ -1,4 +1,5 @@
 import { themeScript } from "@/components/menu-product/theme-script";
+import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
+        <ThemeSync />
         {children}
         <Toaster richColors position="top-right" />
       </body>
