@@ -22,6 +22,34 @@ env:
   MEDIA_OUTLET_BUDGET_BYTES: 104857600
   BETTER_AUTH_TELEMETRY: "0"
 jobs:
+  format-pr79:
+    name: Temporary PR79 formatter
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 79 && github.event.pull_request.head.repo.full_name == github.repository }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/online-ordering-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Apply pinned formatting on this same-repository PR branch
+        run: |
+          pnpm exec prettier --write src/components/menu-product/order-tracker.tsx
+          git add src/components/menu-product/order-tracker.tsx
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "style(ordering): normalize tracking component formatting"
+            git push origin HEAD:feat/online-ordering-core
+          fi
+
   quality:
     name: Lint & Code Style
     runs-on: ubuntu-24.04-arm
