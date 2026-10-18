@@ -120,7 +120,9 @@ test("mobile retains the same vertical story and exposes actions in its nav menu
   expect(art!.y + art!.height).toBeLessThan(copy!.y);
   await page.getByLabel("Open navigation menu").click();
   await expect(page.getByRole("link", { name: "Get started free" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Demo" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Demo" })
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
