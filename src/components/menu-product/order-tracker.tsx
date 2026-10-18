@@ -163,7 +163,12 @@ export function OrderTracker({
           <div className="panel stack" style={{ textAlign: "center", padding: "2.5rem 1.5rem" }}>
             <AlertCircle size={36} style={{ color: "var(--danger)", margin: "0 auto" }} />
             <h2>Order Details Unavailable</h2>
-            <p className="quiet">{error || (!capability ? "Private order access is unavailable in this browser." : "Could not locate this order.")}</p>
+            <p className="quiet">
+              {error ||
+                (!capability
+                  ? "Private order access is unavailable in this browser."
+                  : "Could not locate this order.")}
+            </p>
             <Link
               href={`/m/${token}`}
               className="action ember"
