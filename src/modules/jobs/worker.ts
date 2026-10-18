@@ -174,7 +174,7 @@ export async function consumeEvent(
       data.deliverySequence > event.delivery_sequence
     )
       throw new Error("Delivery scope mismatch");
-    const isOrderEvent = ["order.created", "order.status_changed"].includes(event.type);
+    const isOrderEvent = ["order.created", "order.status_changed", "order.payment_changed"].includes(event.type);
     const receiptConsumer = isOrderEvent ? "order-event-v1" : consumerName;
     if (
       (

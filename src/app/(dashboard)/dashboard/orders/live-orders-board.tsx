@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   User,
   Phone,
+  CreditCard,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { playOrderChime } from "@/lib/sound";
@@ -53,6 +54,7 @@ export type MerchantOrder = {
   rejectionReason: string | null;
   orderNumber: number;
   version: number;
+  canManagePayment: boolean;
   createdAt: string;
   updatedAt: string;
   items: MerchantOrderItem[];
@@ -145,6 +147,30 @@ export function LiveOrdersBoard({
       await fetchOrders();
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Error transitioning order");
+    }
+  };
+
+  const handlePayment = async (order: MerchantOrder) => {
+    try {
+      const res = await fetch(
+        `/api/organizations/${organizationId}/outlets/${outletId}/orders/${order.id}/payment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expectedVersion: order.version,
+            paymentStatus: "paid",
+            paymentMethod: "cash",
+          }),
+        }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Payment update failed");
+      }
+      await fetchOrders();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Payment update failed");
     }
   };
 
@@ -499,6 +525,18 @@ export function LiveOrdersBoard({
                       >
                         {isPickup ? "Mark Collected" : "Mark Served"}
                       </button>
+                      {order.canManagePayment && order.paymentStatus === "unpaid" && (
+                        <button
+                          type="button"
+                          onClick={() => handlePayment(order)}
+                          className="flex items-center gap-1 rounded-xl border border-stone-300 bg-stone-50 px-2.5 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                          title="Record an independently audited cash payment"
+                        >
+                          <CreditCard size={13} />
+                          <span>Record Paid</span>
+                        </button>
+                      )}
+
 
 
                     </div>

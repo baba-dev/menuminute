@@ -14,6 +14,7 @@ import {
 import {
   orderSubmissionSchema,
   orderTransitionSchema,
+  orderPaymentSchema,
   type OrderStatus,
 } from "./contracts";
 
@@ -264,6 +265,7 @@ export async function listOutletOrders(
     const predicate = statuses
       ? and(eq(orders.restaurantId, outletId), inArray(orders.status, statuses))
       : eq(orders.restaurantId, outletId);
+    const canPay = await tx.execute<{ allowed: boolean }>(sql`select app_private.can_outlet(${outletId},\'billing.manage\') as allowed`);
     const rows = await tx.select().from(orders)
       .where(predicate).orderBy(desc(orders.createdAt)).limit(100);
     const orderIds = rows.map((order) => order.id);
@@ -278,6 +280,7 @@ export async function listOutletOrders(
     }
     return rows.map((order) => ({
       id: order.id,
+      canManagePayment: canPay.rows[0]?.allowed ?? false,
       restaurantId: order.restaurantId,
       tableId: order.tableId,
       customerName: order.customerName,
@@ -334,6 +337,30 @@ export async function transitionOutletOrder(
       version?: number;
     } }>(sql`select app_private.transition_order(
       ${outletId},${orderId},${input.targetStatus},${input.expectedVersion},${input.reason ?? ""}
+    ) as data`);
+    return result.rows[0]!.data;
+  });
+}
+
+export async function recordOutletOrderPayment(
+  actor: Actor,
+  outletId: string,
+  orderId: string,
+  organizationId: string,
+  raw: unknown
+) {
+  const input = orderPaymentSchema.parse(raw);
+  return withOutlet(actor, outletId, "billing.manage", async (tx) => {
+    const [outlet] = await tx.select({ organizationId: restaurants.organizationId })
+      .from(restaurants).where(eq(restaurants.id, outletId));
+    if (!outlet || outlet.organizationId !== organizationId) throw new NotFoundError("Outlet");
+    const result = await tx.execute<{ data: {
+      success: boolean;
+      orderId: string;
+      paymentStatus: string;
+      version: number;
+    } }>(sql`select app_private.record_order_payment(
+      ${outletId},${orderId},${input.expectedVersion},${input.paymentStatus},${input.paymentMethod}
     ) as data`);
     return result.rows[0]!.data;
   });
