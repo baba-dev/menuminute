@@ -288,33 +288,59 @@
   background: linear-gradient(to bottom, #111 78%, var(--mm-surface, #202020) 100%);
 }
 .food-orbit-hero__brand,
-.food-orbit-hero__heading { color: var(--mm-foreground, #171717); }
-.food-orbit-hero__heading { font-family: var(--font-display), sans-serif; max-width: 1040px; text-wrap: balance; }
-.food-orbit-hero__accent { color: #a83500; margin-top: 0.12em; }
-:root[data-theme="dark"] .food-orbit-hero__accent { color: #ffc83d; }
-.food-orbit-hero__nav { background: transparent; }
-.food-orbit-hero__nav-link { color: var(--mm-secondary, #555); transition: color 150ms ease; }
+.food-orbit-hero__heading {
+  color: var(--mm-foreground, #171717);
+}
+.food-orbit-hero__heading {
+  font-family: var(--font-display), sans-serif;
+  max-width: 1040px;
+  text-wrap: balance;
+}
+.food-orbit-hero__accent {
+  color: #a83500;
+  margin-top: 0.12em;
+}
+:root[data-theme="dark"] .food-orbit-hero__accent {
+  color: #ffc83d;
+}
+.food-orbit-hero__nav {
+  background: transparent;
+}
+.food-orbit-hero__nav-link {
+  color: var(--mm-secondary, #555);
+  transition: color 150ms ease;
+}
 .food-orbit-hero__nav-link:hover,
-.food-orbit-hero__nav-link:focus-visible { color: var(--mm-foreground, #171717); }
+.food-orbit-hero__nav-link:focus-visible {
+  color: var(--mm-foreground, #171717);
+}
 .food-orbit-hero__nav-cta {
   background: var(--mm-gradient);
   color: var(--mm-gradient-ink, #211600);
   box-shadow: 0 5px 0 -3px rgb(131 63 12 / 20%);
 }
-.food-orbit-hero__nav-cta:hover { filter: brightness(1.05); }
+.food-orbit-hero__nav-cta:hover {
+  filter: brightness(1.05);
+}
 .food-orbit-hero__icon-button {
   border: 1px solid var(--mm-border, #d7d7d7);
   background: transparent;
   color: var(--mm-foreground, #171717);
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 }
-.food-orbit-hero__icon-button:hover { background: var(--mm-soft-surface, #f5f5f5); }
+.food-orbit-hero__icon-button:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
 .food-orbit-hero__nav a:focus-visible,
 .food-orbit-hero__mobile-menu summary:focus-visible {
   outline: 3px solid var(--mm-focus, #a83500);
   outline-offset: 3px;
 }
-.food-orbit-hero__mobile-menu summary::-webkit-details-marker { display: none; }
+.food-orbit-hero__mobile-menu summary::-webkit-details-marker {
+  display: none;
+}
 .food-orbit-hero__mobile-panel {
   background: var(--mm-surface, #fff);
   border-color: var(--mm-border, #d7d7d7);
@@ -327,23 +353,56 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
-.food-orbit-hero__mobile-link:hover { background: var(--mm-soft-surface, #f5f5f5); }
-.food-orbit-hero__content { padding-top: clamp(2rem, 4.2vw, 4rem); padding-bottom: clamp(2rem, 4vw, 3.5rem); }
-.food-orbit-hero__stage { max-width: 840px; margin-top: clamp(1rem, 2.5vw, 2rem); }
-.food-orbit-hero__art { width: 100%; margin-inline: auto; }
-.food-orbit-hero__description { color: var(--mm-secondary, #555); margin-top: clamp(0.6rem, 2.5vw, 1.5rem); text-wrap: pretty; }
+.food-orbit-hero__mobile-link:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
+.food-orbit-hero__content {
+  padding-top: clamp(2rem, 4.2vw, 4rem);
+  padding-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+.food-orbit-hero__stage {
+  max-width: 840px;
+  margin-top: clamp(1rem, 2.5vw, 2rem);
+}
+.food-orbit-hero__art {
+  width: 100%;
+  margin-inline: auto;
+}
+.food-orbit-hero__description {
+  color: var(--mm-secondary, #555);
+  margin-top: clamp(0.6rem, 2.5vw, 1.5rem);
+  text-wrap: pretty;
+}
 .food-orbit-hero__divider {
   width: min(78vw, 940px);
   height: 1px;
   margin-top: clamp(2.5rem, 5vw, 4.5rem);
-  background: linear-gradient(90deg, transparent, var(--mm-border, #d7d7d7) 28%, #e7a044 50%, var(--mm-border, #d7d7d7) 72%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mm-border, #d7d7d7) 28%,
+    #e7a044 50%,
+    var(--mm-border, #d7d7d7) 72%,
+    transparent
+  );
 }
-.food-orbit-hero__next { background: var(--mm-surface, #fff); }
+.food-orbit-hero__next {
+  background: var(--mm-surface, #fff);
+}
 @media (max-width: 639px) {
-  .food-orbit-hero__heading { max-width: 19ch; }
-  .food-orbit-hero__stage { max-width: 510px; }
-  .food-orbit-hero__description { max-width: 34ch; }
+  .food-orbit-hero__heading {
+    max-width: 19ch;
+  }
+  .food-orbit-hero__stage {
+    max-width: 510px;
+  }
+  .food-orbit-hero__description {
+    max-width: 34ch;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .food-orbit-hero__nav-link, .food-orbit-hero__icon-button { transition: none; }
+  .food-orbit-hero__nav-link,
+  .food-orbit-hero__icon-button {
+    transition: none;
+  }
 }
