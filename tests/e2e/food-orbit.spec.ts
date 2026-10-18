@@ -42,7 +42,7 @@ test("Food Orbit maintains a visible composition without horizontal overflow at 
 test("theme icon switches the entire hero and persists across reloads", async ({ page }) => {
   await page.goto("/");
   const art = page.getByTestId("food-orbit");
-  const current = await page.locator("html").getAttribute("data-theme");
+  const current = (await page.locator("html").getAttribute("data-theme")) === "dark" ? "dark" : "light";
   await page.getByRole("button", { name: current === "dark" ? "Switch to light mode" : "Switch to dark mode" }).click();
   const next = current === "dark" ? "light" : "dark";
   await expect(page.locator("html")).toHaveAttribute("data-theme", next);
