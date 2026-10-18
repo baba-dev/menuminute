@@ -236,7 +236,9 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.getByText("Sold Out", { exact: true })).toBeVisible();
   await page.screenshot({ path: info.outputPath("menu-dark.png"), fullPage: true });
-  await page.getByLabel("Appearance", { exact: true }).selectOption("light");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.goto(`/m/${f.token}`);
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.screenshot({ path: info.outputPath("menu-light.png"), fullPage: true });
@@ -257,7 +259,11 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await expect(
     page.getByRole("heading", { name: /An intentionally long dish name/ })
   ).toBeVisible();
-  await page.getByLabel("Appearance", { exact: true }).selectOption("system");
+  await page.evaluate(() => localStorage.setItem("menuminute.appearance", "system"));
+  // A same-tab localStorage write does not emit a storage event. Reload as a returning guest
+  // would, verify the saved System preference, then exercise both OS media transitions.
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.emulateMedia({ colorScheme: "light" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.emulateMedia({ colorScheme: "dark" });

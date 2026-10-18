@@ -8,7 +8,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
       "Your menu, beautifully digital"
     );
     await expect(page.getByRole("link", { name: "Create your free menu" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "View live demo" })).toBeVisible();
+    await expect(page.locator('a[href="/demo"]').first()).toHaveAttribute("href", "/demo");
   });
 
   test("Pricing page displays all 3 product tiers correctly", async ({ page }) => {

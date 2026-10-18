@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ThemeControl } from "@/components/menu-product/theme-control";
 import { CheckCircle, QrCode } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -79,10 +80,11 @@ export default function PricingPage() {
               </div>
               <span className="text-lg font-bold text-stone-900">MenuMinute</span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <ThemeControl />
               <Link
                 href="/login"
-                className="text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="hidden text-sm font-medium text-stone-600 hover:text-stone-900 sm:inline"
               >
                 Sign in
               </Link>
@@ -90,7 +92,8 @@ export default function PricingPage() {
                 href="/register"
                 className="bg-brand-600 hover:bg-brand-700 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
               >
-                Get started free
+                <span className="sm:hidden">Start free</span>
+                <span className="hidden sm:inline">Get started free</span>
               </Link>
             </div>
           </div>
