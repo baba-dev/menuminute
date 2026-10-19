@@ -154,13 +154,13 @@
   transform-origin: 50% 75%;
 }
 .ss-stage[data-mount="window"] .ss-door {
-  opacity: 0.2;
+  opacity: 0;
 }
 .ss-stage[data-mount="window"] .ss-counter {
   opacity: 0;
 }
 .ss-stage[data-mount="door"] .ss-window {
-  opacity: 0.28;
+  opacity: 1;
 }
 .ss-stage[data-mount="door"] .ss-door {
   opacity: 1;
@@ -168,9 +168,18 @@
 .ss-stage[data-mount="door"] .ss-counter {
   opacity: 0;
 }
-.ss-stage[data-mount="counter"] .ss-window,
+.ss-stage[data-mount="counter"] .ss-window {
+  opacity: 0.7;
+}
 .ss-stage[data-mount="counter"] .ss-door {
-  opacity: 0.25;
+  opacity: 0;
+}
+.ss-counter-display {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.ss-stage[data-mount="counter"] .ss-counter-display {
+  opacity: 1;
 }
 .ss-stage[data-mount="counter"] .ss-counter {
   opacity: 1;
@@ -184,59 +193,72 @@
 .ss-decal-host {
   position: absolute;
   z-index: 2;
-  top: 47%;
-  left: 36%;
-  width: 29%;
+  top: 51%;
+  left: 30%;
+  width: 16%;
+  container-type: inline-size;
   display: grid;
   place-items: center;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 12px 15px rgb(18 16 10 / 28%));
+  filter: drop-shadow(0 6px 7px rgb(18 16 10 / 24%));
 }
+/* All formats are proportional to an actual glass pane, not the full illustration. */
+.ss-decal-host[data-design="circular"] { width: 18%; top: 50%; }
+.ss-decal-host[data-design="cling"] { width: 11%; }
+.ss-decal-host[data-design="premium"] { width: 25%; }
+.ss-decal-host[data-design="hours"] { width: 12%; }
+.ss-decal-host[data-design="compact"] { width: 13%; }
 .ss-stage[data-mount="door"] .ss-decal-host {
-  top: 49%;
+  top: 51%;
   left: 72%;
-  width: 24%;
-  transform: translate(-50%, -50%) perspective(650px) rotateY(-8deg);
+  width: 14%;
+  transform: translate(-50%, -50%) perspective(650px) rotateY(-5deg);
 }
+.ss-stage[data-mount="door"] .ss-decal-host[data-design="circular"] { width: 15%; }
+.ss-stage[data-mount="door"] .ss-decal-host[data-design="cling"] { width: 10%; }
+.ss-stage[data-mount="door"] .ss-decal-host[data-design="premium"] { width: 20%; }
+.ss-stage[data-mount="door"] .ss-decal-host[data-design="hours"] { width: 10%; }
+.ss-stage[data-mount="door"] .ss-decal-host[data-design="compact"] { width: 12%; }
+/* A small counter sign sits on the illustrated stand, sharing one common baseline. */
 .ss-stage[data-mount="counter"] .ss-decal-host {
-  top: 75%;
-  left: 47%;
-  width: 23%;
-  transform: translate(-50%, -50%) perspective(650px) rotateX(12deg);
+  top: auto;
+  bottom: 26%;
+  left: 48%;
+  width: 12%;
+  transform: translateX(-50%) perspective(650px) rotateX(3deg);
 }
-.ss-decal-host[data-design="circular"] {
-  width: 33%;
-}
-.ss-stage[data-mount="door"] .ss-decal-host[data-design="circular"] {
-  width: 26%;
-}
-.ss-stage[data-mount="counter"] .ss-decal-host[data-design="circular"] {
-  width: 24%;
-}
-.ss-decal-host[data-design="premium"] {
-  width: 47%;
-}
-.ss-stage[data-mount="door"] .ss-decal-host[data-design="premium"] {
-  width: 35%;
-}
-.ss-stage[data-mount="counter"] .ss-decal-host[data-design="premium"] {
-  width: 42%;
-}
-.ss-decal-host[data-design="hours"] {
-  width: 24%;
-}
-.ss-stage[data-mount="door"] .ss-decal-host[data-design="hours"] {
-  width: 20%;
-}
-.ss-decal-host[data-design="compact"] {
-  width: 24%;
-}
+.ss-stage[data-mount="counter"] .ss-decal-host[data-design="circular"] { width: 12%; }
+.ss-stage[data-mount="counter"] .ss-decal-host[data-design="cling"] { width: 9%; }
+.ss-stage[data-mount="counter"] .ss-decal-host[data-design="premium"] { width: 20%; }
+.ss-stage[data-mount="counter"] .ss-decal-host[data-design="hours"] { width: 10%; }
+.ss-stage[data-mount="counter"] .ss-decal-host[data-design="compact"] { width: 10%; }
+/* Type and border track the selected decal itself; viewport-sized fonts overflow small art. */
+.ss-decal-host .ss-sticker { border-width: clamp(2px, 2.5cqw, 4px); }
+.ss-decal-host .ss-sticker--circular { border-width: clamp(3px, 3cqw, 5px); }
+.ss-decal-host .ss-mark { width: 17cqw; border-radius: 3px; }
+.ss-decal-host .ss-brand { gap: 2px; }
+.ss-decal-host .ss-brand-copy { gap: 1px; }
+.ss-decal-host .ss-brand-copy strong { font-size: 8.2cqw; }
+.ss-decal-host .ss-brand-copy small { font-size: 4.3cqw; }
+.ss-decal-host .ss-brand--small .ss-mark { width: 13cqw; }
+.ss-decal-host .ss-brand--small .ss-brand-copy strong { font-size: 7cqw; }
+.ss-decal-host .ss-brand--small .ss-brand-copy small { font-size: 3.8cqw; }
+.ss-decal-host .ss-sticker-footer { font-size: 7.5cqw; }
+.ss-decal-host .ss-circle-top { font-size: 12cqw; }
+.ss-decal-host .ss-circle-bottom { font-size: 10cqw; }
+.ss-decal-host .ss-cling-copy,
+.ss-decal-host .ss-cling-bottom { font-size: 6.5cqw; }
+.ss-decal-host .ss-premium-copy > strong { font-size: 13cqw; }
+.ss-decal-host .ss-premium-copy > small { font-size: 4.5cqw; }
+.ss-decal-host .ss-hours-body strong { font-size: 7cqw; }
+.ss-decal-host .ss-hours-body span { font-size: 5.2cqw; }
+.ss-decal-host .ss-hours-foot b { font-size: 5cqw; }
 .ss-decal-shadow {
   position: absolute;
   z-index: -1;
-  inset: -12px;
-  border-radius: 20px;
-  box-shadow: 0 18px 45px rgb(26 14 8 / 22%);
+  inset: -4px;
+  border-radius: 9px;
+  box-shadow: 0 8px 15px rgb(26 14 8 / 16%);
   pointer-events: none;
 }
 .ss-sticker {
@@ -521,8 +543,8 @@
 .ss-scan-focus {
   position: absolute;
   pointer-events: none;
-  inset: -12px;
-  border: 2px solid #ffac60;
+  inset: -5px;
+  border: 1px solid #ffac60;
   border-radius: 18px;
   opacity: 0;
   box-shadow: 0 0 20px 4px rgb(255 136 35 / 32%);
@@ -539,12 +561,13 @@
   left: 5%;
   bottom: 3%;
   color: #fff0d7;
-  background: rgb(30 21 16 / 70%);
-  padding: 8px 12px;
-  border-radius: 99px;
-  font-size: clamp(8px, 1vw, 11px);
-  letter-spacing: 0.09em;
-  font-weight: 800;
+  background: rgb(30 21 16 / 77%);
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: clamp(8px, 0.9vw, 10px);
+  letter-spacing: 0.04em;
+  font-weight: 750;
+  text-transform: uppercase;
 }
 .ss-stage-glow {
   position: absolute;
@@ -553,6 +576,23 @@
   z-index: 3;
   box-shadow: inset 0 0 45px rgb(255 143 54 / 10%);
 }
+/* Place the preview controls immediately with the preview, never below the catalogue. */
+.ss-preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  padding: 15px 0 12px;
+  border-bottom: 1px solid var(--ss-line);
+}
+.ss-preview-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ss-preview-copy small { color: var(--ss-muted); font-size: 11px; line-height: 1.4; }
+.ss-preview-controls .ss-surfaces { margin-top: 0; }
 .ss-toolbar {
   display: flex;
   align-items: center;
@@ -655,31 +695,30 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: clamp(94px, 10.1vw, 136px);
+  height: 82px;
   border-radius: 10px;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 75%, rgb(224 125 55 / 15%), transparent 72%);
 }
 .ss-format-art > .ss-sticker {
+  flex: none;
   width: auto;
-  height: 89%;
-  max-width: 100%;
+  height: 114px;
+  max-width: none;
   border-width: 3px;
   padding: 5%;
+  transform: scale(0.63);
   filter: drop-shadow(0 4px 6px rgb(20 10 5 / 19%));
 }
 .ss-format-art > .ss-sticker--premium {
   height: auto;
-  width: 94%;
+  width: 166px;
   aspect-ratio: 1.55;
   border-width: 3px;
+  transform: scale(0.66);
 }
-.ss-format-art > .ss-sticker--circular {
-  height: 90%;
-}
-.ss-format-art > .ss-sticker--hours {
-  height: 98%;
-}
+.ss-format-art > .ss-sticker--circular { height: 114px; }
+.ss-format-art > .ss-sticker--hours { height: 116px; }
 .ss-sticker--thumb .ss-mark {
   width: 12px;
   border-radius: 3px;
@@ -765,18 +804,13 @@
   line-height: 1.6;
   max-width: 370px;
 }
-.ss-surface-block {
-  border-top: 1px solid var(--ss-line);
-  padding-top: 18px;
-}
 .ss-surfaces {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  margin-top: 11px;
 }
 .ss-surfaces button {
-  min-height: 42px;
+  min-height: 40px;
   padding: 9px 12px;
   font-size: 11px;
 }
@@ -1036,13 +1070,13 @@
     margin-inline: auto;
   }
   .ss-format-art {
-    height: 130px;
+    height: 82px;
   }
   .ss-sticker--thumb .ss-mark {
     width: 18px;
   }
   .ss-format-art > .ss-sticker {
-    max-height: 117px;
+    max-height: none;
   }
   .ss-format-meta b {
     font-size: 12px;
@@ -1084,10 +1118,25 @@
     padding: 9px;
   }
   .ss-format-art {
-    height: 100px;
+    height: 80px;
   }
   .ss-format-art > .ss-sticker {
-    max-height: 91px;
+    max-height: none;
+  }
+  .ss-format-art > .ss-sticker--premium {
+    transform: scale(0.57);
+  }
+  .ss-preview-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ss-preview-controls .ss-surfaces {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ss-preview-controls .ss-surfaces button {
+    min-width: 0;
+    padding-inline: 6px;
   }
   .ss-format-meta small {
     font-size: 9px;
@@ -1111,47 +1160,41 @@
     font-size: 7px;
     padding: 5px 7px;
   }
-  .ss-decal-host {
-    width: 32%;
-  }
-  .ss-decal-host[data-design="premium"] {
-    width: 48%;
-  }
   .ss-sticker {
     border-width: 3px;
   }
-  .ss-mark {
+  .ss-format-art .ss-mark {
     width: 13px;
   }
-  .ss-brand-copy strong {
+  .ss-format-art .ss-brand-copy strong {
     font-size: 7px;
   }
-  .ss-brand-copy small {
+  .ss-format-art .ss-brand-copy small {
     font-size: 4px;
   }
-  .ss-premium-copy > strong {
+  .ss-format-art .ss-premium-copy > strong {
     font-size: 12px;
   }
-  .ss-sticker-footer {
+  .ss-format-art .ss-sticker-footer {
     font-size: 7px;
   }
-  .ss-circle-top {
+  .ss-format-art .ss-circle-top {
     font-size: 10px;
   }
-  .ss-circle-bottom {
+  .ss-format-art .ss-circle-bottom {
     font-size: 8px;
   }
-  .ss-cling-copy,
-  .ss-cling-bottom {
+  .ss-format-art .ss-cling-copy,
+  .ss-format-art .ss-cling-bottom {
     font-size: 6px;
   }
-  .ss-hours-body strong {
+  .ss-format-art .ss-hours-body strong {
     font-size: 6px;
   }
-  .ss-hours-body span {
+  .ss-format-art .ss-hours-body span {
     font-size: 4px;
   }
-  .ss-hours-foot b {
+  .ss-format-art .ss-hours-foot b {
     font-size: 4px;
   }
 }

@@ -149,8 +149,8 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
             Your menu deserves <em>a place in the window.</em>
           </h2>
           <p>
-            Six distinctive MenuMinute sticker concepts for doors, windows and counters. Choose a
-            design and see it come to life.
+            Six thoughtfully scaled MenuMinute sticker concepts for doors, windows and counters.
+            Choose a design, then see how it belongs in a real storefront.
           </p>
         </header>
 
@@ -181,9 +181,28 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
                 </div>
               </div>
               <div className="ss-scene-label" aria-hidden="true">
-                YOUR RESTAURANT · SAMPLE PREVIEW
+                {MOUNTING_SURFACES.find((surface) => surface.id === mount)?.name} · illustrative placement
               </div>
               <div className="ss-stage-glow" aria-hidden="true" />
+            </div>
+            <div className="ss-preview-controls">
+              <div className="ss-preview-copy">
+                <span className="ss-catalogue-kicker">SEE IT IN PLACE</span>
+                <small>Switch surfaces to compare a realistic placement.</small>
+              </div>
+              <div className="ss-surfaces" role="radiogroup" aria-label="Sticker preview surface">
+                {MOUNTING_SURFACES.map((surface) => (
+                  <button
+                    key={surface.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={mount === surface.id}
+                    onClick={() => chooseSurface(surface.id)}
+                  >
+                    {surface.name}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="ss-toolbar">
               <span>
@@ -229,8 +248,8 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
 
           <div className="ss-catalogue">
             <div className="ss-catalogue-head">
-              <span className="ss-catalogue-kicker">THE STICKER COLLECTION</span>
-              <span>SELECT A FORMAT</span>
+              <span className="ss-catalogue-kicker">CHOOSE A STICKER</span>
+              <span>06 CONCEPTS</span>
             </div>
             <div className="ss-design-grid" role="radiogroup" aria-label="Choose sticker design">
               {STICKER_FORMATS.map((item, index) => (
@@ -259,22 +278,6 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
               <span>SELECTED · {selected.number} / 06</span>
               <h3>{selected.name}</h3>
               <p>{selected.detail}</p>
-            </div>
-            <div className="ss-surface-block">
-              <span className="ss-catalogue-kicker">SEE IT IN PLACE</span>
-              <div className="ss-surfaces" role="radiogroup" aria-label="Sticker preview surface">
-                {MOUNTING_SURFACES.map((surface) => (
-                  <button
-                    key={surface.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={mount === surface.id}
-                    onClick={() => chooseSurface(surface.id)}
-                  >
-                    {surface.name}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>

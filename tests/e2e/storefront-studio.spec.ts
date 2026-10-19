@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
 
 const studio = (page: import("@playwright/test").Page) => page.getByTestId("storefront-studio");
+const STICKER_NAMES: Record<string, string> = {
+  primary: "Primary QR",
+  circular: "Circular",
+  cling: "Door cling",
+  premium: "Premium window",
+  hours: "Opening hours",
+  compact: "Compact",
+};
 
 test("Section 7 replaces the generic CTA and shows six real-demo sticker formats", async ({
   page,
@@ -52,6 +60,21 @@ test("Choosing designs and mounting surfaces updates the actual illustrated stor
     await expect(stage).toHaveAttribute("data-design", id);
     await expect(section.locator(`.ss-decal-host .ss-sticker--${id}`)).toHaveCount(1);
   }
+  // The surface switch belongs directly to the live mockup, not buried in the catalogue.
+  const stageBounds = await stage.boundingBox();
+  if (!stageBounds) throw new Error("Storefront stage did not render");
+  for (const format of ["primary", "circular", "cling", "premium", "hours", "compact"]) {
+    await section.getByRole("radio", { name: new RegExp(STICKER_NAMES[format]) }).click();
+    const sticker = await stage.locator(".ss-decal-host").boundingBox();
+    if (!sticker) throw new Error(`Missing ${format} storefront decal`);
+    expect(sticker.width / stageBounds.width, `${format} should fit the pane`).toBeLessThan(0.27);
+  }
+  const placement = section.locator(".ss-preview-controls");
+  await expect(placement.getByText("SEE IT IN PLACE")).toBeVisible();
+  await expect(placement.getByRole("radio")).toHaveCount(3);
+  const scene = stage.locator(".ss-scene");
+  await expect(scene.getByText("WELCOME TO")).toHaveCount(1);
+  await expect(scene.getByText("YOUR RESTAURANT")).toHaveCount(1);
   for (const [name, id] of [
     ["Glass door", "door"],
     ["Countertop", "counter"],
@@ -59,6 +82,7 @@ test("Choosing designs and mounting surfaces updates the actual illustrated stor
   ] as const) {
     await section.getByRole("radio", { name, exact: true }).click();
     await expect(stage).toHaveAttribute("data-mount", id);
+    await expect(stage.locator(".ss-scene-label")).toContainText(name);
     await expect(section.getByRole("radio", { name, exact: true })).toHaveAttribute(
       "aria-checked",
       "true"
