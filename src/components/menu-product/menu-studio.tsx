@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -313,9 +314,9 @@ export function MenuStudio({
             <strong>Your menu is live.</strong>
             <p>Your printed QR stays the same. Changes are ready for guests.</p>
           </div>
-          <a className="action ember" href="/dashboard/qr-codes">
+          <Link className="action ember" href="/dashboard/qr-codes">
             Manage permanent QR codes
-          </a>
+          </Link>
           <button type="button" onClick={() => setMilestone(false)}>
             Dismiss
           </button>
