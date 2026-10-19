@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 /** Resolved theme is owned by ThemeSync and stored on html[data-theme]. */
 type BrandMode = "light" | "dark";
@@ -22,8 +23,22 @@ export function BrandNavLogo() {
   if (mode === null) {
     return (
       <span className="mm-brand-nav-logo mm-brand-nav-logo--fallback" data-testid="brand-nav-logo">
-        <img className="mm-brand-nav-logo__light" src="/brand/logos/logo-horizontal-light.svg" alt="" />
-        <img className="mm-brand-nav-logo__dark" src="/brand/logos/logo-horizontal-dark.svg" alt="" />
+        <Image
+          className="mm-brand-nav-logo__light"
+          src="/brand/logos/logo-horizontal-light.svg"
+          alt=""
+          width={660}
+          height={156}
+          unoptimized
+        />
+        <Image
+          className="mm-brand-nav-logo__dark"
+          src="/brand/logos/logo-horizontal-dark.svg"
+          alt=""
+          width={660}
+          height={156}
+          unoptimized
+        />
       </span>
     );
   }
@@ -42,7 +57,13 @@ export function BrandNavLogo() {
         tabIndex={-1}
         className="mm-brand-nav-logo__motion pointer-events-none"
       >
-        <img src={`/brand/logos/logo-horizontal-${mode}.svg`} alt="" />
+        <Image
+          src={`/brand/logos/logo-horizontal-${mode}.svg`}
+          alt=""
+          width={660}
+          height={156}
+          unoptimized
+        />
       </object>
     </span>
   );

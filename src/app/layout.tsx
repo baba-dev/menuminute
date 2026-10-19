@@ -32,7 +32,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: "MenuMinute",
-    images: [{ url: "/brand/social/og-light.webp", width: 1200, height: 630, alt: "MenuMinute by BabaBuilds" }],
+    images: [
+      {
+        url: "/brand/social/og-light.webp",
+        width: 1200,
+        height: 630,
+        alt: "MenuMinute by BabaBuilds",
+      },
+    ],
   },
   twitter: { card: "summary_large_image", images: ["/brand/social/og-light.webp"] },
   robots: {

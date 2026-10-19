@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { MenuJourney } from "@/components/marketing/journey/menu-journey";
 import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
@@ -218,7 +219,14 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-2">
-              <img src="/brand/logos/logo-horizontal-dark.svg" alt="MenuMinute by BabaBuilds" className="h-11 w-auto" width="188" height="44" />
+              <Image
+                src="/brand/logos/logo-horizontal-dark.svg"
+                alt="MenuMinute by BabaBuilds"
+                className="h-11 w-auto"
+                width={188}
+                height={44}
+                unoptimized
+              />
             </div>
             <div className="flex gap-8">
               <Link
