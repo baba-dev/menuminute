@@ -183,8 +183,8 @@ export default function PrivacyPage() {
                 <strong>How we handle your information</strong>
                 <p>
                   This policy explains how MenuMinute handles data for current functions and
-                  describes additional processing only when an optional feature is enabled.
-                  For requests or questions, contact admin@bababuilds.com.
+                  describes additional processing only when an optional feature is enabled. For
+                  requests or questions, contact admin@bababuilds.com.
                 </p>
               </div>
             </div>
@@ -245,8 +245,8 @@ export default function PrivacyPage() {
               </a>
             </div>
             <p className="privacy-print-hint">
-              <Download size={14} aria-hidden="true" /> Use your browser’s print command to save
-              a copy of this policy.
+              <Download size={14} aria-hidden="true" /> Use your browser’s print command to save a
+              copy of this policy.
             </p>
           </main>
         </div>

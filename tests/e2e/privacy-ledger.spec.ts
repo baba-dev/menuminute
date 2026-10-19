@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("published Privacy Policy", () => {
-  test("renders all fifteen substantive policy sections", async ({
-    page,
-  }) => {
+  test("renders all fifteen substantive policy sections", async ({ page }) => {
     await page.goto("/privacy");
     await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
     await expect(page.getByRole("main", { name: "Privacy Policy" })).toBeVisible();

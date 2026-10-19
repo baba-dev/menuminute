@@ -43,9 +43,7 @@ test.describe("shared public footer", () => {
   test("published privacy and pending terms are accurately distinguished", async ({ page }) => {
     await page.goto("/privacy");
     await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
-    await expect(
-      page.getByText("Privacy Policy · Effective 20 October 2026")
-    ).toBeVisible();
+    await expect(page.getByText("Privacy Policy · Effective 20 October 2026")).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute("content", /noindex/);
     await page.goto("/terms");
     await expect(page.getByRole("heading", { level: 1, name: /Good terms make/ })).toBeVisible();
