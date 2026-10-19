@@ -37,7 +37,7 @@ const groups = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy Policy", href: "/privacy", soon: true },
+      { label: "Privacy Policy", href: "/privacy" },
       { label: "Account deletion", href: "/delete-account", soon: true },
       { label: "Terms of Service", href: "/terms", soon: true },
       { label: "Cookie Policy", href: "/cookies", soon: true },

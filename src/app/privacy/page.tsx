@@ -8,11 +8,11 @@ import { policySections } from "@/content/privacy";
 import "./privacy.css";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Legal review draft",
+  title: "Privacy Policy",
   description:
-    "Review draft of MenuMinute's privacy notice, including data use, AI, restaurant ordering and privacy requests.",
+    "How MenuMinute and BabaBuilds handle account, restaurant, guest and ordering information, AI features and privacy rights.",
   alternates: { canonical: "https://food.bababuilds.com/privacy" },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 };
 
 function PrivacyArtwork() {
@@ -139,11 +139,9 @@ export default function PrivacyPage() {
               Clear information about what MenuMinute handles, why it matters, and the choices
               available to you.
             </p>
-            <p className="privacy-review-status" role="status">
-              Legal and operational review draft — not yet an effective published policy.
-            </p>
+            <p className="privacy-review-status">Privacy Policy · Effective 20 October 2026</p>
             <div className="privacy-hero-meta">
-              <span>Draft prepared: 19 October 2026</span>
+              <span>Last updated: 20 October 2026</span>
               <span>Operator: BabaBuilds · India</span>
             </div>
           </div>
@@ -178,15 +176,15 @@ export default function PrivacyPage() {
               <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           </aside>
-          <main className="privacy-copy" aria-label="Privacy policy draft">
+          <main className="privacy-copy" aria-label="Privacy Policy">
             <div className="privacy-note">
               <ShieldCheck size={22} aria-hidden="true" />
               <div>
-                <strong>Designed for transparency, pending release validation.</strong>
+                <strong>How we handle your information</strong>
                 <p>
-                  This draft separates existing operations from planned functionality. Its retention
-                  and provider inventory are subject to operational and legal approval before it can
-                  be used for an app-store submission.
+                  This policy explains how MenuMinute handles data for current functions and
+                  describes additional processing only when an optional feature is enabled.
+                  For requests or questions, contact admin@bababuilds.com.
                 </p>
               </div>
             </div>
@@ -248,7 +246,7 @@ export default function PrivacyPage() {
             </div>
             <p className="privacy-print-hint">
               <Download size={14} aria-hidden="true" /> Use your browser’s print command to save
-              this draft for review.
+              a copy of this policy.
             </p>
           </main>
         </div>

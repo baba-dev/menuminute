@@ -119,7 +119,7 @@ export default function DeleteAccountPage() {
               <p>
                 Use the same email to ask for access, correction, an available export, marketing
                 preferences or information about the data we hold. Review the{" "}
-                <Link href="/privacy">Privacy Policy draft</Link> for the full proposed scope of
+                <Link href="/privacy">Privacy Policy</Link> for the full proposed scope of
                 data categories and rights.
               </p>
               <p>
