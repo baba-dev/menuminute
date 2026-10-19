@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("shared public footer", () => {
-  for (const route of ["/", "/pricing", "/demo", "/login", "/register", "/privacy", "/terms"]) {
+  for (const route of ["/", "/pricing", "/demo", "/login", "/register", "/privacy", "/delete-account", "/terms"]) {
     test(`renders once on ${route}`, async ({ page }) => {
       await page.goto(route);
       const footer = page.getByTestId("public-footer");
@@ -32,8 +32,9 @@ test.describe("shared public footer", () => {
 
   test("legal placeholders do not pretend to be published policies", async ({ page }) => {
     await page.goto("/privacy");
-    await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
-    await expect(page.getByText("not a published Privacy Policy", { exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
+    await expect(page.getByText("Legal and operational review draft", { exact: false })).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
     await page.goto("/terms");
     await expect(
       page.getByText("not a published Terms of Service", { exact: false })

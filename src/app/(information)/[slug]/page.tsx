@@ -68,13 +68,6 @@ const pages = {
     detail:
       "This is a placeholder, not a real-time uptime or incident report. No availability guarantee is implied.",
   },
-  privacy: {
-    title: "Privacy Policy",
-    category: "Legal · publication pending",
-    description: "Our formal privacy information is being prepared.",
-    detail:
-      "This is a navigation placeholder, not a published Privacy Policy. It does not describe actual data collection, retention or processing terms and must not be treated as legal notice.",
-  },
   terms: {
     title: "Terms of Service",
     category: "Legal · publication pending",
