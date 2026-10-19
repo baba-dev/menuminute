@@ -1,18 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("privacy ledger review draft", () => {
-  test("renders an accessible, complete review draft without publication claims", async ({
-    page,
-  }) => {
+test.describe("published Privacy Policy", () => {
+  test("renders all fifteen substantive policy sections", async ({ page }) => {
     await page.goto("/privacy");
     await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
-    await expect(page.getByRole("main", { name: "Privacy policy draft" })).toBeVisible();
+    await expect(page.getByRole("main", { name: "Privacy Policy" })).toBeVisible();
     await expect(
-      page.getByText("Legal and operational review draft", { exact: false })
+      page.getByText("Privacy Policy · Effective 20 October 2026", { exact: true })
     ).toBeVisible();
     await expect(page.getByText("BabaBuilds", { exact: false }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /15\. Contact and complaints/ })).toBeVisible();
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute("content", /noindex/);
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     const sections = page.locator("main.privacy-copy > section.privacy-section");
     await expect(sections).toHaveCount(15);

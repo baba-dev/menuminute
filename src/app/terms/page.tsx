@@ -257,7 +257,7 @@ export default function TermsPage() {
                 {section.id === "privacy" && (
                   <p>
                     <Link href="/privacy">
-                      Read the companion Privacy Policy draft{" "}
+                      Read the companion Privacy Policy{" "}
                       <ArrowUpRight size={15} aria-hidden="true" className="inline" />
                     </Link>
                   </p>

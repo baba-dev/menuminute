@@ -1,7 +1,7 @@
 /**
- * MenuMinute policy copy — review draft, 19 October 2026.
- * IMPORTANT: No publication assertion until docs/privacy/README.md release gates are satisfied.
- * Categories reflect the October 2026 source audit; planned features are explicitly conditional.
+ * MenuMinute Privacy Policy — effective 20 October 2026.
+ * Keep this disclosure aligned with production data flows and update it
+ * before activating additional SDKs, advertising, payments or AI providers.
  */
 export const policySections: {
   id: string;
@@ -64,7 +64,7 @@ export const policySections: {
     title: "5. Who receives information",
     paragraphs: [
       "We do not sell personal information. We share only what is appropriate to the specific purpose, such as with authorized members of your restaurant organization; the restaurant receiving an order; infrastructure and content-delivery, hosting, database, communications, support, security or analytics providers; and, once activated, relevant AI and payment-related providers.",
-      "Our identified infrastructure includes an Oracle-hosted VPS and Cloudflare services. Provider locations and contracts, specific transactional-email and analytics vendors, and any future AI or payment vendors must be confirmed in our internal processing inventory before their features go live. Naming a type of provider here does not mean every proposed vendor or integration is active.",
+      "Our infrastructure includes an Oracle-hosted VPS and Cloudflare services. Other providers, including email, analytics, AI and payment services, receive relevant data only when their integrations are enabled for the applicable purpose. We assess relevant provider arrangements and update these disclosures when material processing changes; naming a category here does not mean that every possible integration is currently active.",
       "We may disclose information where required by lawful process, to protect rights or safety, or in connection with a legitimate reorganization or transfer subject to applicable safeguards and notice. We do not give one restaurant unrestricted access to another restaurant's private records. Publicly published menu and restaurant content is visible to anyone with access to its public link.",
     ],
   },
@@ -73,7 +73,7 @@ export const policySections: {
     title: "6. AI-assisted features and uploads",
     paragraphs: [
       "If a restaurant enables an AI workflow, relevant menu images, documents, item text, instructions or other inputs may be automatically processed to deliver the enabled task and may be transferred to the selected provider. We aim to minimize unnecessary personal information in those requests. Restaurant operators should not upload unnecessary customer personal information or confidential documents.",
-      "AI output may be inaccurate; restaurant staff must review prices, allergens, ingredients and other customer-facing facts before publication. Provider retention, model-training and international-transfer terms must be reviewed and disclosed for each activated integration; we do not claim that an unverified provider never retains or trains on submitted material. Uploaded content may be stored and processed to supply the requested service, and merchant-approved derivatives may be made public in the menu.",
+      "AI output may be inaccurate; restaurant staff should review prices, allergens, ingredients and other customer-facing facts before publication. A selected provider's own retention, model-training and international-transfer practices may apply; we do not promise that every provider will refrain from retaining or using submitted material for model improvement. Ask us at the privacy contact for information about the provider relevant to an enabled workflow. Uploaded content may be stored and processed to supply the requested service, and merchant-approved derivatives may be made public in the menu.",
     ],
   },
   {
@@ -81,8 +81,8 @@ export const policySections: {
     title: "7. Cookies, analytics and similar technologies",
     paragraphs: [
       "Our site uses necessary session and preference mechanisms for sign-in, authentication, theme choices, abuse prevention and service delivery. These mechanisms may store identifiers in cookies or similar browser storage. Browser and device settings may allow you to limit them, but disabling essential storage can affect sign-in or other functions.",
-      "The product owner has selected Google Analytics or a similar product as a potential analytics approach. Its presence, exact cookie identifiers, event types, retention settings, geography and consent configuration must be confirmed before activation. We will not treat a future vendor choice as proof that tracking is already installed. Where law requires it, non-essential analytics and advertising technologies must remain off until an appropriate user choice is made; an accessible way to change that choice must be provided.",
-      "Personalized advertising may be considered in the future but is not part of the presently approved operating model. We will update this notice and applicable controls and platform disclosures before activating any such advertising, profiling or cross-service tracking.",
+      "We may use Google Analytics or a comparable analytics service to understand site use if and when enabled. The particular technology and resulting data depend on the active implementation. Where applicable law requires consent for non-essential analytics or advertising technologies, we will provide the necessary choice before enabling them; you may also contact us regarding your preferences.",
+      "We do not currently use personal information to operate a personalized advertising program. If this changes, we will update this policy and provide any required notices and choices before the new processing begins.",
     ],
   },
   {
@@ -90,7 +90,7 @@ export const policySections: {
     title: "8. Security and access",
     paragraphs: [
       "We use proportionate organizational and technical measures intended to protect information, including access controls, session protections, HTTPS and tenant-scoped authorization measures where implemented. Access to operational records is limited by role and legitimate need. We work to prevent personal data, passwords and security tokens from appearing in ordinary application logs. No internet service can guarantee absolute security.",
-      "Please protect your credentials and report suspicious access to admin@bababuilds.com. Detailed incident, backup, audit-log and vendor-control claims will only be published once verified in the production environment.",
+      "Please protect your credentials and report suspicious access to admin@bababuilds.com. We investigate reported security issues and take measures appropriate to the information and incident involved.",
     ],
   },
   {
@@ -104,8 +104,8 @@ export const policySections: {
     id: "retention",
     title: "10. Retention and deletion",
     paragraphs: [
-      "We retain information while needed for the identified purposes, active relationships, security, dispute handling and applicable legal obligations, and then delete or anonymize it according to an approved data-category schedule. Relevant criteria include account status, whether a menu or order is active, legal/tax recordkeeping duties, incident investigation needs and backup expiry. Public menu material may remain available while a merchant keeps it published. A closed account is not an authorization to keep unnecessary data indefinitely.",
-      "Our proposed numeric schedule for accounts, orders, uploads, logs, AI inputs, and backups remains an operational release gate, not a claim that automatic deletion already runs. Some transactional or security records may be retained when legally necessary, with unnecessary identifiers removed where feasible. Deletion from backups follows documented rotation and recovery controls. For details about a particular category, email admin@bababuilds.com.",
+      "We keep information for as long as reasonably needed for its identified purpose, our relationship with you, security, dispute handling and applicable legal obligations, and then delete or anonymize it as appropriate. Relevant criteria include account status, whether a menu or order remains active, legal and tax recordkeeping requirements, incident investigation and backup retention. Published menu material may remain available while a merchant keeps it published; closing an account does not authorize unnecessary indefinite retention.",
+      "Account information is generally needed while the account is active; order and transaction records may be retained for applicable accounting, compliance and dispute requirements; uploads and AI inputs are kept as needed to provide the selected feature; and operational and security records are retained as needed to protect and troubleshoot the service. Some data may remain in backups until they are rotated or otherwise securely removed. We handle verified deletion requests subject to lawful exceptions. For the retention criteria applicable to your information, email admin@bababuilds.com.",
     ],
   },
   {
@@ -114,7 +114,7 @@ export const policySections: {
     paragraphs: [
       "Depending on applicable law, you may request access to or a copy of information about you, correction or completion, deletion, portability, restriction or objection, withdrawal of consent, or review of relevant automated decisions where such rights apply. You can also opt out of optional promotional messages without losing essential service notifications. We will not require unnecessary information to handle a request, but may verify identity and confirm your authority over organization data.",
       "Contact admin@bababuilds.com with the subject “MenuMinute Privacy Request” and describe the account, data or right concerned. We will acknowledge and handle the request under the timelines required by applicable law, explain lawful exceptions, and provide available complaint or appeal channels. Guests may also contact the restaurant directly about information the restaurant independently controls.",
-      "Account deletion and an external request channel are described at /delete-account. The current external contact method must not be represented as an automated, store-compliant in-app deletion flow until the actual deletion implementation and tests have been completed. An organization owner may need to transfer ownership or resolve active legal/operational obligations before organization-wide deletion.",
+      "You may initiate an account or information deletion request through /delete-account or by emailing admin@bababuilds.com. This is currently a contact-based request process, not an instant automated deletion button. An organization owner may need to transfer ownership or resolve existing obligations before an organization-wide request can be completed.",
     ],
   },
   {
@@ -129,7 +129,7 @@ export const policySections: {
     title: "13. Website, PWA and future mobile applications",
     paragraphs: [
       "This notice is designed to cover the website and PWA alongside any future native Android or iOS release. A mobile build must request protected device access only for a real and disclosed feature. Permissions such as camera or photo-library access must be explained in context and requested through the platform mechanism; users should be able to decline optional permissions.",
-      "Before any store submission, we will verify the released binaries and SDKs against Google Play Data Safety and Apple App Privacy disclosures, and provide the necessary in-app account deletion and privacy-access controls. This policy does not by itself establish that those builds, permissions or deletion flows have already shipped.",
+      "If native Android or iOS applications are released, their specific permissions, integrated SDKs and relevant app-store privacy disclosures will be based on the functions actually included in those builds. This web policy does not mean that any particular native application or mobile feature is presently available.",
     ],
   },
   {
@@ -143,7 +143,7 @@ export const policySections: {
     id: "contact",
     title: "15. Contact and complaints",
     paragraphs: [
-      "BabaBuilds (sole proprietorship), Pilani, Rajasthan, India. Email: admin@bababuilds.com. Please include “MenuMinute Privacy” in the subject line. We will provide an applicable grievance or supervisory-authority route where the law requires it. A fuller postal correspondence address and any required representative details must be verified before final legal publication.",
+      "BabaBuilds (sole proprietorship), Pilani, Rajasthan, India. Email: admin@bababuilds.com. Please include “MenuMinute Privacy” in the subject line. If you are dissatisfied with our handling of a request, let us know so we can review it; you may also use an applicable regulator or supervisory-authority complaint mechanism where available under law.",
     ],
   },
 ];
