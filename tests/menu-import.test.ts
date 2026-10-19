@@ -207,7 +207,7 @@ it("denies upload/read after role revocation and forbids unsafe input and storag
 
 it("serializes retained-source quota under concurrent reservations even for tiny uploaded originals", async () => {
   const f = await fixture();
-  const sessions = [];
+  const sessions: Array<{ id: string }> = [];
   for (let i = 0; i < 3; i++)
     sessions.push(
       await createImport(f.actor, f.outlet.id, {
