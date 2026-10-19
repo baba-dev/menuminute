@@ -35,6 +35,15 @@ outlet-type onboarding, role permissions, variants/add-ons, closing-time expiry 
 25-owner / 50-restaurant / 1,000-orders-per-hour planning envelope. Platform subscriptions use
 USD/INR; outlets select supported local transaction currencies independently.
 
+## Brand identity assets (approved)
+
+| Asset | Canonical location | Usage |
+| --- | --- | --- |
+| Static logo / emblem | `public/brand/logos/`, `public/brand/icons/` | Theme-aware vector identity, favicon |
+| Animated SVG logo | `public/brand/motion/` | One-shot homepage header and larger reveal |
+| Motion integration | `src/components/marketing/brand/` | Replay only after effective color mode changes |
+| Asset rules / future work | [Brand asset index](docs/brand-assets.md) | Source of truth; PWA assets explicitly deferred |
+
 ## Approved design direction
 
 Ink & Ember remains approved: vivid color on white, gold/orange on charcoal, expressive restaurant
