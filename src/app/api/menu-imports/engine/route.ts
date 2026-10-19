@@ -6,8 +6,13 @@ export async function GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     await withOutlet(actor, restaurant.id, "menu.write", async () => true);
-    return NextResponse.json({ enabled: importEngineEnabled() }, {
-      headers: { "Cache-Control": "private, no-store" },
-    });
-  } catch (error) { return errorResponse(error); }
+    return NextResponse.json(
+      { enabled: importEngineEnabled() },
+      {
+        headers: { "Cache-Control": "private, no-store" },
+      }
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
