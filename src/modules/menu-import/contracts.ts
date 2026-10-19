@@ -102,6 +102,9 @@ export const cancelImportSchema = z
 export const sourceUploadHeaders = z
   .object({
     id: importId,
-    pageIndex: z.string().regex(/^(?:[0-9]|1[01])$/).transform(Number),
+    pageIndex: z
+      .string()
+      .regex(/^(?:[0-9]|1[01])$/)
+      .transform(Number),
   })
   .strict();
