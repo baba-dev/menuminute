@@ -38,6 +38,7 @@ const groups = [
     title: "Legal",
     links: [
       { label: "Privacy Policy", href: "/privacy", soon: true },
+      { label: "Account deletion", href: "/delete-account", soon: true },
       { label: "Terms of Service", href: "/terms", soon: true },
       { label: "Cookie Policy", href: "/cookies", soon: true },
       { label: "Refund Policy", href: "/refund-policy", soon: true },
@@ -168,7 +169,10 @@ export function PublicFooter() {
           </div>
         </div>
         <div className="mmf-bottom">
-          <p>© 2026 Menu Minute App - A Subsidiary of BabaBuilds.com.</p>
+          <p>
+            © 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship
+            in Pilani, Rajasthan, India.
+          </p>
           <span>
             Made with care for the people behind every plate. <span aria-hidden="true">✳</span>
           </span>
