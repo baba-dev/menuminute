@@ -6,6 +6,8 @@ import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
 import { OrderConveyor } from "@/components/marketing/order-conveyor/order-conveyor";
 import { ChefPass } from "@/components/marketing/chef-pass/chef-pass";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import { AnimatedNavBrand } from "@/components/marketing/animated-nav-brand";
+import Image from "next/image";
 import { QrCode, Smartphone, ChefHat, ArrowRight, Menu } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -55,12 +57,7 @@ export default function HomePage() {
               className="flex shrink-0 items-center gap-2.5"
               aria-label="MenuMinute home"
             >
-              <span className="bg-brand-600 flex h-9 w-9 items-center justify-center rounded-xl">
-                <QrCode className="h-4 w-4 text-white" aria-hidden="true" />
-              </span>
-              <span className="food-orbit-hero__brand text-lg font-extrabold tracking-tight">
-                MenuMinute
-              </span>
+              <AnimatedNavBrand />
             </Link>
             <div className="hidden items-center gap-5 md:flex lg:gap-7">
               <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">
@@ -220,12 +217,16 @@ export default function HomePage() {
       <footer className="bg-stone-900 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="bg-brand-600 flex h-7 w-7 items-center justify-center rounded-lg">
-                <QrCode className="h-3.5 w-3.5 text-white" />
-              </div>
-              <span className="font-bold text-white">MenuMinute</span>
-            </div>
+            <Link href="/" aria-label="MenuMinute home" className="block w-[185px]">
+              <Image
+                src="/brand/logos/nav-dark-static.svg"
+                alt=""
+                width={650}
+                height={159}
+                unoptimized
+                className="block h-auto w-full"
+              />
+            </Link>
             <div className="flex gap-8">
               <Link
                 href="/pricing"

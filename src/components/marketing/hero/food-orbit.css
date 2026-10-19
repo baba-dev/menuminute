@@ -406,3 +406,15 @@
     transition: none;
   }
 }
+
+/* Static first-paint lockup; the outlined SVG reveal is remounted only when the
+   resolved data-theme changes. The SSR fallback avoids a blank navbar. */
+.mm-nav-brand__static {
+  background-image: url("/brand/logos/nav-light-static.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+:root[data-theme="dark"] .mm-nav-brand__static {
+  background-image: url("/brand/logos/nav-dark-static.svg");
+}

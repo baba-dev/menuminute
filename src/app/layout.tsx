@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: { icon: [{ url: "/brand/icons/favicon.svg", type: "image/svg+xml" }] },
 };
 
 export const viewport: Viewport = {

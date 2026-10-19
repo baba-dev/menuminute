@@ -127,3 +127,8 @@ Mixed outlets label fulfillment; pickup completes as Collected. Sold-out dishes 
 greyed imagery, Sold Out overlay and accessible text, including image fallbacks. Currency formatting
 uses outlet-local currency independently of platform USD/INR billing. Complete UX review remains a
 separate gate; keep all approved Ink & Ember, theme, button and feedback contracts above.
+
+
+## Brand media and motion assets
+
+The owner-approved MenuMinute identity is distinct from the Ink & Ember semantic UI palette. Use [the canonical brand asset registry](brand/README.md) for matching light/dark logo variants, one-shot nav motion, loaders and editable QR/sticker templates. Keep WebP for raster imagery and SVG for vector logos/motion. Never print a storyboard QR example as if it encoded a valid menu; insert and scan-test the real outlet-specific generated QR. PWA artwork and manifest integration are deferred.

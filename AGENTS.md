@@ -107,3 +107,8 @@ runtime identities. Public-readiness release identity must equal the candidate
 SHA. A failed public check may restore only a verified schema-compatible
 application release, never SQL or customer data. Preserve GitHub Environment
 protections; a configured required reviewer remains an explicit operator gate.
+
+
+## Approved brand assets
+
+Read [docs/brand/README.md](docs/brand/README.md) before adding logos, QR centre marks, print stickers, or UI motion. Use the canonical `public/brand` SVGs; never create a second logo by cropping an identity board. The homepage nav reveal runs once and only replays when the resolved theme changes, and `prefers-reduced-motion` must show a static final frame. Illustrative QR placeholders are **not scannable**. PWA images/manifest changes are deferred.

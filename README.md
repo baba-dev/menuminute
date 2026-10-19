@@ -234,3 +234,17 @@ Migration-changing releases use the versioned automatic migration path with a fr
 off-host snapshot; helper v4, migration-owner env and restic provisioning are one-time root tasks. See [deployment actions](docs/deployment-actions.md)
 and the [measured pre-change baseline](docs/ci-cd-baseline.md). Repository code
 alone does not update the installed VPS helper or establish live deployment.
+
+
+### Approved brand resources
+
+| Resource | Canonical location | Guidance |
+| --- | --- | --- |
+| Logo, emblem, favicon | [`public/brand/logos`](public/brand/logos), [`icons`](public/brand/icons) | Light/dark SVG; same identity in top nav |
+| One-shot animated logo | [`public/brand/motion`](public/brand/motion) | 2.4 s; stays static; replays on resolved theme change |
+| UI loaders | [`public/brand/loaders`](public/brand/loaders) | SVG, reduced-motion aware |
+| QR centre mark and sticker layouts | [`public/brand/print`](public/brand/print) | Replace template placeholder with validated live QR before print |
+| Social / raster graphics | `public/brand/social` | Prefer optimized WebP when adding images; never crop concept boards |
+| Future PWA images | Deferred | Do not alter current manifest/icons as part of this asset import |
+
+[Full brand usage and asset registry](docs/brand/README.md). The homepage nav uses the approved one-shot vector reveal; all other routes and the existing theme bootstrap remain unchanged.
