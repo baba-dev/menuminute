@@ -7,6 +7,7 @@ const csvPath = resolve(root, "india-200-dish-backlog.csv");
 const jsonPath = resolve(root, "india-200-dish-backlog.json");
 const csv = readFileSync(csvPath, "utf8").trimEnd();
 const data = JSON.parse(readFileSync(jsonPath, "utf8"));
+const manifest = JSON.parse(readFileSync(resolve(root, "manifest.json"), "utf8"));
 
 function fail(message) {
   throw new Error(`Dish backlog: ${message}`);
@@ -63,6 +64,13 @@ const slugs = new Set();
 const ids = new Set();
 const collectionCounts = {};
 const dietCounts = {};
+const linkedAssets = new Map();
+for (const asset of manifest.assets) {
+  if (!asset.datasetId) continue;
+  if (linkedAssets.has(asset.datasetId)) fail(`duplicate manifest dataset ID: ${asset.datasetId}`);
+  linkedAssets.set(asset.datasetId, asset);
+}
+let imported = 0;
 
 for (const [index, dish] of data.dishes.entries()) {
   const expectedId = `MM-IN-${String(index + 1).padStart(3, "0")}`;
@@ -71,7 +79,12 @@ for (const [index, dish] of data.dishes.entries()) {
     if (!dish[field]) fail(`missing ${field} for ${dish.id}`);
   }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(dish.slug)) fail(`invalid slug: ${dish.slug}`);
-  if (dish.illustration_status !== "not_created") fail(`unexpected status: ${dish.id}`);
+  const asset = linkedAssets.get(dish.id);
+  if (asset) {
+    if (dish.illustration_status !== "assets_imported_pending_review") fail(`stale imported status: ${dish.id}`);
+    if (!asset.path?.startsWith("/assets/food/dishes/") || !asset.state) fail(`invalid manifest entry: ${dish.id}`);
+    imported++;
+  } else if (dish.illustration_status !== "not_created") fail(`stale uncreated status: ${dish.id}`);
   if (excluded.has(dish.slug)) fail(`already illustrated: ${dish.slug}`);
   if (slugs.has(dish.slug) || ids.has(dish.id)) fail(`duplicate: ${dish.slug}`);
   slugs.add(dish.slug);
@@ -99,4 +112,5 @@ if (JSON.stringify(collectionCounts) !== JSON.stringify(expectedCollections)) {
 if (JSON.stringify(dietCounts) !== JSON.stringify(expectedDiet)) {
   fail("diet hint distribution changed");
 }
-console.log("Validated: 200 candidates, 36 exclusions, equivalent CSV and JSON.");
+if (linkedAssets.size !== imported) fail("manifest has unknown dataset IDs or stale rows");
+console.log(`Validated: 200 candidates, 36 legacy exclusions, equivalent CSV/JSON, ${imported} imported and ${200 - imported} pending creation.`);

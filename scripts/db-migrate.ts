@@ -1,27 +1,12 @@
-/**
- * Database migration script.
- * Run with: pnpm db:migrate
- *
- * Uses Drizzle's migrate() to apply versioned migrations from src/db/migrations/.
- * Safe for production — never drops tables unless migrations explicitly do so.
- */
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { getDb, closeDb } from "../src/db/index";
-import path from "path";
-
-async function runMigrations() {
-  console.warn("Running database migrations...");
-
-  const db = getDb();
-  const migrationsFolder = path.join(process.cwd(), "src", "db", "migrations");
-
-  migrate(db, { migrationsFolder });
-
-  console.warn("✅ Migrations completed successfully.");
-  closeDb();
-}
-
-runMigrations().catch((err) => {
-  console.error("❌ Migration failed:", err);
-  process.exit(1);
-});
+import { migrateDatabase } from "./migration-runner";
+const url = process.env["MIGRATION_DATABASE_URL"];
+if (!url || !/^postgres(ql)?:\/\//.test(url))
+  throw new Error("MIGRATION_DATABASE_URL must be an explicit PostgreSQL owner connection");
+migrateDatabase(url)
+  .then(() => console.warn("Migrations applied"))
+  .catch(() => {
+    console.error(
+      "Migration failed; inspect reviewed SQL and owner connection without logging credentials"
+    );
+    process.exitCode = 1;
+  });

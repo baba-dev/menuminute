@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { QrCode, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z
   .object({
@@ -41,25 +43,17 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
+      const result = await authClient.signUp.email({
+        name: data.name,
+        email: data.email,
+        password: data.password,
       });
-
-      const json = (await res.json()) as { error?: string };
-
-      if (!res.ok) {
-        setError(json.error ?? "Registration failed");
+      if (result.error) {
+        setError(result.error.message ?? "Registration failed");
         return;
       }
-
-      toast.success("Account created! Signing you in...");
-      router.push("/login");
+      toast.success("Account created! Set up your first outlet.");
+      router.push("/onboarding");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -196,6 +190,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

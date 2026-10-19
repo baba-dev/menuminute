@@ -1,6 +1,6 @@
 # Menu-Minute: India 200 dish illustration backlog
 
-A curated editorial shortlist of 200 **new** candidates for original Ink & Ember food artwork.
+A curated editorial shortlist of 200 originally proposed candidates for Ink & Ember food artwork. **Live reconciliation:** 90 already have imported illustration assets awaiting owner review; 110 remain not created. This dataset does not authorize publication or assert product-owner approval.
 IDs `MM-IN-001` through `MM-IN-200` are stable production IDs, **not a nationwide sales ranking**.
 Regional associations do not claim exclusive origin or historic birthplace.
 
@@ -26,10 +26,16 @@ Regional associations do not claim exclusive origin or historic birthplace.
 **Total: 200**; provisional recipe hints: 136 vegetarian, 59 non-vegetarian, two egg-based
 and three recipe-dependent.
 
+## Artwork status (reconciled against `docs/food-artwork/manifest.json`)
+
+- `assets_imported_pending_review` (90): imported asset exists with this row's exact `datasetId`; artwork is **not** approved or automatically published.
+- `not_created` (110): no dataset-ID-linked asset in the current manifest; plan artwork only after owner curation.
+- Run the standalone validator to enforce CSV/JSON correspondence and exact imported-ID linkage with the canonical manifest; the validator does not verify image quality, provenance or merchant dietary claims.
+- Asset status is a snapshot of the manifest during this update; re-run reconciliation if the artwork manifest changes.
+
 ## Excluded existing artwork
 
-These 36 illustrations are already in [draft PR #4](https://github.com/baba-dev/menuminute/pull/4)
-and its [review gallery](https://github.com/baba-dev/menuminute/blob/feat/approved-dish-artwork-review/docs/food-artwork/gallery.md).
+These 36 pre-existing icons were in the original exclusion set. The repository now also contains more illustration batches; the 90 exact dataset-ID matches above are tracked separately in the canonical `docs/food-artwork/manifest.json` and [gallery](gallery.md).
 
 - Indian (12): Biryani, Butter Chicken, Masala Dosa, Idli Sambar, Paneer Tikka, Samosa,
   Chole Bhature, Rajma Chawal, Naan, Dal Tadka, Vada Pav, Gulab Jamun.

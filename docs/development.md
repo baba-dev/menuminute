@@ -1,8 +1,7 @@
 # MenuMinute — Local Development Guide
 
-> Current scaffold instructions: SQLite + NextAuth. PostgreSQL/Redis/Better Auth are the
-> approved target, pending the foundation implementation. Do not use these commands as the
-> target production deployment. See [implementation plan](implementation-plan.md).
+> Phase 1 uses PostgreSQL, Better Auth and separate Redis workloads. See
+> [foundation status/cutover](foundation/phase-1.md). Docker is required for isolated local dependencies.
 
 ## 1. Prerequisites
 
@@ -26,12 +25,16 @@ pnpm install --frozen-lockfile
 # 3. Configure local environment
 cp .env.example .env.local
 
-# 4. Generate and run database migrations
-pnpm db:generate
+# 4. Start isolated dependencies and export CLI configuration
+pnpm infra:test:up
+set -a
+source .env.local
+set +a
+NODE_ENV=test pnpm exec tsx scripts/test-bootstrap.ts
 pnpm db:migrate
 
 # 5. Populate demonstration menu and user
-pnpm db:seed
+ALLOW_DEMO_SEED=true DEMO_PASSWORD="set-a-unique-local-password" pnpm db:seed
 
 # 6. Start development server
 pnpm dev
@@ -51,7 +54,7 @@ Visit:
 The database seed provides a pre-configured restaurant owner account:
 
 - **Email**: `demo@menuminute.com`
-- **Password**: `demo-password-change-me`
+- **Password**: the unique DEMO_PASSWORD you supplied to the explicit development seed
 - **Restaurant**: Spice Route Kitchen
 - **Public ID**: `demo-spice-route-kitchen-v1`
 
@@ -82,12 +85,11 @@ use another architecture, but an x64 build does not satisfy the production relea
 
 CI runs on `ubuntu-24.04-arm` and verifies `process.arch === "arm64"` before installing dependencies.
 Use the packageManager-pinned pnpm version and a frozen lockfile. Install native dependencies
-(Next.js SWC, Sharp and the current SQLite scaffold) on the target architecture; never copy
+(Next.js SWC, Sharp and development-only SQLite import tooling) on the target architecture; never copy
 node_modules or `.next` output from AMD64/macOS. Keep caches separated by OS, architecture and
 Node major. Container builds, if introduced, must target `linux/arm64` and pass native runtime checks.
 
-Build and test outside the ERP host. The CI build is scaffold validation, not a PostgreSQL/Redis
-release or an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
+Build and test outside the ERP host. The CI suite validates PostgreSQL/Redis foundation behavior; it is not an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
 
 ## Product and design contract
 

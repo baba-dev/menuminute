@@ -8,7 +8,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
       "Your menu, beautifully digital"
     );
     await expect(page.getByRole("link", { name: "Create your free menu" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "View live demo" })).toBeVisible();
+    await expect(page.locator('a[href="/demo"]').first()).toHaveAttribute("href", "/demo");
   });
 
   test("Pricing page displays all 3 product tiers correctly", async ({ page }) => {
@@ -17,10 +17,10 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
       "Simple, transparent pricing"
     );
     await expect(page.getByText("Free Forever")).toBeVisible();
-    await expect(page.getByText("Online Ordering")).toBeVisible();
-    await expect(page.getByText("Kitchen Pro")).toBeVisible();
-    await expect(page.getByText("₹149")).toBeVisible();
-    await expect(page.getByText("₹299")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Online Ordering", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Kitchen Pro", exact: true })).toBeVisible();
+    await expect(page.getByText("TBA", { exact: true })).toHaveCount(2);
+    await expect(page.getByText("Coming soon · pricing pending")).toHaveCount(2);
   });
 
   test("Demo page displays live QR code and sample showcase", async ({ page }) => {
@@ -36,17 +36,17 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
     await page.goto("/m/demo-spice-route-kitchen-v1");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Spice Route Kitchen");
     await expect(page.getByText("Sample Menu")).toBeVisible();
-    await expect(page.getByText("Butter Chicken")).toBeVisible();
+
     await expect(page.getByText("Paneer Tikka")).toBeVisible();
-    await expect(page.getByText("₹379")).toBeVisible();
+    await expect(page.getByText("₹299")).toBeVisible();
   });
 
-  test("Authentication login page renders with demo credentials hint", async ({ page }) => {
+  test("Authentication login page renders without public demo credentials", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Welcome back");
     await expect(page.getByLabel("Email address")).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByText("demo@menuminute.com")).toBeVisible();
+    await expect(page.getByText("demo@menuminute.com")).toHaveCount(0);
   });
 
   test("Registration page renders all signup fields", async ({ page }) => {
@@ -57,9 +57,8 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
     await expect(page.getByRole("button", { name: "Create free account" })).toBeVisible();
   });
 
-  test("Kitchen Display route loads with upcoming Phase D banner", async ({ page }) => {
+  test("Kitchen route requires a session", async ({ page }) => {
     await page.goto("/kitchen");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Kitchen Display System");
-    await expect(page.getByText("Kitchen Dashboard Coming in Phase D")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 });

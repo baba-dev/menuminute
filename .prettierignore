@@ -6,3 +6,6 @@ playwright-report
 test-results
 dist
 build
+
+# Approved generated brand SVG/binary masters
+public/brand/

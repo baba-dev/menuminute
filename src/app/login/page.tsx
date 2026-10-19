@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,13 +35,18 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    const result = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
-
-    setIsLoading(false);
+    let result;
+    try {
+      result = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      });
+    } catch {
+      setError("Unable to connect. Please try again.");
+      return;
+    } finally {
+      setIsLoading(false);
+    }
 
     if (result?.error) {
       setError("Invalid email or password. Please try again.");
@@ -142,18 +148,10 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
-
-            {/* Demo hint */}
-            <div className="mt-4 rounded-lg border border-stone-100 bg-stone-50 p-3">
-              <p className="text-center text-xs text-stone-500">
-                Try the demo: <span className="font-mono text-stone-700">demo@menuminute.com</span>
-                {" / "}
-                <span className="font-mono text-stone-700">demo-password-change-me</span>
-              </p>
-            </div>
           </div>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

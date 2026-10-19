@@ -1,6 +1,10 @@
 # Operations and recovery requirements
 
-Status: operational design, not an installed runbook. Record actual commands after provisioning.
+Status: operational design and future reliability targets. Initial MenuMinute web/worker services
+were publicly activated with successful readiness and ERP coexistence on 2026-10-16; actual
+installed paths, recovery snapshots and **outstanding** merchant-flow, nightly-backup and alert
+verification are recorded in [the production runbook](production-runbook.md). Do not treat a
+proposed timer, retention policy or incident response plan as verified installed behavior.
 
 ## Processes and resource budgets
 
@@ -41,7 +45,11 @@ External checks must detect host failure. Local-only monitoring fails with the s
 
 Use encrypted off-host PostgreSQL backups with verified retention and separate credentials. Add WAL
 archiving/point-in-time recovery according to agreed RPO. A daily dump alone cannot promise zero
-order loss. Back up object metadata/provenance and plan object retention alongside database retention.
+order loss. For the selected current deployment, **local** persistent media at `/var/lib/menuminute/media`
+is captured with PostgreSQL and configuration using private encrypted R2/restic; no live R2 media
+bucket is configured. Back up object metadata/provenance and plan media retention alongside database
+retention. A sequential live pg_dump and media walk is not atomically consistent without an approved
+write barrier or reconciled snapshot method; do not claim a tested RPO from it.
 
 Restore drills must provision a clean isolated database, restore schema/data, verify counts and money,
 reconcile pending work, test a menu/order/KDS flow and record elapsed recovery time. Disable external

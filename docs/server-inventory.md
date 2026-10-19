@@ -68,16 +68,29 @@ rules; do not flush the firewall. Verify SSH/Tailscale and recovery-console acce
 ## Proposed Food Minutes coexistence
 
 - Separate non-root account, systemd units, secrets, release tree and persistent data from ERP.
-- Proposed web binding: 127.0.0.1:3001; confirm free at provisioning. ERP keeps port 3000.
+- Proposed web binding: 127.0.0.1:3100, matching committed systemd/Nginx templates; confirm free at provisioning. ERP keeps port 3000.
 - Separate PostgreSQL role/database and separate queue/cache Redis processes with private listeners.
   Confirm ports and existing ERP storage dependencies before provisioning.
 - Explicit per-service memory/CPU limits, bounded pg pools, worker concurrency and queue retention.
   Choose actual values after peak ERP measurements; 20 GiB available is not all reserved for this app.
 - Build in external Ubuntu 24.04 ARM64 CI; never install a general PR runner on the ERP host.
-- Keep uploads in R2, backups encrypted off-host, logs/releases/WAL under monitored retention.
+- **Current selected implementation:** local shared-group media at `/var/lib/menuminute/media`;
+  encrypted R2 is for off-host restic backups only. Monitor media, PostgreSQL, logs, releases and WAL.
 - Stage Nginx changes, validate configuration and preserve ERP routing/certificates.
 - Test ERP health before and after changes and under representative joint peak load.
 
 This is an initial single-host deployment, not high availability or a million-order throughput claim.
 Still required: OCI shape/region and network rules, public app domain/TLS, peak ERP and ordering
 traffic, storage growth, SLO, RPO/RTO, restore rehearsal and escalation owner.
+
+## Dated first-live verification (2026-10-16)
+
+This is an update to the historical 2026-10-15 inventory, not a new load test. MenuMinute's
+separate web/worker systemd services were running on isolated private Node 24 and verified healthy
+at `127.0.0.1:3100`; public `https://food.bababuilds.com` returned HTTP 200 via Cloudflare
+with valid TLS and PostgreSQL/queue/cache readiness. ERP returned HTTP 200 after the Food Nginx
+reload. Approximately 21 GiB RAM and 46 GB root disk were available at that sample. A separate
+wildcard Cloudflare Origin CA certificate covers Food. Both runtime accounts passed a local
+cross-account Sharp/WebP filesystem smoke. The authenticated SQL/Redis/media workflow, ongoing
+nightly backup timer, monitoring/escalation and representative ERP+MenuMinute load are still
+acceptance gates. See [production runbook](production-runbook.md) for full exact paths and SHA.

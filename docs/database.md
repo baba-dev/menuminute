@@ -1,12 +1,12 @@
 # Database migration and target schema
 
-Status: approved PostgreSQL design; current code still uses better-sqlite3.
+Status: Phase 1 branch implements PostgreSQL for foundation and existing menu services. Orders/outbox remain later slices; see [implementation and cutover](foundation/phase-1.md).
 
-## Existing baseline
+## Preserved source baseline
 
-`src/db/index.ts` opens SQLite WAL with synchronous=NORMAL. Schemas import sqlite-core and services
-use synchronous get/all/run methods. Existing migrations and tests are SQLite-specific. A URL change
-alone will not migrate the application. Keep the baseline reproducible until the replacement slice passes.
+Original SQLite migrations remain under scripts/legacy/sqlite-migrations for explicit read-only import tests.
+Runtime schemas use pg-core and services await PostgreSQL transactions. Source data inventory and staging
+reconciliation are mandatory before real cutover; no live SQLite fallback exists.
 
 ## PostgreSQL target
 

@@ -1,0 +1,12 @@
+# Place inside the reviewed HTTPS server for the confirmed production hostname.
+# Preserve existing ERP server blocks and certificates. Do not paste this as a replacement nginx.conf.
+location / {
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Overwrite untrusted client forwarding headers; configure real_ip only for trusted proxies.
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_read_timeout 60s;
+    client_max_body_size 1m;
+}

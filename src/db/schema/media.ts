@@ -1,12 +1,12 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { timestamp, integer, pgTable, text, index } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 import { users } from "./users";
 
 // ─── Media Assets ──────────────────────────────────────────────────────────────
 // Central registry of all media files used in the system
 
-export const mediaAssets = sqliteTable(
+export const mediaAssets = pgTable(
   "media_assets",
   {
     id: text("id").primaryKey(),
@@ -39,9 +39,9 @@ export const mediaAssets = sqliteTable(
     attributionText: text("attribution_text"),
     attributionUrl: text("attribution_url"),
     externalId: text("external_id"),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`now()`),
   },
   (t) => [
     index("media_assets_restaurant_idx").on(t.restaurantId),

@@ -1,0 +1,30 @@
+.mm-brand-nav-logo {
+  display: inline-flex;
+  width: clamp(174px, 19vw, 220px);
+  max-width: 100%;
+  aspect-ratio: 660 / 156;
+  align-items: center;
+  flex: none;
+}
+.mm-brand-nav-logo__motion,
+.mm-brand-nav-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+}
+.mm-brand-nav-logo__dark {
+  display: none !important;
+}
+html[data-theme="dark"] .mm-brand-nav-logo__light {
+  display: none !important;
+}
+html[data-theme="dark"] .mm-brand-nav-logo__dark {
+  display: block !important;
+}
+@media (max-width: 410px) {
+  .mm-brand-nav-logo {
+    width: 166px;
+  }
+}

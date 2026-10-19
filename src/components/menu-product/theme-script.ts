@@ -1,0 +1,1 @@
+export const themeScript = `(()=>{try{const v=localStorage.getItem('menuminute.appearance')||'system';document.documentElement.dataset.theme=v==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):v;}catch{document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}})()`;

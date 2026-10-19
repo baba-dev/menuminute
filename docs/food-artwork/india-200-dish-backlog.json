@@ -165,7 +165,7 @@
       "category": "bread",
       "dietary_hint": "vegetarian",
       "visual_anchor": "round stuffed kulcha with charred spots and butter",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-012",
@@ -176,7 +176,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "yellow corn flatbread beside dark mustard greens and butter",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-013",
@@ -220,7 +220,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "mutton chunks in deep red aromatic gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-017",
@@ -275,7 +275,7 @@
       "category": "starter",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "soft flattened browned minced-meat kebabs with onion",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-022",
@@ -297,7 +297,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "slow-cooked meat shank in dark red-brown stew",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-024",
@@ -385,7 +385,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "baati balls with lentils and crumbly sweet churma",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-032",
@@ -396,7 +396,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "gram-flour dumpling discs in yellow yogurt gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-033",
@@ -418,7 +418,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "mutton chunks in vivid red chili gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-035",
@@ -440,7 +440,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "large round flaky onion-filled kachori cut open",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-037",
@@ -451,7 +451,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "large green chili enclosed in golden gram-flour fritter",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-038",
@@ -517,7 +517,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "finely chopped flaky flatbread tossed on griddle with vegetables",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-044",
@@ -528,7 +528,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "layered flaky parotta beside aromatic thin veg salna",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-045",
@@ -561,7 +561,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "small round golden savory dumplings with chutney",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-048",
@@ -583,7 +583,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "white yogurt rice with mustard seed and pomegranate garnish",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-050",
@@ -594,7 +594,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "yellow rice with peanuts curry leaves and lemon",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-051",
@@ -605,7 +605,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "tamarind-brown rice with peanuts and curry leaves",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-052",
@@ -616,7 +616,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "orange vegetable lentil rice with crunchy boondi",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-053",
@@ -627,7 +627,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "round dark finger-millet ball beside greenish lentil greens soup",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-054",
@@ -638,7 +638,7 @@
       "category": "bread",
       "dietary_hint": "vegetarian",
       "visual_anchor": "thin speckled rice-flour flatbread with herbs",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-055",
@@ -649,7 +649,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "flat crisp onion-spiced golden fritters",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-056",
@@ -660,7 +660,7 @@
       "category": "breakfast",
       "dietary_hint": "vegetarian",
       "visual_anchor": "puffy deep-golden banana puri rounds",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-057",
@@ -671,7 +671,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "crisp rice wafers drenched in red chicken curry",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-058",
@@ -682,7 +682,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "dry roasted chicken with dark coconut masala",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-059",
@@ -693,7 +693,7 @@
       "category": "breakfast",
       "dietary_hint": "vegetarian",
       "visual_anchor": "two mounds savory upma and sweet kesari on one plate",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-060",
@@ -704,7 +704,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "round light-golden fluffy savory fritters",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-061",
@@ -715,7 +715,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "lacy white bowl-shaped appam with coconut vegetable stew",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-062",
@@ -726,7 +726,7 @@
       "category": "breakfast",
       "dietary_hint": "vegetarian",
       "visual_anchor": "cylindrical steamed rice cake with black chickpea curry",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-063",
@@ -737,7 +737,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "banana leaf feast with rice and many small vegetable sides",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-064",
@@ -748,7 +748,7 @@
       "category": "combo",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "flaky layered flatbread beside red chicken gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-065",
@@ -759,7 +759,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "whole spiced pearl spot fish wrapped in banana leaf",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-066",
@@ -770,7 +770,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "fish steaks in pale yellow coconut curry",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-067",
@@ -781,7 +781,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "dark dry-fried beef pieces with curry leaves",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-068",
@@ -792,7 +792,7 @@
       "category": "snack",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "golden stuffed fried pastry revealing minced meat",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-069",
@@ -803,7 +803,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "long golden battered banana fritters",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-070",
@@ -814,7 +814,7 @@
       "category": "side",
       "dietary_hint": "vegetarian",
       "visual_anchor": "mixed vegetable batons in pale coconut yogurt coating",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-071",
@@ -825,7 +825,7 @@
       "category": "side",
       "dietary_hint": "vegetarian",
       "visual_anchor": "dark green tangy sorrel chutney with chilies",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-072",
@@ -836,7 +836,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "mutton cooked with dark green gongura leaves",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-073",
@@ -847,7 +847,7 @@
       "category": "breakfast",
       "dietary_hint": "vegetarian",
       "visual_anchor": "green moong crepe folded around pale upma",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-074",
@@ -858,7 +858,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "prawns coated in thick fiery Andhra masala",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-075",
@@ -869,7 +869,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "small whole stuffed eggplants in sesame-peanut gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-076",
@@ -902,7 +902,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "small eggplants in dark peanut sesame gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-079",
@@ -913,7 +913,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "round crisp rice-flour disc dotted with peanuts and chilies",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-080",
@@ -924,7 +924,7 @@
       "category": "side",
       "dietary_hint": "vegetarian",
       "visual_anchor": "large green chilies in nutty brown gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-081",
@@ -957,7 +957,7 @@
       "category": "breakfast",
       "dietary_hint": "vegetarian",
       "visual_anchor": "pearl tapioca with roasted peanuts and potato",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-084",
@@ -968,7 +968,7 @@
       "category": "bread",
       "dietary_hint": "vegetarian",
       "visual_anchor": "brown multigrain flatbread dotted with onion and herbs",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-085",
@@ -979,7 +979,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "yellow gram-flour pithla beside rustic millet flatbread",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-086",
@@ -990,7 +990,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "square golden coriander-and-gram-flour fritters",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-087",
@@ -1012,7 +1012,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "small eggplants stuffed with coarse coconut-peanut masala",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-089",
@@ -1078,7 +1078,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "mixed winter vegetables and dumplings in green masala",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-095",
@@ -1100,7 +1100,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "diamond wheat pieces cooked in yellow dal",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-097",
@@ -1111,7 +1111,7 @@
       "category": "snack",
       "dietary_hint": "vegetarian",
       "visual_anchor": "sliced spiral colocasia leaf rolls with sesame",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-098",
@@ -1122,7 +1122,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "fish pieces in orange coconut gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-099",
@@ -1133,7 +1133,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "prawns in thick dark red tangy pickle masala",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-100",
@@ -1144,7 +1144,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "green herb-marinated chicken with charred edges",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-101",
@@ -1155,7 +1155,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "hilsa fish steak in bright yellow mustard gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-102",
@@ -1177,7 +1177,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "large prawns in pale golden coconut cream sauce",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-104",
@@ -1199,7 +1199,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "potato cubes coated in pale poppy-seed paste",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-106",
@@ -1254,7 +1254,7 @@
       "category": "street_food",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "flaky wrap cut open showing chicken onions and sauce",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-111",
@@ -1265,7 +1265,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "lentil vegetable stew with squash and chunks of vegetables",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-112",
@@ -1287,7 +1287,7 @@
       "category": "dessert",
       "dietary_hint": "vegetarian",
       "visual_anchor": "caramelized dark-topped baked cottage-cheese cake wedge",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-114",
@@ -1298,7 +1298,7 @@
       "category": "side",
       "dietary_hint": "vegetarian",
       "visual_anchor": "lightly cooked mixed vegetables with gentle tempering",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-115",
@@ -1331,7 +1331,7 @@
       "category": "bread",
       "dietary_hint": "vegetarian",
       "visual_anchor": "stuffed browned paratha cut to show sattu filling",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-118",
@@ -1342,7 +1342,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "steamed crescent rice dumplings filled with lentils",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-119",
@@ -1364,7 +1364,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "small seasonal forest mushrooms in rustic curry",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-121",
@@ -1397,7 +1397,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "pork strips simmered with radish and dried red chilies",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-124",
@@ -1408,7 +1408,7 @@
       "category": "snack",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "large fried half-moon pastry filled with minced meat",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-125",
@@ -1419,7 +1419,7 @@
       "category": "soup",
       "dietary_hint": "vegetarian",
       "visual_anchor": "fermented leafy green broth in rustic bowl",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-126",
@@ -1430,7 +1430,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "mashed vegetables with fermented fish and chilies",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-127",
@@ -1441,7 +1441,7 @@
       "category": "side",
       "dietary_hint": "varies",
       "visual_anchor": "shredded vegetable salad with herbs and possible fermented fish",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-128",
@@ -1452,7 +1452,7 @@
       "category": "dessert",
       "dietary_hint": "vegetarian",
       "visual_anchor": "purple-black sticky-rice milk pudding",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-129",
@@ -1507,7 +1507,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "pork curry darkened by black sesame",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-134",
@@ -1518,7 +1518,7 @@
       "category": "side",
       "dietary_hint": "varies",
       "visual_anchor": "fermented soybeans in dark chunky aromatic relish",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-135",
@@ -1529,7 +1529,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "fish in pale tomato-and-lemon tangy broth",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-136",
@@ -1628,7 +1628,7 @@
       "category": "starter",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "boneless fried chicken with capsicum onion and dark glaze",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-145",
@@ -1650,7 +1650,7 @@
       "category": "starter",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "saucy glazed chicken lollipops topped with scallions",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-147",
@@ -1672,7 +1672,7 @@
       "category": "starter",
       "dietary_hint": "vegetarian",
       "visual_anchor": "golden baby corn batons with chopped peppers",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-149",
@@ -1870,7 +1870,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "wok-tossed thin noodles with cabbage carrot and peppers",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-167",
@@ -1881,7 +1881,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "thin bright-red chili-coated noodles with vegetables",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-168",
@@ -1892,7 +1892,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "red-orange wok-fried rice with finely cut vegetables",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-169",
@@ -1903,7 +1903,7 @@
       "category": "main",
       "dietary_hint": "egg",
       "visual_anchor": "rice scattered with scrambled egg peas and spring onion",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-170",
@@ -1914,7 +1914,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "wok-fried rice with small boneless chicken pieces",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-171",
@@ -1925,7 +1925,7 @@
       "category": "combo",
       "dietary_hint": "vegetarian",
       "visual_anchor": "layered fried rice and crisp noodles with Schezwan gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-172",
@@ -1936,7 +1936,7 @@
       "category": "main",
       "dietary_hint": "vegetarian",
       "visual_anchor": "crunchy fried noodle nest covered with sweet-sour vegetable gravy",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-173",
@@ -1947,7 +1947,7 @@
       "category": "main",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "crisp noodle nest with chicken and glossy vegetable sauce",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-174",
@@ -1958,7 +1958,7 @@
       "category": "soup",
       "dietary_hint": "vegetarian",
       "visual_anchor": "dark vegetable soup topped with thin crunchy noodles",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-175",
@@ -1969,7 +1969,7 @@
       "category": "soup",
       "dietary_hint": "non_vegetarian",
       "visual_anchor": "dark tangy broth with chicken shreds and mushrooms",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-176",
@@ -2046,7 +2046,7 @@
       "category": "dessert",
       "dietary_hint": "vegetarian",
       "visual_anchor": "flat white chhena discs in yellow saffron milk with pistachio",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-183",
@@ -2057,7 +2057,7 @@
       "category": "dessert",
       "dietary_hint": "vegetarian",
       "visual_anchor": "diamond-shaped pale cashew sweets with silver foil",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-184",
@@ -2068,7 +2068,7 @@
       "category": "dessert",
       "dietary_hint": "vegetarian",
       "visual_anchor": "bright orange syrup-soaked tight spiral loops",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-185",
@@ -2233,7 +2233,7 @@
       "category": "dessert",
       "dietary_hint": "egg",
       "visual_anchor": "layered brown-and-gold coconut egg custard cake wedge",
-      "illustration_status": "not_created"
+      "illustration_status": "assets_imported_pending_review"
     },
     {
       "id": "MM-IN-200",

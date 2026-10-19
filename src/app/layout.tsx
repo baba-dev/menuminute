@@ -1,13 +1,17 @@
+import { themeScript } from "@/components/menu-product/theme-script";
+import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+import "@/styles/menu-product.css";
+const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-display",
 });
+const bodyFont = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm" });
 
 export const metadata: Metadata = {
   title: {
@@ -15,15 +19,29 @@ export const metadata: Metadata = {
     template: "%s | MenuMinute",
   },
   description:
-    "Create beautiful digital menus and QR codes for free. Accept online orders and manage your kitchen — built for restaurants of all sizes.",
+    "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
+  applicationName: "MenuMinute",
+  icons: {
+    icon: [{ url: "/brand/icons/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/brand/icons/favicon.svg",
+  },
   authors: [{ name: "MenuMinute" }],
   creator: "MenuMinute",
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "MenuMinute",
+    images: [
+      {
+        url: "/brand/social/og-light.webp",
+        width: 1200,
+        height: 630,
+        alt: "MenuMinute by BabaBuilds",
+      },
+    ],
   },
+  twitter: { card: "summary_large_image", images: ["/brand/social/og-light.webp"] },
   robots: {
     index: true,
     follow: true,
@@ -43,7 +61,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
+        <ThemeSync />
         {children}
         <Toaster richColors position="top-right" />
       </body>

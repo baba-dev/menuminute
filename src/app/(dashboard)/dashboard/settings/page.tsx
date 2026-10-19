@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { Settings, Store, Palette, ShieldCheck, Mail, Phone, MapPin } from "lucide-react";
@@ -9,7 +10,9 @@ export const metadata = {
 
 export default async function SettingsPage() {
   const session = await auth();
-  const restaurant = getDefaultOrActiveRestaurant(session?.user?.id);
+  if (!session?.user.id) redirect("/login");
+  const actor = { userId: session.user.id };
+  const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
 
   if (!restaurant) {
     return (

@@ -127,3 +127,7 @@ Mixed outlets label fulfillment; pickup completes as Collected. Sold-out dishes 
 greyed imagery, Sold Out overlay and accessible text, including image fallbacks. Currency formatting
 uses outlet-local currency independently of platform USD/INR billing. Complete UX review remains a
 separate gate; keep all approved Ink & Ember, theme, button and feedback contracts above.
+
+## Approved MenuMinute branding
+
+Brand asset inventory and header replay contract are in [brand-assets.md](brand-assets.md). Keep SVG vector marks/animation and theme-specific light/dark variants; raster visual presentations use WebP. PWA image work is deferred by product owner. The home header SVG plays once and holds, replaying only on effective theme change; reduced-motion users see its final frame.

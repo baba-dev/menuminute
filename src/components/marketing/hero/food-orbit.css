@@ -1,0 +1,408 @@
+/* Food Orbit: isolated ink-and-ember tokens. */
+.food-orbit {
+  --ink: #3a2a20;
+  --paper: #fff9ed;
+  --quiet: #ffedcf;
+  --field: #f5f5f5;
+  --screen: #fff;
+  --screen-ink: #171717;
+  --muted: #625c53;
+  --soft: #e4d6c3;
+  --card: #fffdf9;
+  --accent: #ef6624;
+  --ring: #e9b16d;
+  --ring-soft: #e7d6c4;
+  --detail: #be733c;
+  --shadow: #70411f;
+  --edge: #7e634e;
+  --ticket: #fff8e9;
+  --ticket-ink: #37291f;
+  display: block;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  user-select: none;
+  touch-action: pan-y;
+  width: 100%;
+  aspect-ratio: 4/3;
+  --near-x: 0px;
+  --near-y: 0px;
+  --mid-x: 0px;
+  --mid-y: 0px;
+  --far-x: 0px;
+  --far-y: 0px;
+}
+:root[data-theme="dark"] .food-orbit {
+  --ink: #ead6af;
+  --paper: #302b24;
+  --quiet: #40372b;
+  --field: #34312b;
+  --screen: #22201d;
+  --screen-ink: #fff9ef;
+  --muted: #d0c4b6;
+  --soft: #4e473d;
+  --card: #302c26;
+  --accent: #ffc83d;
+  --ring: #8d6b38;
+  --ring-soft: #61513d;
+  --detail: #d7a25c;
+  --shadow: #000;
+  --edge: #d2a54c;
+  --ticket: #342d25;
+  --ticket-ink: #fff0c7;
+}
+.food-orbit svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+.food-orbit__far,
+.food-orbit__mid,
+.food-orbit__near {
+  transition: translate 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.food-orbit__far {
+  translate: var(--far-x) var(--far-y);
+}
+.food-orbit__mid {
+  translate: var(--mid-x) var(--mid-y);
+}
+.food-orbit__near {
+  translate: var(--near-x) var(--near-y);
+}
+.food-orbit__trace {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: orbit-draw 1.65s 0.15s both cubic-bezier(0.22, 1, 0.36, 1);
+}
+.food-orbit__line {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbit-ring 26s 7.3s infinite ease-in-out alternate;
+}
+.food-orbit__enter {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbit-enter 1.1s both cubic-bezier(0.22, 1, 0.36, 1);
+}
+.food-orbit__enter--phone {
+  animation-name: orbit-phone-enter;
+  animation-delay: 1.35s;
+  animation-duration: 1.25s;
+}
+.food-orbit__enter--pizza {
+  animation-delay: 2.1s;
+}
+.food-orbit__enter--coffee {
+  animation-delay: 2.3s;
+}
+.food-orbit__enter--bowl {
+  animation-delay: 2.8s;
+}
+.food-orbit__enter--cake {
+  animation-delay: 3.3s;
+}
+.food-orbit__enter--qr {
+  animation-delay: 4.5s;
+}
+.food-orbit__bob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbit-float 7s 6s infinite ease-in-out alternate;
+}
+.food-orbit__bob--phone {
+  animation-duration: 6.5s;
+  animation-delay: 2.6s;
+}
+.food-orbit__bob--coffee {
+  animation-duration: 7.5s;
+  animation-delay: 3.4s;
+}
+.food-orbit__bob--pizza {
+  animation-duration: 13s;
+  animation-delay: 3.2s;
+}
+.food-orbit__bob--bowl {
+  animation-duration: 10s;
+  animation-delay: 3.9s;
+}
+.food-orbit__bob--cake {
+  animation-duration: 9s;
+  animation-delay: 4.4s;
+}
+.food-orbit__bob--qr {
+  animation-duration: 8s;
+  animation-delay: 5.6s;
+}
+.food-orbit__steam {
+  stroke-dasharray: 115;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: orbit-steam 4.5s 5.4s infinite ease-out;
+}
+.food-orbit__steam--two {
+  animation-delay: 5.9s;
+}
+.food-orbit__steam--three {
+  animation-delay: 6.3s;
+}
+.food-orbit__screen-dishes {
+  animation: orbit-menu 750ms 3.7s both ease-out;
+}
+@keyframes orbit-draw {
+  from {
+    stroke-dashoffset: 100;
+    opacity: 0.25;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes orbit-enter {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes orbit-phone-enter {
+  from {
+    opacity: 0;
+    transform: translateY(52px) rotate(-6deg) scale(0.9);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-5px) rotate(1deg) scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes orbit-float {
+  from {
+    transform: translateY(0) rotate(-0.5deg);
+  }
+  to {
+    transform: translateY(-6px) rotate(0.5deg);
+  }
+}
+@keyframes orbit-steam {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 115;
+    transform: translateY(8px);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -40;
+    transform: translateY(-13px);
+  }
+}
+@keyframes orbit-ring {
+  from {
+    transform: rotate(-0.6deg);
+  }
+  to {
+    transform: rotate(0.6deg);
+  }
+}
+@keyframes orbit-menu {
+  from {
+    opacity: 0.15;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.food-orbit[data-paused="true"] *,
+.food-orbit[data-offscreen="true"] * {
+  animation-play-state: paused !important;
+}
+@media (max-width: 639px) {
+  .food-orbit {
+    aspect-ratio: 1/1.04;
+  }
+  .food-orbit svg {
+    width: 144%;
+    max-width: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .food-orbit__small-detail {
+    display: none;
+  }
+  .food-orbit__far,
+  .food-orbit__mid,
+  .food-orbit__near {
+    transition: none;
+    translate: 0 0;
+  }
+  .food-orbit__bob {
+    animation-duration: 11s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .food-orbit *,
+  .food-orbit *::before,
+  .food-orbit *::after {
+    animation: none !important;
+    transition: none !important;
+    translate: 0 0 !important;
+  }
+  .food-orbit__trace {
+    stroke-dashoffset: 0 !important;
+  }
+  .food-orbit__enter,
+  .food-orbit__screen-dishes {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .food-orbit__steam {
+    opacity: 0.75;
+    stroke-dashoffset: 0;
+  }
+}
+/* Home-only composition: the navigation lives within the hero surface. */
+.food-orbit-hero {
+  background: #fff;
+  color: var(--mm-foreground, #171717);
+}
+:root[data-theme="dark"] .food-orbit-hero {
+  background: linear-gradient(to bottom, #111 78%, var(--mm-surface, #202020) 100%);
+}
+.food-orbit-hero__brand,
+.food-orbit-hero__heading {
+  color: var(--mm-foreground, #171717);
+}
+.food-orbit-hero__heading {
+  font-family: var(--font-display), sans-serif;
+  max-width: 1040px;
+  text-wrap: balance;
+}
+.food-orbit-hero__accent {
+  color: #a83500;
+  margin-top: 0.12em;
+}
+:root[data-theme="dark"] .food-orbit-hero__accent {
+  color: #ffc83d;
+}
+.food-orbit-hero__nav {
+  background: transparent;
+}
+.food-orbit-hero__nav-link {
+  color: var(--mm-secondary, #555);
+  transition: color 150ms ease;
+}
+.food-orbit-hero__nav-link:hover,
+.food-orbit-hero__nav-link:focus-visible {
+  color: var(--mm-foreground, #171717);
+}
+.food-orbit-hero__nav-cta {
+  background: var(--mm-gradient);
+  color: var(--mm-gradient-ink, #211600);
+  box-shadow: 0 5px 0 -3px rgb(131 63 12 / 20%);
+}
+.food-orbit-hero__nav-cta:hover {
+  filter: brightness(1.05);
+}
+.food-orbit-hero__icon-button {
+  border: 1px solid var(--mm-border, #d7d7d7);
+  background: transparent;
+  color: var(--mm-foreground, #171717);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.food-orbit-hero__icon-button:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
+.food-orbit-hero__nav a:focus-visible,
+.food-orbit-hero__mobile-menu summary:focus-visible {
+  outline: 3px solid var(--mm-focus, #a83500);
+  outline-offset: 3px;
+}
+.food-orbit-hero__mobile-menu summary::-webkit-details-marker {
+  display: none;
+}
+.food-orbit-hero__mobile-panel {
+  background: var(--mm-surface, #fff);
+  border-color: var(--mm-border, #d7d7d7);
+}
+.food-orbit-hero__mobile-link {
+  display: block;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  color: var(--mm-foreground, #171717);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.food-orbit-hero__mobile-link:hover {
+  background: var(--mm-soft-surface, #f5f5f5);
+}
+.food-orbit-hero__content {
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+.food-orbit-hero__stage {
+  max-width: 700px;
+  margin-top: clamp(0.75rem, 1.7vw, 1.25rem);
+}
+.food-orbit-hero__art {
+  width: 100%;
+  margin-inline: auto;
+}
+.food-orbit-hero__description {
+  color: var(--mm-secondary, #555);
+  margin-top: clamp(0.5rem, 1.5vw, 1rem);
+  text-wrap: pretty;
+}
+.food-orbit-hero__divider {
+  width: min(78vw, 940px);
+  height: 1px;
+  margin-top: clamp(1.75rem, 3vw, 2.75rem);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mm-border, #d7d7d7) 28%,
+    #e7a044 50%,
+    var(--mm-border, #d7d7d7) 72%,
+    transparent
+  );
+}
+.food-orbit-hero__next {
+  background: var(--mm-surface, #fff);
+}
+@media (max-width: 639px) {
+  .food-orbit-hero__heading {
+    max-width: 19ch;
+  }
+  .food-orbit-hero__stage {
+    max-width: 510px;
+  }
+  .food-orbit-hero__description {
+    max-width: 34ch;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .food-orbit-hero__nav-link,
+  .food-orbit-hero__icon-button {
+    transition: none;
+  }
+}

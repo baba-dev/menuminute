@@ -1,0 +1,444 @@
+name: Deploy verified MenuMinute ARM64 release
+
+# Authenticate the publisher's source CI run, not workflow_run.head_sha.
+# Stage-only uses its own environment; production history is activation only.
+on:
+  workflow_run:
+    workflows: ["Publish verified ARM64 artifact"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: "Full 40-character SHA of a published main release"
+        required: true
+        type: string
+      activate:
+        description: "Activate the verified release using the same unattended migration/backup path"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: menuminute-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: >-
+      ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'workflow_run' &&
+           github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'workflow_run' &&
+           github.event.workflow_run.head_branch == 'main' &&
+           github.event.workflow_run.head_repository.full_name == github.repository) }}
+    name: Authenticate and stage (not production)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment:
+      name: production-staging
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+      ci_id: ${{ steps.source.outputs.ci_id }}
+      ci_created_at: ${{ steps.source.outputs.ci_created_at }}
+      ci_seconds: ${{ steps.source.outputs.ci_seconds }}
+      ci_queue_seconds: ${{ steps.source.outputs.ci_queue_seconds }}
+      packaging_seconds: ${{ steps.source.outputs.packaging_seconds }}
+      publication_seconds: ${{ steps.source.outputs.publication_seconds }}
+      digest: ${{ steps.artifact.outputs.digest }}
+      eligible: ${{ steps.policy.outputs.eligible }}
+      staging_seconds: ${{ steps.transport.outputs.staging_seconds }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+    steps:
+      - name: Download trusted publisher handoff
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: published-source-${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Authenticate exact publisher and source main CI
+        id: source
+        env:
+          PUBLISH_RUN_ID: ${{ github.event.workflow_run.id }}
+          MANUAL_SHA: ${{ inputs.release_sha }}
+        run: |
+          set -Eeuo pipefail
+          sha="$MANUAL_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            test -s published-source.json
+            jq -e --argjson publisher "$PUBLISH_RUN_ID" '
+              .publisher_run_id == $publisher and
+              (.source_sha | test("^[0-9a-f]{40}$")) and
+              (.source_ci_run_id | type == "number") and
+              (.artifact_sha256 | test("^[0-9a-f]{64}$")) and
+              (.ci_duration_seconds | type == "number") and
+              (.ci_queue_seconds | type == "number") and
+              (.packaging_seconds | type == "number") and
+              (.publication_seconds | type == "number")
+            ' published-source.json >/dev/null
+            sha="$(jq -r .source_sha published-source.json)"
+            echo "sha=$sha" >> "$GITHUB_OUTPUT"
+            ci_id="$(jq -r .source_ci_run_id published-source.json)"
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_id" |
+              jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$sha" '
+                .name == "CI" and .path == ".github/workflows/ci.yml" and
+                .head_repository.full_name == $repo and .head_sha == $sha and
+                .event == "push" and .head_branch == "main" and
+                .status == "completed" and .conclusion == "success"
+              ' >/dev/null
+            gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$ci_id/jobs?per_page=100" |
+              jq -se '([.[].jobs[] | select(.name == "Required CI quality gate" and .conclusion == "success")] | length) == 1' >/dev/null
+            echo "ci_id=$ci_id" >> "$GITHUB_OUTPUT"
+            echo "ci_created_at=$(jq -r .source_ci_created_at published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "ci_seconds=$(jq -r .ci_duration_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "ci_queue_seconds=$(jq -r .ci_queue_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "packaging_seconds=$(jq -r .packaging_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+            echo "publication_seconds=$(jq -r .publication_seconds published-source.json)" >> "$GITHUB_OUTPUT"
+          fi
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Full SHA required" >&2; exit 1; }
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$sha" != "$latest" ]]; then
+              echo "Superseded release $sha; main is $latest" >> "$GITHUB_STEP_SUMMARY"
+              echo "superseded=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_SHA=$sha" >> "$GITHUB_ENV"
+
+      - name: Verify immutable main release identity
+        id: artifact
+        if: steps.source.outputs.superseded != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Expected a full lowercase commit SHA" >&2; exit 1; }
+          short="${RELEASE_SHA:0:12}"
+          tag="arm64-$short"
+          target="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq '.target_commitish')"
+          [[ "$target" == "$RELEASE_SHA" ]] || { echo "Release target does not match requested SHA" >&2; exit 1; }
+          tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha')"
+          [[ "$tag_sha" == "$RELEASE_SHA" ]] || { echo "Release tag moved or points elsewhere" >&2; exit 1; }
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" \
+            --pattern "menuminute-$short-linux-arm64.tar.gz" \
+            --pattern "menuminute-$short-linux-arm64.tar.gz.sha256" --dir "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP"
+          sha256sum -c "menuminute-$short-linux-arm64.tar.gz.sha256"
+          digest="$(cut -d' ' -f1 "menuminute-$short-linux-arm64.tar.gz.sha256")"
+          [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          echo "DEPLOY_ARCHIVE=$RUNNER_TEMP/menuminute-$short-linux-arm64.tar.gz" >> "$GITHUB_ENV"
+          echo "DEPLOY_DIGEST=$digest" >> "$GITHUB_ENV"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            # actions/download-artifact writes to GITHUB_WORKSPACE; the release archive
+            # above is intentionally verified from RUNNER_TEMP.
+            handoff="$GITHUB_WORKSPACE/published-source.json"
+            test -s "$handoff"
+            test "$(jq -r .artifact_sha256 "$handoff")" = "$digest"
+            test "$(jq -r .artifact_name "$handoff")" = "menuminute-$short-linux-arm64.tar.gz"
+            test "$(jq -r .artifact_bytes "$handoff")" = "$(stat -c %s "$RUNNER_TEMP/menuminute-$short-linux-arm64.tar.gz")"
+          fi
+
+      - name: Configure pinned SSH host identity
+        if: steps.source.outputs.superseded != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ && "$VPS_PORT" =~ ^[0-9]{1,5}$ ]] || {
+            echo "Invalid host/port configuration" >&2; exit 1;
+          }
+          [[ -n "$VPS_SSH_KEY" && -n "$VPS_SSH_KNOWN_HOSTS" ]] || {
+            echo "Missing production environment secrets" >&2; exit 1;
+          }
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/id_deploy"
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
+          ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
+          echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
+
+      - name: Pull and stage checked release on VPS
+        if: steps.source.outputs.superseded != 'true'
+        id: transport
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          stage_start="$(date -u +%s)"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$latest" != "$RELEASE_SHA" ]]; then
+              echo "superseded=true" >> "$GITHUB_OUTPUT"
+              echo "Superseded before staging; no live release changed"
+              exit 0
+            fi
+          fi
+          # SSH carries only a short, pinned command. Public GitHub HTTPS carries
+          # the large archive directly to the VPS; no root SSH or server build.
+          short="${RELEASE_SHA:0:12}"
+          bytes="$(stat -c %s "$DEPLOY_ARCHIVE")"
+          [[ "$bytes" =~ ^[0-9]+$ && "$bytes" -gt 0 ]] || exit 1
+          url="https://github.com/$GITHUB_REPOSITORY/releases/download/arm64-$short/menuminute-$short-linux-arm64.tar.gz"
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+            "menuminute-deploy@$VPS_HOST" \
+            "bash -s -- '$RELEASE_SHA' '$DEPLOY_DIGEST' '$bytes' '$url'" <<'REMOTE'
+          set -Eeuo pipefail
+          sha="$1"; digest="$2"; expected_bytes="$3"; url="$4"
+          archive="/var/lib/menuminute/incoming/$sha.tar.gz"
+          [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
+            echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
+          }
+          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 4 || {
+            echo "AUTO_MIGRATION_SETUP_REQUIRED: Install reviewed root-owned helper v4 (one-time operator bootstrap)" >&2; exit 1;
+          }
+          # A repeated stage/activation run may find a complete prior archive.
+          # Do not send a Range request starting at EOF (some CDNs return 416).
+          # Incomplete files resume via HTTPS; overlong files fail closed.
+          current_bytes=0
+          if [[ -f "$archive" ]]; then
+            current_bytes="$(stat -c %s "$archive")"
+          fi
+          if (( current_bytes > expected_bytes )); then
+            echo "Incoming archive exceeds expected size" >&2; exit 1
+          elif (( current_bytes == expected_bytes )); then
+            echo "Archive already fully downloaded; verifying staged release"
+          else
+            curl --fail --location --show-error --progress-bar \
+              --proto '=https' --proto-redir '=https' \
+              --retry 4 --retry-all-errors --retry-delay 3 \
+              --connect-timeout 15 --speed-limit 32768 --speed-time 90 \
+              --continue-at - --output "$archive" "$url"
+          fi
+          [[ "$(stat -c %s "$archive")" == "$expected_bytes" ]] || {
+            echo "Downloaded archive size mismatch" >&2; exit 1;
+          }
+          # The root-owned deploy helper copies and SHA-256-verifies the whole
+          # artifact against the authenticated release digest before extraction.
+          sudo -n /usr/local/sbin/menuminute-release stage "$sha" "$digest"
+          REMOTE
+          echo "staging_seconds=$(( $(date -u +%s) - stage_start ))" >> "$GITHUB_OUTPUT"
+
+      - name: Confirm unattended activation eligibility
+        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
+        id: policy
+        env:
+          AUTO: ${{ github.event_name == 'workflow_run' }}
+          MANUAL_ACTIVATE: ${{ inputs.activate }}
+        run: |
+          set -Eeuo pipefail
+          echo "eligible=false" >> "$GITHUB_OUTPUT"
+          if [[ "$AUTO" != true && "$MANUAL_ACTIVATE" != true ]]; then
+            exit 0
+          fi
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$latest" != "$RELEASE_SHA" ]]; then
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+            echo "Superseded during staging; live services unchanged" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST"
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+      - name: Staging report
+        if: always()
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          SUPERSEDED_BEFORE: ${{ steps.source.outputs.superseded || steps.transport.outputs.superseded }}
+          STAGING_SECONDS: ${{ steps.transport.outputs.staging_seconds }}
+          SUPERSEDED_AFTER: ${{ steps.policy.outputs.superseded }}
+          ELIGIBLE: ${{ steps.policy.outputs.eligible }}
+        run: |
+          {
+            echo "### MenuMinute immutable ARM64 staging"
+            echo "| Field | Result |"
+            echo "|---|---|"
+            echo "| SHA | \`$SOURCE_SHA\` |"
+            echo "| Release | [arm64-${SOURCE_SHA:0:12}](https://github.com/$GITHUB_REPOSITORY/releases/tag/arm64-${SOURCE_SHA:0:12}) |"
+            echo "| Digest | \`${DEPLOY_DIGEST:-not downloaded}\` |"
+            echo "| Staging elapsed | ${STAGING_SECONDS:-not started} seconds |"
+            if [[ "$SUPERSEDED_BEFORE" == true || "$SUPERSEDED_AFTER" == true ]]; then
+              echo "| Outcome | Superseded; not deployed. |"
+            elif [[ "$ELIGIBLE" == true ]]; then
+              echo "| Outcome | Staged; eligible for separate production activation. Not yet deployed. |"
+            else
+              echo "| Outcome | Stage-only or failed; not deployed. |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  activate:
+    name: Activate and publicly verify production
+    needs: stage
+    if: needs.stage.result == 'success' && needs.stage.outputs.eligible == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://food.bababuilds.com
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ needs.stage.outputs.sha }}
+      DEPLOY_DIGEST: ${{ needs.stage.outputs.digest }}
+      SOURCE_CI_RUN_ID: ${{ needs.stage.outputs.ci_id }}
+      SOURCE_CI_CREATED_AT: ${{ needs.stage.outputs.ci_created_at }}
+      CI_SECONDS: ${{ needs.stage.outputs.ci_seconds }}
+      CI_QUEUE_SECONDS: ${{ needs.stage.outputs.ci_queue_seconds }}
+      PACKAGING_SECONDS: ${{ needs.stage.outputs.packaging_seconds }}
+      PUBLICATION_SECONDS: ${{ needs.stage.outputs.publication_seconds }}
+      STAGING_SECONDS: ${{ needs.stage.outputs.staging_seconds }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+    steps:
+      - name: Configure pinned SSH host identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ && "$VPS_PORT" =~ ^[0-9]{1,5}$ ]] || {
+            echo "Invalid host/port configuration" >&2; exit 1;
+          }
+          [[ -n "$VPS_SSH_KEY" && -n "$VPS_SSH_KNOWN_HOSTS" ]] || {
+            echo "Missing production environment secrets" >&2; exit 1;
+          }
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/id_deploy"
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_deploy" "$HOME/.ssh/known_hosts"
+          ssh-keygen -lf "$HOME/.ssh/known_hosts" >/dev/null
+          echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=12" >> "$GITHUB_ENV"
+
+      - name: Exact main recheck and root-owned cutover
+        id: cutover
+        run: |
+          set -Eeuo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ && "$DEPLOY_DIGEST" =~ ^[0-9a-f]{64}$ ]]
+          mode=autoactivate
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+            if [[ "$latest" != "$RELEASE_SHA" ]]; then
+              echo "::error::Superseded immediately before production activation; no live cutover occurred." >&2
+              echo "superseded=true" >> "$GITHUB_OUTPUT"
+              # A production job must not be marked successful when nothing was deployed.
+              exit 1
+            fi
+          fi
+          started="$(date -u +%s)"
+          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 4 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
+            echo "activated=true" >> "$GITHUB_OUTPUT"
+            echo "activation_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Cutover/verification failed; requesting compatible recovery if candidate became live"
+            if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+              if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release recover $RELEASE_SHA $DEPLOY_DIGEST"; then
+                echo "rollback=verified" >> "$GITHUB_OUTPUT"
+              else
+                echo "rollback=not-applicable-or-failed; operator review required" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+            exit 1
+          fi
+      - name: Public HTTPS, dependency and route verification
+        if: steps.cutover.outputs.activated == 'true'
+        id: public
+        run: |
+          set -Eeuo pipefail
+          # A public failure after a successful automatic cutover must recover
+          # the previously verified, schema-compatible application only.
+          recover_public_failure() {
+            local rc=$?
+            trap - ERR
+            if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+              if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release recover $RELEASE_SHA $DEPLOY_DIGEST"; then
+                echo "rollback=verified" >> "$GITHUB_OUTPUT"
+              else
+                echo "rollback=failed-needs-operator" >> "$GITHUB_OUTPUT"
+              fi
+            else
+              echo "rollback=manual-operator-review" >> "$GITHUB_OUTPUT"
+            fi
+            exit "$rc"
+          }
+          trap recover_public_failure ERR
+          started="$(date -u +%s)"
+          url=https://food.bababuilds.com
+          ok=false
+          for attempt in 1 2 3 4; do
+            if curl --fail --silent --show-error --max-time 6 --proto '=https' --tlsv1.2 -D "$RUNNER_TEMP/headers" -o "$RUNNER_TEMP/ready" "$url/api/health/ready?deploy=$RELEASE_SHA"; then
+              if python3 - "$RUNNER_TEMP/ready" "$RUNNER_TEMP/headers" "$RELEASE_SHA" <<'PY'
+          import json, sys
+          j=json.load(open(sys.argv[1]))
+          headers=open(sys.argv[2]).read().lower()
+          assert j["status"] == "ready" and j["database"] is True
+          assert j["release"] == sys.argv[3], "stale or incorrect public release"
+          assert j["redis"]["queue"] is True and j["redis"]["cache"] is True
+          assert "application/json" in headers and "cf-cache-status: hit" not in headers
+          PY
+              then ok=true; break; fi
+            fi
+            sleep 2
+          done
+          if [[ "$ok" != true ]]; then echo "::error::Public readiness failed; do not label deployment verified"; fi
+          [[ "$ok" == true ]]
+          curl --fail --silent --show-error --max-time 6 --proto '=https' --tlsv1.2 -o "$RUNNER_TEMP/home" "$url/"
+          test -s "$RUNNER_TEMP/home"
+          code="$(curl --silent --show-error --max-time 6 --proto '=https' --tlsv1.2 -o /dev/null -w '%{http_code}' "$url/login")"
+          [[ "$code" == 200 || "$code" == 302 || "$code" == 303 || "$code" == 307 || "$code" == 308 ]]
+          trap - ERR
+          echo "verified=true" >> "$GITHUB_OUTPUT"
+          echo "verification_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
+      - name: Verified deployment report
+        if: always()
+        env:
+          CUTOVER: ${{ steps.cutover.outputs.activated }}
+          SUPERSEDED: ${{ steps.cutover.outputs.superseded }}
+          VERIFIED: ${{ steps.public.outputs.verified }}
+          ROLLBACK: ${{ steps.public.outputs.rollback }}
+          VERIFY_SECONDS: ${{ steps.public.outputs.verification_seconds }}
+          ACTIVATION_SECONDS: ${{ steps.cutover.outputs.activation_seconds }}
+          CUTOVER_ROLLBACK: ${{ steps.cutover.outputs.rollback }}
+        run: |
+          {
+            echo "## MenuMinute production deployment"
+            echo "| Field | Result |"
+            echo "|---|---|"
+            echo "| Application | [MenuMinute — live application](https://food.bababuilds.com) |"
+            echo "| Environment | production |"
+            echo "| Full commit | [\`$RELEASE_SHA\`](https://github.com/$GITHUB_REPOSITORY/commit/$RELEASE_SHA) |"
+            echo "| Short SHA | \`${RELEASE_SHA:0:12}\` |"
+            echo "| Immutable release | [arm64-${RELEASE_SHA:0:12}](https://github.com/$GITHUB_REPOSITORY/releases/tag/arm64-${RELEASE_SHA:0:12}) |"
+            echo "| Verified artifact checksum | \`$DEPLOY_DIGEST\` |"
+            echo "| Source CI | [run $SOURCE_CI_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID) |"
+            echo "| Completed UTC | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+            echo "| CI execution | ${CI_SECONDS:-not recorded} seconds |"
+            echo "| GitHub CI queue | ${CI_QUEUE_SECONDS:-not recorded} seconds |"
+            echo "| Artifact packaging | ${PACKAGING_SECONDS:-not recorded} seconds |"
+            echo "| Release publication | ${PUBLICATION_SECONDS:-not recorded} seconds |"
+            echo "| Staging | ${STAGING_SECONDS:-not recorded} seconds |"
+            echo "| Activation | ${ACTIVATION_SECONDS:-not completed} seconds |"
+            echo "| Public verification | ${VERIFY_SECONDS:-not completed} seconds |"
+            echo "| Rollback | ${ROLLBACK:-${CUTOVER_ROLLBACK:-not required}} |"
+            if [[ "$SUPERSEDED" == true ]]; then
+              echo "| Outcome | Superseded; no live cutover |"
+            elif [[ "$CUTOVER" == true && "$VERIFIED" == true ]]; then
+              echo "| Outcome | ✅ Activated and public HTTPS verified |"
+              if [[ -n "$SOURCE_CI_CREATED_AT" ]]; then
+                start="$(date -d "$SOURCE_CI_CREATED_AT" +%s)"
+                echo "| Push-to-verified-public elapsed | $(( $(date -u +%s) - start )) seconds (includes CI queue) |"
+              fi
+              echo "| Services and dependencies | VPS helper verified web/worker, PostgreSQL, Redis queue/cache and ERP |"
+              echo "| Public routes | HTTPS homepage, authentication and uncached readiness passed |"
+            else
+              echo "| Outcome | ❌ Activation or verification failed; investigate before claiming production success |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
