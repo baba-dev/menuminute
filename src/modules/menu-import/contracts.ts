@@ -102,10 +102,6 @@ export const cancelImportSchema = z
 export const sourceUploadHeaders = z
   .object({
     id: importId,
-    pageIndex: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(sourceLimit - 1),
+    pageIndex: z.string().regex(/^(?:[0-9]|1[01])$/).transform(Number),
   })
   .strict();

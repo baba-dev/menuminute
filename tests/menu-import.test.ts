@@ -170,9 +170,10 @@ it("normalizes private sources, replays same upload, rejects source-key conflict
     await expect(
       addImportSource(f.actor, f.outlet.id, id, { id: crypto.randomUUID(), pageIndex: 1 }, jpg)
     ).rejects.toMatchObject({ statusCode: 403 });
-    expect(
-      (await admin(async (_db, pool) => pool.query("select * from menu_releases where published_by=$1", [f.actor.userId]))).rowCount
-    ).toBe(0);
+    const ownReleases = await admin(async (_db, pool) =>
+      pool.query("select id from menu_releases where published_by=$1", [f.actor.userId])
+    );
+    expect(ownReleases.rowCount).toBe(0);
   } finally {
     process.umask(umask);
     vi.unstubAllEnvs();
