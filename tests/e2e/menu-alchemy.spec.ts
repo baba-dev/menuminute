@@ -17,7 +17,9 @@ test("Menu Alchemy follows the Journey and preserves the existing product links"
     "/register"
   );
   await expect(alchemy.getByText(/Manual menu creation is available now/i)).toBeVisible();
-  await expect(page.getByTestId("service-worlds").getByRole("heading", { name: /Different kitchens/i })).toBeVisible();
+  await expect(
+    page.getByTestId("service-worlds").getByRole("heading", { name: /Different kitchens/i })
+  ).toBeVisible();
   const order = await page
     .locator("main, body")
     .first()

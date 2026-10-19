@@ -10,7 +10,9 @@
   isolation: isolate;
   overflow: clip;
   border-block: 1px solid var(--mm6-line);
-  background: radial-gradient(ellipse 55% 25% at 50% 32%, rgb(244 156 59 / 12%), transparent), linear-gradient(180deg, #fff 0%, #fff7eb 28%, #f8eddf 78%, #fff 100%);
+  background:
+    radial-gradient(ellipse 55% 25% at 50% 32%, rgb(244 156 59 / 12%), transparent),
+    linear-gradient(180deg, #fff 0%, #fff7eb 28%, #f8eddf 78%, #fff 100%);
 }
 :root[data-theme="dark"] .service-worlds {
   --mm6-copy: #fff0dd;
@@ -19,60 +21,303 @@
   --mm6-panel: #2b211a;
   --mm6-accent: #ffbd79;
   --mm6-focus: #ffd18b;
-  background: radial-gradient(ellipse 55% 25% at 50% 28%, rgb(244 112 25 / 11%), transparent), linear-gradient(180deg, #18130f 0%, #211911 60%, #17130f 100%);
+  background:
+    radial-gradient(ellipse 55% 25% at 50% 28%, rgb(244 112 25 / 11%), transparent),
+    linear-gradient(180deg, #18130f 0%, #211911 60%, #17130f 100%);
 }
-.service-worlds *, .service-worlds *::before, .service-worlds *::after { box-sizing: border-box; }
-.mm6-container { width: min(100% - 48px, 1440px); margin-inline: auto; padding-block: clamp(72px, 8vw, 110px); }
-.mm6-header { text-align: center; margin: 0 auto 30px; max-width: 1080px; }
-.mm6-eyebrow { color: var(--mm6-accent); font-size: 11px; font-weight: 850; letter-spacing: .16em; }
-.mm6-header h2 { margin: 18px auto 15px; font: 800 clamp(2.5rem, 5vw, 4.7rem)/1.07 var(--font-display), sans-serif; letter-spacing: -.052em; text-wrap: balance; }
-.mm6-header h2 em { font-style: normal; color: var(--mm6-accent); }
-.mm6-header p { margin: 0 auto; max-width: 740px; color: var(--mm6-muted); font-size: clamp(14px, 1.55vw, 18px); line-height: 1.65; }
-.mm6-modes { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; transition: opacity .55s ease, transform .55s ease; }
-.mm6-modes[data-ready="false"] { opacity: 0; transform: translateY(12px); pointer-events: none; visibility: hidden; }
-.mm6-mode { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 45px; padding: 10px 19px; border: 1px solid var(--mm6-line); border-radius: 999px; background: var(--mm6-panel); color: var(--mm6-copy); font-size: 13px; font-weight: 800; cursor: pointer; transition: background .25s, color .25s, transform .25s; }
-.mm6-mode[aria-pressed="true"] { background: linear-gradient(110deg,#f35411,#ff8b27); color: #fff; border-color: #f4661c; box-shadow: 0 6px 18px rgb(206 78 13 / 19%); }
-.mm6-mode:hover { transform: translateY(-2px); }
-.mm6-stage { width: 100%; margin: 0 auto; overflow: hidden; border: 1px solid var(--mm6-line); border-radius: 24px; box-shadow: 0 19px 60px rgb(76 39 13 / 9%); line-height: 0; background: var(--mm6-panel); }
-.mm6-stage svg { display: block; width: 100%; height: auto; }
-.mm6-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 14px; font-size: 12px; line-height: 1.55; color: var(--mm6-muted); }
-.mm6-controls { display: flex; gap: 8px; }
-.mm6-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--mm6-line); color: var(--mm6-copy); background: var(--mm6-panel); font-size: 12px; font-weight: 750; cursor: pointer; }
-.mm6-controls button:disabled { opacity: .55; cursor: not-allowed; }
-.mm6-static-note { margin-top: 9px; color: var(--mm6-muted); font-size: 12px; }
-.mm6-explainer { max-width: 780px; margin: clamp(32px, 4vw, 57px) auto 0; text-align: center; min-height: 135px; }
-.mm6-state { color: var(--mm6-accent); font-size: 11px; font-weight: 850; letter-spacing: .13em; }
-.mm6-explainer h3 { margin: 11px 0 8px; font: 800 clamp(1.55rem, 2.6vw, 2.2rem)/1.19 var(--font-display), sans-serif; letter-spacing: -.025em; }
-.mm6-explainer p { margin: 0; color: var(--mm6-muted); font-size: 14px; line-height: 1.75; }
-.mm6-outro { display: flex; align-items: center; justify-content: space-between; gap: 28px; border-top: 1px solid var(--mm6-line); margin-top: clamp(35px, 5vw, 64px); padding-top: 30px; }
-.mm6-outro h3 { font: 800 clamp(1.45rem,2.35vw,2rem)/1.2 var(--font-display), sans-serif; letter-spacing: -.03em; }
-.mm6-outro p { margin-top: 10px; color: var(--mm6-muted); font-size: 13px; line-height: 1.65; }
-.mm6-links { display: flex; flex: none; gap: 10px; }
-.mm6-links a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 17px; font-size: 13px; font-weight: 800; border-radius: 13px; text-decoration: none; transition: transform .2s; }
-.mm6-links a:hover { transform: translateY(-2px); }
-.mm6-primary { background: linear-gradient(110deg, #fa6520, #ffb236); color: #27170e; box-shadow: 0 4px 0 #884117; }
-.mm6-secondary { background: var(--mm6-panel); border: 1px solid var(--mm6-line); color: var(--mm6-copy); }
-.service-worlds a:focus-visible, .service-worlds button:focus-visible { outline: 3px solid var(--mm6-focus); outline-offset: 4px; }
-@media(max-width:1080px) { .mm6-outro { flex-direction: column; align-items: flex-start; } .mm6-links { flex-wrap: wrap; } }
-@media(max-width:680px) {
-  .mm6-container { width: min(100% - 28px, 440px); padding-block: 68px 75px; }
-  .mm6-header h2 { font-size: clamp(2.15rem, 9vw, 3rem); }
-  .mm6-header p { font-size: 14px; }
-  .mm6-modes { gap: 6px; }
-  .mm6-mode { padding: 8px 10px; font-size: 11px; gap: 5px; min-height: 44px; }
-  .mm6-mode svg { width: 15px; }
-  .mm6-stage { border-radius: 17px; }
+.service-worlds *,
+.service-worlds *::before,
+.service-worlds *::after {
+  box-sizing: border-box;
+}
+.mm6-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+  padding-block: clamp(72px, 8vw, 110px);
+}
+.mm6-header {
+  text-align: center;
+  margin: 0 auto 30px;
+  max-width: 1080px;
+}
+.mm6-eyebrow {
+  color: var(--mm6-accent);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+.mm6-header h2 {
+  margin: 18px auto 15px;
+  font:
+    800 clamp(2.5rem, 5vw, 4.7rem)/1.07 var(--font-display),
+    sans-serif;
+  letter-spacing: -0.052em;
+  text-wrap: balance;
+}
+.mm6-header h2 em {
+  font-style: normal;
+  color: var(--mm6-accent);
+}
+.mm6-header p {
+  margin: 0 auto;
+  max-width: 740px;
+  color: var(--mm6-muted);
+  font-size: clamp(14px, 1.55vw, 18px);
+  line-height: 1.65;
+}
+.mm6-modes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
+.mm6-modes[data-ready="false"] {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  visibility: hidden;
+}
+.mm6-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 45px;
+  padding: 10px 19px;
+  border: 1px solid var(--mm6-line);
+  border-radius: 999px;
+  background: var(--mm6-panel);
+  color: var(--mm6-copy);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    color 0.25s,
+    transform 0.25s;
+}
+.mm6-mode[aria-pressed="true"] {
+  background: linear-gradient(110deg, #f35411, #ff8b27);
+  color: #fff;
+  border-color: #f4661c;
+  box-shadow: 0 6px 18px rgb(206 78 13 / 19%);
+}
+.mm6-mode:hover {
+  transform: translateY(-2px);
+}
+.mm6-stage {
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--mm6-line);
+  border-radius: 24px;
+  box-shadow: 0 19px 60px rgb(76 39 13 / 9%);
+  line-height: 0;
+  background: var(--mm6-panel);
+}
+.mm6-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mm6-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--mm6-muted);
+}
+.mm6-controls {
+  display: flex;
+  gap: 8px;
+}
+.mm6-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--mm6-line);
+  color: var(--mm6-copy);
+  background: var(--mm6-panel);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.mm6-controls button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.mm6-static-note {
+  margin-top: 9px;
+  color: var(--mm6-muted);
+  font-size: 12px;
+}
+.mm6-explainer {
+  max-width: 780px;
+  margin: clamp(32px, 4vw, 57px) auto 0;
+  text-align: center;
+  min-height: 135px;
+}
+.mm6-state {
+  color: var(--mm6-accent);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+.mm6-explainer h3 {
+  margin: 11px 0 8px;
+  font:
+    800 clamp(1.55rem, 2.6vw, 2.2rem)/1.19 var(--font-display),
+    sans-serif;
+  letter-spacing: -0.025em;
+}
+.mm6-explainer p {
+  margin: 0;
+  color: var(--mm6-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+.mm6-outro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border-top: 1px solid var(--mm6-line);
+  margin-top: clamp(35px, 5vw, 64px);
+  padding-top: 30px;
+}
+.mm6-outro h3 {
+  font:
+    800 clamp(1.45rem, 2.35vw, 2rem)/1.2 var(--font-display),
+    sans-serif;
+  letter-spacing: -0.03em;
+}
+.mm6-outro p {
+  margin-top: 10px;
+  color: var(--mm6-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.mm6-links {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+.mm6-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 17px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 13px;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+.mm6-links a:hover {
+  transform: translateY(-2px);
+}
+.mm6-primary {
+  background: linear-gradient(110deg, #fa6520, #ffb236);
+  color: #27170e;
+  box-shadow: 0 4px 0 #884117;
+}
+.mm6-secondary {
+  background: var(--mm6-panel);
+  border: 1px solid var(--mm6-line);
+  color: var(--mm6-copy);
+}
+.service-worlds a:focus-visible,
+.service-worlds button:focus-visible {
+  outline: 3px solid var(--mm6-focus);
+  outline-offset: 4px;
+}
+@media (max-width: 1080px) {
+  .mm6-outro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mm6-links {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 680px) {
+  .mm6-container {
+    width: min(100% - 28px, 440px);
+    padding-block: 68px 75px;
+  }
+  .mm6-header h2 {
+    font-size: clamp(2.15rem, 9vw, 3rem);
+  }
+  .mm6-header p {
+    font-size: 14px;
+  }
+  .mm6-modes {
+    gap: 6px;
+  }
+  .mm6-mode {
+    padding: 8px 10px;
+    font-size: 11px;
+    gap: 5px;
+    min-height: 44px;
+  }
+  .mm6-mode svg {
+    width: 15px;
+  }
+  .mm6-stage {
+    border-radius: 17px;
+  }
   /* Keep the vector legible: focus on the dining diorama; the accompanying
      HTML copy and selectors carry the content on narrow viewports. */
-  .mm6-stage > svg { width: 690px; max-width: none; margin-left: calc(50% - 390px); }
-  .mm6-toolbar { justify-content: center; text-align: center; }
-  .mm6-toolbar > span { width: 100%; }
-  .mm6-explainer { min-height: 155px; }
-  .mm6-outro { gap: 24px; }
-  .mm6-links { flex-direction: column; width: 100%; }
-  .mm6-links a { width: 100%; }
+  .mm6-stage > svg {
+    width: 690px;
+    max-width: none;
+    margin-left: calc(50% - 390px);
+  }
+  .mm6-toolbar {
+    justify-content: center;
+    text-align: center;
+  }
+  .mm6-toolbar > span {
+    width: 100%;
+  }
+  .mm6-explainer {
+    min-height: 155px;
+  }
+  .mm6-outro {
+    gap: 24px;
+  }
+  .mm6-links {
+    flex-direction: column;
+    width: 100%;
+  }
+  .mm6-links a {
+    width: 100%;
+  }
 }
-@media(prefers-reduced-motion:reduce) {
-  .service-worlds *, .service-worlds *::before, .service-worlds *::after { animation: none !important; transition: none !important; }
-  .mm6-mode:hover, .mm6-links a:hover { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .service-worlds *,
+  .service-worlds *::before,
+  .service-worlds *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mm6-mode:hover,
+  .mm6-links a:hover {
+    transform: none;
+  }
 }

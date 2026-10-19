@@ -1,24 +1,36 @@
 import { expect, test } from "@playwright/test";
 
-test("Section 6 replaces the pricing cards with the approved service-worlds story", async ({ page }) => {
+test("Section 6 replaces the pricing cards with the approved service-worlds story", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const section = page.getByTestId("service-worlds");
   await expect(section.getByRole("heading", { name: /Different kitchens/i })).toBeVisible();
   await expect(section.locator("svg[data-mm6]")).toHaveAttribute("data-mode", "dine");
   await expect(section.getByText(/No real scan, order or payment takes place/)).toBeVisible();
-  await expect(section.getByRole("link", { name: /Create your free menu/i })).toHaveAttribute("href", "/register");
-  await expect(section.getByRole("link", { name: /Explore the live QR demo/i })).toHaveAttribute("href", "/demo");
+  await expect(section.getByRole("link", { name: /Create your free menu/i })).toHaveAttribute(
+    "href",
+    "/register"
+  );
+  await expect(section.getByRole("link", { name: /Explore the live QR demo/i })).toHaveAttribute(
+    "href",
+    "/demo"
+  );
   await expect(page.locator(".ma-product-features")).toHaveCount(0);
   const ordering = await page.evaluate(() => {
     const chef = document.querySelector(".chef-pass");
     const worlds = document.querySelector(".service-worlds");
-    return Boolean(chef && worlds && chef.compareDocumentPosition(worlds) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return Boolean(
+      chef && worlds && chef.compareDocumentPosition(worlds) & Node.DOCUMENT_POSITION_FOLLOWING
+    );
   });
   expect(ordering).toBe(true);
 });
 
-test("Every world changes both the physical illustration and the matching phone menu", async ({ page }) => {
+test("Every world changes both the physical illustration and the matching phone menu", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const section = page.getByTestId("service-worlds");
@@ -31,11 +43,16 @@ test("Every world changes both the physical illustration and the matching phone 
   ] as const) {
     await section.getByRole("button", { name: label, exact: true }).click();
     await expect(svg).toHaveAttribute("data-mode", mode);
-    await expect(section.getByRole("button", { name: label, exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(section.getByRole("button", { name: label, exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
     await expect(section.getByText(message)).toBeVisible();
   }
   await expect(section.getByRole("button", { name: "Replay introduction" })).toBeDisabled();
-  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "dark";
+  });
   await expect(svg).toHaveClass(/theme-dark/);
 });
 
@@ -56,7 +73,9 @@ test("Desktop introduction is user-controlled and pauses offscreen", async ({ pa
   await expect(svg).toHaveAttribute("data-mode", "take");
 });
 
-test("Narrow screens preserve accessible selectors, appearance and no document overflow", async ({ page }) => {
+test("Narrow screens preserve accessible selectors, appearance and no document overflow", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 760 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
@@ -64,5 +83,11 @@ test("Narrow screens preserve accessible selectors, appearance and no document o
   await section.scrollIntoViewIfNeeded();
   await expect(section.getByRole("button", { name: "Cloud kitchen", exact: true })).toBeVisible();
   await expect(section.getByText(/Static composition for smaller screens/)).toBeVisible();
-  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+      )
+    )
+    .toBeLessThanOrEqual(1);
 });
