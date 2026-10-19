@@ -1,0 +1,51 @@
+# Terms of Service — release and legal review
+
+**Status:** draft only. Authored 19 October 2026. Part of PR #97, together with /privacy, /delete-account, footer and a common Ink & Ember reading design.
+
+## Scope and identity
+
+Operator: **BabaBuilds**, an Indian **sole proprietorship**, based in **Pilani, Rajasthan, India**. Contact **admin@bababuilds.com**. MenuMinute is a product of BabaBuilds, **not a separately incorporated subsidiary**. The shared public footer copyright uses:
+
+> © 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship in Pilani, Rajasthan, India.
+
+This is an identity correction, **not** evidence that all the remaining mandatory disclosures have been verified. Confirm full service/correspondence address, any registration/tax particulars, required grievance officer contact, and any native app contact telephone before issuing final legal copy.
+
+## What has been drafted
+
+`src/content/terms.ts` is the source for 24 anchored sections. `src/app/terms/page.tsx` and `terms.css` reuse the privacy document's shell with original 'The Shared Table' SVG. This is a **noindex, visible review draft**, not an agreement asserted to be binding. Existing generic /terms placeholder removed from `(information)/[slug]` to avoid duplicate routing/copy.
+
+The Terms allocate the software/restaurant/guest relationship, age and eligibility, business licenses, merchant content rights, published menu links, permission boundaries, order submission versus restaurant acceptance, restaurant safety and allergen statements, payment separation, restrictions, optional AI, data/retention, suspension, cancellation, liability, indemnity, governing law and future mobile-app distribution. A zero-fee QR menu does not create a subscription charge, and the document does not claim a live diner gateway, courier delivery or native binary.
+
+## Critical counsel and launch decisions
+
+| Issue | Proposed approach and required verification |
+| --- | --- |
+| Enforceable acceptance | Implement and test appropriate registration/merchant plan clickwrap with version, timestamp, locale and account/organization attribution. Guest public browsing alone must not be treated as consent to surprising restrictions. Store release requires visible terms access and a correctly scoped EULA. |
+| Plan pricing and renewal | Approved price list, taxes, checkout, exact feature limits, trial expiry, cancellation, refunds, notices, consent and customer support must be actually implemented before removing conditional language. Plan purchases by native app need store-specific billing compliance review. |
+| Sole proprietorship contact | Confirm full postal address and grievance officer/contact requirements for each jurisdiction, not just Pilani locality; provide telephone if Apple custom EULA requires it. |
+| Liability and indemnity | Independent legal review of INR 5,000 floor/12-month fees proposed cap, non-excludable claims, Merchant indemnity, plain-language clarity and local mandatory consumer protection; adjust if unacceptable. |
+| Food transaction boundary | Merchant sells food; platform supplies software. Review jurisdictional marketplace/e-commerce intermediary classification for live ordering, FSSAI/regulatory applicability, applicable tax/invoice disclosures and merchant customer policies. Mere contractual disclaimer cannot erase a law-imposed platform duty. |
+| Free QR and suspension | Confirm support/grace rules, QR revocation, content export, paid-entitlement downgrade and handling of active orders. Do not promise perfect uptime or unlimited use. |
+| Privacy and processing | Align /privacy with merchant/processor roles; agree DPA, AI vendor notices, user/guest retention, content removal and actual deletion workflow. |
+| Worldwide availability | Country-specific consumer, food, tax, contract, privacy, refunds and digital commerce constraints require validation as markets and features launch. Contract's Rajasthan forum expressly preserves mandatory consumer and regulator jurisdictions. |
+| 2026 India amendments | Review the 2026 amendment to the Consumer Protection (E-Commerce) Rules, announced for commencement 1 January 2027, before relevant functions go live; classify MenuMinute's actual role and revise necessary disclosures/consumer workflows. |
+| App Store/Google Play | These are web/PWA service terms, **not currently a custom Apple EULA**. Apple applies its standard EULA by default when no custom EULA is submitted; any chosen custom EULA must contain its minimum terms (Apple acknowledgments, permitted license, support, warranty, product/IP claims, legal compliance, company name/address and contact incl. telephone, third-party terms/beneficiary). Google Play payments rules need separate review for any native sale of digital SaaS subscriptions. |
+| Document release | Obtain counsel approval of exact copy, acceptance and consumer-facing disclosures; replace draft date with accurate effective/updated date; remove review banner and noindex and footer Soon labels only after all gates pass. Snapshot approved version and maintain change history. |
+
+### Verified official references (review, not certification)
+
+- India Department of Consumer Affairs — Consumer Protection Act and e-commerce rules: https://consumeraffairs.gov.in/pages/consumer-protection-acts
+- India government 10 September 2026 announcement of amendment effective 1 January 2027: https://www.pib.gov.in/newsite/erelcontent.aspx?lang=2&reg=48&relid=294532
+- Apple's standard EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+- Apple's custom EULA minimum terms: https://www.apple.com/legal/internet-services/itunes/dev/minterms/
+- Apple's custom EULA setup (standard applies by default): https://developer.apple.com/help/app-store-connect/manage-app-information/provide-a-custom-license-agreement
+- Google Play payments policy: https://support.google.com/googleplay/android-developer/answer/10281818
+- Privacy and deletion operational release gates: `docs/privacy/README.md`
+
+## QA and acceptance
+
+- Verify /terms, /privacy, /delete-account all render exactly one public footer; only current deployed pages and verified policies may lose draft indicators.
+- Verify noindex, metadata, 24 sections and links/anchors, contact email, keyboard accessibility, SVG accessibility and prefers-reduced-motion.
+- Check at 375px, tablet, desktop, print and dark mode; avoid legal-content truncation or overflowing sticky contents navigation.
+- Ensure shared footer copyright cannot suggest a separate incorporated subsidiary, and preserve illustrative payment/badge disclaimers.
+- Typecheck, lint, Prettier, integration, production build and E2E must complete; do not merge a draft policy into production as finalized content.

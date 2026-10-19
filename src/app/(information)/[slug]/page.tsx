@@ -68,13 +68,6 @@ const pages = {
     detail:
       "This is a placeholder, not a real-time uptime or incident report. No availability guarantee is implied.",
   },
-  terms: {
-    title: "Terms of Service",
-    category: "Legal · publication pending",
-    description: "Our service terms are being finalized.",
-    detail:
-      "This is a navigation placeholder, not a published Terms of Service agreement. No contractual terms are established by this page.",
-  },
   cookies: {
     title: "Cookie Policy",
     category: "Legal · publication pending",
