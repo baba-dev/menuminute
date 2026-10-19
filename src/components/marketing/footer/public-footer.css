@@ -225,9 +225,10 @@ html[data-theme="light"] .mm-public-footer {
 }
 .mmf-payments {
   flex: none;
+  opacity: 0.78;
 }
 .mmf-payments img {
-  width: 242px;
+  width: 218px;
   height: auto;
   margin-top: 0.75rem;
 }

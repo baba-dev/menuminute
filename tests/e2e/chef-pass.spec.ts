@@ -26,7 +26,7 @@ test("Chef's Pass is Section 5, after Order Conveyor, and truthfully advertises 
   const order = await page.evaluate(() => {
     const previous = document.querySelector(".order-conveyor");
     const pass = document.querySelector(".chef-pass");
-    const next = document.querySelector(".ma-product-features");
+    const next = document.querySelector(".service-worlds");
     return Boolean(
       previous &&
       pass &&

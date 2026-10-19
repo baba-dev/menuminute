@@ -232,14 +232,15 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
               <span className="ss-catalogue-kicker">THE STICKER COLLECTION</span>
               <span>SELECT A FORMAT</span>
             </div>
-            <div className="ss-design-grid" role="group" aria-label="Choose sticker design">
+            <div className="ss-design-grid" role="radiogroup" aria-label="Choose sticker design">
               {STICKER_FORMATS.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
                   className="ss-format"
                   style={{ "--ss-order": index } as React.CSSProperties}
-                  aria-pressed={design === item.id}
+                  role="radio"
+                  aria-checked={design === item.id}
                   onClick={() => select(item.id)}
                 >
                   <span className="ss-format-art">
@@ -261,12 +262,13 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
             </div>
             <div className="ss-surface-block">
               <span className="ss-catalogue-kicker">SEE IT IN PLACE</span>
-              <div className="ss-surfaces" role="group" aria-label="Sticker preview surface">
+              <div className="ss-surfaces" role="radiogroup" aria-label="Sticker preview surface">
                 {MOUNTING_SURFACES.map((surface) => (
                   <button
                     key={surface.id}
                     type="button"
-                    aria-pressed={mount === surface.id}
+                    role="radio"
+                    aria-checked={mount === surface.id}
                     onClick={() => chooseSurface(surface.id)}
                   >
                     {surface.name}
