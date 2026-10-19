@@ -910,3 +910,142 @@ body.font-sans {
     transition: none !important;
   }
 }
+
+/* Phase 5 Guest B: editorial discovery, extending rather than replacing Free QR. */
+.product .editorial-menu .hero {
+  padding: clamp(1.75rem, 4vw, 3rem);
+  border: 1px solid var(--decorative);
+  border-radius: 24px;
+  background: radial-gradient(circle at 94% 4%, #ff9a261b, transparent 44%), var(--paper);
+}
+.product .editorial-menu .hero h1 {
+  max-width: 16ch;
+  text-wrap: balance;
+}
+.product .editorial-menu .hero-mark {
+  width: clamp(60px, 10vw, 120px);
+  height: auto;
+}
+.product .editorial-menu .public-toolbar {
+  border-radius: 0 0 14px 14px;
+}
+.product .editorial-menu .dish-card {
+  grid-template-columns: minmax(105px, 38%) minmax(0, 1fr);
+  border-color: var(--decorative);
+  border-radius: 18px;
+  padding: clamp(0.65rem, 1.8vw, 1rem);
+  gap: clamp(0.7rem, 2vw, 1.15rem);
+  box-shadow: 0 5px 18px #00000008;
+}
+.product .editorial-menu .dish-card h3 {
+  text-wrap: balance;
+}
+.product .editorial-menu .dish-image {
+  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}
+.product .editorial-menu .dish-explore {
+  border: 1px solid var(--decorative);
+  min-height: 44px;
+  align-self: start;
+  padding: 0.55rem 0.9rem;
+  background: var(--gradient);
+  color: var(--button-ink);
+  border-radius: 13px;
+  font-weight: 750;
+}
+.product .editorial-menu .dish-explore:hover {
+  box-shadow: 2px 3px 0 var(--decorative);
+}
+.product .dish-detail {
+  width: min(95vw, 880px);
+  max-height: min(92vh, 850px);
+  padding: 0;
+  border-radius: 20px;
+  overscroll-behavior: contain;
+}
+.product .dish-detail-content {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  align-items: start;
+}
+.product .dish-detail-art {
+  position: sticky;
+  top: 0;
+  min-height: 100%;
+  background: var(--panel);
+  overflow: hidden;
+}
+.product .dish-detail-art > img {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  object-fit: cover;
+}
+.product .dish-detail-copy {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  gap: 0.9rem;
+}
+.product .dish-detail-copy .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.product .dish-detail-price {
+  font-size: clamp(1.25rem, 3vw, 1.9rem);
+  font-family: var(--font-display), sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.product .dish-detail-options {
+  border-top: 1px solid var(--decorative);
+  padding-top: 0.85rem;
+}
+.product .dish-detail-options section {
+  display: grid;
+  gap: 0.3rem;
+}
+.product .dish-detail-options section > p {
+  margin: 0;
+  gap: 0.5rem;
+}
+.product .dish-close {
+  min-width: 44px;
+  width: 44px;
+  padding: 0.4rem;
+}
+.product .dish-detail-disclaimer {
+  font-size: 0.85rem;
+}
+@media (max-width: 680px) {
+  .product .editorial-menu .hero {
+    border-radius: 18px;
+    padding: 1.15rem;
+  }
+  .product .editorial-menu .dish-card {
+    grid-template-columns: minmax(84px, 32%) minmax(0, 1fr);
+  }
+  .product .dish-detail {
+    margin: auto 0 0;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+  }
+  .product .dish-detail-content {
+    grid-template-columns: 1fr;
+  }
+  .product .dish-detail-art {
+    position: relative;
+    height: 165px;
+    min-height: 0;
+  }
+  .product .dish-detail-art > img {
+    min-height: 0;
+    height: 165px;
+  }
+  .product .dish-detail-copy {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
