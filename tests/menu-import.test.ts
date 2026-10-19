@@ -3,6 +3,8 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
+import { sql } from "drizzle-orm";
+import { withActor } from "../src/modules/tenancy/service";
 import { admin, fixture } from "./helpers";
 import {
   createImport,
@@ -201,4 +203,44 @@ it("denies upload/read after role revocation and forbids unsafe input and storag
   await expect(
     addImportSource(f.actor, f.outlet.id, id, { id: crypto.randomUUID(), pageIndex: 0 }, png)
   ).rejects.toMatchObject({ statusCode: 403 });
+});
+
+it("serializes retained-source quota under concurrent reservations even for tiny uploaded originals", async () => {
+  const f = await fixture();
+  const sessions = [];
+  for (let i = 0; i < 3; i++)
+    sessions.push(
+      await createImport(f.actor, f.outlet.id, {
+        id: crypto.randomUUID(),
+        key: crypto.randomUUID(),
+      })
+    );
+  const reserve = (index: number) =>
+    withActor(f.actor, (tx) =>
+      tx.execute(
+        sql`select app_private.import_source_reserve(
+          ${f.outlet.id},
+          ${sessions[Math.floor(index / 12)]!.id},
+          ${crypto.randomUUID()},
+          ${index % 12},
+          ${"a".repeat(64)},
+          ${100}
+        ) as result`
+      )
+    );
+  for (let index = 0; index < 29; index++) await reserve(index);
+  const racers = await Promise.allSettled([reserve(29), reserve(30)]);
+  expect(racers.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+  const rejected = racers.find((result) => result.status === "rejected");
+  expect(rejected).toMatchObject({ status: "rejected" });
+  const count = await admin(
+    async (_db, pool) =>
+      (
+        await pool.query<{ count: number }>(
+          "select count(*)::integer as count from menu_import_sources where outlet_id=$1",
+          [f.outlet.id]
+        )
+      ).rows[0]!.count
+  );
+  expect(count).toBe(30);
 });
