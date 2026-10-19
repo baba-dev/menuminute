@@ -87,14 +87,14 @@ export function ServiceWorlds() {
       if (status)
         status.textContent =
           step < 6
-            ? [
+            ? ([
                 "01 / DRAW THE ROOM",
                 "02 / SET THE TABLES",
                 "03 / GUEST SCANS TABLE QR",
                 "04 / MENU OPENS ON PHONE",
                 "05 / CHOOSE YOUR SERVICE WORLD",
                 "06 / YOUR RESTAURANT, YOUR WAY",
-              ][step] ?? ""
+              ][step] ?? "")
             : {
                 dine: "DINE-IN  /  QR MENU AVAILABLE TODAY",
                 take: "TAKEOUT  /  PICKUP ORDERING PLANNED",

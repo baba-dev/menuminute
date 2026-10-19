@@ -61,7 +61,7 @@ test("Desktop introduction is user-controlled and pauses offscreen", async ({ pa
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   const section = page.getByTestId("service-worlds");
-  await section.scrollIntoViewIfNeeded();
+  await section.locator(".mm6-stage").scrollIntoViewIfNeeded();
   const svg = section.locator("svg[data-mm6]");
   await section.getByRole("button", { name: "Replay introduction" }).click();
   await expect(svg).toHaveClass(/is-intro/);
