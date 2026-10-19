@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { getDb, type Transaction } from "@/db";
 import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
-export type Actor = { userId: string };
+export type Actor = { userId: string; sessionId?: string };
 export type Permission =
   | "menu.read"
   | "menu.write"
@@ -19,6 +19,7 @@ export async function withActor<T>(
   if (!actor?.userId) throw new UnauthorizedError();
   return getDb().transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.actor_id',${actor.userId},true)`);
+    await tx.execute(sql`select set_config('app.session_id',${actor.sessionId ?? ""},true)`);
     return work(tx);
   });
 }

@@ -10,6 +10,7 @@ import { z } from "zod";
 import { QrCode, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { RegistrationChallenge } from "@/components/auth/turnstile";
 
 const registerSchema = z
   .object({
@@ -29,6 +30,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState("");
 
   const {
     register,
@@ -47,6 +49,7 @@ export default function RegisterPage() {
         name: data.name,
         email: data.email,
         password: data.password,
+        fetchOptions: challenge ? { headers: { "x-captcha-response": challenge } } : undefined,
       });
       if (result.error) {
         setError(result.error.message ?? "Registration failed");
@@ -160,9 +163,10 @@ export default function RegisterPage() {
                 )}
               </div>
 
+              <RegistrationChallenge onToken={setChallenge} />
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !challenge)}
                 className="bg-brand-600 hover:bg-brand-700 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isLoading ? (

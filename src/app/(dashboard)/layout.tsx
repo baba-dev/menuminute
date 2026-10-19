@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth, authServer } from "@/lib/auth";
+import { needsMfaEnrollment } from "@/lib/privileged-access";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import {
   QrCode,
@@ -20,6 +21,8 @@ import {
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
+  if (await needsMfaEnrollment(session.user.id, Boolean(session.user.twoFactorEnabled)))
+    redirect("/account/security");
   const actor = { userId: session.user.id };
   const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
 
@@ -136,6 +139,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
             className="block rounded-lg px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100"
           >
             Organization & access
+          </Link>
+          <Link
+            href="/account/security"
+            className="block rounded-lg px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100"
+          >
+            Account & security
           </Link>
           <Link
             href="/dashboard/settings"

@@ -14,6 +14,7 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   version: integer("version").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  mfaRequired: boolean("mfa_required").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const organizationMembers = pgTable(

@@ -1,10 +1,20 @@
-import { pgTable, text, timestamp, boolean, index, uniqueIndex, bigint } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  uniqueIndex,
+  bigint,
+  integer,
+} from "drizzle-orm/pg-core";
 const instant = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   image: text("image"),
   isDemoData: boolean("is_demo_data").notNull().default(false),
   createdAt: instant("created_at"),
@@ -67,3 +77,16 @@ export const rateLimits = pgTable("rate_limits", {
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
+
+export const twoFactors = pgTable("two_factor", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  secret: text("secret").notNull(),
+  backupCodes: text("backup_codes").notNull(),
+  verified: boolean("verified").notNull().default(false),
+  failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+  lockedUntil: timestamp("locked_until", { withTimezone: true }),
+});

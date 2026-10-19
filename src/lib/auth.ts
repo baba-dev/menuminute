@@ -3,10 +3,12 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { headers, cookies } from "next/headers";
 import { getDb } from "@/db";
-import { users, sessions, accounts, verificationTokens, rateLimits } from "@/db/schema";
+import { users, sessions, accounts, verificationTokens, rateLimits, twoFactors } from "@/db/schema";
 import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
+import { twoFactor, captcha } from "better-auth/plugins";
+import { recordAuthEvent, alertSecurityEvent } from "@/lib/security-events";
 import { sendAuthEmail } from "@/lib/auth-email";
 export const authServer = betterAuth({
   appName: "MenuMinute",
@@ -22,6 +24,7 @@ export const authServer = betterAuth({
       account: accounts,
       verification: verificationTokens,
       rateLimit: rateLimits,
+      twoFactor: twoFactors,
     },
   }),
   emailVerification: {
@@ -38,6 +41,10 @@ export const authServer = betterAuth({
     autoSignIn: false,
     resetPasswordTokenExpiresIn: 60 * 30,
     revokeSessionsOnPasswordReset: true,
+    onPasswordReset: async ({ user }) => {
+      await recordAuthEvent(user.id, "password.reset");
+      void alertSecurityEvent(user.id, "Your MenuMinute password was reset");
+    },
     sendResetPassword: async ({ user, url }) => {
       await sendAuthEmail(user.email, "Reset your MenuMinute password", url);
     },
@@ -50,6 +57,21 @@ export const authServer = betterAuth({
         /^\$2[aby]\$/.test(hash)
           ? bcrypt.compare(password, hash)
           : verifyPassword({ hash, password }),
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          await recordAuthEvent(session.userId, "session.created", session.id);
+          void alertSecurityEvent(session.userId, "New MenuMinute sign-in");
+        },
+      },
+      delete: {
+        after: async (session) => {
+          await recordAuthEvent(session.userId, "session.revoked", session.id);
+        },
+      },
     },
   },
   session: {
@@ -73,7 +95,22 @@ export const authServer = betterAuth({
     useSecureCookies: env.NODE_ENV === "production",
     database: { generateId: () => crypto.randomUUID() },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    twoFactor({
+      issuer: "MenuMinute",
+      backupCodeOptions: { amount: 10, length: 10, storeBackupCodes: "encrypted" },
+    }),
+    ...(env.TURNSTILE_SECRET_KEY
+      ? [
+          captcha({
+            provider: "cloudflare-turnstile",
+            secretKey: env.TURNSTILE_SECRET_KEY,
+            endpoints: ["/sign-up/email"],
+          }),
+        ]
+      : []),
+    nextCookies(),
+  ],
 });
 export async function auth() {
   const session = await authServer.api.getSession({ headers: await headers() });

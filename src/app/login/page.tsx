@@ -57,6 +57,10 @@ export default function LoginPage() {
       return;
     }
 
+    if (result?.data && "twoFactorRedirect" in result.data && result.data.twoFactorRedirect) {
+      router.push("/two-factor");
+      return;
+    }
     toast.success("Welcome back!");
     router.push("/dashboard");
     router.refresh();

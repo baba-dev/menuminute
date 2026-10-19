@@ -28,5 +28,10 @@ export async function fixture(currency = "INR") {
     timezone: "Asia/Kolkata",
     outletType: "restaurant",
   });
+  await admin(async (_db, pool) => {
+    await pool.query("update organizations set mfa_required=false where id=$1", [
+      outlet.organizationId,
+    ]);
+  });
   return { actor: { userId }, outlet };
 }
