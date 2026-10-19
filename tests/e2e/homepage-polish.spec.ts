@@ -24,7 +24,7 @@ test("mobile navigation exposes state, closes with Escape and retains 44px contr
   await expect(open).toHaveCSS("height", "44px");
   await open.click();
   const close = page.getByRole("button", { name: "Close navigation menu" });
-  const pricing = page.locator("#food-orbit-mobile-nav").getByRole("link", { name: "Pricing" });
+  const pricing = page.locator(".food-orbit-hero__mobile-panel").getByRole("link", { name: "Pricing" });
   await expect(close).toHaveAttribute("aria-expanded", "true");
   await expect(pricing).toBeVisible();
   await page.keyboard.press("Escape");
