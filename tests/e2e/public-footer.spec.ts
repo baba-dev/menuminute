@@ -1,13 +1,22 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("shared public footer", () => {
-  for (const route of ["/", "/pricing", "/demo", "/login", "/register", "/privacy", "/terms"]) {
+  for (const route of [
+    "/",
+    "/pricing",
+    "/demo",
+    "/login",
+    "/register",
+    "/privacy",
+    "/delete-account",
+    "/terms",
+  ]) {
     test(`renders once on ${route}`, async ({ page }) => {
       await page.goto(route);
       const footer = page.getByTestId("public-footer");
       await expect(footer).toHaveCount(1);
       await expect(footer).toContainText(
-        "© 2026 Menu Minute App - A Subsidiary of BabaBuilds.com."
+        "© 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship in Pilani, Rajasthan, India."
       );
       await expect(footer.getByRole("link", { name: /BabaBuilds website/ })).toHaveAttribute(
         "href",
@@ -25,6 +34,7 @@ test.describe("shared public footer", () => {
         "href",
         "/terms"
       );
+      await expect(footer).not.toContainText("A Subsidiary of BabaBuilds.com");
       await expect(footer).toContainText("not external certifications");
       await expect(footer).toContainText("Planned · not yet available");
     });
@@ -32,12 +42,17 @@ test.describe("shared public footer", () => {
 
   test("legal placeholders do not pretend to be published policies", async ({ page }) => {
     await page.goto("/privacy");
-    await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
-    await expect(page.getByText("not a published Privacy Policy", { exact: false })).toBeVisible();
-    await page.goto("/terms");
+    await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
     await expect(
-      page.getByText("not a published Terms of Service", { exact: false })
+      page.getByText("Legal and operational review draft", { exact: false })
     ).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await page.goto("/terms");
+    await expect(page.getByRole("heading", { level: 1, name: /Good terms make/ })).toBeVisible();
+    await expect(
+      page.getByText("not yet effective or ready for acceptance", { exact: false })
+    ).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   });
 
   test("restaurant guest menus do not receive a marketing footer", async ({ page }) => {
