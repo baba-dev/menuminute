@@ -24,11 +24,12 @@ test("mobile navigation exposes state, closes with Escape and retains 44px contr
   await expect(open).toHaveCSS("height", "44px");
   await open.click();
   const close = page.getByRole("button", { name: "Close navigation menu" });
+  const pricing = page.locator("#food-orbit-mobile-nav").getByRole("link", { name: "Pricing" });
   await expect(close).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("link", { name: "Pricing" })).toBeVisible();
+  await expect(pricing).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open navigation menu" })).toBeFocused();
-  await expect(page.getByRole("link", { name: "Pricing" })).toBeHidden();
+  await expect(pricing).toBeHidden();
 });
 
 test("homepage sections are sequential and exclusive choices use radio semantics", async ({
