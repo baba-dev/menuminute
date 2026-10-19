@@ -16,16 +16,16 @@ Status: DRAFT FOR COUNSEL AND OPERATIONS. Prepared 19 October 2026. Do not merge
 
 ## Current code evidence and limitations
 
-| Function | Checked source | Privacy relevance |
-| --- | --- | --- |
-| Account and session | `src/db/schema/users.ts`, `src/lib/auth.ts` | Name, email, emailVerified, credential storage, sessions, IP/user-agent, limited request rate records |
-| Organization access | `src/db/schema/tenancy.ts` | Members, permissions and multi-outlet roles |
-| Restaurant setup | `src/db/schema/restaurants.ts` | Public and staff-facing business information |
-| Guest ordering | `src/db/schema/orders.ts`, `src/app/api/public-orders/route.ts` | Name, phone, notes, order snapshots, tracking token |
-| Images | `src/db/schema/media.ts`, `src/modules/media/product-service.ts` | Source image, derivative, provenance, upload ownership; actual storage must be reconciled |
-| Audit | `src/db/schema/audit.ts` | IP, user agent, before/after details; confirm redaction and retention |
-| AI | `src/modules/ai/service.ts` | Existing service interface is scaffold; do not advertise a specific third-party AI provider as active on this basis |
-| Commercial | `src/db/schema/billing.ts` | Subscription status, but not proof of a live payment gateway |
+| Function            | Checked source                                                   | Privacy relevance                                                                                                   |
+| ------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Account and session | `src/db/schema/users.ts`, `src/lib/auth.ts`                      | Name, email, emailVerified, credential storage, sessions, IP/user-agent, limited request rate records               |
+| Organization access | `src/db/schema/tenancy.ts`                                       | Members, permissions and multi-outlet roles                                                                         |
+| Restaurant setup    | `src/db/schema/restaurants.ts`                                   | Public and staff-facing business information                                                                        |
+| Guest ordering      | `src/db/schema/orders.ts`, `src/app/api/public-orders/route.ts`  | Name, phone, notes, order snapshots, tracking token                                                                 |
+| Images              | `src/db/schema/media.ts`, `src/modules/media/product-service.ts` | Source image, derivative, provenance, upload ownership; actual storage must be reconciled                           |
+| Audit               | `src/db/schema/audit.ts`                                         | IP, user agent, before/after details; confirm redaction and retention                                               |
+| AI                  | `src/modules/ai/service.ts`                                      | Existing service interface is scaffold; do not advertise a specific third-party AI provider as active on this basis |
+| Commercial          | `src/db/schema/billing.ts`                                       | Subscription status, but not proof of a live payment gateway                                                        |
 
 The page uses an original inline SVG, scoped Ink & Ember styling, sticky table of contents, semantic anchored sections, a theme toggle, reduced-motion animation, mobile navigation and print styles. It is deliberately noindex and visibly marked review draft.
 
@@ -33,17 +33,17 @@ The page uses an original inline SVG, scoped Ink & Ember styling, sticky table o
 
 These are targets to validate with Indian and each applicable market's recordkeeping obligations, security needs, actual data flows, production deletion jobs, backups, and counsel. Do not copy numbers into the public policy before they are verified.
 
-| Data | Initial proposed rule | Conditions |
-| --- | --- | --- |
-| Active accounts and membership | While account/merchant relationship is active | Provide export, verified closure, identity and delegated-role handling |
-| Closed accounts | Remove identifying account data within 30 days after approved verified request where no exception applies | Handle shared organization ownership, external providers and pending legal holds |
-| Orders and associated financial records | Separate restaurant transaction retention schedule; default design hypothesis 7 years where applicable, otherwise lawful minimum | Validate tax/accounting obligations country by country; minimize diner phone/notes sooner when lawful |
-| Optional guest contact and nonessential order notes | Default design hypothesis 90 days after terminal order | Retain only as long as merchant's lawful need; separate from mandatory transaction amount/order trail |
-| Unused media originals / failed uploads | Default design hypothesis 30 days after rejection or orphan identification | Exclude referenced/public approved derivatives; verify restore dependencies |
-| AI inputs and temporary artifacts | Default design hypothesis 30 days or less after completion unless retained by user request | Verify vendor-side retention and model-training terms, exceptions for approved published output |
-| Security and operational logs | Default design hypothesis 90 days; longer for a documented incident/hold | No raw secrets, passwords, customer notes in logs; validate data security and tax exceptions |
-| Backups | Default design hypothesis rolling 30 days | Verify actual Restic retention, encryption/access and restoration-time deletion replay |
-| Consent receipts and formal requests | As needed to prove permissions and comply with relevant legal limitations | Restrict access and redact unnecessary submitted documents |
+| Data                                                | Initial proposed rule                                                                                                            | Conditions                                                                                            |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Active accounts and membership                      | While account/merchant relationship is active                                                                                    | Provide export, verified closure, identity and delegated-role handling                                |
+| Closed accounts                                     | Remove identifying account data within 30 days after approved verified request where no exception applies                        | Handle shared organization ownership, external providers and pending legal holds                      |
+| Orders and associated financial records             | Separate restaurant transaction retention schedule; default design hypothesis 7 years where applicable, otherwise lawful minimum | Validate tax/accounting obligations country by country; minimize diner phone/notes sooner when lawful |
+| Optional guest contact and nonessential order notes | Default design hypothesis 90 days after terminal order                                                                           | Retain only as long as merchant's lawful need; separate from mandatory transaction amount/order trail |
+| Unused media originals / failed uploads             | Default design hypothesis 30 days after rejection or orphan identification                                                       | Exclude referenced/public approved derivatives; verify restore dependencies                           |
+| AI inputs and temporary artifacts                   | Default design hypothesis 30 days or less after completion unless retained by user request                                       | Verify vendor-side retention and model-training terms, exceptions for approved published output       |
+| Security and operational logs                       | Default design hypothesis 90 days; longer for a documented incident/hold                                                         | No raw secrets, passwords, customer notes in logs; validate data security and tax exceptions          |
+| Backups                                             | Default design hypothesis rolling 30 days                                                                                        | Verify actual Restic retention, encryption/access and restoration-time deletion replay                |
+| Consent receipts and formal requests                | As needed to prove permissions and comply with relevant legal limitations                                                        | Restrict access and redact unnecessary submitted documents                                            |
 
 ## Publication and app-store blockers
 
@@ -53,10 +53,11 @@ These are targets to validate with Indian and each applicable market's recordkee
 4. Implement / test in-app deletion (and native route if relevant), plus public online request/completion path; removal of personal and public UGC, organization co-ownership workflow, legal holds, provider cascade, backups, acknowledgement/completion and rejection appeal. **Current /delete-account is a contact-based draft, not store-compliant self-service.**
 5. Implement category-specific retention and erasure jobs, export, separate marketing preferences, rights/grievance workflow. Do not use planned durations as actual durations before verification.
 6. Confirm AI activation notices, consent/legal bases when appropriate, provider terms, sensitive material minimization, and prompt sanitization; account for automatic processing of an enabled feature.
-7. Audit Android and iOS *built* binaries and every SDK. Prepare Google Play Data safety and Apple App Privacy responses separately based on released build; camera, photo library, local notifications and location only on disclosed feature invocation, with platform permission purpose text.
+7. Audit Android and iOS _built_ binaries and every SDK. Prepare Google Play Data safety and Apple App Privacy responses separately based on released build; camera, photo library, local notifications and location only on disclosed feature invocation, with platform permission purpose text.
 8. Once approved: remove review banner, add effective date, set metadata `robots: { index: true, follow: true }`, remove footer `soon`, update placeholder links, audit read-time locale/contrast and verify external URL from outside a logged-in session. Obtain final approval on the exact production copy.
 
 Official app-store sources:
+
 - Google User Data and privacy policy https://support.google.com/googleplay/android-developer/answer/10144311
 - Google account deletion https://support.google.com/googleplay/android-developer/answer/13327111
 - Apple in-app account deletion https://developer.apple.com/support/offering-account-deletion-in-your-app/

@@ -64,7 +64,7 @@ test("Choosing designs and mounting surfaces updates the actual illustrated stor
   const stageBounds = await stage.boundingBox();
   if (!stageBounds) throw new Error("Storefront stage did not render");
   for (const format of ["primary", "circular", "cling", "premium", "hours", "compact"]) {
-    await section.getByRole("radio", { name: new RegExp(STICKER_NAMES[format]) }).click();
+    await section.getByRole("radio", { name: new RegExp(STICKER_NAMES[format] ?? format) }).click();
     const sticker = await stage.locator(".ss-decal-host").boundingBox();
     if (!sticker) throw new Error(`Missing ${format} storefront decal`);
     expect(sticker.width / stageBounds.width, `${format} should fit the pane`).toBeLessThan(0.27);

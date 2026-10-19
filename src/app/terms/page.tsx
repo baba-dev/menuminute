@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  BookOpenCheck,
-  Download,
-  Mail,
-  Scale,
-} from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpenCheck, Download, Mail, Scale } from "lucide-react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { termsSections } from "@/content/terms";
@@ -48,8 +41,14 @@ function TermsArtwork() {
       <circle cx="244" cy="210" r="197" fill="url(#terms-glow)" />
       <circle
         className="privacy-art-orbit"
-        cx="240" cy="214" r="169" fill="none"
-        stroke="#e7a65c" strokeOpacity=".5" strokeDasharray="3 9" strokeWidth="1.5"
+        cx="240"
+        cy="214"
+        r="169"
+        fill="none"
+        stroke="#e7a65c"
+        strokeOpacity=".5"
+        strokeDasharray="3 9"
+        strokeWidth="1.5"
       />
       <circle cx="240" cy="214" r="142" fill="none" stroke="#a66a39" strokeOpacity=".5" />
       <g className="privacy-art-nodes">
@@ -60,19 +59,52 @@ function TermsArtwork() {
       </g>
       <ellipse cx="240" cy="341" rx="131" ry="18" fill="#080504" fillOpacity=".29" />
       <g transform="rotate(-5 242 205)">
-        <rect x="155" y="88" width="179" height="237" rx="20" fill="#120d0a" stroke="#d99b59" strokeWidth="2.5" />
+        <rect
+          x="155"
+          y="88"
+          width="179"
+          height="237"
+          rx="20"
+          fill="#120d0a"
+          stroke="#d99b59"
+          strokeWidth="2.5"
+        />
         <rect x="165" y="78" width="179" height="237" rx="20" fill="url(#terms-paper)" />
         <rect x="177" y="92" width="155" height="211" rx="12" fill="#f9e8c6" />
-        <path d="M198 126h75M198 143h113M198 155h101M198 167h109" stroke="#85502d" strokeWidth="3.5" strokeLinecap="round" />
-        <path d="M198 187h91M198 199h105M198 211h97" stroke="#ba8755" strokeWidth="3" strokeLinecap="round" />
+        <path
+          d="M198 126h75M198 143h113M198 155h101M198 167h109"
+          stroke="#85502d"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M198 187h91M198 199h105M198 211h97"
+          stroke="#ba8755"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
         <rect x="194" y="231" width="52" height="52" rx="6" fill="#32241b" />
         <g stroke="#f4c88c" strokeWidth="4" fill="none">
           <path d="M203 241h13v13h-13zM224 241h13v13h-13zM203 261h13v13h-13z" />
           <path d="M224 261h4v4h-4zM234 271h4" />
         </g>
-        <path d="m263 263 12 12 22-28" stroke="#854820" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path
+          d="m263 263 12 12 22-28"
+          stroke="#854820"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
       </g>
-      <g className="terms-scale" fill="none" stroke="#ffcc84" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <g
+        className="terms-scale"
+        fill="none"
+        stroke="#ffcc84"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M104 138v-54M80 93h48M88 100l-15 27M88 100l15 27M120 100l-15 27M120 100l15 27" />
         <path d="M64 127q9 21 24 0M120 127q9 21 24 0M90 140h28" />
       </g>
@@ -85,32 +117,70 @@ function TermsArtwork() {
 }
 
 const highlights = [
-  { number: "01", title: "Clear boundaries", detail: "Software provider and restaurant responsibilities." },
-  { number: "02", title: "Merchant-minded", detail: "Fair rules for plans, publishing and operations." },
-  { number: "03", title: "Guest-first clarity", detail: "Understand ordering, acceptance and food sales." },
+  {
+    number: "01",
+    title: "Clear boundaries",
+    detail: "Software provider and restaurant responsibilities.",
+  },
+  {
+    number: "02",
+    title: "Merchant-minded",
+    detail: "Fair rules for plans, publishing and operations.",
+  },
+  {
+    number: "03",
+    title: "Guest-first clarity",
+    detail: "Understand ordering, acceptance and food sales.",
+  },
 ];
 
 export default function TermsPage() {
   return (
     <div className="privacy-page terms-page">
-      <a className="privacy-skip" href="#terms-content">Skip to Terms of Service</a>
+      <a className="privacy-skip" href="#terms-content">
+        Skip to Terms of Service
+      </a>
       <div className="privacy-shell">
         <header className="privacy-header">
           <Link href="/" aria-label="MenuMinute homepage" className="privacy-brand">
-            <Image src="/brand/logos/logo-horizontal-light.svg" alt="MenuMinute" width={205} height={48} unoptimized className="privacy-logo-light" />
-            <Image src="/brand/logos/logo-horizontal-dark.svg" alt="" width={205} height={48} unoptimized className="privacy-logo-dark" />
+            <Image
+              src="/brand/logos/logo-horizontal-light.svg"
+              alt="MenuMinute"
+              width={205}
+              height={48}
+              unoptimized
+              className="privacy-logo-light"
+            />
+            <Image
+              src="/brand/logos/logo-horizontal-dark.svg"
+              alt=""
+              width={205}
+              height={48}
+              unoptimized
+              className="privacy-logo-dark"
+            />
           </Link>
           <nav className="privacy-header-actions" aria-label="Terms navigation">
-            <Link href="/" className="privacy-back"><ArrowLeft size={16} aria-hidden="true" /> Home</Link>
+            <Link href="/" className="privacy-back">
+              <ArrowLeft size={16} aria-hidden="true" /> Home
+            </Link>
             <ThemeControl />
           </nav>
         </header>
         <section className="privacy-hero" aria-labelledby="terms-title">
           <div className="privacy-hero-copy">
-            <span className="privacy-eyebrow"><span className="privacy-spark" /> 02 / THE SHARED TABLE</span>
-            <h1 id="terms-title">Good terms make <em>better partnerships.</em></h1>
-            <p>A clear understanding between restaurants, guests and the platform behind every menu.</p>
-            <p className="privacy-review-status" role="status">Legal and operational review draft — not yet effective or ready for acceptance.</p>
+            <span className="privacy-eyebrow">
+              <span className="privacy-spark" /> 02 / THE SHARED TABLE
+            </span>
+            <h1 id="terms-title">
+              Good terms make <em>better partnerships.</em>
+            </h1>
+            <p>
+              A clear understanding between restaurants, guests and the platform behind every menu.
+            </p>
+            <p className="privacy-review-status" role="status">
+              Legal and operational review draft — not yet effective or ready for acceptance.
+            </p>
             <div className="privacy-hero-meta">
               <span>Draft prepared: 19 October 2026</span>
               <span>BabaBuilds · India</span>
@@ -121,7 +191,9 @@ export default function TermsPage() {
         <section className="privacy-principles" aria-label="How these Terms are organized">
           {highlights.map((item) => (
             <div key={item.number}>
-              <span>{item.number}</span><h2>{item.title}</h2><p>{item.detail}</p>
+              <span>{item.number}</span>
+              <h2>{item.title}</h2>
+              <p>{item.detail}</p>
             </div>
           ))}
         </section>
@@ -131,12 +203,15 @@ export default function TermsPage() {
               <p className="privacy-aside-label">ON THIS PAGE</p>
               <ol>
                 {termsSections.map(({ id, title }) => (
-                  <li key={id}><a href={`#${id}`}>{title}</a></li>
+                  <li key={id}>
+                    <a href={`#${id}`}>{title}</a>
+                  </li>
                 ))}
               </ol>
             </nav>
             <Link className="privacy-aside-contact" href="/privacy">
-              <BookOpenCheck size={17} aria-hidden="true" /> Privacy Policy <ArrowUpRight size={14} aria-hidden="true" />
+              <BookOpenCheck size={17} aria-hidden="true" /> Privacy Policy{" "}
+              <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
           </aside>
           <main className="privacy-copy" aria-label="Terms of Service draft">
@@ -144,30 +219,64 @@ export default function TermsPage() {
               <Scale size={22} aria-hidden="true" />
               <div>
                 <strong>Legally reviewed terms require an actual release decision.</strong>
-                <p>This draft distinguishes present functions from proposed billing, ordering and native apps. The complete address, commercial checkout, acceptance mechanism and applicable local-law provisions need confirmation before publication.</p>
+                <p>
+                  This draft distinguishes present functions from proposed billing, ordering and
+                  native apps. The complete address, commercial checkout, acceptance mechanism and
+                  applicable local-law provisions need confirmation before publication.
+                </p>
               </div>
             </div>
             <details className="privacy-mobile-index">
               <summary>Jump to a section</summary>
               <ol>
                 {termsSections.map(({ id, title }) => (
-                  <li key={id}><a href={`#${id}`}>{title}</a></li>
+                  <li key={id}>
+                    <a href={`#${id}`}>{title}</a>
+                  </li>
                 ))}
               </ol>
             </details>
             {termsSections.map((section) => (
-              <section className="privacy-section" id={section.id} key={section.id} aria-labelledby={`${section.id}-heading`}>
+              <section
+                className="privacy-section"
+                id={section.id}
+                key={section.id}
+                aria-labelledby={`${section.id}-heading`}
+              >
                 <h2 id={`${section.id}-heading`}>{section.title}</h2>
-                {section.paragraphs.map((p) => <p key={p}>{p}</p>)}
-                {section.points && <ul>{section.points.map((p) => <li key={p}>{p}</li>)}</ul>}
+                {section.paragraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+                {section.points && (
+                  <ul>
+                    {section.points.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                )}
                 {section.id === "privacy" && (
-                  <p><Link href="/privacy">Read the companion Privacy Policy draft <ArrowUpRight size={15} aria-hidden="true" className="inline" /></Link></p>
+                  <p>
+                    <Link href="/privacy">
+                      Read the companion Privacy Policy draft{" "}
+                      <ArrowUpRight size={15} aria-hidden="true" className="inline" />
+                    </Link>
+                  </p>
                 )}
                 {section.id === "suspension" && (
-                  <p><Link href="/delete-account">View current account-deletion request information <ArrowUpRight size={15} aria-hidden="true" className="inline" /></Link></p>
+                  <p>
+                    <Link href="/delete-account">
+                      View current account-deletion request information{" "}
+                      <ArrowUpRight size={15} aria-hidden="true" className="inline" />
+                    </Link>
+                  </p>
                 )}
                 {section.id === "general" && (
-                  <p><a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Terms%20Enquiry">Email admin@bababuilds.com <ArrowUpRight size={15} aria-hidden="true" className="inline" /></a></p>
+                  <p>
+                    <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Terms%20Enquiry">
+                      Email admin@bababuilds.com{" "}
+                      <ArrowUpRight size={15} aria-hidden="true" className="inline" />
+                    </a>
+                  </p>
                 )}
               </section>
             ))}
@@ -175,11 +284,17 @@ export default function TermsPage() {
               <div>
                 <span>HAVE A QUESTION?</span>
                 <h2>We build for the people behind every plate.</h2>
-                <p>Contact BabaBuilds about your account, Merchant operations or these draft terms.</p>
+                <p>
+                  Contact BabaBuilds about your account, Merchant operations or these draft terms.
+                </p>
               </div>
-              <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Terms%20Enquiry"><Mail size={18} aria-hidden="true" /> Contact the operator</a>
+              <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Terms%20Enquiry">
+                <Mail size={18} aria-hidden="true" /> Contact the operator
+              </a>
             </div>
-            <p className="privacy-print-hint"><Download size={14} aria-hidden="true" /> Print or save this draft for legal review.</p>
+            <p className="privacy-print-hint">
+              <Download size={14} aria-hidden="true" /> Print or save this draft for legal review.
+            </p>
           </main>
         </div>
       </div>

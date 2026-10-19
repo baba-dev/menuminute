@@ -169,7 +169,10 @@ export function PublicFooter() {
           </div>
         </div>
         <div className="mmf-bottom">
-          <p>© 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship in Pilani, Rajasthan, India.</p>
+          <p>
+            © 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship
+            in Pilani, Rajasthan, India.
+          </p>
           <span>
             Made with care for the people behind every plate. <span aria-hidden="true">✳</span>
           </span>

@@ -3,32 +3,59 @@
   background-image:
     linear-gradient(125deg, transparent 0%, rgb(255 184 102 / 12%) 55%, transparent 100%),
     radial-gradient(#e9a35f 1px, transparent 1px);
-  background-size: auto, 22px 22px;
+  background-size:
+    auto,
+    22px 22px;
 }
-.terms-page .privacy-hero h1 { max-width: 680px; }
-.terms-page .privacy-principles > div:last-child h2 { text-wrap: balance; }
+.terms-page .privacy-hero h1 {
+  max-width: 680px;
+}
+.terms-page .privacy-principles > div:last-child h2 {
+  text-wrap: balance;
+}
 .terms-page .privacy-aside nav {
   max-height: calc(100dvh - 4rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  padding-right: .65rem;
+  padding-right: 0.65rem;
 }
-.terms-page .privacy-aside ol { gap: .72rem; }
-.terms-page .privacy-aside a { transition: color .15s ease; }
-.terms-page .privacy-last { background: #221b16; }
+.terms-page .privacy-aside ol {
+  gap: 0.72rem;
+}
+.terms-page .privacy-aside a {
+  transition: color 0.15s ease;
+}
+.terms-page .privacy-last {
+  background: #221b16;
+}
 @media (prefers-reduced-motion: no-preference) {
-  .terms-scale { transform-origin: 104px 138px; animation: terms-balance 7s ease-in-out infinite alternate; }
+  .terms-scale {
+    transform-origin: 104px 138px;
+    animation: terms-balance 7s ease-in-out infinite alternate;
+  }
 }
 @keyframes terms-balance {
-  from { transform: rotate(-3deg); }
-  to { transform: rotate(3deg); }
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
 }
 @media (max-width: 720px) {
-  .terms-page .privacy-hero { min-height: 0; }
+  .terms-page .privacy-hero {
+    min-height: 0;
+  }
 }
 @media print {
-  .terms-page .privacy-hero::before { display:none; }
-  .terms-page .privacy-section { break-inside: auto; }
-  .terms-page .privacy-section h2 { break-after:avoid-page; }
+  .terms-page .privacy-hero::before {
+    display: none;
+  }
+  .terms-page .privacy-section {
+    break-inside: auto;
+  }
+  .terms-page .privacy-section h2 {
+    break-after: avoid-page;
+  }
 }
