@@ -5,8 +5,11 @@ import { MenuJourney } from "@/components/marketing/journey/menu-journey";
 import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
 import { OrderConveyor } from "@/components/marketing/order-conveyor/order-conveyor";
 import { ChefPass } from "@/components/marketing/chef-pass/chef-pass";
+import { StorefrontStudio } from "@/components/marketing/storefront-studio/storefront-studio";
+import { STICKER_DEMO_URL } from "@/components/marketing/storefront-studio/sticker-config";
+import QRCode from "qrcode";
 import { ThemeControl } from "@/components/menu-product/theme-control";
-import { QrCode, Smartphone, ChefHat, ArrowRight, Menu } from "lucide-react";
+import { QrCode, Smartphone, ChefHat, Menu } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "MenuMinute — Free QR Menus for Restaurants",
@@ -43,7 +46,14 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const qrDataUrl = await QRCode.toDataURL(STICKER_DEMO_URL, {
+    type: "image/png",
+    errorCorrectionLevel: "H",
+    margin: 4,
+    scale: 8,
+    color: { dark: "#101820", light: "#ffffff" },
+  });
   return (
     <div className="min-h-screen bg-stone-50">
       {/* The navigation is part of the hero, not a separate sticky toolbar. */}
@@ -190,31 +200,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-brand-600 px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Ready to go digital?</h2>
-          <p className="text-brand-100 mb-8 text-lg">
-            Create your outlet, add dishes, review your menu and print a permanent QR when you
-            publish.
-          </p>
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href="/register"
-              className="text-brand-700 hover:bg-brand-50 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold transition-all"
-            >
-              Create your free menu
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/demo"
-              className="border-brand-400 hover:bg-brand-700 inline-flex items-center justify-center rounded-xl border px-8 py-4 text-base font-semibold text-white transition-all"
-            >
-              See it in action
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Section 7 — original illustrated, interactive storefront sticker collection. */}
+      <StorefrontStudio qrDataUrl={qrDataUrl} />
 
       {/* Footer */}
       <footer className="bg-stone-900 px-4 py-12 sm:px-6 lg:px-8">
