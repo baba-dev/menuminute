@@ -118,7 +118,7 @@ BEGIN
  PERFORM 1 FROM organizations WHERE id=i.organization_id FOR UPDATE;
  IF NOT app_private.can_outlet(p_outlet,'menu.write') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  IF (SELECT count(*) FROM menu_import_sources WHERE outlet_id=p_outlet AND created_at>=now()-interval '1 hour')>=30 THEN RAISE EXCEPTION 'Hourly import source limit exceeded' USING ERRCODE='22023'; END IF;
- IF (SELECT coalesce(sum(request_bytes),0) FROM menu_import_sources WHERE outlet_id=p_outlet)+p_size>157286400 THEN RAISE EXCEPTION 'Retained import storage budget exhausted' USING ERRCODE='54000'; END IF;
+ IF (SELECT count(*) FROM menu_import_sources WHERE outlet_id=p_outlet)>=30 THEN RAISE EXCEPTION 'Retained import storage budget exhausted' USING ERRCODE='54000'; END IF;
  IF (SELECT count(*) FROM menu_import_sources WHERE import_id=i.id)>=12 OR
   (SELECT coalesce(sum(request_bytes),0) FROM menu_import_sources WHERE import_id=i.id)+p_size>31457280 THEN RAISE EXCEPTION 'Import source limit exceeded' USING ERRCODE='22023'; END IF;
  key:=format('imports/%s/%s/%s.webp',i.organization_id,i.id,p_source);
