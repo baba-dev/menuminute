@@ -23,17 +23,24 @@ export default async function Page() {
   const list = await listMenus(actor, outlet.id);
   return (
     <div className="space-y-4">
-      <div className="flex justify-end"><Link href="/dashboard/menu/import" className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700">Import from photos ↗</Link></div>
+      <div className="flex justify-end">
+        <Link
+          href="/dashboard/menu/import"
+          className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
+        >
+          Import from photos ↗
+        </Link>
+      </div>
       <MenuStudio
-      key={outlet.id}
-      outlet={outlet}
-      initialList={list}
-      initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
-      initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
-      outletChoices={await getRestaurantsByUserId(actor.userId)}
-      brandChoices={await withActor(actor, (tx) =>
-        tx.select({ id: brands.id, name: brands.name }).from(brands)
-      )}
+        key={outlet.id}
+        outlet={outlet}
+        initialList={list}
+        initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
+        initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
+        outletChoices={await getRestaurantsByUserId(actor.userId)}
+        brandChoices={await withActor(actor, (tx) =>
+          tx.select({ id: brands.id, name: brands.name }).from(brands)
+        )}
       />
     </div>
   );

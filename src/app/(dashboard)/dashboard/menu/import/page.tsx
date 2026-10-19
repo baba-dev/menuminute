@@ -9,7 +9,20 @@ export default async function MenuCapturePage() {
   if (!session?.user.id) redirect("/login");
   const actor = { userId: session.user.id };
   const outlet = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
-  if (!outlet) return <div className="panel"><h1>Select an outlet</h1><Link href="/onboarding">Set up your first outlet</Link></div>;
+  if (!outlet)
+    return (
+      <div className="panel">
+        <h1>Select an outlet</h1>
+        <Link href="/onboarding">Set up your first outlet</Link>
+      </div>
+    );
   await withOutlet(actor, outlet.id, "menu.write", async () => true);
-  return <CaptureWizard key={outlet.id} outletId={outlet.id} outletName={outlet.name} currency={outlet.currency} />;
+  return (
+    <CaptureWizard
+      key={outlet.id}
+      outletId={outlet.id}
+      outletName={outlet.name}
+      currency={outlet.currency}
+    />
+  );
 }
