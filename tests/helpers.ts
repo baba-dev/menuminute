@@ -14,9 +14,12 @@ export async function admin<T>(work: (db: ReturnType<typeof drizzle>, pool: Pool
 export async function fixture(currency = "INR") {
   const userId = nanoid();
   await admin(async (db) => {
-    await db
-      .insert(users)
-      .values({ id: userId, email: `${userId}@test.invalid`, name: "Fixture Owner" });
+    await db.insert(users).values({
+      id: userId,
+      email: `${userId}@test.invalid`,
+      name: "Fixture Owner",
+      emailVerified: true,
+    });
   });
   const outlet = await createRestaurant(userId, {
     name: "Fixture Kitchen",

@@ -163,10 +163,10 @@ it("enforces organization/currency sharing, all-assignment edits, and outlet-loc
   ).rejects.toMatchObject({ statusCode: 403 });
   const uid = crypto.randomUUID();
   await admin(async (_, p) => {
-    await p.query("insert into users(id,email,name) values($1,$2,'Scoped editor')", [
-      uid,
-      `${uid}@test.invalid`,
-    ]);
+    await p.query(
+      "insert into users(id,email,name,email_verified) values($1,$2,'Scoped editor',true)",
+      [uid, `${uid}@test.invalid`]
+    );
     await p.query(
       "insert into organization_members(id,organization_id,user_id,role) values($1,$2,$3,'member')",
       [uid, org, uid]

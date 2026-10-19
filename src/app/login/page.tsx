@@ -49,6 +49,10 @@ export default function LoginPage() {
     }
 
     if (result?.error) {
+      if (result.error.code === "EMAIL_NOT_VERIFIED") {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
       setError("Invalid email or password. Please try again.");
       return;
     }
@@ -137,6 +141,14 @@ export default function LoginPage() {
               </button>
             </form>
 
+            <div className="mt-4 text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-orange-700 underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="mt-6 text-center">
               <p className="text-sm text-stone-500">
                 Don&apos;t have an account?{" "}

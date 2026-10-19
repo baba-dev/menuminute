@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { admin } from "../helpers";
 
 test("failed outlet setup keeps the retry key for identical input and changes it for edited input", async ({
   page,
@@ -11,7 +12,17 @@ test("failed outlet setup keeps the retry key for identical input and changes it
   await page.getByLabel("Password", { exact: true }).fill("phase4-password-123");
   await page.getByLabel("Confirm password").fill("phase4-password-123");
   await page.getByRole("button", { name: "Create free account" }).click();
-  await expect(page).toHaveURL(/\/onboarding/);
+  await expect(page).toHaveURL(/\/verify-email/);
+  await admin(async (_db, pool) => {
+    await pool.query("update users set email_verified=true where email=$1", [email]);
+  });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill("phase4-password-123");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.goto("/onboarding");
+  await expect(page.getByLabel("Outlet name")).toBeVisible();
 
   const observed: { key: string; body: string }[] = [];
   await page.route("**/api/organizations", async (route) => {

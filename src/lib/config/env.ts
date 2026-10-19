@@ -14,6 +14,13 @@ export const envSchema = z
     DATABASE_URL: pgUrl,
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
     AUTH_SECRET: z.string().min(32),
+    EMAIL_PROVIDER: z.enum(["resend", "test"]).default("test"),
+    EMAIL_FROM: z.string().email().optional(),
+    RESEND_API_KEY: z.string().optional(),
+    AUTH_ALLOW_TEST_EMAIL: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
     GEMINI_API_KEY: z.string().optional(),
@@ -41,7 +48,37 @@ export const envSchema = z
         path: ["REDIS_CACHE_URL"],
         message: "Separate queue/cache instances required",
       });
+    if (
+      e.EMAIL_PROVIDER === "test" &&
+      (!e.AUTH_ALLOW_TEST_EMAIL ||
+        new URL(e.APP_URL).hostname !== "localhost" ||
+        new URL(e.DATABASE_URL).pathname !== "/menuminute_test")
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["EMAIL_PROVIDER"],
+        message: "Test mail requires explicit isolated localhost opt-in",
+      });
     if (e.NODE_ENV === "production") {
+      if (
+        e.EMAIL_PROVIDER !== "resend" &&
+        !(
+          e.AUTH_ALLOW_TEST_EMAIL &&
+          new URL(e.APP_URL).hostname === "localhost" &&
+          new URL(e.DATABASE_URL).pathname === "/menuminute_test"
+        )
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["EMAIL_PROVIDER"],
+          message: "Production email delivery is required",
+        });
+      if (e.EMAIL_PROVIDER === "resend" && (!e.RESEND_API_KEY || !e.EMAIL_FROM))
+        ctx.addIssue({
+          code: "custom",
+          path: ["RESEND_API_KEY"],
+          message: "Resend credentials and verified sender are required",
+        });
       if (new URL(e.APP_URL).protocol !== "https:")
         ctx.addIssue({ code: "custom", path: ["APP_URL"], message: "Production HTTPS required" });
       if (/secret|change|example|test|development|placeholder/i.test(e.AUTH_SECRET))

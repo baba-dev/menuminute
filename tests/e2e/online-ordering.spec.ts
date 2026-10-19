@@ -19,10 +19,10 @@ async function seedOrdering(enabled: boolean) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      await client.query("insert into users(id,name,email) values($1,'Ordering owner',$2)", [
-        ownerId,
-        email,
-      ]);
+      await client.query(
+        "insert into users(id,name,email,email_verified) values($1,'Ordering owner',$2,true)",
+        [ownerId, email]
+      );
       await client.query(
         "insert into accounts(id,user_id,provider_id,account_id,password) values($1,$2,'credential',$2,$3)",
         [crypto.randomUUID(), ownerId, await hashPassword(password)]
@@ -126,6 +126,8 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   );
   expect(unauthorized.status()).toBe(404);
 
+  // Keep each synthetic browser login on an independent proxy-supplied client IP.
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const owner = await page.context().newPage();
   try {
     await owner.goto("/login");

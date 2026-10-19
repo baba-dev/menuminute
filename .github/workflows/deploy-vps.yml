@@ -230,8 +230,23 @@ jobs:
           REMOTE
           echo "staging_seconds=$(( $(date -u +%s) - stage_start ))" >> "$GITHUB_OUTPUT"
 
-      - name: Confirm unattended activation eligibility
+      # New identity controls invalidate unverified legacy sessions. Merging code is not
+      # authorization to activate it: staging is safe; cutover requires reviewed sign-off.
+      - name: Require Auth 2.0 production cutover sign-off
         if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
+        id: auth_cutover
+        env:
+          AUTH_V2_CUTOVER_APPROVED: ${{ vars.AUTH_V2_CUTOVER_APPROVED }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$AUTH_V2_CUTOVER_APPROVED" != 'verified-identity-mfa-2026-10' ]]; then
+            echo "approved=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Auth 2.0 staged only. Verify Resend, existing-owner inventory, recovery process and MFA enrollment before cutover."
+            exit 0
+          fi
+          echo "approved=true" >> "$GITHUB_OUTPUT"
+      - name: Confirm unattended activation eligibility
+        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true' && steps.auth_cutover.outputs.approved == 'true'
         id: policy
         env:
           AUTO: ${{ github.event_name == 'workflow_run' }}

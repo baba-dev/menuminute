@@ -21,6 +21,8 @@ it("imports a read-only legacy snapshot with preserved credentials, QR IDs and t
       "insert into users(id,name,email,password_hash,role) values('source-user','Source Owner','source@test.invalid',?,'user')"
     )
     .run(password);
+  // Synthetic legacy fixture with a previously verified identity, not a production backfill.
+  sqlite.prepare("update users set email_verified=1 where id='source-user'").run();
   sqlite.exec(
     "insert into restaurants(id,public_id,name,slug) values('source-outlet','source-permanent-token','Source Kitchen','source-kitchen'); insert into restaurant_members(id,restaurant_id,user_id,role) values('source-member','source-outlet','source-user','owner'); insert into qr_codes(id,restaurant_id,destination_token) values('source-qr','source-outlet','source-permanent-token'); insert into menu_categories(id,restaurant_id,name) values('source-category','source-outlet','Sample'); insert into menu_items(id,restaurant_id,category_id,name,price_paise) values('source-item','source-outlet','source-category','Dish',125); insert into orders(id,restaurant_id,status,order_number,total_paise) values('source-order','source-outlet','confirmed',1,250);"
   );

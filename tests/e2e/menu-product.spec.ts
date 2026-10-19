@@ -18,7 +18,10 @@ async function seed(publish = false) {
     const c = await pool.connect();
     try {
       await c.query("begin");
-      await c.query("insert into users(id,name,email) values($1,'Menu owner',$2)", [user, email]);
+      await c.query(
+        "insert into users(id,name,email,email_verified) values($1,'Menu owner',$2,true)",
+        [user, email]
+      );
       await c.query(
         "insert into accounts(id,user_id,provider_id,account_id,password) values($1,$2,'credential',$2,$3)",
         [crypto.randomUUID(), user, hash]
