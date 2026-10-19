@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
@@ -150,6 +151,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

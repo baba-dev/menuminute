@@ -7,7 +7,6 @@ import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
 import { CartDrawer } from "./cart-drawer";
-import { DishDetail } from "./dish-detail";
 
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
@@ -50,10 +49,6 @@ export function PublicMenu({
   }, [token]);
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
-  const [detail, setDetail] = useState<{
-    dish: Parameters<typeof DishDetail>[0]["dish"];
-    currency: string;
-  } | null>(null);
 
   // Sync cart to sessionStorage
   useEffect(() => {
@@ -78,14 +73,6 @@ export function PublicMenu({
             if (r.status === 404 || r.status === 410) {
               // Revoked/deleted QR must not leave stale published dishes on screen.
               setData((previous) => ({ ...previous, menus: [] }));
-              setDetail(null);
-              setCustomizingDish(null);
-              setCartItems([]);
-              try {
-                sessionStorage.removeItem(`cart_${token}`);
-              } catch {
-                /* Storage may be unavailable. */
-              }
               setStatus("This menu is no longer available. Please ask the staff.");
             } else {
               setStatus("Menu updates could not be checked. This view may be outdated.");
@@ -189,7 +176,7 @@ export function PublicMenu({
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>
-      <div className="public-shell stack editorial-menu">
+      <div className="public-shell stack">
         <header className="hero">
           <div className="stack">
             <span className="eyebrow">Made to be savoured · Digital menu</span>
@@ -356,15 +343,6 @@ export function PublicMenu({
                               ))}
                             </div>
 
-                            <button
-                              className="dish-explore"
-                              type="button"
-                              onClick={() => setDetail({ dish: i, currency: m.view.currency })}
-                              aria-label={`View ${i.name} details`}
-                            >
-                              View dish <span aria-hidden="true">↗</span>
-                            </button>
-
                             {/* Add to Cart CTA Button */}
                             <div
                               className="row between"
@@ -433,10 +411,6 @@ export function PublicMenu({
           <small>Powered by MenuMinute · Free QR menus & Online Ordering</small>
         </footer>
       </div>
-
-      {detail && (
-        <DishDetail dish={detail.dish} currency={detail.currency} onClose={() => setDetail(null)} />
-      )}
 
       {/* Item Customizer Modal */}
       <ItemCustomizer

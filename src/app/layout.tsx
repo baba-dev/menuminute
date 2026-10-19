@@ -1,11 +1,11 @@
 import { themeScript } from "@/components/menu-product/theme-script";
+import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
 import "@/styles/menu-product.css";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
@@ -21,13 +21,27 @@ export const metadata: Metadata = {
   description:
     "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
+  applicationName: "MenuMinute",
+  icons: {
+    icon: [{ url: "/brand/icons/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/brand/icons/favicon.svg",
+  },
   authors: [{ name: "MenuMinute" }],
   creator: "MenuMinute",
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "MenuMinute",
+    images: [
+      {
+        url: "/brand/social/og-light.webp",
+        width: 1200,
+        height: 630,
+        alt: "MenuMinute by BabaBuilds",
+      },
+    ],
   },
+  twitter: { card: "summary_large_image", images: ["/brand/social/og-light.webp"] },
   robots: {
     index: true,
     follow: true,
@@ -51,9 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
-        <div className="appearance-bar">
-          <ThemeControl />
-        </div>
+        <ThemeSync />
         {children}
         <Toaster richColors position="top-right" />
       </body>

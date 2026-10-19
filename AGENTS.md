@@ -1,5 +1,7 @@
 # Development contract
 
+Brand handoff: see [docs/brand-assets.md](docs/brand-assets.md) for approved SVG logo sources, single-play/theme-replay header motion, usage rules, and the PWA asset deferral. Do not use illustration-board QR samples for live QR URLs.
+
 Read this file before changing the repository. The working repository name is MenuMinute;
 the product planning context is Food Minutes. Do not rename the product incidentally.
 

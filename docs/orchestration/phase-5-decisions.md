@@ -1,5 +1,7 @@
 # Phase 5 — decision register and proposed defaults
 
+> Integration note (19 October 2026): This PR carries planning and **pure, non-wired domain contracts only**. Guest-facing editorial dish-detail UI has been extracted to [draft PR #101](https://github.com/baba-dev/menuminute/pull/101). Neither the pure reducer nor this documentation authorizes Kitchen Pro or checkout activation.
+
 Parent [#67](https://github.com/baba-dev/menuminute/issues/67), decision package [P5-00 #68](https://github.com/baba-dev/menuminute/issues/68). Marked **Approved** only when supported by the 2026-10-18 user decision or the existing approved requirements. Items labelled **Open / Proposed** are NOT authorized policy and must not silently become default runtime behavior merely because a fixture needs a value.
 
 | ID    | Decision                                                                                                                              | Status / implementation meaning                                                                                                                                                                      |

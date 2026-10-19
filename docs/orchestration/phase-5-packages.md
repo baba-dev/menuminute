@@ -1,5 +1,7 @@
 # Phase 5 scoped work packages and multi-agent execution
 
+> Integration note (19 October 2026): This PR carries planning and **pure, non-wired domain contracts only**. Guest-facing editorial dish-detail UI has been extracted to [draft PR #101](https://github.com/baba-dev/menuminute/pull/101). Neither the pure reducer nor this documentation authorizes Kitchen Pro or checkout activation.
+
 Parent [#67](https://github.com/baba-dev/menuminute/issues/67). These are **Backlog issues**, not authorized active reservations or evidence of delivery. Existing agent contract and single-writer rules remain authoritative. Owner choices B/C/C are recorded in [Phase 5](phase-5.md).
 
 ## Execution map

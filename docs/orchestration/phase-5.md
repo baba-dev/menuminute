@@ -1,5 +1,7 @@
 # Phase 5 — Editorial Ordering & Professional Multi-Station Kitchen
 
+> Integration note (19 October 2026): This PR carries planning and **pure, non-wired domain contracts only**. Guest-facing editorial dish-detail UI has been extracted to [draft PR #101](https://github.com/baba-dev/menuminute/pull/101). Neither the pure reducer nor this documentation authorizes Kitchen Pro or checkout activation.
+
 Planning status: **Approved, partially implemented in separate source tranches; complete Phase 5 not released**. Date: 2026-10-18. Parent [#67](https://github.com/baba-dev/menuminute/issues/67). Baseline main inspected: `593c18bba24468f12a4f90fef6cdd34d5f9eb55c`; recheck before any development/merge/release. The owner selected **Guest B** (editorial food discovery), **Kitchen C** (full multi-station KDS in its first release), **Design C** (actual designs developed and accepted in scoped PRs; no separate PDF/prototype gate). This is an approved direction, not approval of every still-undecided business rule.
 
 ## Phase 4 predecessor and operating boundary

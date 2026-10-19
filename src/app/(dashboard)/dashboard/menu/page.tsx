@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { withActor } from "@/modules/tenancy/service";
 import { brands } from "@/db/schema";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
@@ -16,7 +17,7 @@ export default async function Page() {
     return (
       <div className="product panel">
         <h1>Select an outlet</h1>
-        <a href="/onboarding">Set up your first outlet</a>
+        <Link href="/onboarding">Set up your first outlet</Link>
       </div>
     );
   const list = await listMenus(actor, outlet.id);

@@ -17,10 +17,7 @@ test("Food Orbit is native SVG, accessible, and advertises only the free product
     "href",
     "/register"
   );
-  await expect(page.getByRole("link", { name: "View live demo" }).first()).toHaveAttribute(
-    "href",
-    "/demo"
-  );
+  await expect(page.locator('a[href="/demo"]').first()).toHaveAttribute("href", "/demo");
   await expect(page.locator("body")).not.toContainText(/₹149|₹299/);
 });
 
@@ -42,21 +39,28 @@ test("Food Orbit maintains a visible composition without horizontal overflow at 
   }
 });
 
-test("Food Orbit respects explicit appearance changes", async ({ page }) => {
+test("theme icon switches the entire hero and persists across reloads", async ({ page }) => {
   await page.goto("/");
   const art = page.getByTestId("food-orbit");
-  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  const current =
+    (await page.locator("html").getAttribute("data-theme")) === "dark" ? "dark" : "light";
+  await page
+    .getByRole("button", {
+      name: current === "dark" ? "Switch to light mode" : "Switch to dark mode",
+    })
+    .click();
+  const next = current === "dark" ? "light" : "dark";
+  await expect(page.locator("html")).toHaveAttribute("data-theme", next);
   await expect
     .poll(async () => art.evaluate((el) => getComputedStyle(el).getPropertyValue("--paper").trim()))
-    .toBe("#302b24");
+    .toBe(next === "dark" ? "#302b24" : "#fff9ed");
+  await expect(page.getByLabel("Appearance", { exact: true })).toHaveCount(0);
   await page.reload();
-  await expect
-    .poll(async () => art.evaluate((el) => getComputedStyle(el).getPropertyValue("--paper").trim()))
-    .toBe("#302b24");
-  await page.getByLabel("Appearance", { exact: true }).selectOption("light");
-  await expect
-    .poll(async () => art.evaluate((el) => getComputedStyle(el).getPropertyValue("--paper").trim()))
-    .toBe("#fff9ed");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", next);
+  await page
+    .getByRole("button", { name: next === "dark" ? "Switch to light mode" : "Switch to dark mode" })
+    .click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", current);
 });
 
 test("reduced motion shows the complete final artwork and does not animate", async ({ page }) => {
@@ -71,36 +75,57 @@ test("reduced motion shows the complete final artwork and does not animate", asy
   await expect(art).toHaveAttribute("data-paused", "true");
 });
 
-test("the artwork is centered on desktop while primary actions remain interactive", async ({
+test("the centered desktop composition contains only title, artwork and supporting copy", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
+  const heading = page.getByRole("heading", { level: 1 });
   const art = page.getByTestId("food-orbit-hero-art");
-  const box = await art.boundingBox();
-  expect(box).not.toBeNull();
-  expect(Math.abs(box!.x + box!.width / 2 - 720)).toBeLessThan(32);
-  const primary = page.getByRole("link", { name: "Create your free menu", exact: true }).first();
-  const demo = page.getByRole("link", { name: "View live demo", exact: true }).first();
-  await expect(primary).toBeVisible();
-  await expect(demo).toBeVisible();
-  await expect(primary).toHaveCSS("background-image", /linear-gradient/);
+  const description = page.locator(".food-orbit-hero__description");
+  const [titleBox, artBox, descriptionBox] = await Promise.all([
+    heading.boundingBox(),
+    art.boundingBox(),
+    description.boundingBox(),
+  ]);
+  expect(titleBox && artBox && descriptionBox).toBeTruthy();
+  expect(titleBox!.y + titleBox!.height).toBeLessThan(artBox!.y);
+  expect(artBox!.y + artBox!.height).toBeLessThan(descriptionBox!.y);
+  expect(Math.abs(artBox!.x + artBox!.width / 2 - 720)).toBeLessThan(24);
+  await expect(
+    page.locator(".food-orbit-hero__eyebrow, .food-orbit-hero__benefits, .food-orbit-hero__cta")
+  ).toHaveCount(0);
+  await expect(
+    page.locator(".food-orbit-hero").getByRole("link", { name: "View live demo" })
+  ).toHaveCount(0);
   await expect(art.locator("svg")).toHaveAttribute("role", "img");
   await expect(art.locator("svg a, svg button, svg [tabindex]")).toHaveCount(0);
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const hero = page.locator(".food-orbit-hero");
+  expect(
+    await nav.evaluate((node, parent) => parent?.contains(node), await hero.elementHandle())
+  ).toBe(true);
 });
 
-test("mobile hero keeps its copy and actions ahead of the illustrated stage", async ({ page }) => {
+test("mobile retains the same vertical story and exposes actions in its nav menu", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  const primary = page.getByRole("link", { name: "Create your free menu", exact: true }).first();
-  const art = page.getByTestId("food-orbit-hero-art");
-  const [buttonBox, artBox] = await Promise.all([primary.boundingBox(), art.boundingBox()]);
-  expect(buttonBox).not.toBeNull();
-  expect(artBox).not.toBeNull();
-  expect(buttonBox!.y).toBeLessThan(artBox!.y);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  const noOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
-  );
-  expect(noOverflow).toBe(true);
+  const title = await page.getByRole("heading", { level: 1 }).boundingBox();
+  const art = await page.getByTestId("food-orbit-hero-art").boundingBox();
+  const copy = await page.locator(".food-orbit-hero__description").boundingBox();
+  expect(title && art && copy).toBeTruthy();
+  expect(title!.y + title!.height).toBeLessThan(art!.y);
+  expect(art!.y + art!.height).toBeLessThan(copy!.y);
+  await page.getByLabel("Open navigation menu").click();
+  await expect(page.getByRole("link", { name: "Get started free" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Demo" })
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
+    )
+  ).toBe(true);
 });
