@@ -34,7 +34,7 @@ test.describe("Terms: The Shared Table review draft", () => {
         .click();
     }
     await expect(page).toHaveURL(/#ordering$/);
-    await page.getByRole("link", { name: /Read the companion Privacy Policy draft/ }).click();
+    await page.getByRole("link", { name: /Read the companion Privacy Policy/ }).click();
     await expect(page).toHaveURL(/\/privacy$/);
     await page.goto("/terms");
     await page
