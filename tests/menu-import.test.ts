@@ -12,7 +12,7 @@ import {
   readImportSource,
   cancelImport,
 } from "../src/modules/menu-import/service";
-import { parseImportCandidate } from "../src/modules/menu-import/contracts";
+import { parseImportCandidate, sourceUploadHeaders } from "../src/modules/menu-import/contracts";
 import {
   getPrivateSource,
   putPrivateSource,
@@ -21,6 +21,9 @@ import {
 
 it("keeps AI candidates distinct from canonical menus and rejects invented required prices", () => {
   const id = crypto.randomUUID();
+  expect(sourceUploadHeaders.parse({ id, pageIndex: "0" }).pageIndex).toBe(0);
+  expect(sourceUploadHeaders.parse({ id, pageIndex: 0 }).pageIndex).toBe(0);
+  expect(() => sourceUploadHeaders.parse({ id, pageIndex: null })).toThrow();
   expect(
     parseImportCandidate({
       schemaVersion: 1,
