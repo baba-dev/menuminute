@@ -9,7 +9,11 @@ Approved product mark: orange menu-book with clock, **MenuMinute by BabaBuilds**
 | Static header / fallback | `brand/logos/logo-horizontal-{light,dark}.svg` | Outlined vector mark, no font/network dependency |
 | Square product symbol | `brand/icons/icon-master.svg` | Standalone menu-clock emblem |
 | Browser favicon | `brand/icons/favicon.svg` and `src/app/icon.svg` | SVG; not a PWA install asset |
-| Brand concepts, stickers and QR | `docs/brand-assets.md` / original approved artwork | Design reference only; mock QR is **not** a functional code |
+| Original static variants | `brand/logos/menuminute-{logo,wordmark,stacked}-{light,dark}.svg` | Approved master SVGs; live header uses outlined static derivative |
+| Logo / badge centre marks | `brand/qr/centre-mark-{square,circle,dark}.svg` | SVG centre mark only, scanner-test in real QR |
+| Loaders | `brand/motion/loaders/{timer,orbit-dots,menu-pulse,three-dots,progress-indeterminate,compact}.svg` | Standalone CSS-animated SVGs with reduced-motion support |
+| Social | `brand/social/{avatar,og}-{light,dark}.webp` | Exported images; OG is 1200×630 |
+| Approved presentation references | `brand/reference/*.webp` | Six separate WebP boards, not code or scannable QRs |
 
 ## Motion interaction contract
 
