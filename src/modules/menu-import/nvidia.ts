@@ -132,6 +132,7 @@ export async function extractNvidiaCandidate(
       throw new NvidiaExtractionError("source_unavailable", usage);
     }
     let accepted = false;
+    let metered = false;
     try {
       usage.requests++;
       const response = await request(NVIDIA_CHAT_URL, {
@@ -165,14 +166,28 @@ export async function extractNvidiaCandidate(
       if (!response.ok || Number(response.headers.get("content-length") ?? 0) > 150000)
         throw new Error("Provider response rejected");
       accepted = true;
-      const raw = await response.text();
-      if (raw.length > 150000) throw new Error("Provider response too large");
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Provider response missing");
+      const chunks: Uint8Array[] = [];
+      let received = 0;
+      while (true) {
+        const part = await reader.read();
+        if (part.done) break;
+        received += part.value.byteLength;
+        if (received > 150000) {
+          await reader.cancel();
+          throw new Error("Provider response too large");
+        }
+        chunks.push(part.value);
+      }
+      const raw = new TextDecoder().decode(Buffer.concat(chunks));
       const completion = completionSchema.parse(JSON.parse(raw));
       if (completion.usage?.prompt_tokens === undefined) usage.inputTokens = null;
       else if (usage.inputTokens !== null) usage.inputTokens += completion.usage.prompt_tokens;
       if (completion.usage?.completion_tokens === undefined) usage.outputTokens = null;
       else if (usage.outputTokens !== null)
         usage.outputTokens += completion.usage.completion_tokens;
+      metered = true;
       const page = pageSchema.parse(JSON.parse(completion.choices[0]!.message.content));
       for (const category of page.categories)
         categories.push({
@@ -187,6 +202,10 @@ export async function extractNvidiaCandidate(
           })),
         });
     } catch {
+      if (!metered) {
+        usage.inputTokens = null;
+        usage.outputTokens = null;
+      }
       throw new NvidiaExtractionError(
         accepted ? "invalid_provider_response" : "provider_unavailable",
         usage
