@@ -88,10 +88,16 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
         sync();
       },
     };
-    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([entry]) => {
-      visible = Boolean(entry?.isIntersecting);
-      sync();
-    }, { threshold: 0.1 });
+    const observer =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver(
+            ([entry]) => {
+              visible = Boolean(entry?.isIntersecting);
+              sync();
+            },
+            { threshold: 0.1 }
+          );
     if (observer) observer.observe(stage);
     else {
       visible = true;
@@ -136,9 +142,16 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
     >
       <div className="ss-container">
         <header className="ss-header">
-          <span className="ss-eyebrow"><Sparkles size={15} aria-hidden="true" /> 07 / FROM MENU TO STOREFRONT</span>
-          <h2 id="storefront-studio-heading">Your menu deserves <em>a place in the window.</em></h2>
-          <p>Six distinctive MenuMinute sticker concepts for doors, windows and counters. Choose a design and see it come to life.</p>
+          <span className="ss-eyebrow">
+            <Sparkles size={15} aria-hidden="true" /> 07 / FROM MENU TO STOREFRONT
+          </span>
+          <h2 id="storefront-studio-heading">
+            Your menu deserves <em>a place in the window.</em>
+          </h2>
+          <p>
+            Six distinctive MenuMinute sticker concepts for doors, windows and counters. Choose a
+            design and see it come to life.
+          </p>
         </header>
 
         <div className="ss-layout">
@@ -152,32 +165,66 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
               role="img"
               aria-label={`${selected.name} restaurant menu QR sticker illustrated on a ${MOUNTING_SURFACES.find((s) => s.id === mount)?.name.toLowerCase() ?? "window"}; sample artwork using the public Spice Route Kitchen demo QR`}
             >
-              <div className="ss-scene-wrap" key={`scene-${epoch}`}><StorefrontScene /></div>
-              <div className="ss-decal-host" data-design={design} key={`${epoch}-${design}-${mount}`}>
+              <div className="ss-scene-wrap" key={`scene-${epoch}`}>
+                <StorefrontScene />
+              </div>
+              <div
+                className="ss-decal-host"
+                data-design={design}
+                key={`${epoch}-${design}-${mount}`}
+              >
                 <div className="ss-decal-shadow" aria-hidden="true" />
                 <StickerArt design={design} qrDataUrl={qrDataUrl} />
                 <div className="ss-adhesion" aria-hidden="true" />
-                <div className="ss-scan-focus" aria-hidden="true"><ScanLine size={31} /></div>
+                <div className="ss-scan-focus" aria-hidden="true">
+                  <ScanLine size={31} />
+                </div>
               </div>
-              <div className="ss-scene-label" aria-hidden="true">YOUR RESTAURANT · SAMPLE PREVIEW</div>
+              <div className="ss-scene-label" aria-hidden="true">
+                YOUR RESTAURANT · SAMPLE PREVIEW
+              </div>
               <div className="ss-stage-glow" aria-hidden="true" />
             </div>
             <div className="ss-toolbar">
-              <span>Illustrative storefront · Preview only, not a sticker purchase or printing service</span>
+              <span>
+                Illustrative storefront · Preview only, not a sticker purchase or printing service
+              </span>
               <div className="ss-playback" role="group" aria-label="Storefront animation playback">
-                <button type="button" onClick={replay} disabled={reduced} aria-label="Replay storefront introduction"><RotateCcw size={16} aria-hidden="true" /> Replay</button>
                 <button
                   type="button"
-                  onClick={() => playback === "done" ? replay() : playerRef.current?.toggle()}
+                  onClick={replay}
                   disabled={reduced}
-                  aria-label={playback === "running" ? "Pause storefront introduction" : playback === "paused" ? "Resume storefront introduction" : "Play storefront introduction"}
+                  aria-label="Replay storefront introduction"
                 >
-                  {playback === "running" ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+                  <RotateCcw size={16} aria-hidden="true" /> Replay
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (playback === "done" ? replay() : playerRef.current?.toggle())}
+                  disabled={reduced}
+                  aria-label={
+                    playback === "running"
+                      ? "Pause storefront introduction"
+                      : playback === "paused"
+                        ? "Resume storefront introduction"
+                        : "Play storefront introduction"
+                  }
+                >
+                  {playback === "running" ? (
+                    <Pause size={16} aria-hidden="true" />
+                  ) : (
+                    <Play size={16} aria-hidden="true" />
+                  )}
                   {playback === "running" ? "Pause" : "Play"}
                 </button>
               </div>
             </div>
-            {reduced && <p className="ss-static-note">Static final-state artwork for reduced-motion preferences. All designs and surfaces remain selectable.</p>}
+            {reduced && (
+              <p className="ss-static-note">
+                Static final-state artwork for reduced-motion preferences. All designs and surfaces
+                remain selectable.
+              </p>
+            )}
           </div>
 
           <div className="ss-catalogue">
@@ -195,8 +242,15 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
                   aria-pressed={design === item.id}
                   onClick={() => select(item.id)}
                 >
-                  <span className="ss-format-art"><StickerArt design={item.id} qrDataUrl={qrDataUrl} thumbnail /></span>
-                  <span className="ss-format-meta"><b>{item.number} / {item.name}</b><small>{item.short}</small></span>
+                  <span className="ss-format-art">
+                    <StickerArt design={item.id} qrDataUrl={qrDataUrl} thumbnail />
+                  </span>
+                  <span className="ss-format-meta">
+                    <b>
+                      {item.number} / {item.name}
+                    </b>
+                    <small>{item.short}</small>
+                  </span>
                 </button>
               ))}
             </div>
@@ -209,7 +263,14 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
               <span className="ss-catalogue-kicker">SEE IT IN PLACE</span>
               <div className="ss-surfaces" role="group" aria-label="Sticker preview surface">
                 {MOUNTING_SURFACES.map((surface) => (
-                  <button key={surface.id} type="button" aria-pressed={mount === surface.id} onClick={() => chooseSurface(surface.id)}>{surface.name}</button>
+                  <button
+                    key={surface.id}
+                    type="button"
+                    aria-pressed={mount === surface.id}
+                    onClick={() => chooseSurface(surface.id)}
+                  >
+                    {surface.name}
+                  </button>
                 ))}
               </div>
             </div>
@@ -220,19 +281,36 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
           <div className="ss-outro-copy">
             <span>ONE PERMANENT DIGITAL DESTINATION</span>
             <h3>Make your first scan count.</h3>
-            <p>See how your guests explore a real sample menu. Create your own free menu when you are ready; printable sticker tooling is a future concept.</p>
+            <p>
+              See how your guests explore a real sample menu. Create your own free menu when you are
+              ready; printable sticker tooling is a future concept.
+            </p>
             <div className="ss-links">
-              <Link href="/register" className="ss-primary">Create your free menu <ArrowRight size={18} aria-hidden="true" /></Link>
-              <Link href="/demo" className="ss-secondary">Explore the live demo</Link>
+              <Link href="/register" className="ss-primary">
+                Create your free menu <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <Link href="/demo" className="ss-secondary">
+                Explore the live demo
+              </Link>
             </div>
           </div>
           <div className="ss-real-qr">
             <div className="ss-real-qr-image">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrDataUrl} alt="QR code that opens the public Spice Route Kitchen demo menu" width="172" height="172" />
+              <img
+                src={qrDataUrl}
+                alt="QR code that opens the public Spice Route Kitchen demo menu"
+                width="172"
+                height="172"
+              />
             </div>
-            <p><strong>TRY A REAL SCAN</strong><span>Spice Route Kitchen · sample menu</span></p>
-            <a href={STICKER_DEMO_URL} rel="noopener noreferrer">Open the sample menu ↗</a>
+            <p>
+              <strong>TRY A REAL SCAN</strong>
+              <span>Spice Route Kitchen · sample menu</span>
+            </p>
+            <a href={STICKER_DEMO_URL} rel="noopener noreferrer">
+              Open the sample menu ↗
+            </a>
           </div>
         </div>
       </div>
