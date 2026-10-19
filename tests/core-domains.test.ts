@@ -9,6 +9,23 @@ import {
 import { withActor, withOutlet, type Actor } from "../src/modules/tenancy/service";
 import { createCategory, createMenuItem } from "../src/modules/menus/service";
 import { getPublicMenu, getRestaurantById } from "../src/modules/restaurants/service";
+// A synthetic fixture simulates an authenticated password + TOTP confirmation at the
+// database boundary. Production proof is issued only by the /api/security/step-up route.
+async function confirmedOwner(actor: Actor): Promise<Actor> {
+  const sessionId = crypto.randomUUID();
+  await admin(async (_, pool) => {
+    await pool.query("update users set two_factor_enabled=true where id=$1", [actor.userId]);
+    await pool.query(
+      "insert into sessions(id,token,user_id,expires_at) values($1,$2,$3,now()+interval '1 hour')",
+      [sessionId, crypto.randomUUID(), actor.userId]
+    );
+    await pool.query(
+      "insert into auth_step_up(session_id,user_id,expires_at) values($1,$2,now()+interval '5 minutes')",
+      [sessionId, actor.userId]
+    );
+  });
+  return { ...actor, sessionId };
+}
 async function command(actor: Actor, org: string, action: string, data: Record<string, unknown>) {
   const version = (await listOrganizations(actor)).find((o) => o.id === org)!.version;
   return manageOrganization(actor, org, {
@@ -112,7 +129,11 @@ it("checks current roles on every retry, prevents escalation and cross-tenant ou
       linked: true,
     })
   ).rejects.toMatchObject({ statusCode: 422 });
-  await command(actor, org, "member.save", { email: member.email, role: "admin", isActive: true });
+  await command(await confirmedOwner(actor), org, "member.save", {
+    email: member.email,
+    role: "admin",
+    isActive: true,
+  });
   await expect(
     command(member, org, "organization.active", { isActive: false })
   ).rejects.toMatchObject({ statusCode: 403 });
@@ -175,7 +196,7 @@ it("suspends public/private access, lets only owner reactivate, transfers exactl
   const { actor, outlet } = await fixture();
   const org = outlet.organizationId;
   const member = await account();
-  const m = await command(actor, org, "member.save", {
+  const m = await command(await confirmedOwner(actor), org, "member.save", {
     email: member.email,
     role: "admin",
     isActive: true,
@@ -198,7 +219,7 @@ it("suspends public/private access, lets only owner reactivate, transfers exactl
   ).rejects.toMatchObject({ statusCode: 403 });
   await command(actor, org, "organization.active", { isActive: true });
   expect(await getPublicMenu(outlet.publicId)).not.toBeNull();
-  await command(actor, org, "owner.transfer", { memberId: m.memberId });
+  await command(await confirmedOwner(actor), org, "owner.transfer", { memberId: m.memberId });
   expect((await listOrganizations(member))[0]?.role).toBe("owner");
   await expect(
     command(actor, org, "organization.active", { isActive: false })

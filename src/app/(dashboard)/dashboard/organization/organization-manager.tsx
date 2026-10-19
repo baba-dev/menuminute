@@ -166,6 +166,13 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold">Organization management</h1>
+        <p className="text-sm">
+          Admin promotion and ownership transfer require{" "}
+          <Link className="font-semibold text-orange-700 underline" href="/account/security">
+            recent password and authenticator confirmation
+          </Link>
+          .
+        </p>
         <p className="text-sm text-stone-600">
           Manage outlets, people and access across your organization.
         </p>

@@ -17,6 +17,7 @@ export const envSchema = z
     EMAIL_PROVIDER: z.enum(["resend", "test"]).default("test"),
     EMAIL_FROM: z.string().email().optional(),
     RESEND_API_KEY: z.string().optional(),
+    TURNSTILE_SECRET_KEY: z.string().optional(),
     AUTH_ALLOW_TEST_EMAIL: z
       .enum(["true", "false"])
       .default("false")

@@ -61,6 +61,13 @@
     {
       "idx": 8,
       "version": "7",
+      "when": 1792440000001,
+      "tag": "0008_auth_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
       "when": 1792450000000,
       "tag": "0009_menu_import_foundation",
       "breakpoints": true

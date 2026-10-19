@@ -48,6 +48,9 @@ async function seed() {
             outletType: "restaurant",
           }),
         ]);
+      await c.query("update organizations set mfa_required=false where id=any($1::text[])", [
+        [`org-${first}`, `org-${second}`],
+      ]);
       await c.query("commit");
     } finally {
       c.release();

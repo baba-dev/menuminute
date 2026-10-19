@@ -147,6 +147,7 @@ export async function importSqlite(
         id: org,
         name: restaurant.name,
         is_active: restaurant.is_active,
+        mfa_required: false, // Give imported legacy owners a reviewed MFA enrollment window.
       });
       await insert("restaurants", {
         ...restaurant,
