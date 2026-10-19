@@ -153,7 +153,7 @@ export function CaptureWizard({
       live = false;
       window.clearInterval(timer);
     };
-  }, [session?.id, session?.status, refresh]);
+  }, [session, refresh]);
   const sourceIds =
     session?.sources
       .filter((s) => s.status === "ready")
@@ -227,6 +227,10 @@ export function CaptureWizard({
     if (!session || session.status !== "collecting" || !files?.length) return;
     setError("");
     setNotice("");
+    if (drafts.some((d) => d.state !== "ready")) {
+      setError("Upload or retry your selected batch before choosing more photographs.");
+      return;
+    }
     const chosen = Array.from(files);
     if (chosen.some((f) => !supported.has(f.type) || f.size === 0 || f.size > MAX_PHOTO)) {
       setError("Only nonempty JPEG, PNG or WebP files up to 5 MiB each are supported.");
@@ -246,7 +250,7 @@ export function CaptureWizard({
     let cursor = 0;
     const items = chosen.map((file) => {
       const retry = reserved[cursor];
-      const index = retry ? retry.pageIndex : next + cursor - reserved.length - 1;
+      const index = retry ? retry.pageIndex : next + Math.max(0, cursor - reserved.length);
       cursor++;
       const preview = URL.createObjectURL(file);
       localUrls.current.add(preview);
