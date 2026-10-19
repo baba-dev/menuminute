@@ -49,7 +49,9 @@ test("Every world changes both the physical illustration and the matching phone 
     );
     await expect(section.getByText(message)).toBeVisible();
   }
-  await expect(section.getByRole("button", { name: "Replay service worlds introduction", exact: true })).toBeDisabled();
+  await expect(
+    section.getByRole("button", { name: "Replay service worlds introduction", exact: true })
+  ).toBeDisabled();
   await page.evaluate(() => {
     document.documentElement.dataset.theme = "dark";
   });
@@ -63,11 +65,17 @@ test("Desktop introduction is user-controlled and pauses offscreen", async ({ pa
   const section = page.getByTestId("service-worlds");
   await section.locator(".mm6-stage").scrollIntoViewIfNeeded();
   const svg = section.locator("svg[data-mm6]");
-  await section.getByRole("button", { name: "Replay service worlds introduction", exact: true }).click();
+  await section
+    .getByRole("button", { name: "Replay service worlds introduction", exact: true })
+    .click();
   await expect(svg).toHaveClass(/is-intro/);
-  await section.getByRole("button", { name: "Pause service worlds introduction", exact: true }).click();
+  await section
+    .getByRole("button", { name: "Pause service worlds introduction", exact: true })
+    .click();
   await expect(svg).toHaveClass(/paused/);
-  await section.getByRole("button", { name: "Resume service worlds introduction", exact: true }).click();
+  await section
+    .getByRole("button", { name: "Resume service worlds introduction", exact: true })
+    .click();
   await section.getByRole("radio", { name: "Takeout", exact: true }).click();
   await expect(svg).toHaveAttribute("data-step", "6");
   await expect(svg).toHaveAttribute("data-mode", "take");

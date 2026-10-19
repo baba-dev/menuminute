@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("desktop hero keeps the approved composition and brings supporting copy above the fold", async ({ page }) => {
+test("desktop hero keeps the approved composition and brings supporting copy above the fold", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1363, height: 936 });
   await page.goto("/");
   const hero = page.locator(".food-orbit-hero");
@@ -12,7 +14,9 @@ test("desktop hero keeps the approved composition and brings supporting copy abo
   await expect(hero.getByRole("heading", { level: 1 })).toContainText("Free forever.");
 });
 
-test("mobile navigation exposes state, closes with Escape and retains 44px controls", async ({ page }) => {
+test("mobile navigation exposes state, closes with Escape and retains 44px controls", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const open = page.getByRole("button", { name: "Open navigation menu" });
@@ -27,16 +31,38 @@ test("mobile navigation exposes state, closes with Escape and retains 44px contr
   await expect(page.getByRole("link", { name: "Pricing" })).toBeHidden();
 });
 
-test("homepage sections are sequential and exclusive choices use radio semantics", async ({ page }) => {
+test("homepage sections are sequential and exclusive choices use radio semantics", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const order = await page.evaluate(() => {
-    const selectors = [".menu-alchemy", ".order-conveyor", ".chef-pass", ".service-worlds", ".storefront-studio"];
+    const selectors = [
+      ".menu-alchemy",
+      ".order-conveyor",
+      ".chef-pass",
+      ".service-worlds",
+      ".storefront-studio",
+    ];
     const nodes = selectors.map((selector) => document.querySelector(selector));
-    return nodes.every((node) => node) && nodes.every((node, index) => index === 0 || Boolean(nodes[index - 1]!.compareDocumentPosition(node!) & Node.DOCUMENT_POSITION_FOLLOWING));
+    return (
+      nodes.every((node) => node) &&
+      nodes.every(
+        (node, index) =>
+          index === 0 ||
+          Boolean(
+            nodes[index - 1]!.compareDocumentPosition(node!) &
+              Node.DOCUMENT_POSITION_FOLLOWING
+          )
+      )
+    );
   });
   expect(order).toBe(true);
   await expect(page.getByTestId("service-worlds").getByRole("radiogroup")).toHaveCount(1);
   await expect(page.getByTestId("storefront-studio").getByRole("radiogroup")).toHaveCount(2);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+    )
+  ).toBeLessThanOrEqual(1);
 });

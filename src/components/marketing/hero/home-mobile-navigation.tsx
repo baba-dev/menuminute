@@ -49,7 +49,11 @@ export function HomeMobileNavigation() {
           className="food-orbit-hero__icon-button flex h-11 w-11 items-center justify-center rounded-xl"
           onClick={() => setOpen((current) => !current)}
         >
-          {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+          {open ? (
+            <X className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          )}
         </button>
         {open && (
           <div
@@ -57,11 +61,20 @@ export function HomeMobileNavigation() {
             className="food-orbit-hero__mobile-panel absolute top-full right-0 z-30 mt-2 flex w-52 flex-col gap-1 rounded-2xl border p-2 shadow-xl"
           >
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="food-orbit-hero__mobile-link" onClick={() => setOpen(false)}>
+              <Link
+                key={link.href}
+                href={link.href}
+                className="food-orbit-hero__mobile-link"
+                onClick={() => setOpen(false)}
+              >
                 {link.label}
               </Link>
             ))}
-            <Link href="/register" className="food-orbit-hero__nav-cta mt-1 rounded-xl px-4 py-3 text-center text-sm font-bold" onClick={() => setOpen(false)}>
+            <Link
+              href="/register"
+              className="food-orbit-hero__nav-cta mt-1 rounded-xl px-4 py-3 text-center text-sm font-bold"
+              onClick={() => setOpen(false)}
+            >
               Get started free
             </Link>
           </div>
