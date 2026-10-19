@@ -12,9 +12,21 @@ export async function POST(req: Request, c: C) {
       throw new ValidationError("Choose a JPEG, PNG or WebP source image");
     const { actor, restaurant } = await requestContext(req);
     const { importId } = await c.params;
-    const result = await addImportSource(actor, restaurant.id, importId,
-      { id: req.headers.get("x-import-source-id"), pageIndex: req.headers.get("x-import-page-index") },
-      await boundedBytes(req, 5242880));
-    return NextResponse.json(result, { status: result.duplicate ? 200 : 201, headers: { "Cache-Control": "private, no-store" } });
-  } catch (error) { return errorResponse(error); }
+    const result = await addImportSource(
+      actor,
+      restaurant.id,
+      importId,
+      {
+        id: req.headers.get("x-import-source-id"),
+        pageIndex: req.headers.get("x-import-page-index"),
+      },
+      await boundedBytes(req, 5242880)
+    );
+    return NextResponse.json(result, {
+      status: result.duplicate ? 200 : 201,
+      headers: { "Cache-Control": "private, no-store" },
+    });
+  } catch (error) {
+    return errorResponse(error);
+  }
 }

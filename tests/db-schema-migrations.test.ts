@@ -11,8 +11,12 @@ it("applies reviewed migrations idempotently and keeps tenant RLS enabled", asyn
     );
     expect(r.rows).toHaveLength(6);
     expect(r.rows.every((row) => row.relrowsecurity)).toBe(true);
-    const journal = JSON.parse(await readFile("src/db/migrations/meta/_journal.json", "utf8")) as { entries: { tag: string }[] };
-    const names = (await pool.query<{ name: string }>("select name from drizzle.foundation_migrations")).rows.map(row => row.name);
-    expect(names.sort()).toEqual(journal.entries.map(e => e.tag).sort());
+    const journal = JSON.parse(await readFile("src/db/migrations/meta/_journal.json", "utf8")) as {
+      entries: { tag: string }[];
+    };
+    const names = (
+      await pool.query<{ name: string }>("select name from drizzle.foundation_migrations")
+    ).rows.map((row) => row.name);
+    expect(names.sort()).toEqual(journal.entries.map((e) => e.tag).sort());
   });
 });

@@ -5,7 +5,10 @@ type C = { params: Promise<{ importId: string }> };
 export async function GET(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req);
-    return NextResponse.json(await importDetail(actor, restaurant.id, (await c.params).importId),
-      { headers: { "Cache-Control": "private, no-store" } });
-  } catch (error) { return errorResponse(error); }
+    return NextResponse.json(await importDetail(actor, restaurant.id, (await c.params).importId), {
+      headers: { "Cache-Control": "private, no-store" },
+    });
+  } catch (error) {
+    return errorResponse(error);
+  }
 }

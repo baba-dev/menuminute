@@ -9,9 +9,13 @@ export async function GET(req: Request, c: C) {
     const bytes = await readImportSource(actor, restaurant.id, importId, sourceId);
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
-        "Content-Type": "image/webp", "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; sandbox",
+        "Content-Type": "image/webp",
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
       },
     });
-  } catch (error) { return errorResponse(error); }
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
