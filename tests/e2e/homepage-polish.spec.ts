@@ -51,8 +51,7 @@ test("homepage sections are sequential and exclusive choices use radio semantics
         (node, index) =>
           index === 0 ||
           Boolean(
-            nodes[index - 1]!.compareDocumentPosition(node!) &
-              Node.DOCUMENT_POSITION_FOLLOWING
+            nodes[index - 1]!.compareDocumentPosition(node!) & Node.DOCUMENT_POSITION_FOLLOWING
           )
       )
     );
