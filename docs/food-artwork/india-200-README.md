@@ -58,7 +58,7 @@ merchant's uploaded images or any unenumerated personal assets.
 - `category`: presentation role such as main, starter, street_food, snack, bread, or dessert.
 - `dietary_hint`: provisional recipe type only.
 - `visual_anchor`: distinctive appearance for a faithful food illustration.
-- `illustration_status`: always `not_created` in this backlog.
+- `illustration_status`: `assets_imported_pending_review` when a matching `datasetId` exists in the current manifest; otherwise `not_created`. Neither state asserts owner approval.
 
 **Do not publish dietary hints as verified merchant claims.** Actual ingredients, egg content,
 allergens, cross-contact and religious certification require each restaurant's confirmation.
