@@ -93,7 +93,12 @@ export function StorefrontScene() {
         <g className="ss-counter-display">
           <path d="M402 443V471" stroke="var(--ss-frame)" strokeWidth="8" strokeLinecap="round" />
           <ellipse cx="402" cy="473" rx="36" ry="7" fill="var(--ss-counter-front)" />
-          <path d="M373 470h58" stroke="var(--ss-counter-rule)" strokeWidth="3" strokeLinecap="round" />
+          <path
+            d="M373 470h58"
+            stroke="var(--ss-counter-rule)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
         </g>
         <path d="M64 96H778" stroke="var(--ss-gilt)" strokeWidth="5" strokeLinecap="round" />
         <g className="ss-shop-sign">
