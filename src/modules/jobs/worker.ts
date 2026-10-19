@@ -1,4 +1,5 @@
 import { processMedia } from "../media/worker";
+import { processImport } from "../menu-import/engine";
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
@@ -144,6 +145,9 @@ export async function consumeEvent(
   ).rows[0];
   if (!stored || data.deliverySequence > stored.delivery_sequence)
     throw new Error("Delivery scope mismatch");
+  if (stored.type === "menu_import.process" && stored.schema_version === 1) {
+    return processImport(pool, data.eventId, data.organizationId);
+  }
   if (stored.type === "media.process" && stored.schema_version === 1) {
     try {
       return await processMedia(pool, data.eventId, data.organizationId);
