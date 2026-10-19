@@ -21,10 +21,18 @@ test.describe("Terms: The Shared Table review draft", () => {
 
   test("anchors, Privacy Policy and account-deletion links are accessible", async ({ page }) => {
     await page.goto("/terms");
-    await page
-      .getByRole("navigation", { name: "Terms of Service contents" })
-      .getByRole("link", { name: /9\. Guest ordering, acceptance and fulfillment/ })
-      .click();
+    const desktopContents = page.getByRole("navigation", { name: "Terms of Service contents" });
+    if (await desktopContents.isVisible()) {
+      await desktopContents
+        .getByRole("link", { name: /9\. Guest ordering, acceptance and fulfillment/ })
+        .click();
+    } else {
+      const mobileContents = page.locator("details.privacy-mobile-index");
+      await mobileContents.locator("summary").click();
+      await mobileContents
+        .getByRole("link", { name: /9\. Guest ordering, acceptance and fulfillment/ })
+        .click();
+    }
     await expect(page).toHaveURL(/#ordering$/);
     await page.getByRole("link", { name: /Read the companion Privacy Policy draft/ }).click();
     await expect(page).toHaveURL(/\/privacy$/);

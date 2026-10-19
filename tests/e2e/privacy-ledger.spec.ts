@@ -16,10 +16,14 @@ test.describe("privacy ledger review draft", () => {
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     const sections = page.locator("main.privacy-copy > section.privacy-section");
     await expect(sections).toHaveCount(15);
-    await page
-      .getByRole("navigation", { name: "Privacy policy contents" })
-      .getByRole("link", { name: /10\. Retention and deletion/ })
-      .click();
+    const desktopContents = page.getByRole("navigation", { name: "Privacy policy contents" });
+    if (await desktopContents.isVisible()) {
+      await desktopContents.getByRole("link", { name: /10\. Retention and deletion/ }).click();
+    } else {
+      const mobileContents = page.locator("details.privacy-mobile-index");
+      await mobileContents.locator("summary").click();
+      await mobileContents.getByRole("link", { name: /10\. Retention and deletion/ }).click();
+    }
     await expect(page).toHaveURL(/#retention$/);
   });
 
