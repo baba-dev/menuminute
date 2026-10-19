@@ -25,6 +25,8 @@ Selectable formats: primary QR, circle, door cling, premium landscape, _example-
 
 ## Data and safety contract
 
+The visual-scale contract keeps window decals at 11–25% of the illustrated scene width (narrower on doors and counters), uses component-relative typography so small stickers do not overflow, and grounds the countertop decal on a dedicated sign stand. The mounting-surface chooser sits immediately below the preview. Six catalogue thumbnails are compact reference swatches rather than full-sized mockups; the architectural sign has its own welcome line, readable padding and trim. These are illustrative proportions rather than print-size guarantees.
+
 The showcase QR resolves **only** to `https://food.bababuilds.com/m/demo-spice-route-kitchen-v1`, the existing public Spice Route Kitchen sample. Never insert a private tenant or imply demo scans create orders. The six mockups are illustrative; no checkout, physical printing, SKU pricing or shop link exists. Hours in the sample sticker are explicitly labeled EXAMPLE HOURS. The `qrcode` QR uses H error correction and white quiet zones with dark square modules, without a centre-overlay logo. Real merchant stickers, their menu token, opening hours and printable exports require a later merchant-authorized scope and physical scan tests.
 
 Playback begins once upon viewport entry, pauses while hidden, respects reduced motion and offers Pause/Replay. Theme is inherited from `data-theme` on the root. Only safe code-authored JSX/SVG is inserted—no externally supplied markup.

@@ -90,28 +90,49 @@ export function StorefrontScene() {
             strokeLinecap="round"
           />
         </g>
+        <g className="ss-counter-display">
+          <path d="M402 443V471" stroke="var(--ss-frame)" strokeWidth="8" strokeLinecap="round" />
+          <ellipse cx="402" cy="473" rx="36" ry="7" fill="var(--ss-counter-front)" />
+          <path d="M373 470h58" stroke="var(--ss-counter-rule)" strokeWidth="3" strokeLinecap="round" />
+        </g>
         <path d="M64 96H778" stroke="var(--ss-gilt)" strokeWidth="5" strokeLinecap="round" />
-        <rect
-          x="285"
-          y="69"
-          width="266"
-          height="51"
-          rx="13"
-          fill="var(--ss-sign-back)"
-          stroke="var(--ss-gilt)"
-          strokeWidth="2"
-        />
-        <text
-          x="418"
-          y="101"
-          fill="var(--ss-sign-text)"
-          fontSize="22"
-          fontWeight="800"
-          textAnchor="middle"
-          letterSpacing="1.5"
-        >
-          YOUR RESTAURANT
-        </text>
+        <g className="ss-shop-sign">
+          <rect
+            x="253"
+            y="53"
+            width="334"
+            height="68"
+            rx="13"
+            fill="var(--ss-sign-back)"
+            stroke="var(--ss-gilt)"
+            strokeWidth="2"
+          />
+          <path d="M268 61H572M268 113H572" stroke="var(--ss-gilt)" strokeOpacity=".35" />
+          <circle cx="276" cy="87" r="2.5" fill="var(--ss-gilt)" />
+          <circle cx="564" cy="87" r="2.5" fill="var(--ss-gilt)" />
+          <text
+            x="420"
+            y="78"
+            fill="var(--ss-gilt)"
+            fontSize="9"
+            fontWeight="750"
+            textAnchor="middle"
+            letterSpacing="3"
+          >
+            WELCOME TO
+          </text>
+          <text
+            x="420"
+            y="105"
+            fill="var(--ss-sign-text)"
+            fontSize="20"
+            fontWeight="800"
+            textAnchor="middle"
+            letterSpacing="1"
+          >
+            YOUR RESTAURANT
+          </text>
+        </g>
         <path
           d="M85 575H755"
           stroke="var(--ss-ground-rule)"
