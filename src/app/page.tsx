@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { MenuJourney } from "@/components/marketing/journey/menu-journey";
 import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
@@ -11,6 +10,7 @@ import { STICKER_DEMO_URL } from "@/components/marketing/storefront-studio/stick
 import QRCode from "qrcode";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import "@/components/marketing/brand/brand-nav-logo.css";
 import { QrCode, Smartphone, ChefHat, Menu } from "lucide-react";
 
@@ -150,7 +150,7 @@ export default async function HomePage() {
       <ChefPass />
 
       {/* Product choices after the illustrated onboarding story. */}
-      <section className="ma-product-features px-4 py-20 sm:px-6 lg:px-8">
+      <section id="features" className="ma-product-features px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold text-stone-900 sm:text-4xl">
@@ -201,46 +201,7 @@ export default async function HomePage() {
       {/* Section 7 — original illustrated, interactive storefront sticker collection. */}
       <StorefrontStudio qrDataUrl={qrDataUrl} />
 
-      {/* Footer */}
-      <footer className="bg-stone-900 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/brand/logos/logo-horizontal-dark.svg"
-                alt="MenuMinute by BabaBuilds"
-                className="h-11 w-auto"
-                width={188}
-                height={44}
-                unoptimized
-              />
-            </div>
-            <div className="flex gap-8">
-              <Link
-                href="/pricing"
-                className="text-sm text-stone-400 transition-colors hover:text-white"
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/demo"
-                className="text-sm text-stone-400 transition-colors hover:text-white"
-              >
-                Demo
-              </Link>
-              <Link
-                href="/login"
-                className="text-sm text-stone-400 transition-colors hover:text-white"
-              >
-                Sign in
-              </Link>
-            </div>
-            <p className="text-sm text-stone-500">
-              © {new Date().getFullYear()} MenuMinute. Built with ♥ for restaurants.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
