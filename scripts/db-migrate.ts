@@ -6,7 +6,13 @@ migrateDatabase(url)
   .then(() => console.warn("Migrations applied"))
   .catch((error: unknown) => {
     if (process.env["CI"] === "true" && typeof error === "object" && error !== null) {
-      const pg = error as { code?: string; position?: string; routine?: string; constraint?: string; table?: string };
+      const pg = error as {
+        code?: string;
+        position?: string;
+        routine?: string;
+        constraint?: string;
+        table?: string;
+      };
       console.error("Migration SQL diagnostic", {
         sqlstate: pg.code,
         position: pg.position,
