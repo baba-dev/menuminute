@@ -32,7 +32,7 @@ BEGIN
  SELECT count(*) INTO n FROM menu_import_sources WHERE import_id=i.id AND status='ready';
  IF n<1 OR EXISTS(SELECT 1 FROM menu_import_sources WHERE import_id=i.id AND status<>'ready') THEN RAISE EXCEPTION 'Finish every source upload before processing' USING ERRCODE='22023'; END IF;
  PERFORM 1 FROM organizations WHERE id=i.organization_id FOR UPDATE;
- IF (SELECT count(*) FROM menu_import_ai_usage WHERE organization_id=i.organization_id AND created_at>=now()-interval '1 day')>=20 THEN RAISE EXCEPTION 'Daily import engine limit' USING ERRCODE='54000'; END IF;
+ IF (SELECT count(*) FROM outbox_events WHERE organization_id=i.organization_id AND type='menu_import.process' AND created_at>=now()-interval '1 day')>=20 THEN RAISE EXCEPTION 'Daily import engine limit' USING ERRCODE='54000'; END IF;
  UPDATE menu_imports SET status='queued',revision=revision+1,updated_at=now() WHERE id=i.id RETURNING * INTO i;
  INSERT INTO outbox_events(id,organization_id,outlet_id,type,schema_version,aggregate_version,payload,max_attempts)
  VALUES(eid,i.organization_id,p_outlet,'menu_import.process',1,i.revision,jsonb_build_object('importId',i.id),3);
