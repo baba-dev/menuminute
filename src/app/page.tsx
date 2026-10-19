@@ -14,6 +14,7 @@ import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
 import { HomeMobileNavigation } from "@/components/marketing/hero/home-mobile-navigation";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import "@/components/marketing/brand/brand-nav-logo.css";
+import "./home-layout.css";
 
 export const metadata: Metadata = {
   title: "MenuMinute — Free QR Menus for Restaurants",
@@ -30,7 +31,7 @@ export default async function HomePage() {
     color: { dark: "#101820", light: "#ffffff" },
   });
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="mm-homepage min-h-screen bg-stone-50">
       {/* The navigation is part of the hero, not a separate sticky toolbar. */}
       <section className="food-orbit-hero relative isolate overflow-hidden">
         <nav aria-label="Main navigation" className="food-orbit-hero__nav relative z-20">
