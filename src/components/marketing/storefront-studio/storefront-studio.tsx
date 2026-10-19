@@ -181,7 +181,8 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
                 </div>
               </div>
               <div className="ss-scene-label" aria-hidden="true">
-                {MOUNTING_SURFACES.find((surface) => surface.id === mount)?.name} · illustrative placement
+                {MOUNTING_SURFACES.find((surface) => surface.id === mount)?.name} · illustrative
+                placement
               </div>
               <div className="ss-stage-glow" aria-hidden="true" />
             </div>
