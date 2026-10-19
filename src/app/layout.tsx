@@ -21,13 +21,27 @@ export const metadata: Metadata = {
   description:
     "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
+  applicationName: "MenuMinute",
+  icons: {
+    icon: [{ url: "/brand/icons/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/brand/icons/favicon.svg",
+  },
   authors: [{ name: "MenuMinute" }],
   creator: "MenuMinute",
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "MenuMinute",
+    images: [
+      {
+        url: "/brand/social/og-light.webp",
+        width: 1200,
+        height: 630,
+        alt: "MenuMinute by BabaBuilds",
+      },
+    ],
   },
+  twitter: { card: "summary_large_image", images: ["/brand/social/og-light.webp"] },
   robots: {
     index: true,
     follow: true,

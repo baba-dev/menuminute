@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { FoodOrbit } from "@/components/marketing/hero/food-orbit";
 import { MenuJourney } from "@/components/marketing/journey/menu-journey";
 import { MenuAlchemy } from "@/components/marketing/alchemy/menu-alchemy";
@@ -9,6 +10,8 @@ import { StorefrontStudio } from "@/components/marketing/storefront-studio/store
 import { STICKER_DEMO_URL } from "@/components/marketing/storefront-studio/sticker-config";
 import QRCode from "qrcode";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
+import "@/components/marketing/brand/brand-nav-logo.css";
 import { QrCode, Smartphone, ChefHat, Menu } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -65,12 +68,7 @@ export default async function HomePage() {
               className="flex shrink-0 items-center gap-2.5"
               aria-label="MenuMinute home"
             >
-              <span className="bg-brand-600 flex h-9 w-9 items-center justify-center rounded-xl">
-                <QrCode className="h-4 w-4 text-white" aria-hidden="true" />
-              </span>
-              <span className="food-orbit-hero__brand text-lg font-extrabold tracking-tight">
-                MenuMinute
-              </span>
+              <BrandNavLogo />
             </Link>
             <div className="hidden items-center gap-5 md:flex lg:gap-7">
               <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">
@@ -208,10 +206,14 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="bg-brand-600 flex h-7 w-7 items-center justify-center rounded-lg">
-                <QrCode className="h-3.5 w-3.5 text-white" />
-              </div>
-              <span className="font-bold text-white">MenuMinute</span>
+              <Image
+                src="/brand/logos/logo-horizontal-dark.svg"
+                alt="MenuMinute by BabaBuilds"
+                className="h-11 w-auto"
+                width={188}
+                height={44}
+                unoptimized
+              />
             </div>
             <div className="flex gap-8">
               <Link
