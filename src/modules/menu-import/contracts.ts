@@ -103,7 +103,11 @@ export const sourceUploadHeaders = z
   .object({
     id: importId,
     pageIndex: z.union([
-      z.number().int().min(0).max(sourceLimit - 1),
+      z
+        .number()
+        .int()
+        .min(0)
+        .max(sourceLimit - 1),
       z
         .string()
         .regex(/^(?:[0-9]|1[01])$/)
