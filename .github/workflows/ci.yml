@@ -64,6 +64,9 @@ jobs:
       - name: Validate approved dish artwork assets
         run: node scripts/food-artwork/verify.mjs
 
+      - name: Verify India dish artwork backlog against the canonical manifest
+        run: node scripts/food-artwork/verify-india-backlog.mjs
+
       - name: Check deployment and packaging shell syntax
         run: |
           bash -n infra/deploy/menuminute-release
