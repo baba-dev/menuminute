@@ -174,7 +174,7 @@ it("normalizes private sources, replays same upload, rejects source-key conflict
       addImportSource(f.actor, f.outlet.id, id, { id: crypto.randomUUID(), pageIndex: 1 }, jpg)
     ).rejects.toMatchObject({ statusCode: 403 });
     const ownReleases = await admin(async (_db, pool) =>
-      pool.query("select id from menu_releases where published_by=$1", [f.actor.userId])
+      pool.query("select revision from menu_releases where published_by=$1", [f.actor.userId])
     );
     expect(ownReleases.rowCount).toBe(0);
   } finally {
