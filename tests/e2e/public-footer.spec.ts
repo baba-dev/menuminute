@@ -6,11 +6,25 @@ test.describe("shared public footer", () => {
       await page.goto(route);
       const footer = page.getByTestId("public-footer");
       await expect(footer).toHaveCount(1);
-      await expect(footer).toContainText("© 2026 Menu Minute App - A Subsidiary of BabaBuilds.com.");
-      await expect(footer.getByRole("link", { name: /BabaBuilds website/ })).toHaveAttribute("href", "https://bababuilds.com/");
-      await expect(footer.getByRole("link", { name: /BabaBuilds ERP/ })).toHaveAttribute("href", "https://erp.bababuilds.com/");
-      await expect(footer.getByRole("link", { name: /Privacy Policy/ })).toHaveAttribute("href", "/privacy");
-      await expect(footer.getByRole("link", { name: /Terms of Service/ })).toHaveAttribute("href", "/terms");
+      await expect(footer).toContainText(
+        "© 2026 Menu Minute App - A Subsidiary of BabaBuilds.com."
+      );
+      await expect(footer.getByRole("link", { name: /BabaBuilds website/ })).toHaveAttribute(
+        "href",
+        "https://bababuilds.com/"
+      );
+      await expect(footer.getByRole("link", { name: /BabaBuilds ERP/ })).toHaveAttribute(
+        "href",
+        "https://erp.bababuilds.com/"
+      );
+      await expect(footer.getByRole("link", { name: /Privacy Policy/ })).toHaveAttribute(
+        "href",
+        "/privacy"
+      );
+      await expect(footer.getByRole("link", { name: /Terms of Service/ })).toHaveAttribute(
+        "href",
+        "/terms"
+      );
       await expect(footer).toContainText("not external certifications");
       await expect(footer).toContainText("Planned · not yet available");
     });
@@ -21,7 +35,9 @@ test.describe("shared public footer", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
     await expect(page.getByText("not a published Privacy Policy", { exact: false })).toBeVisible();
     await page.goto("/terms");
-    await expect(page.getByText("not a published Terms of Service", { exact: false })).toBeVisible();
+    await expect(
+      page.getByText("not a published Terms of Service", { exact: false })
+    ).toBeVisible();
   });
 
   test("restaurant guest menus do not receive a marketing footer", async ({ page }) => {
@@ -35,7 +51,9 @@ test.describe("shared public footer", () => {
     const footer = page.getByTestId("public-footer");
     await expect(footer.getByRole("link", { name: /Create your free menu/ })).toBeVisible();
     await expect(footer.getByRole("link", { name: /Contact/ })).toBeVisible();
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
     expect(overflow).toBe(false);
   });
 });
