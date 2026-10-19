@@ -78,7 +78,7 @@ export const importCandidateSchema = z
     ];
     if (new Set(ids).size !== ids.length)
       ctx.addIssue({ code: "custom", message: "Candidate IDs must be unique" });
-    if (Buffer.byteLength(JSON.stringify(doc), "utf8") > 500000)
+    if (new TextEncoder().encode(JSON.stringify(doc)).byteLength > 500000)
       ctx.addIssue({ code: "custom", message: "Candidate exceeds the size limit" });
   });
 export type ImportCandidate = z.infer<typeof importCandidateSchema>;
@@ -102,9 +102,12 @@ export const cancelImportSchema = z
 export const sourceUploadHeaders = z
   .object({
     id: importId,
-    pageIndex: z
-      .string()
-      .regex(/^(?:[0-9]|1[01])$/)
-      .transform(Number),
+    pageIndex: z.union([
+      z.number().int().min(0).max(sourceLimit - 1),
+      z
+        .string()
+        .regex(/^(?:[0-9]|1[01])$/)
+        .transform(Number),
+    ]),
   })
   .strict();
