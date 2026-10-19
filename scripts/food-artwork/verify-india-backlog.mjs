@@ -81,8 +81,10 @@ for (const [index, dish] of data.dishes.entries()) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(dish.slug)) fail(`invalid slug: ${dish.slug}`);
   const asset = linkedAssets.get(dish.id);
   if (asset) {
-    if (dish.illustration_status !== "assets_imported_pending_review") fail(`stale imported status: ${dish.id}`);
-    if (!asset.path?.startsWith("/assets/food/dishes/") || !asset.state) fail(`invalid manifest entry: ${dish.id}`);
+    if (dish.illustration_status !== "assets_imported_pending_review")
+      fail(`stale imported status: ${dish.id}`);
+    if (!asset.path?.startsWith("/assets/food/dishes/") || !asset.state)
+      fail(`invalid manifest entry: ${dish.id}`);
     imported++;
   } else if (dish.illustration_status !== "not_created") fail(`stale uncreated status: ${dish.id}`);
   if (excluded.has(dish.slug)) fail(`already illustrated: ${dish.slug}`);
@@ -113,4 +115,6 @@ if (JSON.stringify(dietCounts) !== JSON.stringify(expectedDiet)) {
   fail("diet hint distribution changed");
 }
 if (linkedAssets.size !== imported) fail("manifest has unknown dataset IDs or stale rows");
-console.log(`Validated: 200 candidates, 36 legacy exclusions, equivalent CSV/JSON, ${imported} imported and ${200 - imported} pending creation.`);
+console.log(
+  `Validated: 200 candidates, 36 legacy exclusions, equivalent CSV/JSON, ${imported} imported and ${200 - imported} pending creation.`
+);
