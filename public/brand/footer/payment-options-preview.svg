@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="242" height="43" viewBox="0 0 242 43" role="img" aria-labelledby="title desc">
+<title id="title">Payment options preview</title><desc id="desc">Illustrative Visa, Mastercard and UPI wordmarks. Planned, not currently accepted.</desc>
+<rect x=".5" y=".5" width="75" height="42" rx="8" fill="#fffaf5" stroke="#d9c8b9"/><text x="38" y="27" font-family="Arial,sans-serif" font-size="17" font-weight="900" font-style="italic" text-anchor="middle" fill="#193e91">VISA</text>
+<rect x="83.5" y=".5" width="75" height="42" rx="8" fill="#fffaf5" stroke="#d9c8b9"/><circle cx="112" cy="21.5" r="10.5" fill="#ea4937"/><circle cx="125" cy="21.5" r="10.5" fill="#eda526" opacity=".9"/>
+<rect x="166.5" y=".5" width="75" height="42" rx="8" fill="#fffaf5" stroke="#d9c8b9"/><path d="M176 14h6l-3.5 15h-6z" fill="#f28c31"/><path d="M183 14h6l-3.5 15h-6z" fill="#2e9256"/><text x="211" y="27" font-family="Arial,sans-serif" font-size="16" font-weight="800" text-anchor="middle" fill="#353535">UPI</text>
+</svg>

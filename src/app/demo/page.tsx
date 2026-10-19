@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { QrCode, ArrowRight, Smartphone, Eye, Sparkles } from "lucide-react";
 import { generateMenuQrCode } from "@/modules/qr/service";
@@ -147,6 +148,7 @@ export default async function DemoPage() {
           </div>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

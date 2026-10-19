@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import type { ReactNode } from "react";
@@ -172,9 +173,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
       {!organizations.length ? (
         <p>
           No organization yet.{" "}
-          <a href="/onboarding" className="underline">
+          <Link href="/onboarding" className="underline">
             Create your first outlet
-          </a>
+          </Link>
           .
         </p>
       ) : (

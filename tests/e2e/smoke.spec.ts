@@ -17,7 +17,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
       "Simple, transparent pricing"
     );
     await expect(page.getByText("Free Forever")).toBeVisible();
-    await expect(page.getByText("Online Ordering")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Online Ordering", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Kitchen Pro", exact: true })).toBeVisible();
     await expect(page.getByText("TBA", { exact: true })).toHaveCount(2);
     await expect(page.getByText("Coming soon · pricing pending")).toHaveCount(2);

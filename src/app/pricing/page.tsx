@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { CheckCircle, QrCode } from "lucide-react";
 
@@ -175,6 +176,7 @@ export default function PricingPage() {
           ))}
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }
