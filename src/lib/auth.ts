@@ -7,6 +7,7 @@ import { users, sessions, accounts, verificationTokens, rateLimits } from "@/db/
 import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
+import { sendAuthEmail } from "@/lib/auth-email";
 export const authServer = betterAuth({
   appName: "MenuMinute",
   baseURL: env.APP_URL,
@@ -23,7 +24,23 @@ export const authServer = betterAuth({
       rateLimit: rateLimits,
     },
   }),
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: false,
+    expiresIn: 60 * 60,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendAuthEmail(user.email, "Verify your MenuMinute email", url);
+    },
+  },
   emailAndPassword: {
+    requireEmailVerification: true,
+    autoSignIn: false,
+    resetPasswordTokenExpiresIn: 60 * 30,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendAuthEmail(user.email, "Reset your MenuMinute password", url);
+    },
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
@@ -60,7 +77,7 @@ export const authServer = betterAuth({
 });
 export async function auth() {
   const session = await authServer.api.getSession({ headers: await headers() });
-  return session
+  return session?.user.emailVerified
     ? { ...session, activeOutletId: (await cookies()).get("menuminute.outlet")?.value }
     : null;
 }

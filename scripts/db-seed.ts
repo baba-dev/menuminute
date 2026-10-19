@@ -23,7 +23,7 @@ async function seed() {
       return;
     }
     await c.query(
-      "insert into users(id,name,email,is_demo_data) values('demo-owner','Demo Owner','demo@menuminute.com',true)"
+      "insert into users(id,name,email,is_demo_data,email_verified) values('demo-owner','Demo Owner','demo@menuminute.com',true,true)"
     );
     await c.query(
       "insert into accounts(id,user_id,provider_id,account_id,password) values('demo-credential','demo-owner','credential','demo-owner',$1)",

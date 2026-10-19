@@ -21,7 +21,10 @@ async function account() {
   const id = crypto.randomUUID();
   const email = `${id}@test.invalid`;
   await admin(async (_, p) => {
-    await p.query("insert into users(id,name,email) values($1,'Domain member',$2)", [id, email]);
+    await p.query(
+      "insert into users(id,name,email,email_verified) values($1,'Domain member',$2,true)",
+      [id, email]
+    );
   });
   return { userId: id, email };
 }

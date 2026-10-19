@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, chore/phase-0-development-orchestration]
+    branches: [main, chore/phase-0-development-orchestration, security/auth-2-identity-recovery]
 permissions:
   contents: read
 concurrency:
@@ -21,6 +21,8 @@ env:
   MEDIA_STORAGE: local
   MEDIA_OUTLET_BUDGET_BYTES: 104857600
   BETTER_AUTH_TELEMETRY: "0"
+  EMAIL_PROVIDER: test
+  AUTH_ALLOW_TEST_EMAIL: "true"
 jobs:
   quality:
     name: Lint & Code Style
@@ -163,6 +165,9 @@ jobs:
           APP_URL: https://food.bababuilds.com
           NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+          EMAIL_PROVIDER: resend
+          EMAIL_FROM: accounts@ci.example.invalid
+          RESEND_API_KEY: ci-placeholder-do-not-use
       - run: pnpm build:worker
       - run: pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs
       - run: pnpm db:seed

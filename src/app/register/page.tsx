@@ -52,8 +52,8 @@ export default function RegisterPage() {
         setError(result.error.message ?? "Registration failed");
         return;
       }
-      toast.success("Account created! Set up your first outlet.");
-      router.push("/onboarding");
+      toast.success("Check your inbox to verify your account.");
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

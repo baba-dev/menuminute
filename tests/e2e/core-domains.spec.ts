@@ -22,7 +22,11 @@ async function seed() {
         [id, email, "Browser owner"],
         [memberId, memberEmail, "Browser staff"],
       ]) {
-        await c.query("insert into users(id,name,email) values($1,$2,$3)", [uid, name, mail]);
+        await c.query("insert into users(id,name,email,email_verified) values($1,$2,$3,true)", [
+          uid,
+          name,
+          mail,
+        ]);
         await c.query(
           "insert into accounts(id,user_id,provider_id,account_id,password) values($1,$2,'credential',$2,$3)",
           [crypto.randomUUID(), uid, hash]

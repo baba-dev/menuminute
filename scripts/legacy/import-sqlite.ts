@@ -62,6 +62,17 @@ export async function importSqlite(
           "Legacy platform role requires explicit review; no implicit admin migration"
         );
     }
+    // Legacy email flags remain untrusted unless the source explicitly records verification.
+    // Never import an active owner using an unverified identity; arrange independently reviewed
+    // verification before cutover instead of bypassing the new membership trigger.
+    const verifiedEmails = new Set(
+      rows("users")
+        .filter((u) => Boolean(u.email_verified))
+        .map((u) => String(u.id))
+    );
+    for (const m of rows("restaurant_members"))
+      if (m.is_active && m.role === "owner" && !verifiedEmails.has(String(m.user_id)))
+        throw new Error("Legacy owner email needs verified ownership before activation");
     c = await pool.connect();
     await c.query("begin");
     await c.query("select pg_advisory_xact_lock(60312103)");
