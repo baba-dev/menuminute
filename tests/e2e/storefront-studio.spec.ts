@@ -48,7 +48,7 @@ test("Choosing designs and mounting surfaces updates the actual illustrated stor
     ["Opening hours", "hours"],
     ["Compact", "compact"],
   ] as const) {
-    await section.getByRole("button", { name: new RegExp(name) }).click();
+    await section.getByRole("radio", { name: new RegExp(name) }).click();
     await expect(stage).toHaveAttribute("data-design", id);
     await expect(section.locator(`.ss-decal-host .ss-sticker--${id}`)).toHaveCount(1);
   }
@@ -57,10 +57,10 @@ test("Choosing designs and mounting surfaces updates the actual illustrated stor
     ["Countertop", "counter"],
     ["Window", "window"],
   ] as const) {
-    await section.getByRole("button", { name, exact: true }).click();
+    await section.getByRole("radio", { name, exact: true }).click();
     await expect(stage).toHaveAttribute("data-mount", id);
-    await expect(section.getByRole("button", { name, exact: true })).toHaveAttribute(
-      "aria-pressed",
+    await expect(section.getByRole("radio", { name, exact: true })).toHaveAttribute(
+      "aria-checked",
       "true"
     );
   }
@@ -77,7 +77,7 @@ test("Finite introduction can pause, replay and stop on user interaction", async
   await expect(section).toHaveAttribute("data-intro", "paused");
   await section.getByRole("button", { name: "Resume storefront introduction" }).click();
   await expect(section).toHaveAttribute("data-intro", "running");
-  await section.getByRole("button", { name: /Circular/i }).click();
+  await section.getByRole("radio", { name: /Circular/i }).click();
   await expect(section).toHaveAttribute("data-intro", "done");
   await section.getByRole("button", { name: "Replay storefront introduction" }).click();
   await expect(section).toHaveAttribute("data-intro", "running", { timeout: 5000 });
@@ -96,7 +96,7 @@ test("Reduced-motion, theming and narrow widths preserve a usable sticker studio
     await expect(
       section.getByRole("button", { name: "Replay storefront introduction" })
     ).toBeDisabled();
-    await expect(section.getByRole("button", { name: /Premium window/i })).toBeVisible();
+    await expect(section.getByRole("radio", { name: /Premium window/i })).toBeVisible();
     await page.evaluate(() => {
       document.documentElement.dataset.theme = "dark";
     });

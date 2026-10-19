@@ -36,13 +36,13 @@
   box-sizing: border-box;
 }
 .cp-container {
-  width: min(100% - 48px, 1440px);
+  width: min(100% - 48px, 1320px);
   margin-inline: auto;
-  padding-block: clamp(70px, 8vw, 108px) clamp(76px, 8vw, 104px);
+  padding-block: clamp(62px, 6vw, 88px) clamp(68px, 6vw, 88px);
 }
 .cp-intro {
   max-width: 950px;
-  margin: 0 auto clamp(30px, 4vw, 56px);
+  margin: 0 auto clamp(28px, 3vw, 44px);
   text-align: center;
 }
 .cp-eyebrow {
@@ -171,7 +171,7 @@
   font-weight: 700;
 }
 .cp-capabilities {
-  margin-top: clamp(30px, 5vw, 65px);
+  margin-top: clamp(28px, 4vw, 48px);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 30px);
@@ -212,7 +212,7 @@
   color: var(--cp-muted);
 }
 .cp-outro {
-  margin-top: clamp(44px, 5vw, 72px);
+  margin-top: clamp(38px, 4vw, 56px);
   border-top: 1px solid var(--cp-line);
   padding-top: 31px;
   display: flex;

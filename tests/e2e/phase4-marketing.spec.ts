@@ -20,7 +20,12 @@ test("homepage describes ordering and kitchen as development, not currently purc
   page,
 }) => {
   await page.goto("/");
-  await expect(page.getByText("In development", { exact: true })).toHaveCount(2);
+  await expect(page.getByTestId("order-conveyor")).toContainText("IN DEVELOPMENT");
+  await expect(page.getByTestId("chef-pass")).toContainText("IN DEVELOPMENT");
+  await expect(page.getByTestId("service-worlds")).toContainText("AVAILABLE TODAY");
+  await expect(page.getByTestId("service-worlds")).toContainText(
+    "Ordering and kitchen workflows are coming later."
+  );
   await expect(page.locator("body")).not.toContainText(/₹149|₹299/);
   await expect(page.getByRole("link", { name: "Create your free menu" }).first()).toHaveAttribute(
     "href",

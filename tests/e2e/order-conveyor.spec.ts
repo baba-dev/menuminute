@@ -24,7 +24,7 @@ test("Section 4 follows smart import and advertises only planned ordering", asyn
     const journey = document.querySelector(".menu-journey");
     const alchemy = document.querySelector(".menu-alchemy");
     const conveyor = document.querySelector(".order-conveyor");
-    const products = document.querySelector(".ma-product-features");
+    const products = document.querySelector(".service-worlds");
     return Boolean(
       journey &&
       alchemy &&
