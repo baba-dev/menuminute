@@ -165,8 +165,8 @@ function RegistrationForm() {
           <Link href="/terms" target="_blank" rel="noopener noreferrer">
             Terms of Service
           </Link>{" "}
-          draft, which is not yet effective. Acceptance will be requested only after publication
-          of approved terms.
+          draft, which is not yet effective. Acceptance will be requested only after publication of
+          approved terms.
         </p>
         <RegistrationChallenge onToken={setChallenge} />
         <button
