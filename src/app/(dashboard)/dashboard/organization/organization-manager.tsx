@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { InvitationManager } from "@/components/auth/invitation-manager";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import type { ReactNode } from "react";
@@ -230,38 +231,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 </Form>
               </>
             )}
-            {canAdmin && (
-              <>
-                {" "}
-                <Form
-                  title="Existing-account member"
-                  button="Save member"
-                  disabled={!org.isActive}
-                  onSave={(f) =>
-                    send("member.save", {
-                      email: String(f.get("email")),
-                      role: String(f.get("role")),
-                      isActive: f.get("active") === "on",
-                    })
-                  }
-                >
-                  <Field label="Member email" name="email" type="email" />
-                  <label className="block text-sm">
-                    Organization role
-                    <select name="role" className={inputClass}>
-                      <option value="member">Member — scoped outlet access</option>
-                      <option value="admin">Admin — organization management</option>
-                    </select>
-                  </label>
-                  <label className="text-sm">
-                    <input type="checkbox" name="active" defaultChecked /> Membership active
-                  </label>
-                  <p className="text-xs text-stone-500">
-                    The person must already have an account. Saving a member sends no invitation.
-                  </p>
-                </Form>
-              </>
-            )}
+            {canAdmin && org.isActive && <InvitationManager organizationId={org.id} />}
             {canAdmin && (
               <>
                 {" "}

@@ -39,7 +39,7 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByLabel("Outlet type").selectOption("cloud_kitchen");
   await page.getByLabel("Currency", { exact: true }).selectOption("OMR");
   await page.getByRole("button", { name: "Create organization and outlet" }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/dashboard\/menu/);
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   const created = await page.request.post("/api/menu/categories", {
     headers: { origin: "https://localhost:3443" },

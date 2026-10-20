@@ -40,7 +40,7 @@ export async function getRestaurantsByUserId(userId: string) {
 export async function getDefaultOrActiveRestaurant(userId?: string, activeOutletId?: string) {
   if (!userId) return undefined;
   const outlets = await getRestaurantsByUserId(userId);
-  return activeOutletId ? outlets.find((o) => o.id === activeOutletId) : outlets[0];
+  return outlets.find((o) => o.id === activeOutletId) ?? outlets[0];
 }
 export async function getRestaurantById(actor: Actor, id: string) {
   return withOutlet(
