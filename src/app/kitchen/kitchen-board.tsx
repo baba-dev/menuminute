@@ -34,12 +34,14 @@ function Ticket({
   work,
   onAction,
   busy,
+  now,
 }: {
   work: KitchenWorkView;
   onAction: (work: KitchenWorkView, action: "start" | "complete") => void;
   busy: boolean;
+  now: number | null;
 }) {
-  const age = Math.max(0, Math.floor((Date.now() - new Date(work.createdAt).getTime()) / 60000));
+  const age = now === null ? null : Math.max(0, Math.floor((now - new Date(work.createdAt).getTime()) / 60000));
   return (
     <article
       className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900"
@@ -51,7 +53,7 @@ function Ticket({
         </span>
         <span className="flex items-center gap-1 text-xs font-semibold text-stone-500 dark:text-stone-300">
           <Clock3 size={13} aria-hidden="true" />
-          {age} min
+          {age === null ? "—" : age} min
         </span>
       </div>
       <p className="mt-2 text-xs font-bold tracking-wide text-orange-700 uppercase dark:text-orange-400">
@@ -123,7 +125,8 @@ export function KitchenBoard({
   const [snapshot, setSnapshot] = useState(initial);
   const [selected, setSelected] = useState(initial.stations[0]?.id ?? "");
   const [connection, setConnection] = useState<Connection>("connecting");
-  const [lastSync, setLastSync] = useState<Date | null>(new Date());
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [sound, setSound] = useState(false);
@@ -155,6 +158,11 @@ export function KitchenBoard({
     apply((await res.json()) as KitchenSnapshot);
   }, [base, apply]);
   useEffect(() => {
+    const clock = setInterval(() => setNow(Date.now()), 15000);
+    setNow(Date.now());
+    return () => clearInterval(clock);
+  }, []);
+  useEffect(() => {
     try {
       setSound(localStorage.getItem("menuminute.kitchen.sound") === "true");
     } catch {}
@@ -185,15 +193,15 @@ export function KitchenBoard({
       if (alive) setConnection((c) => (c === "revoked" ? c : "recovering"));
     };
     const timer = setInterval(() => {
-      if (alive && connection !== "revoked")
-        void refresh().catch(() => setConnection("recovering"));
+      if (alive)
+        void refresh().catch(() => setConnection(c => c === "revoked" ? c : "recovering"));
     }, 15000);
     return () => {
       alive = false;
       source.close();
       clearInterval(timer);
     };
-  }, [base, apply, refresh, connection]);
+  }, [base, apply, refresh]);
   const station = snapshot.stations.find((s) => s.id === selected) ?? snapshot.stations[0];
   const work = useMemo(
     () => snapshot.work.filter((w) => w.stationId === station?.id),
@@ -285,13 +293,10 @@ export function KitchenBoard({
             <button
               type="button"
               onClick={() => {
-                setSound((v) => {
-                  try {
-                    localStorage.setItem("menuminute.kitchen.sound", String(!v));
-                  } catch {}
-                  if (!v) playOrderChime();
-                  return !v;
-                });
+                const enabled = !sound;
+                try { localStorage.setItem("menuminute.kitchen.sound", String(enabled)); } catch {}
+                if (enabled) playOrderChime();
+                setSound(enabled);
               }}
               className="flex min-h-10 items-center gap-2 rounded-lg border border-stone-200 px-3 text-xs font-semibold dark:border-stone-700"
               aria-pressed={sound}
@@ -425,8 +430,9 @@ export function KitchenBoard({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (dishId && routeStation)
-                  void admin("route.assign", { dishId, stationId: routeStation });
+                const target = routeStation || snapshot.stations[0]?.id;
+                if (dishId && target)
+                  void admin("route.assign", { dishId, stationId: target });
               }}
               className="space-y-3"
             >
@@ -454,7 +460,7 @@ export function KitchenBoard({
               <select
                 id="route-station"
                 required
-                value={routeStation}
+                value={routeStation || snapshot.stations[0]?.id || ""}
                 onChange={(e) => setRouteStation(e.target.value)}
                 className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
               >
@@ -467,7 +473,7 @@ export function KitchenBoard({
               </select>
               <button
                 type="submit"
-                disabled={!!busy || !dishId || !routeStation}
+                disabled={!!busy || !dishId || !(routeStation || snapshot.stations[0]?.id)}
                 className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
               >
                 Assign route
@@ -498,7 +504,7 @@ export function KitchenBoard({
                 </h3>
                 <div className="space-y-3">
                   {groups[lane.key].map((w) => (
-                    <Ticket key={w.id} work={w} busy={busy === w.id} onAction={action} />
+                    <Ticket key={w.id} work={w} now={now} busy={busy === w.id} onAction={action} />
                   ))}
                   {groups[lane.key].length === 0 && (
                     <p className="rounded-xl border border-dashed border-stone-300 p-5 text-center text-sm text-stone-600 dark:border-stone-700 dark:text-stone-400">
