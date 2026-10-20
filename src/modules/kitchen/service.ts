@@ -58,6 +58,7 @@ export type KitchenWorkView = {
 export type KitchenSnapshot = {
   cursor: number;
   enabled: boolean;
+  workOverflow: boolean;
   routes: Array<{ dishId: string; stationId: string; ruleVersion: number }>;
   members: Array<{ id: string; name: string; stationIds: string[] }>;
   stations: Array<{ id: string; name: string; active: boolean; position: number }>;

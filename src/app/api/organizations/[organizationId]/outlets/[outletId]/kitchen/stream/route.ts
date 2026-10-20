@@ -1,6 +1,8 @@
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { kitchenChanges, kitchenSnapshot } from "@/modules/kitchen/service";
 export const runtime = "nodejs";
+// Per-instance guard in addition to Cloudflare/Nginx rate limits; never treated as a global distributed quota.
+const activeStreams = new Map<string, number>();
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ organizationId: string; outletId: string }> }
@@ -9,6 +11,18 @@ export async function GET(
     const actor = await requestActor(req);
     const { organizationId, outletId } = await params;
     const first = await kitchenSnapshot(actor, organizationId, outletId);
+    const streamKey = actor.userId + ":" + actor.sessionId + ":" + outletId;
+    const active = activeStreams.get(streamKey) ?? 0;
+    if(active>=2)return new Response(JSON.stringify({message:"Too many concurrent kitchen streams"}),{status:429,headers:{"content-type":"application/json","cache-control":"no-store"}});
+    activeStreams.set(streamKey,active+1);
+    const started = Date.now();
+    let released = false;
+    const release = () => {
+      if(released)return;
+      released=true;
+      const count=activeStreams.get(streamKey)??0;
+      if(count<=1)activeStreams.delete(streamKey);else activeStreams.set(streamKey,count-1);
+    };
     const encoder = new TextEncoder();
     let cancelled = false;
     const body = new ReadableStream<Uint8Array>({
@@ -28,7 +42,7 @@ export async function GET(
         send("snapshot", first, first.cursor);
         void (async () => {
           try {
-            while (!cancelled && !req.signal.aborted) {
+            while (!cancelled && !req.signal.aborted && Date.now()-started<55000) {
               await new Promise<void>((resolve) => setTimeout(resolve, 3000));
               if (cancelled || req.signal.aborted) break;
               // Revalidate the session and current outlet/station role at EVERY heartbeat.
@@ -53,6 +67,7 @@ export async function GET(
                 });
               } catch {}
           } finally {
+            release();
             try {
               controller.close();
             } catch {}
@@ -61,6 +76,7 @@ export async function GET(
       },
       cancel() {
         cancelled = true;
+        release();
       },
     });
     return new Response(body, {

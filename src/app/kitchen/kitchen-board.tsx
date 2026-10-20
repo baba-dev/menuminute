@@ -358,6 +358,7 @@ export function KitchenBoard({
         </div>
       </header>
       <div className="mx-auto max-w-[1600px] space-y-6 px-4 pt-6 md:px-8">
+        {snapshot.workOverflow && <p role="alert" className="rounded-xl border border-orange-300 bg-orange-50 p-4 text-sm font-bold text-orange-950 dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-200">More than 500 live station tickets. This board is bounded to the oldest 500. Escalate kitchen capacity before accepting more orders.</p>}
         {!snapshot.enabled && (
           <section
             role="note"
