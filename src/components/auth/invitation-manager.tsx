@@ -17,7 +17,9 @@ export function InvitationManager({ organizationId }: { organizationId: string }
     setItems(await r.json());
   }, [organizationId]);
   useEffect(() => {
-    void Promise.resolve().then(load).catch(() => setMessage("Unable to load invitations."));
+    void Promise.resolve()
+      .then(load)
+      .catch(() => setMessage("Unable to load invitations."));
   }, [load]);
   return (
     <section className="product panel stack">
