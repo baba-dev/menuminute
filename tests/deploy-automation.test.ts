@@ -55,10 +55,11 @@ describe("provenance-bound main-only production delivery", () => {
     expect(deploy).toContain("url: https://food.bababuilds.com");
     expect(deploy).not.toContain("Staged — manual migration review and approval required.");
     expect(deploy).toContain("Confirm unattended activation eligibility");
-    expect(deploy).toContain(
-      "Staged; eligible for separate production activation. Not yet deployed."
-    );
-    expect(deploy).toContain("Not yet deployed.");
+    expect(deploy).toContain("Validated and staged; proceeding to automatic activation.");
+    expect(deploy).toContain("Not eligible for activation; check stage and migration logs.");
+    expect(deploy).not.toContain("AUTH_V2_CUTOVER_APPROVED");
+    expect(deploy).not.toContain("inputs.activate");
+    expect(deploy).toContain("menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST");
     expect(deploy).toContain("needs.stage.outputs.eligible == 'true'");
     expect(deploy).toContain("Public HTTPS, dependency and route verification");
     expect(deploy).toContain("Push-to-verified-public elapsed");
