@@ -20,7 +20,7 @@ async function seedOrdering(enabled: boolean) {
     try {
       await client.query("BEGIN");
       await client.query(
-        "insert into users(id,name,email,email_verified,two_factor_enabled) values($1,'Ordering owner',$2,true,true)",
+        "insert into users(id,name,email,email_verified) values($1,'Ordering owner',$2,true)",
         [ownerId, email]
       );
       await client.query(
@@ -40,11 +40,6 @@ async function seedOrdering(enabled: boolean) {
           fulfillmentModes: ["dine_in", "pickup"],
         }),
       ]);
-      // Fixture-only MFA policy override: ordering permissions are covered separately.
-      await client.query("update organizations set mfa_required=false where id=$1", [
-        `org-${outletId}`,
-      ]);
-      await client.query("update users set two_factor_enabled=false where id=$1", [ownerId]);
       const document = menuDocumentSchema.parse({
         name: "Online menu",
         currency: "INR",

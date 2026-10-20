@@ -148,7 +148,7 @@ BEGIN
  IF actor IS NULL OR NOT EXISTS(SELECT 1 FROM users WHERE id=actor) THEN RAISE EXCEPTION 'Unknown actor'; END IF;
  IF length(token)<12 OR length(request_input->>'name') NOT BETWEEN 2 AND 100 THEN RAISE EXCEPTION 'Invalid provisioning input'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended(outlet,0));
- -- Serialize new-organization creation per verified identity, not just per request key.
+ -- Serialize each verified owner before checking new-account quota.
  PERFORM 1 FROM users WHERE id=actor AND email_verified FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION 'Verified account required' USING ERRCODE='42501'; END IF;
  IF EXISTS(SELECT 1 FROM app_private.provisioning_requests p WHERE p.outlet_id=outlet) THEN
@@ -161,12 +161,14 @@ BEGIN
  INSERT INTO organizations(id,name) VALUES(org,request_input->>'name');
  INSERT INTO organization_members(id,organization_id,user_id,role) VALUES('member-'||outlet,org,actor,'owner');
  INSERT INTO restaurants(id,organization_id,public_id,name,slug,description,city,country,currency,timezone,outlet_type,fulfillment_modes)
- VALUES(outlet,org,token,request_input->>'name',outlet,request_input->>'description',request_input->>'city',request_input->>'country',request_input->>'currency',request_input->>'timezone',request_input->>'outletType',CASE WHEN request_input->>'outletType' IN ('cafe','takeout','cloud_kitchen') THEN ARRAY['pickup']::text[] ELSE ARRAY['dine_in']::text[] END);
+ VALUES(outlet,org,token,request_input->>'name',outlet,request_input->>'description',request_input->>'city',request_input->>'country',request_input->>'currency',request_input->>'timezone',request_input->>'outletType',COALESCE((SELECT array_agg(value) FROM jsonb_array_elements_text(request_input->'fulfillmentModes')),CASE WHEN request_input->>'outletType' IN ('cafe','takeout','cloud_kitchen') THEN ARRAY['pickup']::text[] ELSE ARRAY['dine_in']::text[] END));
  INSERT INTO app_private.provisioning_requests(outlet_id,actor_id,input) VALUES(outlet,actor,request_input-'svgData');
  INSERT INTO brands(id,organization_id,name) VALUES('brand-'||outlet,org,request_input->>'name');
  INSERT INTO brand_outlets(organization_id,brand_id,outlet_id) VALUES(org,'brand-'||outlet,outlet);
  INSERT INTO qr_codes(id,restaurant_id,destination_token,svg_data,label) VALUES('qr-'||outlet,outlet,token,request_input->>'svgData','Main Menu QR');
- UPDATE restaurants SET fulfillment_modes=ARRAY['pickup']::text[] WHERE id=outlet AND outlet_type IN ('cafe','takeout','cloud_kitchen');
+
+ INSERT INTO menus(id,organization_id,outlet_id,document) VALUES('menu-'||outlet,org,outlet,jsonb_build_object('name','Our menu','currency',request_input->>'currency','schedule',COALESCE(request_input->'menuSchedule','null'::jsonb),'categories','[]'::jsonb));
+ INSERT INTO menu_assignments(organization_id,menu_id,outlet_id) VALUES(org,'menu-'||outlet,outlet);
  PERFORM app_private.record_org_change(org,'organization.created',outlet);
 END $$;
 
