@@ -6,6 +6,7 @@ import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { KitchenBoard } from "./kitchen-board";
+import { ForbiddenError } from "@/lib/errors";
 export const metadata = {
   title: "Kitchen Pro — MenuMinute",
   description: "Outlet-scoped preparation stations and live kitchen work",
@@ -26,7 +27,8 @@ export default async function KitchenPage() {
   let initial;
   try {
     initial = await kitchenSnapshot(actor, outlet.organizationId, outlet.id);
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ForbiddenError)) throw error;
     return (
       <main className="mx-auto max-w-xl p-8">
         <h1 className="text-2xl font-bold">Kitchen access unavailable</h1>
