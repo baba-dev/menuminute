@@ -413,15 +413,15 @@ migration lineage verification, fresh verified off-host backup, bundled checksum
 runner and public SHA verification. Missing prerequisites fail closed instead of producing a
 successfully staged-only run. Do not assume the root-owned installed copy has changed on merge.
 
-## Current successor: configuration preflight and incident recovery (helper v5)
+## Current successor: configuration preflight and incident recovery (helper v6)
 
-Helper v5 preserves the v4 append-only migration, off-host backup and public-readiness contract.
+Helper v6 preserves the v4 append-only migration, off-host backup and public-readiness contract.
 Before migration work it executes the candidate's bundled `dist/env-validate.mjs` through a
 transient systemd unit as the unprivileged `menuminute` user with the root-managed web environment.
 Invalid configuration stops with variable names only.
 
-Install v5 with the pinned merge-SHA and independently verified Git-blob procedure above, changing
-the final expected version to `5`. Keep the previous executable. Source merge does not install this
+Install v6 with the pinned merge-SHA and independently verified Git-blob procedure above, changing
+the final expected version to `6`. Keep the previous executable. Source merge does not install this
 root-owned control plane.
 
 For an unhealthy-current-service incident only, create a root-owned mode-0600 authorization at

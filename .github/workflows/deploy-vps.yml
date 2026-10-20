@@ -202,8 +202,8 @@ jobs:
           [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
             echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
           }
-          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 5 || {
-            echo "RELEASE_HELPER_SETUP_REQUIRED: Install reviewed root-owned helper v5 (one-time operator bootstrap)" >&2; exit 1;
+          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 6 || {
+            echo "RELEASE_HELPER_SETUP_REQUIRED: Install reviewed root-owned helper v6 (one-time operator bootstrap)" >&2; exit 1;
           }
           # A repeated stage/activation run may find a complete prior archive.
           # Do not send a Range request starting at EOF (some CDNs return 416).
@@ -339,7 +339,7 @@ jobs:
             fi
           fi
           started="$(date -u +%s)"
-          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 5 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
+          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 6 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
             echo "activated=true" >> "$GITHUB_OUTPUT"
             echo "activation_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
           else

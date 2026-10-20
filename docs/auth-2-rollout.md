@@ -69,7 +69,7 @@ identity-checked recovery, Auth 2.0 migration rehearsal against a disposable
 backup, MFA enrollment/recovery/step-up on the production hostname, and matching
 Turnstile keys if enabled. Do not bulk-verify existing users.
 
-The root-owned helper v5 still refuses divergent applied migration histories,
+The root-owned helper v6 still refuses divergent applied migration histories,
 unhealthy services, missing migration-owner configuration, unsuccessful off-host
 backup, or failed ERP preflight. Do not disable these checks to make a deploy green.
 If the new auth release fails runtime configuration or migration, repair that

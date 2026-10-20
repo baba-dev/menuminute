@@ -1,18 +1,20 @@
-# Unattended main-to-production deployment (helper v5)
+# Unattended main-to-production deployment (helper v6)
 
 **Policy:** After the exact `main` push passes all four mandatory CI lanes, the publisher creates the immutable ARM64 artifact. The deploy workflow stages it, checks current `main`, and, if eligible, calls the restricted root-owned helper with `autoactivate`. The helper applies a _new append-only_ PostgreSQL migration when present, without asking for a per-SHA approval marker or an operator console round trip. Manual `workflow_dispatch activate=true` uses the same policy, not an unsafe bypass.
 
 ## One-time server prerequisites — not performed by a source PR
 
 The root-owned helper cannot be replaced by a source PR through the restricted
-`menuminute-deploy` account. An administrator must review/install **v5**, retaining the old
-executable. The workflow explicitly checks `--version = 5`. v5 adds candidate runtime
+`menuminute-deploy` account. An administrator must review/install **v6**, retaining the old
+executable. The workflow explicitly checks `--version = 6`. v6 adds candidate runtime
 configuration preflight before migration work and a separately authorized incident recovery mode.
+It also executes read-only migration verification from the staged release working directory so
+candidate migration paths are resolved deterministically.
 Use the exact merged commit and independently verified Git blob, as in the existing
 [Actions runbook](deployment-actions.md). Do not grant deploy unrestricted sudo, root SSH or access
 to other services.
 
-Provision `/etc/menuminute/migration.env` owned `root:root`, mode `0600`, shell-compatible and containing `MIGRATION_DATABASE_URL` for **menuminute_owner** only. Do not substitute web/worker roles or put production credentials into GitHub. The repo has an earlier `migration-db.env` initial-install convention; this v5 helper requires the explicitly reviewed `migration.env`, not an implicit copy.
+Provision `/etc/menuminute/migration.env` owned `root:root`, mode `0600`, shell-compatible and containing `MIGRATION_DATABASE_URL` for **menuminute_owner** only. Do not substitute web/worker roles or put production credentials into GitHub. The repo has an earlier `migration-db.env` initial-install convention; this v6 helper requires the explicitly reviewed `migration.env`, not an implicit copy.
 
 The existing root-only `/usr/local/sbin/menuminute-restic` must support `snapshots --json --tag` and `backup --tag`, with a working encrypted **off-host** R2 repository. PostgreSQL `pg_dump` and `pg_restore` must be installed and compatible with the server. Validate an isolated restore, retention policy and alerts separately; a successful dump alone is not a recovery drill. The service's persistent media must exist at `/var/lib/menuminute/media`. GitHub `production-staging` and `production` environments must expose the existing pinned SSH secrets and allow `main` without required reviewers if truly unattended delivery is desired. This repository connector cannot alter the installed helper or GitHub environment approvals.
 

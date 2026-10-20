@@ -5,7 +5,7 @@ set -Eeuo pipefail
 umask 027
 
 if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
-  echo 5
+  echo 6
   exit 0
 fi
 
@@ -318,6 +318,7 @@ if [[ "$mode" == incident-eligibility || "$mode" == forward-recover ]]; then
   }
   systemd-run --quiet --wait --collect --pipe --property=DynamicUser=yes \
     --property="EnvironmentFile=$owner_env" \
+    --property="WorkingDirectory=$release" \
     "$node24" "$release/dist/db-migration-verify.mjs" || {
       echo "FORWARD_RECOVERY_BLOCKED: Candidate migration ledger does not match production" >&2
       exit 1
