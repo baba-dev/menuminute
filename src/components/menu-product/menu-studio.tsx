@@ -105,6 +105,7 @@ export function MenuStudio({
   const [composerCategory, setComposerCategory] = useState("");
   const [composerFocus, setComposerFocus] = useState(0);
   const [composerPending, setComposerPending] = useState(false);
+  const [composerSelection, setComposerSelection] = useState<QuickDish[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
   const [media, setMedia] = useState<Media[]>(initialMedia);
@@ -137,7 +138,7 @@ export function MenuStudio({
     setCategoryFilter("all");
     setComposerCategory("");
     setComposerMode("add");
-    if (changedMenu) setComposerPending(false);
+    if (changedMenu) { setComposerPending(false); setComposerSelection([]); }
     setDirty(false);
   }
   function change(next: MenuDocument) {
@@ -633,6 +634,7 @@ export function MenuStudio({
                               <SmartDishComposer key={detail.id} doc={doc}
                               outletId={outlet.id} menuId={detail.id} media={media}
                               defaultCategoryId={composerCategory} focusRequest={composerFocus}
+                              selection={composerSelection} setSelection={setComposerSelection}
                               onAdd={addQuickDishes} onPendingChange={setComposerPending} />
                             </div>
                             {composerMode === "find" && <div className="panel stack">
