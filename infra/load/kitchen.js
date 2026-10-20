@@ -10,7 +10,7 @@ const base=__ENV.BASE_URL||"";
 // Parse a literal hostname instead of substring-filtering an URL; reject userinfo.
 const match=base.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 const authority=match?.[1]||"";
-const hostname=authority.replace(/:\\d+$/,"").toLowerCase();
+const hostname=authority.replace(/:\d+$/,"").toLowerCase();
 const declared=(__ENV.KITCHEN_NONPROD_HOST||"").toLowerCase();
 if(__ENV.KITCHEN_LOAD_AUTHORIZED_NONPROD!=="YES" || !authority ||
  authority.includes("@") || !hostname || !declared || hostname!==declared ||
