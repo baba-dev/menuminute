@@ -134,12 +134,15 @@ export async function inviteMember(actor: Actor, orgId: string, raw: unknown) {
   const input = invitationInput.parse(raw);
   const token = invitationToken(orgId, input, actor);
   const hash = createHash("sha256").update(token).digest("hex");
-  const result = await withActor(actor, (tx) =>
+  let result;
+  try {
+    result = await withActor(actor, (tx) =>
     tx.execute<{ invite_id: string; expires_at: Date }>(
       sql`select invite_id,expires_at from app_private.issue_invitation(${orgId},${input.email},
         ${input.role},${input.key},${hash})`
     )
   );
+  } catch (e) { domainError(e); }
   const url = new URL("/invite/" + token, env.APP_URL).toString();
   await sendAuthEmail(input.email, "Invitation to MenuMinute", url);
   return { id: result.rows[0]!.invite_id, expiresAt: result.rows[0]!.expires_at };
@@ -163,11 +166,14 @@ export async function invitationPreview(actor: Actor, rawToken: string) {
 }
 export async function acceptInvitation(actor: Actor, rawToken: string) {
   const hash = createHash("sha256").update(tokenSchema.parse(rawToken)).digest("hex");
-  const result = await withActor(actor, (tx) =>
+  let result;
+  try {
+    result = await withActor(actor, (tx) =>
     tx.execute<{ result: { organizationId: string; memberId: string } }>(
       sql`select app_private.accept_invitation(${hash}) as result`
     )
   );
+  } catch (e) { domainError(e); }
   return result.rows[0]!.result;
 }
 export async function listInvitations(actor: Actor, orgId: string) {
@@ -180,7 +186,9 @@ export async function listInvitations(actor: Actor, orgId: string) {
 }
 export async function revokeInvitation(actor: Actor, orgId: string, inviteId: string) {
   z.uuid().parse(inviteId);
-  await withActor(actor, (tx) =>
-    tx.execute(sql`select app_private.revoke_invitation(${orgId},${inviteId})`)
-  );
+  try {
+    await withActor(actor, (tx) =>
+      tx.execute(sql`select app_private.revoke_invitation(${orgId},${inviteId})`)
+    );
+  } catch (e) { domainError(e); }
 }

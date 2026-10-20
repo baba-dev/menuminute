@@ -53,7 +53,7 @@ BEGIN
  END IF;
  IF (SELECT count(*) FROM organization_members WHERE organization_id=p_org AND is_active)>=10 OR
   (SELECT count(*) FROM organization_invitations i WHERE i.organization_id=p_org AND i.status='pending' AND i.expires_at>now())>=10
- THEN RAISE EXCEPTION 'Invitation capacity reached' USING ERRCODE='54000'; END IF;
+ THEN RAISE EXCEPTION 'Invitation capacity reached' USING ERRCODE='P3002'; END IF;
  IF EXISTS(SELECT 1 FROM organization_members m JOIN users u ON u.id=m.user_id
    WHERE m.organization_id=p_org AND u.email=p_email AND m.is_active) THEN
    RAISE EXCEPTION 'Already a member' USING ERRCODE='23505'; END IF;
@@ -89,7 +89,7 @@ BEGIN
  IF inv.role='admin' AND NOT EXISTS(SELECT 1 FROM users WHERE id=actor AND two_factor_enabled)
  THEN RAISE EXCEPTION 'Enroll MFA before accepting admin invitation' USING ERRCODE='42501'; END IF;
  IF (SELECT count(*) FROM organization_members WHERE organization_id=inv.organization_id AND is_active)>=10
- THEN RAISE EXCEPTION 'Member capacity reached' USING ERRCODE='54000'; END IF;
+ THEN RAISE EXCEPTION 'Member capacity reached' USING ERRCODE='P3002'; END IF;
  SELECT id INTO mid FROM organization_members WHERE organization_id=inv.organization_id AND user_id=actor FOR UPDATE;
  IF mid IS NOT NULL AND EXISTS(SELECT 1 FROM organization_members WHERE id=mid AND (is_active OR role='owner'))
  THEN RAISE EXCEPTION 'Existing active membership requires administrator review' USING ERRCODE='23505'; END IF;
@@ -156,7 +156,7 @@ BEGIN
   RETURN;
  END IF;
  IF (SELECT count(*) FROM organization_members WHERE user_id=actor AND role='owner' AND is_active)>=3 THEN
-  RAISE EXCEPTION 'New account organization limit reached' USING ERRCODE='54000';
+  RAISE EXCEPTION 'New account organization limit reached' USING ERRCODE='P3001';
  END IF;
  INSERT INTO organizations(id,name) VALUES(org,request_input->>'name');
  INSERT INTO organization_members(id,organization_id,user_id,role) VALUES('member-'||outlet,org,actor,'owner');
