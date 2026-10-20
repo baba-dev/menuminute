@@ -135,6 +135,8 @@ export function MenuStudio({
     if (selected.current !== menuId) return;
     setDetail(next);
     setDoc(next.document);
+    setDishSearch("");
+    setCategoryFilter("all");
     setDirty(false);
   }
   function change(next: MenuDocument) {
