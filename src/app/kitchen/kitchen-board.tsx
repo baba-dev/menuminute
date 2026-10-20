@@ -223,6 +223,14 @@ export function KitchenBoard({
     }),
     [work]
   );
+  const allDay = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const ticket of work) {
+      if (ticket.status !== "queued" && ticket.status !== "preparing") continue;
+      totals.set(ticket.dishName, (totals.get(ticket.dishName) ?? 0) + ticket.quantity);
+    }
+    return [...totals].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [work]);
   async function command(url: string, body: unknown) {
     const res = await fetch(url, {
       method: "POST",
@@ -403,6 +411,19 @@ export function KitchenBoard({
             ))}
           </nav>
         )}
+        {allDay.length > 0 && (
+          <section aria-label="All-day outstanding preparation counts" className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
+            <h3 className="text-sm font-extrabold">All-day · Remaining to prepare</h3>
+            <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">Live outstanding quantities on this station; completed tickets are excluded.</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {allDay.map(([name, quantity]) => (
+                <li key={name} className="rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-stone-900 dark:bg-stone-800 dark:text-stone-100">
+                  <span className="font-extrabold tabular-nums text-orange-700 dark:text-amber-400">{quantity} ×</span> {name}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {showSettings && canManage && (
           <section
             aria-label="Station configuration"
@@ -491,6 +512,16 @@ export function KitchenBoard({
                 A dish may be routed to multiple stations. Final activation requires commercial and
                 end-to-end release sign-off.
               </p>
+              <h4 className="text-sm font-bold">Current dish routes</h4>
+              <ul className="max-h-48 space-y-2 overflow-y-auto">
+                {snapshot.routes.map(route => (
+                  <li key={route.dishId + route.stationId} className="flex items-center justify-between gap-2 rounded-lg border border-stone-200 p-2 text-sm dark:border-stone-700">
+                    <span>{menuDishes.find(d => d.id === route.dishId)?.name ?? route.dishId} · {snapshot.stations.find(st => st.id === route.stationId)?.name ?? "Inactive station"}</span>
+                    <button type="button" disabled={!!busy} onClick={() => void admin("route.remove", {dishId:route.dishId,stationId:route.stationId})} className="min-h-10 shrink-0 rounded-lg px-2 text-xs font-bold text-red-700 underline disabled:opacity-50 dark:text-red-400">Remove</button>
+                  </li>
+                ))}
+                {!snapshot.routes.length && <li className="text-xs text-stone-500">No routes configured yet.</li>}
+              </ul>
             </form>
             <form
               onSubmit={(e) => {
