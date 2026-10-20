@@ -1,7 +1,8 @@
 name: Deploy verified MenuMinute ARM64 release
 
-# Authenticate the publisher's source CI run, not workflow_run.head_sha.
-# Stage-only uses its own environment; production history is activation only.
+# Main CI -> immutable published ARM64 artifact -> automatic production activation.
+# No manual sign-off variable; the server still enforces migration lineage, backup,
+# service readiness and ERP health before cutover.
 on:
   workflow_run:
     workflows: ["Publish verified ARM64 artifact"]
@@ -12,11 +13,6 @@ on:
         description: "Full 40-character SHA of a published main release"
         required: true
         type: string
-      activate:
-        description: "Activate the verified release using the same unattended migration/backup path"
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   actions: read
@@ -35,7 +31,7 @@ jobs:
            github.event.workflow_run.event == 'workflow_run' &&
            github.event.workflow_run.head_branch == 'main' &&
            github.event.workflow_run.head_repository.full_name == github.repository) }}
-    name: Authenticate and stage (not production)
+    name: Verify, stage and check eligibility
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     environment:
@@ -230,33 +226,12 @@ jobs:
           REMOTE
           echo "staging_seconds=$(( $(date -u +%s) - stage_start ))" >> "$GITHUB_OUTPUT"
 
-      # New identity controls invalidate unverified legacy sessions. Merging code is not
-      # authorization to activate it: staging is safe; cutover requires reviewed sign-off.
-      - name: Require Auth 2.0 production cutover sign-off
-        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
-        id: auth_cutover
-        env:
-          AUTH_V2_CUTOVER_APPROVED: ${{ vars.AUTH_V2_CUTOVER_APPROVED }}
-        run: |
-          set -Eeuo pipefail
-          if [[ "$AUTH_V2_CUTOVER_APPROVED" != 'verified-identity-mfa-2026-10' ]]; then
-            echo "approved=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Auth 2.0 staged only. Verify Resend, existing-owner inventory, recovery process and MFA enrollment before cutover."
-            exit 0
-          fi
-          echo "approved=true" >> "$GITHUB_OUTPUT"
       - name: Confirm unattended activation eligibility
-        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true' && steps.auth_cutover.outputs.approved == 'true'
+        if: steps.source.outputs.superseded != 'true' && steps.transport.outputs.superseded != 'true'
         id: policy
-        env:
-          AUTO: ${{ github.event_name == 'workflow_run' }}
-          MANUAL_ACTIVATE: ${{ inputs.activate }}
         run: |
           set -Eeuo pipefail
           echo "eligible=false" >> "$GITHUB_OUTPUT"
-          if [[ "$AUTO" != true && "$MANUAL_ACTIVATE" != true ]]; then
-            exit 0
-          fi
           latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
           if [[ "$latest" != "$RELEASE_SHA" ]]; then
             echo "superseded=true" >> "$GITHUB_OUTPUT"
@@ -285,9 +260,9 @@ jobs:
             if [[ "$SUPERSEDED_BEFORE" == true || "$SUPERSEDED_AFTER" == true ]]; then
               echo "| Outcome | Superseded; not deployed. |"
             elif [[ "$ELIGIBLE" == true ]]; then
-              echo "| Outcome | Staged; eligible for separate production activation. Not yet deployed. |"
+              echo "| Outcome | Validated and staged; proceeding to automatic activation. |"
             else
-              echo "| Outcome | Stage-only or failed; not deployed. |"
+              echo "| Outcome | Not eligible for activation; check stage and migration logs. |"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
