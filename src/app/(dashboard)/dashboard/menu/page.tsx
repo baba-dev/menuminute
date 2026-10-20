@@ -23,7 +23,12 @@ export default async function Page() {
     );
   const list = await listMenus(actor, outlet.id);
   const imports = await listImports(actor, outlet.id).catch((error: unknown) => {
-    if (typeof error === "object" && error !== null && "statusCode" in error && error.statusCode === 403)
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      error.statusCode === 403
+    )
       return [];
     throw error;
   });
