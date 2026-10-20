@@ -295,6 +295,8 @@ BEGIN
    'position',s.position) ORDER BY s.position,s.name) FROM kitchen_stations s
    WHERE s.outlet_id=p_outlet AND s.active AND (is_admin OR EXISTS(
     SELECT 1 FROM kitchen_station_members sm WHERE sm.station_id=s.id AND sm.member_id=member))), '[]'::jsonb),
+ 'routes',CASE WHEN is_admin THEN COALESCE((SELECT jsonb_agg(jsonb_build_object('dishId',dish_id,'stationId',station_id,'ruleVersion',rule_version) ORDER BY dish_id,station_id)
+ FROM kitchen_routes WHERE outlet_id=p_outlet),'[]'::jsonb) ELSE '[]'::jsonb END,
  'work',COALESCE((SELECT jsonb_agg(jsonb_build_object(
    'id',w.id,'stationId',w.station_id,'orderId',w.order_id,'orderNumber',o.order_number,
    'fulfillmentMode',o.fulfillment_mode,'tableLabel',t.table_number,'brandLabel',r.name,
