@@ -53,6 +53,13 @@ it("restores server-owned draft and reconciles an accepted lost provisioning res
       outlet.id,
     ]);
     expect(count.rows[0].n).toBe(1);
+    // Regression: provisioning must preserve the default menu and its outlet
+    // assignment from the latest menu-product migration, not just the new quota.
+    const menu = await pool.query(
+      "select count(*)::int as n from menus m join menu_assignments a on a.menu_id=m.id and a.outlet_id=$1 where m.outlet_id=$1",
+      [outlet.id]
+    );
+    expect(menu.rows[0].n).toBe(1);
   });
 });
 it("only the verified matching recipient can accept a pending invitation once", async () => {
