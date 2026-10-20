@@ -5,7 +5,7 @@ export function ContextSwitcher({
   outlets,
   selected,
 }: {
-  outlets: { id: string; name: string }[];
+  outlets: { id: string; name: string; organizationId: string }[];
   selected?: string;
 }) {
   const router = useRouter();
@@ -43,7 +43,7 @@ export function ContextSwitcher({
           </option>
           {outlets.map((o) => (
             <option key={o.id} value={o.id}>
-              {o.name}
+              {o.name} · {o.organizationId.slice(0, 12)}
             </option>
           ))}
         </select>

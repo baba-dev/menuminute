@@ -9,6 +9,8 @@ import {
 import { withActor, withOutlet, type Actor } from "../src/modules/tenancy/service";
 import { createCategory, createMenuItem } from "../src/modules/menus/service";
 import { getPublicMenu, getRestaurantById } from "../src/modules/restaurants/service";
+import { inviteMember, acceptInvitation } from "../src/modules/onboarding/service";
+import { drainAuthTestMessages } from "../src/lib/auth-email";
 // A synthetic fixture simulates an authenticated password + TOTP confirmation at the
 // database boundary. Production proof is issued only by the /api/security/step-up route.
 async function confirmedOwner(actor: Actor): Promise<Actor> {
@@ -44,6 +46,18 @@ async function account() {
     );
   });
   return { userId: id, email };
+}
+async function invitedMember(actor: Actor, org: string, member: { userId: string; email: string }, role: "member" | "admin") {
+  drainAuthTestMessages();
+  if (role === "admin") await admin(async (_,p) => { await p.query("update users set two_factor_enabled=true where id=$1",[member.userId]); });
+  await inviteMember(role === "admin" ? await confirmedOwner(actor) : actor, org, {
+    email: member.email, role, key: crypto.randomUUID(),
+  });
+  const mail = drainAuthTestMessages().find(m => m.subject.includes("Invitation"));
+  expect(mail).toBeDefined();
+  const token = mail!.text.match(/\/invite\/([a-f0-9]{64})/)?.[1];
+  expect(token).toBeTruthy();
+  return acceptInvitation(member, token!);
 }
 it("serializes commands, persists one audit/event for retries, rejects key reuse and stale writers", async () => {
   const { actor, outlet } = await fixture();
@@ -85,11 +99,8 @@ it("checks current roles on every retry, prevents escalation and cross-tenant ou
   const other = await fixture();
   const org = outlet.organizationId;
   const member = await account();
-  const saved = await command(actor, org, "member.save", {
-    email: member.email,
-    role: "member",
-    isActive: true,
-  });
+  await expect(command(actor, org, "member.save", { email: member.email, role: "member", isActive: true })).rejects.toMatchObject({ statusCode: 403 });
+  const saved = await invitedMember(actor, org, member, "member");
   await command(actor, org, "outlet.roles", {
     outletId: outlet.id,
     memberId: saved.memberId,
@@ -129,10 +140,9 @@ it("checks current roles on every retry, prevents escalation and cross-tenant ou
       linked: true,
     })
   ).rejects.toMatchObject({ statusCode: 422 });
+  await admin(async (_,p) => { await p.query("update users set two_factor_enabled=true where id=$1",[member.userId]); });
   await command(await confirmedOwner(actor), org, "member.save", {
-    email: member.email,
-    role: "admin",
-    isActive: true,
+    email: member.email, role: "admin", isActive: true,
   });
   await expect(
     command(member, org, "organization.active", { isActive: false })
@@ -196,11 +206,7 @@ it("suspends public/private access, lets only owner reactivate, transfers exactl
   const { actor, outlet } = await fixture();
   const org = outlet.organizationId;
   const member = await account();
-  const m = await command(await confirmedOwner(actor), org, "member.save", {
-    email: member.email,
-    role: "admin",
-    isActive: true,
-  });
+  const m = await invitedMember(actor, org, member, "admin");
   await admin(async (_, p) => {
     await p.query("update restaurants set is_published=true where id=$1", [outlet.id]);
   });

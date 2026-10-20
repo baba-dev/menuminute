@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
-import { getRestaurantById } from "@/modules/restaurants/service";
+import { getRestaurantById, getRestaurantsByUserId, getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { auth } from "@/lib/auth";
+import { UnauthorizedError } from "@/lib/errors";
+import { cookies } from "next/headers";
 import { env } from "@/lib/config/env";
 export async function POST(req: Request) {
   try {
@@ -23,4 +26,19 @@ export async function POST(req: Request) {
   } catch (e) {
     return errorResponse(e);
   }
+}
+
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user.id) throw new UnauthorizedError();
+    const outlets = await getRestaurantsByUserId(session.user.id);
+    const selected = await getDefaultOrActiveRestaurant(session.user.id,
+      (await cookies()).get("menuminute.outlet")?.value);
+    return NextResponse.json({ hasOutlets: outlets.length > 0, selectedOutletId: selected?.id ?? null,
+      outlets: outlets.map(o => ({ id:o.id, name:o.name, organizationId:o.organizationId,
+        currency:o.currency, country:o.country, timezone:o.timezone })) }, {
+      headers: { "cache-control": "private, no-store" },
+    });
+  } catch(e) { return errorResponse(e); }
 }
