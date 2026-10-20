@@ -80,6 +80,7 @@ export function MenuStudio({
   initialMedia,
   outletChoices,
   brandChoices,
+  imports = [],
 }: {
   outlet: {
     id: string;
@@ -95,6 +96,7 @@ export function MenuStudio({
   initialMedia: Media[];
   outletChoices: { id: string; name: string; currency: string }[];
   brandChoices: { id: string; name: string }[];
+  imports?: { id: string; status: string; revision: number; updatedAt: Date | string }[];
 }) {
   const router = useRouter();
   const [list, setList] = useState(initialList);
@@ -105,6 +107,8 @@ export function MenuStudio({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("dishes");
+  const [dishSearch, setDishSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [milestone, setMilestone] = useState(false);
@@ -227,15 +231,27 @@ export function MenuStudio({
   }
   return (
     <div className="product stack">
-      <header className="row between">
-        <div>
-          <span className="eyebrow">
-            {outlet.outletType.replaceAll("_", " ")} · {outlet.currency}
-          </span>
-          <h1>Menu Studio</h1>
-          <p>{outlet.name} · Save, preview, then publish.</p>
+      <header className="relative overflow-hidden rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-sm sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full border-[32px] border-orange-100/70" aria-hidden="true" />
+        <div className="relative flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <span className="text-xs font-black uppercase tracking-[.2em] text-orange-700">
+              MenuMinute · {outlet.outletType.replaceAll("_", " ")} · {outlet.currency}
+            </span>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-stone-950 sm:text-4xl">Menu Studio</h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-stone-700">
+              Build, refine and preview {outlet.name}&apos;s menu in one place. Guests only see what you explicitly publish.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/menu/import" className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-orange-700">
+              <ImagePlus size={17} /> Import from photos
+            </Link>
+            <Link href="/dashboard/qr-codes" className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-stone-800 hover:border-orange-400">
+              Permanent QR
+            </Link>
+          </div>
         </div>
-        <UtensilsCrossed size={48} aria-hidden="true" />
       </header>
       <div className="panel row between">
         <label className="field">
@@ -288,6 +304,38 @@ export function MenuStudio({
           Create menu
         </button>
       </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Menu Studio overview">
+        {[
+          { label: "Sections", value: doc?.categories.filter((cat) => !cat.archived).length ?? 0, note: "In this editable draft" },
+          { label: "Dishes", value: doc?.categories.reduce((n, cat) => n + cat.items.filter((item) => !item.archived).length, 0) ?? 0, note: "Across your sections" },
+          { label: "Source imports", value: imports.filter((item) => ["needs_review", "ready"].includes(item.status)).length, note: "Ready for human review" },
+          { label: "Publication", value: detail?.publishedRevision ? "Live" : "Draft", note: dirty ? "Unsaved editor changes" : "Explicit publish only" },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-stone-500">{stat.label}</p>
+            <p className="mt-2 text-2xl font-black tabular-nums text-stone-950">{stat.value}</p>
+            <p className="mt-1 text-xs text-stone-600">{stat.note}</p>
+          </div>
+        ))}
+      </div>
+      {imports.some((item) => ["needs_review", "ready"].includes(item.status)) && (
+        <section aria-label="Pending human review" className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-orange-700">Smart Menu Studio</p>
+              <h2 className="mt-1 text-base font-bold text-stone-900">Your extracted menus need a human eye</h2>
+              <p className="mt-1 text-xs text-stone-700">Compare source photos and correct prices before applying a private draft.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {imports.filter((item) => ["needs_review", "ready"].includes(item.status)).slice(0, 3).map((item) => (
+                <Link key={item.id} href={"/dashboard/menu/import/" + encodeURIComponent(item.id) + "/review"} className="rounded-xl bg-white px-4 py-3 text-xs font-bold text-orange-800 shadow-sm hover:bg-orange-100">
+                  {item.status === "ready" ? "Apply confirmed draft" : "Continue source review"} →
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {error && (
         <div role="alert" className="error" tabIndex={-1}>
           {error}{" "}
@@ -475,6 +523,29 @@ export function MenuStudio({
                       />
                       {tab === "dishes" && (
                         <>
+                          <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs font-bold text-stone-700">
+                                Find a dish or section
+                                <input aria-label="Find a dish or section" type="search" value={dishSearch}
+                                  onChange={(e) => setDishSearch(e.target.value)} placeholder="Search names and descriptions"
+                                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-950 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100" />
+                              </label>
+                              <span className="text-xs font-bold text-stone-500">Filtering changes this view, never the saved menu.</span>
+                            </div>
+                            <nav aria-label="Jump to menu section" className="mt-4 flex flex-wrap gap-2">
+                              <button type="button" aria-pressed={categoryFilter === "all"} onClick={() => setCategoryFilter("all")}
+                                className={categoryFilter === "all" ? "rounded-full bg-stone-900 px-4 py-2 text-xs font-bold text-white" : "rounded-full border border-stone-300 px-4 py-2 text-xs font-bold text-stone-700"}>
+                                All sections
+                              </button>
+                              {doc.categories.map((cat) => (
+                                <button key={cat.id} type="button" aria-pressed={categoryFilter === cat.id} onClick={() => setCategoryFilter(cat.id)}
+                                  className={categoryFilter === cat.id ? "rounded-full bg-orange-600 px-4 py-2 text-xs font-bold text-white" : "rounded-full border border-stone-300 px-4 py-2 text-xs font-bold text-stone-700"}>
+                                  {cat.name} · {cat.items.length}
+                                </button>
+                              ))}
+                            </nav>
+                          </div>
                           <div className="row between">
                             <h2>Sections & dishes</h2>
                             <button
@@ -499,8 +570,13 @@ export function MenuStudio({
                               Add category
                             </button>
                           </div>
-                          {doc.categories.map((c, ci) => (
-                            <section key={c.id} className="panel stack">
+                          {doc.categories
+                            .map((c, ci) => ({ c, ci }))
+                            .filter(({ c }) => (categoryFilter === "all" || categoryFilter === c.id) &&
+                              (!dishSearch.trim() || [c.name, c.description, ...c.items.flatMap(d => [d.name, d.description])]
+                                .some(value => value.toLocaleLowerCase().includes(dishSearch.trim().toLocaleLowerCase()))))
+                            .map(({ c, ci }) => (
+                            <section key={c.id} className="panel stack rounded-2xl border border-stone-200 bg-white shadow-sm">
                               <div className="row between">
                                 <span className="eyebrow">Section {ci + 1}</span>
                                 <div className="row">
@@ -550,7 +626,12 @@ export function MenuStudio({
                                   }
                                 />
                               </label>
-                              {c.items.map((dish, di) => (
+                              {c.items
+                                .map((dish, di) => ({ dish, di }))
+                                .filter(({ dish }) => !dishSearch.trim() ||
+                                  [c.name, c.description, dish.name, dish.description]
+                                    .some(value => value.toLocaleLowerCase().includes(dishSearch.trim().toLocaleLowerCase())))
+                                .map(({ dish, di }) => (
                                 <div className="dish-editor stack" key={dish.id}>
                                   <div className="row between">
                                     <span className="eyebrow">Dish {di + 1}</span>
@@ -1215,8 +1296,11 @@ export function MenuStudio({
                 </>
               )}
             </div>
-            <aside className="preview-phone no-print">
-              <span className="eyebrow">Private draft preview</span>
+            <aside className="preview-phone no-print rounded-3xl border border-stone-200 bg-white p-5 shadow-sm" aria-label="Integrated private draft preview">
+              <span className="eyebrow">Private draft preview · Menu Studio 2.0</span>
+              <p className="mt-2 rounded-lg bg-orange-50 p-2 text-xs font-semibold text-orange-900">
+                Updates as you edit. Guests only see the last explicitly published revision.
+              </p>
               <h2>{doc.name}</h2>
               <small>
                 {outlet.currency} · {outlet.timezone}

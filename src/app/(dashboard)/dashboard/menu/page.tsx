@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { MenuStudio } from "@/components/menu-product/menu-studio";
+import { listImports } from "@/modules/menu-import/service";
 export default async function Page() {
   const session = await auth();
   if (!session) redirect("/login");
@@ -21,27 +22,23 @@ export default async function Page() {
       </div>
     );
   const list = await listMenus(actor, outlet.id);
+  const imports = await listImports(actor, outlet.id).catch((error: unknown) => {
+    if (typeof error === "object" && error !== null && "statusCode" in error && error.statusCode === 403)
+      return [];
+    throw error;
+  });
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Link
-          href="/dashboard/menu/import"
-          className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
-        >
-          Import from photos ↗
-        </Link>
-      </div>
-      <MenuStudio
-        key={outlet.id}
-        outlet={outlet}
-        initialList={list}
-        initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
-        initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
-        outletChoices={await getRestaurantsByUserId(actor.userId)}
-        brandChoices={await withActor(actor, (tx) =>
-          tx.select({ id: brands.id, name: brands.name }).from(brands)
-        )}
-      />
-    </div>
+    <MenuStudio
+      key={outlet.id}
+      outlet={outlet}
+      initialList={list}
+      initialDetail={list[0] ? await menuDetail(actor, list[0].id) : null}
+      initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
+      outletChoices={await getRestaurantsByUserId(actor.userId)}
+      brandChoices={await withActor(actor, (tx) =>
+        tx.select({ id: brands.id, name: brands.name }).from(brands)
+      )}
+      imports={imports}
+    />
   );
 }
