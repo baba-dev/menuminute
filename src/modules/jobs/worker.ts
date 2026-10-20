@@ -182,8 +182,9 @@ export async function consumeEvent(
       "order.created",
       "order.status_changed",
       "order.payment_changed",
+      "kitchen.changed",
     ].includes(event.type);
-    const receiptConsumer = isOrderEvent ? "order-event-v1" : consumerName;
+    const receiptConsumer = event.type === "kitchen.changed" ? "kitchen-event-v1" : isOrderEvent ? "order-event-v1" : consumerName;
     if (
       (
         await client.query("select 1 from consumer_receipts where event_id=$1 and consumer=$2", [
@@ -199,7 +200,14 @@ export async function consumeEvent(
       permanent = true;
       throw new Error("Unsupported durable event schema");
     }
-    if (isOrderEvent) {
+    if (event.type === "kitchen.changed") {
+      const parsed = z.object({outletId:z.string().min(1).max(128),seq:z.number().int().positive(),kind:z.string().min(1).max(40)}).strict().safeParse(event.payload);
+      if (!parsed.success || event.aggregate_version !== 1 || parsed.data.outletId !== event.outlet_id) {
+        permanent = true;
+        throw new Error("Invalid kitchen event");
+      }
+      // Event is already committed in kitchen_events; PostgreSQL snapshot is the recovery source.
+    } else if (isOrderEvent) {
       const payload = z
         .object({
           orderId: z.string().min(1).max(128),
