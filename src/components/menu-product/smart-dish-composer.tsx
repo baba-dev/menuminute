@@ -172,6 +172,19 @@ export function SmartDishComposer({ doc, outletId, menuId, media, defaultCategor
           </div>
           <label className="row smart-free"><input type="checkbox" checked={item.free}
             onChange={e=>update(item.key,{free:e.target.checked,priceText:e.target.checked?"":item.priceText})}/> This item is free</label>
+          {approved.length > 0 && <details className="smart-upload-picker">
+            <summary>Browse {approved.length} approved uploaded photographs</summary>
+            <div className="smart-upload-gallery">
+              {approved.map((photo,index) => <button type="button" key={photo.id}
+                className={photo.id===item.mediaId ? "is-selected" : ""}
+                aria-pressed={photo.id===item.mediaId}
+                aria-label={"Use approved photo "+(index+1)+" for "+item.name}
+                onClick={()=>update(item.key,{mediaId:photo.id})}>
+                <img src={"/api/media/"+encodeURIComponent(photo.id)} alt="" width={76} height={60}/>
+                <span>Photo {index+1}</span>
+              </button>)}
+            </div>
+          </details>}
           {item.mediaId && approved.some(m=>m.id===item.mediaId) && <span className="smart-photo-preview">
             <img src={"/api/media/"+encodeURIComponent(item.mediaId)} alt={"Selected uploaded photo for "+item.name}
               width={84} height={70}/></span>}
