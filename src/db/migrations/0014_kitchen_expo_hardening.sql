@@ -48,6 +48,11 @@ BEGIN
  OR NOT app_private.can_outlet(p_outlet,'orders.prepare') OR NOT app_private.kitchen_access(p_outlet,w.station_id)
  THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO o FROM orders WHERE id=w.order_id AND restaurant_id=p_outlet FOR UPDATE;
+ SELECT * INTO w FROM kitchen_work WHERE id=p_work AND outlet_id=p_outlet FOR UPDATE;
+ -- Station assignment may change while waiting on the order lock. Always re-authorize
+ -- the current locked row, including idempotent replays, before returning any result.
+ IF w.id IS NULL OR NOT app_private.kitchen_access(p_outlet,w.station_id)
+ THEN RAISE EXCEPTION 'Current station permission required' USING ERRCODE='42501'; END IF;
  SELECT * INTO prior FROM kitchen_command_receipts WHERE outlet_id=p_outlet AND request_key=p_key FOR UPDATE;
  IF FOUND THEN
   IF prior.action<>'work.'||p_action OR prior.target_id<>p_work OR prior.expected_version<>p_expected
