@@ -1,0 +1,1437 @@
+[
+  {
+    "id": "MM-IN-048",
+    "name": "Adai with Avial",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-054",
+    "name": "Akki Roti",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-007",
+    "name": "Aloo Gobi",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-105",
+    "name": "Aloo Posto",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-013",
+    "name": "Amritsari Fish",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-011",
+    "name": "Amritsari Kulcha",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-076",
+    "name": "Andhra Kodi Vepudu",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-061",
+    "name": "Appam with Vegetable Stew",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-137",
+    "name": "Assamese Duck Curry",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-070",
+    "name": "Avial",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-130",
+    "name": "Axone Pork",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-030",
+    "name": "Baati Chokha",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-078",
+    "name": "Bagara Baingan",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-008",
+    "name": "Baingan Bharta",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-197",
+    "name": "Balushahi",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-028",
+    "name": "Banarasi Kachori Sabzi",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-027",
+    "name": "Banarasi Tamatar Chaat",
+    "categoryHint": "Street Food",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-108",
+    "name": "Basanti Pulao",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-199",
+    "name": "Bebinca",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-025",
+    "name": "Bedmi Puri with Aloo Sabzi",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-187",
+    "name": "Besan Ladoo",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-087",
+    "name": "Bharli Mirchi",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-088",
+    "name": "Bharli Vangi",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-009",
+    "name": "Bhindi Masala",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-039",
+    "name": "Bhutte Ka Kees",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-biryani",
+    "name": "Biryani",
+    "categoryHint": "Indian",
+    "aliases": [
+      "biriyani"
+    ]
+  },
+  {
+    "id": "MM-IN-052",
+    "name": "Bisi Bele Bath",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-bruschetta",
+    "name": "Bruschetta",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-burger",
+    "name": "Burger",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-butter-chicken",
+    "name": "Butter Chicken",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-caesar-salad",
+    "name": "Caesar Salad",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-caprese-salad",
+    "name": "Caprese Salad",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-128",
+    "name": "Chak Hao Kheer",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-045",
+    "name": "Chettinad Chicken",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-046",
+    "name": "Chettinad Pepper Mushroom",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-113",
+    "name": "Chhena Poda",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-158",
+    "name": "Chicken 65",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-100",
+    "name": "Chicken Cafreal",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-173",
+    "name": "Chicken Chop Suey",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-170",
+    "name": "Chicken Fried Rice",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-175",
+    "name": "Chicken Hot and Sour Soup",
+    "categoryHint": "Soups",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-180",
+    "name": "Chicken in Black Pepper Sauce",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-178",
+    "name": "Chicken in Hot Garlic Sauce",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-110",
+    "name": "Chicken Kathi Roll",
+    "categoryHint": "Street Food",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-145",
+    "name": "Chicken Lollipop",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-165",
+    "name": "Chicken Manchurian Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-152",
+    "name": "Chicken Spring Rolls",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-058",
+    "name": "Chicken Sukka",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-015",
+    "name": "Chicken Tikka",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-144",
+    "name": "Chilli Chicken Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-157",
+    "name": "Chilli Garlic Fish",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-161",
+    "name": "Chilli Garlic Veg Momos",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-149",
+    "name": "Chilli Mushroom Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-143",
+    "name": "Chilli Paneer Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-163",
+    "name": "Chilli Soya Chaap",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-103",
+    "name": "Chingri Malai Curry",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-chole-bhature",
+    "name": "Chole Bhature",
+    "categoryHint": "Indian",
+    "aliases": [
+      "chhole bhature",
+      "chana bhatura"
+    ]
+  },
+  {
+    "id": "MM-IN-059",
+    "name": "Chow Chow Bath",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-148",
+    "name": "Crispy Chilli Baby Corn",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-153",
+    "name": "Crispy Corn Salt and Pepper",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-160",
+    "name": "Crispy Lotus Stem",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-177",
+    "name": "Crispy Pan-Fried Noodles",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-049",
+    "name": "Curd Rice",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-031",
+    "name": "Dal Baati Churma",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-096",
+    "name": "Dal Dhokli",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-001",
+    "name": "Dal Makhani",
+    "categoryHint": "Main Course",
+    "aliases": [
+      "daal makhani"
+    ]
+  },
+  {
+    "id": "MM-IN-118",
+    "name": "Dal Pitha",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-dal-tadka",
+    "name": "Dal Tadka",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-111",
+    "name": "Dalma",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-091",
+    "name": "Dhokla",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-119",
+    "name": "Dhuska",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-133",
+    "name": "Dohneiiong",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-104",
+    "name": "Doi Maach",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-donut",
+    "name": "Donut",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-198",
+    "name": "Double Ka Meetha",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-154",
+    "name": "Dragon Chicken",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-146",
+    "name": "Drums of Heaven",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-169",
+    "name": "Egg Fried Rice",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-068",
+    "name": "Erachi Pathiri",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-126",
+    "name": "Eromba",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-focaccia",
+    "name": "Focaccia",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-french-fries",
+    "name": "French Fries",
+    "categoryHint": "Western",
+    "aliases": [
+      "chips"
+    ]
+  },
+  {
+    "id": "MM-CORE-fried-chicken",
+    "name": "Fried Chicken",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-185",
+    "name": "Gajar Ka Halwa",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-021",
+    "name": "Galouti Kebab",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-032",
+    "name": "Gatte Ki Sabzi",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-gelato",
+    "name": "Gelato",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-194",
+    "name": "Ghevar",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-gnocchi",
+    "name": "Gnocchi",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-098",
+    "name": "Goan Fish Curry",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-142",
+    "name": "Gobi Manchurian Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-072",
+    "name": "Gongura Mutton",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-071",
+    "name": "Gongura Pachadi",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-grilled-fish",
+    "name": "Grilled Fish",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-139",
+    "name": "Gudok with Dried Fish",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-gulab-jamun",
+    "name": "Gulab Jamun",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-125",
+    "name": "Gundruk Soup",
+    "categoryHint": "Soups",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-075",
+    "name": "Gutti Vankaya Kura",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-164",
+    "name": "Honey Chilli Cauliflower",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-147",
+    "name": "Honey Chilli Potato",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-hot-dog",
+    "name": "Hot Dog",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-077",
+    "name": "Hyderabadi Haleem",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-idli-sambar",
+    "name": "Idli Sambar",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-132",
+    "name": "Jadoh",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-184",
+    "name": "Jalebi",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-004",
+    "name": "Kadai Paneer",
+    "categoryHint": "Main Course",
+    "aliases": [
+      "karahi paneer"
+    ]
+  },
+  {
+    "id": "MM-IN-183",
+    "name": "Kaju Katli",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-022",
+    "name": "Kakori Kebab",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-065",
+    "name": "Karimeen Pollichathu",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-006",
+    "name": "Kashmiri Dum Aloo",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-019",
+    "name": "Kashmiri Haak Saag",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-017",
+    "name": "Kashmiri Mutton Yakhni",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-033",
+    "name": "Ker Sangri",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-067",
+    "name": "Kerala Beef Fry",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-063",
+    "name": "Kerala Sadya",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-092",
+    "name": "Khandvi",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-089",
+    "name": "Kolhapuri Tambda Rassa",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-057",
+    "name": "Kori Rotti",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-102",
+    "name": "Kosha Mangsho",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-086",
+    "name": "Kothimbir Vadi",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-196",
+    "name": "Kulfi",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-162",
+    "name": "Kung Pao Chicken Indian Style",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-047",
+    "name": "Kuzhi Paniyaram",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-034",
+    "name": "Laal Maas",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-lasagna",
+    "name": "Lasagna",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-050",
+    "name": "Lemon Rice",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-116",
+    "name": "Litti Chokha",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-109",
+    "name": "Luchi with Aloo Dum",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-023",
+    "name": "Lucknowi Nihari",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-mac-and-cheese",
+    "name": "Mac & Cheese",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-115",
+    "name": "Macha Besara",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-055",
+    "name": "Maddur Vada",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-012",
+    "name": "Makki di Roti with Sarson da Saag",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-064",
+    "name": "Malabar Parotta with Chicken Curry",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-005",
+    "name": "Malai Kofta",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-195",
+    "name": "Malpua with Rabri",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-056",
+    "name": "Mangalore Buns",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-masala-dosa",
+    "name": "Masala Dosa",
+    "categoryHint": "Indian",
+    "aliases": [
+      "masala dosai"
+    ]
+  },
+  {
+    "id": "MM-IN-135",
+    "name": "Masor Tenga",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-029",
+    "name": "Matar Ka Nimona",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-041",
+    "name": "Medu Vada",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-066",
+    "name": "Meen Moilee",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-093",
+    "name": "Methi Thepla",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-milkshake",
+    "name": "Milkshake",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-080",
+    "name": "Mirchi Ka Salan",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-037",
+    "name": "Mirchi Vada",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-082",
+    "name": "Misal Pav",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-179",
+    "name": "Mixed Vegetables in Hot Garlic Sauce",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-107",
+    "name": "Mochar Ghonto",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-191",
+    "name": "Modak",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-186",
+    "name": "Moong Dal Halwa",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-188",
+    "name": "Motichoor Ladoo",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-150",
+    "name": "Mushroom Manchurian",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-020",
+    "name": "Mutton Korma",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-060",
+    "name": "Mysore Bonda",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-189",
+    "name": "Mysore Pak",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-naan",
+    "name": "Naan",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-018",
+    "name": "Nadru Yakhni",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-112",
+    "name": "Pakhala Bhata",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-190",
+    "name": "Palada Payasam",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-002",
+    "name": "Palak Paneer",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-pancakes",
+    "name": "Pancakes",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-159",
+    "name": "Paneer 65",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-paneer-tikka",
+    "name": "Paneer Tikka",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-136",
+    "name": "Papaya Khar",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-044",
+    "name": "Parotta with Salna",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-200",
+    "name": "Patishapta",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-097",
+    "name": "Patra",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-081",
+    "name": "Pav Bhaji",
+    "categoryHint": "Street Food",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-069",
+    "name": "Pazham Pori",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-penne-alfredo",
+    "name": "Penne Alfredo",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-073",
+    "name": "Pesarattu Upma",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-123",
+    "name": "Phagshapa",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-085",
+    "name": "Pithla Bhakri",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-pizza-margherita",
+    "name": "Pizza Margherita",
+    "categoryHint": "Italian",
+    "aliases": [
+      "margherita pizza"
+    ]
+  },
+  {
+    "id": "MM-IN-038",
+    "name": "Poha Jalebi",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-099",
+    "name": "Prawn Balchao",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-051",
+    "name": "Puliyodarai",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-010",
+    "name": "Punjabi Kadhi Pakora",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-192",
+    "name": "Puran Poli",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-062",
+    "name": "Puttu Kadala Curry",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-036",
+    "name": "Pyaaz Kachori",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-053",
+    "name": "Ragi Mudde with Bassaru",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-rajma-chawal",
+    "name": "Rajma Chawal",
+    "categoryHint": "Indian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-181",
+    "name": "Rasgulla",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-182",
+    "name": "Rasmalai",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-ravioli",
+    "name": "Ravioli",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-risotto",
+    "name": "Risotto",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-016",
+    "name": "Rogan Josh",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-074",
+    "name": "Royyala Iguru",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-120",
+    "name": "Rugra Curry",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-083",
+    "name": "Sabudana Khichdi",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-035",
+    "name": "Safed Maas",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-155",
+    "name": "Salt and Pepper Prawns",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-samosa",
+    "name": "Samosa",
+    "categoryHint": "Indian",
+    "aliases": [
+      "samosay"
+    ]
+  },
+  {
+    "id": "MM-CORE-sandwich",
+    "name": "Sandwich",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-114",
+    "name": "Santula",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-090",
+    "name": "Saoji Chicken",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-079",
+    "name": "Sarva Pindi",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-117",
+    "name": "Sattu Paratha",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-156",
+    "name": "Schezwan Paneer Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-095",
+    "name": "Sev Tameta Nu Shaak",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-124",
+    "name": "Sha Phaley",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-003",
+    "name": "Shahi Paneer",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-024",
+    "name": "Sheermal",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-101",
+    "name": "Shorshe Ilish",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-193",
+    "name": "Shrikhand",
+    "categoryHint": "Desserts",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-106",
+    "name": "Shukto",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-040",
+    "name": "Siddu",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-127",
+    "name": "Singju",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-129",
+    "name": "Smoked Pork with Bamboo Shoot",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-spaghetti",
+    "name": "Spaghetti",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-steak",
+    "name": "Steak",
+    "categoryHint": "Western",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-121",
+    "name": "Steamed Vegetable Momos",
+    "categoryHint": "Snacks",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-014",
+    "name": "Tandoori Chicken",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-084",
+    "name": "Thalipeeth",
+    "categoryHint": "Breads",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-tiramisu",
+    "name": "Tiramisu",
+    "categoryHint": "Italian",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-134",
+    "name": "Tungrymbai",
+    "categoryHint": "Sides",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-094",
+    "name": "Undhiyu",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-CORE-vada-pav",
+    "name": "Vada Pav",
+    "categoryHint": "Indian",
+    "aliases": [
+      "wada pav"
+    ]
+  },
+  {
+    "id": "MM-IN-172",
+    "name": "Veg American Chop Suey",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-166",
+    "name": "Veg Hakka Noodles",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-174",
+    "name": "Veg Manchow Soup",
+    "categoryHint": "Soups",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-141",
+    "name": "Veg Manchurian Dry",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-168",
+    "name": "Veg Schezwan Fried Rice",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-167",
+    "name": "Veg Schezwan Noodles",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-176",
+    "name": "Veg Sweet Corn Soup",
+    "categoryHint": "Soups",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-171",
+    "name": "Veg Triple Schezwan Rice",
+    "categoryHint": "Other",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-138",
+    "name": "Vegetable Bai",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-131",
+    "name": "Vegetable Galho",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-043",
+    "name": "Vegetable Kothu Parotta",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-151",
+    "name": "Vegetable Spring Rolls",
+    "categoryHint": "Starters",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-026",
+    "name": "Vegetable Tehri",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-122",
+    "name": "Vegetable Thukpa",
+    "categoryHint": "Main Course",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-042",
+    "name": "Ven Pongal",
+    "categoryHint": "Breakfast",
+    "aliases": []
+  },
+  {
+    "id": "MM-IN-140",
+    "name": "Zan",
+    "categoryHint": "Main Course",
+    "aliases": []
+  }
+]
