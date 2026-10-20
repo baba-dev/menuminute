@@ -49,18 +49,13 @@ export function SmartDishComposer({
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState(0);
   const [newSection, setNewSection] = useState("");
-  const [category, setCategory] = useState(defaultCategoryId);
   const [error, setError] = useState("");
   const [photoPickerKey, setPhotoPickerKey] = useState<string | null>(null);
   const [photoLimit, setPhotoLimit] = useState(24);
   const approved = media.filter((m) => m.status === "ready" && !!m.approvedAt);
   useEffect(() => {
-    if (!focusRequest) return;
-    setCategory(defaultCategoryId);
-    setExpanded(true);
-    setReview(false);
-    input.current?.focus();
-  }, [focusRequest, defaultCategoryId]);
+    if (focusRequest) input.current?.focus();
+  }, [focusRequest]);
   const existing = useMemo(
     () => existingFromDocument(doc, outletId, menuId),
     [doc, outletId, menuId]
@@ -79,8 +74,8 @@ export function SmartDishComposer({
       (c) => !c.archived && normalizeDishText(c.name) === normalizeDishText(s.categoryHint)
     );
     const target =
-      (category && doc.categories.some((c) => c.id === category && !c.archived)
-        ? category
+      (defaultCategoryId && doc.categories.some((c) => c.id === defaultCategoryId && !c.archived)
+        ? defaultCategoryId
         : null) ??
       (s.categoryId && doc.categories.some((c) => c.id === s.categoryId && !c.archived)
         ? s.categoryId

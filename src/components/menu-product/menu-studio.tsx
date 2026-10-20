@@ -678,7 +678,7 @@ export function MenuStudio({
                             </div>
                             <div hidden={composerMode !== "add"}>
                               <SmartDishComposer
-                                key={detail.id}
+                                key={detail.id + ":" + composerFocus}
                                 doc={doc}
                                 outletId={outlet.id}
                                 menuId={detail.id}
