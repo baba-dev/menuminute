@@ -92,6 +92,13 @@
       "when": 1792450000005,
       "tag": "0012_registration_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792504800000,
+      "tag": "0013_kitchen_pro_foundation",
+      "breakpoints": true
     }
   ]
 }
