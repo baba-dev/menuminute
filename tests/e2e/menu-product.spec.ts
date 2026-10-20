@@ -304,7 +304,9 @@ test("Smart Composer batches autocomplete suggestions, validates prices and pres
   await page.getByLabel("Email address").fill(f.email);
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
+  await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
   await page.getByRole("button", { name: "Add dish", exact: true }).click();

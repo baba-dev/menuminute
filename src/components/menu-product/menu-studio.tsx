@@ -641,7 +641,7 @@ export function MenuStudio({
                     }}
                   >
                     <fieldset
-                      disabled={busy || !detail.canWrite || detail.archived || composerPending}
+                      disabled={busy || !detail.canWrite || detail.archived}
                       className="stack"
                       style={{ minWidth: 0 }}
                     >
