@@ -36,22 +36,48 @@ export type Suggestion = {
 // Explicit, editorially checked common Hindi/Arabic terms. Preserve unrecognized Unicode
 // tokens verbatim; never approximate translations or derive nutritional information.
 const translations: Record<string, string> = {
-  "पनीर": "paneer", "मसाला": "masala", "टिक्का": "tikka", "बिरयानी": "biryani",
-  "बिरयानीं": "biryani", "दाल": "dal", "चावल": "chawal", "समोसा": "samosa",
-  "चाय": "chai", "छोले": "chole", "भटूरे": "bhature", "आलू": "aloo",
-  "डोसा": "dosa", "मक्खनी": "makhani", "नान": "naan", "पिज़्ज़ा": "pizza",
-  "शाही": "shahi", "कड़ाही": "kadai",
-  "بانير": "paneer", "بانيير": "paneer", "برياني": "biryani",
-  "بريانـي": "biryani", "ماسالا": "masala", "تيكا": "tikka",
-  "سمبوسة": "samosa", "شاي": "chai", "بيتزا": "pizza",
-  "شاورما": "shawarma", "دال": "dal", "نان": "naan",
+  पनीर: "paneer",
+  मसाला: "masala",
+  टिक्का: "tikka",
+  बिरयानी: "biryani",
+  बिरयानीं: "biryani",
+  दाल: "dal",
+  चावल: "chawal",
+  समोसा: "samosa",
+  चाय: "chai",
+  छोले: "chole",
+  भटूरे: "bhature",
+  आलू: "aloo",
+  डोसा: "dosa",
+  मक्खनी: "makhani",
+  नान: "naan",
+  पिज़्ज़ा: "pizza",
+  शाही: "shahi",
+  कड़ाही: "kadai",
+  بانير: "paneer",
+  بانيير: "paneer",
+  برياني: "biryani",
+  بريانـي: "biryani",
+  ماسالا: "masala",
+  تيكا: "tikka",
+  سمبوسة: "samosa",
+  شاي: "chai",
+  بيتزا: "pizza",
+  شاورما: "shawarma",
+  دال: "dal",
+  نان: "naan",
 };
 export function normalizeDishText(value: string) {
-  return value.normalize("NFKD")
+  return value
+    .normalize("NFKD")
     .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640\u200c\u200d]/g, "")
     .toLocaleLowerCase("en")
-    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ")
-    .split(" ").map(token => translations[token] ?? token).join(" ");
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((token) => translations[token] ?? token)
+    .join(" ");
 }
 export type OrganizationDish = {
   key: string;
@@ -68,18 +94,27 @@ export function recentFromDocument(doc: MenuDocument, limit = 6): OrganizationDi
       const name = normalizeDishText(dish.name);
       if (dish.archived || seen.has(name)) continue;
       seen.add(name);
-      rows.push({ key: "recent:" + dish.id, name: dish.name, categoryHint: cat.name, sourceMenu: doc.name });
+      rows.push({
+        key: "recent:" + dish.id,
+        name: dish.name,
+        categoryHint: cat.name,
+        sourceMenu: doc.name,
+      });
       if (rows.length >= Math.max(1, Math.min(12, limit))) return rows;
     }
   }
   return rows;
 }
 export function batchCandidates(value: string) {
-  const rows = value.split(/[\n,;]+/u).map(s => s.trim()).filter(Boolean);
-  if (rows.some(name => name.length > 100)) throw new Error("Dish names must be 100 characters or fewer.");
+  const rows = value
+    .split(/[\n,;]+/u)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (rows.some((name) => name.length > 100))
+    throw new Error("Dish names must be 100 characters or fewer.");
   if (rows.length > 50) throw new Error("Add up to 50 dishes per batch.");
   const seen = new Set<string>();
-  return rows.filter(name => {
+  return rows.filter((name) => {
     const normalized = normalizeDishText(name);
     if (!normalized || seen.has(normalized)) return false;
     seen.add(normalized);
@@ -179,17 +214,24 @@ export function rankDishSuggestions(args: {
     if (!name || orgSeen.has(name) || existingNames.has(name)) continue;
     orgSeen.add(name);
     const rank = score(d.name);
-    if (rank !== Infinity) matches.push({
-      rank: rank + 0.05,
-      item: {
-        key: d.key, source: "organization", name: d.name,
-        categoryHint: d.categoryHint, sourceMenu: d.sourceMenu,
-        dishId: null, categoryId: null, mediaId: null,
-      },
-    });
+    if (rank !== Infinity)
+      matches.push({
+        rank: rank - 0.1,
+        item: {
+          key: d.key,
+          source: "organization",
+          name: d.name,
+          categoryHint: d.categoryHint,
+          sourceMenu: d.sourceMenu,
+          dishId: null,
+          categoryId: null,
+          mediaId: null,
+        },
+      });
   }
   for (const d of args.catalogue ?? dishCatalogue) {
-    if (existingNames.has(normalizeDishText(d.name))) continue;
+    if (existingNames.has(normalizeDishText(d.name)) || orgSeen.has(normalizeDishText(d.name)))
+      continue;
     const rank = score(d.name, d.aliases);
     if (rank !== Infinity)
       matches.push({

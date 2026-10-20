@@ -30,16 +30,20 @@ export async function listReusableDishes(actor: Actor, outletId: string, menuId:
   const outlet = await getRestaurantById(actor, outletId);
   if (!outlet) throw new NotFoundError("Outlet");
   const targetMenus = await listMenus(actor, outletId);
-  if (!targetMenus.some(m => m.id === menuId)) throw new NotFoundError("Menu");
-  return withOutlet(actor, outletId, "menu.read", async tx => {
-    const rows = await tx.select({
-      id: menus.id, document: menus.document, updatedAt: menus.updatedAt,
-    }).from(menus).where(and(
-      eq(menus.organizationId, outlet.organizationId),
-      eq(menus.archived, false),
-    )).orderBy(desc(menus.updatedAt)).limit(40);
+  if (!targetMenus.some((m) => m.id === menuId)) throw new NotFoundError("Menu");
+  return withOutlet(actor, outletId, "menu.read", async (tx) => {
+    const rows = await tx
+      .select({
+        id: menus.id,
+        document: menus.document,
+        updatedAt: menus.updatedAt,
+      })
+      .from(menus)
+      .where(and(eq(menus.organizationId, outlet.organizationId), eq(menus.archived, false)))
+      .orderBy(desc(menus.updatedAt))
+      .limit(40);
     // RLS still gates each source row via app_private.menu_access('menu.read').
-    return organizationFromAuthorizedMenus(rows.filter(row => row.id !== menuId));
+    return organizationFromAuthorizedMenus(rows.filter((row) => row.id !== menuId));
   });
 }
 export async function menuDetail(actor: Actor, id: string) {

@@ -1112,16 +1112,84 @@ body.font-sans {
 }
 
 /* Smart Composer productivity: theme-token-only and resilient on small screens. */
-.product .smart-productivity-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.product .smart-productivity-actions button { flex:1 1 150px; justify-content:center; font-size:.82rem; }
-.product .smart-bulk-entry { display:grid; gap:8px; padding:12px; border-radius:12px; border:1px solid var(--decorative); background:var(--panel); }
-.product .smart-bulk-entry textarea { min-height:110px; resize:vertical; }
-.product .smart-discovery { display:grid; gap:12px; }
-.product .smart-discovery > div { display:grid; gap:6px; min-width:0; }
-.product .smart-discovery strong { color:var(--ink); font-size:.82rem; }
-.product .smart-discovery-list { display:flex; flex-wrap:wrap; gap:6px; max-height:190px; overflow:auto; }
-.product .smart-discovery-list button { display:flex; align-items:center; gap:6px; min-height:40px; max-width:100%; text-align:start; font-size:.78rem; padding:6px 10px; border-color:var(--decorative); }
-.product .smart-discovery-list small { color:var(--muted); font-size:.7rem; }
-.product .smart-artwork-hint { display:flex; align-items:center; gap:10px; padding:8px; background:var(--panel); border:1px dashed var(--decorative); border-radius:10px; font-size:.78rem; }
-.product .smart-artwork-hint img { flex:0 0 72px; width:72px; height:60px; object-fit:contain; }
-@media(max-width:580px) { .product .smart-discovery-list { max-height:150px; } .product .smart-productivity-actions button { flex:1 1 100%; } }
+.product .smart-productivity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.product .smart-productivity-actions button {
+  flex: 1 1 150px;
+  justify-content: center;
+  font-size: 0.82rem;
+}
+.product .smart-bulk-entry {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--decorative);
+  background: var(--panel);
+}
+.product .smart-bulk-entry textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.product .smart-discovery {
+  display: grid;
+  gap: 12px;
+}
+.product .smart-discovery > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.product .smart-discovery strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.product .smart-discovery-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 190px;
+  overflow: auto;
+}
+.product .smart-discovery-list button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  max-width: 100%;
+  text-align: start;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-color: var(--decorative);
+}
+.product .smart-discovery-list small {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.product .smart-artwork-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px dashed var(--decorative);
+  border-radius: 10px;
+  font-size: 0.78rem;
+}
+.product .smart-artwork-hint img {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 60px;
+  object-fit: contain;
+}
+@media (max-width: 580px) {
+  .product .smart-discovery-list {
+    max-height: 150px;
+  }
+  .product .smart-productivity-actions button {
+    flex: 1 1 100%;
+  }
+}

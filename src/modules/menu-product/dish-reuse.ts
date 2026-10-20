@@ -3,7 +3,7 @@ import { normalizeDishText, type OrganizationDish } from "./dish-intelligence";
 
 /** Input is exclusively menu rows returned under per-actor menu.read RLS. */
 export function organizationFromAuthorizedMenus(
-  rows: readonly { id: string; document: unknown; updatedAt: Date | string }[],
+  rows: readonly { id: string; document: unknown; updatedAt: Date | string }[]
 ): OrganizationDish[] {
   const result: OrganizationDish[] = [];
   const seen = new Set<string>();
@@ -20,7 +20,9 @@ export function organizationFromAuthorizedMenus(
         seen.add(normalized);
         result.push({
           key: "organization:" + row.id + ":" + dish.id,
-          name: dish.name, categoryHint: section.name, sourceMenu: doc.name,
+          name: dish.name,
+          categoryHint: section.name,
+          sourceMenu: doc.name,
         });
         if (result.length >= 100) return result;
       }

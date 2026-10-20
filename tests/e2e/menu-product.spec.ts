@@ -334,33 +334,34 @@ test("Smart Composer batches autocomplete suggestions, validates prices and pres
   await expect(page.getByLabel("Dish name 1.1")).toBeVisible();
 });
 
-
-test("PR C bulk composer deduplicates pasted dishes and matches Hindi input without publishing", async ({page}) => {
+test("PR C bulk composer deduplicates pasted dishes and matches Hindi input without publishing", async ({
+  page,
+}) => {
   const f = await seed();
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   await page.goto("/login");
   await page.getByLabel("Email address").fill(f.email);
-  await page.getByLabel("Password", {exact:true}).fill(f.password);
-  await page.getByRole("button",{name:"Sign in",exact:true}).click();
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
-  await page.getByRole("button",{name:"Add category",exact:true}).click();
-  await page.getByLabel("Category name 1",{exact:true}).fill("Main Course");
-  await page.getByRole("button",{name:"Add dish",exact:true}).click();
-  await page.getByRole("button",{name:"Paste a dish list"}).click();
+  await page.getByRole("button", { name: "Add category", exact: true }).click();
+  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
+  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  await page.getByRole("button", { name: "Paste a dish list" }).click();
   await page.getByLabel("Bulk dish names").fill("Paneer Tikka\nBiryani\npaneer-tikka");
-  await page.getByRole("button",{name:"Select pasted dishes"}).click();
-  await expect(page.getByRole("button",{name:"Review & Add 2 dishes"})).toBeVisible();
-  await expect(page.getByRole("button",{name:"Save draft",exact:true})).toBeDisabled();
-  await page.getByRole("button",{name:"Review & Add 2 dishes"}).click();
+  await page.getByRole("button", { name: "Select pasted dishes" }).click();
+  await expect(page.getByRole("button", { name: "Review & Add 2 dishes" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save draft", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Review & Add 2 dishes" }).click();
   await page.getByLabel("Quick price for Paneer Tikka").fill("9.000");
   await page.getByLabel("Quick price for Biryani").fill("10.000");
-  await page.getByRole("button",{name:"Add 2 to private draft"}).click();
+  await page.getByRole("button", { name: "Add 2 to private draft" }).click();
   await expect(page.getByLabel("Dish name 1.1")).toHaveValue("Paneer Tikka");
   await expect(page.getByLabel("Dish name 1.2")).toHaveValue("Biryani");
   await expect(page.getByText("Recently used in this menu")).toBeVisible();
   const search = page.getByLabel("Search the dish catalogue");
   await search.fill("पनीर");
-  await expect(page.getByRole("option",{name:/Paneer Tikka/})).toBeVisible();
-  expect((await page.request.get("/api/public-menu/"+f.token)).status()).toBe(404);
+  await expect(page.getByRole("option", { name: /Paneer Tikka/ })).toBeVisible();
+  expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
 });

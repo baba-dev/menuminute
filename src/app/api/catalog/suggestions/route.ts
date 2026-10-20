@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     const menuId = entityId.parse(z.string().parse(url.searchParams.get("menuId")));
     return NextResponse.json(
       { items: await listReusableDishes(actor, restaurant.id, menuId) },
-      { headers: { "Cache-Control": "private, no-store" } },
+      { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch (error) {
     return errorResponse(error);
