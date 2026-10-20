@@ -118,7 +118,9 @@ with tempfile.TemporaryDirectory() as temp:
 deploy_workflow = pathlib.Path(".github/workflows/deploy-vps.yml").read_text()
 assert "AUTH_V2_CUTOVER_APPROVED" not in deploy_workflow
 assert "inputs.activate" not in deploy_workflow
-assert 'menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST' in deploy_workflow
+assert "policy=eligibility" in deploy_workflow
+assert "policy=incident-eligibility" in deploy_workflow
+assert 'menuminute-release $policy $RELEASE_SHA $DEPLOY_DIGEST' in deploy_workflow
 assert 'menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST' in deploy_workflow
 
 print("Production 0009 lineage and automatic activation regression: PASS")

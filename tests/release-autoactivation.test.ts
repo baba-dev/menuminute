@@ -8,12 +8,12 @@ const helper = readFileSync(path.resolve("infra/deploy/menuminute-release"), "ut
 describe("fail-closed automatic release activation", () => {
   it("requires a versioned root-owned helper and verifies both runtime accounts", () => {
     expect(helper).toContain('if [[ "${1:-}" == --version');
-    expect(helper).toContain("echo 4");
+    expect(helper).toContain("echo 5");
     expect(helper).toContain("runuser -u menuminute -- sh -c");
     expect(helper).toContain("runuser -u menuminute-worker -- sh -c");
     expect(helper).toContain("runtime_access_ok ||");
     expect(workflow).toContain("menuminute-release --version");
-    expect(workflow).toContain("= 4 && sudo -n /usr/local/sbin/menuminute-release $mode");
+    expect(workflow).toContain("= 5 && sudo -n /usr/local/sbin/menuminute-release $mode");
   });
 
   it("validates archive members before extraction", () => {
@@ -48,6 +48,25 @@ describe("fail-closed automatic release activation", () => {
     expect(helper).toContain('erp_healthy || { echo "ERP postflight failed');
     expect(workflow).toContain("Exact main recheck and root-owned cutover");
     expect(workflow).toContain("Superseded during staging");
+  });
+
+  it("validates candidate configuration before migration and isolates forward recovery", () => {
+    expect(helper).toContain("candidate_configuration_ok");
+    expect(helper).toContain("EnvironmentFile=$env_file");
+    expect(helper).toContain('"$release/dist/env-validate.mjs"');
+    expect(helper).toContain("DEPLOYMENT_PREFLIGHT_FAILED");
+    expect(helper.indexOf("candidate_configuration_ok ||")).toBeLessThan(
+      helper.indexOf('if [[ "$mode" == autoactivate && "$migration_change" == changed ]]')
+    );
+    expect(helper).toContain("incident-eligibility");
+    expect(helper).toContain("forward-recover");
+    expect(helper).toContain("recovery-authorizations/$sha");
+    expect(helper).toContain("authorization_age <= 3600");
+    expect(helper).toContain('"$release/dist/db-migration-verify.mjs"');
+    expect(helper).toContain("--property=DynamicUser=yes");
+    expect(workflow).toContain("forward_recovery:");
+    expect(workflow).toContain("policy=incident-eligibility");
+    expect(workflow).toContain("mode=forward-recover");
   });
 
   it("backs up remotely before automatic staged SQL and needs no per-SHA operator marker", () => {
@@ -89,7 +108,9 @@ describe("fail-closed automatic release activation", () => {
       "Refusing automatic restoration to a potentially schema-incompatible previous release"
     );
     expect(helper).toContain('"$rollback_root/$sha"');
-    expect(helper).toContain('if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]');
+    expect(helper).toContain(
+      'if [[ "$mode" != forward-recover && "$old_web" == "$release" && "$old_worker" == "$release" ]]'
+    );
     expect(helper).not.toContain("DROP DATABASE");
   });
 });

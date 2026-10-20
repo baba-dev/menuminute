@@ -2,9 +2,12 @@
 
 ## Gate
 
-Do not activate this release on public production until `EMAIL_PROVIDER=resend`,
-`EMAIL_FROM` is a verified Resend sender, and `RESEND_API_KEY` is installed in the private
-web environment. No credentials or one-time links belong in GitHub, logs or Action summaries.
+Do not activate this release on public production until one provider is fully configured in the
+private web environment. Native SMTP uses `EMAIL_PROVIDER=smtp`,
+`EMAIL_FROM=food@bababuilds.com`, `SMTP_HOST=mx.bababuilds.com`, `SMTP_PORT=465`,
+`SMTP_SECURE=true`, `SMTP_USER=food@bababuilds.com`, and a private `SMTP_PASSWORD`.
+Resend remains available with a verified sender and `RESEND_API_KEY`. No credentials or one-time
+links belong in GitHub, logs or Action summaries.
 The environment validator refuses unconfigured production delivery.
 
 ## Existing accounts
@@ -23,7 +26,8 @@ Better Auth sends 1-hour single-use verification links; no session is created at
 verified email is required to log in. The DB trigger also guards new/changed effective
 organization memberships, including direct provisioning. Password-reset links last 30 minutes;
 successful reset revokes existing sessions, using transactional PostgreSQL auth storage.
-Resend transport is fail-closed and never logs bearer tokens or generated links.
+Both production transports are fail-closed and never log credentials, recipients, provider response
+bodies or generated links. SMTP validates the certificate/hostname and never downgrades or falls back.
 
 ## Isolated tests
 
@@ -59,13 +63,13 @@ entries ahead of one already deployed, even if the filename number is smaller.
 `tests/deploy/migration-policy.py` checks this exact historical case.
 
 **Release prerequisites** remain mandatory and should be validated before merging
-account-lifecycle changes: private production Resend configuration, verified sender,
+account-lifecycle changes: private production email configuration, verified sender,
 live verification/reset-email tests, existing unverified-owner inventory and
 identity-checked recovery, Auth 2.0 migration rehearsal against a disposable
 backup, MFA enrollment/recovery/step-up on the production hostname, and matching
 Turnstile keys if enabled. Do not bulk-verify existing users.
 
-The root-owned helper v4 still refuses divergent applied migration histories,
+The root-owned helper v5 still refuses divergent applied migration histories,
 unhealthy services, missing migration-owner configuration, unsuccessful off-host
 backup, or failed ERP preflight. Do not disable these checks to make a deploy green.
 If the new auth release fails runtime configuration or migration, repair that

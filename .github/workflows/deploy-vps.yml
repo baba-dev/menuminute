@@ -13,6 +13,11 @@ on:
         description: "Full 40-character SHA of a published main release"
         required: true
         type: string
+      forward_recovery:
+        description: "Use the separately root-authorized, migration-free incident recovery path"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   actions: read
@@ -47,6 +52,7 @@ jobs:
       digest: ${{ steps.artifact.outputs.digest }}
       eligible: ${{ steps.policy.outputs.eligible }}
       staging_seconds: ${{ steps.transport.outputs.staging_seconds }}
+      forward_recovery: ${{ steps.policy.outputs.forward_recovery }}
     env:
       GH_TOKEN: ${{ github.token }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -196,8 +202,8 @@ jobs:
           [[ -d /var/lib/menuminute/incoming && ! -L "$archive" ]] || {
             echo "Incoming directory is missing or archive is a symlink" >&2; exit 1;
           }
-          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 4 || {
-            echo "AUTO_MIGRATION_SETUP_REQUIRED: Install reviewed root-owned helper v4 (one-time operator bootstrap)" >&2; exit 1;
+          test "$(sudo -n /usr/local/sbin/menuminute-release --version)" = 5 || {
+            echo "RELEASE_HELPER_SETUP_REQUIRED: Install reviewed root-owned helper v5 (one-time operator bootstrap)" >&2; exit 1;
           }
           # A repeated stage/activation run may find a complete prior archive.
           # Do not send a Range request starting at EOF (some CDNs return 416).
@@ -232,13 +238,20 @@ jobs:
         run: |
           set -Eeuo pipefail
           echo "eligible=false" >> "$GITHUB_OUTPUT"
+          recovery=false
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "${{ inputs.forward_recovery }}" == true ]]; then
+            recovery=true
+          fi
+          echo "forward_recovery=$recovery" >> "$GITHUB_OUTPUT"
           latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
           if [[ "$latest" != "$RELEASE_SHA" ]]; then
             echo "superseded=true" >> "$GITHUB_OUTPUT"
             echo "Superseded during staging; live services unchanged" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST"
+          policy=eligibility
+          [[ "$recovery" != true ]] || policy=incident-eligibility
+          ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "sudo -n /usr/local/sbin/menuminute-release $policy $RELEASE_SHA $DEPLOY_DIGEST"
           echo "eligible=true" >> "$GITHUB_OUTPUT"
       - name: Staging report
         if: always()
@@ -286,6 +299,7 @@ jobs:
       PACKAGING_SECONDS: ${{ needs.stage.outputs.packaging_seconds }}
       PUBLICATION_SECONDS: ${{ needs.stage.outputs.publication_seconds }}
       STAGING_SECONDS: ${{ needs.stage.outputs.staging_seconds }}
+      FORWARD_RECOVERY: ${{ needs.stage.outputs.forward_recovery }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
@@ -314,6 +328,7 @@ jobs:
           set -Eeuo pipefail
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ && "$DEPLOY_DIGEST" =~ ^[0-9a-f]{64}$ ]]
           mode=autoactivate
+          [[ "$FORWARD_RECOVERY" != true ]] || mode=forward-recover
           if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
             latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
             if [[ "$latest" != "$RELEASE_SHA" ]]; then
@@ -324,7 +339,7 @@ jobs:
             fi
           fi
           started="$(date -u +%s)"
-          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 4 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
+          if ssh -i "$HOME/.ssh/id_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o ConnectTimeout=12 "menuminute-deploy@$VPS_HOST" "test \"\$(sudo -n /usr/local/sbin/menuminute-release --version)\" = 5 && sudo -n /usr/local/sbin/menuminute-release $mode $RELEASE_SHA $DEPLOY_DIGEST && sudo -n /usr/local/sbin/menuminute-release verify $RELEASE_SHA $DEPLOY_DIGEST"; then
             echo "activated=true" >> "$GITHUB_OUTPUT"
             echo "activation_seconds=$(( $(date -u +%s) - started ))" >> "$GITHUB_OUTPUT"
           else
