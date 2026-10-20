@@ -744,6 +744,7 @@ export function CaptureWizard({
                 These are untrusted suggestions. Check every name and price against the photographs.
                 This package does not apply or publish them.
               </p>
+              <Link href={"/dashboard/menu/import/" + encodeURIComponent(session.id) + "/review"} className="mt-4 inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700">Open source-aware review →</Link>
               <div className="mt-5 space-y-5">
                 {session.candidate.document.categories.map((c) => (
                   <div key={c.id} className="overflow-hidden rounded-xl border border-stone-200">
