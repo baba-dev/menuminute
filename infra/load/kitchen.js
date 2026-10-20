@@ -6,11 +6,12 @@
 import http from "k6/http";
 import {check,sleep} from "k6";
 import {Rate,Trend} from "k6/metrics";
-import exec from "k6/execution";
 const base=__ENV.BASE_URL||"";
-if(__ENV.KITCHEN_LOAD_AUTHORIZED_NONPROD!=="YES"||!base||
- /(^|\\/\\/)(?:food|erp)\\.bababuilds\\.com(?=[:\\/]|$)/i.test(base)||
- !/^https?:\\/\\//.test(base))throw new Error("Explicit authorized nonproduction URL required. Never run synthetic guest writes on production.");
+const origin=base.toLowerCase();
+if(__ENV.KITCHEN_LOAD_AUTHORIZED_NONPROD!=="YES" || !base ||
+ !(origin.startsWith("https://")||origin.startsWith("http://")) ||
+ origin.includes("://food.bababuilds.com") || origin.includes("://erp.bababuilds.com"))
+ throw new Error("Explicit authorized nonproduction URL required. Never send synthetic guest orders to production.");
 const token=__ENV.PUBLIC_TOKEN||"",org=__ENV.ORG_ID||"",outlet=__ENV.OUTLET_ID||"";
 const cookie=__ENV.SESSION_COOKIE||"";
 const dish=__ENV.DISH_ID||"";
