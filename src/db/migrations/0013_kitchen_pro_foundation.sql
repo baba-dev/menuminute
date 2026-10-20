@@ -81,7 +81,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,
  AND EXISTS(
   SELECT 1 FROM restaurants r JOIN organization_members m ON m.organization_id=r.organization_id
   WHERE r.id=p_outlet AND m.user_id=current_setting('app.actor_id',true) AND m.is_active
-  AND (m.role IN ('owner','admin')
+  AND (m.role IN ('owner','admin') OR app_private.can_outlet(p_outlet,'outlet.manage')
     OR (app_private.can_outlet(p_outlet,'orders.prepare')
       AND EXISTS(SELECT 1 FROM kitchen_station_members sm
                  WHERE sm.outlet_id=p_outlet AND sm.member_id=m.id
@@ -302,7 +302,7 @@ RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalo
 DECLARE result jsonb; is_admin boolean; member text;
 BEGIN
  IF NOT app_private.kitchen_access(p_outlet) THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
- SELECT m.id,m.role IN ('owner','admin') INTO member,is_admin
+ SELECT m.id,(m.role IN ('owner','admin') OR app_private.can_outlet(p_outlet,'outlet.manage')) INTO member,is_admin
  FROM organization_members m JOIN restaurants r ON r.organization_id=m.organization_id
  WHERE r.id=p_outlet AND m.user_id=current_setting('app.actor_id',true) AND m.is_active;
  SELECT jsonb_build_object(
@@ -314,6 +314,15 @@ BEGIN
     SELECT 1 FROM kitchen_station_members sm WHERE sm.station_id=s.id AND sm.member_id=member))), '[]'::jsonb),
  'routes',CASE WHEN is_admin THEN COALESCE((SELECT jsonb_agg(jsonb_build_object('dishId',dish_id,'stationId',station_id,'ruleVersion',rule_version) ORDER BY dish_id,station_id)
  FROM kitchen_routes WHERE outlet_id=p_outlet),'[]'::jsonb) ELSE '[]'::jsonb END,
+ 'members',CASE WHEN is_admin THEN COALESCE((SELECT jsonb_agg(jsonb_build_object(
+   'id',m.id,'name',u.name,'stationIds',COALESCE((SELECT jsonb_agg(sm.station_id ORDER BY sm.station_id)
+     FROM kitchen_station_members sm WHERE sm.member_id=m.id AND sm.outlet_id=p_outlet),'[]'::jsonb))
+   ORDER BY u.name,m.id)
+   FROM organization_members m JOIN users u ON u.id=m.user_id
+   JOIN restaurants r ON r.organization_id=m.organization_id
+   JOIN outlet_grants g ON g.organization_id=m.organization_id AND g.member_id=m.id AND g.outlet_id=p_outlet
+   WHERE r.id=p_outlet AND m.is_active AND g.roles && ARRAY['manager','kitchen']::text[]),'[]'::jsonb)
+   ELSE '[]'::jsonb END,
  'work',COALESCE((SELECT jsonb_agg(jsonb_build_object(
    'id',w.id,'stationId',w.station_id,'orderId',w.order_id,'orderNumber',o.order_number,
    'fulfillmentMode',o.fulfillment_mode,'tableLabel',t.table_number,'brandLabel',r.name,
