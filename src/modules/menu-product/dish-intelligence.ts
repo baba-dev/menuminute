@@ -50,7 +50,7 @@ export function normalizeDishText(value: string) {
   return value.normalize("NFKD")
     .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640\u200c\u200d]/g, "")
     .toLocaleLowerCase("en")
-    .replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ")
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ")
     .split(" ").map(token => translations[token] ?? token).join(" ");
 }
 export type OrganizationDish = {
@@ -75,7 +75,8 @@ export function recentFromDocument(doc: MenuDocument, limit = 6): OrganizationDi
   return rows;
 }
 export function batchCandidates(value: string) {
-  const rows = value.split(/[\n,;]+/u).map(s=>s.trim().slice(0,100)).filter(Boolean);
+  const rows = value.split(/[\n,;]+/u).map(s => s.trim()).filter(Boolean);
+  if (rows.some(name => name.length > 100)) throw new Error("Dish names must be 100 characters or fewer.");
   if (rows.length > 50) throw new Error("Add up to 50 dishes per batch.");
   const seen = new Set<string>();
   return rows.filter(name => {
