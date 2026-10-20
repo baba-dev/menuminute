@@ -144,9 +144,12 @@ export function KitchenBoard({
   const [reassignStation, setReassignStation] = useState("");
   const [reassignReason, setReassignReason] = useState("");
   const seen = useRef(new Set(initial.work.map((w) => w.id)));
+  const revoked = useRef(false);
+  const stream = useRef<EventSource | null>(null);
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/kitchen`;
   const apply = useCallback(
     (data: KitchenSnapshot) => {
+      if (revoked.current) return;
       const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
       seen.current = new Set(data.work.map((w) => w.id));
       setSnapshot(data);
@@ -157,9 +160,12 @@ export function KitchenBoard({
     [sound]
   );
   const refresh = useCallback(async () => {
+    if (revoked.current) return;
     const res = await fetch(base, { cache: "no-store" });
     if (res.status === 401 || res.status === 403) {
-      setSnapshot((s) => ({ ...s, work: [], stations: [] }));
+      revoked.current = true;
+      stream.current?.close();
+      setSnapshot((s) => ({ ...s, work: [], stations: [], routes: [], members: [] }));
       setConnection("revoked");
       throw new Error("Kitchen access expired");
     }
@@ -181,9 +187,11 @@ export function KitchenBoard({
   }, []);
   useEffect(() => {
     let alive = true;
+    if (revoked.current) return;
     const source = new EventSource(base + "/stream");
+    stream.current = source;
     source.addEventListener("snapshot", (event) => {
-      if (!alive) return;
+      if (!alive || revoked.current) return;
       try {
         apply(JSON.parse((event as MessageEvent<string>).data) as KitchenSnapshot);
       } catch {
@@ -191,12 +199,13 @@ export function KitchenBoard({
       }
     });
     source.addEventListener("heartbeat", () => {
-      if (alive) setConnection("live");
+      if (alive && !revoked.current) setConnection("live");
     });
     source.addEventListener("revoked", () => {
       if (alive) {
+        revoked.current = true;
         source.close();
-        setSnapshot((s) => ({ ...s, work: [], stations: [] }));
+        setSnapshot((s) => ({ ...s, work: [], stations: [], routes: [], members: [] }));
         setConnection("revoked");
         setError("Your kitchen session or station permission has changed. Sign in again.");
       }
@@ -205,12 +214,13 @@ export function KitchenBoard({
       if (alive) setConnection((c) => (c === "revoked" ? c : "recovering"));
     };
     const timer = setInterval(() => {
-      if (alive)
+      if (alive && !revoked.current)
         void refresh().catch(() => setConnection((c) => (c === "revoked" ? c : "recovering")));
     }, 15000);
     return () => {
       alive = false;
       source.close();
+      if (stream.current === source) stream.current = null;
       clearInterval(timer);
     };
   }, [base, apply, refresh]);
