@@ -531,9 +531,7 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={
-                  busy || !detail.canWrite || detail.archived || composerPending
-                }
+                disabled={busy || !detail.canWrite || detail.archived || composerPending}
                 onClick={() =>
                   void run(async () => {
                     await save();
@@ -546,9 +544,7 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember ink-press"
-                disabled={
-                  busy || !detail.canWrite || detail.archived || composerPending
-                }
+                disabled={busy || !detail.canWrite || detail.archived || composerPending}
                 onClick={() => dialog.current?.showModal()}
               >
                 <Send size={16} />
@@ -645,9 +641,7 @@ export function MenuStudio({
                     }}
                   >
                     <fieldset
-                      disabled={
-                        busy || !detail.canWrite || detail.archived || composerPending
-                      }
+                      disabled={busy || !detail.canWrite || detail.archived || composerPending}
                       className="stack"
                       style={{ minWidth: 0 }}
                     >
