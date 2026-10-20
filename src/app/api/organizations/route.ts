@@ -23,7 +23,11 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ outletId: outlet.id }, { status: 201 });
   } catch (e) {
-    try { domainError(e); } catch (mapped) { return errorResponse(mapped); }
+    try {
+      domainError(e);
+    } catch (mapped) {
+      return errorResponse(mapped);
+    }
   }
 }
 

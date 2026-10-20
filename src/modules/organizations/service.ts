@@ -85,9 +85,17 @@ export function domainError(error: unknown): never {
       "Invalid domain change. Check the account, scope and settings; currency changes with existing prices require repricing."
     );
   if (code === "P3001")
-    throw new AppError("The free account limit is three owned organizations. Contact support for a higher limit.", "PROVISIONING_LIMIT", 409);
+    throw new AppError(
+      "The free account limit is three owned organizations. Contact support for a higher limit.",
+      "PROVISIONING_LIMIT",
+      409
+    );
   if (code === "P3002")
-    throw new AppError("This organization has reached its invitation or member capacity.", "MEMBER_LIMIT", 409);
+    throw new AppError(
+      "This organization has reached its invitation or member capacity.",
+      "MEMBER_LIMIT",
+      409
+    );
   if (code === "54000")
     throw new AppError(
       "Photo uploads are temporarily limited. Your existing photos are safe.",
