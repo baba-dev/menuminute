@@ -2,16 +2,20 @@
 // k6 run -e BASE_URL=https://approved-staging.test -e PUBLIC_TOKEN=<private test token> \\
 //  -e ORG_ID=<fixture> -e OUTLET_ID=<fixture> -e SESSION_COOKIE=<private fixture cookie> \\
 //  -e DISH_ID=<approved synthetic dish> -e QUOTE_MINOR=<server-verified minor units> \\
-//  -e KITCHEN_LOAD_AUTHORIZED_NONPROD=YES infra/load/kitchen.js
+//  -e KITCHEN_NONPROD_HOST=approved-staging.test -e KITCHEN_LOAD_AUTHORIZED_NONPROD=YES infra/load/kitchen.js
 import http from "k6/http";
 import {check,sleep} from "k6";
 import {Rate,Trend} from "k6/metrics";
 const base=__ENV.BASE_URL||"";
-const origin=base.toLowerCase();
-if(__ENV.KITCHEN_LOAD_AUTHORIZED_NONPROD!=="YES" || !base ||
- !(origin.startsWith("https://")||origin.startsWith("http://")) ||
- origin.includes("://food.bababuilds.com") || origin.includes("://erp.bababuilds.com"))
- throw new Error("Explicit authorized nonproduction URL required. Never send synthetic guest orders to production.");
+// Parse a literal hostname instead of substring-filtering an URL; reject userinfo.
+const match=base.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
+const authority=match?.[1]||"";
+const hostname=authority.replace(/:\\d+$/,"").toLowerCase();
+const declared=(__ENV.KITCHEN_NONPROD_HOST||"").toLowerCase();
+if(__ENV.KITCHEN_LOAD_AUTHORIZED_NONPROD!=="YES" || !authority ||
+ authority.includes("@") || !hostname || !declared || hostname!==declared ||
+ hostname==="bababuilds.com" || hostname.endsWith(".bababuilds.com"))
+ throw new Error("Explicit exact nonproduction hostname and operator authorization required. Never send synthetic guest orders to production.");
 const token=__ENV.PUBLIC_TOKEN||"",org=__ENV.ORG_ID||"",outlet=__ENV.OUTLET_ID||"";
 const cookie=__ENV.SESSION_COOKIE||"";
 const dish=__ENV.DISH_ID||"";
