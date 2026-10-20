@@ -296,7 +296,7 @@ export function SmartDishComposer({
                         <img src={artwork.path} alt="" width={46} height={46} loading="lazy" />
                       ) : (
                         <ImagePlus size={19} aria-hidden="true" />
-                      )
+                      )}
                     </span>
                     <span className="smart-option-name">
                       <strong>{item.name}</strong>
