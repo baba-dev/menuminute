@@ -3,64 +3,79 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-function VerificationForm() {
-  const params = useSearchParams();
+import { AuthShell } from "@/components/auth/auth-shell";
+import { safeReturnPath } from "@/lib/auth-return";
+function Form() {
+  const params = useSearchParams(),
+    next = safeReturnPath(params.get("next"), "");
   const [email, setEmail] = useState(params.get("email") ?? "");
-  const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false),
+    [status, setStatus] = useState(""),
+    [error, setError] = useState("");
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 p-6">
-      <Link href="/" className="font-bold text-orange-700">
-        MenuMinute
-      </Link>
-      <h1 className="text-3xl font-extrabold">Verify your email</h1>
-      <p>
-        Check your inbox for a verification link. Existing accounts must verify their address before
-        accessing restaurant data.
-      </p>
+    <AuthShell
+      eyebrow="ONE QUICK SECURITY STEP"
+      title="Check your inbox."
+      description="Verify ownership of your address before we open access to restaurant data."
+      extra={
+        <Link href={next ? "/login?next=" + encodeURIComponent(next) : "/login"}>
+          Return to sign in
+        </Link>
+      }
+    >
       <form
-        className="grid gap-3"
+        className="mm-auth-form"
+        aria-busy={busy}
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
           setStatus("");
+          setError("");
           try {
-            await authClient.sendVerificationEmail({ email, callbackURL: "/login?verified=1" });
-            setStatus("If this address is eligible, a verification link has been sent.");
-          } catch {
-            setStatus("Unable to request a link. Please try again.");
+            const url = "/login?verified=1" + (next ? "&next=" + encodeURIComponent(next) : "");
+            const result = await authClient.sendVerificationEmail({ email, callbackURL: url });
+            if (result.error) throw new Error("Unable to send a new link. Try again.");
+            setStatus("If the address is eligible, a verification link has been sent.");
+          } catch (e) {
+            setError(e instanceof Error ? e.message : "Unable to request a link.");
           } finally {
             setBusy(false);
           }
         }}
       >
-        <label htmlFor="verification-email">Email address</label>
-        <input
-          id="verification-email"
-          className="rounded border p-3"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <button disabled={busy} className="rounded bg-orange-600 p-3 font-semibold text-white">
+        <label className="mm-auth-field" htmlFor="verification-email">
+          Email address
+          <input
+            id="verification-email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <button className="mm-auth-submit" disabled={busy}>
           {busy ? "Sending…" : "Resend verification email"}
         </button>
-        <p role="status" aria-live="polite">
-          {status}
-        </p>
+        {status && (
+          <p className="mm-auth-message" role="status" aria-live="polite">
+            {status}
+          </p>
+        )}
+        {error && (
+          <p className="mm-auth-message mm-auth-message--error" role="alert">
+            {error}
+          </p>
+        )}
+        <p>Already verified? Sign in and continue from your saved onboarding step.</p>
       </form>
-      <Link href="/login" className="underline">
-        Return to sign in
-      </Link>
-    </main>
+    </AuthShell>
   );
 }
 export default function VerifyEmailPage() {
   return (
     <Suspense>
-      <VerificationForm />
+      <Form />
     </Suspense>
   );
 }

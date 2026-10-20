@@ -141,7 +141,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             Organization & access
           </Link>
           <Link
-            href="/account/security"
+            href="/account"
             className="block rounded-lg px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100"
           >
             Account & security

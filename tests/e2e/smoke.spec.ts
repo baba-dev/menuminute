@@ -43,7 +43,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
 
   test("Authentication login page renders without public demo credentials", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Welcome back");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Good to have you back.");
     await expect(page.getByLabel("Email address")).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
     await expect(page.getByText("demo@menuminute.com")).toHaveCount(0);
@@ -51,7 +51,9 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
 
   test("Registration page renders all signup fields", async ({ page }) => {
     await page.goto("/register");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Create your account");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "Your next chapter starts here."
+    );
     await expect(page.getByLabel("Your name")).toBeVisible();
     await expect(page.getByLabel("Email address")).toBeVisible();
     await expect(page.getByRole("button", { name: "Create free account" })).toBeVisible();
