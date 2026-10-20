@@ -64,3 +64,8 @@ export async function kitchenWorkCommand(actor:Actor,organizationId:string,outle
   return r.rows[0]!.data;
  });}catch(e){mapError(e);}
 }
+
+export async function kitchenCanManage(actor:Actor,outletId:string):Promise<boolean>{
+ try{await withOutlet(actor,outletId,"outlet.manage",async()=>true);return true;}
+ catch(e){if(e instanceof ForbiddenError)return false;throw e;}
+}
