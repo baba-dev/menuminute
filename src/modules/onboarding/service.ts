@@ -66,9 +66,16 @@ export async function saveOnboarding(actor: Actor, input: unknown) {
       sql`select operation_key,draft,status,outlet_id from onboarding_progress
         where user_id=${actor.userId} for update`
     );
-    if (current.rows[0]?.status === "provisioning" || current.rows[0]?.status === "completed")
-      throw new ConflictError("Provisioning is in progress or completed. Refresh to reconcile.");
     const original = current.rows[0];
+    if (original?.status === "completed")
+      throw new ConflictError("Outlet already created. Refresh to continue.");
+    if (original?.status === "provisioning") {
+      if (stableJson(original.draft) !== stableJson(draft))
+        throw new ConflictError("A previous operation is in progress. Resume with the saved settings.");
+      // The first response may have been lost. Reuse the same durable key, then
+      // reconcile/retry the idempotent provisioning operation without a new outlet.
+      return { key: original.operation_key, draft: original.draft, status: "provisioning" as const, outletId: null };
+    }
     const key =
       original && stableJson(original.draft) === stableJson(draft)
         ? original.operation_key
