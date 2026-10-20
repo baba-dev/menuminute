@@ -144,5 +144,5 @@ The unattended migration v4 proposal is documented in
 [automatic-migration-deployment.md](automatic-migration-deployment.md). It replaces the
 per-release operator marker with root-owned automatic backup and checksummed SQL execution
 only after an independently reviewed one-time helper installation. The last operator evidence
-above remains authoritative until live verification; do not infer helper v5, a working backup
+above remains authoritative until live verification; do not infer helper v6, a working backup
 pipeline, ordering migration 0006 or public Food Orbit activation from repository changes.
