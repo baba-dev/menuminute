@@ -1,4 +1,4 @@
-import { listOrganizations } from "@/modules/organizations/service";
+import { listOrganizations, domainError } from "@/modules/organizations/service";
 import { requestActor } from "@/lib/request-context";
 import { z } from "zod";
 import { NextResponse } from "next/server";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ outletId: outlet.id }, { status: 201 });
   } catch (e) {
-    return errorResponse(e);
+    try { domainError(e); } catch (mapped) { return errorResponse(mapped); }
   }
 }
 
