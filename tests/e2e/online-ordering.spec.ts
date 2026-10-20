@@ -40,6 +40,10 @@ async function seedOrdering(enabled: boolean) {
           fulfillmentModes: ["dine_in", "pickup"],
         }),
       ]);
+      // Fixture-only MFA policy override: ordering permissions are covered separately.
+      await client.query("update organizations set mfa_required=false where id=$1", [
+        `org-${outletId}`,
+      ]);
       const document = menuDocumentSchema.parse({
         name: "Online menu",
         currency: "INR",

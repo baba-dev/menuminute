@@ -38,6 +38,11 @@ async function seed(publish = false) {
           outletType: "cafe",
         }),
       ]);
+      // Synthetic browser owner: test menu permissions without enrolling a real authenticator.
+      // Production new-owner MFA remains mandatory.
+      await c.query("update organizations set mfa_required=false where id=$1", [
+        `org-${outlet}`,
+      ]);
       if (publish) {
         const doc = menuDocumentSchema.parse({
           name: "All-day kitchen",
