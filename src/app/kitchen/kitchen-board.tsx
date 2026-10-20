@@ -163,14 +163,17 @@ export function KitchenBoard({
     apply((await res.json()) as KitchenSnapshot);
   }, [base, apply]);
   useEffect(() => {
+    const initial = requestAnimationFrame(() => {
+      setNow(Date.now());
+      try {
+        setSound(localStorage.getItem("menuminute.kitchen.sound") === "true");
+      } catch {}
+    });
     const clock = setInterval(() => setNow(Date.now()), 15000);
-    setNow(Date.now());
-    return () => clearInterval(clock);
-  }, []);
-  useEffect(() => {
-    try {
-      setSound(localStorage.getItem("menuminute.kitchen.sound") === "true");
-    } catch {}
+    return () => {
+      cancelAnimationFrame(initial);
+      clearInterval(clock);
+    };
   }, []);
   useEffect(() => {
     let alive = true;

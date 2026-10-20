@@ -5,13 +5,12 @@ import {
   bigint,
   boolean,
   timestamp,
-  jsonb,
   index,
   unique,
   foreignKey,
 } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
-import { organizations, organizationMembers } from "./tenancy";
+import { organizationMembers } from "./tenancy";
 import { orders, orderItems } from "./orders";
 const stamp = (name: string) => timestamp(name, { withTimezone: true });
 export const kitchenOutletSettings = pgTable("kitchen_outlet_settings", {
