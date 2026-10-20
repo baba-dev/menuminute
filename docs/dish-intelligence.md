@@ -1,4 +1,5 @@
 # Dish Intelligence Foundation (PR A)
+
 Menu Studio may import the static, reviewed-for-names editorial catalogue generated from the merged India-200 dataset and the 36 baseline excluded names. The catalogue stores only id, name, category hint and selected human-curated aliases. It is **not** a photo registry, a sales ranking or a source of merchant-verified price, dietary/allergen/certification, description, or approval. Retain the source dataset and artwork manifest separately.
 
 The pure search engine consumes only the current, already-authorized menu document and explicitly checks outletId/menuId on each existing item; there is no private cross-tenant suggestion endpoint. Existing menu matches take precedence. Exact, prefix, word-prefix and substring ranking are bounded to 20 suggestions. Normalized duplicate detection is scoped to the destination category; never overwrite or reuse an existing dish ID on import. Unassigned uploaded photos have no dish-name association: only already assigned ready/approved media can be automatically shown, and other uploads must be selected explicitly via the current outlet's private media library.
