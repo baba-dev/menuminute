@@ -5,7 +5,7 @@ import { withActor, type Actor } from "@/modules/tenancy/service";
 import { createRestaurant, createRestaurantSchema } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { sendAuthEmail } from "@/lib/auth-email";
-import { ConflictError, ValidationError } from "@/lib/errors";
+import { AppError, ConflictError, ValidationError } from "@/lib/errors";
 import { domainError } from "@/modules/organizations/service";
 export const onboardingDraftSchema = createRestaurantSchema.partial().strict();
 const invitationInput = z
@@ -144,7 +144,15 @@ export async function inviteMember(actor: Actor, orgId: string, raw: unknown) {
   );
   } catch (e) { domainError(e); }
   const url = new URL("/invite/" + token, env.APP_URL).toString();
-  await sendAuthEmail(input.email, "Invitation to MenuMinute", url);
+  try {
+    await sendAuthEmail(input.email, "Invitation to MenuMinute", url);
+  } catch {
+    throw new AppError(
+      "The invitation is saved, but delivery was not confirmed. Retry with the same details.",
+      "INVITATION_DELIVERY",
+      503
+    );
+  }
   return { id: result.rows[0]!.invite_id, expiresAt: result.rows[0]!.expires_at };
 }
 export async function invitationPreview(actor: Actor, rawToken: string) {

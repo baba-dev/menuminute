@@ -111,5 +111,5 @@ it("caps a verified new owner at three organizations without weakening idempoten
     const outlet = await createRestaurant(actor.userId, details, key);
     expect((await createRestaurant(actor.userId, details, key)).id).toBe(outlet.id);
   }
-  await expect(createRestaurant(actor.userId, details, keys[3]!)).rejects.toThrow();
+  await expect(createRestaurant(actor.userId, details, keys[3]!)).rejects.toMatchObject({ statusCode: 409 });
 });

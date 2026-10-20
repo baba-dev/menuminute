@@ -44,13 +44,13 @@ BEGIN
  THEN RAISE EXCEPTION 'Invalid invitation' USING ERRCODE='22023'; END IF;
  PERFORM 1 FROM organizations WHERE id=p_org AND is_active FOR UPDATE;
  IF NOT FOUND OR NOT app_private.org_admin(p_org) THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
- IF p_role='admin' AND NOT app_private.require_step_up() THEN RAISE EXCEPTION 'Recent MFA required' USING ERRCODE='42501'; END IF;
  SELECT * INTO old FROM organization_invitations WHERE organization_id=p_org AND inviter_id=actor AND request_key=p_key;
  IF FOUND THEN
   IF old.email<>p_email OR old.role<>p_role OR old.token_hash<>p_hash OR old.status<>'pending' OR old.expires_at<=now() THEN
    RAISE EXCEPTION 'Invitation key conflict' USING ERRCODE='40001'; END IF;
   RETURN QUERY SELECT old.id,old.expires_at; RETURN;
  END IF;
+ IF p_role='admin' AND NOT app_private.require_step_up() THEN RAISE EXCEPTION 'Recent MFA required' USING ERRCODE='42501'; END IF;
  IF (SELECT count(*) FROM organization_members WHERE organization_id=p_org AND is_active)>=10 OR
   (SELECT count(*) FROM organization_invitations i WHERE i.organization_id=p_org AND i.status='pending' AND i.expires_at>now())>=10
  THEN RAISE EXCEPTION 'Invitation capacity reached' USING ERRCODE='P3002'; END IF;
