@@ -49,7 +49,7 @@ async function seed() {
   } finally {
     await pool.end();
   }
-  return { email, password };
+  return { email, password, outlet };
 }
 test("capture page does not expose private import UI to anonymous guests", async ({ page }) => {
   await page.goto("/dashboard/menu/import");
@@ -84,4 +84,75 @@ test("menu editor can create and privately upload a gallery image without an ena
   await expect(page.getByText("Page 1 · ready")).toBeVisible();
   await expect(page.getByText(/Extraction is currently unavailable/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Start extraction" })).toHaveCount(0);
+});
+
+test("reviewer corrects an unreadable price and applies only a private draft", async ({ page }) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu/import");
+  await page.getByRole("button", { name: "Create private draft" }).click();
+  await expect(page.getByRole("heading", { name: "Collect photographs" })).toBeVisible();
+  await page.getByLabel("Choose menu photographs").setInputFiles({
+    name: "menu.png", mimeType: "image/png",
+    buffer: await sharp({ create: { width: 320, height: 280, channels: 3, background: "white" } })
+      .png().toBuffer(),
+  });
+  await page.getByRole("button", { name: "Upload photos privately" }).click();
+  await expect(page.getByText("Page 1 · ready")).toBeVisible();
+  // Simulate PR B's already-validated candidate without calling an external provider.
+  const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+  let importId = "";
+  try {
+    const row = (await pool.query(
+      "select i.id as id,s.id as source from menu_imports i join menu_import_sources s on s.import_id=i.id where i.outlet_id=$1 and s.status='ready' order by i.created_at desc limit 1",
+      [f.outlet]
+    )).rows[0];
+    expect(row).toBeTruthy();
+    importId = row.id as string;
+    const revision = (await pool.query(
+      "update menu_imports set status='needs_review',revision=revision+1 where id=$1 returning revision",
+      [row.id]
+    )).rows[0].revision;
+    const candidate = { schemaVersion: 1, importId, currency: "INR", categories: [{
+      id: crypto.randomUUID(), name: { value: "Starters", evidence: [{ sourceId: row.source, excerpt: "Starters" }] },
+      items: [{ id: crypto.randomUUID(), name: { value: "Curry", evidence: [{ sourceId: row.source, excerpt: "Curry" }] },
+        priceMinor: { value: null, review: "needs_attention", evidence: [{ sourceId: row.source, excerpt: "Unclear" }] },
+        variants: [] }],
+    }] };
+    await pool.query(
+      "insert into menu_import_candidates(import_id,organization_id,outlet_id,revision,schema_version,document) select id,organization_id,outlet_id,$2,1,$3::jsonb from menu_imports where id=$1",
+      [importId,revision,JSON.stringify(candidate)]
+    );
+  } finally { await pool.end(); }
+  await page.getByRole("button", { name: "Refresh import" }).click();
+  await expect(page.getByRole("link", { name: /Open source-aware review/ })).toBeVisible();
+  await page.getByRole("link", { name: /Open source-aware review/ }).click();
+  await expect(page.getByRole("heading", { name: "Make every detail yours." })).toBeVisible();
+  await expect(page.getByText(/AI could not verify this price/)).toBeVisible();
+  await page.getByLabel("Dish 1.1 price").fill("12.50");
+  await page.getByLabel("I checked this category heading against the photograph").check();
+  await page.getByLabel("I verified this dish, description and its price against the photograph").check();
+  await page.getByRole("button", { name: "Confirm review" }).click();
+  await expect(page.getByText(/Human review confirmed/)).toBeVisible();
+  page.on("dialog", dialog => void dialog.accept());
+  await page.getByRole("button", { name: "Apply to private draft" }).click();
+  await expect(page.getByText(/Applied to a PRIVATE menu draft/)).toBeVisible();
+  const verify = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+  try {
+    const applied = (await verify.query(
+      "select r.state,r.applied_menu_id,m.published_revision,m.document from menu_import_reviews r join menus m on m.id=r.applied_menu_id where r.import_id=$1",
+      [importId]
+    )).rows[0];
+    expect(applied.state).toBe("applied");
+    expect(applied.published_revision).toBeNull();
+    expect(applied.document.categories[0].items[0].priceMinor).toBe(1250);
+    expect((await verify.query("select count(*)::int AS n from menu_releases where menu_id=$1",
+      [applied.applied_menu_id])).rows[0].n).toBe(0);
+  } finally { await verify.end(); }
 });
