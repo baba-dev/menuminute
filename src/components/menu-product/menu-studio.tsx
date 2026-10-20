@@ -760,7 +760,8 @@ export function MenuStudio({
                                   )
                                   .map(({ dish, di }) => (
                                     <div className="dish-editor stack" key={dish.id}>
-                                      {dish.mediaId && media.some(m => m.id === dish.mediaId && m.status === "ready" && m.approvedAt) && (
+                                      {detail.canWrite && dish.mediaId && media.some(m => m.id === dish.mediaId && m.status === "ready" && m.approvedAt) && (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img src={"/api/media/" + encodeURIComponent(dish.mediaId)}
                                           alt={"Uploaded photograph for " + dish.name} width={104} height={84}
                                           style={{width:104,height:84,objectFit:"cover",borderRadius:10}} />
