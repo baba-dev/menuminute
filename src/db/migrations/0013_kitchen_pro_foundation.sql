@@ -157,15 +157,10 @@ BEGIN
      DELETE FROM kitchen_routes WHERE outlet_id=p_outlet AND dish_id=p_data->>'dishId' AND station_id=station;
    END IF;
    PERFORM app_private.kitchen_emit(p_outlet,'route.changed');
- ELSIF p_action='settings.enable' OR p_action='settings.disable' THEN
-   IF p_action='settings.enable' AND (NOT EXISTS(
-     SELECT 1 FROM entitlement_grants g WHERE g.organization_id=org AND g.capability='kitchen.new'
-      AND g.revoked_at IS NULL AND g.starts_at<=clock_timestamp() AND g.ends_at>clock_timestamp())
-     OR NOT EXISTS(SELECT 1 FROM kitchen_routes kr JOIN kitchen_stations ks ON ks.id=kr.station_id
-       WHERE kr.outlet_id=p_outlet AND ks.active)) THEN
-      RAISE EXCEPTION 'Kitchen entitlement and routing are required' USING ERRCODE='42501'; END IF;
-   INSERT INTO kitchen_outlet_settings(outlet_id,enabled) VALUES(p_outlet,p_action='settings.enable')
-   ON CONFLICT(outlet_id) DO UPDATE SET enabled=excluded.enabled,revision=kitchen_outlet_settings.revision+1,updated_at=now();
+ ELSIF p_action='settings.disable' THEN
+   -- Activation is deliberately deferred to integrated expeditor/rollout PR E.
+   INSERT INTO kitchen_outlet_settings(outlet_id,enabled) VALUES(p_outlet,false)
+   ON CONFLICT(outlet_id) DO UPDATE SET enabled=false,revision=kitchen_outlet_settings.revision+1,updated_at=now();
    PERFORM app_private.kitchen_emit(p_outlet,'settings.changed');
  ELSE RAISE EXCEPTION 'Unknown kitchen action' USING ERRCODE='22023'; END IF;
  INSERT INTO domain_audit(id,organization_id,actor_id,action,details)
