@@ -7,6 +7,20 @@ const redisUrl = z
   .string()
   .url()
   .refine((v) => /^rediss?:\/\//.test(v), "Redis URL required");
+const strictBoolean = z.enum(["true", "false"]).transform((v) => v === "true");
+const smtpHostname = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(
+    (value) =>
+      value === "localhost" ||
+      (/^(?=.{1,253}$)(?!.*\.\.)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(
+        value
+      ) &&
+        !/^\d+(?:\.\d+){3}$/.test(value)),
+    "SMTP hostname required"
+  );
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -14,14 +28,16 @@ export const envSchema = z
     DATABASE_URL: pgUrl,
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
     AUTH_SECRET: z.string().min(32),
-    EMAIL_PROVIDER: z.enum(["resend", "test"]).default("test"),
-    EMAIL_FROM: z.string().email().optional(),
-    RESEND_API_KEY: z.string().optional(),
+    EMAIL_PROVIDER: z.enum(["smtp", "resend", "test"]).default("test"),
+    EMAIL_FROM: z.string().trim().email().optional(),
+    RESEND_API_KEY: z.string().trim().min(1).optional(),
+    SMTP_HOST: smtpHostname.optional(),
+    SMTP_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+    SMTP_SECURE: strictBoolean.optional(),
+    SMTP_USER: z.string().trim().min(1).optional(),
+    SMTP_PASSWORD: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().optional(),
-    AUTH_ALLOW_TEST_EMAIL: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((v) => v === "true"),
+    AUTH_ALLOW_TEST_EMAIL: strictBoolean.default(false),
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
     GEMINI_API_KEY: z.string().optional(),
@@ -33,14 +49,8 @@ export const envSchema = z
     R2_BUCKET_NAME: z.string().default("menuminute-media"),
     R2_ENDPOINT: z.string().optional(),
     PEXELS_API_KEY: z.string().optional(),
-    AI_FEATURES_ENABLED: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((v) => v === "true"),
-    IMAGE_GENERATION_ENABLED: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((v) => v === "true"),
+    AI_FEATURES_ENABLED: strictBoolean.default(false),
+    IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
   })
   .superRefine((e, ctx) => {
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
@@ -60,25 +70,38 @@ export const envSchema = z
         path: ["EMAIL_PROVIDER"],
         message: "Test mail requires explicit isolated localhost opt-in",
       });
+    if (e.EMAIL_PROVIDER === "smtp") {
+      const required = [
+        ["EMAIL_FROM", e.EMAIL_FROM],
+        ["SMTP_HOST", e.SMTP_HOST],
+        ["SMTP_PORT", e.SMTP_PORT],
+        ["SMTP_SECURE", e.SMTP_SECURE],
+        ["SMTP_USER", e.SMTP_USER],
+        ["SMTP_PASSWORD", e.SMTP_PASSWORD],
+      ] as const;
+      for (const [name, value] of required) {
+        if (value === undefined)
+          ctx.addIssue({ code: "custom", path: [name], message: `${name} is required for SMTP` });
+      }
+    }
+    if (e.EMAIL_PROVIDER === "resend" && (!e.RESEND_API_KEY || !e.EMAIL_FROM))
+      ctx.addIssue({
+        code: "custom",
+        path: [!e.EMAIL_FROM ? "EMAIL_FROM" : "RESEND_API_KEY"],
+        message: "Resend credentials and verified sender are required",
+      });
     if (e.NODE_ENV === "production") {
-      if (
-        e.EMAIL_PROVIDER !== "resend" &&
-        !(
-          e.AUTH_ALLOW_TEST_EMAIL &&
-          new URL(e.APP_URL).hostname === "localhost" &&
-          new URL(e.DATABASE_URL).pathname === "/menuminute_test"
-        )
-      )
+      if (e.EMAIL_PROVIDER === "test")
         ctx.addIssue({
           code: "custom",
           path: ["EMAIL_PROVIDER"],
           message: "Production email delivery is required",
         });
-      if (e.EMAIL_PROVIDER === "resend" && (!e.RESEND_API_KEY || !e.EMAIL_FROM))
+      if (e.EMAIL_PROVIDER === "smtp" && e.SMTP_SECURE !== true)
         ctx.addIssue({
           code: "custom",
-          path: ["RESEND_API_KEY"],
-          message: "Resend credentials and verified sender are required",
+          path: ["SMTP_SECURE"],
+          message: "Production SMTP requires implicit TLS",
         });
       if (new URL(e.APP_URL).protocol !== "https:")
         ctx.addIssue({ code: "custom", path: ["APP_URL"], message: "Production HTTPS required" });
