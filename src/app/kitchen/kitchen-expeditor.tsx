@@ -21,7 +21,9 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   }, [base]);
   useEffect(() => {
     active.current = true;
-    void sync().catch((e) => setError(e instanceof Error ? e.message : "Cannot load expeditor"));
+    void Promise.resolve().then(() =>
+      sync().catch((e) => setError(e instanceof Error ? e.message : "Cannot load expeditor"))
+    );
     const timer = setInterval(
       () =>
         void sync().catch((e) =>
