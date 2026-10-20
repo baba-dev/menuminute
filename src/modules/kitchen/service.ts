@@ -26,9 +26,7 @@ const adminSchema = z.discriminatedUnion("action", [
   ...(["route.assign", "route.remove"] as const).map((action) =>
     z.object({ action: z.literal(action), data: z.object({ stationId: id, dishId: id }).strict() })
   ),
-  ...(["settings.enable", "settings.disable"] as const).map((action) =>
-    z.object({ action: z.literal(action), data: z.object({}).strict() })
-  ),
+  z.object({ action: z.literal("settings.disable"), data: z.object({}).strict() }),
 ]);
 const workSchema = z
   .object({
