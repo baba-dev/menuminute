@@ -208,8 +208,10 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,pu
  SELECT CASE WHEN current_setting('app.outlet_id',true)=p_outlet
  AND app_private.can_outlet(p_outlet,'orders.read')
  THEN COALESCE((SELECT jsonb_agg(q.id) FROM
- (SELECT DISTINCT o.id FROM orders o JOIN kitchen_work w ON w.order_id=o.id AND w.outlet_id=p_outlet
- WHERE o.restaurant_id=p_outlet ORDER BY o.id LIMIT 100) q),'[]'::jsonb)
+ (SELECT o.id FROM orders o
+ WHERE o.restaurant_id=p_outlet AND o.status IN ('accepted','preparing','ready')
+ AND EXISTS(SELECT 1 FROM kitchen_work w WHERE w.order_id=o.id AND w.outlet_id=p_outlet)
+ ORDER BY o.created_at DESC,o.id LIMIT 100) q),'[]'::jsonb)
  ELSE '[]'::jsonb END
 $$;
 REVOKE ALL ON FUNCTION app_private.kitchen_managed_orders(text) FROM PUBLIC;
