@@ -126,6 +126,7 @@ export function MenuStudio({
     return body;
   }
   async function load(menuId: string) {
+    const changedMenu = selected.current !== menuId;
     selected.current = menuId;
     setError("");
     const next = await json(path(menuId));
@@ -136,7 +137,7 @@ export function MenuStudio({
     setCategoryFilter("all");
     setComposerCategory("");
     setComposerMode("add");
-    setComposerPending(false);
+    if (changedMenu) setComposerPending(false);
     setDirty(false);
   }
   function change(next: MenuDocument) {
@@ -628,11 +629,13 @@ export function MenuStudio({
                                 Find in menu
                               </button>
                             </div>
-                            {composerMode === "add" ? <SmartDishComposer key={detail.id} doc={doc}
+                            <div hidden={composerMode !== "add"}>
+                              <SmartDishComposer key={detail.id} doc={doc}
                               outletId={outlet.id} menuId={detail.id} media={media}
                               defaultCategoryId={composerCategory} focusRequest={composerFocus}
-                              onAdd={addQuickDishes} onPendingChange={setComposerPending} /> :
-                              <div className="panel stack">
+                              onAdd={addQuickDishes} onPendingChange={setComposerPending} />
+                            </div>
+                            {composerMode === "find" && <div className="panel stack">
                                 <label className="field">Find a dish or section
                                   <input aria-label="Find a dish or section" type="search" value={dishSearch}
                                     onChange={e => setDishSearch(e.target.value)} placeholder="Filter names and descriptions" />
