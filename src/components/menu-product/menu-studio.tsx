@@ -171,6 +171,7 @@ export function MenuStudio({
   }
   async function save() {
     if (!doc || !detail) throw new Error("Select a menu");
+    if (composerPending) throw new Error("Review or clear selected Composer dishes before saving.");
     if (!form.current?.reportValidity()) throw new Error("Check the highlighted fields");
     const parsed = menuDocumentSchema.safeParse(doc);
     if (!parsed.success)
@@ -488,6 +489,7 @@ export function MenuStudio({
               </span>
               <span className="badge">Revision {detail.revision}</span>
               <span className="badge">{dirty ? "Unsaved changes" : "Saved"}</span>
+              {composerPending && <span className="badge">Review selected dishes before saving or publishing</span>}
             </div>
             <div className="row">
               <button type="button" onClick={() => setPreview(!preview)}>
@@ -497,7 +499,7 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={busy || !detail.canWrite || detail.archived}
+                disabled={busy || !detail.canWrite || detail.archived || composerPending}
                 onClick={() =>
                   void run(async () => {
                     await save();
@@ -510,7 +512,7 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember ink-press"
-                disabled={busy || !detail.canWrite || detail.archived}
+                disabled={busy || !detail.canWrite || detail.archived || composerPending}
                 onClick={() => dialog.current?.showModal()}
               >
                 <Send size={16} />
@@ -607,7 +609,7 @@ export function MenuStudio({
                     }}
                   >
                     <fieldset
-                      disabled={busy || !detail.canWrite || detail.archived}
+                      disabled={busy || !detail.canWrite || detail.archived || composerPending}
                       className="stack"
                       style={{ minWidth: 0 }}
                     >
