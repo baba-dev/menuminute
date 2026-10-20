@@ -24,7 +24,7 @@ async function run(){
    pool.query<{total:string;enabled:string}>("select count(*)::text as total,count(*) filter (where enabled)::text as enabled from kitchen_outlet_settings"),
    pool.query<{total:string;unsettled:string}>("select count(*)::text as total,count(*) filter (where status in ('queued','preparing'))::text as unsettled from kitchen_work"),
    pool.query<{total:string;maxseq:string}>("select count(*)::text as total,coalesce(max(seq),0)::text as maxseq from kitchen_events"),
-   pool.query<{total:string}>("select count(*)::text as total from outbox_events where type='kitchen.changed' and processed_at is null")
+   pool.query<{total:string}>("select count(*)::text as total from outbox_events where type='kitchen.changed' and status in ('pending','dispatched','failed')")
   ]);
   const evidence={
    sha,webAndWorkerSameExpectedSha:links.every(Boolean),
