@@ -59,6 +59,7 @@ export type KitchenWorkView = {
 export type KitchenSnapshot = {
   cursor: number;
   enabled: boolean;
+  routes: Array<{ dishId: string; stationId: string; ruleVersion: number }>;
   stations: Array<{ id: string; name: string; active: boolean; position: number }>;
   work: KitchenWorkView[];
 };
