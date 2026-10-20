@@ -79,7 +79,8 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     SMTP_SECURE: "true",
     SMTP_USER: "browser-ci",
     SMTP_PASSWORD: "browser-ci-password",
-    AUTH_ALLOW_TEST_EMAIL: "false",
+    // Also gates the established localhost/menuminute_test-only MFA fixture bypass.
+    AUTH_ALLOW_TEST_EMAIL: "true",
     NODE_EXTRA_CA_CERTS: path.join(dir, "cert.pem"),
     PORT: "3100",
     HOSTNAME: "127.0.0.1",
