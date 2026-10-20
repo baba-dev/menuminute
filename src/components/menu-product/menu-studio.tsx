@@ -7,7 +7,6 @@ import {
   Save,
   Eye,
   Send,
-  UtensilsCrossed,
   ArrowUp,
   ArrowDown,
   ImagePlus,
