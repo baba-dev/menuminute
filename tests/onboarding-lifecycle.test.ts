@@ -132,7 +132,7 @@ it("rejects expired invitations even for a verified matching recipient", async (
     role: "member",
     key: crypto.randomUUID(),
   });
-  const token = drainAuthTestMessages()[0]?.text.match(/\\/invite\\/([a-f0-9]{64})/)?.[1];
+  const token = drainAuthTestMessages()[0]?.text.match(/\/invite\/([a-f0-9]{64})/)?.[1];
   expect(token).toBeTruthy();
   await admin(async (_db, pool) => {
     await pool.query(
@@ -163,6 +163,6 @@ it("bounds outstanding invitations and refuses an eleventh pending invitation", 
       key: crypto.randomUUID(),
     })
   ).rejects.toThrow();
-  expect((await listInvitations(actor, outlet.organizationId)).filter((i) => i.status === "pending"))
-    .toHaveLength(10);
+  const invitations = await listInvitations(actor, outlet.organizationId);
+  expect(invitations.filter((i) => i.status === "pending")).toHaveLength(10);
 });
