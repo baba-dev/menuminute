@@ -1,10 +1,10 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Save, Eye, Send, ArrowUp, ArrowDown, ImagePlus } from "lucide-react";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
-import { findDishDuplicate, normalizeDishText } from "@/modules/menu-product/dish-intelligence";
+import { findDishDuplicate, normalizeDishText, type OrganizationDish } from "@/modules/menu-product/dish-intelligence";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
 import { displayToMinor, currencyExponent } from "@/lib/money";
 import type { menuDetail } from "@/modules/menu-product/service";
@@ -106,6 +106,7 @@ export function MenuStudio({
   const [composerFocus, setComposerFocus] = useState(0);
   const [composerPending, setComposerPending] = useState(false);
   const [composerSelection, setComposerSelection] = useState<QuickDish[]>([]);
+  const [organizationDishes, setOrganizationDishes] = useState<OrganizationDish[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
   const [media, setMedia] = useState<Media[]>(initialMedia);
@@ -117,6 +118,19 @@ export function MenuStudio({
   const dialog = useRef<HTMLDialogElement>(null);
   const headers = { "content-type": "application/json", "x-outlet-id": outlet.id };
   const path = (menuId: string) => `/api/catalog/${menuId}`;
+  useEffect(() => {
+    if (!detail?.id) return;
+    let cancelled = false;
+    const controller = new AbortController();
+    void fetch(`/api/catalog/suggestions?menuId=${encodeURIComponent(detail.id)}`, {
+      headers: { "x-outlet-id": outlet.id }, cache: "no-store", signal: controller.signal,
+    }).then(async response => {
+      if (!response.ok) throw new Error("Organization suggestions unavailable");
+      return response.json() as Promise<{ items: OrganizationDish[] }>;
+    }).then(result => { if (!cancelled) setOrganizationDishes(result.items); })
+      .catch(() => { if (!cancelled) setOrganizationDishes([]); });
+    return () => { cancelled = true; controller.abort(); };
+  }, [detail?.id, outlet.id]);
   async function json(url: string, options?: RequestInit) {
     const r = await fetch(url, {
       ...options,
@@ -137,6 +151,7 @@ export function MenuStudio({
     setDishSearch("");
     setCategoryFilter("all");
     setComposerCategory("");
+    setOrganizationDishes([]);
     setComposerMode("add");
     if (changedMenu) {
       setComposerPending(false);
@@ -683,6 +698,7 @@ export function MenuStudio({
                                 outletId={outlet.id}
                                 menuId={detail.id}
                                 media={media}
+                                organization={organizationDishes}
                                 defaultCategoryId={composerCategory}
                                 focusRequest={composerFocus}
                                 selection={composerSelection}
