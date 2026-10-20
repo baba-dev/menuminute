@@ -10,8 +10,9 @@ export async function GET(
     const { organizationId, outletId } = await params;
     const first = await kitchenSnapshot(actor, organizationId, outletId);
     const encoder = new TextEncoder();
+    let cancelled = false;
     const body = new ReadableStream<Uint8Array>({
-      async start(controller) {
+      start(controller) {
         let cursor = first.cursor;
         const send = (event: string, value: unknown, id?: number) => {
           const msg =
@@ -25,10 +26,11 @@ export async function GET(
           controller.enqueue(encoder.encode(msg));
         };
         send("snapshot", first, first.cursor);
+        void (async () => {
         try {
-          while (!req.signal.aborted) {
+          while (!cancelled && !req.signal.aborted) {
             await new Promise<void>((resolve) => setTimeout(resolve, 3000));
-            if (req.signal.aborted) break;
+            if (cancelled || req.signal.aborted) break;
             // Revalidate the session and current outlet/station role at EVERY heartbeat.
             const fresh = await requestActor(req);
             if (fresh.userId !== actor.userId || fresh.sessionId !== actor.sessionId)
@@ -44,7 +46,7 @@ export async function GET(
             }
           }
         } catch {
-          if (!req.signal.aborted)
+          if (!cancelled && !req.signal.aborted)
             try {
               send("revoked", {
                 message: "Kitchen connection requires a fresh login or permission check",
@@ -55,9 +57,10 @@ export async function GET(
             controller.close();
           } catch {}
         }
+        })();
       },
       cancel() {
-        /* Request abort stops the loop. */
+        cancelled = true;
       },
     });
     return new Response(body, {
