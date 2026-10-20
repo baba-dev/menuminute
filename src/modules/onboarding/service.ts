@@ -21,10 +21,15 @@ const invitationInput = z
 const tokenSchema = z.string().regex(/^[a-f0-9]{64}$/);
 function stableJson(input: unknown): string {
   const ordered = (v: unknown): unknown =>
-    Array.isArray(v) ? v.map(ordered) :
-    v && typeof v === "object" ? Object.fromEntries(
-      Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, ordered(value)])
-    ) : v;
+    Array.isArray(v)
+      ? v.map(ordered)
+      : v && typeof v === "object"
+        ? Object.fromEntries(
+            Object.entries(v)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([key, value]) => [key, ordered(value)])
+          )
+        : v;
   return JSON.stringify(ordered(input));
 }
 const operationId = (user: string, key: string) =>
@@ -71,10 +76,17 @@ export async function saveOnboarding(actor: Actor, input: unknown) {
       throw new ConflictError("Outlet already created. Refresh to continue.");
     if (original?.status === "provisioning") {
       if (stableJson(original.draft) !== stableJson(draft))
-        throw new ConflictError("A previous operation is in progress. Resume with the saved settings.");
+        throw new ConflictError(
+          "A previous operation is in progress. Resume with the saved settings."
+        );
       // The first response may have been lost. Reuse the same durable key, then
       // reconcile/retry the idempotent provisioning operation without a new outlet.
-      return { key: original.operation_key, draft: original.draft, status: "provisioning" as const, outletId: null };
+      return {
+        key: original.operation_key,
+        draft: original.draft,
+        status: "provisioning" as const,
+        outletId: null,
+      };
     }
     const key =
       original && stableJson(original.draft) === stableJson(draft)

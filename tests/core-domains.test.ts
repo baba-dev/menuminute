@@ -47,13 +47,23 @@ async function account() {
   });
   return { userId: id, email };
 }
-async function invitedMember(actor: Actor, org: string, member: { userId: string; email: string }, role: "member" | "admin") {
+async function invitedMember(
+  actor: Actor,
+  org: string,
+  member: { userId: string; email: string },
+  role: "member" | "admin"
+) {
   drainAuthTestMessages();
-  if (role === "admin") await admin(async (_,p) => { await p.query("update users set two_factor_enabled=true where id=$1",[member.userId]); });
+  if (role === "admin")
+    await admin(async (_, p) => {
+      await p.query("update users set two_factor_enabled=true where id=$1", [member.userId]);
+    });
   await inviteMember(role === "admin" ? await confirmedOwner(actor) : actor, org, {
-    email: member.email, role, key: crypto.randomUUID(),
+    email: member.email,
+    role,
+    key: crypto.randomUUID(),
   });
-  const mail = drainAuthTestMessages().find(m => m.subject.includes("Invitation"));
+  const mail = drainAuthTestMessages().find((m) => m.subject.includes("Invitation"));
   expect(mail).toBeDefined();
   const token = mail!.text.match(/\/invite\/([a-f0-9]{64})/)?.[1];
   expect(token).toBeTruthy();
@@ -99,7 +109,9 @@ it("checks current roles on every retry, prevents escalation and cross-tenant ou
   const other = await fixture();
   const org = outlet.organizationId;
   const member = await account();
-  await expect(command(actor, org, "member.save", { email: member.email, role: "member", isActive: true })).rejects.toMatchObject({ statusCode: 403 });
+  await expect(
+    command(actor, org, "member.save", { email: member.email, role: "member", isActive: true })
+  ).rejects.toMatchObject({ statusCode: 403 });
   const saved = await invitedMember(actor, org, member, "member");
   await command(actor, org, "outlet.roles", {
     outletId: outlet.id,
@@ -140,9 +152,13 @@ it("checks current roles on every retry, prevents escalation and cross-tenant ou
       linked: true,
     })
   ).rejects.toMatchObject({ statusCode: 422 });
-  await admin(async (_,p) => { await p.query("update users set two_factor_enabled=true where id=$1",[member.userId]); });
+  await admin(async (_, p) => {
+    await p.query("update users set two_factor_enabled=true where id=$1", [member.userId]);
+  });
   await command(await confirmedOwner(actor), org, "member.save", {
-    email: member.email, role: "admin", isActive: true,
+    email: member.email,
+    role: "admin",
+    isActive: true,
   });
   await expect(
     command(member, org, "organization.active", { isActive: false })

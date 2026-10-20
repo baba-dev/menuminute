@@ -3,7 +3,13 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, chore/phase-0-development-orchestration, security/auth-2-identity-recovery, auth/onboarding-2-lifecycle]
+    branches:
+      [
+        main,
+        chore/phase-0-development-orchestration,
+        security/auth-2-identity-recovery,
+        auth/onboarding-2-lifecycle,
+      ]
 permissions:
   contents: read
 concurrency:
