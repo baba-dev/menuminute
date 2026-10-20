@@ -2,7 +2,7 @@
   "name": "menuminute",
   "version": "0.1.0",
   "private": true,
-  "description": "Affordable mobile-first restaurant SaaS \u2014 free QR menus, online ordering and kitchen display",
+  "description": "Affordable mobile-first restaurant SaaS — free QR menus, online ordering and kitchen display",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=11.0.0"
@@ -30,6 +30,7 @@
     "infra:test:up": "docker compose -f infra/compose.test.yml up -d --wait",
     "infra:test:down": "docker compose -f infra/compose.test.yml down -v",
     "build:worker": "esbuild scripts/worker.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/worker.mjs",
+    "build:release-preflight": "esbuild scripts/env-validate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/env-validate.mjs && esbuild scripts/db-migration-verify.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migration-verify.mjs",
     "worker": "node dist/worker.mjs",
     "billing:entitlement": "tsx scripts/entitlement.ts"
   },
@@ -63,6 +64,7 @@
     "lucide-react": "^0.513.0",
     "nanoid": "^5.1.5",
     "next": "16.4.0",
+    "nodemailer": "10.1.7",
     "pg": "8.23.1",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
@@ -84,24 +86,27 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22",
+    "@types/nodemailer": "8.0.2",
     "@types/pg": "8.15.6",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/smtp-server": "3.5.13",
     "@vitejs/plugin-react": "^4.5.2",
     "@vitest/coverage-v8": "^3.2.4",
     "better-sqlite3": "12.11.1",
     "drizzle-kit": "^0.31.1",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "jsdom": "^26.1.0",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.12",
+    "smtp-server": "3.20.2",
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5",
-    "vitest": "^3.2.4",
-    "esbuild": "0.28.2"
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@11.19.0"
 }

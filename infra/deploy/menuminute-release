@@ -5,16 +5,16 @@ set -Eeuo pipefail
 umask 027
 
 if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
-  echo 4
+  echo 6
   exit 0
 fi
 
 [[ "$EUID" -eq 0 ]] || { echo "Root is required" >&2; exit 1; }
-[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|activate|autoactivate|verify|recover SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
+[[ "$#" -eq 3 ]] || { echo "Usage: menuminute-release stage|eligibility|incident-eligibility|activate|autoactivate|forward-recover|verify|recover SHA256_COMMIT SHA256_ARCHIVE" >&2; exit 2; }
 mode="$1"; sha="$2"; digest="$3"
 # Legacy manual activation now takes the same checked, unattended path.
 [[ "$mode" != activate ]] || mode=autoactivate
-[[ "$mode" == stage || "$mode" == eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == verify || "$mode" == recover ]] || {
+[[ "$mode" == stage || "$mode" == eligibility || "$mode" == incident-eligibility || "$mode" == activate || "$mode" == autoactivate || "$mode" == forward-recover || "$mode" == verify || "$mode" == recover ]] || {
   echo "Unsupported release mode; install the reviewed current helper" >&2; exit 2;
 }
 [[ "$sha" =~ ^[0-9a-f]{40}$ && "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid release identity" >&2; exit 2; }
@@ -42,7 +42,9 @@ verify_release() {
   [[ "$(cat "$release/RELEASE-SHA")" == "$sha" ]] || return 1
   [[ "$(cat "$release/.release-archive-sha256")" == "$digest" ]] || return 1
   [[ -f "$release/.next/standalone/server.js" && -f "$release/dist/worker.mjs" &&
-     -f "$release/dist/db-migrate.mjs" && -f "$release/src/db/migrations/meta/_journal.json" ]] || return 1
+     -f "$release/dist/db-migrate.mjs" && -f "$release/dist/env-validate.mjs" &&
+     -f "$release/dist/db-migration-verify.mjs" &&
+     -f "$release/src/db/migrations/meta/_journal.json" ]] || return 1
 }
 
 # Root can read a broken 0750 release; verify the two *actual* service users
@@ -134,12 +136,15 @@ ARCHIVE
   tar -xzf "$temp/archive.tar.gz" --no-same-owner --no-same-permissions -C "$temp/content"
   [[ "$(cat "$temp/content/RELEASE-SHA")" == "$sha" ]] || { echo "Release SHA mismatch" >&2; exit 1; }
   [[ -f "$temp/content/.next/standalone/server.js" && -f "$temp/content/dist/worker.mjs" &&
-     -f "$temp/content/dist/db-migrate.mjs" ]] || { echo "Incomplete release" >&2; exit 1; }
+     -f "$temp/content/dist/db-migrate.mjs" && -f "$temp/content/dist/env-validate.mjs" &&
+     -f "$temp/content/dist/db-migration-verify.mjs" ]] || { echo "Incomplete release" >&2; exit 1; }
   (
     cd "$temp/content"
-    "$node24" -e 'require("pg"); require("bullmq"); require("sharp")'
+    "$node24" -e 'require("pg"); require("bullmq"); require("sharp"); require("nodemailer")'
     "$node24" --check dist/worker.mjs
     "$node24" --check dist/db-migrate.mjs
+    "$node24" --check dist/env-validate.mjs
+    "$node24" --check dist/db-migration-verify.mjs
   )
   [[ -d "$data/cache" && -d "$temp/content/.next/standalone/.next" ]] || {
     echo "Provision /var/lib/menuminute/cache before staging" >&2; exit 1;
@@ -167,6 +172,22 @@ runtime_access_ok || {
 }
 [[ -f /etc/menuminute/web.env && -f /etc/menuminute/worker.env ]] || {
   echo "Runtime environment files are not provisioned" >&2; exit 1;
+}
+
+# systemd reads the private file, then executes the exact candidate validator as
+# the unprivileged runtime account. Validator failures expose variable names
+# only. This runs before migration comparison, backup, SQL, or link changes.
+candidate_configuration_ok() {
+  local env_file=/etc/menuminute/web.env
+  [[ -f "$env_file" && ! -L "$env_file" ]] || return 1
+  command -v systemd-run >/dev/null || return 1
+  systemd-run --quiet --wait --collect --pipe --uid=menuminute \
+    --property="EnvironmentFile=$env_file" \
+    "$node24" "$release/dist/env-validate.mjs"
+}
+candidate_configuration_ok || {
+  echo "DEPLOYMENT_PREFLIGHT_FAILED: Invalid or missing production runtime configuration (see variable names above)" >&2
+  exit 1
 }
 systemctl cat menuminute-web.service >/dev/null
 systemctl cat menuminute-worker.service >/dev/null
@@ -274,6 +295,36 @@ PY
   fi
 fi
 
+# A broken current application cannot satisfy ordinary eligibility. Forward
+# recovery is a separate, short-lived, root-authorized route for an exact
+# verified SHA/digest. It verifies the already-applied database ledger in
+# read-only mode and never runs the migration command.
+if [[ "$mode" == incident-eligibility || "$mode" == forward-recover ]]; then
+  authorization="/etc/menuminute/recovery-authorizations/$sha"
+  [[ -f "$authorization" && ! -L "$authorization" &&
+     "$(stat -c '%U:%a' "$authorization")" == root:600 &&
+     "$(cat "$authorization")" == "$digest" ]] || {
+    echo "FORWARD_RECOVERY_AUTHORIZATION_REQUIRED: root-owned SHA/digest authorization missing" >&2
+    exit 1
+  }
+  authorization_age=$(( $(date +%s) - $(stat -c %Y "$authorization") ))
+  (( authorization_age >= 0 && authorization_age <= 3600 )) || {
+    echo "FORWARD_RECOVERY_AUTHORIZATION_EXPIRED" >&2; exit 1;
+  }
+  owner_env=/etc/menuminute/migration.env
+  [[ -f "$owner_env" && ! -L "$owner_env" &&
+     "$(stat -c '%U:%a' "$owner_env")" == root:600 ]] || {
+    echo "FORWARD_RECOVERY_SETUP_REQUIRED: Provision root-only migration.env" >&2; exit 1;
+  }
+  systemd-run --quiet --wait --collect --pipe --property=DynamicUser=yes \
+    --property="EnvironmentFile=$owner_env" \
+    --property="WorkingDirectory=$release" \
+    "$node24" "$release/dist/db-migration-verify.mjs" || {
+      echo "FORWARD_RECOVERY_BLOCKED: Candidate migration ledger does not match production" >&2
+      exit 1
+    }
+fi
+
 erp_healthy() {
   local status
   status="$(curl -sS -o /dev/null --max-time 7 -w '%{http_code}' http://127.0.0.1:3000/)" || return 1
@@ -283,6 +334,10 @@ erp_healthy || { echo "ERP preflight failed; no changes applied" >&2; exit 1; }
 
 if [[ "$mode" == eligibility ]]; then
   echo "ELIGIBLE: append-only migration history ($migration_change), healthy existing release and ERP"
+  exit 0
+fi
+if [[ "$mode" == incident-eligibility ]]; then
+  echo "INCIDENT_ELIGIBLE: candidate configuration, database ledger, artifact authorization and ERP verified"
   exit 0
 fi
 if [[ "$mode" == verify ]]; then
@@ -348,7 +403,7 @@ if [[ "$mode" == recover ]]; then
 fi
 
 # Repeated delivery of the already-live release performs verification only.
-if [[ "$old_web" == "$release" && "$old_worker" == "$release" ]]; then
+if [[ "$mode" != forward-recover && "$old_web" == "$release" && "$old_worker" == "$release" ]]; then
   systemctl is-active --quiet menuminute-web.service
   systemctl is-active --quiet menuminute-worker.service
   curl --silent --show-error --fail --max-time 5 http://127.0.0.1:3100/api/health/ready |
@@ -427,6 +482,10 @@ switched=false
 restore_previous() {
   trap - ERR
   if [[ "$switched" == true ]]; then
+    if [[ "$mode" == forward-recover ]]; then
+      echo "EMERGENCY: Forward recovery failed readiness; no database or application rollback was attempted." >&2
+      return 0
+    fi
     if [[ -n "$old_web" ]]; then
       # Manual activation may follow an irreversible database migration. The
       # ERR trap must obey the same compatibility policy as explicit recover.

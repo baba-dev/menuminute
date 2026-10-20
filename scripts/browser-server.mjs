@@ -6,6 +6,7 @@ import { mkdtemp, readFile, cp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn, execFileSync } from "node:child_process";
+import { SMTPServer } from "smtp-server";
 const dir = await mkdtemp(path.join(tmpdir(), "menuminute-browser-tls-"));
 execFileSync(
   "openssl",
@@ -30,6 +31,33 @@ execFileSync(
 );
 await cp("public", ".next/standalone/public", { recursive: true });
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true });
+const tlsKey = await readFile(path.join(dir, "key.pem"));
+const tlsCertificate = await readFile(path.join(dir, "cert.pem"));
+const smtpServer = new SMTPServer({
+  secure: true,
+  key: tlsKey,
+  cert: tlsCertificate,
+  authOptional: false,
+  onAuth(auth, _session, callback) {
+    callback(
+      auth.username === "browser-ci" && auth.password === "browser-ci-password"
+        ? null
+        : new Error("Invalid CI SMTP credentials"),
+      { user: auth.username }
+    );
+  },
+  onData(stream, _session, callback) {
+    stream.on("data", () => undefined);
+    stream.on("end", callback);
+  },
+});
+await new Promise((resolve, reject) => {
+  smtpServer.once("error", reject);
+  smtpServer.listen(2465, "127.0.0.1", () => {
+    smtpServer.off("error", reject);
+    resolve();
+  });
+});
 const {
   MIGRATION_DATABASE_URL: ownerUrl,
   WORKER_DATABASE_URL: workerUrl,
@@ -44,6 +72,16 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     NODE_ENV: "production",
     APP_URL: "https://localhost:3443",
     AUTH_SECRET: "31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc",
+    EMAIL_PROVIDER: "smtp",
+    EMAIL_FROM: "food@bababuilds.com",
+    SMTP_HOST: "localhost",
+    SMTP_PORT: "2465",
+    SMTP_SECURE: "true",
+    SMTP_USER: "browser-ci",
+    SMTP_PASSWORD: "browser-ci-password",
+    // Also gates the established localhost/menuminute_test-only MFA fixture bypass.
+    AUTH_ALLOW_TEST_EMAIL: "true",
+    NODE_EXTRA_CA_CERTS: path.join(dir, "cert.pem"),
     PORT: "3100",
     HOSTNAME: "127.0.0.1",
   },
@@ -61,8 +99,8 @@ const mediaWorker = spawn(process.execPath, ["dist/worker.mjs"], {
 });
 const server = https.createServer(
   {
-    key: await readFile(path.join(dir, "key.pem")),
-    cert: await readFile(path.join(dir, "cert.pem")),
+    key: tlsKey,
+    cert: tlsCertificate,
   },
   (req, res) => {
     const forwarded = http.request(
@@ -115,6 +153,7 @@ async function stop() {
   stopping = true;
   backend.kill("SIGTERM");
   mediaWorker.kill("SIGTERM");
+  smtpServer.close();
   server.close();
   await rm(dir, { recursive: true, force: true });
   process.exit(0);

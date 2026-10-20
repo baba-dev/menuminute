@@ -59,7 +59,8 @@ describe("provenance-bound main-only production delivery", () => {
     expect(deploy).toContain("Not eligible for activation; check stage and migration logs.");
     expect(deploy).not.toContain("AUTH_V2_CUTOVER_APPROVED");
     expect(deploy).not.toContain("inputs.activate");
-    expect(deploy).toContain("menuminute-release eligibility $RELEASE_SHA $DEPLOY_DIGEST");
+    expect(deploy).toContain("policy=eligibility");
+    expect(deploy).toContain("$policy $RELEASE_SHA $DEPLOY_DIGEST");
     expect(deploy).toContain("needs.stage.outputs.eligible == 'true'");
     expect(deploy).toContain("Public HTTPS, dependency and route verification");
     expect(deploy).toContain("Push-to-verified-public elapsed");

@@ -102,6 +102,12 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Import from photos" })).toBeVisible();
+  await expect(page.getByLabel("Menu Studio overview")).toBeVisible();
+  await page.getByLabel("Find a dish or section").fill("nonexistent-dish-search");
+  await expect(page.getByLabel("Find a dish or section")).toHaveValue("nonexistent-dish-search");
+  await page.getByLabel("Find a dish or section").clear();
+  await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   await page.getByLabel("Category name 1", { exact: true }).fill("Chef’s specials");
   await page.getByRole("button", { name: "Add dish", exact: true }).click();

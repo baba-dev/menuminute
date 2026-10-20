@@ -93,6 +93,7 @@ switch_link() { printf '%s %s\\n' "$1" "$2" >> "$CALLS"; }
 systemctl() { return 0; }
 curl() { return 0; }
 old_web="$OLD"; old_worker="$OLD"; release="$CANDIDATE"; switched=true
+mode=autoactivate
 web_link=/tmp/test-web; worker_link=/tmp/test-worker
 ${rollback}
 restore_previous

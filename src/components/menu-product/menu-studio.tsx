@@ -2,16 +2,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Save,
-  Eye,
-  Send,
-  UtensilsCrossed,
-  ArrowUp,
-  ArrowDown,
-  ImagePlus,
-} from "lucide-react";
+import { Plus, Save, Eye, Send, ArrowUp, ArrowDown, ImagePlus } from "lucide-react";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
 import { displayToMinor, currencyExponent } from "@/lib/money";
 import type { menuDetail } from "@/modules/menu-product/service";
@@ -80,6 +71,7 @@ export function MenuStudio({
   initialMedia,
   outletChoices,
   brandChoices,
+  imports = [],
 }: {
   outlet: {
     id: string;
@@ -95,6 +87,7 @@ export function MenuStudio({
   initialMedia: Media[];
   outletChoices: { id: string; name: string; currency: string }[];
   brandChoices: { id: string; name: string }[];
+  imports?: { id: string; status: string; revision: number; updatedAt: Date | string }[];
 }) {
   const router = useRouter();
   const [list, setList] = useState(initialList);
@@ -105,6 +98,8 @@ export function MenuStudio({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("dishes");
+  const [dishSearch, setDishSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [milestone, setMilestone] = useState(false);
@@ -131,6 +126,8 @@ export function MenuStudio({
     if (selected.current !== menuId) return;
     setDetail(next);
     setDoc(next.document);
+    setDishSearch("");
+    setCategoryFilter("all");
     setDirty(false);
   }
   function change(next: MenuDocument) {
@@ -227,15 +224,39 @@ export function MenuStudio({
   }
   return (
     <div className="product stack">
-      <header className="row between">
-        <div>
-          <span className="eyebrow">
-            {outlet.outletType.replaceAll("_", " ")} · {outlet.currency}
-          </span>
-          <h1>Menu Studio</h1>
-          <p>{outlet.name} · Save, preview, then publish.</p>
+      <header className="relative overflow-hidden rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-sm sm:p-8">
+        <div
+          className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full border-[32px] border-orange-100/70"
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <span className="text-xs font-black tracking-[.2em] text-orange-700 uppercase">
+              MenuMinute · {outlet.outletType.replaceAll("_", " ")} · {outlet.currency}
+            </span>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-stone-950 sm:text-4xl">
+              Menu Studio
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-stone-700">
+              Build, refine and preview {outlet.name}&apos;s menu in one place. Guests only see what
+              you explicitly publish.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/dashboard/menu/import"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-orange-700"
+            >
+              <ImagePlus size={17} /> Import from photos
+            </Link>
+            <Link
+              href="/dashboard/qr-codes"
+              className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-stone-800 hover:border-orange-400"
+            >
+              Permanent QR
+            </Link>
+          </div>
         </div>
-        <UtensilsCrossed size={48} aria-hidden="true" />
       </header>
       <div className="panel row between">
         <label className="field">
@@ -288,6 +309,79 @@ export function MenuStudio({
           Create menu
         </button>
       </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Menu Studio overview">
+        {[
+          {
+            label: "Sections",
+            value: doc?.categories.filter((cat) => !cat.archived).length ?? 0,
+            note: "In this editable draft",
+          },
+          {
+            label: "Dishes",
+            value:
+              doc?.categories.reduce(
+                (n, cat) => n + cat.items.filter((item) => !item.archived).length,
+                0
+              ) ?? 0,
+            note: "Across your sections",
+          },
+          {
+            label: "Source imports",
+            value: imports.filter((item) => ["needs_review", "ready"].includes(item.status)).length,
+            note: "Ready for human review",
+          },
+          {
+            label: "Publication",
+            value: detail?.publishedRevision ? "Live" : "Draft",
+            note: dirty ? "Unsaved editor changes" : "Explicit publish only",
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
+          >
+            <p className="text-xs font-bold tracking-widest text-stone-500 uppercase">
+              {stat.label}
+            </p>
+            <p className="mt-2 text-2xl font-black text-stone-950 tabular-nums">{stat.value}</p>
+            <p className="mt-1 text-xs text-stone-600">{stat.note}</p>
+          </div>
+        ))}
+      </div>
+      {imports.some((item) => ["needs_review", "ready"].includes(item.status)) && (
+        <section
+          aria-label="Pending human review"
+          className="rounded-2xl border border-orange-200 bg-orange-50 p-5"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black tracking-widest text-orange-700 uppercase">
+                Smart Menu Studio
+              </p>
+              <h2 className="mt-1 text-base font-bold text-stone-900">
+                Your extracted menus need a human eye
+              </h2>
+              <p className="mt-1 text-xs text-stone-700">
+                Compare source photos and correct prices before applying a private draft.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {imports
+                .filter((item) => ["needs_review", "ready"].includes(item.status))
+                .slice(0, 3)
+                .map((item) => (
+                  <Link
+                    key={item.id}
+                    href={"/dashboard/menu/import/" + encodeURIComponent(item.id) + "/review"}
+                    className="rounded-xl bg-white px-4 py-3 text-xs font-bold text-orange-800 shadow-sm hover:bg-orange-100"
+                  >
+                    {item.status === "ready" ? "Apply confirmed draft" : "Continue source review"} →
+                  </Link>
+                ))}
+            </div>
+          </div>
+        </section>
+      )}
       {error && (
         <div role="alert" className="error" tabIndex={-1}>
           {error}{" "}
@@ -475,6 +569,56 @@ export function MenuStudio({
                       />
                       {tab === "dishes" && (
                         <>
+                          <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs font-bold text-stone-700">
+                                Find a dish or section
+                                <input
+                                  aria-label="Find a dish or section"
+                                  type="search"
+                                  value={dishSearch}
+                                  onChange={(e) => setDishSearch(e.target.value)}
+                                  placeholder="Search names and descriptions"
+                                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-950 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none"
+                                />
+                              </label>
+                              <span className="text-xs font-bold text-stone-500">
+                                Filtering changes this view, never the saved menu.
+                              </span>
+                            </div>
+                            <nav
+                              aria-label="Jump to menu section"
+                              className="mt-4 flex flex-wrap gap-2"
+                            >
+                              <button
+                                type="button"
+                                aria-pressed={categoryFilter === "all"}
+                                onClick={() => setCategoryFilter("all")}
+                                className={
+                                  categoryFilter === "all"
+                                    ? "rounded-full bg-stone-900 px-4 py-2 text-xs font-bold text-white"
+                                    : "rounded-full border border-stone-300 px-4 py-2 text-xs font-bold text-stone-700"
+                                }
+                              >
+                                All sections
+                              </button>
+                              {doc.categories.map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  aria-pressed={categoryFilter === cat.id}
+                                  onClick={() => setCategoryFilter(cat.id)}
+                                  className={
+                                    categoryFilter === cat.id
+                                      ? "rounded-full bg-orange-600 px-4 py-2 text-xs font-bold text-white"
+                                      : "rounded-full border border-stone-300 px-4 py-2 text-xs font-bold text-stone-700"
+                                  }
+                                >
+                                  {cat.name} · {cat.items.length}
+                                </button>
+                              ))}
+                            </nav>
+                          </div>
                           <div className="row between">
                             <h2>Sections & dishes</h2>
                             <button
@@ -499,437 +643,476 @@ export function MenuStudio({
                               Add category
                             </button>
                           </div>
-                          {doc.categories.map((c, ci) => (
-                            <section key={c.id} className="panel stack">
-                              <div className="row between">
-                                <span className="eyebrow">Section {ci + 1}</span>
-                                <div className="row">
-                                  <button
-                                    type="button"
-                                    aria-label={`Move ${c.name} up`}
-                                    onClick={() => move(ci, -1)}
-                                  >
-                                    <ArrowUp size={16} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    aria-label={`Move ${c.name} down`}
-                                    onClick={() => move(ci, 1)}
-                                  >
-                                    <ArrowDown size={16} />
-                                  </button>
-                                  <label>
-                                    <input
-                                      type="checkbox"
-                                      checked={c.archived}
-                                      onChange={(e) =>
-                                        updateCategory(ci, (c) => ({
-                                          ...c,
-                                          archived: e.target.checked,
-                                        }))
-                                      }
-                                    />
-                                    Archive section
-                                  </label>
-                                </div>
-                              </div>
-                              <Field
-                                label={`Category name ${ci + 1}`}
-                                value={c.name}
-                                onChange={(name) => updateCategory(ci, (c) => ({ ...c, name }))}
-                              />
-                              <label className="field">
-                                Section description
-                                <textarea
-                                  value={c.description}
-                                  onChange={(e) =>
-                                    updateCategory(ci, (c) => ({
-                                      ...c,
-                                      description: e.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              {c.items.map((dish, di) => (
-                                <div className="dish-editor stack" key={dish.id}>
-                                  <div className="row between">
-                                    <span className="eyebrow">Dish {di + 1}</span>
-                                    <div
-                                      className="row"
-                                      aria-label={`Reorder ${dish.name || "untitled dish"}`}
-                                    >
-                                      <button
-                                        type="button"
-                                        aria-label={`Move dish ${di + 1} up`}
-                                        disabled={di === 0}
-                                        onClick={() => moveDish(ci, di, -1)}
-                                      >
-                                        <ArrowUp size={16} aria-hidden="true" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        aria-label={`Move dish ${di + 1} down`}
-                                        disabled={di === c.items.length - 1}
-                                        onClick={() => moveDish(ci, di, 1)}
-                                      >
-                                        <ArrowDown size={16} aria-hidden="true" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div className="columns">
-                                    <Field
-                                      label={`Dish name ${ci + 1}.${di + 1}`}
-                                      value={dish.name}
-                                      onChange={(name) => updateDish(ci, di, { name })}
-                                    />
-                                    <Money
-                                      label={`Dish price ${ci + 1}.${di + 1}`}
-                                      value={dish.priceMinor}
-                                      currency={doc.currency}
-                                      onChange={(priceMinor) => updateDish(ci, di, { priceMinor })}
-                                    />
-                                  </div>
-                                  <label className="field">
-                                    Description
-                                    <textarea
-                                      value={dish.description}
-                                      onChange={(e) =>
-                                        updateDish(ci, di, { description: e.target.value })
-                                      }
-                                      maxLength={1000}
-                                    />
-                                  </label>
+                          {doc.categories
+                            .map((c, ci) => ({ c, ci }))
+                            .filter(
+                              ({ c }) =>
+                                (categoryFilter === "all" || categoryFilter === c.id) &&
+                                (!dishSearch.trim() ||
+                                  [
+                                    c.name,
+                                    c.description,
+                                    ...c.items.flatMap((d) => [d.name, d.description]),
+                                  ].some((value) =>
+                                    value
+                                      .toLocaleLowerCase()
+                                      .includes(dishSearch.trim().toLocaleLowerCase())
+                                  ))
+                            )
+                            .map(({ c, ci }) => (
+                              <section
+                                key={c.id}
+                                className="panel stack rounded-2xl border border-stone-200 bg-white shadow-sm"
+                              >
+                                <div className="row between">
+                                  <span className="eyebrow">Section {ci + 1}</span>
                                   <div className="row">
+                                    <button
+                                      type="button"
+                                      aria-label={`Move ${c.name} up`}
+                                      onClick={() => move(ci, -1)}
+                                    >
+                                      <ArrowUp size={16} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label={`Move ${c.name} down`}
+                                      onClick={() => move(ci, 1)}
+                                    >
+                                      <ArrowDown size={16} />
+                                    </button>
                                     <label>
                                       <input
                                         type="checkbox"
-                                        checked={dish.soldOut}
+                                        checked={c.archived}
                                         onChange={(e) =>
-                                          updateDish(ci, di, { soldOut: e.target.checked })
+                                          updateCategory(ci, (c) => ({
+                                            ...c,
+                                            archived: e.target.checked,
+                                          }))
                                         }
                                       />
-                                      Sold out
+                                      Archive section
                                     </label>
-                                    <label>
-                                      <input
-                                        type="checkbox"
-                                        checked={dish.archived}
-                                        onChange={(e) =>
-                                          updateDish(ci, di, { archived: e.target.checked })
-                                        }
-                                      />
-                                      Archived dish
-                                    </label>
-                                    {(["vegetarian", "vegan", "gluten_free"] as const).map((d) => (
-                                      <label key={d}>
-                                        <input
-                                          type="checkbox"
-                                          checked={dish.dietary.includes(d)}
-                                          onChange={(e) =>
-                                            updateDish(ci, di, {
-                                              dietary: e.target.checked
-                                                ? [...dish.dietary, d]
-                                                : dish.dietary.filter((x) => x !== d),
-                                            })
+                                  </div>
+                                </div>
+                                <Field
+                                  label={`Category name ${ci + 1}`}
+                                  value={c.name}
+                                  onChange={(name) => updateCategory(ci, (c) => ({ ...c, name }))}
+                                />
+                                <label className="field">
+                                  Section description
+                                  <textarea
+                                    value={c.description}
+                                    onChange={(e) =>
+                                      updateCategory(ci, (c) => ({
+                                        ...c,
+                                        description: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </label>
+                                {c.items
+                                  .map((dish, di) => ({ dish, di }))
+                                  .filter(
+                                    ({ dish }) =>
+                                      !dishSearch.trim() ||
+                                      [c.name, c.description, dish.name, dish.description].some(
+                                        (value) =>
+                                          value
+                                            .toLocaleLowerCase()
+                                            .includes(dishSearch.trim().toLocaleLowerCase())
+                                      )
+                                  )
+                                  .map(({ dish, di }) => (
+                                    <div className="dish-editor stack" key={dish.id}>
+                                      <div className="row between">
+                                        <span className="eyebrow">Dish {di + 1}</span>
+                                        <div
+                                          className="row"
+                                          aria-label={`Reorder ${dish.name || "untitled dish"}`}
+                                        >
+                                          <button
+                                            type="button"
+                                            aria-label={`Move dish ${di + 1} up`}
+                                            disabled={di === 0}
+                                            onClick={() => moveDish(ci, di, -1)}
+                                          >
+                                            <ArrowUp size={16} aria-hidden="true" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            aria-label={`Move dish ${di + 1} down`}
+                                            disabled={di === c.items.length - 1}
+                                            onClick={() => moveDish(ci, di, 1)}
+                                          >
+                                            <ArrowDown size={16} aria-hidden="true" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div className="columns">
+                                        <Field
+                                          label={`Dish name ${ci + 1}.${di + 1}`}
+                                          value={dish.name}
+                                          onChange={(name) => updateDish(ci, di, { name })}
+                                        />
+                                        <Money
+                                          label={`Dish price ${ci + 1}.${di + 1}`}
+                                          value={dish.priceMinor}
+                                          currency={doc.currency}
+                                          onChange={(priceMinor) =>
+                                            updateDish(ci, di, { priceMinor })
                                           }
                                         />
-                                        {d.replaceAll("_", " ")}
+                                      </div>
+                                      <label className="field">
+                                        Description
+                                        <textarea
+                                          value={dish.description}
+                                          onChange={(e) =>
+                                            updateDish(ci, di, { description: e.target.value })
+                                          }
+                                          maxLength={1000}
+                                        />
                                       </label>
-                                    ))}
-                                  </div>
-                                  <label className="field">
-                                    Dish photo
-                                    <select
-                                      aria-label={`Dish photo ${ci + 1}.${di + 1}`}
-                                      value={dish.mediaId ?? ""}
-                                      onChange={(e) =>
-                                        updateDish(ci, di, { mediaId: e.target.value || null })
-                                      }
-                                    >
-                                      <option value="">Local illustration</option>
-                                      {dish.mediaId &&
-                                        !media.some((a) => a.id === dish.mediaId) && (
-                                          <option value={dish.mediaId}>
-                                            Current approved photo
-                                          </option>
+                                      <div className="row">
+                                        <label>
+                                          <input
+                                            type="checkbox"
+                                            checked={dish.soldOut}
+                                            onChange={(e) =>
+                                              updateDish(ci, di, { soldOut: e.target.checked })
+                                            }
+                                          />
+                                          Sold out
+                                        </label>
+                                        <label>
+                                          <input
+                                            type="checkbox"
+                                            checked={dish.archived}
+                                            onChange={(e) =>
+                                              updateDish(ci, di, { archived: e.target.checked })
+                                            }
+                                          />
+                                          Archived dish
+                                        </label>
+                                        {(["vegetarian", "vegan", "gluten_free"] as const).map(
+                                          (d) => (
+                                            <label key={d}>
+                                              <input
+                                                type="checkbox"
+                                                checked={dish.dietary.includes(d)}
+                                                onChange={(e) =>
+                                                  updateDish(ci, di, {
+                                                    dietary: e.target.checked
+                                                      ? [...dish.dietary, d]
+                                                      : dish.dietary.filter((x) => x !== d),
+                                                  })
+                                                }
+                                              />
+                                              {d.replaceAll("_", " ")}
+                                            </label>
+                                          )
                                         )}
-                                      {media
-                                        .filter((a) => a.status === "ready" && a.approvedAt)
-                                        .map((a, n) => (
-                                          <option key={a.id} value={a.id}>
-                                            Approved photo {n + 1}
-                                          </option>
-                                        ))}
-                                    </select>
-                                  </label>
-                                  <details>
-                                    <summary>Variants & add-ons</summary>
-                                    <div className="stack">
-                                      {dish.variants.map((v, vi) => (
-                                        <div className="columns" key={v.id}>
-                                          <Field
-                                            label={`Variant name ${vi + 1}`}
-                                            value={v.name}
-                                            onChange={(name) =>
-                                              updateDish(ci, di, {
-                                                variants: dish.variants.map((x, n) =>
-                                                  n === vi ? { ...x, name } : x
-                                                ),
-                                              })
-                                            }
-                                          />
-                                          <Money
-                                            label={`Variant price ${vi + 1}`}
-                                            value={v.priceMinor}
-                                            currency={doc.currency}
-                                            onChange={(priceMinor) =>
-                                              updateDish(ci, di, {
-                                                variants: dish.variants.map((x, n) =>
-                                                  n === vi ? { ...x, priceMinor } : x
-                                                ),
-                                              })
-                                            }
-                                          />
-                                          <label>
-                                            <input
-                                              type="checkbox"
-                                              checked={v.isAvailable}
-                                              onChange={(e) =>
-                                                updateDish(ci, di, {
-                                                  variants: dish.variants.map((x, n) =>
-                                                    n === vi
-                                                      ? { ...x, isAvailable: e.target.checked }
-                                                      : x
-                                                  ),
-                                                })
-                                              }
-                                            />
-                                            Available
-                                          </label>
+                                      </div>
+                                      <label className="field">
+                                        Dish photo
+                                        <select
+                                          aria-label={`Dish photo ${ci + 1}.${di + 1}`}
+                                          value={dish.mediaId ?? ""}
+                                          onChange={(e) =>
+                                            updateDish(ci, di, { mediaId: e.target.value || null })
+                                          }
+                                        >
+                                          <option value="">Local illustration</option>
+                                          {dish.mediaId &&
+                                            !media.some((a) => a.id === dish.mediaId) && (
+                                              <option value={dish.mediaId}>
+                                                Current approved photo
+                                              </option>
+                                            )}
+                                          {media
+                                            .filter((a) => a.status === "ready" && a.approvedAt)
+                                            .map((a, n) => (
+                                              <option key={a.id} value={a.id}>
+                                                Approved photo {n + 1}
+                                              </option>
+                                            ))}
+                                        </select>
+                                      </label>
+                                      <details>
+                                        <summary>Variants & add-ons</summary>
+                                        <div className="stack">
+                                          {dish.variants.map((v, vi) => (
+                                            <div className="columns" key={v.id}>
+                                              <Field
+                                                label={`Variant name ${vi + 1}`}
+                                                value={v.name}
+                                                onChange={(name) =>
+                                                  updateDish(ci, di, {
+                                                    variants: dish.variants.map((x, n) =>
+                                                      n === vi ? { ...x, name } : x
+                                                    ),
+                                                  })
+                                                }
+                                              />
+                                              <Money
+                                                label={`Variant price ${vi + 1}`}
+                                                value={v.priceMinor}
+                                                currency={doc.currency}
+                                                onChange={(priceMinor) =>
+                                                  updateDish(ci, di, {
+                                                    variants: dish.variants.map((x, n) =>
+                                                      n === vi ? { ...x, priceMinor } : x
+                                                    ),
+                                                  })
+                                                }
+                                              />
+                                              <label>
+                                                <input
+                                                  type="checkbox"
+                                                  checked={v.isAvailable}
+                                                  onChange={(e) =>
+                                                    updateDish(ci, di, {
+                                                      variants: dish.variants.map((x, n) =>
+                                                        n === vi
+                                                          ? { ...x, isAvailable: e.target.checked }
+                                                          : x
+                                                      ),
+                                                    })
+                                                  }
+                                                />
+                                                Available
+                                              </label>
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  updateDish(ci, di, {
+                                                    variants: dish.variants.filter(
+                                                      (_, n) => n !== vi
+                                                    ),
+                                                  })
+                                                }
+                                              >
+                                                Remove variant
+                                              </button>
+                                            </div>
+                                          ))}
                                           <button
                                             type="button"
                                             onClick={() =>
                                               updateDish(ci, di, {
-                                                variants: dish.variants.filter((_, n) => n !== vi),
+                                                variants: [
+                                                  ...dish.variants,
+                                                  {
+                                                    id: id(),
+                                                    name: "New variant",
+                                                    priceMinor: dish.priceMinor,
+                                                    isAvailable: true,
+                                                  },
+                                                ],
                                               })
                                             }
                                           >
-                                            Remove variant
+                                            Add variant
                                           </button>
-                                        </div>
-                                      ))}
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          updateDish(ci, di, {
-                                            variants: [
-                                              ...dish.variants,
-                                              {
-                                                id: id(),
-                                                name: "New variant",
-                                                priceMinor: dish.priceMinor,
-                                                isAvailable: true,
-                                              },
-                                            ],
-                                          })
-                                        }
-                                      >
-                                        Add variant
-                                      </button>
-                                      {dish.addOnGroups.map((g, gi) => {
-                                        const updateGroup = (patch: Partial<typeof g>) =>
-                                          updateDish(ci, di, {
-                                            addOnGroups: dish.addOnGroups.map((x, n) =>
-                                              n === gi ? { ...x, ...patch } : x
-                                            ),
-                                          });
-                                        return (
-                                          <div key={g.id} className="panel stack">
-                                            <Field
-                                              label={`Add-on group ${gi + 1}`}
-                                              value={g.name}
-                                              onChange={(name) => updateGroup({ name })}
-                                            />
-                                            <div className="columns">
-                                              <label className="field">
-                                                Minimum selections
-                                                <input
-                                                  type="number"
-                                                  min={0}
-                                                  value={g.min}
-                                                  onChange={(e) =>
-                                                    updateGroup({ min: Number(e.target.value) })
-                                                  }
-                                                />
-                                              </label>
-                                              <label className="field">
-                                                Maximum selections
-                                                <input
-                                                  type="number"
-                                                  min={1}
-                                                  value={g.max}
-                                                  onChange={(e) =>
-                                                    updateGroup({ max: Number(e.target.value) })
-                                                  }
-                                                />
-                                              </label>
-                                            </div>
-                                            {g.options.map((o, oi) => (
-                                              <div className="columns" key={o.id}>
+                                          {dish.addOnGroups.map((g, gi) => {
+                                            const updateGroup = (patch: Partial<typeof g>) =>
+                                              updateDish(ci, di, {
+                                                addOnGroups: dish.addOnGroups.map((x, n) =>
+                                                  n === gi ? { ...x, ...patch } : x
+                                                ),
+                                              });
+                                            return (
+                                              <div key={g.id} className="panel stack">
                                                 <Field
-                                                  label={`Add-on name ${oi + 1}`}
-                                                  value={o.name}
-                                                  onChange={(name) =>
-                                                    updateGroup({
-                                                      options: g.options.map((x, n) =>
-                                                        n === oi ? { ...x, name } : x
-                                                      ),
-                                                    })
-                                                  }
+                                                  label={`Add-on group ${gi + 1}`}
+                                                  value={g.name}
+                                                  onChange={(name) => updateGroup({ name })}
                                                 />
-                                                <Money
-                                                  label={`Add-on price ${oi + 1}`}
-                                                  value={o.priceMinor}
-                                                  currency={doc.currency}
-                                                  onChange={(priceMinor) =>
-                                                    updateGroup({
-                                                      options: g.options.map((x, n) =>
-                                                        n === oi ? { ...x, priceMinor } : x
-                                                      ),
-                                                    })
-                                                  }
-                                                />
-                                                <label>
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={o.isAvailable}
-                                                    onChange={(e) =>
-                                                      updateGroup({
-                                                        options: g.options.map((item, n) =>
-                                                          n === oi
-                                                            ? {
-                                                                ...item,
-                                                                isAvailable: e.target.checked,
-                                                              }
-                                                            : item
-                                                        ),
-                                                      })
-                                                    }
-                                                  />
-                                                  Available
-                                                </label>
+                                                <div className="columns">
+                                                  <label className="field">
+                                                    Minimum selections
+                                                    <input
+                                                      type="number"
+                                                      min={0}
+                                                      value={g.min}
+                                                      onChange={(e) =>
+                                                        updateGroup({ min: Number(e.target.value) })
+                                                      }
+                                                    />
+                                                  </label>
+                                                  <label className="field">
+                                                    Maximum selections
+                                                    <input
+                                                      type="number"
+                                                      min={1}
+                                                      value={g.max}
+                                                      onChange={(e) =>
+                                                        updateGroup({ max: Number(e.target.value) })
+                                                      }
+                                                    />
+                                                  </label>
+                                                </div>
+                                                {g.options.map((o, oi) => (
+                                                  <div className="columns" key={o.id}>
+                                                    <Field
+                                                      label={`Add-on name ${oi + 1}`}
+                                                      value={o.name}
+                                                      onChange={(name) =>
+                                                        updateGroup({
+                                                          options: g.options.map((x, n) =>
+                                                            n === oi ? { ...x, name } : x
+                                                          ),
+                                                        })
+                                                      }
+                                                    />
+                                                    <Money
+                                                      label={`Add-on price ${oi + 1}`}
+                                                      value={o.priceMinor}
+                                                      currency={doc.currency}
+                                                      onChange={(priceMinor) =>
+                                                        updateGroup({
+                                                          options: g.options.map((x, n) =>
+                                                            n === oi ? { ...x, priceMinor } : x
+                                                          ),
+                                                        })
+                                                      }
+                                                    />
+                                                    <label>
+                                                      <input
+                                                        type="checkbox"
+                                                        checked={o.isAvailable}
+                                                        onChange={(e) =>
+                                                          updateGroup({
+                                                            options: g.options.map((item, n) =>
+                                                              n === oi
+                                                                ? {
+                                                                    ...item,
+                                                                    isAvailable: e.target.checked,
+                                                                  }
+                                                                : item
+                                                            ),
+                                                          })
+                                                        }
+                                                      />
+                                                      Available
+                                                    </label>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        updateGroup({
+                                                          options: g.options.filter(
+                                                            (_, n) => n !== oi
+                                                          ),
+                                                        })
+                                                      }
+                                                    >
+                                                      Remove add-on
+                                                    </button>
+                                                  </div>
+                                                ))}
                                                 <button
                                                   type="button"
                                                   onClick={() =>
                                                     updateGroup({
-                                                      options: g.options.filter((_, n) => n !== oi),
+                                                      options: [
+                                                        ...g.options,
+                                                        {
+                                                          id: id(),
+                                                          name: "New option",
+                                                          priceMinor: 0,
+                                                          isAvailable: true,
+                                                        },
+                                                      ],
                                                     })
                                                   }
                                                 >
-                                                  Remove add-on
+                                                  Add option
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    updateDish(ci, di, {
+                                                      addOnGroups: dish.addOnGroups.filter(
+                                                        (_, n) => n !== gi
+                                                      ),
+                                                    })
+                                                  }
+                                                >
+                                                  Remove add-on group
                                                 </button>
                                               </div>
-                                            ))}
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                updateGroup({
-                                                  options: [
-                                                    ...g.options,
-                                                    {
-                                                      id: id(),
-                                                      name: "New option",
-                                                      priceMinor: 0,
-                                                      isAvailable: true,
-                                                    },
-                                                  ],
-                                                })
-                                              }
-                                            >
-                                              Add option
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                updateDish(ci, di, {
-                                                  addOnGroups: dish.addOnGroups.filter(
-                                                    (_, n) => n !== gi
-                                                  ),
-                                                })
-                                              }
-                                            >
-                                              Remove add-on group
-                                            </button>
-                                          </div>
-                                        );
-                                      })}
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          updateDish(ci, di, {
-                                            addOnGroups: [
-                                              ...dish.addOnGroups,
-                                              {
-                                                id: id(),
-                                                name: "Extras",
-                                                min: 0,
-                                                max: 1,
-                                                options: [
+                                            );
+                                          })}
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              updateDish(ci, di, {
+                                                addOnGroups: [
+                                                  ...dish.addOnGroups,
                                                   {
                                                     id: id(),
-                                                    name: "New option",
-                                                    priceMinor: 0,
-                                                    isAvailable: true,
+                                                    name: "Extras",
+                                                    min: 0,
+                                                    max: 1,
+                                                    options: [
+                                                      {
+                                                        id: id(),
+                                                        name: "New option",
+                                                        priceMinor: 0,
+                                                        isAvailable: true,
+                                                      },
+                                                    ],
                                                   },
                                                 ],
-                                              },
-                                            ],
-                                          })
-                                        }
-                                      >
-                                        Add add-on group
-                                      </button>
+                                              })
+                                            }
+                                          >
+                                            Add add-on group
+                                          </button>
+                                        </div>
+                                      </details>
+                                      <details>
+                                        <summary>Dish schedule</summary>
+                                        <ScheduleEditor
+                                          value={dish.schedule}
+                                          onChange={(schedule) => updateDish(ci, di, { schedule })}
+                                        />
+                                      </details>
                                     </div>
-                                  </details>
-                                  <details>
-                                    <summary>Dish schedule</summary>
-                                    <ScheduleEditor
-                                      value={dish.schedule}
-                                      onChange={(schedule) => updateDish(ci, di, { schedule })}
-                                    />
-                                  </details>
-                                </div>
-                              ))}
-                              <button
-                                type="button"
-                                className="ember"
-                                onClick={() =>
-                                  updateCategory(ci, (c) => ({
-                                    ...c,
-                                    items: [
-                                      ...c.items,
-                                      {
-                                        id: id(),
-                                        name: "",
-                                        description: "",
-                                        priceMinor: 0,
-                                        soldOut: false,
-                                        archived: false,
-                                        mediaId: null,
-                                        dietary: [],
-                                        variants: [],
-                                        addOnGroups: [],
-                                        schedule: null,
-                                      },
-                                    ],
-                                  }))
-                                }
-                              >
-                                <Plus size={16} />
-                                Add dish
-                              </button>
-                            </section>
-                          ))}
+                                  ))}
+                                <button
+                                  type="button"
+                                  className="ember"
+                                  onClick={() =>
+                                    updateCategory(ci, (c) => ({
+                                      ...c,
+                                      items: [
+                                        ...c.items,
+                                        {
+                                          id: id(),
+                                          name: "",
+                                          description: "",
+                                          priceMinor: 0,
+                                          soldOut: false,
+                                          archived: false,
+                                          mediaId: null,
+                                          dietary: [],
+                                          variants: [],
+                                          addOnGroups: [],
+                                          schedule: null,
+                                        },
+                                      ],
+                                    }))
+                                  }
+                                >
+                                  <Plus size={16} />
+                                  Add dish
+                                </button>
+                              </section>
+                            ))}
                         </>
                       )}
                       {tab === "schedule" && (
@@ -1215,8 +1398,14 @@ export function MenuStudio({
                 </>
               )}
             </div>
-            <aside className="preview-phone no-print">
-              <span className="eyebrow">Private draft preview</span>
+            <aside
+              className="preview-phone no-print rounded-3xl border border-stone-200 bg-white p-5 shadow-sm"
+              aria-label="Integrated private draft preview"
+            >
+              <span className="eyebrow">Private draft preview · Menu Studio 2.0</span>
+              <p className="mt-2 rounded-lg bg-orange-50 p-2 text-xs font-semibold text-orange-900">
+                Updates as you edit. Guests only see the last explicitly published revision.
+              </p>
               <h2>{doc.name}</h2>
               <small>
                 {outlet.currency} · {outlet.timezone}

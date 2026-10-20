@@ -412,3 +412,20 @@ operator evidence and are not the v4 automatic path. A green main push uses appe
 migration lineage verification, fresh verified off-host backup, bundled checksummed migration
 runner and public SHA verification. Missing prerequisites fail closed instead of producing a
 successfully staged-only run. Do not assume the root-owned installed copy has changed on merge.
+
+## Current successor: configuration preflight and incident recovery (helper v6)
+
+Helper v6 preserves the v4 append-only migration, off-host backup and public-readiness contract.
+Before migration work it executes the candidate's bundled `dist/env-validate.mjs` through a
+transient systemd unit as the unprivileged `menuminute` user with the root-managed web environment.
+Invalid configuration stops with variable names only.
+
+Install v6 with the pinned merge-SHA and independently verified Git-blob procedure above, changing
+the final expected version to `6`. Keep the previous executable. Source merge does not install this
+root-owned control plane.
+
+For an unhealthy-current-service incident only, create a root-owned mode-0600 authorization at
+`/etc/menuminute/recovery-authorizations/<FULL_SHA>` containing only the verified archive digest,
+then manually dispatch that SHA with `forward_recovery=true` within one hour. The helper verifies
+the candidate against the production migration checksum ledger in read-only mode; it neither
+applies nor reverses SQL. Remove the authorization afterward. Never use this path for normal releases.
