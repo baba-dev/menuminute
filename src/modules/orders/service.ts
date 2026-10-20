@@ -353,7 +353,9 @@ export async function listOutletOrders(
     const items = orderIds.length
       ? await tx.select().from(orderItems).where(inArray(orderItems.orderId, orderIds))
       : [];
-    const managed = await tx.execute<{data:string[]}>(sql`select app_private.kitchen_managed_orders(${outletId}) as data`);
+    const managed = await tx.execute<{ data: string[] }>(
+      sql`select app_private.kitchen_managed_orders(${outletId}) as data`
+    );
     const kitchenManaged = new Set(managed.rows[0]?.data ?? []);
     const byOrder = new Map<string, typeof items>();
     for (const item of items) {

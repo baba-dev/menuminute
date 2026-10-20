@@ -13,15 +13,20 @@ export async function GET(
     const first = await kitchenSnapshot(actor, organizationId, outletId);
     const streamKey = actor.userId + ":" + actor.sessionId + ":" + outletId;
     const active = activeStreams.get(streamKey) ?? 0;
-    if(active>=2)return new Response(JSON.stringify({message:"Too many concurrent kitchen streams"}),{status:429,headers:{"content-type":"application/json","cache-control":"no-store"}});
-    activeStreams.set(streamKey,active+1);
+    if (active >= 2)
+      return new Response(JSON.stringify({ message: "Too many concurrent kitchen streams" }), {
+        status: 429,
+        headers: { "content-type": "application/json", "cache-control": "no-store" },
+      });
+    activeStreams.set(streamKey, active + 1);
     const started = Date.now();
     let released = false;
     const release = () => {
-      if(released)return;
-      released=true;
-      const count=activeStreams.get(streamKey)??0;
-      if(count<=1)activeStreams.delete(streamKey);else activeStreams.set(streamKey,count-1);
+      if (released) return;
+      released = true;
+      const count = activeStreams.get(streamKey) ?? 0;
+      if (count <= 1) activeStreams.delete(streamKey);
+      else activeStreams.set(streamKey, count - 1);
     };
     const encoder = new TextEncoder();
     let cancelled = false;
@@ -42,7 +47,7 @@ export async function GET(
         send("snapshot", first, first.cursor);
         void (async () => {
           try {
-            while (!cancelled && !req.signal.aborted && Date.now()-started<55000) {
+            while (!cancelled && !req.signal.aborted && Date.now() - started < 55000) {
               await new Promise<void>((resolve) => setTimeout(resolve, 3000));
               if (cancelled || req.signal.aborted) break;
               // Revalidate the session and current outlet/station role at EVERY heartbeat.

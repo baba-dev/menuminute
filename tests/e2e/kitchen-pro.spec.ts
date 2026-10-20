@@ -79,42 +79,72 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(page.getByRole("heading", { name: "Grill", exact: true })).toBeVisible();
 });
 
-test("Multi-station device and expeditor flow: no premature guest Ready",async({page})=>{
- const f=await seed();
- const url=process.env["MIGRATION_DATABASE_URL"]!;
- const pool=new Pool({connectionString:url,max:1});
- const orderId=crypto.randomUUID(),itemId=crypto.randomUUID();
- const a="kst-"+crypto.randomUUID(),b="kst-"+crypto.randomUUID();
- try{
-  await pool.query("BEGIN");
-  await pool.query("insert into kitchen_outlet_settings(outlet_id,enabled) values($1,true)",[f.outlet]);
-  await pool.query("insert into kitchen_stations(id,outlet_id,name) values($1,$3,'Grill'),($2,$3,'Tandoor')",[a,b,f.outlet]);
-  await pool.query("insert into orders(id,restaurant_id,order_number,status,version,fulfillment_mode) values($1,$2,1042,'preparing',3,'dine_in')",[orderId,f.outlet]);
-  await pool.query("insert into order_items(id,order_id,restaurant_id,dish_id,item_name,quantity) values($1,$2,$3,'paneer','Paneer Tikka',1)",[itemId,orderId,f.outlet]);
-  await pool.query("insert into kitchen_work(id,outlet_id,order_id,order_item_id,station_id,rule_version) values($1,$3,$4,$5,$6,1),($2,$3,$4,$5,$7,1)",["kw-"+crypto.randomUUID(),"kw-"+crypto.randomUUID(),f.outlet,orderId,itemId,a,b]);
-  await pool.query("COMMIT");
- }catch(e){await pool.query("ROLLBACK");throw e;}finally{await pool.end();}
- await page.goto("/login");
- await page.getByLabel("Email address").fill(f.email);
- await page.getByLabel("Password",{exact:true}).fill(f.password);
- await page.getByRole("button",{name:"Sign in",exact:true}).click();
- await expect(page).toHaveURL(/dashboard/);
- await page.goto("/kitchen#expeditor");
- const expo=page.getByRole("region",{name:"Expeditor"});
- await expect(expo.getByText("#1042")).toBeVisible();
- await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
- await expect(expo.getByRole("button",{name:"Await all stations"})).toBeDisabled();
- for(const name of ["Grill","Tandoor"]){
-  await page.getByRole("navigation",{name:"Kitchen stations"}).getByRole("button",{name}).click();
-  await page.getByRole("button",{name:"Start preparing",exact:true}).click();
-  await expect(page.getByRole("button",{name:"Complete item"})).toBeVisible();
-  await page.getByRole("button",{name:"Complete item"}).click();
-  await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
- }
- await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
- await expo.getByRole("button",{name:"Release Ready to guest"}).click();
- await expect(expo.getByText("#1042")).toHaveCount(0);
- const db=new Pool({connectionString:url,max:1});
- try{const r=await db.query("select status,version,payment_status from orders where id=$1",[orderId]);
- expect(r.rows[0]).toMatchObject({status:"ready",version:4,payment_status:"unpaid"});}finally{await db.end();}
+test("Multi-station device and expeditor flow: no premature guest Ready", async ({ page }) => {
+  const f = await seed();
+  const url = process.env["MIGRATION_DATABASE_URL"]!;
+  const pool = new Pool({ connectionString: url, max: 1 });
+  const orderId = crypto.randomUUID(),
+    itemId = crypto.randomUUID();
+  const a = "kst-" + crypto.randomUUID(),
+    b = "kst-" + crypto.randomUUID();
+  try {
+    await pool.query("BEGIN");
+    await pool.query("insert into kitchen_outlet_settings(outlet_id,enabled) values($1,true)", [
+      f.outlet,
+    ]);
+    await pool.query(
+      "insert into kitchen_stations(id,outlet_id,name) values($1,$3,'Grill'),($2,$3,'Tandoor')",
+      [a, b, f.outlet]
+    );
+    await pool.query(
+      "insert into orders(id,restaurant_id,order_number,status,version,fulfillment_mode) values($1,$2,1042,'preparing',3,'dine_in')",
+      [orderId, f.outlet]
+    );
+    await pool.query(
+      "insert into order_items(id,order_id,restaurant_id,dish_id,item_name,quantity) values($1,$2,$3,'paneer','Paneer Tikka',1)",
+      [itemId, orderId, f.outlet]
+    );
+    await pool.query(
+      "insert into kitchen_work(id,outlet_id,order_id,order_item_id,station_id,rule_version) values($1,$3,$4,$5,$6,1),($2,$3,$4,$5,$7,1)",
+      ["kw-" + crypto.randomUUID(), "kw-" + crypto.randomUUID(), f.outlet, orderId, itemId, a, b]
+    );
+    await pool.query("COMMIT");
+  } catch (e) {
+    await pool.query("ROLLBACK");
+    throw e;
+  } finally {
+    await pool.end();
+  }
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/kitchen#expeditor");
+  const expo = page.getByRole("region", { name: "Expeditor" });
+  await expect(expo.getByText("#1042")).toBeVisible();
+  await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
+  await expect(expo.getByRole("button", { name: "Await all stations" })).toBeDisabled();
+  for (const name of ["Grill", "Tandoor"]) {
+    await page
+      .getByRole("navigation", { name: "Kitchen stations" })
+      .getByRole("button", { name })
+      .click();
+    await page.getByRole("button", { name: "Start preparing", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Complete item" })).toBeVisible();
+    await page.getByRole("button", { name: "Complete item" }).click();
+    await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
+  }
+  await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
+  await expo.getByRole("button", { name: "Release Ready to guest" }).click();
+  await expect(expo.getByText("#1042")).toHaveCount(0);
+  const db = new Pool({ connectionString: url, max: 1 });
+  try {
+    const r = await db.query("select status,version,payment_status from orders where id=$1", [
+      orderId,
+    ]);
+    expect(r.rows[0]).toMatchObject({ status: "ready", version: 4, payment_status: "unpaid" });
+  } finally {
+    await db.end();
+  }
 });

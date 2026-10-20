@@ -196,50 +196,85 @@ export type KitchenExpoOrder = {
   createdAt: string;
 };
 export type KitchenExpoSnapshot = { cursor: number; overflow: boolean; orders: KitchenExpoOrder[] };
-const expoCommandSchema = z.object({
-  orderId: id,
-  expectedVersion: z.number().int().nonnegative(),
-  key: z.uuid(),
-}).strict();
-const reassignSchema = z.object({
-  workId: id,
-  stationId: id,
-  expectedVersion: z.number().int().nonnegative(),
-  key: z.uuid(),
-  reason: z.string().trim().min(5).max(500),
-}).strict();
+const expoCommandSchema = z
+  .object({
+    orderId: id,
+    expectedVersion: z.number().int().nonnegative(),
+    key: z.uuid(),
+  })
+  .strict();
+const reassignSchema = z
+  .object({
+    workId: id,
+    stationId: id,
+    expectedVersion: z.number().int().nonnegative(),
+    key: z.uuid(),
+    reason: z.string().trim().min(5).max(500),
+  })
+  .strict();
 
-export async function kitchenExpoSnapshot(actor: Actor, organizationId: string, outletId: string): Promise<KitchenExpoSnapshot> {
-  id.parse(organizationId); id.parse(outletId);
+export async function kitchenExpoSnapshot(
+  actor: Actor,
+  organizationId: string,
+  outletId: string
+): Promise<KitchenExpoSnapshot> {
+  id.parse(organizationId);
+  id.parse(outletId);
   try {
-    return await withOutlet(actor, outletId, "orders.complete", async tx => {
+    return await withOutlet(actor, outletId, "orders.complete", async (tx) => {
       await ensureOrganization(tx, outletId, organizationId);
-      const r = await tx.execute<{data:KitchenExpoSnapshot}>(sql`select app_private.kitchen_expo_snapshot(${outletId}) as data`);
+      const r = await tx.execute<{ data: KitchenExpoSnapshot }>(
+        sql`select app_private.kitchen_expo_snapshot(${outletId}) as data`
+      );
       return r.rows[0]!.data;
     });
-  } catch(e) { mapError(e); }
+  } catch (e) {
+    mapError(e);
+  }
 }
-export async function kitchenExpoRelease(actor: Actor, organizationId: string, outletId: string, raw: unknown) {
-  id.parse(organizationId); id.parse(outletId); const input = expoCommandSchema.parse(raw);
+export async function kitchenExpoRelease(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
+) {
+  id.parse(organizationId);
+  id.parse(outletId);
+  const input = expoCommandSchema.parse(raw);
   try {
-    return await withOutlet(actor, outletId, "orders.complete", async tx => {
+    return await withOutlet(actor, outletId, "orders.complete", async (tx) => {
       await ensureOrganization(tx, outletId, organizationId);
-      const r = await tx.execute<{data:{orderId:string;currentStatus:"ready";version:number;seq:number}}>(
+      const r = await tx.execute<{
+        data: { orderId: string; currentStatus: "ready"; version: number; seq: number };
+      }>(
         sql`select app_private.kitchen_expo_release(${outletId},${input.orderId},${input.expectedVersion},${input.key}::uuid) as data`
       );
       return r.rows[0]!.data;
     });
-  } catch(e) { mapError(e); }
+  } catch (e) {
+    mapError(e);
+  }
 }
-export async function kitchenReassign(actor: Actor, organizationId: string, outletId: string, raw: unknown) {
-  id.parse(organizationId); id.parse(outletId); const input = reassignSchema.parse(raw);
+export async function kitchenReassign(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
+) {
+  id.parse(organizationId);
+  id.parse(outletId);
+  const input = reassignSchema.parse(raw);
   try {
-    return await withOutlet(actor, outletId, "outlet.manage", async tx => {
+    return await withOutlet(actor, outletId, "outlet.manage", async (tx) => {
       await ensureOrganization(tx, outletId, organizationId);
-      const r = await tx.execute<{data:{workId:string;stationId:string;version:number;seq:number}}>(
+      const r = await tx.execute<{
+        data: { workId: string; stationId: string; version: number; seq: number };
+      }>(
         sql`select app_private.kitchen_reassign(${outletId},${input.workId},${input.stationId},${input.expectedVersion},${input.key}::uuid,${input.reason}) as data`
       );
       return r.rows[0]!.data;
     });
-  } catch(e) { mapError(e); }
+  } catch (e) {
+    mapError(e);
+  }
 }

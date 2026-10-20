@@ -464,14 +464,20 @@ export function LiveOrdersBoard({
                       {formatPrice(order.totalMinor, currency)}
                     </span>
                     {order.kitchenManaged && order.status === "preparing" ? (
-                      <Link href="/kitchen#expeditor" className="flex min-h-10 items-center gap-1 rounded-xl bg-orange-600 px-3 py-2 text-xs font-bold text-white">
+                      <Link
+                        href="/kitchen#expeditor"
+                        className="flex min-h-10 items-center gap-1 rounded-xl bg-orange-600 px-3 py-2 text-xs font-bold text-white"
+                      >
                         <ChefHat size={13} /> Expeditor release required
                       </Link>
                     ) : (
                       <button
                         type="button"
                         onClick={() =>
-                          handleTransition(order, order.status === "accepted" ? "preparing" : "ready")
+                          handleTransition(
+                            order,
+                            order.status === "accepted" ? "preparing" : "ready"
+                          )
                         }
                         className="flex min-h-10 items-center gap-1 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-orange-700"
                       >
