@@ -2,12 +2,16 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { ImagePlus, Plus, Search, ShoppingBasket, X } from "lucide-react";
 import { displayToMinor } from "@/lib/money";
+import { approvedArtworkForDish } from "@/modules/menu-product/dish-artwork";
 /* eslint-disable @next/next/no-img-element -- Authenticated private media must use its existing scoped route. */
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import {
   existingFromDocument,
   normalizeDishText,
   rankDishSuggestions,
+  recentFromDocument,
+  batchCandidates,
+  type OrganizationDish,
   type Suggestion,
 } from "@/modules/menu-product/dish-intelligence";
 
@@ -25,6 +29,7 @@ export function SmartDishComposer({
   outletId,
   menuId,
   media,
+  organization,
   defaultCategoryId,
   focusRequest,
   selection,
@@ -36,6 +41,7 @@ export function SmartDishComposer({
   outletId: string;
   menuId: string;
   media: Media[];
+  organization: OrganizationDish[];
   defaultCategoryId: string;
   focusRequest: number;
   selection: QuickDish[];
@@ -45,6 +51,8 @@ export function SmartDishComposer({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
   const [review, setReview] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState(0);
@@ -61,15 +69,17 @@ export function SmartDishComposer({
     [doc, outletId, menuId]
   );
   const matches = useMemo(
-    () => rankDishSuggestions({ query, outletId, menuId, existing, limit: 7 }),
-    [query, outletId, menuId, existing]
+    () => rankDishSuggestions({ query, outletId, menuId, existing, organization, limit: 7 }),
+    [query, outletId, menuId, existing, organization]
   );
+  const recent = useMemo(() => recentFromDocument(doc), [doc]);
   const clean = normalizeDishText(query);
   const custom = query.trim().slice(0, 100);
   const alreadySelected = (name: string) =>
     selection.some((s) => normalizeDishText(s.name) === normalizeDishText(name));
-  const add = (s: Pick<Suggestion, "key" | "name" | "categoryHint" | "categoryId" | "mediaId">) => {
-    if (alreadySelected(s.name)) return;
+  const makeQuickDish = (
+    s: Pick<Suggestion, "key" | "name" | "categoryHint" | "categoryId" | "mediaId">
+  ): QuickDish => {
     const hint = doc.categories.find(
       (c) => !c.archived && normalizeDishText(c.name) === normalizeDishText(s.categoryHint)
     );
@@ -83,16 +93,67 @@ export function SmartDishComposer({
       hint?.id ??
       doc.categories.find((c) => !c.archived)?.id ??
       "new";
+    // Reused organization dishes never carry source-outlet photos or inherited prices.
     const photo = approved.some((m) => m.id === s.mediaId) ? s.mediaId : null;
-    setSelection((prev) => [
-      ...prev,
-      { key: s.key, name: s.name, categoryId: target, priceText: "", free: false, mediaId: photo },
-    ]);
+    return {
+      key: s.key,
+      name: s.name,
+      categoryId: target,
+      priceText: "",
+      free: false,
+      mediaId: photo,
+    };
+  };
+  const addMany = (
+    choices: Pick<Suggestion, "key" | "name" | "categoryHint" | "categoryId" | "mediaId">[]
+  ) => {
+    const seen = new Set(selection.map((item) => normalizeDishText(item.name)));
+    const batch: QuickDish[] = [];
+    for (const choice of choices) {
+      const name = normalizeDishText(choice.name);
+      if (!name || seen.has(name)) continue;
+      if (selection.length + batch.length >= 50) break;
+      seen.add(name);
+      batch.push(makeQuickDish(choice));
+    }
+    if (!batch.length) {
+      setError(
+        selection.length >= 50
+          ? "Maximum 50 dishes per batch."
+          : "All matching dishes are already selected."
+      );
+      return;
+    }
+    setSelection((prev) => [...prev, ...batch]);
     onPendingChange(true);
     setError("");
     setActive(0);
     setQuery("");
     input.current?.focus();
+  };
+  const add = (s: Pick<Suggestion, "key" | "name" | "categoryHint" | "categoryId" | "mediaId">) => {
+    addMany([s]);
+  };
+  const addBulk = () => {
+    try {
+      const names = batchCandidates(bulkText);
+      if (!names.length) throw new Error("Enter at least one dish name.");
+      if (names.length + selection.length > 50)
+        throw new Error("Maximum 50 selected dishes per batch.");
+      addMany(
+        names.map((name) => ({
+          key: "custom:" + normalizeDishText(name),
+          name,
+          categoryHint: "",
+          categoryId: null,
+          mediaId: null,
+        }))
+      );
+      setBulkText("");
+      setBulkOpen(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Check your dish list.");
+    }
   };
   const update = (key: string, patch: Partial<QuickDish>) =>
     setSelection((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -200,6 +261,99 @@ export function SmartDishComposer({
               }}
             />
           </div>
+          <div className="smart-productivity-actions">
+            <button type="button" onClick={() => setBulkOpen((v) => !v)} aria-expanded={bulkOpen}>
+              {bulkOpen ? "Close bulk entry" : "Paste a dish list"}
+            </button>
+            {clean.length >= 2 && matches.length > 1 && (
+              <button
+                type="button"
+                disabled={selection.length >= 50}
+                onClick={() => addMany(matches)}
+              >
+                Select all {matches.length} suggestions
+              </button>
+            )}
+          </div>
+          {bulkOpen && (
+            <div className="smart-bulk-entry">
+              <label className="field">
+                Bulk dish names (one per line, comma or semicolon separated; up to 50)
+                <textarea
+                  aria-label="Bulk dish names"
+                  rows={4}
+                  maxLength={5000}
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder={"Paneer Tikka\nDal Makhani\nButter Naan"}
+                />
+              </label>
+              <p className="quiet">
+                Names only: review each price, section and optional photograph before adding to your
+                private draft.
+              </p>
+              <button type="button" className="ember" onClick={addBulk}>
+                Select pasted dishes
+              </button>
+            </div>
+          )}
+          {clean.length < 2 && (
+            <div className="smart-discovery">
+              {recent.length > 0 && (
+                <div>
+                  <strong>Recently used in this menu</strong>
+                  <div className="smart-discovery-list">
+                    {recent.map((item) => (
+                      <button
+                        type="button"
+                        key={item.key}
+                        disabled={alreadySelected(item.name)}
+                        onClick={() =>
+                          add({
+                            key: item.key,
+                            name: item.name,
+                            categoryHint: item.categoryHint,
+                            categoryId: null,
+                            mediaId: null,
+                          })
+                        }
+                      >
+                        {item.name} <span aria-hidden="true">+</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {organization.length > 0 && (
+                <div>
+                  <strong>Reuse from your accessible organization menus</strong>
+                  <div className="smart-discovery-list">
+                    {organization.slice(0, 8).map((item) => (
+                      <button
+                        type="button"
+                        key={item.key}
+                        disabled={alreadySelected(item.name)}
+                        title={"From " + item.sourceMenu}
+                        onClick={() =>
+                          add({
+                            key: item.key,
+                            name: item.name,
+                            categoryHint: item.categoryHint,
+                            categoryId: null,
+                            mediaId: null,
+                          })
+                        }
+                      >
+                        {item.name}
+                        <small>{item.sourceMenu}</small>
+                        <span aria-hidden="true">+</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {expanded && clean.length >= 2 && (
             <div
               id="smart-dish-options"
@@ -209,6 +363,7 @@ export function SmartDishComposer({
             >
               {matches.map((item, i) => {
                 const image = approved.some((m) => m.id === item.mediaId) ? item.mediaId : null;
+                const artwork = image ? null : approvedArtworkForDish(item.name);
                 return (
                   <button
                     id={"smart-option-" + i}
@@ -229,6 +384,8 @@ export function SmartDishComposer({
                           width={46}
                           height={46}
                         />
+                      ) : artwork ? (
+                        <img src={artwork.path} alt="" width={46} height={46} loading="lazy" />
                       ) : (
                         <ImagePlus size={19} aria-hidden="true" />
                       )}
@@ -236,7 +393,11 @@ export function SmartDishComposer({
                     <span className="smart-option-name">
                       <strong>{item.name}</strong>
                       <small>
-                        {item.source === "existing" ? "Already in this menu · " : ""}
+                        {item.source === "existing"
+                          ? "Already in this menu · "
+                          : item.source === "organization"
+                            ? "From " + item.sourceMenu + " · "
+                            : ""}
                         {item.categoryHint}
                       </small>
                     </span>
@@ -265,8 +426,7 @@ export function SmartDishComposer({
                 </button>
               )}
               <p className="quiet" role="status">
-                {matches.length} catalogue/menu matches. Uploaded photographs appear only where
-                explicitly assigned.
+                {matches.length} matches. Cross-outlet reuse never carries a source price or photo.
               </p>
             </div>
           )}
@@ -412,6 +572,21 @@ export function SmartDishComposer({
                 />{" "}
                 This item is free
               </label>
+              {approvedArtworkForDish(item.name) && (
+                <div className="smart-artwork-hint">
+                  <img
+                    src={approvedArtworkForDish(item.name)!.path}
+                    alt=""
+                    width={72}
+                    height={60}
+                    loading="lazy"
+                  />
+                  <span>
+                    Approved illustrative artwork suggestion. Preview only; an uploaded, approved
+                    restaurant photo is required for menu media.
+                  </span>
+                </div>
+              )}
               {approved.length > 0 && (
                 <div className="smart-upload-picker">
                   <button
