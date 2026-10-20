@@ -204,7 +204,7 @@ CREATE TRIGGER kitchen_accept_order AFTER UPDATE OF status ON orders
 -- Terminal order transitions invalidate open station work and wake SSE consumers.
 -- Reuse canonical order update's lock order: orders, then kitchen_work.
 CREATE FUNCTION app_private.kitchen_on_terminal() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
- SET search_path=pg_catalog,public,pg_temp AS $
+ SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE w record;
 BEGIN
  FOR w IN SELECT id,status FROM kitchen_work WHERE order_id=NEW.id ORDER BY id FOR UPDATE LOOP
@@ -214,7 +214,7 @@ BEGIN
   PERFORM app_private.kitchen_emit(NEW.restaurant_id,'work.changed',w.id);
  END LOOP;
  RETURN NEW;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION app_private.kitchen_on_terminal() FROM PUBLIC;
 CREATE TRIGGER kitchen_terminal_order AFTER UPDATE OF status ON orders
  FOR EACH ROW WHEN (NEW.status IN ('cancelled','rejected','expired','ready','served','collected')
