@@ -51,6 +51,12 @@ async function seed() {
       await c.query("update organizations set mfa_required=false where id=any($1::text[])", [
         [`org-${first}`, `org-${second}`],
       ]);
+      // This existing-member fixture exercises outlet grants. The separate invitation
+      // lifecycle suite tests real issuance, verification, consent and replay prevention.
+      await c.query(
+        "insert into organization_members(id,organization_id,user_id,role,is_active) values($1,$2,$3,'member',true)",
+        [crypto.randomUUID(), `org-${first}`, memberId]
+      );
       await c.query("commit");
     } finally {
       c.release();
@@ -100,12 +106,7 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await create.getByLabel("Pickup", { exact: true }).check();
   await create.getByRole("button", { name: "Create outlet", exact: true }).click();
   await expect(create.getByRole("status")).toHaveText("Saved");
-  const member = page
-    .getByRole("button", { name: "Save member", exact: true })
-    .locator("xpath=ancestor::form");
-  await member.getByLabel("Member email").fill(f.memberEmail);
-  await member.getByRole("button", { name: "Save member", exact: true }).click();
-  await expect(member.getByRole("status")).toHaveText("Saved");
+  await expect(page.getByRole("heading", { name: "Invite a teammate" })).toBeVisible();
   const roles = page
     .getByRole("button", { name: "Save outlet roles" })
     .locator("xpath=ancestor::form");
@@ -147,7 +148,7 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await expect(
     page.getByRole("heading", { name: "Settings: Scoped Pickup", exact: true })
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save member", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Invite a teammate" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Billing entitlements" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Settings: Alpha Domain", exact: true })
