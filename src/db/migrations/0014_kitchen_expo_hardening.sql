@@ -277,3 +277,24 @@ BEGIN
  ) INTO result;
  RETURN result;
 END $$;
+
+-- Feature flag and entitlement are separate requirements: new accepted kitchen orders need both.
+-- Existing accepted tickets may still be finished after a grant expires; never strand prepared food.
+CREATE FUNCTION app_private.kitchen_accept_entitlement_check() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE org text;
+BEGIN
+ IF COALESCE((SELECT enabled FROM kitchen_outlet_settings WHERE outlet_id=NEW.restaurant_id),false) THEN
+  SELECT organization_id INTO org FROM restaurants WHERE id=NEW.restaurant_id;
+  IF NOT EXISTS(SELECT 1 FROM entitlement_grants e
+    WHERE e.organization_id=org AND e.capability='kitchen.new' AND e.revoked_at IS NULL
+      AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp()) THEN
+   RAISE EXCEPTION 'Active Kitchen Pro entitlement required for new acceptance' USING ERRCODE='42501';
+  END IF;
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION app_private.kitchen_accept_entitlement_check() FROM PUBLIC;
+CREATE TRIGGER kitchen_accept_entitlement BEFORE UPDATE OF status ON orders
+ FOR EACH ROW WHEN (NEW.status='accepted' AND OLD.status IS DISTINCT FROM NEW.status)
+ EXECUTE FUNCTION app_private.kitchen_accept_entitlement_check();
