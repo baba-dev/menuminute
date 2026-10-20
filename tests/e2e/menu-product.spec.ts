@@ -181,6 +181,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page
     .getByLabel("Dish photo 1.1", { exact: true })
     .selectOption({ label: "Approved photo 1" });
+  await expect(page.getByRole("img", { name: "Uploaded photograph for Signature thali" })).toBeVisible();
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
