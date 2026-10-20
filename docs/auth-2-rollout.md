@@ -2,9 +2,12 @@
 
 ## Gate
 
-Do not activate this release on public production until `EMAIL_PROVIDER=resend`,
-`EMAIL_FROM` is a verified Resend sender, and `RESEND_API_KEY` is installed in the private
-web environment. No credentials or one-time links belong in GitHub, logs or Action summaries.
+Do not activate this release on public production until one provider is fully configured in the
+private web environment. Native SMTP uses `EMAIL_PROVIDER=smtp`,
+`EMAIL_FROM=food@bababuilds.com`, `SMTP_HOST=mx.bababuilds.com`, `SMTP_PORT=465`,
+`SMTP_SECURE=true`, `SMTP_USER=food@bababuilds.com`, and a private `SMTP_PASSWORD`.
+Resend remains available with a verified sender and `RESEND_API_KEY`. No credentials or one-time
+links belong in GitHub, logs or Action summaries.
 The environment validator refuses unconfigured production delivery.
 
 ## Existing accounts
@@ -23,7 +26,8 @@ Better Auth sends 1-hour single-use verification links; no session is created at
 verified email is required to log in. The DB trigger also guards new/changed effective
 organization memberships, including direct provisioning. Password-reset links last 30 minutes;
 successful reset revokes existing sessions, using transactional PostgreSQL auth storage.
-Resend transport is fail-closed and never logs bearer tokens or generated links.
+Both production transports are fail-closed and never log credentials, recipients, provider response
+bodies or generated links. SMTP validates the certificate/hostname and never downgrades or falls back.
 
 ## Isolated tests
 
@@ -38,29 +42,37 @@ Prior to new writes, release rollback may restore old code. Do not reverse the i
 verified state or drop the membership trigger while the new account policy is in use.
 Recover using a reviewed forward migration if activation fails after writes.
 
-## Fail-closed merge-to-activation gate
+## Automatic merge-to-activation (migration-lineage repair)
 
-Code may be merged and the signed ARM64 artifact staged before production cutover.
-The deployment workflow does **not** run automatic eligibility or production activation
-until the repository Actions variable `AUTH_V2_CUTOVER_APPROVED` is explicitly set to
-`verified-identity-mfa-2026-10`. This is an operator sign-off, **not a credential**.
-Do not set it until all of the following are verified using the private root-owned
-production environment (no secrets printed in CI):
+Merging a release into main triggers the four-lane CI, immutable native ARM64 publication,
+and a single unattended deployment chain. The deployment verifies the published SHA
+and checksum, stages the artifact on the VPS, runs the root helper's eligibility
+check, and then automatically activates and publicly verifies the **latest main**.
+Manual workflow dispatch takes the full published latest-main SHA and also activates;
+there is no approval variable or stage-only checkbox. The production environment
+is labelled successful only after web, worker, PostgreSQL, both Redis connections,
+ERP, public readiness and routes are checked. Failed eligibility fails the run.
 
-1. `EMAIL_PROVIDER=resend`, a verified Resend `EMAIL_FROM` and working
-   `RESEND_API_KEY`; send and complete a real verification and password-reset email.
-2. Inventory existing unverified owner/admin addresses and their currently active
-   memberships. Notify them and confirm an independently identity-checked recovery
-   route; do not mark legacy addresses verified as a shortcut.
-3. Rehearse additive migrations 0007 and 0008 against a current disposable backup and
-   perform both invalid-token and valid-token acceptance checks.
-4. Confirm MFA enrollment/recovery and signed-in step-up on the real production hostname;
-   if enabling Cloudflare Turnstile, provide both matching private and public keys,
-   including the public value at build time.
-5. Record the current release SHA and rollback decision. After approval, set the Actions
-   variable and explicitly dispatch the existing deploy workflow for the verified
-   published main SHA with `activate=true`. A past staged run never authorizes itself.
+The prior production release `caa91318f6e6dc3827b8709ee8f9e6ea8990ba59`
+already applied `0009_menu_import_foundation` as journal index 7. Its SQL and
+metadata are immutable. The lineage repair keeps it at index 7, then appends
+`0007_verified_identity`, `0008_auth_security`, and
+`0010_menu_import_nvidia_engine`, then `0011_menu_import_review`. The numeric SQL filenames are historical;
+`meta/_journal.json` determines execution order. Never insert new journal
+entries ahead of one already deployed, even if the filename number is smaller.
+`tests/deploy/migration-policy.py` checks this exact historical case.
 
-This gate prevents unattended cutover, not CI, merge or artifact staging. Leave the
-variable unset after a failed rehearsal or if private production configuration cannot be
-inspected. An older pre-gate deploy workflow run must not be manually re-run as a bypass.
+**Release prerequisites** remain mandatory and should be validated before merging
+account-lifecycle changes: private production email configuration, verified sender,
+live verification/reset-email tests, existing unverified-owner inventory and
+identity-checked recovery, Auth 2.0 migration rehearsal against a disposable
+backup, MFA enrollment/recovery/step-up on the production hostname, and matching
+Turnstile keys if enabled. Do not bulk-verify existing users.
+
+The root-owned helper v5 still refuses divergent applied migration histories,
+unhealthy services, missing migration-owner configuration, unsuccessful off-host
+backup, or failed ERP preflight. Do not disable these checks to make a deploy green.
+If the new auth release fails runtime configuration or migration, repair that
+specific issue and deploy a new tested commit instead of force-activating or
+re-running an older workflow. Rollback of irreversible migrations must not
+destroy new data or silently downgrade schema.

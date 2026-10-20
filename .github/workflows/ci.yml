@@ -165,11 +165,17 @@ jobs:
           APP_URL: https://food.bababuilds.com
           NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
-          EMAIL_PROVIDER: resend
-          EMAIL_FROM: accounts@ci.example.invalid
-          RESEND_API_KEY: ci-placeholder-do-not-use
+          EMAIL_PROVIDER: smtp
+          EMAIL_FROM: food@bababuilds.com
+          SMTP_HOST: mx.bababuilds.com
+          SMTP_PORT: "465"
+          SMTP_SECURE: "true"
+          SMTP_USER: food@bababuilds.com
+          SMTP_PASSWORD: synthetic-build-value-never-used
+          AUTH_ALLOW_TEST_EMAIL: "false"
       - run: pnpm build:worker
       - run: pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs
+      - run: pnpm build:release-preflight
       - run: pnpm db:seed
         env:
           NODE_ENV: test

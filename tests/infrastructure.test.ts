@@ -25,3 +25,37 @@ it("fails configuration without secrets, PostgreSQL or separate Redis", () => {
   expect(() => parseEnv({ ...base, REDIS_CACHE_URL: base.REDIS_QUEUE_URL })).toThrow();
   expect(() => parseEnv({ ...base, APP_URL: "http://menu.invalid" })).toThrow();
 });
+
+it("accepts only complete secure production SMTP configuration", () => {
+  const smtp = {
+    ...process.env,
+    NODE_ENV: "production",
+    APP_URL: "https://food.bababuilds.com",
+    DATABASE_URL: "postgresql://app:password@127.0.0.1:5432/menuminute",
+    REDIS_QUEUE_URL: "redis://127.0.0.1:6381",
+    REDIS_CACHE_URL: "redis://127.0.0.1:6382",
+    AUTH_SECRET: "a92c809411966d26b5fe736b74e24dfde93d1e1d",
+    EMAIL_PROVIDER: "smtp",
+    EMAIL_FROM: "food@bababuilds.com",
+    SMTP_HOST: "mx.bababuilds.com",
+    SMTP_PORT: "465",
+    SMTP_SECURE: "true",
+    SMTP_USER: "food@bababuilds.com",
+    SMTP_PASSWORD: "private-ci-placeholder",
+    AUTH_ALLOW_TEST_EMAIL: "false",
+  };
+  expect(parseEnv(smtp)).toMatchObject({
+    EMAIL_PROVIDER: "smtp",
+    SMTP_PORT: 465,
+    SMTP_SECURE: true,
+  });
+  for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD"]) {
+    expect(() => parseEnv({ ...smtp, [name]: undefined })).toThrow(name);
+  }
+  expect(() => parseEnv({ ...smtp, SMTP_PORT: "65536" })).toThrow("SMTP_PORT");
+  expect(() => parseEnv({ ...smtp, SMTP_SECURE: "yes" })).toThrow("SMTP_SECURE");
+  expect(() => parseEnv({ ...smtp, SMTP_SECURE: "false" })).toThrow("SMTP_SECURE");
+  expect(() => parseEnv({ ...smtp, EMAIL_FROM: "not-an-address" })).toThrow("EMAIL_FROM");
+  expect(() => parseEnv({ ...smtp, EMAIL_PROVIDER: "test" })).toThrow("EMAIL_PROVIDER");
+  expect(() => parseEnv({ ...smtp, SMTP_PASSWORD: "" })).toThrow("SMTP_PASSWORD");
+});
