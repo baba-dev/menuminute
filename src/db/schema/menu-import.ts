@@ -94,3 +94,29 @@ export const menuImportCandidates = pgTable(
     }),
   ]
 );
+
+export const menuImportReviews = pgTable(
+  "menu_import_reviews",
+  {
+    importId: text("import_id").primaryKey(),
+    organizationId: text("organization_id").notNull(),
+    outletId: text("outlet_id").notNull(),
+    baseCandidateRevision: integer("base_candidate_revision").notNull(),
+    reviewRevision: integer("review_revision").notNull(),
+    document: jsonb("document").notNull(),
+    confirmedIds: jsonb("confirmed_ids").notNull(),
+    state: text("state").notNull(),
+    appliedMenuId: text("applied_menu_id"),
+    appliedMenuRevision: integer("applied_menu_revision"),
+    updatedBy: text("updated_by")
+      .notNull()
+      .references(() => users.id),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.importId, t.organizationId, t.outletId],
+      foreignColumns: [menuImports.id, menuImports.organizationId, menuImports.outletId],
+    }),
+  ]
+);

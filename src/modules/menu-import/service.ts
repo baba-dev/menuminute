@@ -1,5 +1,10 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import { menuImportCandidates, menuImports, menuImportSources } from "@/db/schema";
+import {
+  menuImportCandidates,
+  menuImports,
+  menuImportSources,
+  menuImportReviews,
+} from "@/db/schema";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { NotFoundError } from "@/lib/errors";
 import { domainError } from "@/modules/organizations/service";
@@ -90,7 +95,22 @@ export async function importDetail(actor: Actor, outletId: string, rawId: string
           .orderBy(desc(menuImportCandidates.revision))
           .limit(1)
       )[0] ?? null;
-    return { ...row, sources, candidate: latest };
+    const review =
+      (
+        await tx
+          .select({
+            document: menuImportReviews.document,
+            confirmedIds: menuImportReviews.confirmedIds,
+            state: menuImportReviews.state,
+            baseCandidateRevision: menuImportReviews.baseCandidateRevision,
+            reviewRevision: menuImportReviews.reviewRevision,
+            appliedMenuId: menuImportReviews.appliedMenuId,
+            appliedMenuRevision: menuImportReviews.appliedMenuRevision,
+          })
+          .from(menuImportReviews)
+          .where(eq(menuImportReviews.importId, id))
+      )[0] ?? null;
+    return { ...row, sources, candidate: latest, review };
   });
 }
 /** Only fully authorized editors may obtain private bytes; recheck after the storage read. */

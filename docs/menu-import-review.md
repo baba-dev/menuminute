@@ -1,0 +1,9 @@
+# PR D — Review Workspace
+
+Source of truth: immutable schema-v1 NVIDIA candidate from PR B. Separate human review record with revisions, human confirmations and canonical schema validation. The candidate's original evidence UUIDs remain unchanged and display against private photos. Corrections may change names, descriptions and prices; categories/dishes/variants retain identities and relationships, avoiding fabricated media/dietary flags. Each ID must be confirmed against its photograph before readiness; missing prices initially display blank and must be entered manually.
+
+GET /api/menu-imports/:id now includes review: null | {document, confirmedIds, state, baseCandidateRevision, reviewRevision, appliedMenuId, appliedMenuRevision}. PUT /:id/review with expectedRevision, candidateRevision, canonical document, confirmedIds, finalize=false saves a partial review; finalize=true requires every ID confirmed and moves import to ready. POST /:id/apply with expectedRevision, menuId and expectedMenuRevision applies to a NEW menu (when targetMenuId null and expectedMenuRevision 0) or to the originally bound target at its exact revision. Never arbitrarily choose an existing menu, never publish. Original published release remains immutable. SQL RPC holds organization/import locks, enforces current menu.write, target menu_access, currency, exact replay and audit. Stale review/menu leaves the existing draft unchanged.
+
+Required rollout: exact-head PostgreSQL/Redis, role/RLS, ARM64 browser and signed packaging; append-only 0011 through migration pipeline. PR E builds on the stable review/apply API.
+
+Browser scenario: authenticated capture, server-injected synthetic candidate, human correction of unreadable price, complete confirmation, and draft-only application with no menu release. Provider calls are mocked or bypassed in CI; no NVIDIA charges are incurred.
