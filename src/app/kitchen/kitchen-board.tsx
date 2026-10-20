@@ -134,6 +134,8 @@ export function KitchenBoard({
   const [stationName, setStationName] = useState("");
   const [dishId, setDishId] = useState(menuDishes[0]?.id ?? "");
   const [routeStation, setRouteStation] = useState(initial.stations[0]?.id ?? "");
+  const [memberId, setMemberId] = useState("");
+  const [memberStation, setMemberStation] = useState("");
   const seen = useRef(new Set(initial.work.map((w) => w.id)));
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/kitchen`;
   const apply = useCallback(
@@ -482,6 +484,29 @@ export function KitchenBoard({
                 A dish may be routed to multiple stations. Final activation requires commercial and
                 end-to-end release sign-off.
               </p>
+            </form>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (memberId && (memberStation || snapshot.stations[0]?.id))
+                  void admin("member.assign", { memberId, stationId: memberStation || snapshot.stations[0]!.id });
+              }}
+              className="space-y-3"
+            >
+              <h3 className="font-extrabold">Assign kitchen staff</h3>
+              <p className="text-xs text-stone-600 dark:text-stone-300">Assign an active teammate with a kitchen or manager outlet role. Revoking the assignment removes their station access on the next request.</p>
+              <label className="block text-sm font-medium" htmlFor="kitchen-member">Team member</label>
+              <select id="kitchen-member" required value={memberId} onChange={(e)=>setMemberId(e.target.value)} className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600">
+                <option value="">Choose a teammate</option>
+                {snapshot.members.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              <label className="block text-sm font-medium" htmlFor="kitchen-member-station">Assigned station</label>
+              <select id="kitchen-member-station" required value={memberStation || snapshot.stations[0]?.id || ""} onChange={e=>setMemberStation(e.target.value)} className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600">
+                <option value="">Choose a station</option>
+                {snapshot.stations.map(st=><option key={st.id} value={st.id}>{st.name}</option>)}
+              </select>
+              <button type="submit" disabled={!!busy || !memberId || !(memberStation || snapshot.stations[0]?.id)} className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50">Assign teammate</button>
+              {snapshot.members.filter(m=>m.stationIds.length>0).length>0&&<ul className="space-y-2 text-sm">{snapshot.members.filter(m=>m.stationIds.length>0).flatMap(m=>m.stationIds.map(stationId=>({member:m,stationId}))).map(({member,stationId})=><li key={member.id+stationId} className="flex items-center justify-between gap-2 rounded-lg border border-stone-200 p-2 dark:border-stone-700"><span>{member.name} · {snapshot.stations.find(st=>st.id===stationId)?.name??"Inactive station"}</span><button type="button" disabled={!!busy} onClick={()=>void admin("member.remove",{memberId:member.id,stationId})} className="min-h-10 rounded-lg px-3 text-xs font-bold text-red-700 underline dark:text-red-400">Remove</button></li>)}</ul>}
             </form>
           </section>
         )}
