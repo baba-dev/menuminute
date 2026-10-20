@@ -27,36 +27,36 @@ export async function GET(
         };
         send("snapshot", first, first.cursor);
         void (async () => {
-        try {
-          while (!cancelled && !req.signal.aborted) {
-            await new Promise<void>((resolve) => setTimeout(resolve, 3000));
-            if (cancelled || req.signal.aborted) break;
-            // Revalidate the session and current outlet/station role at EVERY heartbeat.
-            const fresh = await requestActor(req);
-            if (fresh.userId !== actor.userId || fresh.sessionId !== actor.sessionId)
-              throw new Error("Session changed");
-            const changes = await kitchenChanges(fresh, organizationId, outletId, cursor);
-            if (changes.resync || changes.events.length) {
-              const latest = await kitchenSnapshot(fresh, organizationId, outletId);
-              send("snapshot", latest, latest.cursor);
-              cursor = latest.cursor;
-            } else {
-              cursor = changes.cursor;
-              send("heartbeat", { cursor });
-            }
-          }
-        } catch {
-          if (!cancelled && !req.signal.aborted)
-            try {
-              send("revoked", {
-                message: "Kitchen connection requires a fresh login or permission check",
-              });
-            } catch {}
-        } finally {
           try {
-            controller.close();
-          } catch {}
-        }
+            while (!cancelled && !req.signal.aborted) {
+              await new Promise<void>((resolve) => setTimeout(resolve, 3000));
+              if (cancelled || req.signal.aborted) break;
+              // Revalidate the session and current outlet/station role at EVERY heartbeat.
+              const fresh = await requestActor(req);
+              if (fresh.userId !== actor.userId || fresh.sessionId !== actor.sessionId)
+                throw new Error("Session changed");
+              const changes = await kitchenChanges(fresh, organizationId, outletId, cursor);
+              if (changes.resync || changes.events.length) {
+                const latest = await kitchenSnapshot(fresh, organizationId, outletId);
+                send("snapshot", latest, latest.cursor);
+                cursor = latest.cursor;
+              } else {
+                cursor = changes.cursor;
+                send("heartbeat", { cursor });
+              }
+            }
+          } catch {
+            if (!cancelled && !req.signal.aborted)
+              try {
+                send("revoked", {
+                  message: "Kitchen connection requires a fresh login or permission check",
+                });
+              } catch {}
+          } finally {
+            try {
+              controller.close();
+            } catch {}
+          }
         })();
       },
       cancel() {

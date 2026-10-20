@@ -16,13 +16,13 @@
 
 All endpoints are private and scoped to `/api/organizations/:organizationId/outlets/:outletId/kitchen`:
 
-| Endpoint | Method | Purpose |
-| --- | --- | --- |
-| `/` | GET | Authenticated snapshot of enabled state, eligible stations, admin-only routes/staff and station-visible work |
-| `/changes?cursor=N` | GET | Bounded, ordered event metadata and resync indicator |
-| `/stream` | GET | SSE immediate snapshot, authorized heartbeat and full snapshot after change/gap; session checked on every heartbeat |
-| `/admin` | POST | Station create/rename, route assign/remove, member assign/remove and settings.disable |
-| `/work` | POST | Version-checked Start/Complete, station scoped |
+| Endpoint            | Method | Purpose                                                                                                             |
+| ------------------- | ------ | ------------------------------------------------------------------------------------------------------------------- |
+| `/`                 | GET    | Authenticated snapshot of enabled state, eligible stations, admin-only routes/staff and station-visible work        |
+| `/changes?cursor=N` | GET    | Bounded, ordered event metadata and resync indicator                                                                |
+| `/stream`           | GET    | SSE immediate snapshot, authorized heartbeat and full snapshot after change/gap; session checked on every heartbeat |
+| `/admin`            | POST   | Station create/rename, route assign/remove, member assign/remove and settings.disable                               |
+| `/work`             | POST   | Version-checked Start/Complete, station scoped                                                                      |
 
 The stream is an optimization, not proof a command committed. Browser errors show uncertain state and reconcile using the GET snapshot. No offline replay of preparation actions. Status is never inferred from a sound notification.
 
