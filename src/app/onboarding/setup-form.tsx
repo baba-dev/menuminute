@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScheduleEditor } from "@/components/menu-product/schedule-editor";
 import type { Schedule } from "@/modules/menu-product/contracts";
@@ -34,10 +34,8 @@ export function OnboardingForm() {
   const [error, setError] = useState("");
   const [persisted, setPersisted] = useState(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
-  const latest = useRef(fields);
-  latest.current = fields;
   const reconciliation = useRef(false);
-  const reconcile = async () => {
+  const reconcile = useCallback(async () => {
     if (reconciliation.current) return;
     reconciliation.current = true;
     try {
@@ -64,11 +62,11 @@ export function OnboardingForm() {
     } finally {
       reconciliation.current = false;
     }
-  };
+  }, [router]);
   useEffect(() => {
-    void reconcile();
-  }, []);
-  const save = (data: Fields) => {
+    void Promise.resolve().then(reconcile);
+  }, [reconcile]);
+  const save = useCallback((data: Fields) => {
     const operation = queue.current
       .catch(() => undefined)
       .then(async () => {
@@ -87,14 +85,14 @@ export function OnboardingForm() {
       });
     queue.current = operation;
     return operation;
-  };
+  }, []);
   useEffect(() => {
     if (!ready) return;
     const timeout = window.setTimeout(() => {
       void save(fields).catch((e) => setError(e instanceof Error ? e.message : "Unable to save."));
     }, 700);
     return () => window.clearTimeout(timeout);
-  }, [fields, ready]);
+  }, [fields, ready, save]);
   const set = <K extends keyof Fields>(key: K, value: Fields[K]) => {
     setPersisted(false);
     setError("");
@@ -110,10 +108,10 @@ export function OnboardingForm() {
         setError("");
         setBusy(true);
         try {
-          if (!latest.current.fulfillmentModes.length)
+          if (!fields.fulfillmentModes.length)
             throw new Error("Choose at least one fulfillment mode.");
-          if (latest.current.name.trim().length < 2) throw new Error("Enter an outlet name.");
-          await save(latest.current);
+          if (fields.name.trim().length < 2) throw new Error("Enter an outlet name.");
+          await save(fields);
           const response = await fetch("/api/onboarding", {
             method: "POST",
             headers: { "content-type": "application/json" },
