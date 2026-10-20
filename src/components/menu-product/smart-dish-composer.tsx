@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { ImagePlus, Plus, Search, ShoppingBasket, X } from "lucide-react";
 import { displayToMinor } from "@/lib/money";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
@@ -7,15 +7,15 @@ import { existingFromDocument, normalizeDishText, rankDishSuggestions, type Sugg
 
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
 export type QuickDish = { key: string; name: string; categoryId: string; priceText: string; free: boolean; mediaId: string | null };
-export function SmartDishComposer({ doc, outletId, menuId, media, defaultCategoryId, focusRequest, onAdd, onPendingChange }: {
+export function SmartDishComposer({ doc, outletId, menuId, media, defaultCategoryId, focusRequest, selection, setSelection, onAdd, onPendingChange }: {
   doc: MenuDocument; outletId: string; menuId: string; media: Media[];
   defaultCategoryId: string; focusRequest: number;
+  selection: QuickDish[]; setSelection: Dispatch<SetStateAction<QuickDish[]>>;
   onAdd: (dishes: QuickDish[], newSectionName: string) => void;
   onPendingChange: (pending: boolean) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
-  const [selection, setSelection] = useState<QuickDish[]>([]);
   const [review, setReview] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState(0);
