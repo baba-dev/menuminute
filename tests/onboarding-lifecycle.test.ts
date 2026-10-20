@@ -122,3 +122,47 @@ it("caps a verified new owner at three organizations without weakening idempoten
     cause: { code: "P3001" },
   });
 });
+
+it("rejects expired invitations even for a verified matching recipient", async () => {
+  const { actor, outlet } = await fixture();
+  const recipient = await verified();
+  drainAuthTestMessages();
+  const invite = await inviteMember(actor, outlet.organizationId, {
+    email: recipient.email,
+    role: "member",
+    key: crypto.randomUUID(),
+  });
+  const token = drainAuthTestMessages()[0]?.text.match(/\\/invite\\/([a-f0-9]{64})/)?.[1];
+  expect(token).toBeTruthy();
+  await admin(async (_db, pool) => {
+    await pool.query(
+      "update organization_invitations set expires_at=now()-interval '1 minute' where id=$1",
+      [invite.id]
+    );
+  });
+  await expect(invitationPreview(recipient, token!)).rejects.toThrow();
+  await expect(acceptInvitation(recipient, token!)).rejects.toThrow();
+});
+it("bounds outstanding invitations and refuses an eleventh pending invitation", async () => {
+  const { actor, outlet } = await fixture();
+  drainAuthTestMessages();
+  for (let i = 0; i < 10; i++) {
+    const recipient = await verified();
+    const result = await inviteMember(actor, outlet.organizationId, {
+      email: recipient.email,
+      role: "member",
+      key: crypto.randomUUID(),
+    });
+    expect(result.id).toBeTruthy();
+  }
+  const extra = await verified();
+  await expect(
+    inviteMember(actor, outlet.organizationId, {
+      email: extra.email,
+      role: "member",
+      key: crypto.randomUUID(),
+    })
+  ).rejects.toThrow();
+  expect((await listInvitations(actor, outlet.organizationId)).filter((i) => i.status === "pending"))
+    .toHaveLength(10);
+});
