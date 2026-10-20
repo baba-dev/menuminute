@@ -1,16 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("shared public footer", () => {
-  for (const route of [
-    "/",
-    "/pricing",
-    "/demo",
-    "/login",
-    "/register",
-    "/privacy",
-    "/delete-account",
-    "/terms",
-  ]) {
+  for (const route of ["/", "/pricing", "/demo", "/privacy", "/delete-account", "/terms"]) {
     test(`renders once on ${route}`, async ({ page }) => {
       await page.goto(route);
       const footer = page.getByTestId("public-footer");
@@ -37,6 +28,24 @@ test.describe("shared public footer", () => {
       await expect(footer).not.toContainText("A Subsidiary of BabaBuilds.com");
       await expect(footer).toContainText("not external certifications");
       await expect(footer).toContainText("Planned · not yet available");
+    });
+  }
+
+  for (const route of ["/login", "/register"]) {
+    test(`renders accurate compact legal footer on ${route}`, async ({ page }) => {
+      await page.goto(route);
+      const footer = page.locator(".mm-auth-footer");
+      await expect(footer).toHaveCount(1);
+      await expect(footer).toContainText("MenuMinute is a product operated by BabaBuilds");
+      await expect(footer.getByRole("link", { name: "Terms of Service" })).toHaveAttribute(
+        "href",
+        "/terms"
+      );
+      await expect(footer.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
+        "href",
+        "/privacy"
+      );
+      await expect(page.getByTestId("public-footer")).toHaveCount(0);
     });
   }
 

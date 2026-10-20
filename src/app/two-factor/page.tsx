@@ -1,27 +1,30 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import { authNextKey, safeReturnPath } from "@/lib/auth-return";
+import { AuthShell } from "@/components/auth/auth-shell";
 export default function TwoFactorPage() {
   const router = useRouter();
-  const [code, setCode] = useState("");
-  const [backup, setBackup] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [code, setCode] = useState(""),
+    [backup, setBackup] = useState(false);
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 p-6">
-      <Link href="/" className="font-bold text-orange-700">
-        MenuMinute
-      </Link>
-      <h1 className="text-3xl font-extrabold">Two-factor verification</h1>
-      <p>
-        {backup
+    <AuthShell
+      eyebrow="PROTECTED SIGN IN"
+      title="One more check."
+      description={
+        backup
           ? "Use one of your saved single-use recovery codes."
-          : "Enter the six-digit code from your authenticator app."}
-      </p>
+          : "Enter the six-digit code from your authenticator app."
+      }
+      extra={<Link href="/login">Return to sign in</Link>}
+    >
       <form
-        className="grid gap-3"
+        className="mm-auth-form"
+        aria-busy={busy}
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
@@ -34,7 +37,19 @@ export default function TwoFactorPage() {
               setError("Invalid or expired code. Try again.");
               return;
             }
-            router.replace("/dashboard");
+            let next = "";
+            try {
+              next = safeReturnPath(sessionStorage.getItem(authNextKey), "");
+              sessionStorage.removeItem(authNextKey);
+            } catch {}
+            if (!next) {
+              const r = await fetch("/api/context", { cache: "no-store" });
+              if (r.ok) {
+                const ctx = await r.json();
+                next = ctx.hasOutlets ? "/dashboard" : "/onboarding";
+              }
+            }
+            router.replace(next || "/dashboard");
             router.refresh();
           } catch {
             setError("Verification failed. Try again.");
@@ -43,33 +58,41 @@ export default function TwoFactorPage() {
           }
         }}
       >
-        <label htmlFor="factor-code">{backup ? "Recovery code" : "Authenticator code"}</label>
-        <input
-          id="factor-code"
-          className="rounded border p-3"
-          required
-          autoComplete={backup ? "off" : "one-time-code"}
-          inputMode={backup ? "text" : "numeric"}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-        <button disabled={busy} className="rounded bg-orange-600 p-3 font-semibold text-white">
+        <label className="mm-auth-field" htmlFor="factor-code">
+          {backup ? "Recovery code" : "Authenticator code"}
+          <input
+            id="factor-code"
+            required
+            autoComplete={backup ? "off" : "one-time-code"}
+            inputMode={backup ? "text" : "numeric"}
+            pattern={backup ? undefined : "[0-9]{6}"}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            aria-invalid={!!error}
+            aria-describedby={error ? "factor-error" : undefined}
+          />
+        </label>
+        {error && (
+          <p className="mm-auth-message mm-auth-message--error" id="factor-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button className="mm-auth-submit" disabled={busy}>
           {busy ? "Verifying…" : "Continue"}
         </button>
-        <p role="alert">{error}</p>
       </form>
-      <button
-        className="text-left underline"
-        onClick={() => {
-          setBackup(!backup);
-          setCode("");
-        }}
-      >
-        {backup ? "Use authenticator" : "Use recovery code"}
-      </button>
-      <Link href="/login" className="underline">
-        Return to sign in
-      </Link>
-    </main>
+      <div className="mm-auth-secondary">
+        <button
+          type="button"
+          onClick={() => {
+            setBackup(!backup);
+            setCode("");
+            setError("");
+          }}
+        >
+          {backup ? "Use authenticator" : "Use recovery code"}
+        </button>
+      </div>
+    </AuthShell>
   );
 }

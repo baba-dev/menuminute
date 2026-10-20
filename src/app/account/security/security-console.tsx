@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { authClient } from "@/lib/auth-client";
+import { ThemeControl } from "@/components/menu-product/theme-control";
 type Device = {
   id: string;
   token: string;
@@ -49,10 +50,13 @@ export function SecurityConsole({ initialMfa }: { initialMfa: boolean }) {
     setPassword("");
   }
   return (
-    <main className="mx-auto grid w-full max-w-3xl min-w-0 gap-6 overflow-x-clip p-4 sm:p-6">
-      <Link href="/dashboard" className="text-sm font-semibold text-orange-700 underline">
-        ← Dashboard
-      </Link>
+    <main className="product mx-auto grid w-full max-w-3xl min-w-0 gap-6 overflow-x-clip p-4 sm:p-6">
+      <div className="row between">
+        <Link href="/account" className="text-sm font-semibold underline">
+          ← Account
+        </Link>
+        <ThemeControl />
+      </div>
       <header>
         <h1 className="text-3xl font-extrabold">Account security</h1>
         <p>Manage your authenticator and revoke sessions you do not recognize.</p>

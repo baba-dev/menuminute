@@ -1,87 +1,92 @@
 "use client";
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import { AuthShell } from "@/components/auth/auth-shell";
 function Form() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const token = params.get("token");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const router = useRouter(),
+    token = useSearchParams().get("token");
+  const [password, setPassword] = useState(""),
+    [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 p-6">
-      <Link href="/" className="font-bold text-orange-700">
-        MenuMinute
-      </Link>
-      <h1 className="text-3xl font-extrabold">Choose a new password</h1>
+    <AuthShell
+      eyebrow="ACCOUNT RECOVERY"
+      title="Choose a new password."
+      description="Use a strong password you do not use elsewhere. Resetting it revokes your other sessions."
+      extra={<Link href="/login">Return to sign in</Link>}
+    >
       {!token ? (
-        <p role="alert">
-          This reset link is missing or invalid.{" "}
-          <Link href="/forgot-password" className="underline">
-            Request a new one
-          </Link>
-          .
+        <p role="alert" className="mm-auth-message mm-auth-message--error">
+          This link is missing or invalid. <Link href="/forgot-password">Request a new one.</Link>
         </p>
       ) : (
         <form
-          className="grid gap-3"
+          className="mm-auth-form"
+          aria-busy={busy}
           onSubmit={async (e) => {
             e.preventDefault();
+            setError("");
             if (password !== confirm) {
-              setMessage("Passwords do not match");
+              setError("Passwords do not match.");
               return;
             }
             setBusy(true);
             try {
-              const result = await authClient.resetPassword({ token, newPassword: password });
-              if (result.error) {
-                setMessage("This link could not be used. It may have expired. Request a new link.");
+              const r = await authClient.resetPassword({ token, newPassword: password });
+              if (r.error) {
+                setError("This link may have expired. Request a new reset link.");
                 return;
               }
               router.replace("/login?reset=1");
             } catch {
-              setMessage("Unable to reset password. Try again.");
+              setError("Unable to reset your password. Try again.");
             } finally {
               setBusy(false);
             }
           }}
         >
-          <label htmlFor="new-password">New password</label>
-          <input
-            id="new-password"
-            className="rounded border p-3"
-            type="password"
-            minLength={8}
-            maxLength={128}
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <label htmlFor="confirm-password">Confirm password</label>
-          <input
-            id="confirm-password"
-            className="rounded border p-3"
-            type="password"
-            minLength={8}
-            maxLength={128}
-            autoComplete="new-password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-          <button disabled={busy} className="rounded bg-orange-600 p-3 font-semibold text-white">
+          <label className="mm-auth-field" htmlFor="new-password">
+            New password
+            <input
+              id="new-password"
+              type="password"
+              minLength={8}
+              maxLength={128}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <label className="mm-auth-field" htmlFor="confirm-password">
+            Confirm password
+            <input
+              id="confirm-password"
+              type="password"
+              minLength={8}
+              maxLength={128}
+              autoComplete="new-password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              aria-invalid={Boolean(error && password !== confirm)}
+              aria-describedby={error ? "reset-error" : undefined}
+            />
+          </label>
+          {error && (
+            <p id="reset-error" role="alert" className="mm-auth-message mm-auth-message--error">
+              {error}
+            </p>
+          )}
+          <button className="mm-auth-submit" disabled={busy}>
             {busy ? "Resetting…" : "Reset password"}
           </button>
-          <p role="alert" aria-live="polite">
-            {message}
-          </p>
         </form>
       )}
-    </main>
+    </AuthShell>
   );
 }
 export default function ResetPasswordPage() {

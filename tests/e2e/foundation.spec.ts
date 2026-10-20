@@ -32,7 +32,7 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("browser-password-123");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/onboarding/);
   await page.goto("/onboarding");
   await expect(page.getByLabel("Outlet name")).toBeVisible();
   await page.getByLabel("Outlet name").fill("Browser Kitchen");
