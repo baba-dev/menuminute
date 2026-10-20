@@ -20,7 +20,7 @@ async function seedOrdering(enabled: boolean) {
     try {
       await client.query("BEGIN");
       await client.query(
-        "insert into users(id,name,email,email_verified) values($1,'Ordering owner',$2,true)",
+        "insert into users(id,name,email,email_verified,two_factor_enabled) values($1,'Ordering owner',$2,true,true)",
         [ownerId, email]
       );
       await client.query(
@@ -44,6 +44,7 @@ async function seedOrdering(enabled: boolean) {
       await client.query("update organizations set mfa_required=false where id=$1", [
         `org-${outletId}`,
       ]);
+      await client.query("update users set two_factor_enabled=false where id=$1", [ownerId]);
       const document = menuDocumentSchema.parse({
         name: "Online menu",
         currency: "INR",

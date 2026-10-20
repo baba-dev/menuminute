@@ -19,7 +19,7 @@ async function seed(publish = false) {
     try {
       await c.query("begin");
       await c.query(
-        "insert into users(id,name,email,email_verified) values($1,'Menu owner',$2,true)",
+        "insert into users(id,name,email,email_verified,two_factor_enabled) values($1,'Menu owner',$2,true,true)",
         [user, email]
       );
       await c.query(
@@ -41,6 +41,7 @@ async function seed(publish = false) {
       // Synthetic browser owner: test menu permissions without enrolling a real authenticator.
       // Production new-owner MFA remains mandatory.
       await c.query("update organizations set mfa_required=false where id=$1", [`org-${outlet}`]);
+      await c.query("update users set two_factor_enabled=false where id=$1", [user]);
       if (publish) {
         const doc = menuDocumentSchema.parse({
           name: "All-day kitchen",

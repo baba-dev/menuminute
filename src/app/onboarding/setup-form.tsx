@@ -153,7 +153,8 @@ export function OnboardingForm() {
         </label>
         <label className="field" htmlFor="outletType">
           Outlet type
-          <select
+        </label>
+        <select
             id="outletType"
             value={fields.outletType}
             onChange={(e) => {
@@ -173,7 +174,6 @@ export function OnboardingForm() {
               </option>
             ))}
           </select>
-        </label>
       </div>
       <div className="panel stack">
         <h2>Country and local settings</h2>
@@ -182,7 +182,8 @@ export function OnboardingForm() {
         </p>
         <label className="field" htmlFor="onboarding-country">
           Country
-          <select
+        </label>
+        <select
             id="onboarding-country"
             name="country"
             value={fields.country}
@@ -201,10 +202,10 @@ export function OnboardingForm() {
               </option>
             ))}
           </select>
-        </label>
         <label className="field" htmlFor="currency">
           Currency
-          <select
+        </label>
+        <select
             id="currency"
             name="currency"
             value={fields.currency}
@@ -216,10 +217,10 @@ export function OnboardingForm() {
               </option>
             ))}
           </select>
-        </label>
         <label className="field" htmlFor="timezone">
           Timezone
-          <select
+        </label>
+        <select
             id="timezone"
             name="timezone"
             value={fields.timezone}
@@ -231,7 +232,6 @@ export function OnboardingForm() {
               </option>
             ))}
           </select>
-        </label>
       </div>
       <section className="panel stack">
         <h2>Service and hours</h2>
