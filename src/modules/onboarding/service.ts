@@ -107,8 +107,14 @@ export async function provisionOnboarding(actor: Actor) {
   const input = createRestaurantSchema.safeParse(state.draft);
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
   await withActor(actor, async (tx) => {
-    await tx.execute(sql`update onboarding_progress set status='provisioning',updated_at=now()
-      where user_id=${actor.userId} and operation_key=${state.key} and status in ('draft','provisioning')`);
+    const claimed = await tx.execute<{ operation_key: string }>(
+      sql`update onboarding_progress set status='provisioning',updated_at=now()
+        where user_id=${actor.userId} and operation_key=${state.key}
+          and status in ('draft','provisioning') returning operation_key`
+    );
+    if (!claimed.rows[0]) {
+      throw new ConflictError("Outlet settings changed. Refresh and resume the latest draft.");
+    }
   });
   try {
     const outlet = await createRestaurant(actor.userId, input.data, state.key);
