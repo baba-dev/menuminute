@@ -1,13 +1,14 @@
-import { sql, eq, desc } from "drizzle-orm";
+import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia } from "@/db/schema";
-import { withActor, type Actor } from "@/modules/tenancy/service";
+import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { getPool } from "@/db";
 import { getPublicMenu, getRestaurantById } from "@/modules/restaurants/service";
 import { getFullMenu } from "@/modules/menus/service";
 import { domainError } from "@/modules/organizations/service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
+import { organizationFromAuthorizedMenus } from "./dish-reuse";
 export async function listMenus(actor: Actor, outletId: string) {
   await getRestaurantById(actor, outletId);
   return withActor(actor, async (tx) => {
@@ -17,6 +18,28 @@ export async function listMenus(actor: Actor, outletId: string) {
       .from(menuAssignments)
       .where(eq(menuAssignments.outletId, outletId));
     return rows.filter((m) => m.outletId === outletId || assigned.some((a) => a.menuId === m.id));
+  });
+}
+/**
+ * Organization reuse: permission is checked independently for the target outlet, target
+ * menu and every source menu by the database's menu_read RLS policy. Never return
+ * prices, descriptions, dietary flags or source-outlet media.
+ */
+export async function listReusableDishes(actor: Actor, outletId: string, menuId: string) {
+  entityId.parse(menuId);
+  const outlet = await getRestaurantById(actor, outletId);
+  if (!outlet) throw new NotFoundError("Outlet");
+  const targetMenus = await listMenus(actor, outletId);
+  if (!targetMenus.some(m => m.id === menuId)) throw new NotFoundError("Menu");
+  return withOutlet(actor, outletId, "menu.read", async tx => {
+    const rows = await tx.select({
+      id: menus.id, document: menus.document, updatedAt: menus.updatedAt,
+    }).from(menus).where(and(
+      eq(menus.organizationId, outlet.organizationId),
+      eq(menus.archived, false),
+    )).orderBy(desc(menus.updatedAt)).limit(40);
+    // RLS still gates each source row via app_private.menu_access('menu.read').
+    return organizationFromAuthorizedMenus(rows.filter(row => row.id !== menuId));
   });
 }
 export async function menuDetail(actor: Actor, id: string) {
