@@ -138,7 +138,10 @@ export function MenuStudio({
     setCategoryFilter("all");
     setComposerCategory("");
     setComposerMode("add");
-    if (changedMenu) { setComposerPending(false); setComposerSelection([]); }
+    if (changedMenu) {
+      setComposerPending(false);
+      setComposerSelection([]);
+    }
     setDirty(false);
   }
   function change(next: MenuDocument) {
@@ -220,33 +223,51 @@ export function MenuStudio({
   function openComposer(categoryId: string) {
     setComposerCategory(categoryId);
     setComposerMode("add");
-    setComposerFocus(i => i + 1);
+    setComposerFocus((i) => i + 1);
   }
   function addQuickDishes(items: QuickDish[], newSectionName: string) {
     if (!doc || !detail?.canWrite || detail.archived) throw new Error("This menu is not editable.");
     const next = structuredClone(doc);
     let newId: string | null = null;
-    if (items.some(item => item.categoryId === "new")) {
+    if (items.some((item) => item.categoryId === "new")) {
       const name = newSectionName.trim();
       if (!name || name.length > 100) throw new Error("Enter a valid section name.");
-      if (next.categories.some(c => !c.archived && normalizeDishText(c.name) === normalizeDishText(name)))
+      if (
+        next.categories.some(
+          (c) => !c.archived && normalizeDishText(c.name) === normalizeDishText(name)
+        )
+      )
         throw new Error("That section already exists. Choose it instead.");
       if (next.categories.length >= 100) throw new Error("Menu has reached the section limit.");
       newId = id();
-      next.categories.push({ id: newId, name, description:"", archived:false, items:[] });
+      next.categories.push({ id: newId, name, description: "", archived: false, items: [] });
     }
     for (const item of items) {
       const sectionId = item.categoryId === "new" ? newId : item.categoryId;
-      const category = next.categories.find(c => c.id === sectionId && !c.archived);
+      const category = next.categories.find((c) => c.id === sectionId && !c.archived);
       if (!category) throw new Error("Select an active section for " + item.name);
       if (category.items.length >= 1000) throw new Error("Section has reached its dish limit.");
       if (findDishDuplicate(next, category.id, item.name))
-        throw new Error(item.name + " is already in " + category.name + ". Open the existing dish instead.");
+        throw new Error(
+          item.name + " is already in " + category.name + ". Open the existing dish instead."
+        );
       const priceMinor = displayToMinor(item.free ? "0" : item.priceText.trim(), next.currency);
-      const photo = media.some(m => m.id === item.mediaId && m.status === "ready" && m.approvedAt)
-        ? item.mediaId : null;
-      category.items.push({id:id(),name:item.name.trim(),description:"",priceMinor,soldOut:false,
-        archived:false,mediaId:photo,dietary:[],variants:[],addOnGroups:[],schedule:null});
+      const photo = media.some((m) => m.id === item.mediaId && m.status === "ready" && m.approvedAt)
+        ? item.mediaId
+        : null;
+      category.items.push({
+        id: id(),
+        name: item.name.trim(),
+        description: "",
+        priceMinor,
+        soldOut: false,
+        archived: false,
+        mediaId: photo,
+        dietary: [],
+        variants: [],
+        addOnGroups: [],
+        schedule: null,
+      });
     }
     const parsed = menuDocumentSchema.safeParse(next);
     if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid menu draft.");
@@ -317,7 +338,11 @@ export function MenuStudio({
             value={detail?.id ?? ""}
             onChange={(e) => {
               if (e.target.value === selected.current) return;
-              if ((dirty || composerPending) && !window.confirm("Discard unsaved menu changes and selected dishes?")) return;
+              if (
+                (dirty || composerPending) &&
+                !window.confirm("Discard unsaved menu changes and selected dishes?")
+              )
+                return;
               void run(() => load(e.target.value));
             }}
           >
@@ -338,7 +363,12 @@ export function MenuStudio({
           disabled={busy}
           onClick={() =>
             void run(async () => {
-              if ((dirty || composerPending) && !window.confirm("Discard unsaved changes and selected dishes to create another menu?"))
+              if (
+                (dirty || composerPending) &&
+                !window.confirm(
+                  "Discard unsaved changes and selected dishes to create another menu?"
+                )
+              )
                 return;
               const result = await json("/api/catalog", {
                 method: "POST",
@@ -489,7 +519,9 @@ export function MenuStudio({
               </span>
               <span className="badge">Revision {detail.revision}</span>
               <span className="badge">{dirty ? "Unsaved changes" : "Saved"}</span>
-              {composerPending && <span className="badge">Review selected dishes before saving or publishing</span>}
+              {composerPending && (
+                <span className="badge">Review selected dishes before saving or publishing</span>
+              )}
             </div>
             <div className="row">
               <button type="button" onClick={() => setPreview(!preview)}>
@@ -499,7 +531,9 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={busy || !detail.canWrite || detail.archived || composerPending}
+                disabled={
+                  busy || !detail.canWrite || detail.archived || composerPending
+                }
                 onClick={() =>
                   void run(async () => {
                     await save();
@@ -512,7 +546,9 @@ export function MenuStudio({
               <button
                 type="button"
                 className="ember ink-press"
-                disabled={busy || !detail.canWrite || detail.archived || composerPending}
+                disabled={
+                  busy || !detail.canWrite || detail.archived || composerPending
+                }
                 onClick={() => dialog.current?.showModal()}
               >
                 <Send size={16} />
@@ -609,7 +645,9 @@ export function MenuStudio({
                     }}
                   >
                     <fieldset
-                      disabled={busy || !detail.canWrite || detail.archived || composerPending}
+                      disabled={
+                        busy || !detail.canWrite || detail.archived || composerPending
+                      }
                       className="stack"
                       style={{ minWidth: 0 }}
                     >
@@ -622,37 +660,79 @@ export function MenuStudio({
                         <>
                           <div className="stack" aria-label="Dish entry and menu filtering">
                             <div className="row" role="group" aria-label="Menu Studio dish tools">
-                              <button type="button" className={composerMode === "add" ? "ember" : ""}
-                                aria-pressed={composerMode === "add"} onClick={() => {
-                                  setComposerMode("add"); setDishSearch(""); setCategoryFilter("all");
-                                  setComposerFocus(n => n + 1);
-                                }}>+ Add dishes</button>
-                              <button type="button" className={composerMode === "find" ? "ember" : ""}
-                                aria-pressed={composerMode === "find"} onClick={() => setComposerMode("find")}>
+                              <button
+                                type="button"
+                                className={composerMode === "add" ? "ember" : ""}
+                                aria-pressed={composerMode === "add"}
+                                onClick={() => {
+                                  setComposerMode("add");
+                                  setDishSearch("");
+                                  setCategoryFilter("all");
+                                  setComposerFocus((n) => n + 1);
+                                }}
+                              >
+                                + Add dishes
+                              </button>
+                              <button
+                                type="button"
+                                className={composerMode === "find" ? "ember" : ""}
+                                aria-pressed={composerMode === "find"}
+                                onClick={() => setComposerMode("find")}
+                              >
                                 Find in menu
                               </button>
                             </div>
                             <div hidden={composerMode !== "add"}>
-                              <SmartDishComposer key={detail.id} doc={doc}
-                              outletId={outlet.id} menuId={detail.id} media={media}
-                              defaultCategoryId={composerCategory} focusRequest={composerFocus}
-                              selection={composerSelection} setSelection={setComposerSelection}
-                              onAdd={addQuickDishes} onPendingChange={setComposerPending} />
+                              <SmartDishComposer
+                                key={detail.id}
+                                doc={doc}
+                                outletId={outlet.id}
+                                menuId={detail.id}
+                                media={media}
+                                defaultCategoryId={composerCategory}
+                                focusRequest={composerFocus}
+                                selection={composerSelection}
+                                setSelection={setComposerSelection}
+                                onAdd={addQuickDishes}
+                                onPendingChange={setComposerPending}
+                              />
                             </div>
-                            {composerMode === "find" && <div className="panel stack">
-                                <label className="field">Find a dish or section
-                                  <input aria-label="Find a dish or section" type="search" value={dishSearch}
-                                    onChange={e => setDishSearch(e.target.value)} placeholder="Filter names and descriptions" />
+                            {composerMode === "find" && (
+                              <div className="panel stack">
+                                <label className="field">
+                                  Find a dish or section
+                                  <input
+                                    aria-label="Find a dish or section"
+                                    type="search"
+                                    value={dishSearch}
+                                    onChange={(e) => setDishSearch(e.target.value)}
+                                    placeholder="Filter names and descriptions"
+                                  />
                                 </label>
-                                <p className="quiet">Filtering only changes this view, never the saved menu.</p>
+                                <p className="quiet">
+                                  Filtering only changes this view, never the saved menu.
+                                </p>
                                 <nav aria-label="Jump to menu section" className="row">
-                                  <button type="button" aria-pressed={categoryFilter==="all"}
-                                    onClick={()=>setCategoryFilter("all")}>All sections</button>
-                                  {doc.categories.map(cat=><button key={cat.id} type="button"
-                                    aria-pressed={categoryFilter===cat.id} onClick={()=>setCategoryFilter(cat.id)}>
-                                    {cat.name} · {cat.items.length}</button>)}
+                                  <button
+                                    type="button"
+                                    aria-pressed={categoryFilter === "all"}
+                                    onClick={() => setCategoryFilter("all")}
+                                  >
+                                    All sections
+                                  </button>
+                                  {doc.categories.map((cat) => (
+                                    <button
+                                      key={cat.id}
+                                      type="button"
+                                      aria-pressed={categoryFilter === cat.id}
+                                      onClick={() => setCategoryFilter(cat.id)}
+                                    >
+                                      {cat.name} · {cat.items.length}
+                                    </button>
+                                  ))}
                                 </nav>
-                              </div>}
+                              </div>
+                            )}
                           </div>
                           <div className="row between">
                             <h2>Sections & dishes</h2>
@@ -762,12 +842,28 @@ export function MenuStudio({
                                   )
                                   .map(({ dish, di }) => (
                                     <div className="dish-editor stack" key={dish.id}>
-                                      {detail.canWrite && dish.mediaId && media.some(m => m.id === dish.mediaId && m.status === "ready" && m.approvedAt) && (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={"/api/media/" + encodeURIComponent(dish.mediaId)}
-                                          alt={"Uploaded photograph for " + dish.name} width={104} height={84}
-                                          style={{width:104,height:84,objectFit:"cover",borderRadius:10}} />
-                                      )}
+                                      {detail.canWrite &&
+                                        dish.mediaId &&
+                                        media.some(
+                                          (m) =>
+                                            m.id === dish.mediaId &&
+                                            m.status === "ready" &&
+                                            m.approvedAt
+                                        ) && (
+                                          // eslint-disable-next-line @next/next/no-img-element
+                                          <img
+                                            src={"/api/media/" + encodeURIComponent(dish.mediaId)}
+                                            alt={"Uploaded photograph for " + dish.name}
+                                            width={104}
+                                            height={84}
+                                            style={{
+                                              width: 104,
+                                              height: 84,
+                                              objectFit: "cover",
+                                              borderRadius: 10,
+                                            }}
+                                          />
+                                        )}
                                       <div className="row between">
                                         <span className="eyebrow">Dish {di + 1}</span>
                                         <div
@@ -1124,7 +1220,11 @@ export function MenuStudio({
                                       </details>
                                     </div>
                                   ))}
-                                <button type="button" className="ember" onClick={() => openComposer(c.id)}>
+                                <button
+                                  type="button"
+                                  className="ember"
+                                  onClick={() => openComposer(c.id)}
+                                >
                                   <Plus size={16} /> Add dish
                                 </button>
                               </section>

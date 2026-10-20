@@ -181,7 +181,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page
     .getByLabel("Dish photo 1.1", { exact: true })
     .selectOption({ label: "Approved photo 1" });
-  await expect(page.getByRole("img", { name: "Uploaded photograph for Signature thali" })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Uploaded photograph for Signature thali" })
+  ).toBeVisible();
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -293,8 +295,9 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   ).toBe(true);
 });
 
-
-test("Smart Composer batches autocomplete suggestions, validates prices and preserves private publication", async ({ page }) => {
+test("Smart Composer batches autocomplete suggestions, validates prices and preserves private publication", async ({
+  page,
+}) => {
   const f = await seed();
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   await page.goto("/login");
