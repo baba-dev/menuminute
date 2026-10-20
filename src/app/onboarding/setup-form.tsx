@@ -155,25 +155,25 @@ export function OnboardingForm() {
           Outlet type
         </label>
         <select
-            id="outletType"
-            value={fields.outletType}
-            onChange={(e) => {
-              const type = e.target.value;
-              setFields((previous) => ({
-                ...previous,
-                outletType: type,
-                fulfillmentModes: ["cafe", "takeout", "cloud_kitchen"].includes(type)
-                  ? ["pickup"]
-                  : ["dine_in"],
-              }));
-            }}
-          >
-            {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((x) => (
-              <option key={x} value={x}>
-                {x.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
+          id="outletType"
+          value={fields.outletType}
+          onChange={(e) => {
+            const type = e.target.value;
+            setFields((previous) => ({
+              ...previous,
+              outletType: type,
+              fulfillmentModes: ["cafe", "takeout", "cloud_kitchen"].includes(type)
+                ? ["pickup"]
+                : ["dine_in"],
+            }));
+          }}
+        >
+          {["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"].map((x) => (
+            <option key={x} value={x}>
+              {x.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="panel stack">
         <h2>Country and local settings</h2>
@@ -184,54 +184,54 @@ export function OnboardingForm() {
           Country
         </label>
         <select
-            id="onboarding-country"
-            name="country"
-            value={fields.country}
-            onChange={(e) => {
-              const country = e.target.value;
-              setFields((previous) => ({
-                ...previous,
-                country,
-                currency: currencyFor[country] ?? previous.currency,
-              }));
-            }}
-          >
-            {regions.map((r) => (
-              <option key={r.code} value={r.code}>
-                {r.label} ({r.code})
-              </option>
-            ))}
-          </select>
+          id="onboarding-country"
+          name="country"
+          value={fields.country}
+          onChange={(e) => {
+            const country = e.target.value;
+            setFields((previous) => ({
+              ...previous,
+              country,
+              currency: currencyFor[country] ?? previous.currency,
+            }));
+          }}
+        >
+          {regions.map((r) => (
+            <option key={r.code} value={r.code}>
+              {r.label} ({r.code})
+            </option>
+          ))}
+        </select>
         <label className="field" htmlFor="currency">
           Currency
         </label>
         <select
-            id="currency"
-            name="currency"
-            value={fields.currency}
-            onChange={(e) => set("currency", e.target.value)}
-          >
-            {currencies.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
+          id="currency"
+          name="currency"
+          value={fields.currency}
+          onChange={(e) => set("currency", e.target.value)}
+        >
+          {currencies.map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
         <label className="field" htmlFor="timezone">
           Timezone
         </label>
         <select
-            id="timezone"
-            name="timezone"
-            value={fields.timezone}
-            onChange={(e) => set("timezone", e.target.value)}
-          >
-            {timezones.map((v) => (
-              <option key={v} value={v}>
-                {v.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
+          id="timezone"
+          name="timezone"
+          value={fields.timezone}
+          onChange={(e) => set("timezone", e.target.value)}
+        >
+          {timezones.map((v) => (
+            <option key={v} value={v}>
+              {v.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
       </div>
       <section className="panel stack">
         <h2>Service and hours</h2>
