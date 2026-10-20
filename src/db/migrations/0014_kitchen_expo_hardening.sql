@@ -229,3 +229,51 @@ BEGIN
  RETURN n;
 END $$;
 REVOKE ALL ON FUNCTION app_private.kitchen_prune_events() FROM PUBLIC;
+
+-- A bounded active snapshot never silently truncates: workOverflow is surfaced to operators.
+CREATE OR REPLACE FUNCTION app_private.kitchen_snapshot(p_outlet text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE result jsonb; is_admin boolean; member text;
+BEGIN
+ IF NOT app_private.kitchen_access(p_outlet) THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ SELECT m.id,(m.role IN ('owner','admin') OR app_private.can_outlet(p_outlet,'outlet.manage')) INTO member,is_admin
+ FROM organization_members m JOIN restaurants r ON r.organization_id=m.organization_id
+ WHERE r.id=p_outlet AND m.user_id=current_setting('app.actor_id',true) AND m.is_active;
+ SELECT jsonb_build_object(
+ 'cursor',COALESCE((SELECT last_seq FROM kitchen_event_counters WHERE outlet_id=p_outlet),0),
+ 'enabled',COALESCE((SELECT enabled FROM kitchen_outlet_settings WHERE outlet_id=p_outlet),false),
+ 'stations',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',s.name,'active',s.active,
+   'position',s.position) ORDER BY s.position,s.name) FROM kitchen_stations s
+   WHERE s.outlet_id=p_outlet AND s.active AND (is_admin OR EXISTS(
+    SELECT 1 FROM kitchen_station_members sm WHERE sm.station_id=s.id AND sm.member_id=member))), '[]'::jsonb),
+ 'routes',CASE WHEN is_admin THEN COALESCE((SELECT jsonb_agg(jsonb_build_object('dishId',dish_id,'stationId',station_id,'ruleVersion',rule_version) ORDER BY dish_id,station_id)
+ FROM kitchen_routes WHERE outlet_id=p_outlet),'[]'::jsonb) ELSE '[]'::jsonb END,
+ 'members',CASE WHEN is_admin THEN COALESCE((SELECT jsonb_agg(jsonb_build_object(
+   'id',m.id,'name',u.name,'stationIds',COALESCE((SELECT jsonb_agg(sm.station_id ORDER BY sm.station_id)
+     FROM kitchen_station_members sm WHERE sm.member_id=m.id AND sm.outlet_id=p_outlet),'[]'::jsonb))
+   ORDER BY u.name,m.id)
+   FROM organization_members m JOIN users u ON u.id=m.user_id
+   JOIN restaurants r ON r.organization_id=m.organization_id
+   JOIN outlet_grants g ON g.organization_id=m.organization_id AND g.member_id=m.id AND g.outlet_id=p_outlet
+   WHERE r.id=p_outlet AND m.is_active AND g.roles && ARRAY['manager','kitchen']::text[]),'[]'::jsonb)
+   ELSE '[]'::jsonb END,
+ 'workOverflow',(SELECT COUNT(*)>500 FROM kitchen_work w JOIN orders o ON o.id=w.order_id AND o.restaurant_id=p_outlet
+ WHERE w.outlet_id=p_outlet AND w.status IN ('queued','preparing','complete') AND o.status IN ('accepted','preparing')
+ AND (is_admin OR EXISTS(SELECT 1 FROM kitchen_station_members sm WHERE sm.station_id=w.station_id AND sm.member_id=member))),
+ 'work',COALESCE((SELECT jsonb_agg(x.payload ORDER BY x.created_at,x.id) FROM (SELECT jsonb_build_object(
+   'id',w.id,'stationId',w.station_id,'orderId',w.order_id,'orderNumber',o.order_number,
+   'fulfillmentMode',o.fulfillment_mode,'tableLabel',t.table_number,'brandLabel',r.name,
+   'dishName',i.item_name,'quantity',i.quantity,'variantName',i.variant_name,
+   'selectedOptions',i.selected_options,'notes',i.notes,'orderNotes',o.notes,
+   'status',w.status,'version',w.version,'createdAt',w.created_at,'updatedAt',w.updated_at) AS payload,w.created_at,w.id
+  FROM kitchen_work w JOIN orders o ON o.id=w.order_id AND o.restaurant_id=p_outlet
+  JOIN order_items i ON i.id=w.order_item_id JOIN restaurants r ON r.id=p_outlet
+  LEFT JOIN restaurant_tables t ON t.id=o.table_id
+  WHERE w.outlet_id=p_outlet AND w.status IN ('queued','preparing','complete')
+   AND o.status IN ('accepted','preparing')
+   AND (is_admin OR EXISTS(SELECT 1 FROM kitchen_station_members sm
+     WHERE sm.station_id=w.station_id AND sm.member_id=member))
+  ORDER BY w.created_at,w.id LIMIT 500) x),'[]'::jsonb)
+ ) INTO result;
+ RETURN result;
+END $$;
