@@ -67,10 +67,12 @@ async function setup(routed = true) {
         data: { dishId: "paneer", stationId: s.stationId },
       });
     }
+  // A–D has no public activation command. Only the isolated migration-owner fixture can enable work.
   if (routed)
-    await kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
-      action: "settings.enable",
-      data: {},
+    await admin(async (_, pool) => {
+      await pool.query("insert into kitchen_outlet_settings(outlet_id,enabled) values($1,true)", [
+        f.outlet.id,
+      ]);
     });
   return { ...f, a: a.stationId, b: b.stationId };
 }
