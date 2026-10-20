@@ -179,4 +179,49 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     );
     expect(forbidden.rows[0]?.allowed).toBe(false);
   });
+  it("limits kitchen staff to assigned stations and revokes access immediately", async () => {
+    const f = await setup();
+    const userId = crypto.randomUUID();
+    const memberId = crypto.randomUUID();
+    await admin(async (_, pool) => {
+      await pool.query("insert into users(id,name,email,email_verified) values($1,'Kitchen staff',$2,true)", [
+        userId, `kitchen-staff-${userId}@test.invalid`,
+      ]);
+      await pool.query("insert into organization_members(id,organization_id,user_id,role,is_active) values($1,$2,$3,'member',true)", [
+        memberId, f.outlet.organizationId, userId,
+      ]);
+      await pool.query("insert into outlet_grants(organization_id,member_id,outlet_id,roles) values($1,$2,$3,ARRAY['kitchen']::text[])", [
+        f.outlet.organizationId, memberId, f.outlet.id,
+      ]);
+    });
+    const staff = { userId };
+    await expect(kitchenSnapshot(staff, f.outlet.organizationId, f.outlet.id)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    const ownerView = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(ownerView.members.some((m) => m.id === memberId)).toBe(true);
+    await kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
+      action: "member.assign", data: { memberId, stationId: f.a },
+    });
+    const assigned = await kitchenSnapshot(staff, f.outlet.organizationId, f.outlet.id);
+    expect(assigned.stations.map((station) => station.id)).toEqual([f.a]);
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted", expectedVersion: 1,
+    });
+    const scoped = await kitchenSnapshot(staff, f.outlet.organizationId, f.outlet.id);
+    expect(scoped.work).toHaveLength(1);
+    expect(scoped.work[0]?.stationId).toBe(f.a);
+    const full = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const tandoor = full.work.find((w) => w.stationId === f.b)!;
+    await expect(kitchenWorkCommand(staff, f.outlet.organizationId, f.outlet.id, {
+      workId: tandoor.id, action: "start", expectedVersion: 0,
+    })).rejects.toMatchObject({ statusCode: 403 });
+    await kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
+      action: "member.remove", data: { memberId, stationId: f.a },
+    });
+    await expect(kitchenSnapshot(staff, f.outlet.organizationId, f.outlet.id)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
 });
