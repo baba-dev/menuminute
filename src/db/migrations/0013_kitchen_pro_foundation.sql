@@ -206,6 +206,26 @@ CREATE TRIGGER kitchen_accept_order AFTER UPDATE OF status ON orders
  FOR EACH ROW WHEN (NEW.status='accepted' AND OLD.status IS DISTINCT FROM NEW.status)
  EXECUTE FUNCTION app_private.kitchen_on_accept();
 
+-- Terminal order transitions invalidate open station work and wake SSE consumers.
+-- Reuse canonical order update's lock order: orders, then kitchen_work.
+CREATE FUNCTION app_private.kitchen_on_terminal() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+ SET search_path=pg_catalog,public,pg_temp AS $
+DECLARE w record;
+BEGIN
+ FOR w IN SELECT id,status FROM kitchen_work WHERE order_id=NEW.id ORDER BY id FOR UPDATE LOOP
+  IF NEW.status IN ('cancelled','rejected','expired') AND w.status IN ('queued','preparing') THEN
+   UPDATE kitchen_work SET status='cancelled',version=version+1,updated_at=clock_timestamp() WHERE id=w.id;
+  END IF;
+  PERFORM app_private.kitchen_emit(NEW.restaurant_id,'work.changed',w.id);
+ END LOOP;
+ RETURN NEW;
+END $;
+REVOKE ALL ON FUNCTION app_private.kitchen_on_terminal() FROM PUBLIC;
+CREATE TRIGGER kitchen_terminal_order AFTER UPDATE OF status ON orders
+ FOR EACH ROW WHEN (NEW.status IN ('cancelled','rejected','expired','ready','served','collected')
+   AND OLD.status IS DISTINCT FROM NEW.status)
+ EXECUTE FUNCTION app_private.kitchen_on_terminal();
+
 -- Existing merchant Ready action must not bypass required station work.
 CREATE OR REPLACE FUNCTION app_private.transition_order(p_outlet text,p_order text,p_target text,
  p_expected integer,p_reason text)
@@ -258,11 +278,13 @@ CREATE FUNCTION app_private.kitchen_work_command(p_outlet text,p_work text,p_act
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE w kitchen_work%ROWTYPE; o orders%ROWTYPE; next_state text; n bigint; org text;
 BEGIN
- SELECT * INTO w FROM kitchen_work WHERE id=p_work AND outlet_id=p_outlet FOR UPDATE;
+ -- Always lock the canonical order BEFORE station work, consistent with transition_order.
+ SELECT * INTO w FROM kitchen_work WHERE id=p_work AND outlet_id=p_outlet;
  IF w.id IS NULL OR NOT app_private.can_outlet(p_outlet,'orders.prepare')
  OR NOT app_private.kitchen_access(p_outlet,w.station_id) THEN
   RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO o FROM orders WHERE id=w.order_id AND restaurant_id=p_outlet FOR UPDATE;
+ SELECT * INTO w FROM kitchen_work WHERE id=p_work AND outlet_id=p_outlet FOR UPDATE;
  IF o.id IS NULL OR o.status IN ('pending','rejected','cancelled','expired','ready','served','collected')
  OR w.version<>p_expected THEN RAISE EXCEPTION 'Stale kitchen work' USING ERRCODE='40001'; END IF;
  next_state:=CASE WHEN p_action='start' AND w.status='queued' THEN 'preparing'
@@ -311,7 +333,6 @@ BEGIN
    AND o.status IN ('accepted','preparing')
    AND (is_admin OR EXISTS(SELECT 1 FROM kitchen_station_members sm
      WHERE sm.station_id=w.station_id AND sm.member_id=member))
-   AND w.created_at>=now()-interval '72 hours'
   ),'[]'::jsonb)
  ) INTO result;
  RETURN result;
