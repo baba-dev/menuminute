@@ -104,13 +104,21 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Import from photos" })).toBeVisible();
   await expect(page.getByLabel("Menu Studio overview")).toBeVisible();
+  await page.getByRole("button", { name: "Find in menu" }).click();
   await page.getByLabel("Find a dish or section").fill("nonexistent-dish-search");
   await expect(page.getByLabel("Find a dish or section")).toHaveValue("nonexistent-dish-search");
   await page.getByLabel("Find a dish or section").clear();
   await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+  await page.getByRole("button", { name: "+ Add dishes" }).click();
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   await page.getByLabel("Category name 1", { exact: true }).fill("Chef’s specials");
   await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  await expect(page.getByLabel("Search the dish catalogue")).toBeFocused();
+  await page.getByLabel("Search the dish catalogue").fill("Signature thali");
+  await page.getByRole("button", { name: /Create custom dish: Signature thali/ }).click();
+  await page.getByRole("button", { name: "Review & Add 1 dish" }).click();
+  await page.getByLabel("Quick price for Signature thali").fill("12.500");
+  await page.getByRole("button", { name: "Add 1 to private draft" }).click();
   await page.getByLabel("Dish name 1.1", { exact: true }).fill("Signature thali");
   await page.getByLabel("Dish price 1.1", { exact: true }).fill("12.500");
   await expect(page.getByRole("button", { name: "Move dish 1 up" })).toBeDisabled();
@@ -173,6 +181,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page
     .getByLabel("Dish photo 1.1", { exact: true })
     .selectOption({ label: "Approved photo 1" });
+  await expect(
+    page.getByRole("img", { name: "Uploaded photograph for Signature thali" })
+  ).toBeVisible();
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -282,4 +293,43 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
       .locator(".product .action")
       .evaluateAll((elements) => elements.every((e) => e.getBoundingClientRect().height >= 44))
   ).toBe(true);
+});
+
+test("Smart Composer batches autocomplete suggestions, validates prices and preserves private publication", async ({
+  page,
+}) => {
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+  await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
+  await page.getByRole("button", { name: "Add category", exact: true }).click();
+  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
+  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  const search = page.getByLabel("Search the dish catalogue");
+  await expect(search).toBeFocused();
+  await search.fill("kadai");
+  await expect(page.getByRole("option", { name: /Kadai Paneer/ })).toBeVisible();
+  await search.press("Enter");
+  await search.fill("palak");
+  await search.press("Enter");
+  await page.getByRole("button", { name: "Review & Add 2 dishes" }).click();
+  await page.getByLabel("Quick price for Kadai Paneer").fill("3.500");
+  await page.getByRole("button", { name: "Add 2 to private draft" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Enter every dish price" })).toBeVisible();
+  await page.getByLabel("Quick price for Palak Paneer").fill("4.000");
+  await page.getByRole("button", { name: "Add 2 to private draft" }).click();
+  await expect(page.getByLabel("Dish name 1.1")).toHaveValue("Kadai Paneer");
+  await expect(page.getByLabel("Dish name 1.2")).toHaveValue("Palak Paneer");
+  expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
+  await page.getByRole("button", { name: "Find in menu" }).click();
+  await page.getByLabel("Find a dish or section").fill("Palak");
+  await expect(page.getByLabel("Dish name 1.1")).toHaveCount(0);
+  await expect(page.getByLabel("Dish name 1.2")).toBeVisible();
+  await page.getByRole("button", { name: "+ Add dishes" }).click();
+  await expect(page.getByLabel("Dish name 1.1")).toBeVisible();
 });
