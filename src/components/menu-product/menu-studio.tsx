@@ -489,6 +489,11 @@ export function MenuStudio({
                           aria-pressed={tab === t}
                           className={tab === t ? "ember" : ""}
                           onClick={() => {
+                            if (t !== tab && form.current && !form.current.reportValidity()) {
+                              setError("Check the highlighted fields before switching editor sections.");
+                              return;
+                            }
+                            setError("");
                             setTab(t);
                             if (t === "media") void run(refreshMedia);
                           }}
