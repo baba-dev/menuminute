@@ -164,4 +164,3 @@ export async function setOrganizationMfaRequired(
 ) {
   return runAdminCommand(actor, "organization.mfa", orgId, { mfaRequired });
 }
-

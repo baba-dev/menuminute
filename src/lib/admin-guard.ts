@@ -92,14 +92,12 @@ export async function runAdminCommand<T = Record<string, unknown>>(
   requestKey = crypto.randomUUID()
 ): Promise<T> {
   if (!actor.sessionId) throw new ForbiddenError("An active operator session is required");
-  const result = await withActor(
-    { userId: actor.id, sessionId: actor.sessionId },
-    (tx) =>
-      tx.execute<{ result: T }>(
-        sql`SELECT app_private.admin_command(
+  const result = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
+    tx.execute<{ result: T }>(
+      sql`SELECT app_private.admin_command(
           ${action}, ${targetId}, ${JSON.stringify(data)}::jsonb, ${requestKey}
         ) AS result`
-      )
+    )
   );
   if (!result.rows[0]) throw new Error("Administrative command did not return a receipt");
   return result.rows[0].result;

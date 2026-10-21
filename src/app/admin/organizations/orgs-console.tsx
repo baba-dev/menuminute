@@ -2,16 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Search,
-  CheckCircle2,
-  AlertTriangle,
-  Eye,
-  X,
-  Store,
-  Users,
-  Shield,
-} from "lucide-react";
+import { Search, CheckCircle2, AlertTriangle, Eye, X, Store, Users, Shield } from "lucide-react";
 
 interface OrgRow {
   id: string;
@@ -164,7 +155,6 @@ export function OrgsConsole({
       setActionMessage({ text: err.message || "MFA update failed", type: "error" });
     }
   }
-
 
   return (
     <div className="space-y-4">

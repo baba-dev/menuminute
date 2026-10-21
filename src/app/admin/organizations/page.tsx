@@ -48,7 +48,6 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
     return setOrganizationMfaRequired(currentActor, orgId, required);
   }
 
-
   return (
     <div className="space-y-6">
       <div>
@@ -56,8 +55,8 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
           Organizations & Tenancy Control
         </h1>
         <p className="text-xs text-stone-400">
-          Tenant directory, outlet/brand boundaries, suspension controls, and read-only diagnostic support
-          access.
+          Tenant directory, outlet/brand boundaries, suspension controls, and read-only diagnostic
+          support access.
         </p>
       </div>
 

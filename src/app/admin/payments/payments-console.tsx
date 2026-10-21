@@ -533,7 +533,9 @@ export function PaymentsConsole({
                     className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:outline-none"
                   >
                     <option value="ordering.new">ordering.new</option>
-                    <option value="kitchen.new" disabled>kitchen.new — activation pending release gates</option>
+                    <option value="kitchen.new" disabled>
+                      kitchen.new — activation pending release gates
+                    </option>
                   </select>
                 </div>
 

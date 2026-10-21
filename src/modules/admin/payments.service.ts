@@ -27,12 +27,19 @@ export async function updateSubscriptionPlan(
     sortOrder?: number;
   }
 ) {
-  if (!planId || !data || Object.keys(data).length === 0) throw new ValidationError("A plan change is required");
-  if (data.monthlyPricePaise !== undefined &&
-    (!Number.isSafeInteger(data.monthlyPricePaise) || data.monthlyPricePaise < 0 || data.monthlyPricePaise > 999999999))
+  if (!planId || !data || Object.keys(data).length === 0)
+    throw new ValidationError("A plan change is required");
+  if (
+    data.monthlyPricePaise !== undefined &&
+    (!Number.isSafeInteger(data.monthlyPricePaise) ||
+      data.monthlyPricePaise < 0 ||
+      data.monthlyPricePaise > 999999999)
+  )
     throw new ValidationError("Invalid price in minor units");
-  if (data.sortOrder !== undefined &&
-    (!Number.isSafeInteger(data.sortOrder) || data.sortOrder < 0 || data.sortOrder > 999999))
+  if (
+    data.sortOrder !== undefined &&
+    (!Number.isSafeInteger(data.sortOrder) || data.sortOrder < 0 || data.sortOrder > 999999)
+  )
     throw new ValidationError("Invalid sort order");
   return runAdminCommand(actor, "billing.plan.update", planId, data);
 }
@@ -168,8 +175,12 @@ export async function issueEntitlementGrant(
 ) {
   const start = new Date(data.startsAt);
   const end = new Date(data.endsAt);
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) ||
-    end <= start || end.getTime() <= Date.now()) {
+  if (
+    !Number.isFinite(start.getTime()) ||
+    !Number.isFinite(end.getTime()) ||
+    end <= start ||
+    end.getTime() <= Date.now()
+  ) {
     throw new ValidationError("A valid future UTC entitlement window is required");
   }
   if (!data.reason?.trim() || data.reason.trim().length < 5 || data.reason.length > 500)
@@ -179,7 +190,10 @@ export async function issueEntitlementGrant(
   if (data.billingCurrency !== "USD" && data.billingCurrency !== "INR")
     throw new ValidationError("Invalid billing currency");
   return runAdminCommand(actor, "entitlement.grant", data.organizationId, {
-    ...data, reason: data.reason.trim(), startsAt: start.toISOString(), endsAt: end.toISOString(),
+    ...data,
+    reason: data.reason.trim(),
+    startsAt: start.toISOString(),
+    endsAt: end.toISOString(),
   });
 }
 

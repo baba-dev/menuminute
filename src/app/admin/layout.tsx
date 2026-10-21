@@ -151,9 +151,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* Main Administrative Workspace */}
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <div className="border-b border-orange-900/60 bg-stone-900 px-4 py-2 text-xs text-stone-300" role="status">
+        <div
+          className="border-b border-orange-900/60 bg-stone-900 px-4 py-2 text-xs text-stone-300"
+          role="status"
+        >
           Administrative changes require a single-use password and authenticator confirmation.{" "}
-          <Link href="/account/security" className="font-semibold text-orange-300 underline underline-offset-2">Confirm a privileged action</Link>{" "}
+          <Link
+            href="/account/security"
+            className="font-semibold text-orange-300 underline underline-offset-2"
+          >
+            Confirm a privileged action
+          </Link>{" "}
           before each change.
         </div>
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 md:p-8">{children}</main>

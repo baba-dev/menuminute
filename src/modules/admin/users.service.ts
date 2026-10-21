@@ -178,4 +178,3 @@ export async function setUserSuperAdmin(
     throw new ForbiddenError("Cannot revoke your own superadmin role");
   return runAdminCommand(actor, "user.superadmin", targetUserId, { isSuperAdmin });
 }
-
