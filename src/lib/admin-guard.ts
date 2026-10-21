@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getDb } from "@/db";
 import { users, adminAuditLogs } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ForbiddenError } from "@/lib/errors";
@@ -14,6 +14,7 @@ export interface AdminActor {
   email: string;
   name: string;
   twoFactorEnabled: boolean;
+  sessionId?: string;
 }
 
 export async function verifySuperAdmin(): Promise<AdminActor> {
@@ -48,6 +49,7 @@ export async function verifySuperAdmin(): Promise<AdminActor> {
     email: user.email,
     name: user.name,
     twoFactorEnabled: user.twoFactorEnabled,
+    sessionId: session.session.id,
   };
 }
 
@@ -62,7 +64,7 @@ export async function recordAdminAction(
   const ip = reqHeaders.get("x-forwarded-for") || reqHeaders.get("x-real-ip") || "unknown";
   const userAgent = reqHeaders.get("user-agent") || "unknown";
 
-  await withActor({ userId: actor.id }, async (tx) => {
+  await withActor({ userId: actor.id, sessionId: actor.sessionId }, async (tx) => {
     await tx.insert(adminAuditLogs).values({
       id: crypto.randomUUID(),
       actorId: actor.id,
@@ -77,4 +79,28 @@ export async function recordAdminAction(
   });
 }
 
-
+/**
+ * All privileged platform writes are executed by the versioned database
+ * command gateway. It validates the live session, consumes an existing
+ * one-use password+TOTP proof and commits business state + audit atomically.
+ */
+export async function runAdminCommand<T = Record<string, unknown>>(
+  actor: AdminActor,
+  action: string,
+  targetId: string,
+  data: Record<string, unknown> = {},
+  requestKey = crypto.randomUUID()
+): Promise<T> {
+  if (!actor.sessionId) throw new ForbiddenError("An active operator session is required");
+  const result = await withActor(
+    { userId: actor.id, sessionId: actor.sessionId },
+    (tx) =>
+      tx.execute<{ result: T }>(
+        sql`SELECT app_private.admin_command(
+          ${action}, ${targetId}, ${JSON.stringify(data)}::jsonb, ${requestKey}
+        ) AS result`
+      )
+  );
+  if (!result.rows[0]) throw new Error("Administrative command did not return a receipt");
+  return result.rows[0].result;
+}

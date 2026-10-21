@@ -7,7 +7,7 @@ import {
   users,
 } from "@/db/schema";
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
-import { type AdminActor, recordAdminAction, DIAGNOSTIC_COOKIE_NAME } from "@/lib/admin-guard";
+import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 
@@ -19,7 +19,7 @@ export interface ListOrgsParams {
 }
 
 export async function listOrganizations(actor: AdminActor, params: ListOrgsParams = {}) {
-  return withActor({ userId: actor.id }, async (db) => {
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(100, Math.max(1, params.limit || 20));
     const offset = (page - 1) * limit;
@@ -71,7 +71,7 @@ export async function listOrganizations(actor: AdminActor, params: ListOrgsParam
 }
 
 export async function getOrganizationDetails(actor: AdminActor, orgId: string) {
-  return withActor({ userId: actor.id }, async (db) => {
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, orgId),
     });
@@ -151,28 +151,10 @@ export async function setOrganizationActive(
     throw new ValidationError("A reason of at least 5 characters is required for status changes");
   }
 
-  const db = getDb();
-  const [updated] = await db
-    .update(organizations)
-    .set({
-      isActive,
-      version: sql`version + 1`,
-    })
-    .where(eq(organizations.id, orgId))
-    .returning({
-      id: organizations.id,
-      name: organizations.name,
-      isActive: organizations.isActive,
-    });
-
-  if (!updated) throw new NotFoundError("Organization not found");
-
-  await recordAdminAction(actor, "organization.active.set", "organization", orgId, {
+  return runAdminCommand(actor, "organization.active", orgId, {
     isActive,
     reason: reason.trim(),
   });
-
-  return updated;
 }
 
 export async function setOrganizationMfaRequired(
@@ -180,22 +162,6 @@ export async function setOrganizationMfaRequired(
   orgId: string,
   mfaRequired: boolean
 ) {
-  const db = getDb();
-  const [updated] = await db
-    .update(organizations)
-    .set({
-      mfaRequired,
-      version: sql`version + 1`,
-    })
-    .where(eq(organizations.id, orgId))
-    .returning({ id: organizations.id, mfaRequired: organizations.mfaRequired });
-
-  if (!updated) throw new NotFoundError("Organization not found");
-
-  await recordAdminAction(actor, "organization.mfa_required.set", "organization", orgId, {
-    mfaRequired,
-  });
-
-  return updated;
+  return runAdminCommand(actor, "organization.mfa", orgId, { mfaRequired });
 }
 

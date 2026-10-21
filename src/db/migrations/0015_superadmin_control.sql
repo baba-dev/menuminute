@@ -6,7 +6,7 @@ CREATE INDEX IF NOT EXISTS users_super_admin_idx ON users(is_super_admin) WHERE 
 -- INVOKER trigger prevents that runtime role from changing the privileged bit,
 -- including on registration; the vetted SECURITY DEFINER command can change it.
 CREATE FUNCTION app_private.protect_superadmin_role() RETURNS trigger
-LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public,pg_temp AS $
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public,pg_temp AS $protect$
 BEGIN
  IF current_user='menuminute_app' THEN
    IF TG_OP='INSERT' AND NEW.is_super_admin THEN
@@ -16,7 +16,7 @@ BEGIN
    END IF;
  END IF;
  RETURN NEW;
-END $;
+END $protect$;
 REVOKE ALL ON FUNCTION app_private.protect_superadmin_role() FROM PUBLIC;
 CREATE TRIGGER users_protect_superadmin BEFORE INSERT OR UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION app_private.protect_superadmin_role();
