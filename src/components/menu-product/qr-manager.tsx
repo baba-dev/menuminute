@@ -496,7 +496,7 @@ export function QrManager({
                         </div>
                         <p className="qr-selected-note">
                           {selected.tableId
-                            ? "{selected.pointLabel ? "This QR serves " + selected.pointLabel + "." : "Service-point context is linked to this code."}"
+                            ? selected.pointLabel ? "This QR serves " + selected.pointLabel + "." : "Service-point context is linked to this code."
                             : "Permanent menu destination."}{" "}
                           The printed QR stays valid after menu edits.
                         </p>
