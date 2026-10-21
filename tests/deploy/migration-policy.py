@@ -30,7 +30,8 @@ assert "--exclude-table" not in backup
 assert "ALTER TABLE" not in backup
 assert 'pg_restore -l "$backup_dir/database.dump"' in source
 assert 'OFF_HOST_PREDEPLOY_BACKUP_VERIFIED' in source
-assert 'if [[ "${1:-}" == --version' in source\nassert '  echo 7' in source
+assert 'if [[ "${1:-}" == --version' in source
+assert '  echo 7' in source
 
 
 def journal(root, tags):
