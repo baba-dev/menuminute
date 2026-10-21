@@ -366,8 +366,10 @@ test("PR C bulk composer deduplicates pasted dishes and matches Hindi input with
   expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
 });
 
-
-test("Recipe Atelier uses the approved media, meaningful draft metrics and adaptive editor", async ({ page, request }, info) => {
+test("Recipe Atelier uses the approved media, meaningful draft metrics and adaptive editor", async ({
+  page,
+  request,
+}, info) => {
   test.setTimeout(90000);
   const owner = await seed(true);
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
@@ -393,16 +395,27 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(studio.getByRole("group", { name: "Draft and publication actions" })).toBeVisible();
-  await page.screenshot({ path: info.outputPath("recipe-atelier-light-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-light-mobile.png"),
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.screenshot({ path: info.outputPath("recipe-atelier-dark-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-dark-mobile.png"),
+    fullPage: true,
+  });
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({ path: info.outputPath("recipe-atelier-dark-desktop.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-dark-desktop.png"),
+    fullPage: true,
+  });
 
   for (const name of [
     "hero-desktop-light.webp",
