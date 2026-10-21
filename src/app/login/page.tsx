@@ -20,7 +20,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       const outlets = await getRestaurantsByUserId(session.user.id);
       destination = outlets.length ? "/dashboard" : "/onboarding";
     }
-    if (params.switch === "1") return <SwitchAccount email={session.user.email} next={destination} />;
+    if (params.switch === "1")
+      return <SwitchAccount email={session.user.email} next={destination} />;
     redirect(destination);
   }
   return (
