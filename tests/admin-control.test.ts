@@ -1,17 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { SUPERADMIN_EMAIL } from "../src/lib/admin-guard";
-import {
-  setOrganizationActive,
-} from "../src/modules/admin/tenancy.service";
+import { setOrganizationActive } from "../src/modules/admin/tenancy.service";
 import {
   issueEntitlementGrant,
   revokeEntitlementGrant,
   listSubscriptionPlans,
 } from "../src/modules/admin/payments.service";
-import {
-  setUserSuperAdmin,
-  listUsers,
-} from "../src/modules/admin/users.service";
+import { setUserSuperAdmin, listUsers } from "../src/modules/admin/users.service";
 import { ValidationError, ForbiddenError } from "../src/lib/errors";
 
 describe("Admin Control Plane — Business Invariants & Security Guardrails", () => {
@@ -27,9 +22,7 @@ describe("Admin Control Plane — Business Invariants & Security Guardrails", ()
       twoFactorEnabled: true,
     };
 
-    await expect(setUserSuperAdmin(actor, "admin-actor-1", false)).rejects.toThrow(
-      ForbiddenError
-    );
+    await expect(setUserSuperAdmin(actor, "admin-actor-1", false)).rejects.toThrow(ForbiddenError);
   });
 
   it("rejects organization suspension without a valid justification reason (min 5 chars)", async () => {
@@ -40,13 +33,13 @@ describe("Admin Control Plane — Business Invariants & Security Guardrails", ()
       twoFactorEnabled: true,
     };
 
-    await expect(
-      setOrganizationActive(actor, "org-1", false, "bad")
-    ).rejects.toThrow(ValidationError);
+    await expect(setOrganizationActive(actor, "org-1", false, "bad")).rejects.toThrow(
+      ValidationError
+    );
 
-    await expect(
-      setOrganizationActive(actor, "org-1", false, "   ")
-    ).rejects.toThrow(ValidationError);
+    await expect(setOrganizationActive(actor, "org-1", false, "   ")).rejects.toThrow(
+      ValidationError
+    );
   });
 
   it("rejects entitlement grants with invalid or negative date windows", async () => {
@@ -100,8 +93,6 @@ describe("Admin Control Plane — Business Invariants & Security Guardrails", ()
       twoFactorEnabled: true,
     };
 
-    await expect(
-      revokeEntitlementGrant(actor, "grant-1", "rev")
-    ).rejects.toThrow(ValidationError);
+    await expect(revokeEntitlementGrant(actor, "grant-1", "rev")).rejects.toThrow(ValidationError);
   });
 });

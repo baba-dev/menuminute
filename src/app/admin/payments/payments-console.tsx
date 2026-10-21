@@ -71,14 +71,18 @@ export function PaymentsConsole({
   onRevokeGrant,
 }: PaymentsConsoleProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"entitlements" | "plans" | "subscriptions" | "analytics">("entitlements");
+  const [activeTab, setActiveTab] = useState<
+    "entitlements" | "plans" | "subscriptions" | "analytics"
+  >("entitlements");
 
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // New Grant Form State
   const [showGrantModal, setShowGrantModal] = useState(false);
   const [grantOrgId, setGrantOrgId] = useState("");
-  const [grantCapability, setGrantCapability] = useState<"ordering.new" | "kitchen.new">("ordering.new");
+  const [grantCapability, setGrantCapability] = useState<"ordering.new" | "kitchen.new">(
+    "ordering.new"
+  );
   const [grantCurrency, setGrantCurrency] = useState<"USD" | "INR">("INR");
   const [grantStartsAt, setGrantStartsAt] = useState("");
   const [grantEndsAt, setGrantEndsAt] = useState("");
@@ -114,7 +118,9 @@ export function PaymentsConsole({
   }
 
   async function handleRevokeGrant(grantId: string) {
-    const reason = prompt("Enter justification reason for revoking this entitlement grant (min 5 chars):");
+    const reason = prompt(
+      "Enter justification reason for revoking this entitlement grant (min 5 chars):"
+    );
     if (!reason || reason.trim().length < 5) {
       alert("Revocation reason is required (min 5 chars).");
       return;
@@ -138,7 +144,10 @@ export function PaymentsConsole({
         isActive: editingPlan.isActive,
         sortOrder: Number(editingPlan.sortOrder),
       });
-      setMessage({ text: `Plan ${editingPlan.displayName} updated successfully.`, type: "success" });
+      setMessage({
+        text: `Plan ${editingPlan.displayName} updated successfully.`,
+        type: "success",
+      });
       setEditingPlan(null);
       router.refresh();
     } catch (err: any) {
@@ -152,7 +161,7 @@ export function PaymentsConsole({
       <div className="flex border-b border-stone-800 text-xs font-semibold">
         <button
           onClick={() => setActiveTab("entitlements")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "entitlements"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -162,7 +171,7 @@ export function PaymentsConsole({
         </button>
         <button
           onClick={() => setActiveTab("plans")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "plans"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -172,7 +181,7 @@ export function PaymentsConsole({
         </button>
         <button
           onClick={() => setActiveTab("subscriptions")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "subscriptions"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -182,7 +191,7 @@ export function PaymentsConsole({
         </button>
         <button
           onClick={() => setActiveTab("analytics")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "analytics"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -196,8 +205,8 @@ export function PaymentsConsole({
         <div
           className={`rounded-lg p-3 text-xs font-medium ${
             message.type === "success"
-              ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-              : "bg-red-950 text-red-300 border border-red-800"
+              ? "border border-emerald-800 bg-emerald-950 text-emerald-300"
+              : "border border-red-800 bg-red-950 text-red-300"
           }`}
         >
           {message.text}
@@ -223,7 +232,7 @@ export function PaymentsConsole({
                 );
                 setShowGrantModal(true);
               }}
-              className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-orange-500 shadow"
+              className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-semibold text-white shadow transition hover:bg-orange-500"
             >
               <Plus className="h-4 w-4" />
               <span>Issue New Grant</span>
@@ -233,7 +242,7 @@ export function PaymentsConsole({
           <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-stone-300">
-                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                   <tr>
                     <th className="p-3">Organization</th>
                     <th className="p-3">Capability</th>
@@ -261,21 +270,27 @@ export function PaymentsConsole({
                         <tr key={g.id} className="hover:bg-stone-800/40">
                           <td className="p-3">
                             <div className="font-semibold text-white">{g.organizationName}</div>
-                            <div className="font-mono text-[10px] text-stone-500">{g.organizationId}</div>
+                            <div className="font-mono text-[10px] text-stone-500">
+                              {g.organizationId}
+                            </div>
                           </td>
-                          <td className="p-3 font-mono font-semibold text-orange-400">{g.capability}</td>
-                          <td className="p-3 font-mono text-stone-300 font-bold">{g.billingCurrency}</td>
+                          <td className="p-3 font-mono font-semibold text-orange-400">
+                            {g.capability}
+                          </td>
+                          <td className="p-3 font-mono font-bold text-stone-300">
+                            {g.billingCurrency}
+                          </td>
                           <td className="p-3 font-mono text-[11px] text-stone-400">
                             <div>From: {new Date(g.startsAt).toLocaleDateString()}</div>
                             <div>Until: {new Date(g.endsAt).toLocaleDateString()}</div>
                           </td>
                           <td className="p-3">
                             {isActive ? (
-                              <span className="inline-flex items-center gap-1 rounded bg-emerald-950 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-800">
+                              <span className="inline-flex items-center gap-1 rounded border border-emerald-800 bg-emerald-950 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
                                 Active
                               </span>
                             ) : isRevoked ? (
-                              <span className="inline-flex items-center gap-1 rounded bg-red-950 px-2 py-0.5 text-[10px] font-semibold text-red-400 border border-red-800">
+                              <span className="inline-flex items-center gap-1 rounded border border-red-800 bg-red-950 px-2 py-0.5 text-[10px] font-semibold text-red-400">
                                 Revoked
                               </span>
                             ) : (
@@ -285,8 +300,11 @@ export function PaymentsConsole({
                             )}
                           </td>
                           <td className="p-3">
-                            <div className="text-[11px] text-stone-300 font-mono">{g.operator}</div>
-                            <div className="truncate max-w-xs text-[10px] text-stone-500" title={g.reason}>
+                            <div className="font-mono text-[11px] text-stone-300">{g.operator}</div>
+                            <div
+                              className="max-w-xs truncate text-[10px] text-stone-500"
+                              title={g.reason}
+                            >
                               {g.reason}
                             </div>
                           </td>
@@ -294,7 +312,7 @@ export function PaymentsConsole({
                             {isActive && (
                               <button
                                 onClick={() => handleRevokeGrant(g.id)}
-                                className="rounded bg-red-950/60 px-2.5 py-1 text-[11px] font-semibold text-red-400 hover:bg-red-900 border border-red-800"
+                                className="rounded border border-red-800 bg-red-950/60 px-2.5 py-1 text-[11px] font-semibold text-red-400 hover:bg-red-900"
                               >
                                 Revoke
                               </button>
@@ -329,7 +347,7 @@ export function PaymentsConsole({
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="rounded bg-stone-800 px-2 py-0.5 font-mono text-[10px] uppercase text-stone-400">
+                    <span className="rounded bg-stone-800 px-2 py-0.5 font-mono text-[10px] text-stone-400 uppercase">
                       {p.name}
                     </span>
                     <span
@@ -347,7 +365,7 @@ export function PaymentsConsole({
                     <span className="text-xs font-normal text-stone-400">minor units / mo</span>
                   </div>
 
-                  <p className="mt-3 text-[11px] text-stone-400 font-mono">
+                  <p className="mt-3 font-mono text-[11px] text-stone-400">
                     Features: {p.features || "All basic features"}
                   </p>
                 </div>
@@ -379,7 +397,7 @@ export function PaymentsConsole({
           <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-stone-300">
-                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                   <tr>
                     <th className="p-3">Restaurant Outlet</th>
                     <th className="p-3">Plan</th>
@@ -400,14 +418,16 @@ export function PaymentsConsole({
                       <tr key={s.id} className="hover:bg-stone-800/40">
                         <td className="p-3">
                           <div className="font-semibold text-white">{s.restaurantName}</div>
-                          <div className="font-mono text-[10px] text-stone-500">{s.restaurantId}</div>
+                          <div className="font-mono text-[10px] text-stone-500">
+                            {s.restaurantId}
+                          </div>
                         </td>
                         <td className="p-3 font-semibold text-purple-400">{s.planName}</td>
                         <td className="p-3">
                           <span
                             className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase ${
                               s.status === "active"
-                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                                ? "border border-emerald-800 bg-emerald-950 text-emerald-400"
                                 : "bg-stone-800 text-stone-400"
                             }`}
                           >
@@ -415,10 +435,14 @@ export function PaymentsConsole({
                           </span>
                         </td>
                         <td className="p-3 font-mono text-[11px] text-stone-400">
-                          {s.currentPeriodStart ? new Date(s.currentPeriodStart).toLocaleDateString() : "—"}
+                          {s.currentPeriodStart
+                            ? new Date(s.currentPeriodStart).toLocaleDateString()
+                            : "—"}
                         </td>
                         <td className="p-3 font-mono text-[11px] text-stone-400">
-                          {s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString() : "—"}
+                          {s.currentPeriodEnd
+                            ? new Date(s.currentPeriodEnd).toLocaleDateString()
+                            : "—"}
                         </td>
                       </tr>
                     ))
@@ -436,7 +460,8 @@ export function PaymentsConsole({
           <div>
             <h2 className="text-sm font-bold text-white">Multi-Currency Financial Overview</h2>
             <p className="text-xs text-stone-400">
-              Orders transaction volume grouped strictly by local transaction currency (ADR 017 invariant).
+              Orders transaction volume grouped strictly by local transaction currency (ADR 017
+              invariant).
             </p>
           </div>
 
@@ -447,9 +472,14 @@ export function PaymentsConsole({
               </div>
             ) : (
               financials.byCurrency.map((fc) => (
-                <div key={fc.currency} className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+                <div
+                  key={fc.currency}
+                  className="rounded-2xl border border-stone-800 bg-stone-900 p-5"
+                >
                   <div className="flex items-center justify-between border-b border-stone-800 pb-2">
-                    <span className="font-mono text-sm font-bold text-orange-400">{fc.currency} Orders</span>
+                    <span className="font-mono text-sm font-bold text-orange-400">
+                      {fc.currency} Orders
+                    </span>
                     <TrendingUp className="h-4 w-4 text-emerald-400" />
                   </div>
                   <div className="mt-4">
@@ -508,7 +538,9 @@ export function PaymentsConsole({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-stone-300">Platform Billing Currency</label>
+                  <label className="block font-semibold text-stone-300">
+                    Platform Billing Currency
+                  </label>
                   <select
                     value={grantCurrency}
                     onChange={(e) => setGrantCurrency(e.target.value as any)}
@@ -558,7 +590,7 @@ export function PaymentsConsole({
                 />
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-stone-800">
+              <div className="mt-5 flex justify-end gap-2 border-t border-stone-800 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowGrantModal(false)}
@@ -597,13 +629,18 @@ export function PaymentsConsole({
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-300">Monthly Price (Minor Units / Paise)</label>
+                <label className="block font-semibold text-stone-300">
+                  Monthly Price (Minor Units / Paise)
+                </label>
                 <input
                   type="number"
                   required
                   value={editingPlan.monthlyPricePaise}
                   onChange={(e) =>
-                    setEditingPlan({ ...editingPlan, monthlyPricePaise: parseInt(e.target.value, 10) || 0 })
+                    setEditingPlan({
+                      ...editingPlan,
+                      monthlyPricePaise: parseInt(e.target.value, 10) || 0,
+                    })
                   }
                   className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:outline-none"
                 />
@@ -622,7 +659,7 @@ export function PaymentsConsole({
                 </label>
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-stone-800">
+              <div className="mt-5 flex justify-end gap-2 border-t border-stone-800 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditingPlan(null)}

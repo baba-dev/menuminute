@@ -97,7 +97,10 @@ export function OrgsConsole({
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedOrg, setSelectedOrg] = useState<OrgDetailPayload | null>(null);
-  const [actionMessage, setActionMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [actionMessage, setActionMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const [showSuspendPrompt, setShowSuspendPrompt] = useState(false);
 
@@ -179,15 +182,15 @@ export function OrgsConsole({
     <div className="space-y-4">
       {/* Search Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <form onSubmit={handleSearchSubmit} className="flex flex-1 max-w-md items-center gap-2">
+        <form onSubmit={handleSearchSubmit} className="flex max-w-md flex-1 items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-500" />
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-stone-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by organization name..."
-              className="w-full rounded-xl border border-stone-800 bg-stone-900 py-2 pl-9 pr-4 text-xs text-white placeholder-stone-500 focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-stone-800 bg-stone-900 py-2 pr-4 pl-9 text-xs text-white placeholder-stone-500 focus:border-orange-500 focus:outline-none"
             />
           </div>
           <button
@@ -199,7 +202,8 @@ export function OrgsConsole({
         </form>
 
         <span className="text-xs text-stone-400">
-          Showing <strong className="text-white">{organizations.length}</strong> of <strong className="text-white">{total}</strong> organizations
+          Showing <strong className="text-white">{organizations.length}</strong> of{" "}
+          <strong className="text-white">{total}</strong> organizations
         </span>
       </div>
 
@@ -207,7 +211,7 @@ export function OrgsConsole({
       <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-stone-300">
-            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
               <tr>
                 <th className="p-3">Organization</th>
                 <th className="p-3">Status</th>
@@ -234,11 +238,11 @@ export function OrgsConsole({
                     </td>
                     <td className="p-3">
                       {org.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-900">
+                        <span className="inline-flex items-center gap-1 rounded border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
                           <CheckCircle2 className="h-3 w-3" /> Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-red-950/60 px-2 py-0.5 text-[10px] font-medium text-red-400 border border-red-900">
+                        <span className="inline-flex items-center gap-1 rounded border border-red-900 bg-red-950/60 px-2 py-0.5 text-[10px] font-medium text-red-400">
                           <AlertTriangle className="h-3 w-3" /> Suspended
                         </span>
                       )}
@@ -250,8 +254,12 @@ export function OrgsConsole({
                         <span className="text-[11px] text-stone-500">Optional</span>
                       )}
                     </td>
-                    <td className="p-3 font-mono font-semibold text-stone-300">{org.outletCount}</td>
-                    <td className="p-3 font-mono font-semibold text-stone-300">{org.memberCount}</td>
+                    <td className="p-3 font-mono font-semibold text-stone-300">
+                      {org.outletCount}
+                    </td>
+                    <td className="p-3 font-mono font-semibold text-stone-300">
+                      {org.memberCount}
+                    </td>
                     <td className="p-3 font-mono text-purple-400">v{org.version}</td>
                     <td className="p-3 text-right">
                       <button
@@ -311,12 +319,16 @@ export function OrgsConsole({
             <div className="flex items-start justify-between border-b border-stone-800 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-white">{selectedOrg.organization.name}</h2>
-                  <span className="font-mono text-xs text-purple-400 font-semibold">
+                  <h2 className="text-base font-bold text-white">
+                    {selectedOrg.organization.name}
+                  </h2>
+                  <span className="font-mono text-xs font-semibold text-purple-400">
                     v{selectedOrg.organization.version}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-stone-400">ID: {selectedOrg.organization.id}</p>
+                <p className="font-mono text-[10px] text-stone-400">
+                  ID: {selectedOrg.organization.id}
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -334,8 +346,8 @@ export function OrgsConsole({
               <div
                 className={`mt-4 rounded-lg p-3 text-xs font-medium ${
                   actionMessage.type === "success"
-                    ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                    : "bg-red-950 text-red-300 border border-red-800"
+                    ? "border border-emerald-800 bg-emerald-950 text-emerald-300"
+                    : "border border-red-800 bg-red-950 text-red-300"
                 }`}
               >
                 {actionMessage.text}
@@ -349,7 +361,7 @@ export function OrgsConsole({
                   {/* Enter Diagnostic Mode Button */}
                   <button
                     onClick={handleDiagnosticView}
-                    className="flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-500 shadow"
+                    className="flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-orange-500"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     <span>View as Organization (Diagnostic Mode)</span>
@@ -361,7 +373,11 @@ export function OrgsConsole({
                     className="flex items-center gap-1.5 rounded-lg border border-stone-700 bg-stone-800 px-3 py-1.5 text-xs font-semibold text-stone-200 hover:bg-stone-700"
                   >
                     <Shield className="h-3.5 w-3.5 text-stone-400" />
-                    <span>{selectedOrg.organization.mfaRequired ? "Disable MFA Requirement" : "Enforce MFA"}</span>
+                    <span>
+                      {selectedOrg.organization.mfaRequired
+                        ? "Disable MFA Requirement"
+                        : "Enforce MFA"}
+                    </span>
                   </button>
 
                   {/* Suspend / Reactivate trigger */}
@@ -390,7 +406,8 @@ export function OrgsConsole({
               {showSuspendPrompt && (
                 <div className="mt-4 rounded-lg border border-red-800/80 bg-red-950/40 p-3 text-xs">
                   <p className="font-semibold text-red-300">
-                    Are you sure you want to suspend this organization? Staff and public ordering will be disabled.
+                    Are you sure you want to suspend this organization? Staff and public ordering
+                    will be disabled.
                   </p>
                   <input
                     type="text"
@@ -422,7 +439,7 @@ export function OrgsConsole({
               <div className="rounded-xl border border-stone-800 bg-stone-950/60 p-4">
                 <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
                   <Store className="h-4 w-4 text-orange-400" />
-                  <h3 className="font-bold text-white uppercase tracking-wider text-[11px]">
+                  <h3 className="text-[11px] font-bold tracking-wider text-white uppercase">
                     Outlets ({selectedOrg.outlets.length})
                   </h3>
                 </div>
@@ -450,7 +467,7 @@ export function OrgsConsole({
                             {out.fulfillmentModes?.join(", ") || "dine_in"}
                           </span>
                           {out.isPublished ? (
-                            <span className="rounded bg-emerald-950 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-800">
+                            <span className="rounded border border-emerald-800 bg-emerald-950 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
                               Published
                             </span>
                           ) : (
@@ -469,7 +486,7 @@ export function OrgsConsole({
               <div className="rounded-xl border border-stone-800 bg-stone-950/60 p-4">
                 <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
                   <Users className="h-4 w-4 text-blue-400" />
-                  <h3 className="font-bold text-white uppercase tracking-wider text-[11px]">
+                  <h3 className="text-[11px] font-bold tracking-wider text-white uppercase">
                     Members & Roles ({selectedOrg.members.length})
                   </h3>
                 </div>
@@ -478,9 +495,11 @@ export function OrgsConsole({
                     <div key={m.id} className="flex items-center justify-between py-2 text-xs">
                       <div>
                         <span className="font-semibold text-white">{m.userName}</span>
-                        <span className="ml-2 font-mono text-[10px] text-stone-400">{m.userEmail}</span>
+                        <span className="ml-2 font-mono text-[10px] text-stone-400">
+                          {m.userEmail}
+                        </span>
                       </div>
-                      <span className="rounded bg-stone-800 px-2 py-0.5 text-[10px] font-semibold text-purple-400 capitalize border border-stone-700">
+                      <span className="rounded border border-stone-700 bg-stone-800 px-2 py-0.5 text-[10px] font-semibold text-purple-400 capitalize">
                         {m.role}
                       </span>
                     </div>

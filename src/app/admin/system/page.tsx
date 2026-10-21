@@ -6,14 +6,7 @@ import {
   retryOutboxEvent,
 } from "@/modules/admin/system.service";
 import { SystemConsole } from "./system-console";
-import {
-  Database,
-  Activity,
-  Layers,
-  CheckCircle2,
-  XCircle,
-  GitBranch,
-} from "lucide-react";
+import { Database, Activity, Layers, CheckCircle2, XCircle, GitBranch } from "lucide-react";
 import { revalidatePath } from "next/cache";
 
 export default async function AdminSystemPage() {
@@ -39,16 +32,23 @@ export default async function AdminSystemPage() {
   const outboxStatuses = [
     { label: "Pending", count: health.outbox.counts["pending"] || 0, color: "text-amber-400" },
     { label: "Dispatched", count: health.outbox.counts["dispatched"] || 0, color: "text-blue-400" },
-    { label: "Completed", count: health.outbox.counts["completed"] || 0, color: "text-emerald-400" },
+    {
+      label: "Completed",
+      count: health.outbox.counts["completed"] || 0,
+      color: "text-emerald-400",
+    },
     { label: "Failed", count: health.outbox.counts["failed"] || 0, color: "text-red-400" },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">System Infrastructure & Queues</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          System Infrastructure & Queues
+        </h1>
         <p className="text-xs text-stone-400">
-          Telemetry, PostgreSQL connection pool, Redis workloads, outbox state, and domain projections.
+          Telemetry, PostgreSQL connection pool, Redis workloads, outbox state, and domain
+          projections.
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export default async function AdminSystemPage() {
         {/* PostgreSQL Pool */}
         <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
               PostgreSQL Data Plane
             </span>
             <Database className="h-4 w-4 text-blue-400" />
@@ -75,7 +75,9 @@ export default async function AdminSystemPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Max Connection Pool</span>
-              <span className="font-mono text-stone-200">{health.database.poolMax} connections</span>
+              <span className="font-mono text-stone-200">
+                {health.database.poolMax} connections
+              </span>
             </div>
           </div>
         </div>
@@ -83,7 +85,7 @@ export default async function AdminSystemPage() {
         {/* Redis Workloads */}
         <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
               Redis Workloads
             </span>
             <Activity className="h-4 w-4 text-orange-400" />
@@ -135,14 +137,17 @@ export default async function AdminSystemPage() {
         {/* Outbox Overview */}
         <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
               Outbox Event Pipeline
             </span>
             <Layers className="h-4 w-4 text-amber-400" />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs">
             {outboxStatuses.map((st) => (
-              <div key={st.label} className="rounded-lg bg-stone-950/60 p-2 border border-stone-800">
+              <div
+                key={st.label}
+                className="rounded-lg border border-stone-800 bg-stone-950/60 p-2"
+              >
                 <span className="block text-[10px] text-stone-500 uppercase">{st.label}</span>
                 <span className={`text-base font-extrabold ${st.color}`}>{st.count}</span>
               </div>
@@ -162,7 +167,7 @@ export default async function AdminSystemPage() {
         </div>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-xs text-stone-300">
-            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
               <tr>
                 <th className="p-3">Organization</th>
                 <th className="p-3">Org ID</th>
@@ -183,7 +188,9 @@ export default async function AdminSystemPage() {
                     <td className="p-3 font-sans font-semibold text-white">{p.org_name}</td>
                     <td className="p-3 text-stone-400">{p.organization_id}</td>
                     <td className="p-3 font-bold text-purple-400">v{p.version}</td>
-                    <td className="p-3 text-stone-400 font-sans">{new Date(p.updated_at).toLocaleString()}</td>
+                    <td className="p-3 font-sans text-stone-400">
+                      {new Date(p.updated_at).toLocaleString()}
+                    </td>
                   </tr>
                 ))
               )}

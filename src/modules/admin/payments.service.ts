@@ -12,10 +12,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 
 export async function listSubscriptionPlans() {
   const db = getDb();
-  return db
-    .select()
-    .from(subscriptionPlans)
-    .orderBy(subscriptionPlans.sortOrder);
+  return db.select().from(subscriptionPlans).orderBy(subscriptionPlans.sortOrder);
 }
 
 export async function updateSubscriptionPlan(
@@ -42,7 +39,9 @@ export async function updateSubscriptionPlan(
   return updated;
 }
 
-export async function listSubscriptions(params: { page?: number; limit?: number; status?: string } = {}) {
+export async function listSubscriptions(
+  params: { page?: number; limit?: number; status?: string } = {}
+) {
   const db = getDb();
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
@@ -93,12 +92,14 @@ export async function listSubscriptions(params: { page?: number; limit?: number;
   };
 }
 
-export async function listEntitlementGrants(params: {
-  page?: number;
-  limit?: number;
-  organizationId?: string;
-  activeOnly?: boolean;
-} = {}) {
+export async function listEntitlementGrants(
+  params: {
+    page?: number;
+    limit?: number;
+    organizationId?: string;
+    activeOnly?: boolean;
+  } = {}
+) {
   const db = getDb();
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
@@ -213,11 +214,7 @@ export async function issueEntitlementGrant(
   return { id: grantId };
 }
 
-export async function revokeEntitlementGrant(
-  actor: AdminActor,
-  grantId: string,
-  reason: string
-) {
+export async function revokeEntitlementGrant(actor: AdminActor, grantId: string, reason: string) {
   if (!reason?.trim() || reason.trim().length < 5) {
     throw new ValidationError("A reason of at least 5 characters is required for revocation");
   }

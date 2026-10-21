@@ -86,7 +86,10 @@ export function UsersConsole({
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedUser, setSelectedUser] = useState<UserDetailPayload | null>(null);
-  const [actionMessage, setActionMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [actionMessage, setActionMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -129,7 +132,12 @@ export function UsersConsole({
 
   async function handleRevokeSessions() {
     if (!selectedUser) return;
-    if (!confirm(`Revoke all active sessions for ${selectedUser.user.email}? They will be logged out immediately.`)) return;
+    if (
+      !confirm(
+        `Revoke all active sessions for ${selectedUser.user.email}? They will be logged out immediately.`
+      )
+    )
+      return;
     try {
       await onRevokeSessions(selectedUser.user.id);
       setSelectedUser({ ...selectedUser, sessions: [] });
@@ -150,7 +158,10 @@ export function UsersConsole({
           twoFactor: { ...selectedUser.twoFactor, failedVerificationCount: 0, lockedUntil: null },
         });
       }
-      setActionMessage({ text: "Two-factor lockout and failed attempts cleared.", type: "success" });
+      setActionMessage({
+        text: "Two-factor lockout and failed attempts cleared.",
+        type: "success",
+      });
     } catch (err: any) {
       setActionMessage({ text: err.message || "Unlock failed", type: "error" });
     }
@@ -158,7 +169,12 @@ export function UsersConsole({
 
   async function handleToggleSuperAdmin(enable: boolean) {
     if (!selectedUser) return;
-    if (!confirm(`Are you sure you want to ${enable ? "grant" : "revoke"} Superadmin privileges for ${selectedUser.user.email}?`)) return;
+    if (
+      !confirm(
+        `Are you sure you want to ${enable ? "grant" : "revoke"} Superadmin privileges for ${selectedUser.user.email}?`
+      )
+    )
+      return;
     try {
       await onToggleSuperAdmin(selectedUser.user.id, enable);
       setSelectedUser({
@@ -176,15 +192,15 @@ export function UsersConsole({
     <div className="space-y-4">
       {/* Search Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <form onSubmit={handleSearchSubmit} className="flex flex-1 max-w-md items-center gap-2">
+        <form onSubmit={handleSearchSubmit} className="flex max-w-md flex-1 items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-500" />
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-stone-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, email, or user ID..."
-              className="w-full rounded-xl border border-stone-800 bg-stone-900 py-2 pl-9 pr-4 text-xs text-white placeholder-stone-500 focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-stone-800 bg-stone-900 py-2 pr-4 pl-9 text-xs text-white placeholder-stone-500 focus:border-orange-500 focus:outline-none"
             />
           </div>
           <button
@@ -196,7 +212,8 @@ export function UsersConsole({
         </form>
 
         <span className="text-xs text-stone-400">
-          Showing <strong className="text-white">{users.length}</strong> of <strong className="text-white">{total}</strong> users
+          Showing <strong className="text-white">{users.length}</strong> of{" "}
+          <strong className="text-white">{total}</strong> users
         </span>
       </div>
 
@@ -204,7 +221,7 @@ export function UsersConsole({
       <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-stone-300">
-            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
               <tr>
                 <th className="p-3">User</th>
                 <th className="p-3">Email Status</th>
@@ -226,15 +243,15 @@ export function UsersConsole({
                   <tr key={u.id} className="hover:bg-stone-800/40">
                     <td className="p-3">
                       <div className="font-semibold text-white">{u.name}</div>
-                      <div className="text-[11px] text-stone-400 font-mono">{u.email}</div>
+                      <div className="font-mono text-[11px] text-stone-400">{u.email}</div>
                     </td>
                     <td className="p-3">
                       {u.emailVerified ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-900">
+                        <span className="inline-flex items-center gap-1 rounded border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
                           <CheckCircle2 className="h-3 w-3" /> Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-amber-950/60 px-2 py-0.5 text-[10px] font-medium text-amber-400 border border-amber-900">
+                        <span className="inline-flex items-center gap-1 rounded border border-amber-900 bg-amber-950/60 px-2 py-0.5 text-[10px] font-medium text-amber-400">
                           <AlertTriangle className="h-3 w-3" /> Pending
                         </span>
                       )}
@@ -250,14 +267,14 @@ export function UsersConsole({
                     </td>
                     <td className="p-3">
                       {u.isSuperAdmin ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-orange-950 px-2 py-0.5 text-[10px] font-bold text-orange-400 border border-orange-800">
+                        <span className="inline-flex items-center gap-1 rounded border border-orange-800 bg-orange-950 px-2 py-0.5 text-[10px] font-bold text-orange-400">
                           <ShieldAlert className="h-3 w-3" /> Superadmin
                         </span>
                       ) : (
                         <span className="text-[11px] text-stone-400">User</span>
                       )}
                     </td>
-                    <td className="p-3 text-[11px] text-stone-400 font-mono">
+                    <td className="p-3 font-mono text-[11px] text-stone-400">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
                     <td className="p-3 text-right">
@@ -320,7 +337,7 @@ export function UsersConsole({
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold text-white">{selectedUser.user.name}</h2>
                   {selectedUser.user.isSuperAdmin && (
-                    <span className="rounded bg-orange-950 px-2 py-0.5 text-[10px] font-bold text-orange-400 border border-orange-800">
+                    <span className="rounded border border-orange-800 bg-orange-950 px-2 py-0.5 text-[10px] font-bold text-orange-400">
                       Superadmin
                     </span>
                   )}
@@ -341,8 +358,8 @@ export function UsersConsole({
               <div
                 className={`mt-4 rounded-lg p-3 text-xs font-medium ${
                   actionMessage.type === "success"
-                    ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                    : "bg-red-950 text-red-300 border border-red-800"
+                    ? "border border-emerald-800 bg-emerald-950 text-emerald-300"
+                    : "border border-red-800 bg-red-950 text-red-300"
                 }`}
               >
                 {actionMessage.text}
@@ -353,14 +370,14 @@ export function UsersConsole({
             <div className="mt-5 space-y-5 text-xs">
               {/* Account Controls */}
               <div className="rounded-xl border border-stone-800 bg-stone-950/60 p-4">
-                <h3 className="font-bold text-stone-200 uppercase tracking-wider text-[11px]">
+                <h3 className="text-[11px] font-bold tracking-wider text-stone-200 uppercase">
                   Administrative Actions
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selectedUser.user.emailVerified ? (
                     <button
                       onClick={() => handleToggleVerify(false)}
-                      className="rounded bg-stone-800 px-3 py-1.5 font-semibold text-amber-400 hover:bg-stone-700 border border-stone-700"
+                      className="rounded border border-stone-700 bg-stone-800 px-3 py-1.5 font-semibold text-amber-400 hover:bg-stone-700"
                     >
                       Unverify Email
                     </button>
@@ -375,7 +392,7 @@ export function UsersConsole({
 
                   <button
                     onClick={handleRevokeSessions}
-                    className="flex items-center gap-1 rounded bg-red-900/60 px-3 py-1.5 font-semibold text-red-300 hover:bg-red-900 border border-red-800"
+                    className="flex items-center gap-1 rounded border border-red-800 bg-red-900/60 px-3 py-1.5 font-semibold text-red-300 hover:bg-red-900"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     <span>Revoke All Sessions ({selectedUser.sessions.length})</span>
@@ -384,7 +401,7 @@ export function UsersConsole({
                   {selectedUser.twoFactor && (
                     <button
                       onClick={handleUnlock2FA}
-                      className="flex items-center gap-1 rounded bg-blue-900/60 px-3 py-1.5 font-semibold text-blue-300 hover:bg-blue-900 border border-blue-800"
+                      className="flex items-center gap-1 rounded border border-blue-800 bg-blue-900/60 px-3 py-1.5 font-semibold text-blue-300 hover:bg-blue-900"
                     >
                       <Unlock className="h-3.5 w-3.5" />
                       <span>Clear 2FA Lockout</span>
@@ -394,7 +411,7 @@ export function UsersConsole({
                   {selectedUser.user.isSuperAdmin ? (
                     <button
                       onClick={() => handleToggleSuperAdmin(false)}
-                      className="rounded bg-stone-800 px-3 py-1.5 font-semibold text-stone-400 hover:bg-stone-700 border border-stone-700"
+                      className="rounded border border-stone-700 bg-stone-800 px-3 py-1.5 font-semibold text-stone-400 hover:bg-stone-700"
                     >
                       Revoke Superadmin Role
                     </button>
@@ -412,7 +429,7 @@ export function UsersConsole({
 
               {/* Organization Memberships */}
               <div className="rounded-xl border border-stone-800 bg-stone-950/60 p-4">
-                <h3 className="font-bold text-stone-200 uppercase tracking-wider text-[11px]">
+                <h3 className="text-[11px] font-bold tracking-wider text-stone-200 uppercase">
                   Tenant Memberships ({selectedUser.memberships.length})
                 </h3>
                 {selectedUser.memberships.length === 0 ? (
@@ -423,9 +440,11 @@ export function UsersConsole({
                       <div key={m.membershipId} className="flex items-center justify-between py-2">
                         <div>
                           <span className="font-semibold text-white">{m.organizationName}</span>
-                          <span className="ml-2 font-mono text-[10px] text-stone-500">{m.organizationId}</span>
+                          <span className="ml-2 font-mono text-[10px] text-stone-500">
+                            {m.organizationId}
+                          </span>
                         </div>
-                        <span className="rounded bg-stone-800 px-2 py-0.5 text-[10px] font-semibold text-purple-400 border border-stone-700 capitalize">
+                        <span className="rounded border border-stone-700 bg-stone-800 px-2 py-0.5 text-[10px] font-semibold text-purple-400 capitalize">
                           {m.role}
                         </span>
                       </div>
@@ -436,7 +455,7 @@ export function UsersConsole({
 
               {/* Active Sessions */}
               <div className="rounded-xl border border-stone-800 bg-stone-950/60 p-4">
-                <h3 className="font-bold text-stone-200 uppercase tracking-wider text-[11px]">
+                <h3 className="text-[11px] font-bold tracking-wider text-stone-200 uppercase">
                   Active Sessions ({selectedUser.sessions.length})
                 </h3>
                 {selectedUser.sessions.length === 0 ? (
@@ -444,12 +463,20 @@ export function UsersConsole({
                 ) : (
                   <div className="mt-2 space-y-2">
                     {selectedUser.sessions.map((s) => (
-                      <div key={s.id} className="rounded bg-stone-900 p-2.5 font-mono text-[11px] border border-stone-800">
+                      <div
+                        key={s.id}
+                        className="rounded border border-stone-800 bg-stone-900 p-2.5 font-mono text-[11px]"
+                      >
                         <div className="flex justify-between text-stone-300">
                           <span>IP: {s.ipAddress || "Unknown"}</span>
-                          <span className="text-stone-500">Expires: {new Date(s.expiresAt).toLocaleDateString()}</span>
+                          <span className="text-stone-500">
+                            Expires: {new Date(s.expiresAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <div className="mt-1 truncate text-stone-500 text-[10px]" title={s.userAgent || ""}>
+                        <div
+                          className="mt-1 truncate text-[10px] text-stone-500"
+                          title={s.userAgent || ""}
+                        >
                           UA: {s.userAgent || "Unknown"}
                         </div>
                       </div>

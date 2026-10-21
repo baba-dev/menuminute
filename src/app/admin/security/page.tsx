@@ -25,7 +25,8 @@ export default async function AdminSecurityPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white">Security & Audit Control</h1>
         <p className="text-xs text-stone-400">
-          Real-time rate limit unblocking, operator intervention trail, and security policy management.
+          Real-time rate limit unblocking, operator intervention trail, and security policy
+          management.
         </p>
       </div>
 

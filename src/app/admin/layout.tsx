@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="block text-sm font-bold tracking-tight text-white">
                 MenuMinute Admin
               </span>
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-orange-400">
+              <span className="block text-[10px] font-semibold tracking-wider text-orange-400 uppercase">
                 Control Plane
               </span>
             </div>
@@ -48,10 +48,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               Environment
             </span>
             <span
-              className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+              className={`rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
                 isProd
-                  ? "bg-red-950 text-red-400 border border-red-800"
-                  : "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                  ? "border border-red-800 bg-red-950 text-red-400"
+                  : "border border-emerald-800 bg-emerald-950 text-emerald-400"
               }`}
             >
               {process.env.NODE_ENV || "development"}

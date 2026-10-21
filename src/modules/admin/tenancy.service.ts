@@ -158,7 +158,11 @@ export async function setOrganizationActive(
       version: sql`version + 1`,
     })
     .where(eq(organizations.id, orgId))
-    .returning({ id: organizations.id, name: organizations.name, isActive: organizations.isActive });
+    .returning({
+      id: organizations.id,
+      name: organizations.name,
+      isActive: organizations.isActive,
+    });
 
   if (!updated) throw new NotFoundError("Organization not found");
 

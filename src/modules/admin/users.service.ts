@@ -1,5 +1,12 @@
 import { getDb } from "@/db";
-import { users, sessions, accounts, twoFactors, organizationMembers, organizations } from "@/db/schema";
+import {
+  users,
+  sessions,
+  accounts,
+  twoFactors,
+  organizationMembers,
+  organizations,
+} from "@/db/schema";
 import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
 import { type AdminActor, recordAdminAction, SUPERADMIN_EMAIL } from "@/lib/admin-guard";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
@@ -23,7 +30,9 @@ export async function listUsers(params: ListUsersParams = {}) {
 
   if (params.search?.trim()) {
     const q = `%${params.search.trim()}%`;
-    conditions.push(or(ilike(users.name, q), ilike(users.email, q), eq(users.id, params.search.trim())));
+    conditions.push(
+      or(ilike(users.name, q), ilike(users.email, q), eq(users.id, params.search.trim()))
+    );
   }
 
   if (typeof params.filterVerified === "boolean") {
@@ -163,7 +172,10 @@ export async function toggleUserVerification(actor: AdminActor, userId: string, 
 
 export async function revokeUserSessions(actor: AdminActor, userId: string) {
   const db = getDb();
-  const deleted = await db.delete(sessions).where(eq(sessions.userId, userId)).returning({ id: sessions.id });
+  const deleted = await db
+    .delete(sessions)
+    .where(eq(sessions.userId, userId))
+    .returning({ id: sessions.id });
 
   await recordAdminAction(actor, "user.sessions.revoke_all", "user", userId, {
     revokedCount: deleted.length,
@@ -186,7 +198,11 @@ export async function unlockUserTwoFactor(actor: AdminActor, userId: string) {
   return { success: true };
 }
 
-export async function setUserSuperAdmin(actor: AdminActor, targetUserId: string, isSuperAdmin: boolean) {
+export async function setUserSuperAdmin(
+  actor: AdminActor,
+  targetUserId: string,
+  isSuperAdmin: boolean
+) {
   if (actor.id === targetUserId && !isSuperAdmin) {
     throw new ForbiddenError("Cannot revoke superadmin privileges from your own account");
   }

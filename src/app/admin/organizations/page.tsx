@@ -58,9 +58,12 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Organizations & Tenancy Control</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          Organizations & Tenancy Control
+        </h1>
         <p className="text-xs text-stone-400">
-          Tenant directory, outlet/brand boundaries, suspension controls, and diagnostic support access.
+          Tenant directory, outlet/brand boundaries, suspension controls, and diagnostic support
+          access.
         </p>
       </div>
 

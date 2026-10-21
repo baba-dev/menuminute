@@ -162,7 +162,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="pt-2">
               <Link
                 href="/admin"
-                className="flex items-center gap-2.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 transition hover:bg-orange-100 shadow-sm"
+                className="flex items-center gap-2.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 shadow-sm transition hover:bg-orange-100"
               >
                 <ShieldAlert className="h-4 w-4 text-orange-600" />
                 <span>Platform Admin</span>

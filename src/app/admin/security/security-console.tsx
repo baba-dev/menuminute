@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Trash2,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Trash2, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 
 interface RateLimitRow {
   id: string;
@@ -69,7 +64,7 @@ export function SecurityConsole({
       <div className="flex border-b border-stone-800 text-xs font-semibold">
         <button
           onClick={() => setActiveTab("audits")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "audits"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -79,7 +74,7 @@ export function SecurityConsole({
         </button>
         <button
           onClick={() => setActiveTab("ratelimits")}
-          className={`px-4 py-2.5 transition border-b-2 ${
+          className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "ratelimits"
               ? "border-orange-500 text-orange-400"
               : "border-transparent text-stone-400 hover:text-stone-200"
@@ -93,8 +88,8 @@ export function SecurityConsole({
         <div
           className={`rounded-lg p-3 text-xs font-medium ${
             message.type === "success"
-              ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-              : "bg-red-950 text-red-300 border border-red-800"
+              ? "border border-emerald-800 bg-emerald-950 text-emerald-300"
+              : "border border-red-800 bg-red-950 text-red-300"
           }`}
         >
           {message.text}
@@ -108,7 +103,8 @@ export function SecurityConsole({
             <div>
               <h2 className="text-sm font-bold text-white">Platform Administrative Audit Trail</h2>
               <p className="text-xs text-stone-400">
-                Tamper-evident log of all operator interventions, grants, session revocations, and status edits.
+                Tamper-evident log of all operator interventions, grants, session revocations, and
+                status edits.
               </p>
             </div>
             <button
@@ -123,7 +119,7 @@ export function SecurityConsole({
           <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-stone-300">
-                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                   <tr>
                     <th className="p-3">Timestamp</th>
                     <th className="p-3">Operator</th>
@@ -145,7 +141,7 @@ export function SecurityConsole({
                       const isExpanded = expandedLogId === log.id;
                       return (
                         <tr key={log.id} className="hover:bg-stone-800/40">
-                          <td className="p-3 font-mono text-[11px] text-stone-400 whitespace-nowrap">
+                          <td className="p-3 font-mono text-[11px] whitespace-nowrap text-stone-400">
                             {new Date(log.createdAt).toLocaleString()}
                           </td>
                           <td className="p-3 font-mono text-stone-200">{log.actorEmail}</td>
@@ -158,17 +154,23 @@ export function SecurityConsole({
                               </span>
                             )}
                           </td>
-                          <td className="p-3 font-mono text-[11px] text-stone-400">{log.ipAddress || "—"}</td>
+                          <td className="p-3 font-mono text-[11px] text-stone-400">
+                            {log.ipAddress || "—"}
+                          </td>
                           <td className="p-3 text-right">
                             <button
                               onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                              className="inline-flex items-center gap-1 rounded bg-stone-800 px-2 py-0.5 text-[10px] font-mono text-stone-300 hover:bg-stone-700"
+                              className="inline-flex items-center gap-1 rounded bg-stone-800 px-2 py-0.5 font-mono text-[10px] text-stone-300 hover:bg-stone-700"
                             >
                               <span>{isExpanded ? "Hide" : "Inspect"}</span>
-                              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                              {isExpanded ? (
+                                <ChevronUp className="h-3 w-3" />
+                              ) : (
+                                <ChevronDown className="h-3 w-3" />
+                              )}
                             </button>
                             {isExpanded && (
-                              <div className="mt-2 text-left rounded bg-stone-950 p-3 font-mono text-[10px] text-stone-300 border border-stone-800 max-w-sm overflow-x-auto">
+                              <div className="mt-2 max-w-sm overflow-x-auto rounded border border-stone-800 bg-stone-950 p-3 text-left font-mono text-[10px] text-stone-300">
                                 <pre>{JSON.stringify(log.details, null, 2)}</pre>
                               </div>
                             )}
@@ -206,7 +208,7 @@ export function SecurityConsole({
           <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-stone-300">
-                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                   <tr>
                     <th className="p-3">Rate Limit Key</th>
                     <th className="p-3">Hit Count</th>
@@ -217,14 +219,14 @@ export function SecurityConsole({
                 <tbody className="divide-y divide-stone-800/60 font-mono text-xs">
                   {rateLimits.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-6 text-center text-stone-500 font-sans">
+                      <td colSpan={4} className="p-6 text-center font-sans text-stone-500">
                         No active rate limits recorded.
                       </td>
                     </tr>
                   ) : (
                     rateLimits.map((rl) => (
                       <tr key={rl.id} className="hover:bg-stone-800/40">
-                        <td className="p-3 font-semibold text-orange-400 break-all">{rl.key}</td>
+                        <td className="p-3 font-semibold break-all text-orange-400">{rl.key}</td>
                         <td className="p-3 text-stone-200">{rl.count}</td>
                         <td className="p-3 text-[11px] text-stone-400">
                           {new Date(Number(rl.lastRequest)).toLocaleString()}
@@ -233,7 +235,7 @@ export function SecurityConsole({
                           <button
                             onClick={() => handleClear(rl.key)}
                             disabled={clearingKey === rl.key}
-                            className="inline-flex items-center gap-1 rounded bg-red-950/60 px-2.5 py-1 text-[11px] font-semibold text-red-400 hover:bg-red-900 border border-red-800 disabled:opacity-50"
+                            className="inline-flex items-center gap-1 rounded border border-red-800 bg-red-950/60 px-2.5 py-1 text-[11px] font-semibold text-red-400 hover:bg-red-900 disabled:opacity-50"
                           >
                             <Trash2 className="h-3 w-3" />
                             <span>{clearingKey === rl.key ? "Clearing..." : "Clear Key"}</span>

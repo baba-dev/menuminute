@@ -48,9 +48,12 @@ export default async function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Payments, Billing & Entitlements</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          Payments, Billing & Entitlements
+        </h1>
         <p className="text-xs text-stone-400">
-          Operator entitlement grants engine, SaaS plans catalog, and multi-currency revenue analytics.
+          Operator entitlement grants engine, SaaS plans catalog, and multi-currency revenue
+          analytics.
         </p>
       </div>
 

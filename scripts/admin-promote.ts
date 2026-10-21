@@ -6,7 +6,9 @@ async function main() {
   const flag = operation === "promote";
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!["promote", "revoke"].includes(operation ?? "") || process.argv.length !== 4) {
-    throw new Error("Specify an explicit promote or revoke operation using the migration-owner environment.");
+    throw new Error(
+      "Specify an explicit promote or revoke operation using the migration-owner environment."
+    );
   }
   if (!flag && email === "admin@bababuilds.com") {
     throw new Error("Cannot revoke the canonical root account through this CLI.");

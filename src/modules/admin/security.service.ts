@@ -37,13 +37,16 @@ export async function clearRateLimitKey(actor: AdminActor, key: string) {
   return { success: true, key };
 }
 
-export async function listAdminAuditLogs(actor: AdminActor, params: {
-  page?: number;
-  limit?: number;
-  action?: string;
-  actorEmail?: string;
-  targetType?: string;
-} = {}) {
+export async function listAdminAuditLogs(
+  actor: AdminActor,
+  params: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    actorEmail?: string;
+    targetType?: string;
+  } = {}
+) {
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -67,9 +70,9 @@ export async function listAdminAuditLogs(actor: AdminActor, params: {
       .select({ count: sql<number>`count(*)::int` })
       .from(adminAuditLogs)
       .where(whereClause);
-  
+
     const total = countResult?.count ?? 0;
-  
+
     const rows = await tx
       .select()
       .from(adminAuditLogs)
@@ -77,7 +80,7 @@ export async function listAdminAuditLogs(actor: AdminActor, params: {
       .orderBy(desc(adminAuditLogs.createdAt))
       .limit(limit)
       .offset(offset);
-  
+
     return {
       logs: rows,
       total,

@@ -65,14 +65,14 @@ export async function recordAdminAction(
 
   await withActor({ userId: actor.id }, async (tx) => {
     await tx.insert(adminAuditLogs).values({
-    id: crypto.randomUUID(),
-    actorId: actor.id,
-    actorEmail: actor.email,
-    action,
-    targetType,
-    targetId: targetId ?? null,
-    details: details ?? null,
-    ipAddress: ip,
+      id: crypto.randomUUID(),
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action,
+      targetType,
+      targetId: targetId ?? null,
+      details: details ?? null,
+      ipAddress: ip,
       userAgent,
     });
   });

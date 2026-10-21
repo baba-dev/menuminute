@@ -73,7 +73,8 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white">Users & Accounts Control</h1>
         <p className="text-xs text-stone-400">
-          Global directory, email verification states, 2FA recovery, session revocation, and superadmin elevation.
+          Global directory, email verification states, 2FA recovery, session revocation, and
+          superadmin elevation.
         </p>
       </div>
 

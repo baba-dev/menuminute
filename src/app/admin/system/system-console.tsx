@@ -34,7 +34,10 @@ export function SystemConsole({
     try {
       const res = await onRetryAction(eventId);
       if (res.success) {
-        setMessage({ text: `Event ${eventId.slice(0, 8)} successfully queued for retry.`, type: "success" });
+        setMessage({
+          text: `Event ${eventId.slice(0, 8)} successfully queued for retry.`,
+          type: "success",
+        });
         startTransition(() => {
           router.refresh();
         });
@@ -54,8 +57,8 @@ export function SystemConsole({
         <div
           className={`flex items-center gap-2 rounded-lg p-3 text-xs font-medium ${
             message.type === "success"
-              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
-              : "bg-red-950/80 text-red-300 border border-red-800"
+              ? "border border-emerald-800 bg-emerald-950/80 text-emerald-300"
+              : "border border-red-800 bg-red-950/80 text-red-300"
           }`}
         >
           {message.type === "success" ? (
@@ -87,13 +90,17 @@ export function SystemConsole({
         {failedEvents.length === 0 ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
-            <p className="mt-2 text-xs font-semibold text-stone-300">No failed events in outbox queue</p>
-            <p className="text-[11px] text-stone-500">All background transactions have settled cleanly.</p>
+            <p className="mt-2 text-xs font-semibold text-stone-300">
+              No failed events in outbox queue
+            </p>
+            <p className="text-[11px] text-stone-500">
+              All background transactions have settled cleanly.
+            </p>
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left text-xs text-stone-300">
-              <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+              <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                 <tr>
                   <th className="p-3">Event Type</th>
                   <th className="p-3">Organization</th>
@@ -107,14 +114,21 @@ export function SystemConsole({
                 {failedEvents.map((evt) => (
                   <tr key={evt.id} className="hover:bg-stone-800/40">
                     <td className="p-3 font-semibold text-orange-400">{evt.type}</td>
-                    <td className="p-3 text-stone-400 font-sans">{evt.organization_id.slice(0, 12)}...</td>
+                    <td className="p-3 font-sans text-stone-400">
+                      {evt.organization_id.slice(0, 12)}...
+                    </td>
                     <td className="p-3 text-stone-300">
                       {evt.attempts} / {evt.max_attempts}
                     </td>
-                    <td className="max-w-xs truncate p-3 text-red-400" title={evt.last_error || "Unknown"}>
+                    <td
+                      className="max-w-xs truncate p-3 text-red-400"
+                      title={evt.last_error || "Unknown"}
+                    >
                       {evt.last_error || "None"}
                     </td>
-                    <td className="p-3 text-stone-400 font-sans">{new Date(evt.created_at).toLocaleString()}</td>
+                    <td className="p-3 font-sans text-stone-400">
+                      {new Date(evt.created_at).toLocaleString()}
+                    </td>
                     <td className="p-3 text-right font-sans">
                       <button
                         onClick={() => handleRetry(evt.id)}
