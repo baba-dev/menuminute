@@ -108,7 +108,13 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByLabel("Find a dish or section").fill("nonexistent-dish-search");
   await expect(page.getByLabel("Find a dish or section")).toHaveValue("nonexistent-dish-search");
   await page.getByLabel("Find a dish or section").clear();
-  await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+  if ((page.viewportSize()?.width ?? 1440) <= 720) {
+    await page.getByRole("button", { name: "Preview draft" }).click();
+    await expect(page.getByText("Draft preview — not public")).toBeVisible();
+    await page.getByRole("button", { name: "Back to edit" }).click();
+  } else {
+    await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
   await page.getByRole("button", { name: "+ Add dishes" }).click();
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   await page.getByLabel("Category name 1", { exact: true }).fill("Chef’s specials");
@@ -364,4 +370,92 @@ test("PR C bulk composer deduplicates pasted dishes and matches Hindi input with
   await search.fill("पनीर");
   await expect(page.getByRole("option", { name: /Paneer Tikka/ })).toBeVisible();
   expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
+});
+
+test("Recipe Atelier uses the approved media, meaningful draft metrics and adaptive editor", async ({
+  page,
+  request,
+}, info) => {
+  test.setTimeout(90000);
+  const owner = await seed(true);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(owner.email);
+  await page.getByLabel("Password", { exact: true }).fill(owner.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+  const studio = page.getByTestId("recipe-atelier-studio");
+  await expect(studio).toBeVisible();
+  await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
+  await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
+  const compact = (page.viewportSize()?.width ?? 1440) <= 720;
+  if (compact) {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
+  } else {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
+  await expect(studio.getByRole("navigation", { name: "Filter menu sections" })).toBeVisible();
+  await studio.locator("summary[aria-label='About Sections']").click();
+  await expect(studio.getByText("Active sections in the selected editable draft.")).toBeVisible();
+  await studio.getByRole("button", { name: "Preview draft" }).click();
+  await expect(studio.getByText("Draft preview — not public")).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Save draft" })).toBeDisabled();
+  await expect(studio.getByRole("button", { name: "Publish menu" })).toBeDisabled();
+  await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
+  await studio.getByRole("button", { name: "Back to edit" }).click();
+  if (compact) {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
+  } else {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
+  await page.getByLabel("Menu name").fill("Kitchen seasonal menu");
+  await studio.getByRole("button", { name: "Assignments", exact: true }).click();
+  await expect(studio.locator(".atelier-assignment-lock")).toHaveAttribute("disabled", "");
+  await expect(studio.getByRole("button", { name: "Save assignment" })).toBeDisabled();
+  await expect(studio.getByRole("button", { name: "Save local override" })).toBeDisabled();
+  await expect(studio.getByText(/Save your draft and review queued Composer dishes/)).toBeVisible();
+  await studio.getByRole("button", { name: "Save draft" }).click();
+  await expect(studio.locator(".atelier-assignment-lock")).not.toHaveAttribute("disabled");
+  await expect(studio.getByRole("button", { name: "Save assignment" })).toBeEnabled();
+  await studio.getByRole("button", { name: "Dishes", exact: true }).click();
+
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(studio.getByRole("group", { name: "Draft and publication actions" })).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-light-mobile.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-dark-mobile.png"),
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({
+    path: info.outputPath("recipe-atelier-dark-desktop.png"),
+    fullPage: true,
+  });
+
+  for (const name of [
+    "hero-desktop-light.webp",
+    "hero-desktop-dark.webp",
+    "hero-mobile-light.webp",
+    "hero-mobile-dark.webp",
+    "first-menu-empty-illustration.webp",
+    "dish-workspace-illustration.webp",
+    "publication-celebration.webp",
+  ]) {
+    const response = await request.get("/brand/menu-studio/recipe-atelier/" + name);
+    expect(response.status(), name).toBe(200);
+    expect(response.headers()["content-type"], name).toContain("image/webp");
+  }
 });

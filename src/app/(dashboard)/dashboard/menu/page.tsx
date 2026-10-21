@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import "@/components/menu-product/studio-atelier.css";
 import Link from "next/link";
 import { withActor } from "@/modules/tenancy/service";
 import { brands } from "@/db/schema";
@@ -9,6 +11,12 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { MenuStudio } from "@/components/menu-product/menu-studio";
 import { listImports } from "@/modules/menu-import/service";
+export const metadata: Metadata = {
+  title: "Menu Studio | Recipe Atelier",
+  description: "Private restaurant menu editor, draft preview and publishing workspace.",
+  robots: { index: false, follow: false },
+};
+
 export default async function Page() {
   const session = await auth();
   if (!session) redirect("/login");
