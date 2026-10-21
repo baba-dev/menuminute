@@ -28,12 +28,13 @@ export default async function Page() {
   return (
     <QrManager
       key={outlet.id}
-      initial={codes.map(({ id, label, destinationToken, isActive, tableId }) => ({
+      initial={codes.map(({ id, label, destinationToken, isActive, tableId, pointLabel }) => ({
         id,
         label,
         destinationToken,
         isActive,
         tableId,
+        pointLabel,
       }))}
       outletId={outlet.id}
       outletName={outlet.name}
