@@ -33,7 +33,9 @@ for (const asset of manifest.assets) {
     fileStat.size !== asset.bytes ||
     digest !== asset.sha256
   ) {
-    throw new Error("QR Studio media checksum, format, dimensions or alpha mismatch: " + asset.filename);
+    throw new Error(
+      "QR Studio media checksum, format, dimensions or alpha mismatch: " + asset.filename
+    );
   }
 
   console.log(
