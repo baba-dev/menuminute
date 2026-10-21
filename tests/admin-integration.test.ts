@@ -140,6 +140,33 @@ describe("restricted-role platform command integration", () => {
     expect(audit.rows[0]?.total).toBe(1);
   });
 
+  it("rolls back the domain change and preserves step-up if audit insertion fails", async () => {
+    await owner.query(`
+      CREATE FUNCTION app_private.reject_isolated_admin_audit() RETURNS trigger
+      LANGUAGE plpgsql AS $test_audit$
+      BEGIN RAISE EXCEPTION 'simulated audit persistence failure'; END $test_audit$;
+      CREATE TRIGGER reject_isolated_admin_audit BEFORE INSERT ON admin_audit_logs
+      FOR EACH ROW WHEN (NEW.action='organization.active')
+      EXECUTE FUNCTION app_private.reject_isolated_admin_audit();
+    `);
+    try {
+      await proof();
+      await expect(
+        runAdminCommand(actor, "organization.active", orgId, {
+          isActive: false,
+          reason: "Isolated atomicity test",
+        })
+      ).rejects.toThrow();
+      const state = await owner.query("select is_active from organizations where id=$1", [orgId]);
+      expect(state.rows[0]?.is_active).toBe(true);
+      const stepUp = await owner.query("select count(*)::int as total from auth_step_up where session_id=$1", [rootSession]);
+      expect(stepUp.rows[0]?.total).toBe(1);
+    } finally {
+      await owner.query("drop trigger if exists reject_isolated_admin_audit on admin_audit_logs");
+      await owner.query("drop function if exists app_private.reject_isolated_admin_audit()");
+    }
+  });
+
   it("keeps commercial Kitchen Pro activation disabled", async () => {
     await proof();
     const start = new Date(Date.now() + 3600000).toISOString();
