@@ -11,7 +11,7 @@ if (!Array.isArray(manifest.assets) || manifest.assets.length !== 7) {
 }
 
 for (const asset of manifest.assets) {
-  if (!/^[a-z0-9-]+\\.webp$/.test(asset.filename)) {
+  if (!/^[a-z0-9-]+\.webp$/.test(asset.filename)) {
     throw new Error("Invalid asset filename: " + asset.filename);
   }
   const path = join(directory, asset.filename);
