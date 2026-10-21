@@ -62,7 +62,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         <div className="mm-workspace-outlet">
           <span className="mm-workspace-caption">Current outlet</span>
-          <p className="mm-workspace-outlet-name">{restaurant?.name || "Set up an outlet"}</p>
+          <h2 className="mm-workspace-outlet-name">{restaurant?.name || "Set up an outlet"}</h2>
           <p className="mm-workspace-outlet-meta">
             {restaurant
               ? "Selected outlet · " + restaurant.currency
