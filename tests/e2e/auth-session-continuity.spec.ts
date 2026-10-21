@@ -37,9 +37,13 @@ test("remembered sign-in survives navigation; homepage and login recognise the a
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   const tokens = await page.context().cookies();
-  expect(tokens.some((c) => c.name.includes("session_token") && c.expires > Date.now() / 1000)).toBe(true);
+  expect(
+    tokens.some((c) => c.name.includes("session_token") && c.expires > Date.now() / 1000)
+  ).toBe(true);
   await page.reload();
-  await expect(page.getByRole("heading", { name: /dashboard|restaurant|welcome/i }).first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /dashboard|restaurant|welcome/i }).first()
+  ).toBeVisible();
   await page.goto("/");
   if ((page.viewportSize()?.width ?? 1000) < 768)
     await page.getByRole("button", { name: "Open navigation menu" }).click();

@@ -18,8 +18,12 @@ async function main() {
     // Tests actual runtime-role connectivity and the existing session schema.
     await pool.query("select id, user_id, expires_at from sessions limit 0");
     console.log("SESSION_PREFLIGHT: PASS (origin, policy, PostgreSQL session schema)");
-    console.log("SECRET_CONTINUITY: verify externally that the same root-owned web.env is used across releases");
-    console.log("PROXY_CONTINUITY: verify installed Nginx/Cloudflare and Set-Cookie on the public host");
+    console.log(
+      "SECRET_CONTINUITY: verify externally that the same root-owned web.env is used across releases"
+    );
+    console.log(
+      "PROXY_CONTINUITY: verify installed Nginx/Cloudflare and Set-Cookie on the public host"
+    );
   } finally {
     await pool.end();
   }

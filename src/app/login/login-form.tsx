@@ -111,7 +111,9 @@ export function LoginForm() {
             router.refresh();
           } catch {
             discardPendingLoginPreference();
-            setError("Unable to connect. Check your connection and retry. Your entries are still here.");
+            setError(
+              "Unable to connect. Check your connection and retry. Your entries are still here."
+            );
           } finally {
             setBusy(false);
           }

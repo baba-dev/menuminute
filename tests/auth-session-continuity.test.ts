@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword } from "better-auth/crypto";
 import { authServer } from "../src/lib/auth";
-import { REMEMBERED_SESSION_SECONDS, SESSION_REFRESH_SECONDS } from "../src/lib/auth-session-policy";
+import {
+  REMEMBERED_SESSION_SECONDS,
+  SESSION_REFRESH_SECONDS,
+} from "../src/lib/auth-session-policy";
 import { admin } from "./helpers";
 import { getPool } from "../src/db";
 
@@ -38,9 +41,7 @@ async function signIn(email: string, rememberMe: boolean) {
   );
 }
 async function getSession(cookie: string) {
-  return authServer.handler(
-    new Request(origin + "/api/auth/get-session", { headers: { cookie } })
-  );
+  return authServer.handler(new Request(origin + "/api/auth/get-session", { headers: { cookie } }));
 }
 describe("session persistence and browser renewal", () => {
   it("uses a 30-day sliding database session and a persistent first-party cookie when remembered", async () => {

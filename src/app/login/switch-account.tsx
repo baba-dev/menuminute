@@ -21,13 +21,22 @@ export function SwitchAccount({ email, next }: { email: string; next: string }) 
     >
       <div className="mm-auth-form">
         <div className="mm-auth-remembered">
-          <span className="mm-auth-remembered-icon" aria-hidden="true"><UserRound size={20} /></span>
-          <span className="mm-auth-remembered-copy"><strong>Current account</strong><small>{email}</small></span>
+          <span className="mm-auth-remembered-icon" aria-hidden="true">
+            <UserRound size={20} />
+          </span>
+          <span className="mm-auth-remembered-copy">
+            <strong>Current account</strong>
+            <small>{email}</small>
+          </span>
         </div>
         <Link className="mm-auth-submit mm-auth-continue" href={next || "/dashboard"}>
           Continue <ArrowRight size={18} aria-hidden="true" />
         </Link>
-        {error && <p role="alert" className="mm-auth-message mm-auth-message--error">{error}</p>}
+        {error && (
+          <p role="alert" className="mm-auth-message mm-auth-message--error">
+            {error}
+          </p>
+        )}
         <button
           type="button"
           className="mm-auth-switch-button"
