@@ -1,38 +1,61 @@
-import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, ExternalLink, Layers, Plus, QrCode, UtensilsCrossed } from "lucide-react";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  CheckCircle2,
+  ChefHat,
+  ExternalLink,
+  FilePenLine,
+  Globe2,
+  Layers3,
+  Plus,
+  QrCode,
+  UtensilsCrossed,
+} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant, getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { listMenus, publicProduct } from "@/modules/menu-product/service";
-import { dashboardSummary, preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
-import { ServiceCard } from "@/components/menu-product/phase4-primitives";
+import {
+  dashboardSetup,
+  dashboardSummary,
+  preferredMenuQr,
+} from "@/modules/menu-product/dashboard-summary";
+import { ThemeControl } from "@/components/menu-product/theme-control";
+import { DashboardTooltip } from "./dashboard-tooltip";
 
-export const metadata = {
-  title: "Restaurant overview — MenuMinute",
-  description: "Published menus, drafts and permanent QR codes for your selected outlet",
+export const metadata: Metadata = {
+  title: "Restaurant overview",
+  description: "Your private, outlet-specific menu and publishing workspace.",
+  robots: { index: false, follow: false },
 };
+
+const artwork = "/brand/dashboard/editorial/";
 
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const actor = { userId: session.user.id };
   const outlet = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
+
   if (!outlet) {
     return (
-      <div className="product">
-        <ServiceCard className="grid gap-3">
-          <h1>No outlet selected</h1>
-          <p>Create your first outlet to begin a free permanent QR menu.</p>
-          <Link href="/onboarding" className="mm-action mm-action--press w-fit">
-            Set up an outlet
-          </Link>
-        </ServiceCard>
+      <div className="mm-dashboard mm-dashboard-empty">
+        <span className="mm-dashboard-eyebrow">Welcome to MenuMinute</span>
+        <h1>Make something delicious today.</h1>
+        <p>Create your first outlet to build and share its permanent QR menu.</p>
+        <Link href="/onboarding" className="mm-dashboard-button mm-dashboard-button--primary">
+          Set up an outlet <ArrowRight size={17} aria-hidden="true" />
+        </Link>
       </div>
     );
   }
 
-  // Only canonical scoped menu rows and active public QR identities count toward the overview.
-  // Draft document contents must never masquerade as the immutable published release.
+  // Only canonical, outlet-scoped rows and the immutable guest-facing projection
+  // contribute to these values. Unsaved editor state is deliberately excluded.
   const [menus, codes] = await Promise.all([
     listMenus(actor, outlet.id),
     getRestaurantQrCodes(actor, outlet.id),
@@ -40,131 +63,392 @@ export default async function DashboardPage() {
   const primaryQr = preferredMenuQr(codes);
   const publicProjection = primaryQr ? await publicProduct(primaryQr.destinationToken) : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
-  const menuHref = primaryQr ? `/m/${encodeURIComponent(primaryQr.destinationToken)}` : null;
-  const cards = [
+  const hasSavedMenu = menus.some((menu) => !menu.archived);
+  const setup = dashboardSetup({
+    hasOutlet: Boolean(outlet.name && outlet.currency && outlet.timezone),
+    hasSavedMenu,
+    hasPublicMenu: stats.hasPublicMenu,
+    hasActiveQr: stats.activeQrCount > 0,
+  });
+  const publicHref =
+    stats.hasPublicMenu && primaryQr
+      ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
+      : null;
+  const userName = session.user.name?.trim() || "Restaurant admin";
+  const initials = userName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+  const kpis = [
     {
       label: "Published menus",
       value: stats.publishedMenuCount,
-      hint: "Guest-visible releases",
+      detail: "Guest-visible releases",
+      explanation:
+        "Only committed menus in the currently accessible public release. Private drafts are excluded.",
       Icon: BookOpen,
     },
     {
-      label: "Published categories",
+      label: "Categories",
       value: stats.publishedCategoryCount,
-      hint: "From current releases",
-      Icon: Layers,
+      detail: "In your live menu",
+      explanation:
+        "Categories included in the current public release, excluding archived categories.",
+      Icon: Layers3,
     },
     {
-      label: "Published dishes",
+      label: "Dishes",
       value: stats.publishedDishCount,
-      hint: "Not unsaved edits",
-      Icon: UtensilsCrossed,
+      detail: "Published and visible",
+      explanation: "Non-archived dishes in the published release, not unpublished editor changes.",
+      Icon: ChefHat,
     },
     {
-      label: "Active menu QR codes",
+      label: "Active QR codes",
       value: stats.activeQrCount,
-      hint: "Permanent menu links",
+      detail: "Permanent menu links",
+      explanation:
+        "Active menu-purpose QR identities for this outlet. Revoked links and order QR codes are excluded.",
       Icon: QrCode,
     },
+    {
+      label: "Menus to publish",
+      value: stats.draftCount,
+      detail: "With unpublished edits",
+      explanation:
+        "Counts menus with saved changes awaiting publication—not the number of individual edits.",
+      Icon: FilePenLine,
+    },
+    {
+      label: "Public menu status",
+      value: stats.hasPublicMenu ? "Live" : "Not live",
+      detail: stats.hasPublicMenu ? "Available to guests" : "Publish to go live",
+      explanation:
+        "Live means an active menu QR currently resolves to a committed guest-facing menu.",
+      Icon: Globe2,
+      positive: stats.hasPublicMenu,
+    },
   ];
+  const priorities = stats.hasPublicMenu
+    ? [
+        {
+          title: "Add a new dish",
+          detail: "Grow your menu with something special.",
+          action: "Add dish",
+          href: "/dashboard/menu",
+          Icon: Plus,
+        },
+        {
+          title: "Refine your menu",
+          detail: "Update descriptions, prices or availability.",
+          action: "Edit menu",
+          href: "/dashboard/menu",
+          Icon: UtensilsCrossed,
+        },
+        {
+          title: "Share your QR",
+          detail: "Download or print a permanent menu link.",
+          action: "View QR",
+          href: "/dashboard/qr-codes",
+          Icon: QrCode,
+        },
+      ]
+    : [
+        {
+          title: hasSavedMenu ? "Continue your saved menu" : "Create your first menu",
+          detail: hasSavedMenu
+            ? "Review your draft before publication."
+            : "Add categories, dishes and prices.",
+          action: hasSavedMenu ? "Continue draft" : "Menu Studio",
+          href: "/dashboard/menu",
+          Icon: Plus,
+        },
+        {
+          title: "Prepare your QR codes",
+          detail: "Check the links you will share with guests.",
+          action: "View QR",
+          href: "/dashboard/qr-codes",
+          Icon: QrCode,
+        },
+        {
+          title: "Preview and publish",
+          detail: "Make your saved menu available to guests.",
+          action: "Publish menu",
+          href: "/dashboard/menu",
+          Icon: CheckCircle2,
+        },
+      ];
 
   return (
-    <div className="product grid gap-6">
-      <header className="mm-service-card grid gap-4 sm:flex sm:items-center sm:justify-between">
-        <div className="grid min-w-0 gap-2">
-          <span className="eyebrow">Your selected outlet</span>
-          <h1 className="break-words">{outlet.name}</h1>
-          <p>{[outlet.city, outlet.currency, outlet.timezone].filter(Boolean).join(" · ")}</p>
-          {outlet.isDemoData && <span className="badge w-fit">Demo outlet</span>}
+    <div className="mm-dashboard product" data-testid="editorial-dashboard">
+      <header className="mm-dashboard-hero">
+        <div className="mm-dashboard-topbar">
+          <nav aria-label="Breadcrumb" className="mm-dashboard-breadcrumb">
+            <span>Workspace</span>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Restaurant overview</span>
+          </nav>
+          <div className="mm-dashboard-top-actions">
+            {publicHref ? (
+              <Link
+                href={publicHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mm-dashboard-preview"
+              >
+                Preview <ExternalLink size={14} aria-hidden="true" />
+              </Link>
+            ) : (
+              <span
+                className="mm-dashboard-preview mm-dashboard-preview--unavailable"
+                title="Publish your menu to enable public preview"
+              >
+                Preview unavailable
+              </span>
+            )}
+            <ThemeControl />
+            <Link
+              className="mm-dashboard-user"
+              href="/account"
+              aria-label={"Account settings for " + userName}
+            >
+              {initials || "MM"}
+            </Link>
+          </div>
         </div>
-        <Link href="/dashboard/menu" className="mm-action mm-action--flow shrink-0">
-          <Plus size={18} aria-hidden="true" /> Manage menu
-        </Link>
+        <div className="mm-dashboard-hero-copy">
+          <span className="mm-dashboard-eyebrow">
+            A little more than a dashboard <span aria-hidden="true">—</span>
+          </span>
+          <h1>
+            Make something
+            <br />
+            delicious today.
+          </h1>
+          <p>
+            Welcome back to <strong>{outlet.name}</strong>.<br />
+            {stats.hasPublicMenu
+              ? "Your menu is ready to shine."
+              : "Your next great menu starts here."}
+          </p>
+          {outlet.isDemoData && <span className="mm-dashboard-demo">Demo outlet</span>}
+          <div className="mm-dashboard-hero-actions">
+            <Link
+              href="/dashboard/menu"
+              className="mm-dashboard-button mm-dashboard-button--primary"
+            >
+              Open Menu Studio <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            {publicHref && (
+              <Link
+                href={publicHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mm-dashboard-button mm-dashboard-button--secondary"
+              >
+                View public menu <ExternalLink size={15} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Published menu overview">
-        {cards.map(({ label, value, hint, Icon }) => (
-          <ServiceCard key={label} className="grid gap-2">
-            <Icon size={20} aria-hidden="true" />
-            <span className="text-sm font-semibold">{label}</span>
-            <strong className="text-3xl font-extrabold tabular-nums">{value}</strong>
-            <small>{hint}</small>
-          </ServiceCard>
-        ))}
-      </div>
-
-      <ServiceCard className="grid gap-4">
-        {stats.hasPublicMenu ? (
-          <>
-            <div>
-              <span className="eyebrow">Ready for guests</span>
-              <h2>Published menu ready</h2>
-              <p>
-                Guests see the committed published release. Saving a draft will not change it until
-                you publish again.
-              </p>
-            </div>
-            <div className="row">
-              {menuHref && (
-                <Link
-                  href={menuHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mm-action mm-action--press"
+      <div className="mm-dashboard-body">
+        <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
+          <div className="mm-dashboard-section-heading">
+            <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
+              At a glance
+            </h2>
+            <span className="mm-dashboard-data-note">Published menu data · Current outlet</span>
+          </div>
+          <div className="mm-dashboard-kpis">
+            {kpis.map(({ label, value, detail, explanation, Icon, ...rest }) => (
+              <div className="mm-dashboard-kpi" key={label}>
+                <div className="mm-dashboard-kpi-top">
+                  <span className="mm-dashboard-kpi-icon">
+                    <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
+                  </span>
+                  <span className="mm-dashboard-kpi-label">{label}</span>
+                  <DashboardTooltip label={label}>{explanation}</DashboardTooltip>
+                </div>
+                <strong
+                  className={
+                    "mm-dashboard-kpi-value" +
+                    ("positive" in rest && rest.positive ? " is-positive" : "")
+                  }
                 >
-                  View public menu <ExternalLink size={16} aria-hidden="true" />
-                </Link>
-              )}
-              <Link href="/dashboard/menu" className="mm-action mm-action--quiet">
-                Edit or publish changes
+                  {typeof value === "number" ? new Intl.NumberFormat("en").format(value) : value}
+                </strong>
+                <span className="mm-dashboard-kpi-detail">{detail}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="mm-dashboard-lower">
+          <section className="mm-dashboard-priorities" aria-labelledby="mm-priorities-title">
+            <div className="mm-dashboard-priorities-head">
+              <div>
+                <span className="mm-dashboard-eyebrow">Your next move</span>
+                <h2 id="mm-priorities-title">Today’s priorities</h2>
+                <p>A few quick actions to keep {outlet.name} fresh, accurate and guest-ready.</p>
+              </div>
+              <Image
+                src={artwork + "priorities-illustration.webp"}
+                alt=""
+                width={156}
+                height={112}
+                className="mm-dashboard-priorities-art"
+              />
+            </div>
+            <ol className="mm-dashboard-priority-list">
+              {priorities.map((item, index) => (
+                <li className="mm-dashboard-priority" key={item.title}>
+                  <span className="mm-dashboard-priority-number" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="mm-dashboard-priority-copy">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <Link href={item.href} className="mm-dashboard-priority-action">
+                    {item.action} <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+            <Link href="/dashboard/menu" className="mm-dashboard-publish">
+              <span className="mm-dashboard-publish-icon">
+                <FilePenLine size={22} aria-hidden="true" />
+              </span>
+              <span>
+                <strong>
+                  {stats.draftCount > 0
+                    ? "Review & publish changes"
+                    : stats.hasPublicMenu
+                      ? "Keep your menu fresh"
+                      : "Create & publish your menu"}
+                </strong>
+                <small>
+                  {stats.draftCount > 0
+                    ? stats.draftCount +
+                      (stats.draftCount === 1 ? " menu has" : " menus have") +
+                      " unpublished changes."
+                    : stats.hasPublicMenu
+                      ? "Your current release is live. Edit whenever you need."
+                      : "Create your first guest-facing release."}
+                </small>
+              </span>
+              <ArrowRight className="mm-dashboard-publish-arrow" size={22} aria-hidden="true" />
+            </Link>
+          </section>
+
+          <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
+            <div className="mm-dashboard-health-head">
+              <div>
+                <span className="mm-dashboard-eyebrow">{outlet.name}</span>
+                <h2 id="mm-health-title">Outlet health &amp; publishing status</h2>
+                <p>
+                  {stats.hasPublicMenu
+                    ? "Your current menu is available to guests."
+                    : "Finish publishing to make your menu available to guests."}
+                </p>
+              </div>
+              <Image
+                src={artwork + "outlet-health-illustration.webp"}
+                alt=""
+                width={86}
+                height={103}
+                className="mm-dashboard-health-art"
+              />
+            </div>
+            <dl className="mm-dashboard-health-rows">
+              <div className="mm-dashboard-health-row">
+                <BookOpen size={20} aria-hidden="true" />
+                <div>
+                  <dt>Menu publish status</dt>
+                  <dd>
+                    {stats.hasPublicMenu
+                      ? "A committed public release is available"
+                      : "No public release available yet"}
+                  </dd>
+                </div>
+                <span
+                  className={"mm-dashboard-health-badge" + (stats.hasPublicMenu ? " is-good" : "")}
+                >
+                  {stats.hasPublicMenu ? "Live" : "Pending"}
+                </span>
+              </div>
+              <div className="mm-dashboard-health-row">
+                <QrCode size={20} aria-hidden="true" />
+                <div>
+                  <dt>QR codes</dt>
+                  <dd>
+                    {stats.activeQrCount +
+                      (stats.activeQrCount === 1
+                        ? " active permanent link"
+                        : " active permanent links")}
+                  </dd>
+                </div>
+                <span
+                  className={
+                    "mm-dashboard-health-badge" + (stats.activeQrCount > 0 ? " is-good" : "")
+                  }
+                >
+                  {stats.activeQrCount > 0 ? "Active" : "None active"}
+                </span>
+              </div>
+              <div className="mm-dashboard-health-row">
+                <Globe2 size={20} aria-hidden="true" />
+                <div>
+                  <dt>Menu visibility</dt>
+                  <dd>
+                    {stats.hasPublicMenu
+                      ? "Accessible through your active menu link"
+                      : "Private until publication"}
+                  </dd>
+                </div>
+                <span
+                  className={"mm-dashboard-health-badge" + (stats.hasPublicMenu ? " is-good" : "")}
+                >
+                  {stats.hasPublicMenu ? "Public" : "Private"}
+                </span>
+              </div>
+              <div className="mm-dashboard-health-row mm-dashboard-health-row--progress">
+                <CheckCircle2 size={20} aria-hidden="true" />
+                <div>
+                  <dt>
+                    Setup completion{" "}
+                    <DashboardTooltip label="Setup completion">
+                      Outlet configured, menu created, public release and active QR code. Each
+                      verified step counts equally.
+                    </DashboardTooltip>
+                  </dt>
+                  <dd>
+                    {setup.completed} of {setup.total} essentials completed
+                  </dd>
+                  <progress
+                    max={setup.total}
+                    value={setup.completed}
+                    aria-label="Outlet setup progress"
+                  />
+                </div>
+                <strong>{setup.percent}%</strong>
+              </div>
+            </dl>
+            <div className="mm-dashboard-setup-foot">
+              <span>
+                <Check size={15} aria-hidden="true" />{" "}
+                {setup.checks.filter((check) => check.complete).length} verified steps
+              </span>
+              <Link href="/dashboard/settings">
+                Outlet settings <ArrowRight size={15} aria-hidden="true" />
               </Link>
             </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <span className="eyebrow">Your next step</span>
-              <h2>No published menu yet</h2>
-              <p>
-                {stats.draftCount > 0
-                  ? "Your saved drafts remain private. Preview and publish a menu to let guests browse it."
-                  : "Start your menu with a category and a dish, then preview and publish it."}
-                {primaryQr && " Your existing printed QR identity stays the same."}
-              </p>
-            </div>
-            <Link href="/dashboard/menu" className="mm-action mm-action--press w-fit">
-              {stats.draftCount > 0 ? "Continue your menu" : "Create your first menu"}
-            </Link>
-          </>
-        )}
-      </ServiceCard>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <ServiceCard className="grid content-between gap-3">
-          <div>
-            <h2>Menu Studio</h2>
-            <p>
-              {stats.draftCount > 0
-                ? `${stats.draftCount} menu draft${stats.draftCount === 1 ? "" : "s"} waiting for publication.`
-                : "Manage categories, dishes, schedules and approved photos."}
-            </p>
-          </div>
-          <Link href="/dashboard/menu" className="mm-action mm-action--quiet w-fit">
-            Open Menu Studio
-          </Link>
-        </ServiceCard>
-        <ServiceCard className="grid content-between gap-3">
-          <div>
-            <h2>Permanent QR codes</h2>
-            <p>
-              Download PNG/SVG or print service-point codes. Printed links survive menu edits; only
-              explicit revocation/regeneration changes their identity.
-            </p>
-          </div>
-          <Link href="/dashboard/qr-codes" className="mm-action mm-action--quiet w-fit">
-            Manage QR codes
-          </Link>
-        </ServiceCard>
+          </section>
+        </div>
       </div>
     </div>
   );

@@ -78,3 +78,7 @@ next-env.d.ts
 .cache/
 .temp/
 tmp/
+
+# Generated from approved PNG masters during dev/build.
+public/brand/dashboard/editorial/hero-mobile-light.webp
+public/brand/dashboard/editorial/hero-mobile-dark.webp

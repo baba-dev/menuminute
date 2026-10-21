@@ -1,6 +1,8 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
 export function ContextSwitcher({
   outlets,
   selected,
@@ -11,46 +13,55 @@ export function ContextSwitcher({
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
   return (
-    <div className="px-3 pb-2">
-      <label className="text-xs font-semibold">
+    <div className="mm-workspace-switcher">
+      <label className="sr-only" htmlFor="mm-active-outlet">
         Active outlet
-        <select
-          aria-label="Active outlet"
-          className="mt-1 w-full rounded border p-2 text-xs"
-          value={selected ?? ""}
-          disabled={busy}
-          onChange={async (e) => {
-            setBusy(true);
-            setError("");
-            try {
-              const r = await fetch("/api/context", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ outletId: e.target.value }),
-              });
-              if (!r.ok) throw new Error("Outlet access changed. Refresh and try again.");
-              router.refresh();
-            } catch (e) {
-              setError(e instanceof Error ? e.message : "Unable to switch");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <option value="" disabled>
-            Select outlet
-          </option>
-          {outlets.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name} · {o.organizationId.slice(0, 12)}
-            </option>
-          ))}
-        </select>
       </label>
-      <p role="status" className="text-xs">
-        {error}
-      </p>
+      <select
+        id="mm-active-outlet"
+        aria-describedby={error ? "mm-active-outlet-error" : undefined}
+        aria-invalid={Boolean(error)}
+        value={selected ?? ""}
+        disabled={busy || outlets.length === 0}
+        onChange={async (event) => {
+          setBusy(true);
+          setError("");
+          try {
+            const result = await fetch("/api/context", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ outletId: event.target.value }),
+            });
+            if (!result.ok) throw new Error("Outlet access changed. Refresh and try again.");
+            router.refresh();
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : "Unable to switch outlet");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <option value="" disabled>
+          Select outlet
+        </option>
+        {outlets.map((outlet) => (
+          <option key={outlet.id} value={outlet.id}>
+            {outlet.name}
+          </option>
+        ))}
+      </select>
+      {busy && (
+        <p className="mm-workspace-switcher-status" role="status">
+          Switching outlet…
+        </p>
+      )}
+      {error && (
+        <p className="mm-workspace-switcher-error" id="mm-active-outlet-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
