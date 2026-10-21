@@ -15,7 +15,15 @@ import { displayToMinor } from "@/lib/money";
 import { Field } from "./studio-fields";
 import { StudioDishEditor } from "./studio-dish-editor";
 import { StudioMediaTab, StudioAssignmentsTab } from "./studio-resources";
-import { StudioHero, StudioOverview, StudioImportNotice, StudioActions, StudioEmpty, StudioMilestone, StudioPreview } from "./studio-chrome";
+import {
+  StudioHero,
+  StudioOverview,
+  StudioImportNotice,
+  StudioActions,
+  StudioEmpty,
+  StudioMilestone,
+  StudioPreview,
+} from "./studio-chrome";
 import type { menuDetail } from "@/modules/menu-product/service";
 import { PublicMenu } from "./public-menu";
 import { ScheduleEditor } from "./schedule-editor";
@@ -77,7 +85,10 @@ export function MenuStudio({
   const path = (menuId: string) => `/api/catalog/${menuId}`;
   useEffect(() => {
     if (!dirty && !composerPending) return;
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty, composerPending]);
@@ -111,7 +122,12 @@ export function MenuStudio({
       headers: { "x-outlet-id": outlet.id, ...options?.headers },
     });
     const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(typeof body.message === "string" ? body.message : "Request failed. Your local draft fields are preserved; check the saved version before retrying.");
+    if (!r.ok)
+      throw new Error(
+        typeof body.message === "string"
+          ? body.message
+          : "Request failed. Your local draft fields are preserved; check the saved version before retrying."
+      );
     return body;
   }
   async function load(menuId: string) {
@@ -122,7 +138,7 @@ export function MenuStudio({
     try {
       next = await json(path(menuId));
     } catch (cause) {
-      if (selected.current === menuId) selected.current = changedMenu ? detail?.id ?? "" : menuId;
+      if (selected.current === menuId) selected.current = changedMenu ? (detail?.id ?? "") : menuId;
       throw cause;
     }
     if (selected.current !== menuId) return;
@@ -295,447 +311,490 @@ export function MenuStudio({
     <div className="product studio-atelier" data-testid="recipe-atelier-studio">
       <StudioHero outlet={outlet} />
       <div className="atelier-body">
-      <div className="atelier-menu-bar">
-        <label className="field">
-          Your menus
-          <select
-            aria-label="Your menus"
-            disabled={busy}
-            value={detail?.id ?? ""}
-            onChange={(e) => {
-              if (e.target.value === selected.current) return;
-              if (
-                (dirty || composerPending) &&
-                !window.confirm("Discard unsaved menu changes and selected dishes?")
-              )
-                return;
-              void run(() => load(e.target.value));
-            }}
-          >
-            <option value="" disabled>
-              Select a menu
-            </option>
-            {list.map((m) => (
-              <option key={m.id} value={m.id}>
-                {(m.document as MenuDocument).name}
-                {m.archived ? " (archived)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          className="ember"
-          disabled={busy}
-          onClick={() =>
-            void run(async () => {
-              if (
-                (dirty || composerPending) &&
-                !window.confirm(
-                  "Discard unsaved changes and selected dishes to create another menu?"
+        <div className="atelier-menu-bar">
+          <label className="field">
+            Your menus
+            <select
+              aria-label="Your menus"
+              disabled={busy}
+              value={detail?.id ?? ""}
+              onChange={(e) => {
+                if (e.target.value === selected.current) return;
+                if (
+                  (dirty || composerPending) &&
+                  !window.confirm("Discard unsaved menu changes and selected dishes?")
                 )
-              )
-                return;
-              const result = await json("/api/catalog", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ key: creationKey.current }),
-              });
-              const next = await json("/api/catalog");
-              setList(next);
-              await load(result.menuId);
-              // Do not rotate a successful request identity until reconciliation completes.
-              // If the list/load response was lost, retry with the same key, not a duplicate menu.
-              creationKey.current = id();
-              setMessage("Menu draft created");
-            })
-          }
-        >
-          <Plus size={16} />
-          Create menu
-        </button>
-      </div>
-      <StudioOverview doc={doc} imports={imports} publishedRevision={detail?.publishedRevision} revision={detail?.revision} dirty={dirty} />
-      <StudioImportNotice imports={imports} />
-      {error && (
-        <div role="alert" className="error" tabIndex={-1}>
-          {error}{" "}
-          <button type="button" onClick={() => setError("")}>
-            Dismiss
-          </button>
+                  return;
+                void run(() => load(e.target.value));
+              }}
+            >
+              <option value="" disabled>
+                Select a menu
+              </option>
+              {list.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {(m.document as MenuDocument).name}
+                  {m.archived ? " (archived)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
-            onClick={() => {
-              if (detail && window.confirm("Discard local fields and load the saved version?"))
-                void run(() => load(detail.id));
-            }}
+            className="ember"
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                if (
+                  (dirty || composerPending) &&
+                  !window.confirm(
+                    "Discard unsaved changes and selected dishes to create another menu?"
+                  )
+                )
+                  return;
+                const result = await json("/api/catalog", {
+                  method: "POST",
+                  headers,
+                  body: JSON.stringify({ key: creationKey.current }),
+                });
+                const next = await json("/api/catalog");
+                setList(next);
+                await load(result.menuId);
+                // Do not rotate a successful request identity until reconciliation completes.
+                // If the list/load response was lost, retry with the same key, not a duplicate menu.
+                creationKey.current = id();
+                setMessage("Menu draft created");
+              })
+            }
           >
-            Reload saved version
+            <Plus size={16} />
+            Create menu
           </button>
         </div>
-      )}
-      <p role="status" className="success">
-        {message}
-      </p>
-      {milestone && <StudioMilestone dismiss={() => setMilestone(false)} />}
-      {!doc || !detail ? (
-        <StudioEmpty />
-      ) : (
-        <>
-          <StudioActions
-            archived={detail.archived}
-            writable={detail.canWrite}
-            busy={busy}
-            pending={composerPending}
-            dirty={dirty}
-            revision={detail.revision}
-            publishedRevision={detail.publishedRevision}
-            preview={preview}
-            onPreview={() => setPreview((current) => !current)}
-            onSave={() => void run(async () => { await save(); })}
-            onPublish={() => dialog.current?.showModal()}
-          />
-          {!detail.canWrite && (
-            <p className="error">
-              This shared menu requires editing permission at every assigned outlet. You can browse
-              its draft and use local overrides within your outlet scope.
-            </p>
-          )}
-          <dialog ref={dialog} aria-labelledby="publish-title">
-            <div className="stack">
-              <span className="eyebrow">Ready for the table</span>
-              <h2 id="publish-title">Publish this menu?</h2>
-              <p>
-                Saved changes will be visible at every assigned outlet. Unsaved fields are saved
-                first. Your existing QR links stay unchanged.
+        <StudioOverview
+          doc={doc}
+          imports={imports}
+          publishedRevision={detail?.publishedRevision}
+          revision={detail?.revision}
+          dirty={dirty}
+        />
+        <StudioImportNotice imports={imports} />
+        {error && (
+          <div role="alert" className="error" tabIndex={-1}>
+            {error}{" "}
+            <button type="button" onClick={() => setError("")}>
+              Dismiss
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (detail && window.confirm("Discard local fields and load the saved version?"))
+                  void run(() => load(detail.id));
+              }}
+            >
+              Reload saved version
+            </button>
+          </div>
+        )}
+        <p role="status" className="success">
+          {message}
+        </p>
+        {milestone && <StudioMilestone dismiss={() => setMilestone(false)} />}
+        {!doc || !detail ? (
+          <StudioEmpty />
+        ) : (
+          <>
+            <StudioActions
+              archived={detail.archived}
+              writable={detail.canWrite}
+              busy={busy}
+              pending={composerPending}
+              dirty={dirty}
+              revision={detail.revision}
+              publishedRevision={detail.publishedRevision}
+              preview={preview}
+              onPreview={() => setPreview((current) => !current)}
+              onSave={() =>
+                void run(async () => {
+                  await save();
+                })
+              }
+              onPublish={() => dialog.current?.showModal()}
+            />
+            {!detail.canWrite && (
+              <p className="error">
+                This shared menu requires editing permission at every assigned outlet. You can
+                browse its draft and use local overrides within your outlet scope.
               </p>
-              <div className="row">
-                <button type="button" onClick={() => dialog.current?.close()}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="ember ink-press"
-                  disabled={busy}
-                  onClick={() => {
-                    dialog.current?.close();
-                    void run(async () => {
-                      const revision = dirty ? await save() : detail.revision;
-                      await command("publish", {}, revision);
-                      await load(detail.id);
-                      setMilestone(true);
-                      setMessage("Menu published");
-                    });
-                  }}
-                >
-                  Confirm publication
-                </button>
-              </div>
-            </div>
-          </dialog>
-          <div className="atelier-workspace studio-layout">
-            <div className="atelier-editor stack">
-              {preview ? (
-                <PublicMenu
-                  preview
-                  initial={{
-                    outlet: { ...outlet, versioned: true, isDemoData: false },
-                    point: null,
-                    catalogFingerprint: "",
-                    now: new Date().toISOString(),
-                    menus: [
-                      {
-                        id: detail.id,
-                        revision: detail.revision,
-                        document: doc,
-                        brand: null,
-                        overrides: [],
-                      },
-                    ],
-                  }}
-                />
-              ) : (
-                <>
-                  <nav className="atelier-editor-tabs row" aria-label="Menu editor sections">
-                    {["dishes", "schedule", "media", "assignments"].map((t) => (
-                      <button
-                        type="button"
-                        key={t}
-                        aria-pressed={tab === t}
-                        className={tab === t ? "ember" : ""}
-                        onClick={() => {
-                          setTab(t);
-                          if (t === "media") void run(refreshMedia);
-                        }}
-                      >
-                        {t[0]!.toUpperCase() + t.slice(1)}
-                      </button>
-                    ))}
-                  </nav>
-                  <form
-                    key={`${detail.id}:${detail.revision}`}
-                    ref={form}
-                    className="stack"
-                    onSubmit={(e) => {
-                      e.preventDefault();
+            )}
+            <dialog ref={dialog} aria-labelledby="publish-title">
+              <div className="stack">
+                <span className="eyebrow">Ready for the table</span>
+                <h2 id="publish-title">Publish this menu?</h2>
+                <p>
+                  Saved changes will be visible at every assigned outlet. Unsaved fields are saved
+                  first. Your existing QR links stay unchanged.
+                </p>
+                <div className="row">
+                  <button type="button" onClick={() => dialog.current?.close()}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="ember ink-press"
+                    disabled={busy}
+                    onClick={() => {
+                      dialog.current?.close();
                       void run(async () => {
-                        await save();
+                        const revision = dirty ? await save() : detail.revision;
+                        await command("publish", {}, revision);
+                        await load(detail.id);
+                        setMilestone(true);
+                        setMessage("Menu published");
                       });
                     }}
                   >
-                    <fieldset
-                      disabled={busy || !detail.canWrite || detail.archived}
+                    Confirm publication
+                  </button>
+                </div>
+              </div>
+            </dialog>
+            <div className="atelier-workspace studio-layout">
+              <div className="atelier-editor stack">
+                {preview ? (
+                  <PublicMenu
+                    preview
+                    initial={{
+                      outlet: { ...outlet, versioned: true, isDemoData: false },
+                      point: null,
+                      catalogFingerprint: "",
+                      now: new Date().toISOString(),
+                      menus: [
+                        {
+                          id: detail.id,
+                          revision: detail.revision,
+                          document: doc,
+                          brand: null,
+                          overrides: [],
+                        },
+                      ],
+                    }}
+                  />
+                ) : (
+                  <>
+                    <nav className="atelier-editor-tabs row" aria-label="Menu editor sections">
+                      {["dishes", "schedule", "media", "assignments"].map((t) => (
+                        <button
+                          type="button"
+                          key={t}
+                          aria-pressed={tab === t}
+                          className={tab === t ? "ember" : ""}
+                          onClick={() => {
+                            setTab(t);
+                            if (t === "media") void run(refreshMedia);
+                          }}
+                        >
+                          {t[0]!.toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </nav>
+                    <form
+                      key={`${detail.id}:${detail.revision}`}
+                      ref={form}
                       className="stack"
-                      style={{ minWidth: 0 }}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void run(async () => {
+                          await save();
+                        });
+                      }}
                     >
-                      <Field
-                        label="Menu name"
-                        value={doc.name}
-                        onChange={(name) => change({ ...doc, name })}
-                      />
-                      {tab === "dishes" && (
-                        <>
-                          <div className="atelier-composer stack" aria-label="Dish entry and menu filtering">
-                            <div className="atelier-composer-head">
-                              <div>
-                                <span className="atelier-eyebrow">SMART COMPOSER</span>
-                                <h2>Add something delicious.</h2>
-                                <p className="quiet">Find a familiar dish or create your own. Nothing is published automatically.</p>
-                              </div>
-                              <Image src="/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp" alt="" width={120} height={88} />
-                            </div>
-                            <div className="row" role="group" aria-label="Menu Studio dish tools">
-                              <button
-                                type="button"
-                                className={composerMode === "add" ? "ember" : ""}
-                                aria-pressed={composerMode === "add"}
-                                onClick={() => {
-                                  setComposerMode("add");
-                                  setDishSearch("");
-                                  setCategoryFilter("all");
-                                  setComposerFocus((n) => n + 1);
-                                }}
-                              >
-                                + Add dishes
-                              </button>
-                              <button
-                                type="button"
-                                className={composerMode === "find" ? "ember" : ""}
-                                aria-pressed={composerMode === "find"}
-                                onClick={() => setComposerMode("find")}
-                              >
-                                Find in menu
-                              </button>
-                            </div>
-                            <div hidden={composerMode !== "add"}>
-                              <SmartDishComposer
-                                key={detail.id + ":" + composerFocus}
-                                doc={doc}
-                                outletId={outlet.id}
-                                menuId={detail.id}
-                                media={media}
-                                organization={organizationDishes}
-                                defaultCategoryId={composerCategory}
-                                focusRequest={composerFocus}
-                                selection={composerSelection}
-                                setSelection={setComposerSelection}
-                                onAdd={addQuickDishes}
-                                onPendingChange={setComposerPending}
-                              />
-                            </div>
-                            {composerMode === "find" && (
-                              <div className="atelier-filter-panel stack">
-                                <label className="field">
-                                  Find a dish or section
-                                  <input
-                                    aria-label="Find a dish or section"
-                                    type="search"
-                                    value={dishSearch}
-                                    onChange={(e) => setDishSearch(e.target.value)}
-                                    placeholder="Filter names and descriptions"
-                                  />
-                                </label>
-                                <p className="quiet">
-                                  Filtering only changes this view, never the saved menu.
-                                </p>
-                                
-                              </div>
-                            )}
-                          </div>
-                          <nav aria-label="Filter menu sections" className="atelier-section-filter row">
-                                  <button
-                                    type="button"
-                                    aria-pressed={categoryFilter === "all"}
-                                    onClick={() => setCategoryFilter("all")}
-                                  >
-                                    All sections
-                                  </button>
-                                  {doc.categories.map((cat) => (
-                                    <button
-                                      key={cat.id}
-                                      type="button"
-                                      aria-pressed={categoryFilter === cat.id}
-                                      onClick={() => setCategoryFilter(cat.id)}
-                                    >
-                                      {cat.name}{cat.archived ? " (archived)" : ""} · {cat.items.filter(item => !item.archived).length}
-                                    </button>
-                                  ))}
-                                </nav>
-                          <div className="row between">
-                            <h2>Sections & dishes</h2>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                change({
-                                  ...doc,
-                                  categories: [
-                                    ...doc.categories,
-                                    {
-                                      id: id(),
-                                      name: "New section",
-                                      description: "",
-                                      archived: false,
-                                      items: [],
-                                    },
-                                  ],
-                                })
-                              }
+                      <fieldset
+                        disabled={busy || !detail.canWrite || detail.archived}
+                        className="stack"
+                        style={{ minWidth: 0 }}
+                      >
+                        <Field
+                          label="Menu name"
+                          value={doc.name}
+                          onChange={(name) => change({ ...doc, name })}
+                        />
+                        {tab === "dishes" && (
+                          <>
+                            <div
+                              className="atelier-composer stack"
+                              aria-label="Dish entry and menu filtering"
                             >
-                              <Plus size={16} />
-                              Add category
-                            </button>
-                          </div>
-                          {doc.categories
-                            .map((c, ci) => ({ c, ci }))
-                            .filter(
-                              ({ c }) =>
-                                (categoryFilter === "all" || categoryFilter === c.id) &&
-                                (!dishSearch.trim() ||
-                                  [
-                                    c.name,
-                                    c.description,
-                                    ...c.items.flatMap((d) => [d.name, d.description]),
-                                  ].some((value) =>
-                                    value
-                                      .toLocaleLowerCase()
-                                      .includes(dishSearch.trim().toLocaleLowerCase())
-                                  ))
-                            )
-                            .map(({ c, ci }) => (
-                              <section
-                                key={c.id}
-                                className="atelier-menu-section panel stack"
-                              >
-                                <div className="row between">
-                                  <span className="eyebrow">Section {ci + 1}</span>
-                                  <div className="row">
-                                    <button
-                                      type="button"
-                                      aria-label={`Move ${c.name} up`}
-                                      onClick={() => move(ci, -1)}
-                                    >
-                                      <ArrowUp size={16} />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      aria-label={`Move ${c.name} down`}
-                                      onClick={() => move(ci, 1)}
-                                    >
-                                      <ArrowDown size={16} />
-                                    </button>
-                                    <label>
-                                      <input
-                                        type="checkbox"
-                                        checked={c.archived}
-                                        onChange={(e) =>
-                                          updateCategory(ci, (c) => ({
-                                            ...c,
-                                            archived: e.target.checked,
-                                          }))
-                                        }
-                                      />
-                                      Archive section
-                                    </label>
-                                  </div>
+                              <div className="atelier-composer-head">
+                                <div>
+                                  <span className="atelier-eyebrow">SMART COMPOSER</span>
+                                  <h2>Add something delicious.</h2>
+                                  <p className="quiet">
+                                    Find a familiar dish or create your own. Nothing is published
+                                    automatically.
+                                  </p>
                                 </div>
-                                <Field
-                                  label={`Category name ${ci + 1}`}
-                                  value={c.name}
-                                  onChange={(name) => updateCategory(ci, (c) => ({ ...c, name }))}
+                                <Image
+                                  src="/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp"
+                                  alt=""
+                                  width={120}
+                                  height={88}
                                 />
-                                <label className="field">
-                                  Section description
-                                  <textarea
-                                    value={c.description}
-                                    onChange={(e) =>
-                                      updateCategory(ci, (c) => ({
-                                        ...c,
-                                        description: e.target.value,
-                                      }))
-                                    }
-                                  />
-                                </label>
-                                {c.items
-                                  .map((dish, di) => ({ dish, di }))
-                                  .filter(
-                                    ({ dish }) =>
-                                      !dishSearch.trim() ||
-                                      [c.name, c.description, dish.name, dish.description].some(
-                                        (value) =>
-                                          value
-                                            .toLocaleLowerCase()
-                                            .includes(dishSearch.trim().toLocaleLowerCase())
-                                      )
-                                  )
-                                  .map(({ dish, di }) => (
-                                    <StudioDishEditor
-                                      key={dish.id}
-                                      dish={dish}
-                                      ci={ci}
-                                      di={di}
-                                      dishCount={c.items.length}
-                                      canWrite={detail.canWrite}
-                                      currency={doc.currency}
-                                      media={media}
-                                      onUpdate={(patch) => updateDish(ci, di, patch)}
-                                      onMove={(delta) => moveDish(ci, di, delta)}
-                                    />
-                                  ))}
+                              </div>
+                              <div className="row" role="group" aria-label="Menu Studio dish tools">
                                 <button
                                   type="button"
-                                  className="ember"
-                                  onClick={() => openComposer(c.id)}
+                                  className={composerMode === "add" ? "ember" : ""}
+                                  aria-pressed={composerMode === "add"}
+                                  onClick={() => {
+                                    setComposerMode("add");
+                                    setDishSearch("");
+                                    setCategoryFilter("all");
+                                    setComposerFocus((n) => n + 1);
+                                  }}
                                 >
-                                  <Plus size={16} /> Add dish
+                                  + Add dishes
                                 </button>
-                              </section>
-                            ))}
-                        </>
-                      )}
-                      {tab === "schedule" && (
-                        <section className="panel stack">
-                          <h2>Menu service schedule</h2>
-                          <ScheduleEditor
-                            value={doc.schedule}
-                            onChange={(schedule) => change({ ...doc, schedule })}
-                          />
-                        </section>
-                      )}
-                    </fieldset>
-                  </form>
-                  {tab === "media" && (
-                    <StudioMediaTab media={media} outletId={outlet.id} busy={busy} run={run} json={json} refreshMedia={refreshMedia} setMessage={setMessage} />
-                  )}
-                  {tab === "assignments" && (
-                    <StudioAssignmentsTab doc={doc} detail={detail} outletId={outlet.id} outletChoices={outletChoices} brandChoices={brandChoices} busy={busy} run={run} command={command} load={load} setMessage={setMessage} />
-                  )}
-                                  </>
+                                <button
+                                  type="button"
+                                  className={composerMode === "find" ? "ember" : ""}
+                                  aria-pressed={composerMode === "find"}
+                                  onClick={() => setComposerMode("find")}
+                                >
+                                  Find in menu
+                                </button>
+                              </div>
+                              <div hidden={composerMode !== "add"}>
+                                <SmartDishComposer
+                                  key={detail.id + ":" + composerFocus}
+                                  doc={doc}
+                                  outletId={outlet.id}
+                                  menuId={detail.id}
+                                  media={media}
+                                  organization={organizationDishes}
+                                  defaultCategoryId={composerCategory}
+                                  focusRequest={composerFocus}
+                                  selection={composerSelection}
+                                  setSelection={setComposerSelection}
+                                  onAdd={addQuickDishes}
+                                  onPendingChange={setComposerPending}
+                                />
+                              </div>
+                              {composerMode === "find" && (
+                                <div className="atelier-filter-panel stack">
+                                  <label className="field">
+                                    Find a dish or section
+                                    <input
+                                      aria-label="Find a dish or section"
+                                      type="search"
+                                      value={dishSearch}
+                                      onChange={(e) => setDishSearch(e.target.value)}
+                                      placeholder="Filter names and descriptions"
+                                    />
+                                  </label>
+                                  <p className="quiet">
+                                    Filtering only changes this view, never the saved menu.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            <nav
+                              aria-label="Filter menu sections"
+                              className="atelier-section-filter row"
+                            >
+                              <button
+                                type="button"
+                                aria-pressed={categoryFilter === "all"}
+                                onClick={() => setCategoryFilter("all")}
+                              >
+                                All sections
+                              </button>
+                              {doc.categories.map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  aria-pressed={categoryFilter === cat.id}
+                                  onClick={() => setCategoryFilter(cat.id)}
+                                >
+                                  {cat.name}
+                                  {cat.archived ? " (archived)" : ""} ·{" "}
+                                  {cat.items.filter((item) => !item.archived).length}
+                                </button>
+                              ))}
+                            </nav>
+                            <div className="row between">
+                              <h2>Sections & dishes</h2>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  change({
+                                    ...doc,
+                                    categories: [
+                                      ...doc.categories,
+                                      {
+                                        id: id(),
+                                        name: "New section",
+                                        description: "",
+                                        archived: false,
+                                        items: [],
+                                      },
+                                    ],
+                                  })
+                                }
+                              >
+                                <Plus size={16} />
+                                Add category
+                              </button>
+                            </div>
+                            {doc.categories
+                              .map((c, ci) => ({ c, ci }))
+                              .filter(
+                                ({ c }) =>
+                                  (categoryFilter === "all" || categoryFilter === c.id) &&
+                                  (!dishSearch.trim() ||
+                                    [
+                                      c.name,
+                                      c.description,
+                                      ...c.items.flatMap((d) => [d.name, d.description]),
+                                    ].some((value) =>
+                                      value
+                                        .toLocaleLowerCase()
+                                        .includes(dishSearch.trim().toLocaleLowerCase())
+                                    ))
+                              )
+                              .map(({ c, ci }) => (
+                                <section key={c.id} className="atelier-menu-section panel stack">
+                                  <div className="row between">
+                                    <span className="eyebrow">Section {ci + 1}</span>
+                                    <div className="row">
+                                      <button
+                                        type="button"
+                                        aria-label={`Move ${c.name} up`}
+                                        onClick={() => move(ci, -1)}
+                                      >
+                                        <ArrowUp size={16} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label={`Move ${c.name} down`}
+                                        onClick={() => move(ci, 1)}
+                                      >
+                                        <ArrowDown size={16} />
+                                      </button>
+                                      <label>
+                                        <input
+                                          type="checkbox"
+                                          checked={c.archived}
+                                          onChange={(e) =>
+                                            updateCategory(ci, (c) => ({
+                                              ...c,
+                                              archived: e.target.checked,
+                                            }))
+                                          }
+                                        />
+                                        Archive section
+                                      </label>
+                                    </div>
+                                  </div>
+                                  <Field
+                                    label={`Category name ${ci + 1}`}
+                                    value={c.name}
+                                    onChange={(name) => updateCategory(ci, (c) => ({ ...c, name }))}
+                                  />
+                                  <label className="field">
+                                    Section description
+                                    <textarea
+                                      value={c.description}
+                                      onChange={(e) =>
+                                        updateCategory(ci, (c) => ({
+                                          ...c,
+                                          description: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                  </label>
+                                  {c.items
+                                    .map((dish, di) => ({ dish, di }))
+                                    .filter(
+                                      ({ dish }) =>
+                                        !dishSearch.trim() ||
+                                        [c.name, c.description, dish.name, dish.description].some(
+                                          (value) =>
+                                            value
+                                              .toLocaleLowerCase()
+                                              .includes(dishSearch.trim().toLocaleLowerCase())
+                                        )
+                                    )
+                                    .map(({ dish, di }) => (
+                                      <StudioDishEditor
+                                        key={dish.id}
+                                        dish={dish}
+                                        ci={ci}
+                                        di={di}
+                                        dishCount={c.items.length}
+                                        canWrite={detail.canWrite}
+                                        currency={doc.currency}
+                                        media={media}
+                                        onUpdate={(patch) => updateDish(ci, di, patch)}
+                                        onMove={(delta) => moveDish(ci, di, delta)}
+                                      />
+                                    ))}
+                                  <button
+                                    type="button"
+                                    className="ember"
+                                    onClick={() => openComposer(c.id)}
+                                  >
+                                    <Plus size={16} /> Add dish
+                                  </button>
+                                </section>
+                              ))}
+                          </>
+                        )}
+                        {tab === "schedule" && (
+                          <section className="panel stack">
+                            <h2>Menu service schedule</h2>
+                            <ScheduleEditor
+                              value={doc.schedule}
+                              onChange={(schedule) => change({ ...doc, schedule })}
+                            />
+                          </section>
+                        )}
+                      </fieldset>
+                    </form>
+                    {tab === "media" && (
+                      <StudioMediaTab
+                        media={media}
+                        outletId={outlet.id}
+                        busy={busy}
+                        run={run}
+                        json={json}
+                        refreshMedia={refreshMedia}
+                        setMessage={setMessage}
+                      />
+                    )}
+                    {tab === "assignments" && (
+                      <StudioAssignmentsTab
+                        doc={doc}
+                        detail={detail}
+                        outletId={outlet.id}
+                        outletChoices={outletChoices}
+                        brandChoices={brandChoices}
+                        busy={busy}
+                        run={run}
+                        command={command}
+                        load={load}
+                        setMessage={setMessage}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+              {!preview && (
+                <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
               )}
             </div>
-            {!preview && <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />}
-          </div>
-        </>
-      )}
+          </>
+        )}
       </div>
     </div>
   );
