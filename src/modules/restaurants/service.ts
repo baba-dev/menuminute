@@ -1,9 +1,9 @@
 import { scheduleSchema } from "@/modules/menu-product/contracts";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { restaurants, qrCodes } from "@/db/schema";
+import { restaurantTables, restaurants, qrCodes } from "@/db/schema";
 import { getPool } from "@/db";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { generateMenuQrCode } from "@/modules/qr/service";
@@ -75,7 +75,17 @@ export async function createRestaurant(
 }
 export async function getRestaurantQrCodes(actor: Actor, id: string) {
   return withOutlet(actor, id, "menu.read", (tx) =>
-    tx.select().from(qrCodes).where(eq(qrCodes.restaurantId, id))
+    tx
+      .select({
+        ...getTableColumns(qrCodes),
+        pointLabel: restaurantTables.label,
+      })
+      .from(qrCodes)
+      .leftJoin(
+        restaurantTables,
+        and(eq(qrCodes.tableId, restaurantTables.id), eq(restaurantTables.restaurantId, id))
+      )
+      .where(eq(qrCodes.restaurantId, id))
   );
 }
 export type PublicMenu = {

@@ -226,6 +226,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code created");
   const rows = await (await page.request.get("/api/qr")).json();
   const q = rows.find((q: { label: string }) => q.label === "Patio menu");
+  expect(q.pointLabel).toBe("Table 4");
   const patioCard = page
     .getByRole("heading", { name: "Patio menu", exact: true })
     .locator("xpath=ancestor::section");
@@ -235,19 +236,25 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await patioCard.getByRole("button", { name: "Print", exact: true }).click();
   await expect(patioCard).toHaveAttribute("data-print-target", "true");
   await expect(patioCard.locator("xpath=..")).toHaveAttribute("data-print-selected", "true");
-  await expect(patioCard.locator("code")).toContainText("/m/");
+  await expect(patioCard.locator(".qr-fallback code")).toContainText("/m/");
+  await expect(patioCard.getByLabel("Table Stand print preview")).toContainText("Table 4");
   const download = await page.request.get(`/api/qr/${q.id}/download`);
   expect(download.status()).toBe(200);
   expect(download.headers()["content-type"]).toBe("image/png");
   await guest.goto(`/m/${q.destinationToken}`);
   await expect(guest.getByText("Table 4", { exact: true })).toBeVisible();
-  page.once("dialog", (d) => d.accept());
-  await page
-    .getByRole("heading", { name: "Patio menu", exact: true })
-    .locator("xpath=ancestor::section")
-    .getByRole("button", { name: "Revoke QR", exact: true })
-    .click();
+  await patioCard.getByText("Manage QR identity").click();
+  await patioCard.getByRole("button", { name: "Revoke QR", exact: true }).click();
+  const revokeDialog = page.getByRole("dialog", { name: "Revoke this printed QR?" });
+  await expect(revokeDialog.getByRole("button", { name: "Confirm revoke" })).toBeDisabled();
+  await revokeDialog.getByLabel("Type REVOKE to continue").fill("REVOKE");
+  await revokeDialog.getByRole("button", { name: "Confirm revoke" }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code revoked");
+  await page.getByRole("button", { name: "Print Studio", exact: true }).click();
+  await expect(page.getByLabel("Table Stand print preview")).toBeVisible();
+  await expect(
+    page.getByLabel("Table Stand print preview").locator('img[src*="format=svg"]')
+  ).toHaveCount(1);
   expect((await guest.goto(`/m/${q.destinationToken}`))?.status()).toBe(404);
   expect((await guest.goto(`/m/${f.token}`))?.status()).toBe(200);
   await guest.screenshot({ path: info.outputPath("published-menu.png"), fullPage: true });
@@ -455,6 +462,65 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
     "publication-celebration.webp",
   ]) {
     const response = await request.get("/brand/menu-studio/recipe-atelier/" + name);
+    expect(response.status(), name).toBe(200);
+    expect(response.headers()["content-type"], name).toContain("image/webp");
+  }
+});
+
+test("Tabletop Press is responsive and uses real QR media for all printable formats", async ({
+  page,
+  request,
+}, info) => {
+  test.setTimeout(90000);
+  const owner = await seed(true);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(owner.email);
+  await page.getByLabel("Password", { exact: true }).fill(owner.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/qr-codes");
+  const studio = page.getByTestId("tabletop-press");
+  await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
+  await expect(studio.getByLabel("QR inventory at a glance")).toBeVisible();
+  await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeVisible();
+  await studio.locator('summary[aria-label="About Active codes"]').click();
+  await expect(studio.getByText("Currently usable permanent destination tokens.")).toBeVisible();
+  const printPreview = studio.getByLabel("Table Stand print preview");
+  await expect(printPreview).toBeVisible();
+  await expect(printPreview.locator('img[src*="format=svg"]')).toHaveCount(1);
+  await studio.getByRole("button", { name: "Window / Counter Sticker" }).click();
+  await expect(studio.getByLabel("Window / Counter Sticker print preview")).toBeVisible();
+  await studio.getByRole("button", { name: "Menu Insert" }).click();
+  await expect(studio.getByLabel("Menu Insert print preview")).toBeVisible();
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: info.outputPath("tabletop-press-light-mobile.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({
+    path: info.outputPath("tabletop-press-dark-mobile.png"),
+    fullPage: true,
+  });
+  for (const name of [
+    "hero-desktop-light.webp",
+    "hero-desktop-dark.webp",
+    "hero-mobile-light.webp",
+    "hero-mobile-dark.webp",
+    "first-qr-empty-illustration.webp",
+    "print-studio-illustration.webp",
+    "qr-creation-celebration.webp",
+  ]) {
+    const response = await request.get("/brand/qr-studio/tabletop-press/" + name);
     expect(response.status(), name).toBe(200);
     expect(response.headers()["content-type"], name).toContain("image/webp");
   }

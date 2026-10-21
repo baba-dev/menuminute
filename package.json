@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node scripts/dashboard-media.mjs && next dev",
-    "build": "node scripts/verify-menu-studio-media.mjs && node scripts/dashboard-media.mjs && next build",
+    "build": "node scripts/verify-qr-studio-media.mjs && node scripts/verify-menu-studio-media.mjs && node scripts/dashboard-media.mjs && next build",
     "start": "next start",
     "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint src --fix",
@@ -33,7 +33,8 @@
     "build:release-preflight": "esbuild scripts/env-validate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/env-validate.mjs && esbuild scripts/db-migration-verify.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migration-verify.mjs",
     "worker": "node dist/worker.mjs",
     "billing:entitlement": "tsx scripts/entitlement.ts",
-    "media:verify:studio": "node scripts/verify-menu-studio-media.mjs"
+    "media:verify:studio": "node scripts/verify-menu-studio-media.mjs",
+    "media:verify:qr": "node scripts/verify-qr-studio-media.mjs"
   },
   "dependencies": {
     "@better-auth/core": "1.7.7",
