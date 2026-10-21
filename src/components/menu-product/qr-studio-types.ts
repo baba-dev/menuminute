@@ -4,6 +4,7 @@ export type QR = {
   destinationToken: string;
   isActive: boolean;
   tableId: string | null;
+  pointLabel: string | null;
 };
 
 export type QRFilter = "active" | "revoked" | "all";
