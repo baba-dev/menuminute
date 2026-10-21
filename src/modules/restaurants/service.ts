@@ -1,4 +1,5 @@
 import { scheduleSchema } from "@/modules/menu-product/contracts";
+import { readWorkspacePreference } from "@/modules/organizations/workspace-preferences";
 import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createHash } from "node:crypto";
@@ -40,7 +41,17 @@ export async function getRestaurantsByUserId(userId: string) {
 export async function getDefaultOrActiveRestaurant(userId?: string, activeOutletId?: string) {
   if (!userId) return undefined;
   const outlets = await getRestaurantsByUserId(userId);
-  return outlets.find((o) => o.id === activeOutletId) ?? outlets[0];
+  const preference = await readWorkspacePreference(userId);
+  // Database preference wins across devices; cookie is only a legacy fallback.
+  // Match both fields against fresh tenant-scoped active outlets.
+  return (
+    outlets.find((o) => o.id === preference?.outletId && o.organizationId === preference.organizationId) ??
+    (preference?.organizationId
+      ? outlets.find((o) => o.organizationId === preference.organizationId)
+      : undefined) ??
+    (!preference ? outlets.find((o) => o.id === activeOutletId) : undefined) ??
+    outlets[0]
+  );
 }
 export async function getRestaurantById(actor: Actor, id: string) {
   return withOutlet(

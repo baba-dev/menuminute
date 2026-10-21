@@ -5,13 +5,16 @@ import { SessionContinuity } from "@/components/auth/session-continuity";
 import { listOrganizations } from "@/modules/organizations/service";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import { AccountWorkspacePreference } from "./workspace-preference";
+import { readWorkspacePreference } from "@/modules/organizations/workspace-preferences";
 export const metadata = { title: "Your account — MenuMinute" };
 export default async function AccountPage() {
   const session = await auth();
   if (!session) redirect("/login?next=%2Faccount");
-  const [organizations, outlets] = await Promise.all([
+  const [organizations, outlets, preference] = await Promise.all([
     listOrganizations({ userId: session.user.id }),
     getRestaurantsByUserId(session.user.id),
+    readWorkspacePreference(session.user.id),
   ]);
   return (
     <main className="product public-shell stack" style={{ maxWidth: "1000px" }}>
@@ -52,12 +55,12 @@ export default async function AccountPage() {
           <p>
             {organizations.length} organizations · {outlets.length} active outlets
           </p>
-          {organizations.map((o) => (
-            <div key={o.id} className="row between">
-              <strong>{o.name}</strong>
-              <span className="badge">{o.role}</span>
-            </div>
-          ))}
+          <AccountWorkspacePreference
+            organizations={organizations.filter((o) => o.isActive).map((o) => ({ id: o.id, name: o.name, role: o.role }))}
+            outlets={outlets.map((o) => ({ id: o.id, name: o.name, organizationId: o.organizationId }))}
+            selectedOrganizationId={preference?.organizationId ?? null}
+            selectedOutletId={preference?.outletId ?? null}
+          />
           <Link className="action" href="/dashboard/organization">
             Manage team invitations and access →
           </Link>

@@ -21,3 +21,5 @@ export * from "./menu-product";
 export * from "./menu-import";
 
 export * from "./kitchen";
+
+export * from "./continuity";
