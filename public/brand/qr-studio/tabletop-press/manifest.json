@@ -1,0 +1,77 @@
+{
+  "collection": "MenuMinute QR Studio 2.0 — The Tabletop Press",
+  "version": 1,
+  "basePath": "/brand/qr-studio/tabletop-press/",
+  "assets": [
+    {
+      "filename": "hero-desktop-light.webp",
+      "width": 2880,
+      "height": 800,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 189662,
+      "sha256": "4e2a4f1acca31bd2b8ac89955abf51724859c3a0f00e312899cd67fe45aefed4",
+      "usage": "Full-bleed desktop daylight hero"
+    },
+    {
+      "filename": "hero-desktop-dark.webp",
+      "width": 2880,
+      "height": 800,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 219610,
+      "sha256": "a8e52d9ec59788792ea2e8ce3d9d7b625fb75cdaf12e654853b9c21b6b322a86",
+      "usage": "Full-bleed desktop evening hero"
+    },
+    {
+      "filename": "hero-mobile-light.webp",
+      "width": 960,
+      "height": 1000,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 107574,
+      "sha256": "5718d544db2cb5a3e3213c18e86a3412d4af331d02fad4653dec7ec61aac3d77",
+      "usage": "Portrait daylight hero"
+    },
+    {
+      "filename": "hero-mobile-dark.webp",
+      "width": 960,
+      "height": 1000,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 110384,
+      "sha256": "b03a613c5e0a80aa790318d457fb99d64c9bc695254ef4650a148ff72070e771",
+      "usage": "Portrait evening hero"
+    },
+    {
+      "filename": "first-qr-empty-illustration.webp",
+      "width": 700,
+      "height": 600,
+      "format": "WebP",
+      "transparent": true,
+      "bytes": 119960,
+      "sha256": "8add86155b44b7ef3b3e1833509292aa2a8eeb3a5ed7bb3db5a4a3009bb7528c",
+      "usage": "Decorative first-QR empty state"
+    },
+    {
+      "filename": "print-studio-illustration.webp",
+      "width": 640,
+      "height": 480,
+      "format": "WebP",
+      "transparent": true,
+      "bytes": 90714,
+      "sha256": "da2acbe7f6838ee573507da48f8cc389f7cbe43a5873ef767195dbcc40a6917e",
+      "usage": "Decorative printing templates illustration"
+    },
+    {
+      "filename": "qr-creation-celebration.webp",
+      "width": 600,
+      "height": 450,
+      "format": "WebP",
+      "transparent": true,
+      "bytes": 73310,
+      "sha256": "133def23652b0e61d8d1f1b6f1e7684f7b14c13170ff83f64770ddb320ca87b2",
+      "usage": "Decorative creation-success state"
+    }
+  ]
+}
