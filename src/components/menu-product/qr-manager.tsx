@@ -48,7 +48,7 @@ export function QrManager({
   const [selectedId, setSelectedId] = useState(
     initial.find((q) => q.isActive)?.id ?? initial[0]?.id ?? null
   );
-  const [filter, setFilter] = useState<QRFilter>("active");
+  const [filter, setFilter] = useState<QRFilter>(initial.some((q) => q.isActive) ? "active" : "all");
   const [query, setQuery] = useState("");
   const [shown, setShown] = useState(pageSize);
   const [busy, setBusy] = useState(false);
@@ -65,6 +65,7 @@ export function QrManager({
   const running = useRef(false);
   const dangerDialog = useRef<HTMLDialogElement>(null);
   const pointRef = useRef<HTMLInputElement>(null);
+  const detailRef = useRef<HTMLElement>(null);
 
   const stats = useMemo(() => qrStatistics(codes), [codes]);
   const visible = useMemo(() => filterQrCodes(codes, query, filter), [codes, query, filter]);
@@ -123,7 +124,7 @@ export function QrManager({
           throw new Error(
             "The command was accepted, but the new QR is not yet visible. Refresh before retrying."
           );
-        setSelectedId(next.id);
+        selectCode(next.id);
         setFilter("active");
       } else {
         setSelectedId(result.id ?? selectedId);
@@ -177,7 +178,21 @@ export function QrManager({
       setError("Clipboard access was blocked. Select and copy the visible fallback URL instead.");
     }
   }
-  function print(q: QR) {
+  function scrollToSection(id: string, block: ScrollLogicalPosition = "start") {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block });
+  }
+  function selectCode(id: string) {
+    setSelectedId(id);
+    if (window.matchMedia("(max-width: 1050px)").matches) {
+      window.requestAnimationFrame(() => {
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        detailRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        detailRef.current?.focus({ preventScroll: true });
+      });
+    }
+  }
+    function print(q: QR) {
     if (!q.isActive) return;
     flushSync(() => setPrintId(q.id));
     window.print();
@@ -214,9 +229,7 @@ export function QrManager({
               type="button"
               onClick={() => {
                 setShowCreate(true);
-                document
-                  .getElementById("qr-create")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                scrollToSection("qr-create", "center");
               }}
             >
               {" "}
@@ -428,7 +441,7 @@ export function QrManager({
                     <button
                       type="button"
                       aria-current={selectedId === q.id ? "true" : undefined}
-                      onClick={() => setSelectedId(q.id)}
+                      onClick={() => selectCode(q.id)}
                     >
                       <span className="qr-list-icon">
                         <QrCode size={20} aria-hidden="true" />
@@ -464,6 +477,8 @@ export function QrManager({
               {selected ? (
                 <section
                   className="qr-selected"
+                  ref={detailRef}
+                  tabIndex={-1}
                   data-print-target={printId === selected.id}
                   data-qr-active={selected.isActive}
                   aria-labelledby="qr-selected-title"
