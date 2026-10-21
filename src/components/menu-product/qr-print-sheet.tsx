@@ -27,7 +27,11 @@ export function QrPrintSheet({
   if (!qr.isActive) return null;
   const url = qrDestination(origin, qr.destinationToken);
   return (
-    <div className={styles.printCanvas} data-print-ready={active ? "true" : "false"} aria-label={names[format] + " print preview"}>
+    <div
+      className={styles.printCanvas}
+      data-print-ready={active ? "true" : "false"}
+      aria-label={names[format] + " print preview"}
+    >
       <article className={styles.sheet} data-format={format}>
         <div className={styles.brand}>
           <Image src="/brand/qr/centre-mark-circle.svg" alt="" width={36} height={36} />
@@ -50,7 +54,10 @@ export function QrPrintSheet({
         <code className={styles.url}>{url}</code>
         <span className={styles.paperFooter}>PRINT ONCE. KEEP SERVING.</span>
       </article>
-      <p className={styles.printTip}>Preview: {names[format]}. Use actual size in your browser print dialogue; scan a proof before distributing.</p>
+      <p className={styles.printTip}>
+        Preview: {names[format]}. Use actual size in your browser print dialogue; scan a proof
+        before distributing.
+      </p>
     </div>
   );
 }
