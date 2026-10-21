@@ -2,6 +2,26 @@
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin boolean NOT NULL DEFAULT false;
 CREATE INDEX IF NOT EXISTS users_super_admin_idx ON users(is_super_admin) WHERE is_super_admin;
 
+-- Better Auth retains its existing user-row INSERT/UPDATE grants. A SECURITY
+-- INVOKER trigger prevents that runtime role from changing the privileged bit,
+-- including on registration; the vetted SECURITY DEFINER command can change it.
+CREATE FUNCTION app_private.protect_superadmin_role() RETURNS trigger
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public,pg_temp AS $
+BEGIN
+ IF current_user='menuminute_app' THEN
+   IF TG_OP='INSERT' AND NEW.is_super_admin THEN
+     RAISE EXCEPTION 'Superadmin cannot be assigned through registration' USING ERRCODE='42501';
+   ELSIF TG_OP='UPDATE' AND NEW.is_super_admin IS DISTINCT FROM OLD.is_super_admin THEN
+     RAISE EXCEPTION 'Use the audited platform command for role changes' USING ERRCODE='42501';
+   END IF;
+ END IF;
+ RETURN NEW;
+END $;
+REVOKE ALL ON FUNCTION app_private.protect_superadmin_role() FROM PUBLIC;
+CREATE TRIGGER users_protect_superadmin BEFORE INSERT OR UPDATE ON users
+FOR EACH ROW EXECUTE FUNCTION app_private.protect_superadmin_role();
+
+
 -- Automatically mark approved superadmin email
 UPDATE users SET is_super_admin = true WHERE email = 'admin@bababuilds.com';
 

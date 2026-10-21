@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { dashboardSummary, preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
+import {
+  dashboardSetup,
+  dashboardSummary,
+  preferredMenuQr,
+} from "@/modules/menu-product/dashboard-summary";
 
 const codes = [
   { isActive: true, purpose: "menu", tableId: "table-1", destinationToken: "table-token" },
@@ -70,5 +74,34 @@ describe("merchant dashboard published-source summary", () => {
         }
       ).hasPublicMenu
     ).toBe(false);
+  });
+});
+
+describe("editorial dashboard setup truthfulness", () => {
+  it("reports only verified completion states", () => {
+    expect(
+      dashboardSetup({
+        hasOutlet: true,
+        hasSavedMenu: true,
+        hasPublicMenu: false,
+        hasActiveQr: true,
+      })
+    ).toMatchObject({ completed: 3, total: 4, percent: 75 });
+    expect(
+      dashboardSetup({
+        hasOutlet: false,
+        hasSavedMenu: false,
+        hasPublicMenu: false,
+        hasActiveQr: false,
+      })
+    ).toMatchObject({ completed: 0, total: 4, percent: 0 });
+    expect(
+      dashboardSetup({
+        hasOutlet: true,
+        hasSavedMenu: true,
+        hasPublicMenu: true,
+        hasActiveQr: true,
+      })
+    ).toMatchObject({ completed: 4, total: 4, percent: 100 });
   });
 });
