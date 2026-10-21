@@ -80,6 +80,8 @@ test("connection interruption does not erase login entries or claim an intention
   await page.getByLabel("Email address").fill("owner@browser.invalid");
   await page.getByLabel("Password", { exact: true }).fill("temporary-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText(/temporarily unavailable|Unable to connect/);
+  await expect(page.locator(".mm-auth-form .mm-auth-message--error[role='alert']")).toContainText(
+    /temporarily unavailable|Unable to connect/
+  );
   await expect(page.getByLabel("Email address")).toHaveValue("owner@browser.invalid");
 });
