@@ -18,7 +18,7 @@ const links = [
   { href: "/dashboard/qr-codes", label: "QR codes", Icon: QrCode },
   { href: "/dashboard/orders", label: "Orders", Icon: ShoppingBag },
   { href: "/kitchen", label: "Kitchen", Icon: ChefHat },
-  { href: "/dashboard/organization", label: "Organization", Icon: Building2 },
+  { href: "/dashboard/organization", label: "Organization & access", Icon: Building2 },
   { href: "/dashboard/settings", label: "Settings", Icon: Settings },
 ] as const;
 
