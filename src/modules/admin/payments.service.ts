@@ -8,7 +8,7 @@ import {
 } from "@/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 
 export async function listSubscriptionPlans() {

@@ -47,7 +47,33 @@ beforeAll(async () => {
   ]);
 }, 30000);
 afterAll(async () => {
-  await owner?.end();
+  if (!owner) return;
+  const client = await owner.connect();
+  try {
+    await client.query("BEGIN");
+    // The failed-event fixture must never escape into subsequent worker suites.
+    await client.query("delete from consumer_receipts where organization_id=$1", [orgId]);
+    await client.query("delete from outbox_events where organization_id=$1", [orgId]);
+    await client.query("delete from domain_projections where organization_id=$1", [orgId]);
+    await client.query("delete from domain_audit where organization_id=$1", [orgId]);
+    await client.query("delete from entitlement_grants where organization_id=$1", [orgId]);
+    await client.query("delete from organizations where id=$1", [orgId]);
+    await client.query("delete from admin_command_receipts where actor_id=$1", [rootId]);
+    // Test owner temporarily bypasses FORCE RLS solely inside this isolated,
+    // rollback-protected fixture cleanup, restoring it before COMMIT.
+    await client.query("alter table admin_audit_logs no force row level security");
+    await client.query("delete from admin_audit_logs where actor_id=$1", [rootId]);
+    await client.query("alter table admin_audit_logs force row level security");
+    await client.query("delete from sessions where user_id in ($1,$2)", [rootId, memberId]);
+    await client.query("delete from users where id in ($1,$2)", [rootId, memberId]);
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+    await owner.end();
+  }
 });
 
 describe("restricted-role platform command integration", () => {
@@ -159,7 +185,10 @@ describe("restricted-role platform command integration", () => {
       ).rejects.toThrow();
       const state = await owner.query("select is_active from organizations where id=$1", [orgId]);
       expect(state.rows[0]?.is_active).toBe(true);
-      const stepUp = await owner.query("select count(*)::int as total from auth_step_up where session_id=$1", [rootSession]);
+      const stepUp = await owner.query(
+        "select count(*)::int as total from auth_step_up where session_id=$1",
+        [rootSession]
+      );
       expect(stepUp.rows[0]?.total).toBe(1);
     } finally {
       await owner.query("drop trigger if exists reject_isolated_admin_audit on admin_audit_logs");
