@@ -279,7 +279,8 @@ export function StudioPreview({
   timezone: string;
 }) {
   const exponent = currencyExponent(currency) ?? 2;
-  const sections = doc.categories.filter((c) => !c.archived);
+  const allSections = doc.categories.filter((c) => !c.archived);
+  const sections = allSections.slice(0, 4);
   return (
     <aside className="atelier-preview-panel no-print" aria-label="Integrated private draft preview">
       <div className="atelier-preview-top">
@@ -295,7 +296,7 @@ export function StudioPreview({
           </small>
         </div>
         <p className="atelier-preview-disclaimer">
-          Preview only. Guests see your last explicitly published release.
+          Draft outline only. Guests see your last explicitly published release. Use Preview draft to inspect the complete projected menu.
         </p>
         {sections.length ? (
           sections.map((cat) => (
@@ -303,6 +304,7 @@ export function StudioPreview({
               <h3>{cat.name}</h3>
               {cat.items
                 .filter((i) => !i.archived)
+                .slice(0, 8)
                 .map((dish) => (
                   <div key={dish.id} className="atelier-preview-dish">
                     <div>
