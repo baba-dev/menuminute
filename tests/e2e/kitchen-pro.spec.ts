@@ -101,7 +101,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
       [orderId, f.outlet]
     );
     await pool.query(
-      "insert into order_items(id,order_id,restaurant_id,dish_id,item_name,quantity) values($1,$2,$3,'paneer','Paneer Tikka',1)",
+      "insert into order_items(id,order_id,restaurant_id,dish_id,item_name,quantity,unit_price_minor,total_minor,unit_price_paise,total_paise) values($1,$2,$3,'paneer','Paneer Tikka',1,12000,12000,12000,12000)",
       [itemId, orderId, f.outlet]
     );
     await pool.query(
