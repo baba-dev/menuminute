@@ -411,10 +411,13 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   }
   await page.getByLabel("Menu name").fill("Kitchen seasonal menu");
   await studio.getByRole("button", { name: "Assignments", exact: true }).click();
-  await expect(studio.locator(".atelier-assignment-lock")).toBeDisabled();
+  await expect(studio.locator(".atelier-assignment-lock")).toHaveAttribute("disabled", "");
+  await expect(studio.getByRole("button", { name: "Save assignment" })).toBeDisabled();
+  await expect(studio.getByRole("button", { name: "Save local override" })).toBeDisabled();
   await expect(studio.getByText(/Save your draft and review queued Composer dishes/)).toBeVisible();
   await studio.getByRole("button", { name: "Save draft" }).click();
-  await expect(studio.locator(".atelier-assignment-lock")).toBeEnabled();
+  await expect(studio.locator(".atelier-assignment-lock")).not.toHaveAttribute("disabled");
+  await expect(studio.getByRole("button", { name: "Save assignment" })).toBeEnabled();
   await studio.getByRole("button", { name: "Dishes", exact: true }).click();
 
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
