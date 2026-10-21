@@ -1,29 +1,169 @@
 /* Only a user-selected, authorized active QR can enter the print tree. */
-.cards { min-width:0; }
-.printCanvas { display:grid; justify-items:center; gap:11px; margin-top:16px; padding:17px 10px; background:var(--qr-soft); border-radius:13px; }
-.sheet { display:flex; flex-direction:column; align-items:center; justify-content:center; width:min(100%,340px); min-height:400px; padding:23px; background:#fffdf8; border:1px solid #d9c8b6; color:#38261b; text-align:center; box-shadow:0 8px 23px #0000000c; }
-.sheet[data-format="sticker"] { min-height:290px; width:min(100%,300px); border-radius:16px; }
-.sheet[data-format="insert"] { min-height:360px; width:min(100%,310px); }
-.brand { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:19px; font-size:9px; font-weight:850; }
-.brand img { width:29px; height:29px; }
-.eyebrow { color:#a44e21; font-size:8px; letter-spacing:.14em; font-weight:800; }
-.sheet h3 { margin:7px 0 10px; font-size:clamp(17px,1.7vw,23px); overflow-wrap:anywhere; line-height:1.15; }
-.point { color:#79533e; font-size:10px; margin-bottom:9px; }
-.matrix { display:block; width:min(100%,205px); height:auto; aspect-ratio:1; margin:10px 0 13px; background:#fff; image-rendering:auto; }
-.sheet > strong { font-size:13px; } .note { font-size:10px; margin:7px 0 9px; }
-.url { max-width:100%; overflow-wrap:anywhere; font:9px/1.4 monospace; color:#533628; user-select:all; }
-.paperFooter { margin-top:18px; letter-spacing:.11em; color:#98552e; font-size:8px; font-weight:800; }
-.printTip { max-width:370px; margin:0; text-align:center; font-size:11px; color:var(--muted); }
-@page { margin:12mm; }
+.cards {
+  min-width: 0;
+}
+.printCanvas {
+  display: grid;
+  justify-items: center;
+  gap: 11px;
+  margin-top: 16px;
+  padding: 17px 10px;
+  background: var(--qr-soft);
+  border-radius: 13px;
+}
+.sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 340px);
+  min-height: 400px;
+  padding: 23px;
+  background: #fffdf8;
+  border: 1px solid #d9c8b6;
+  color: #38261b;
+  text-align: center;
+  box-shadow: 0 8px 23px #0000000c;
+}
+.sheet[data-format="sticker"] {
+  min-height: 290px;
+  width: min(100%, 300px);
+  border-radius: 16px;
+}
+.sheet[data-format="insert"] {
+  min-height: 360px;
+  width: min(100%, 310px);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 19px;
+  font-size: 9px;
+  font-weight: 850;
+}
+.brand img {
+  width: 29px;
+  height: 29px;
+}
+.eyebrow {
+  color: #a44e21;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+.sheet h3 {
+  margin: 7px 0 10px;
+  font-size: clamp(17px, 1.7vw, 23px);
+  overflow-wrap: anywhere;
+  line-height: 1.15;
+}
+.point {
+  color: #79533e;
+  font-size: 10px;
+  margin-bottom: 9px;
+}
+.matrix {
+  display: block;
+  width: min(100%, 205px);
+  height: auto;
+  aspect-ratio: 1;
+  margin: 10px 0 13px;
+  background: #fff;
+  image-rendering: auto;
+}
+.sheet > strong {
+  font-size: 13px;
+}
+.note {
+  font-size: 10px;
+  margin: 7px 0 9px;
+}
+.url {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font: 9px/1.4 monospace;
+  color: #533628;
+  user-select: all;
+}
+.paperFooter {
+  margin-top: 18px;
+  letter-spacing: 0.11em;
+  color: #98552e;
+  font-size: 8px;
+  font-weight: 800;
+}
+.printTip {
+  max-width: 370px;
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+@page {
+  margin: 12mm;
+}
 @media print {
-  .printCanvas[data-print-ready="true"], .printCanvas[data-print-ready="true"] * { visibility:visible!important; }
-  .printCanvas { display:none!important; }
-  .printCanvas[data-print-ready="true"] { display:flex!important; position:fixed!important; inset:0!important; z-index:2147483647!important; align-items:center; justify-content:center; padding:0!important; margin:0!important; width:100%!important; height:100%!important; background:white!important; border:0!important; }
-  .printCanvas[data-print-ready="true"] .sheet { box-shadow:none!important; break-inside:avoid; }
-  .sheet { width:110mm; min-height:145mm; padding:9mm; border:1px solid #333; color:#211c16!important; background:white!important; }
-  .sheet[data-format="sticker"] { width:83mm; min-height:83mm; padding:5mm; border-radius:0; }
-  .sheet[data-format="insert"] { width:99mm; min-height:117mm; padding:7mm; }
-  .sheet h3 { font-size:19pt; } .matrix { width:58mm!important; max-width:100%; height:auto!important; }
-  .sheet[data-format="sticker"] .matrix { width:45mm!important; }
-  .url { font-size:8pt; } .printTip { display:none!important; }
+  .printCanvas[data-print-ready="true"],
+  .printCanvas[data-print-ready="true"] * {
+    visibility: visible !important;
+  }
+  .printCanvas {
+    display: none !important;
+  }
+  .printCanvas[data-print-ready="true"] {
+    display: flex !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: white !important;
+    border: 0 !important;
+  }
+  .printCanvas[data-print-ready="true"] .sheet {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .sheet {
+    width: 110mm;
+    min-height: 145mm;
+    padding: 9mm;
+    border: 1px solid #333;
+    color: #211c16 !important;
+    background: white !important;
+  }
+  .sheet[data-format="sticker"] {
+    width: 83mm;
+    min-height: 83mm;
+    padding: 5mm;
+    border-radius: 0;
+  }
+  .sheet[data-format="insert"] {
+    width: 99mm;
+    min-height: 117mm;
+    padding: 7mm;
+  }
+  .sheet h3 {
+    font-size: 19pt;
+  }
+  .matrix {
+    width: 58mm !important;
+    max-width: 100%;
+    height: auto !important;
+  }
+  .sheet[data-format="sticker"] .matrix {
+    width: 45mm !important;
+  }
+  .url {
+    font-size: 8pt;
+  }
+  .printTip {
+    display: none !important;
+  }
 }
