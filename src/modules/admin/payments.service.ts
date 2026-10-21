@@ -41,6 +41,7 @@ export async function updateSubscriptionPlan(
 }
 
 export async function listSubscriptions(
+  actor: AdminActor,
   params: { page?: number; limit?: number; status?: string } = {}
 ) {
   return withActor({ userId: actor.id }, async (db) => {
@@ -95,6 +96,7 @@ export async function listSubscriptions(
 }
 
 export async function listEntitlementGrants(
+  actor: AdminActor,
   params: {
     page?: number;
     limit?: number;

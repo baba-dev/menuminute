@@ -11,6 +11,7 @@ import { eq, desc, ilike, and, sql } from "drizzle-orm";
 import { type AdminActor, recordAdminAction, DIAGNOSTIC_COOKIE_NAME } from "@/lib/admin-guard";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { cookies } from "next/headers";
+import { withActor } from "@/modules/tenancy/service";
 
 export interface ListOrgsParams {
   page?: number;
@@ -19,8 +20,8 @@ export interface ListOrgsParams {
   isActive?: boolean;
 }
 
-export async function listOrganizations(params: ListOrgsParams = {}) {
-  const db = getDb();
+export async function listOrganizations(actor: AdminActor, params: ListOrgsParams = {}) {
+  return withActor({ userId: actor.id }, async (db) => {
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -68,10 +69,11 @@ export async function listOrganizations(params: ListOrgsParams = {}) {
     limit,
     totalPages: Math.ceil(total / limit),
   };
+  });
 }
 
-export async function getOrganizationDetails(orgId: string) {
-  const db = getDb();
+export async function getOrganizationDetails(actor: AdminActor, orgId: string) {
+  return withActor({ userId: actor.id }, async (db) => {
   const org = await db.query.organizations.findFirst({
     where: eq(organizations.id, orgId),
   });
@@ -138,6 +140,7 @@ export async function getOrganizationDetails(orgId: string) {
     brands: brandList,
     entitlements: activeGrants,
   };
+  });
 }
 
 export async function setOrganizationActive(
@@ -199,7 +202,6 @@ export async function setOrganizationMfaRequired(
 }
 
 export async function enterDiagnosticMode(actor: AdminActor, orgId: string) {
-  const db = getDb();
   const org = await withActor({ userId: actor.id }, (tx) =>
     tx.query.organizations.findFirst({ where: eq(organizations.id, orgId) })
   );

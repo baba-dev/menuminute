@@ -8,7 +8,7 @@ import {
   organizations,
 } from "@/db/schema";
 import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
-import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
+import { type AdminActor, recordAdminAction, SUPERADMIN_EMAIL } from "@/lib/admin-guard";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 
