@@ -1,5 +1,5 @@
 {
-  "collection": "MenuMinute Menu Studio 3.0 — Recipe Atelier",
+  "collection": "MenuMinute Menu Studio 3.0 \u2014 Recipe Atelier",
   "version": 1,
   "basePath": "/brand/menu-studio/recipe-atelier/",
   "assets": [
@@ -11,7 +11,8 @@
       "transparent": false,
       "bytes": 215128,
       "sha256": "6255caa045788fa19a0976ccc718a9ae208c653fb8267c2f44e29fa9d0666049",
-      "usage": "Full-bleed desktop light-mode hero"
+      "usage": "Desktop hero when light theme is selected",
+      "alphaStats": null
     },
     {
       "filename": "hero-desktop-dark.webp",
@@ -21,7 +22,8 @@
       "transparent": false,
       "bytes": 94272,
       "sha256": "f467fabd0a71adf72fc883555e83043024be24987c2a4bdc1e583f5a63d0d562",
-      "usage": "Full-bleed desktop dark-mode hero"
+      "usage": "Desktop hero when dark theme is selected",
+      "alphaStats": null
     },
     {
       "filename": "hero-mobile-light.webp",
@@ -31,7 +33,8 @@
       "transparent": false,
       "bytes": 86962,
       "sha256": "917fdff265338a699383bdf29dae94e94e8362484209e705c67a14735d7ca16f",
-      "usage": "Portrait light-mode hero"
+      "usage": "Portrait hero for light theme at narrow breakpoints",
+      "alphaStats": null
     },
     {
       "filename": "hero-mobile-dark.webp",
@@ -41,7 +44,8 @@
       "transparent": false,
       "bytes": 79882,
       "sha256": "782ef0a28014e1b4df64e792c6fc8e6a59c4191d06886da3c144a9e8a11df00f",
-      "usage": "Portrait dark-mode hero"
+      "usage": "Portrait hero for dark theme at narrow breakpoints",
+      "alphaStats": null
     },
     {
       "filename": "first-menu-empty-illustration.webp",
@@ -51,7 +55,11 @@
       "transparent": true,
       "bytes": 52538,
       "sha256": "2bda9d3737035c4fde4f83ef1aaf2c5a7cb3519480011ef276bb75043095ef18",
-      "usage": "Decorative illustration for first-menu empty state"
+      "usage": "No menu exists yet; decorative empty state",
+      "alphaStats": {
+        "transparentPixelPct": 72.41,
+        "partialPixelPct": 27.58
+      }
     },
     {
       "filename": "dish-workspace-illustration.webp",
@@ -61,7 +69,11 @@
       "transparent": true,
       "bytes": 46764,
       "sha256": "2ca545e48550dfba1168df1b6741c6fb3d55084eb33d8c0d4ea8ac37aa6561cc",
-      "usage": "Decorative dish-workspace accent"
+      "usage": "Decorative accent in dish creation area",
+      "alphaStats": {
+        "transparentPixelPct": 71.14,
+        "partialPixelPct": 28.85
+      }
     },
     {
       "filename": "publication-celebration.webp",
@@ -71,7 +83,11 @@
       "transparent": true,
       "bytes": 39426,
       "sha256": "01c896f93cc5717633f8539bf83b70494600e9601a5c9887d1ac08ac54ee54fc",
-      "usage": "Decoration for server-acknowledged publication success"
+      "usage": "Successful, server-confirmed publication milestone",
+      "alphaStats": {
+        "transparentPixelPct": 70.77,
+        "partialPixelPct": 29.22
+      }
     }
   ]
 }
