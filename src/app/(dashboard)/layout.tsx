@@ -7,6 +7,8 @@ import Link from "next/link";
 import { auth, authServer } from "@/lib/auth";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { DiagnosticBanner } from "@/components/admin/diagnostic-banner";
+import { SUPERADMIN_EMAIL } from "@/lib/admin-guard";
 import {
   QrCode,
   LayoutDashboard,
@@ -16,6 +18,7 @@ import {
   ChefHat,
   LogOut,
   Store,
+  ShieldAlert,
 } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/account/security");
   const actor = { userId: session.user.id };
   const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
+  const isSuperAdmin = session.user.email === SUPERADMIN_EMAIL;
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-100 md:flex-row">
@@ -153,6 +157,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Settings className="h-4 w-4 text-stone-500" />
             <span>Settings</span>
           </Link>
+
+          {isSuperAdmin && (
+            <div className="pt-2">
+              <Link
+                href="/admin"
+                className="flex items-center gap-2.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 transition hover:bg-orange-100 shadow-sm"
+              >
+                <ShieldAlert className="h-4 w-4 text-orange-600" />
+                <span>Platform Admin</span>
+              </Link>
+            </div>
+          )}
         </nav>
 
         {/* User Footer / Logout */}
@@ -188,6 +204,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <DiagnosticBanner />
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6 md:p-8">{children}</main>
       </div>
     </div>

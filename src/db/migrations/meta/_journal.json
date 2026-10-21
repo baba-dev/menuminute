@@ -92,6 +92,13 @@
       "when": 1792450000005,
       "tag": "0012_registration_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792450000006,
+      "tag": "0013_superadmin_control",
+      "breakpoints": true
     }
   ]
 }

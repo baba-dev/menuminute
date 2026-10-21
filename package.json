@@ -32,7 +32,8 @@
     "build:worker": "esbuild scripts/worker.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/worker.mjs",
     "build:release-preflight": "esbuild scripts/env-validate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/env-validate.mjs && esbuild scripts/db-migration-verify.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migration-verify.mjs",
     "worker": "node dist/worker.mjs",
-    "billing:entitlement": "tsx scripts/entitlement.ts"
+    "billing:entitlement": "tsx scripts/entitlement.ts",
+    "admin:promote": "tsx scripts/admin-promote.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.7",
