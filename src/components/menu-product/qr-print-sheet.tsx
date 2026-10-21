@@ -39,7 +39,7 @@ export function QrPrintSheet({
         </div>
         <span className={styles.eyebrow}>WELCOME TO OUR TABLE</span>
         <h3>{restaurant}</h3>
-        {qr.tableId && <p className={styles.point}>{qr.label ?? "Your table"}</p>}
+        {qr.tableId && <p className={styles.point}>{qr.pointLabel ?? "Your table"}</p>}
         {/* This is the exact authenticated, server-generated QR matrix, never the decorative artwork. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
