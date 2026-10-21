@@ -7,11 +7,11 @@ import {
 import { SecurityConsole } from "./security-console";
 
 export default async function AdminSecurityPage() {
-  await verifySuperAdmin();
+  const actor = await verifySuperAdmin();
 
   const [rateLimits, auditsRes] = await Promise.all([
     listRateLimits(100),
-    listAdminAuditLogs({ limit: 100 }),
+    listAdminAuditLogs(actor, { limit: 100 }),
   ]);
 
   async function handleClearRateLimit(key: string) {

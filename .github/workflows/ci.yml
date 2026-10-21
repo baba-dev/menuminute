@@ -58,7 +58,7 @@ jobs:
             echo "::group::Pinned Prettier differences"
             pnpm exec prettier --write . >/dev/null
             git --no-pager diff --check
-            git --no-pager diff -- .github/workflows/ docs/ README.md AGENTS.md src/ tests/
+            git --no-pager diff -- .github/workflows/ docs/ README.md AGENTS.md infra/ scripts/ src/ tests/
             echo "::endgroup::"
             exit 1
           fi

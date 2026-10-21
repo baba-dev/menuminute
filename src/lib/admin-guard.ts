@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ForbiddenError } from "@/lib/errors";
+import { withActor } from "@/modules/tenancy/service";
 
 export const SUPERADMIN_EMAIL = "admin@bababuilds.com";
 export const DIAGNOSTIC_COOKIE_NAME = "menuminute_admin_diagnostic_org";
@@ -62,8 +63,8 @@ export async function recordAdminAction(
   const ip = reqHeaders.get("x-forwarded-for") || reqHeaders.get("x-real-ip") || "unknown";
   const userAgent = reqHeaders.get("user-agent") || "unknown";
 
-  const db = getDb();
-  await db.insert(adminAuditLogs).values({
+  await withActor({ userId: actor.id }, async (tx) => {
+    await tx.insert(adminAuditLogs).values({
     id: crypto.randomUUID(),
     actorId: actor.id,
     actorEmail: actor.email,
@@ -72,7 +73,8 @@ export async function recordAdminAction(
     targetId: targetId ?? null,
     details: details ?? null,
     ipAddress: ip,
-    userAgent,
+      userAgent,
+    });
   });
 }
 

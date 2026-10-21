@@ -10,7 +10,6 @@ export default defineConfig({
     env: {
       APP_URL: "http://localhost:3000",
       AUTH_SECRET: "isolated-test-key-with-at-least-32-characters",
-      AUTH_ALLOW_TEST_EMAIL: "true",
       DATABASE_URL:
         process.env["DATABASE_URL"] ??
         "postgresql://menuminute_app:local-test@127.0.0.1:5432/menuminute_test",

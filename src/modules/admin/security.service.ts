@@ -3,6 +3,7 @@ import { rateLimits, adminAuditLogs } from "@/db/schema";
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
 import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
 import { NotFoundError } from "@/lib/errors";
+import { withActor } from "@/modules/tenancy/service";
 
 export async function listRateLimits(limit = 100) {
   const db = getDb();
@@ -36,14 +37,13 @@ export async function clearRateLimitKey(actor: AdminActor, key: string) {
   return { success: true, key };
 }
 
-export async function listAdminAuditLogs(params: {
+export async function listAdminAuditLogs(actor: AdminActor, params: {
   page?: number;
   limit?: number;
   action?: string;
   actorEmail?: string;
   targetType?: string;
 } = {}) {
-  const db = getDb();
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -62,26 +62,28 @@ export async function listAdminAuditLogs(params: {
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(adminAuditLogs)
-    .where(whereClause);
-
-  const total = countResult?.count ?? 0;
-
-  const rows = await db
-    .select()
-    .from(adminAuditLogs)
-    .where(whereClause)
-    .orderBy(desc(adminAuditLogs.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  return {
-    logs: rows,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+  return withActor({ userId: actor.id }, async (tx) => {
+    const [countResult] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(adminAuditLogs)
+      .where(whereClause);
+  
+    const total = countResult?.count ?? 0;
+  
+    const rows = await tx
+      .select()
+      .from(adminAuditLogs)
+      .where(whereClause)
+      .orderBy(desc(adminAuditLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+  
+    return {
+      logs: rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  });
 }

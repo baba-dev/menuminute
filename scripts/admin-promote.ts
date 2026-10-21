@@ -2,8 +2,15 @@ import { Pool } from "pg";
 
 async function main() {
   const email = process.argv[2]?.trim().toLowerCase();
-  const flag = process.argv[3] !== "revoke"; // default to promote, pass 'revoke' to demote
-  const url = process.env["DATABASE_URL"] || process.env["MIGRATION_DATABASE_URL"];
+  const operation = process.argv[3];
+  const flag = operation === "promote";
+  const url = process.env["MIGRATION_DATABASE_URL"];
+  if (!["promote", "revoke"].includes(operation ?? "") || process.argv.length !== 4) {
+    throw new Error("Specify an explicit promote or revoke operation using the migration-owner environment.");
+  }
+  if (!flag && email === "admin@bababuilds.com") {
+    throw new Error("Cannot revoke the canonical root account through this CLI.");
+  }
 
   if (!email || !url) {
     console.error("Usage: tsx scripts/admin-promote.ts <user-email> [promote|revoke]");

@@ -16,13 +16,13 @@ import {
 } from "lucide-react";
 
 export default async function AdminOverviewPage() {
-  await verifySuperAdmin();
+  const actor = await verifySuperAdmin();
 
   const [systemHealth, usersData, orgsData, recentAudits] = await Promise.all([
     getSystemHealth(),
     listUsers({ limit: 1 }),
     listOrganizations({ limit: 1 }),
-    listAdminAuditLogs({ limit: 5 }),
+    listAdminAuditLogs(actor, { limit: 5 }),
   ]);
 
   const dbOk = systemHealth.database.status === "healthy";
