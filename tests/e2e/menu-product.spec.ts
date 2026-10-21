@@ -252,7 +252,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code revoked");
   await page.getByRole("button", { name: "Print Studio", exact: true }).click();
   await expect(page.getByLabel("Table Stand print preview")).toBeVisible();
-  await expect(page.getByLabel("Table Stand print preview").locator('img[src*="format=svg"]')).toHaveCount(1);
+  await expect(
+    page.getByLabel("Table Stand print preview").locator('img[src*="format=svg"]')
+  ).toHaveCount(1);
   expect((await guest.goto(`/m/${q.destinationToken}`))?.status()).toBe(404);
   expect((await guest.goto(`/m/${f.token}`))?.status()).toBe(200);
   await guest.screenshot({ path: info.outputPath("published-menu.png"), fullPage: true });
