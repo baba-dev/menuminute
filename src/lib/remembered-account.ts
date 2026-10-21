@@ -4,6 +4,24 @@
  */
 const rememberedKey = "menuminute.remembered-email.v1";
 const pendingKey = "menuminute.pending-login.v1";
+const changeEvent = "menuminute:remembered-account";
+
+export function rememberedAccountServerSnapshot(): null {
+  return null;
+}
+
+export function subscribeRememberedAccount(notify: () => void) {
+  window.addEventListener("storage", notify);
+  window.addEventListener(changeEvent, notify);
+  return () => {
+    window.removeEventListener("storage", notify);
+    window.removeEventListener(changeEvent, notify);
+  };
+}
+
+function notifyRememberedAccount() {
+  window.dispatchEvent(new Event(changeEvent));
+}
 
 function validEmail(value: unknown): value is string {
   return (
@@ -23,6 +41,7 @@ export function readRememberedAccount(): string | null {
 export function clearRememberedAccount() {
   try {
     localStorage.removeItem(rememberedKey);
+    notifyRememberedAccount();
   } catch {}
 }
 
@@ -44,9 +63,10 @@ export function completePendingLoginPreference() {
     const value: unknown = JSON.parse(sessionStorage.getItem(pendingKey) ?? "null");
     if (!value || typeof value !== "object") return;
     const preference = value as { email?: unknown; rememberMe?: unknown };
-    if (preference.rememberMe === true && validEmail(preference.email))
+    if (preference.rememberMe === true && validEmail(preference.email)) {
       localStorage.setItem(rememberedKey, JSON.stringify(preference.email.trim().toLowerCase()));
-    else clearRememberedAccount();
+      notifyRememberedAccount();
+    } else clearRememberedAccount();
   } catch {
     // Blocked browser storage must not prevent sign-in.
   } finally {

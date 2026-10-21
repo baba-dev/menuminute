@@ -1,12 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { ArrowRight, ShieldCheck, UserRound, X } from "lucide-react";
 import {
   clearRememberedAccount,
   completePendingLoginPreference,
   discardPendingLoginPreference,
   readRememberedAccount,
+  rememberedAccountServerSnapshot,
   stageLoginPreference,
+  subscribeRememberedAccount,
 } from "@/lib/remembered-account";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,7 +29,11 @@ export function LoginForm() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  const [rememberedEmail, setRememberedEmail] = useState<string | null>(null);
+  const rememberedEmail = useSyncExternalStore(
+    subscribeRememberedAccount,
+    readRememberedAccount,
+    rememberedAccountServerSnapshot
+  );
   const {
     register,
     handleSubmit,
@@ -38,12 +44,8 @@ export function LoginForm() {
   } = useForm<Values>({ resolver: zodResolver(schema), shouldFocusError: true });
   const next = safeReturnPath(params.get("next"), "");
   useEffect(() => {
-    const email = readRememberedAccount();
-    if (email) {
-      setRememberedEmail(email);
-      if (!getValues("email")) setValue("email", email);
-    }
-  }, [getValues, setValue]);
+    if (rememberedEmail && !getValues("email")) setValue("email", rememberedEmail);
+  }, [rememberedEmail, getValues, setValue]);
   return (
     <AuthShell
       eyebrow="SIGN IN / WELCOME BACK"
@@ -151,7 +153,6 @@ export function LoginForm() {
               disabled={busy}
               onClick={() => {
                 clearRememberedAccount();
-                setRememberedEmail(null);
                 setValue("email", "");
                 setValue("password", "");
                 setFocus("email");
