@@ -775,22 +775,26 @@ export function MenuStudio({
                       <div className="atelier-assignment-workspace">
                         {(dirty || composerPending) && (
                           <p role="status" className="atelier-assignment-warning">
-                            Save your draft and review queued Composer dishes before changing shared-menu assignments or local overrides.
+                            Save your draft and review queued Composer dishes before changing
+                            shared-menu assignments or local overrides.
                           </p>
                         )}
-                        <fieldset className="atelier-assignment-lock" disabled={dirty || composerPending}>
-                      <StudioAssignmentsTab
-                        doc={doc}
-                        detail={detail}
-                        outletId={outlet.id}
-                        outletChoices={outletChoices}
-                        brandChoices={brandChoices}
-                        busy={busy}
-                        run={run}
-                        command={command}
-                        load={load}
-                        setMessage={setMessage}
-                      />
+                        <fieldset
+                          className="atelier-assignment-lock"
+                          disabled={dirty || composerPending}
+                        >
+                          <StudioAssignmentsTab
+                            doc={doc}
+                            detail={detail}
+                            outletId={outlet.id}
+                            outletChoices={outletChoices}
+                            brandChoices={brandChoices}
+                            busy={busy}
+                            run={run}
+                            command={command}
+                            load={load}
+                            setMessage={setMessage}
+                          />
                         </fieldset>
                       </div>
                     )}
