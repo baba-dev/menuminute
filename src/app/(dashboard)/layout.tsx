@@ -3,7 +3,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, ShieldAlert } from "lucide-react";
+import { getDb } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { ThemeControl } from "@/components/menu-product/theme-control";
@@ -29,6 +32,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId),
     getRestaurantsByUserId(session.user.id),
   ]);
+  const adminRole = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { isSuperAdmin: true },
+  });
+  const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
   const name = session.user.name || "Restaurant admin";
   const initials = name
     .trim()
@@ -71,6 +79,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
         </div>
         <WorkspaceNavigation />
+        {isSuperAdmin && (
+          <Link href="/admin" className="mm-workspace-nav-link">
+            <ShieldAlert size={19} aria-hidden="true" />
+            <span>Platform admin</span>
+          </Link>
+        )}
         <div className="mm-workspace-profile">
           <Link href="/account" className="mm-workspace-profile-link">
             <span className="mm-workspace-avatar" aria-hidden="true">
