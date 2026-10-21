@@ -5,7 +5,7 @@ set -Eeuo pipefail
 umask 027
 
 if [[ "${1:-}" == --version && "$#" -eq 1 ]]; then
-  echo 6
+  echo 7
   exit 0
 fi
 
@@ -289,7 +289,8 @@ PY
     [[ "$backup_mode" =~ ^[0-7]{3,4}$ ]] && (( (8#$backup_mode & 8#022) == 0 )) || {
       echo "Off-host backup wrapper must not be writable by group/others" >&2; exit 1;
     }
-    command -v pg_dump >/dev/null && command -v pg_restore >/dev/null || {
+    command -v pg_dump >/dev/null && command -v pg_restore >/dev/null &&
+    command -v psql >/dev/null && command -v runuser >/dev/null && id postgres >/dev/null 2>&1 || {
       echo "AUTO_MIGRATION_SETUP_REQUIRED: PostgreSQL dump and restore clients required" >&2; exit 1;
     }
   fi
@@ -428,24 +429,35 @@ if [[ "$mode" == autoactivate && "$migration_change" == changed ]]; then
   [[ "$MIGRATION_DATABASE_URL" =~ ^postgres(ql)?:// ]] || {
     echo "Invalid explicit migration-owner URL" >&2; exit 1;
   }
+  # A forced-RLS owner cannot make a complete dump. Use the existing local
+  # PostgreSQL superuser over peer authentication for *backup only*. The root
+  # helper writes stdout to its own private directory; postgres never gains
+  # read access to root-only .env files or the off-host backup repository.
   python3 - "$backup_dir/database.dump" <<'PY'
 import os, subprocess, sys
-from urllib.parse import urlsplit, unquote, parse_qs
+from urllib.parse import urlsplit, unquote
 url = urlsplit(os.environ["MIGRATION_DATABASE_URL"])
-if (url.scheme not in ("postgres", "postgresql") or not url.hostname or
+if (url.scheme not in ("postgres", "postgresql") or
+    url.hostname not in ("localhost", "127.0.0.1", "::1") or
     unquote(url.username or "") != "menuminute_owner" or
     unquote(url.path.lstrip("/")) != "menuminute"):
-    raise SystemExit("Migration connection must be the dedicated MenuMinute owner/database")
-env = os.environ.copy()
-env.pop("MIGRATION_DATABASE_URL", None)
-env.update(PGHOST=url.hostname, PGPORT=str(url.port or 5432),
-           PGUSER=unquote(url.username), PGPASSWORD=unquote(url.password or ""),
-           PGDATABASE=unquote(url.path.lstrip("/")), PGCONNECT_TIMEOUT="5")
-options = parse_qs(url.query)
-if "sslmode" in options:
-    env["PGSSLMODE"] = options["sslmode"][0]
-subprocess.run(["pg_dump", "--format=custom", "--no-owner", "--no-acl",
-                "--file", sys.argv[1]], env=env, check=True)
+    raise SystemExit("Migration URL must target the dedicated local MenuMinute owner/database")
+port = str(url.port or 5432)
+# Scrub inherited app, owner and root secrets from both privileged subprocesses.
+args = ["runuser", "-u", "postgres", "--", "env", "-i", "PATH=/usr/bin:/bin",
+        "PGCONNECT_TIMEOUT=5", "PGHOST=/var/run/postgresql",
+        "PGPORT=" + port, "PGUSER=postgres", "PGDATABASE=menuminute"]
+check = subprocess.run(args + ["psql", "-XAt", "-w", "-c",
+                       "select rolsuper from pg_roles where rolname = current_user"],
+                       capture_output=True, text=True, check=True)
+if check.stdout.strip() != "t":
+    raise SystemExit("Full backup requires the local PostgreSQL superuser")
+# Capture custom-format output through a root-held fd. The postgres OS user
+# cannot traverse the private predeploy directory, and cannot write artifacts.
+with open(sys.argv[1], "xb") as dump:
+    os.fchmod(dump.fileno(), 0o600)
+    subprocess.run(args + ["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
+                   stdout=dump, check=True)
 PY
   test -s "$backup_dir/database.dump"
   pg_restore -l "$backup_dir/database.dump" >/dev/null

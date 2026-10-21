@@ -8,12 +8,12 @@ const helper = readFileSync(path.resolve("infra/deploy/menuminute-release"), "ut
 describe("fail-closed automatic release activation", () => {
   it("requires a versioned root-owned helper and verifies both runtime accounts", () => {
     expect(helper).toContain('if [[ "${1:-}" == --version');
-    expect(helper).toContain("echo 6");
+    expect(helper).toContain("echo 7");
     expect(helper).toContain("runuser -u menuminute -- sh -c");
     expect(helper).toContain("runuser -u menuminute-worker -- sh -c");
     expect(helper).toContain("runtime_access_ok ||");
     expect(workflow).toContain("menuminute-release --version");
-    expect(workflow).toContain("= 6 && sudo -n /usr/local/sbin/menuminute-release $mode");
+    expect(workflow).toContain("= 7 && sudo -n /usr/local/sbin/menuminute-release $mode");
   });
 
   it("validates archive members before extraction", () => {
