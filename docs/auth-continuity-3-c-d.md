@@ -21,3 +21,5 @@ release helper. Verify same account on two fresh browsers across server restart/
 cutover and verify revoked token fails next server request; check Cloudflare private
 cache bypass and external AUTH_SECRET continuity. Never copy session cookies into logs.
 Production-host checks are operator-owned and cannot be proven by source CI.
+
+CI note: this PR targets main while #136 remains unmerged because branch-target pull requests do not trigger the repository's required CI workflow. Merge #136 first; do not deploy C+D out of order.
