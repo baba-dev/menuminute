@@ -36,8 +36,26 @@ export function DevicePanel() {
     }
   }, []);
   useEffect(() => {
-    void load();
-  }, [load]);
+    let mounted = true;
+    void fetch("/api/security/devices", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to retrieve devices. Try again.");
+        return (await response.json()) as { devices: Device[] };
+      })
+      .then((data) => {
+        if (mounted) setDevices(data.devices);
+      })
+      .catch((cause: unknown) => {
+        if (mounted)
+          setError(cause instanceof Error ? cause.message : "Unable to retrieve devices.");
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
   async function revoke(target: string | "others" | "current" | "all") {
     setBusy(true);
     setError("");
@@ -102,7 +120,7 @@ export function DevicePanel() {
       <div className="mm-device-heading">
         <div>
           <span className="mm-device-eyebrow">ACCOUNT / ACCESS</span>
-          <h2 id="mm-device-title">Where you're signed in.</h2>
+          <h2 id="mm-device-title">Where you&apos;re signed in.</h2>
           <p>
             Review sessions associated with your account. You can end other sessions without
             interrupting this one.
