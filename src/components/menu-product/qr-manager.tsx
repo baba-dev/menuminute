@@ -197,6 +197,17 @@ export function QrManager({
       });
     }
   }
+  function openPrintStudio() {
+    const active = selected?.isActive ? selected : codes.find((q) => q.isActive);
+    if (!active) {
+      setShowCreate(true);
+      setMessage("Create a permanent QR before opening Print Studio.");
+      window.requestAnimationFrame(() => scrollToSection("qr-create", "center"));
+      return;
+    }
+    setSelectedId(active.id);
+    window.requestAnimationFrame(() => scrollToSection("qr-print-studio"));
+  }
   function print(q: QR) {
     if (!q.isActive) return;
     flushSync(() => setPrintId(q.id));
@@ -243,11 +254,7 @@ export function QrManager({
             <button
               type="button"
               className="qr-secondary"
-              onClick={() =>
-                document
-                  .getElementById("qr-print-studio")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
+              onClick={openPrintStudio}
             >
               <Printer size={17} aria-hidden="true" /> Print Studio
             </button>
