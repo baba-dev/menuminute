@@ -1,0 +1,51 @@
+{
+  "package": "MenuMinute Dashboard 2.0 — Editorial Media PR A",
+  "version": 1,
+  "status": "Awaiting binary upload; see docs/dashboard-editorial-media.md",
+  "assets": [
+    {
+      "path": "/brand/dashboard/editorial/hero-desktop-light.webp",
+      "dimensions": [
+        2880,
+        900
+      ],
+      "format": "WebP",
+      "alpha": false,
+      "bytes": 182542,
+      "sha256": "65ee27d7433a8eeb55f3554247e5ceb3fdc6ae5daddff6f0674bdc00576fd6ab"
+    },
+    {
+      "path": "/brand/dashboard/editorial/hero-desktop-dark.webp",
+      "dimensions": [
+        2880,
+        900
+      ],
+      "format": "WebP",
+      "alpha": false,
+      "bytes": 261788,
+      "sha256": "caadc5d47608e5781e8f7a7a472079c6673ae91291d58bc2a3f0d5dcc1ee346b"
+    },
+    {
+      "path": "/brand/dashboard/editorial/priorities-illustration.webp",
+      "dimensions": [
+        700,
+        500
+      ],
+      "format": "WebP",
+      "alpha": true,
+      "bytes": 46502,
+      "sha256": "8ab9fb1035e12290518f11aae5d09daa0794c1744c68a00e1e552b112a19d989"
+    },
+    {
+      "path": "/brand/dashboard/editorial/outlet-health-illustration.webp",
+      "dimensions": [
+        400,
+        480
+      ],
+      "format": "WebP",
+      "alpha": true,
+      "bytes": 27480,
+      "sha256": "4020d30a6d739e7a2abe40e15e36b189d267b3f4a2db0de18625d00d65f85df2"
+    }
+  ]
+}
