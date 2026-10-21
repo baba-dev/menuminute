@@ -296,7 +296,8 @@ export function StudioPreview({
           </small>
         </div>
         <p className="atelier-preview-disclaimer">
-          Draft outline only. Guests see your last explicitly published release. Use Preview draft to inspect the complete projected menu.
+          Draft outline only. Guests see your last explicitly published release. Use Preview draft
+          to inspect the complete projected menu.
         </p>
         {sections.length ? (
           sections.map((cat) => (
