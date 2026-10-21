@@ -388,6 +388,8 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await expect(studio.getByText("Active sections in the selected editable draft.")).toBeVisible();
   await studio.getByRole("button", { name: "Preview draft" }).click();
   await expect(studio.getByText("Draft preview — not public")).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Save draft" })).toBeDisabled();
+  await expect(studio.getByRole("button", { name: "Publish menu" })).toBeDisabled();
   await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
   await studio.getByRole("button", { name: "Back to edit" }).click();
   await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
