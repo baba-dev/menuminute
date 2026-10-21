@@ -45,7 +45,9 @@ export async function getDefaultOrActiveRestaurant(userId?: string, activeOutlet
   // Database preference wins across devices; cookie is only a legacy fallback.
   // Match both fields against fresh tenant-scoped active outlets.
   return (
-    outlets.find((o) => o.id === preference?.outletId && o.organizationId === preference.organizationId) ??
+    outlets.find(
+      (o) => o.id === preference?.outletId && o.organizationId === preference.organizationId
+    ) ??
     (preference?.organizationId
       ? outlets.find((o) => o.organizationId === preference.organizationId)
       : undefined) ??

@@ -1,29 +1,168 @@
 /* Ink & Ember: clear responsive device management in both appearances. */
-.mm-device-panel { display:grid; gap:18px; padding:clamp(18px,3vw,30px); border:1px solid var(--decorative); border-radius:22px; background:var(--paper); color:var(--ink); }
-.mm-device-heading { display:flex; justify-content:space-between; align-items:start; gap:14px; }
-.mm-device-heading svg { flex:none; color:#dc6a17; }
-.mm-device-eyebrow { font-size:11px; font-weight:800; letter-spacing:.11em; color:#c65d13; }
-.mm-device-heading h2 { margin:5px 0 8px; font-size:clamp(22px,3vw,30px); font-weight:800; letter-spacing:-.04em; }
-.mm-device-heading p,.mm-device-footnote { font-size:13px; line-height:1.6; color:var(--muted); }
-.mm-device-toolbar { display:flex; flex-wrap:wrap; gap:9px; }
-.mm-device-toolbar button,.mm-device-revoke { display:inline-flex; gap:7px; align-items:center; justify-content:center; min-height:42px; padding:8px 14px; border:1px solid var(--decorative); border-radius:10px; font-size:13px; font-weight:750; background:var(--panel); cursor:pointer; }
-.mm-device-toolbar button:hover,.mm-device-revoke:hover { border-color:#e5a36c; }
-.mm-device-panel button:focus-visible { outline:3px solid var(--mm-focus,#f97316); outline-offset:3px; }
-.mm-device-panel button:disabled { opacity:.5; cursor:not-allowed; }
-.mm-device-list { display:grid; list-style:none; margin:0; padding:0; }
-.mm-device-row { display:flex; gap:12px; align-items:center; padding:16px 0; border-top:1px solid var(--decorative); }
-.mm-device-icon { display:grid; flex:none; place-items:center; width:44px; height:44px; border-radius:13px; background:#fff0df; color:#a44716; }
-:root[data-theme="dark"] .mm-device-icon { background:#50321d; color:#ffc47c; }
-.mm-device-details { display:grid; flex:1; min-width:0; gap:3px; font-size:14px; }
-.mm-device-details strong { overflow-wrap:anywhere; }
-.mm-device-details small { color:var(--muted); font-size:11px; line-height:1.5; }
-.mm-device-current { width:max-content; padding:3px 7px; border-radius:12px; background:#e7f3de; color:#23612e; font-size:10px; font-weight:800; }
-:root[data-theme="dark"] .mm-device-current { background:#29432a; color:#b2f7a4; }
-.mm-device-revoke { flex:none; color:var(--danger,#bc2c20); }
-.mm-device-confirm { display:grid; gap:9px; padding:15px; border:1px solid #d8774d; border-radius:13px; background:var(--panel); font-size:13px; }
-.mm-device-confirm p { color:var(--muted); }
-.mm-device-toolbar .mm-device-danger { background:#a92f22; color:white; border-color:#a92f22; }
-.mm-device-success { font-size:13px; color:#236e36; }
-.mm-device-error { font-size:13px; color:var(--danger,#c42a25); }
-@media(max-width:480px) { .mm-device-row { flex-wrap:wrap; } .mm-device-revoke { margin-left:56px; } }
-@media(prefers-reduced-motion:reduce) { .mm-device-panel * { scroll-behavior:auto; transition:none!important; } }
+.mm-device-panel {
+  display: grid;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--decorative);
+  border-radius: 22px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.mm-device-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+.mm-device-heading svg {
+  flex: none;
+  color: #dc6a17;
+}
+.mm-device-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  color: #c65d13;
+}
+.mm-device-heading h2 {
+  margin: 5px 0 8px;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.mm-device-heading p,
+.mm-device-footnote {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.mm-device-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.mm-device-toolbar button,
+.mm-device-revoke {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--decorative);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 750;
+  background: var(--panel);
+  cursor: pointer;
+}
+.mm-device-toolbar button:hover,
+.mm-device-revoke:hover {
+  border-color: #e5a36c;
+}
+.mm-device-panel button:focus-visible {
+  outline: 3px solid var(--mm-focus, #f97316);
+  outline-offset: 3px;
+}
+.mm-device-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mm-device-list {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mm-device-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--decorative);
+}
+.mm-device-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: #fff0df;
+  color: #a44716;
+}
+:root[data-theme="dark"] .mm-device-icon {
+  background: #50321d;
+  color: #ffc47c;
+}
+.mm-device-details {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+  font-size: 14px;
+}
+.mm-device-details strong {
+  overflow-wrap: anywhere;
+}
+.mm-device-details small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.mm-device-current {
+  width: max-content;
+  padding: 3px 7px;
+  border-radius: 12px;
+  background: #e7f3de;
+  color: #23612e;
+  font-size: 10px;
+  font-weight: 800;
+}
+:root[data-theme="dark"] .mm-device-current {
+  background: #29432a;
+  color: #b2f7a4;
+}
+.mm-device-revoke {
+  flex: none;
+  color: var(--danger, #bc2c20);
+}
+.mm-device-confirm {
+  display: grid;
+  gap: 9px;
+  padding: 15px;
+  border: 1px solid #d8774d;
+  border-radius: 13px;
+  background: var(--panel);
+  font-size: 13px;
+}
+.mm-device-confirm p {
+  color: var(--muted);
+}
+.mm-device-toolbar .mm-device-danger {
+  background: #a92f22;
+  color: white;
+  border-color: #a92f22;
+}
+.mm-device-success {
+  font-size: 13px;
+  color: #236e36;
+}
+.mm-device-error {
+  font-size: 13px;
+  color: var(--danger, #c42a25);
+}
+@media (max-width: 480px) {
+  .mm-device-row {
+    flex-wrap: wrap;
+  }
+  .mm-device-revoke {
+    margin-left: 56px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-device-panel * {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}

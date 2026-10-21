@@ -56,8 +56,14 @@ export default async function AccountPage() {
             {organizations.length} organizations · {outlets.length} active outlets
           </p>
           <AccountWorkspacePreference
-            organizations={organizations.filter((o) => o.isActive).map((o) => ({ id: o.id, name: o.name, role: o.role }))}
-            outlets={outlets.map((o) => ({ id: o.id, name: o.name, organizationId: o.organizationId }))}
+            organizations={organizations
+              .filter((o) => o.isActive)
+              .map((o) => ({ id: o.id, name: o.name, role: o.role }))}
+            outlets={outlets.map((o) => ({
+              id: o.id,
+              name: o.name,
+              organizationId: o.organizationId,
+            }))}
             selectedOrganizationId={preference?.organizationId ?? null}
             selectedOutletId={preference?.outletId ?? null}
           />

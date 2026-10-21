@@ -7,7 +7,10 @@ import {
   getDefaultOrActiveRestaurant,
 } from "@/modules/restaurants/service";
 import { auth } from "@/lib/auth";
-import { readWorkspacePreference, selectWorkspacePreference } from "@/modules/organizations/workspace-preferences";
+import {
+  readWorkspacePreference,
+  selectWorkspacePreference,
+} from "@/modules/organizations/workspace-preferences";
 import { listOrganizations } from "@/modules/organizations/service";
 import { ForbiddenError } from "@/lib/errors";
 import { UnauthorizedError } from "@/lib/errors";
@@ -17,10 +20,12 @@ export async function POST(req: Request) {
   try {
     const actor = await requestActor(req, true);
     // Legacy outlet payload remains supported for existing clients.
-    const selection = z.union([
-      z.object({ outletId: z.string().min(1).max(128) }).strict(),
-      z.object({ organizationId: z.string().min(1).max(128) }).strict(),
-    ]).parse(await req.json());
+    const selection = z
+      .union([
+        z.object({ outletId: z.string().min(1).max(128) }).strict(),
+        z.object({ organizationId: z.string().min(1).max(128) }).strict(),
+      ])
+      .parse(await req.json());
     let outletId: string | null = null;
     let organizationId: string;
     if ("outletId" in selection) {
@@ -38,13 +43,14 @@ export async function POST(req: Request) {
       { ok: true, selectedOutletId: outletId, selectedOrganizationId: organizationId },
       { headers: { "cache-control": "private, no-store" } }
     );
-    if (outletId) res.cookies.set("menuminute.outlet", outletId, {
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    if (outletId)
+      res.cookies.set("menuminute.outlet", outletId, {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
     else res.cookies.delete("menuminute.outlet");
     return res;
   } catch (e) {
@@ -69,9 +75,11 @@ export async function GET() {
       {
         hasOutlets: outlets.length > 0,
         selectedOutletId: selected?.id ?? null,
-        selectedOrganizationId: organizations.some((o) => o.id === preference?.organizationId && o.isActive)
+        selectedOrganizationId: organizations.some(
+          (o) => o.id === preference?.organizationId && o.isActive
+        )
           ? preference?.organizationId
-          : selected?.organizationId ?? null,
+          : (selected?.organizationId ?? null),
         outlets: outlets.map((o) => ({
           id: o.id,
           name: o.name,
