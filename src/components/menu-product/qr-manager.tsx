@@ -48,7 +48,9 @@ export function QrManager({
   const [selectedId, setSelectedId] = useState(
     initial.find((q) => q.isActive)?.id ?? initial[0]?.id ?? null
   );
-  const [filter, setFilter] = useState<QRFilter>(initial.some((q) => q.isActive) ? "active" : "all");
+  const [filter, setFilter] = useState<QRFilter>(
+    initial.some((q) => q.isActive) ? "active" : "all"
+  );
   const [query, setQuery] = useState("");
   const [shown, setShown] = useState(pageSize);
   const [busy, setBusy] = useState(false);
@@ -187,12 +189,15 @@ export function QrManager({
     if (window.matchMedia("(max-width: 1050px)").matches) {
       window.requestAnimationFrame(() => {
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        detailRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        detailRef.current?.scrollIntoView({
+          behavior: reduced ? "auto" : "smooth",
+          block: "start",
+        });
         detailRef.current?.focus({ preventScroll: true });
       });
     }
   }
-    function print(q: QR) {
+  function print(q: QR) {
     if (!q.isActive) return;
     flushSync(() => setPrintId(q.id));
     window.print();
@@ -419,7 +424,10 @@ export function QrManager({
                 <input
                   type="search"
                   value={query}
-                  onChange={(e) => { setQuery(e.target.value); setShown(pageSize); }}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShown(pageSize);
+                  }}
                   placeholder="Find a code by label"
                 />
               </label>
@@ -429,7 +437,10 @@ export function QrManager({
                     type="button"
                     key={value}
                     aria-pressed={filter === value}
-                    onClick={() => { setFilter(value); setShown(pageSize); }}
+                    onClick={() => {
+                      setFilter(value);
+                      setShown(pageSize);
+                    }}
                   >
                     {value === "all" ? "All codes" : value === "active" ? "Active" : "Revoked"}
                   </button>
@@ -449,7 +460,7 @@ export function QrManager({
                       <span className="qr-list-name">
                         <strong>{q.label ?? "Menu QR"}</strong>
                         <small>
-                          {q.tableId ? q.pointLabel ?? "Service-point QR" : "Menu QR"} ·{" "}
+                          {q.tableId ? (q.pointLabel ?? "Service-point QR") : "Menu QR"} ·{" "}
                           {q.isActive ? "Active" : "Revoked"}
                         </small>
                       </span>
@@ -511,7 +522,9 @@ export function QrManager({
                         </div>
                         <p className="qr-selected-note">
                           {selected.tableId
-                            ? selected.pointLabel ? "This QR serves " + selected.pointLabel + "." : "Service-point context is linked to this code."
+                            ? selected.pointLabel
+                              ? "This QR serves " + selected.pointLabel + "."
+                              : "Service-point context is linked to this code."
                             : "Permanent menu destination."}{" "}
                           The printed QR stays valid after menu edits.
                         </p>
