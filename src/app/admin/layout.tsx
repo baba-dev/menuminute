@@ -1,5 +1,6 @@
 import { verifySuperAdmin } from "@/lib/admin-guard";
 import { authServer } from "@/lib/auth";
+import { SessionContinuity } from "@/components/auth/session-continuity";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-950 font-sans text-stone-100 md:flex-row">
+      <SessionContinuity />
       {/* Admin Sidebar */}
       <aside className="flex w-full shrink-0 flex-col border-r border-stone-800 bg-stone-900 md:w-64">
         {/* Brand & Mode Header */}

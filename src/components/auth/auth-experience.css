@@ -361,3 +361,118 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Returning-account and session preference controls (Ink & Ember). */
+.mm-auth-remembered {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--auth-border);
+  border-radius: 14px;
+  background: var(--auth-soft);
+}
+.mm-auth-remembered-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--auth-paper);
+  color: var(--auth-accent);
+}
+.mm-auth-remembered-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.mm-auth-remembered-copy strong {
+  font-size: 14px;
+}
+.mm-auth-remembered-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--auth-muted);
+}
+.mm-auth-remembered-clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--auth-border);
+  border-radius: 10px;
+  background: var(--auth-paper);
+  color: var(--auth-text);
+  cursor: pointer;
+}
+.mm-auth-remembered-clear:hover {
+  background: var(--auth-bg);
+}
+.mm-auth-login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 14px;
+}
+.mm-auth-remember-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.mm-auth-remember-label input {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--auth-accent);
+  cursor: pointer;
+}
+.mm-auth-remember-caption {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: -7px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--auth-muted);
+}
+.mm-auth-remember-caption svg {
+  flex: none;
+}
+.mm-auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.mm-auth .mm-auth-continue {
+  text-decoration: none;
+  color: var(--button-ink);
+}
+.mm-auth-switch-button {
+  padding: 12px;
+  min-height: 48px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--auth-border);
+  border-radius: 12px;
+  background: var(--auth-paper);
+  color: var(--auth-text);
+  cursor: pointer;
+}
+.mm-auth-switch-button:hover {
+  background: var(--auth-soft);
+}
+.mm-auth-switch-button:disabled,
+.mm-auth-remembered-clear:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}

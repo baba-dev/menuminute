@@ -11,6 +11,7 @@ test -s dist/worker.mjs
 test -s dist/db-migrate.mjs
 test -s dist/env-validate.mjs
 test -s dist/db-migration-verify.mjs
+test -s dist/auth-session-preflight.mjs
 # Only allowlisted compiled output and production dependencies enter the release.
 # Neither browser demo fixtures nor test DB contents are serialized.
 pnpm install --prod --frozen-lockfile --prefer-offline
@@ -38,6 +39,7 @@ test ! -e "$stage/.env.production"
   node --check dist/db-migrate.mjs
   node --check dist/env-validate.mjs
   node --check dist/db-migration-verify.mjs
+  node --check dist/auth-session-preflight.mjs
 )
 short="${sha:0:12}"
 archive="menuminute-${short}-linux-arm64.tar.gz"

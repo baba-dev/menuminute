@@ -14,6 +14,9 @@ describe("same-origin post-auth return destinations", () => {
       "https://evil.example",
       "/api/auth/sign-out",
       "/login",
+      "/two-factor",
+      "/verify-email",
+      "/forgot-password",
       "/reset-password?token=a",
     ]) {
       expect(safeReturnPath(input)).toBe("/dashboard");

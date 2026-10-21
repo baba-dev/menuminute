@@ -4,11 +4,11 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import { HomeAuthActions } from "./home-auth-actions";
 
 const links = [
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
-  { href: "/login", label: "Sign in" },
 ] as const;
 
 export function HomeMobileNavigation() {
@@ -70,13 +70,7 @@ export function HomeMobileNavigation() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/register"
-              className="food-orbit-hero__nav-cta mt-1 rounded-xl px-4 py-3 text-center text-sm font-bold"
-              onClick={() => setOpen(false)}
-            >
-              Get started free
-            </Link>
+            <HomeAuthActions mobile onNavigate={() => setOpen(false)} />
           </div>
         )}
       </div>

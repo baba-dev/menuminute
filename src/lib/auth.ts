@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { REMEMBERED_SESSION_SECONDS, SESSION_REFRESH_SECONDS } from "@/lib/auth-session-policy";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { headers, cookies } from "next/headers";
@@ -75,8 +76,10 @@ export const authServer = betterAuth({
     },
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7,
-    updateAge: 60 * 60 * 24,
+    // Browser persistence is controlled by Better Auth signIn.email({ rememberMe }).
+    // Do not introduce parallel refresh tokens or cache unrevoked identity in cookies.
+    expiresIn: REMEMBERED_SESSION_SECONDS,
+    updateAge: SESSION_REFRESH_SECONDS,
     cookieCache: { enabled: false },
   },
   rateLimit: {

@@ -12,6 +12,7 @@ import QRCode from "qrcode";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
 import { HomeMobileNavigation } from "@/components/marketing/hero/home-mobile-navigation";
+import { HomeAuthActions } from "@/components/marketing/hero/home-auth-actions";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import "@/components/marketing/brand/brand-nav-logo.css";
 import "./home-layout.css";
@@ -50,15 +51,7 @@ export default async function HomePage() {
               <Link href="/demo" className="food-orbit-hero__nav-link text-sm font-medium">
                 Demo
               </Link>
-              <Link href="/login" className="food-orbit-hero__nav-link text-sm font-medium">
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="food-orbit-hero__nav-cta inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold"
-              >
-                Get started free
-              </Link>
+              <HomeAuthActions />
               <ThemeControl />
             </div>
             <HomeMobileNavigation />

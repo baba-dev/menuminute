@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { SessionContinuity } from "@/components/auth/session-continuity";
 import { listOrganizations } from "@/modules/organizations/service";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 import { ThemeControl } from "@/components/menu-product/theme-control";
@@ -14,6 +15,7 @@ export default async function AccountPage() {
   ]);
   return (
     <main className="product public-shell stack" style={{ maxWidth: "1000px" }}>
+      <SessionContinuity />
       <div className="row between">
         <Link className="underline" href="/dashboard">
           ← Dashboard
