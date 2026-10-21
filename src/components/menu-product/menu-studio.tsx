@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowUp, ArrowDown } from "lucide-react";
@@ -773,6 +772,13 @@ export function MenuStudio({
                       />
                     )}
                     {tab === "assignments" && (
+                      <div className="atelier-assignment-workspace">
+                        {(dirty || composerPending) && (
+                          <p role="status" className="atelier-assignment-warning">
+                            Save your draft and review queued Composer dishes before changing shared-menu assignments or local overrides.
+                          </p>
+                        )}
+                        <fieldset className="atelier-assignment-lock" disabled={dirty || composerPending}>
                       <StudioAssignmentsTab
                         doc={doc}
                         detail={detail}
@@ -785,6 +791,8 @@ export function MenuStudio({
                         load={load}
                         setMessage={setMessage}
                       />
+                        </fieldset>
+                      </div>
                     )}
                   </>
                 )}
