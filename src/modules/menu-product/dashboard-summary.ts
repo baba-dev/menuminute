@@ -40,3 +40,25 @@ export function dashboardSummary(
     hasPublicMenu: published.length > 0,
   };
 }
+
+/** A setup indicator is earned only by a verifiable, outlet-scoped state. */
+export function dashboardSetup(state: {
+  hasOutlet: boolean;
+  hasSavedMenu: boolean;
+  hasPublicMenu: boolean;
+  hasActiveQr: boolean;
+}) {
+  const checks = [
+    { label: "Outlet configured", complete: state.hasOutlet },
+    { label: "Menu created", complete: state.hasSavedMenu },
+    { label: "Menu published", complete: state.hasPublicMenu },
+    { label: "Active QR code", complete: state.hasActiveQr },
+  ];
+  const completed = checks.filter((check) => check.complete).length;
+  return {
+    checks,
+    completed,
+    total: checks.length,
+    percent: Math.round((completed / checks.length) * 100),
+  };
+}
