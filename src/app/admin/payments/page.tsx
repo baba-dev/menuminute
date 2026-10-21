@@ -11,13 +11,13 @@ import {
 import { PaymentsConsole } from "./payments-console";
 
 export default async function AdminPaymentsPage() {
-  await verifySuperAdmin();
+  const actor = await verifySuperAdmin();
 
   const [plans, subscriptionsRes, grantsRes, financials] = await Promise.all([
     listSubscriptionPlans(),
-    listSubscriptions({ limit: 50 }),
-    listEntitlementGrants({ limit: 50 }),
-    getFinancialAnalytics(),
+    listSubscriptions(actor, { limit: 50 }),
+    listEntitlementGrants(actor, { limit: 50 }),
+    getFinancialAnalytics(actor),
   ]);
 
   async function handleUpdatePlan(planId: string, data: any) {

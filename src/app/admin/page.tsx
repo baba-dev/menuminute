@@ -19,9 +19,9 @@ export default async function AdminOverviewPage() {
   const actor = await verifySuperAdmin();
 
   const [systemHealth, usersData, orgsData, recentAudits] = await Promise.all([
-    getSystemHealth(),
+    getSystemHealth(actor),
     listUsers({ limit: 1 }),
-    listOrganizations({ limit: 1 }),
+    listOrganizations(actor, { limit: 1 }),
     listAdminAuditLogs(actor, { limit: 5 }),
   ]);
 

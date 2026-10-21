@@ -40,8 +40,8 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
 
   async function handleFetchDetails(userId: string) {
     "use server";
-    await verifySuperAdmin();
-    return getUserDetails(userId);
+    const currentActor = await verifySuperAdmin();
+    return getUserDetails(currentActor, userId);
   }
 
   async function handleToggleVerify(userId: string, verified: boolean) {

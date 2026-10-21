@@ -32,7 +32,7 @@ export async function verifySuperAdmin(): Promise<AdminActor> {
     redirect("/login?next=/admin");
   }
 
-  const isSuper = user.isSuperAdmin || user.email === SUPERADMIN_EMAIL;
+  const isSuper = user.isSuperAdmin;
   if (!isSuper) {
     throw new ForbiddenError(
       "Superadmin privileges required to access the Platform Control Plane."
@@ -97,13 +97,13 @@ export async function getDiagnosticContext(): Promise<{
     where: eq(users.id, session.user.id),
   });
 
-  if (!user?.isSuperAdmin && user?.email !== SUPERADMIN_EMAIL) {
+  if (!user?.isSuperAdmin || !user.twoFactorEnabled) {
     return { isDiagnostic: false };
   }
 
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.id, diagnosticOrgId),
-  });
+  const org = await withActor({ userId: user.id }, (tx) =>
+    tx.query.organizations.findFirst({ where: eq(organizations.id, diagnosticOrgId) })
+  );
 
   if (!org) return { isDiagnostic: false };
 

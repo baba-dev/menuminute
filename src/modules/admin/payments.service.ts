@@ -9,6 +9,7 @@ import {
 import { eq, desc, and, sql } from "drizzle-orm";
 import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { withActor } from "@/modules/tenancy/service";
 
 export async function listSubscriptionPlans() {
   const db = getDb();
@@ -42,7 +43,7 @@ export async function updateSubscriptionPlan(
 export async function listSubscriptions(
   params: { page?: number; limit?: number; status?: string } = {}
 ) {
-  const db = getDb();
+  return withActor({ userId: actor.id }, async (db) => {
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -90,6 +91,7 @@ export async function listSubscriptions(
     limit,
     totalPages: Math.ceil(total / limit),
   };
+  });
 }
 
 export async function listEntitlementGrants(
@@ -100,7 +102,7 @@ export async function listEntitlementGrants(
     activeOnly?: boolean;
   } = {}
 ) {
-  const db = getDb();
+  return withActor({ userId: actor.id }, async (db) => {
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -151,6 +153,7 @@ export async function listEntitlementGrants(
     limit,
     totalPages: Math.ceil(total / limit),
   };
+  });
 }
 
 export async function issueEntitlementGrant(
@@ -246,8 +249,8 @@ export async function revokeEntitlementGrant(actor: AdminActor, grantId: string,
   return { success: true };
 }
 
-export async function getFinancialAnalytics() {
-  const db = getDb();
+export async function getFinancialAnalytics(actor: AdminActor) {
+  return withActor({ userId: actor.id }, async (db) => {
 
   // Aggregate orders GMV strictly grouped by currency
   const currencyTotals = await db.execute<{
@@ -284,4 +287,5 @@ export async function getFinancialAnalytics() {
       count: parseInt(r.count, 10) || 0,
     })),
   };
+  });
 }

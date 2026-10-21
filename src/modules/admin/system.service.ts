@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { redisHealth } from "@/lib/redis";
 import { env } from "@/lib/config/env";
 import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
+import { withActor } from "@/modules/tenancy/service";
 
 export interface SystemHealthReport {
   database: {
@@ -29,7 +30,7 @@ export interface SystemHealthReport {
   };
 }
 
-export async function getSystemHealth(): Promise<SystemHealthReport> {
+export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthReport> {
   const db = getDb();
   const start = performance.now();
   let dbStatus: "healthy" | "degraded" | "down" = "down";
@@ -45,9 +46,9 @@ export async function getSystemHealth(): Promise<SystemHealthReport> {
 
   const redis = await redisHealth();
 
-  const outboxCountsRes = await db.execute<{ status: string; count: string }>(
+  const outboxCountsRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ status: string; count: string }>(
     sql`SELECT status, count(*)::text as count FROM outbox_events GROUP BY status`
-  );
+  }));
   const counts: Record<string, number> = {
     pending: 0,
     dispatched: 0,
@@ -60,9 +61,9 @@ export async function getSystemHealth(): Promise<SystemHealthReport> {
     }
   }
 
-  const oldestDueRes = await db.execute<{ oldest_due: string | null }>(
+  const oldestDueRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ oldest_due: string | null }>(
     sql`SELECT min(next_attempt_at)::text as oldest_due FROM outbox_events WHERE status IN ('pending', 'failed')`
-  );
+  }));
   const oldestDue = oldestDueRes.rows[0]?.oldest_due || null;
 
   return {
@@ -91,9 +92,8 @@ export async function getSystemHealth(): Promise<SystemHealthReport> {
   };
 }
 
-export async function listFailedOutboxEvents(limit = 50) {
-  const db = getDb();
-  const res = await db.execute<{
+export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
+  const res = await withActor({ userId: actor.id }, (tx) => tx.execute<{
     id: string;
     organization_id: string;
     outlet_id: string | null;
@@ -110,7 +110,7 @@ export async function listFailedOutboxEvents(limit = 50) {
         WHERE status = 'failed'
         ORDER BY created_at DESC
         LIMIT ${limit}`
-  );
+  }));
   return res.rows;
 }
 
@@ -134,9 +134,8 @@ export async function retryOutboxEvent(actor: AdminActor, eventId: string) {
   return { success: true, eventId };
 }
 
-export async function listDomainProjections(limit = 30) {
-  const db = getDb();
-  const res = await db.execute<{
+export async function listDomainProjections(actor: AdminActor, limit = 30) {
+  const res = await withActor({ userId: actor.id }, (tx) => tx.execute<{
     organization_id: string;
     org_name: string;
     version: number;
@@ -148,6 +147,6 @@ export async function listDomainProjections(limit = 30) {
         LEFT JOIN organizations o ON o.id = p.organization_id
         ORDER BY p.updated_at DESC
         LIMIT ${limit}`
-  );
+  }));
   return res.rows;
 }

@@ -10,11 +10,11 @@ import { Database, Activity, Layers, CheckCircle2, XCircle, GitBranch } from "lu
 import { revalidatePath } from "next/cache";
 
 export default async function AdminSystemPage() {
-  await verifySuperAdmin();
+  const actor = await verifySuperAdmin();
   const [health, failedEvents, projections] = await Promise.all([
-    getSystemHealth(),
-    listFailedOutboxEvents(50),
-    listDomainProjections(20),
+    getSystemHealth(actor),
+    listFailedOutboxEvents(actor, 50),
+    listDomainProjections(actor, 20),
   ]);
 
   async function handleRetry(eventId: string) {

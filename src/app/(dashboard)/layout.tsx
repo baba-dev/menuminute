@@ -8,7 +8,9 @@ import { auth, authServer } from "@/lib/auth";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { DiagnosticBanner } from "@/components/admin/diagnostic-banner";
-import { SUPERADMIN_EMAIL } from "@/lib/admin-guard";
+import { getDb } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import {
   QrCode,
   LayoutDashboard,
@@ -28,7 +30,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/account/security");
   const actor = { userId: session.user.id };
   const restaurant = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
-  const isSuperAdmin = session.user.email === SUPERADMIN_EMAIL;
+  const operator = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { isSuperAdmin: true },
+  });
+  const isSuperAdmin = Boolean(operator?.isSuperAdmin);
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-100 md:flex-row">

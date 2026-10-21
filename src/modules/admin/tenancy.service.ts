@@ -200,9 +200,9 @@ export async function setOrganizationMfaRequired(
 
 export async function enterDiagnosticMode(actor: AdminActor, orgId: string) {
   const db = getDb();
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.id, orgId),
-  });
+  const org = await withActor({ userId: actor.id }, (tx) =>
+    tx.query.organizations.findFirst({ where: eq(organizations.id, orgId) })
+  );
   if (!org) throw new NotFoundError("Organization not found");
 
   const cookieStore = await cookies();

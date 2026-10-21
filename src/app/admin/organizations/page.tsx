@@ -17,14 +17,14 @@ interface OrgsPageProps {
 }
 
 export default async function AdminOrganizationsPage({ searchParams }: OrgsPageProps) {
-  await verifySuperAdmin();
+  const actor = await verifySuperAdmin();
   const sp = await searchParams;
 
   const page = parseInt(sp.page || "1", 10) || 1;
   const search = sp.search || "";
   const isActive = sp.active ? sp.active === "true" : undefined;
 
-  const result = await listOrganizations({
+  const result = await listOrganizations(actor, {
     page,
     limit: 20,
     search,
@@ -33,8 +33,8 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
 
   async function handleFetchDetails(orgId: string) {
     "use server";
-    await verifySuperAdmin();
-    return getOrganizationDetails(orgId);
+    const currentActor = await verifySuperAdmin();
+    return getOrganizationDetails(currentActor, orgId);
   }
 
   async function handleSetActive(orgId: string, active: boolean, reason: string) {

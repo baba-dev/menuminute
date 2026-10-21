@@ -42,3 +42,18 @@ CREATE POLICY admin_audit_insert ON admin_audit_logs FOR INSERT WITH CHECK (
 );
 
 GRANT SELECT, INSERT ON admin_audit_logs TO menuminute_app;
+
+-- The existing tenant-scoped SELECT policies remain unchanged. Platform operators
+-- receive global read visibility only after the server sets an authenticated
+-- actor inside a transaction (withActor); an unset actor remains fail-closed.
+DO $$ DECLARE table_name text; BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'organizations', 'organization_members', 'brands', 'restaurants',
+    'orders', 'entitlement_grants', 'outbox_events', 'domain_projections'
+  ] LOOP
+    EXECUTE format(
+      'CREATE POLICY platform_admin_global_read ON %I FOR SELECT TO menuminute_app USING (app_private.is_super_admin(current_setting(''app.actor_id'', true)))',
+      table_name
+    );
+  END LOOP;
+END $$;

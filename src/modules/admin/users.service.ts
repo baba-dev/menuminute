@@ -8,8 +8,9 @@ import {
   organizations,
 } from "@/db/schema";
 import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
-import { type AdminActor, recordAdminAction, SUPERADMIN_EMAIL } from "@/lib/admin-guard";
+import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { withActor } from "@/modules/tenancy/service";
 
 export interface ListUsersParams {
   page?: number;
@@ -83,7 +84,7 @@ export async function listUsers(params: ListUsersParams = {}) {
   };
 }
 
-export async function getUserDetails(userId: string) {
+export async function getUserDetails(actor: AdminActor, userId: string) {
   const db = getDb();
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
@@ -118,7 +119,8 @@ export async function getUserDetails(userId: string) {
     .where(eq(accounts.userId, userId));
 
   // Get organization memberships
-  const memberships = await db
+  const memberships = await withActor({ userId: actor.id }, (tx) =>
+    tx
     .select({
       membershipId: organizationMembers.id,
       organizationId: organizationMembers.organizationId,
@@ -128,7 +130,8 @@ export async function getUserDetails(userId: string) {
     })
     .from(organizationMembers)
     .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-    .where(eq(organizationMembers.userId, userId));
+    .where(eq(organizationMembers.userId, userId))
+  );
 
   // Get two-factor state
   const tf = await db.query.twoFactors.findFirst({
@@ -138,7 +141,7 @@ export async function getUserDetails(userId: string) {
   return {
     user: {
       ...user,
-      isSuperAdmin: user.isSuperAdmin || user.email === SUPERADMIN_EMAIL,
+      isSuperAdmin: user.isSuperAdmin,
     },
     sessions: activeSessions,
     accounts: linkedAccounts,
