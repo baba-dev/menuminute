@@ -15,10 +15,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   // Always validate against PostgreSQL; never trust a remembered-email hint or cookie existence.
   const session = await auth();
   if (session) {
-    if (params.switch === "1") return <SwitchAccount email={session.user.email} next={next} />;
-    if (next) redirect(next);
-    const outlets = await getRestaurantsByUserId(session.user.id);
-    redirect(outlets.length ? "/dashboard" : "/onboarding");
+    let destination = next;
+    if (!destination) {
+      const outlets = await getRestaurantsByUserId(session.user.id);
+      destination = outlets.length ? "/dashboard" : "/onboarding";
+    }
+    if (params.switch === "1")
+      return <SwitchAccount email={session.user.email} next={destination} />;
+    redirect(destination);
   }
   return (
     <Suspense>

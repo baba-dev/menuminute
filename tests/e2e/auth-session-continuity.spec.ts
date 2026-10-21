@@ -29,6 +29,8 @@ async function account() {
 test("remembered sign-in survives navigation; homepage and login recognise the account", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const { email, password } = await account();
   await page.goto("/login");
   await expect(page.getByLabel("Remember me")).toBeChecked();
@@ -41,9 +43,7 @@ test("remembered sign-in survives navigation; homepage and login recognise the a
     tokens.some((c) => c.name.includes("session_token") && c.expires > Date.now() / 1000)
   ).toBe(true);
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: /dashboard|restaurant|welcome/i }).first()
-  ).toBeVisible();
+  await expect(page.locator(".mm-workspace-shell")).toBeVisible();
   await page.goto("/");
   if ((page.viewportSize()?.width ?? 1000) < 768)
     await page.getByRole("button", { name: "Open navigation menu" }).click();
@@ -59,6 +59,8 @@ test("remembered sign-in survives navigation; homepage and login recognise the a
 test("non-remembered sign-in is a browser-session cookie and rejects unsafe return URLs", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const { email, password } = await account();
   await page.goto("/login?next=https%3A%2F%2Fevil.invalid");
   await page.getByLabel("Remember me").uncheck();

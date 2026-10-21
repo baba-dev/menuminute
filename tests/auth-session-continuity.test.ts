@@ -35,7 +35,12 @@ async function signIn(email: string, rememberMe: boolean) {
   return authServer.handler(
     new Request(origin + "/api/auth/sign-in/email", {
       method: "POST",
-      headers: { origin, "content-type": "application/json" },
+      // Isolate synthetic rate-limit subjects without relaxing production rules.
+      headers: {
+        origin,
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.241",
+      },
       body: JSON.stringify({ email, password: "session-fixture-password", rememberMe }),
     })
   );
