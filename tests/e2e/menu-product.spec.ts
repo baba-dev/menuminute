@@ -108,7 +108,13 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByLabel("Find a dish or section").fill("nonexistent-dish-search");
   await expect(page.getByLabel("Find a dish or section")).toHaveValue("nonexistent-dish-search");
   await page.getByLabel("Find a dish or section").clear();
-  await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+  if ((page.viewportSize()?.width ?? 1440) <= 720) {
+    await page.getByRole("button", { name: "Preview draft" }).click();
+    await expect(page.getByText("Draft preview — not public")).toBeVisible();
+    await page.getByRole("button", { name: "Back to edit" }).click();
+  } else {
+    await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
   await page.getByRole("button", { name: "+ Add dishes" }).click();
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   await page.getByLabel("Category name 1", { exact: true }).fill("Chef’s specials");
@@ -377,12 +383,18 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await page.getByLabel("Email address").fill(owner.email);
   await page.getByLabel("Password", { exact: true }).fill(owner.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
   const studio = page.getByTestId("recipe-atelier-studio");
   await expect(studio).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
-  await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  const compact = (page.viewportSize()?.width ?? 1440) <= 720;
+  if (compact) {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
+  } else {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
   await expect(studio.getByRole("navigation", { name: "Filter menu sections" })).toBeVisible();
   await studio.locator("summary[aria-label='About Sections']").click();
   await expect(studio.getByText("Active sections in the selected editable draft.")).toBeVisible();
@@ -392,7 +404,11 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await expect(studio.getByRole("button", { name: "Publish menu" })).toBeDisabled();
   await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
   await studio.getByRole("button", { name: "Back to edit" }).click();
-  await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  if (compact) {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
+  } else {
+    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
+  }
   await page.getByLabel("Menu name").fill("Kitchen seasonal menu");
   await studio.getByRole("button", { name: "Assignments", exact: true }).click();
   await expect(studio.locator(".atelier-assignment-lock")).toBeDisabled();
