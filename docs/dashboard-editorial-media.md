@@ -1,24 +1,23 @@
 # MenuMinute Dashboard 2.0 — Editorial Media (PR A)
 
-Production media for the approved Editorial Table dashboard. This PR is **media-only**; layout, KPIs and data integrations belong to later PRs.
+Production media for the approved Editorial Table dashboard. This PR contains the approved artwork and its asset manifest; UI, data and responsive optimisation are developed in PR B.
 
-> Publication status: The four verified compressed WebP files have been exported into a handoff archive but cannot be transferred as binary through the current GitHub connector. Keep this PR as a **draft** until the actual four binaries are added to `public/brand/dashboard/editorial/` and checked against the SHA-256 manifest.
+| Asset                             |     Pixels | Purpose                                                        |
+| --------------------------------- | ---------: | -------------------------------------------------------------- |
+| `hero-desktop-light.webp`         | 2880 × 900 | Full-bleed light header with left copy-safe area               |
+| `hero-desktop-dark.webp`          | 2880 × 900 | Matching espresso/charcoal header                              |
+| `priorities-illustration.webp`    |  700 × 500 | Transparent cutting board, handwritten napkin and olive leaves |
+| `outlet-health-illustration.webp` |  400 × 480 | Transparent olive-oil cruet and botanical leaves               |
 
-| Asset | Pixels | Purpose |
-| --- | ---: | --- |
-| `hero-desktop-light.webp` | 2880 × 900 | Full-bleed light header with left copy-safe area |
-| `hero-desktop-dark.webp` | 2880 × 900 | Matching espresso/charcoal header |
-| `priorities-illustration.webp` | 700 × 500 | Transparent cutting board, handwritten napkin and olive leaves |
-| `outlet-health-illustration.webp` | 400 × 480 | Transparent olive-oil cruet and botanical leaves |
+Four compressed WebP originals have been uploaded under `public/brand/dashboard/editorial/`. Their expected byte counts and SHA-256 values are in `manifest.json`.
 
-App assets total **518,312 bytes** (about 506 KiB). Exact bytes and SHA-256 are listed in `public/brand/dashboard/editorial/manifest.json`.
+The separately composed mobile source uploads are currently named `hero-mobile-light.webp.png` and `hero-mobile-dark.webp.png`; these contain PNG bytes. The Dashboard 2.0 implementation PR creates real, optimized 960 × 1120 WebP derivatives before dev/build and uses those derivatives at runtime.
 
 ## Usage and acceptance
 
-- Render hero as artwork filling the workspace width, **not** inside a rounded card. The existing dashboard's outer `max-w-6xl` and padding should be exempted in the future implementation PR.
-- Overlay live heading, buttons, name, statuses, KPIs and tooltips as semantic HTML. No text, clickable control or fake sample QR code is baked into hero art.
-- Choose the correct hero for resolved light/dark theme, never invert food imagery with CSS. Provide a solid fallback and contrast-preserving copy overlay.
-- Display transparent supporting artwork only as decoration: `alt=""` or `aria-hidden`. The napkin's phrase is decorative and conveys no required instruction.
-- Keep original MenuMinute identity, Ink & Ember component contract, and outlet-scoped publishing logic; refer to `docs/brand-assets.md` and `docs/design-system.md`.
-- Use responsive crop and check narrow layouts; separately recomposed mobile banners are **not** in this four-asset scope.
-- Verify dimensions, WebP decoding, alpha, bytes and SHA-256 from the manifest. No new runtime dependencies, migrations, or deployment changes in PR A.
+- Display the hero full-width within the workspace, not in a rounded card.
+- Keep heading, actions, outlet identity, KPIs, live state and tooltips as HTML, never baked into artwork.
+- Respect resolved light/dark appearance without inverting the artwork. Keep left-hand copy readable.
+- Small decorative illustrations should use empty alt text. The napkin text is ornament only.
+- Keep canonical outlet-scoped publication state, Ink & Ember styling and real QR identities.
+- See `docs/brand-assets.md` and `docs/design-system.md` for the approved app-wide system.
