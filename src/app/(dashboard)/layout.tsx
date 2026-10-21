@@ -7,7 +7,6 @@ import Link from "next/link";
 import { auth, authServer } from "@/lib/auth";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
-import { DiagnosticBanner } from "@/components/admin/diagnostic-banner";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -210,7 +209,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <DiagnosticBanner />
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6 md:p-8">{children}</main>
       </div>
     </div>

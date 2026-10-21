@@ -2,7 +2,7 @@ import { getDb } from "@/db";
 import { sql } from "drizzle-orm";
 import { redisHealth } from "@/lib/redis";
 import { env } from "@/lib/config/env";
-import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
+import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { withActor } from "@/modules/tenancy/service";
 
 export interface SystemHealthReport {
@@ -46,7 +46,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 
   const redis = await redisHealth();
 
-  const outboxCountsRes = await withActor({ userId: actor.id }, (tx) =>
+  const outboxCountsRes = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
     tx.execute<{ status: string; count: string }>(
       sql`SELECT status, count(*)::text as count FROM outbox_events GROUP BY status`
     )
@@ -63,7 +63,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
     }
   }
 
-  const oldestDueRes = await withActor({ userId: actor.id }, (tx) =>
+  const oldestDueRes = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
     tx.execute<{ oldest_due: string | null }>(
       sql`SELECT min(next_attempt_at)::text as oldest_due FROM outbox_events WHERE status IN ('pending', 'failed')`
     )
@@ -97,7 +97,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 }
 
 export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
-  const res = await withActor({ userId: actor.id }, (tx) =>
+  const res = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
     tx.execute<{
       id: string;
       organization_id: string;
@@ -110,7 +110,7 @@ export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
       created_at: string;
       next_attempt_at: string;
     }>(
-      sql`SELECT id, organization_id, outlet_id, type, attempts, max_attempts, last_error, payload, created_at::text, next_attempt_at::text
+      sql`SELECT id, organization_id, outlet_id, type, attempts, max_attempts, CASE WHEN last_error IS NULL THEN NULL ELSE 'Failure recorded in restricted worker logs' END AS last_error, jsonb_build_object('redacted',true) AS payload, created_at::text, next_attempt_at::text
         FROM outbox_events
         WHERE status = 'failed'
         ORDER BY created_at DESC
@@ -121,27 +121,11 @@ export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
 }
 
 export async function retryOutboxEvent(actor: AdminActor, eventId: string) {
-  const db = getDb();
-  const res = await db.execute<{ id: string }>(
-    sql`UPDATE outbox_events
-        SET status = 'pending', attempts = 0, last_error = NULL, next_attempt_at = now()
-        WHERE id = ${eventId}
-        RETURNING id`
-  );
-
-  if (res.rows.length === 0) {
-    throw new Error(`Outbox event ${eventId} not found`);
-  }
-
-  await recordAdminAction(actor, "outbox.retry", "outbox_event", eventId, {
-    retriedAt: new Date().toISOString(),
-  });
-
-  return { success: true, eventId };
+  return runAdminCommand(actor, "outbox.retry", eventId);
 }
 
 export async function listDomainProjections(actor: AdminActor, limit = 30) {
-  const res = await withActor({ userId: actor.id }, (tx) =>
+  const res = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
     tx.execute<{
       organization_id: string;
       org_name: string;

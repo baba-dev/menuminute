@@ -1,7 +1,7 @@
 import { getDb } from "@/db";
 import { rateLimits, adminAuditLogs } from "@/db/schema";
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
-import { type AdminActor, recordAdminAction } from "@/lib/admin-guard";
+import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { NotFoundError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 
@@ -20,21 +20,8 @@ export async function listRateLimits(limit = 100) {
 }
 
 export async function clearRateLimitKey(actor: AdminActor, key: string) {
-  const db = getDb();
-  const deleted = await db
-    .delete(rateLimits)
-    .where(eq(rateLimits.key, key))
-    .returning({ id: rateLimits.id, key: rateLimits.key });
-
-  if (deleted.length === 0) {
-    throw new NotFoundError(`Rate limit key ${key} not found`);
-  }
-
-  await recordAdminAction(actor, "security.ratelimit.clear", "rate_limit", key, {
-    clearedKey: key,
-  });
-
-  return { success: true, key };
+  if (!key || key.length > 254) throw new NotFoundError("Invalid rate-limit key");
+  return runAdminCommand(actor, "security.ratelimit.clear", key);
 }
 
 export async function listAdminAuditLogs(
@@ -65,7 +52,7 @@ export async function listAdminAuditLogs(
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  return withActor({ userId: actor.id }, async (tx) => {
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (tx) => {
     const [countResult] = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(adminAuditLogs)

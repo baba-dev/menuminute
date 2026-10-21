@@ -8,7 +8,7 @@ import {
   organizations,
 } from "@/db/schema";
 import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
-import { type AdminActor, recordAdminAction, SUPERADMIN_EMAIL } from "@/lib/admin-guard";
+import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 
@@ -119,7 +119,7 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
     .where(eq(accounts.userId, userId));
 
   // Get organization memberships
-  const memberships = await withActor({ userId: actor.id }, (tx) =>
+  const memberships = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
     tx
       .select({
         membershipId: organizationMembers.id,
@@ -157,48 +157,16 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
 }
 
 export async function toggleUserVerification(actor: AdminActor, userId: string, verified: boolean) {
-  const db = getDb();
-  const [updated] = await db
-    .update(users)
-    .set({ emailVerified: verified, updatedAt: new Date() })
-    .where(eq(users.id, userId))
-    .returning({ id: users.id, email: users.email, emailVerified: users.emailVerified });
-
-  if (!updated) throw new NotFoundError("User not found");
-
-  await recordAdminAction(actor, "user.email_verified.set", "user", userId, {
-    newVerified: verified,
-  });
-
-  return updated;
+  if (typeof verified !== "boolean") throw new ForbiddenError("Invalid verification state");
+  return runAdminCommand(actor, "user.email_verified", userId, { verified });
 }
 
 export async function revokeUserSessions(actor: AdminActor, userId: string) {
-  const db = getDb();
-  const deleted = await db
-    .delete(sessions)
-    .where(eq(sessions.userId, userId))
-    .returning({ id: sessions.id });
-
-  await recordAdminAction(actor, "user.sessions.revoke_all", "user", userId, {
-    revokedCount: deleted.length,
-  });
-
-  return { revokedCount: deleted.length };
+  return runAdminCommand(actor, "user.sessions.revoke", userId);
 }
 
 export async function unlockUserTwoFactor(actor: AdminActor, userId: string) {
-  const db = getDb();
-  await db
-    .update(twoFactors)
-    .set({ failedVerificationCount: 0, lockedUntil: null })
-    .where(eq(twoFactors.userId, userId));
-
-  await recordAdminAction(actor, "user.2fa.unlock", "user", userId, {
-    clearedLockout: true,
-  });
-
-  return { success: true };
+  return runAdminCommand(actor, "user.2fa.unlock", userId);
 }
 
 export async function setUserSuperAdmin(
@@ -206,31 +174,8 @@ export async function setUserSuperAdmin(
   targetUserId: string,
   isSuperAdmin: boolean
 ) {
-  if (actor.id === targetUserId && !isSuperAdmin) {
-    throw new ForbiddenError("Cannot revoke superadmin privileges from your own account");
-  }
-
-  const db = getDb();
-  const target = await db.query.users.findFirst({
-    where: eq(users.id, targetUserId),
-  });
-
-  if (!target) throw new NotFoundError("User not found");
-
-  if (target.email === SUPERADMIN_EMAIL && !isSuperAdmin) {
-    throw new ForbiddenError("Primary root superadmin cannot be demoted");
-  }
-
-  const [updated] = await db
-    .update(users)
-    .set({ isSuperAdmin, updatedAt: new Date() })
-    .where(eq(users.id, targetUserId))
-    .returning({ id: users.id, email: users.email, isSuperAdmin: users.isSuperAdmin });
-
-  await recordAdminAction(actor, "user.superadmin.set", "user", targetUserId, {
-    isSuperAdmin,
-    targetEmail: target.email,
-  });
-
-  return updated;
+  if (actor.id === targetUserId && !isSuperAdmin)
+    throw new ForbiddenError("Cannot revoke your own superadmin role");
+  return runAdminCommand(actor, "user.superadmin", targetUserId, { isSuperAdmin });
 }
+

@@ -10,7 +10,6 @@ import {
   X,
   Store,
   Users,
-  ExternalLink,
   Shield,
 } from "lucide-react";
 
@@ -77,7 +76,6 @@ interface OrgsConsoleProps {
   onFetchDetails: (orgId: string) => Promise<OrgDetailPayload>;
   onSetActive: (orgId: string, isActive: boolean, reason: string) => Promise<any>;
   onSetMfaRequired: (orgId: string, required: boolean) => Promise<any>;
-  onEnterDiagnostic: (orgId: string) => Promise<any>;
 }
 
 export function OrgsConsole({
@@ -89,7 +87,6 @@ export function OrgsConsole({
   onFetchDetails,
   onSetActive,
   onSetMfaRequired,
-  onEnterDiagnostic,
 }: OrgsConsoleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -168,15 +165,6 @@ export function OrgsConsole({
     }
   }
 
-  async function handleDiagnosticView() {
-    if (!selectedOrg) return;
-    try {
-      await onEnterDiagnostic(selectedOrg.organization.id);
-      router.push("/dashboard");
-    } catch (err: any) {
-      setActionMessage({ text: err.message || "Failed to enter diagnostic mode", type: "error" });
-    }
-  }
 
   return (
     <div className="space-y-4">
@@ -358,15 +346,6 @@ export function OrgsConsole({
             <div className="mt-4 rounded-xl border border-stone-800 bg-stone-950/60 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap gap-2">
-                  {/* Enter Diagnostic Mode Button */}
-                  <button
-                    onClick={handleDiagnosticView}
-                    className="flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-orange-500"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>View as Organization (Diagnostic Mode)</span>
-                  </button>
-
                   {/* Toggle MFA policy */}
                   <button
                     onClick={() => handleToggleMfa(!selectedOrg.organization.mfaRequired)}

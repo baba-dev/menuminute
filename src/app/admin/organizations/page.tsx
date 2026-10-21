@@ -4,7 +4,6 @@ import {
   getOrganizationDetails,
   setOrganizationActive,
   setOrganizationMfaRequired,
-  enterDiagnosticMode,
 } from "@/modules/admin/tenancy.service";
 import { OrgsConsole } from "./orgs-console";
 
@@ -49,11 +48,6 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
     return setOrganizationMfaRequired(currentActor, orgId, required);
   }
 
-  async function handleEnterDiagnostic(orgId: string) {
-    "use server";
-    const currentActor = await verifySuperAdmin();
-    return enterDiagnosticMode(currentActor, orgId);
-  }
 
   return (
     <div className="space-y-6">
@@ -62,7 +56,7 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
           Organizations & Tenancy Control
         </h1>
         <p className="text-xs text-stone-400">
-          Tenant directory, outlet/brand boundaries, suspension controls, and diagnostic support
+          Tenant directory, outlet/brand boundaries, suspension controls, and read-only diagnostic support
           access.
         </p>
       </div>
@@ -76,7 +70,6 @@ export default async function AdminOrganizationsPage({ searchParams }: OrgsPageP
         onFetchDetails={handleFetchDetails}
         onSetActive={handleSetActive}
         onSetMfaRequired={handleSetMfaRequired}
-        onEnterDiagnostic={handleEnterDiagnostic}
       />
     </div>
   );

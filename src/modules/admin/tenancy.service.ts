@@ -1,4 +1,3 @@
-import { getDb } from "@/db";
 import {
   organizations,
   organizationMembers,
@@ -10,7 +9,6 @@ import {
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
 import { type AdminActor, recordAdminAction, DIAGNOSTIC_COOKIE_NAME } from "@/lib/admin-guard";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { cookies } from "next/headers";
 import { withActor } from "@/modules/tenancy/service";
 
 export interface ListOrgsParams {
@@ -201,32 +199,3 @@ export async function setOrganizationMfaRequired(
   return updated;
 }
 
-export async function enterDiagnosticMode(actor: AdminActor, orgId: string) {
-  const org = await withActor({ userId: actor.id }, (tx) =>
-    tx.query.organizations.findFirst({ where: eq(organizations.id, orgId) })
-  );
-  if (!org) throw new NotFoundError("Organization not found");
-
-  const cookieStore = await cookies();
-  cookieStore.set(DIAGNOSTIC_COOKIE_NAME, orgId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2, // 2 hours
-  });
-
-  await recordAdminAction(actor, "admin.diagnostic.enter", "organization", orgId, {
-    orgName: org.name,
-  });
-
-  return { success: true, orgId, orgName: org.name };
-}
-
-export async function exitDiagnosticMode(actor: AdminActor) {
-  const cookieStore = await cookies();
-  cookieStore.delete(DIAGNOSTIC_COOKIE_NAME);
-
-  await recordAdminAction(actor, "admin.diagnostic.exit", "diagnostic_session", null);
-  return { success: true };
-}
