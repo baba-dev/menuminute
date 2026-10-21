@@ -98,7 +98,7 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
   await expect(page.getByText("Published and visible")).toBeVisible();
   await expect(page.getByRole("link", { name: "View public menu" })).toBeVisible();
   await page.getByRole("button", { name: "About Published menus" }).click();
-  await expect(page.getByRole("tooltip")).toContainText("committed menus");
+  await expect(page.getByRole("dialog", { name: "About Published menus" })).toContainText("committed menus");
   await page.keyboard.press("Escape");
   await expect(page.locator("meta[name='robots']")).toHaveAttribute("content", /noindex/);
 
