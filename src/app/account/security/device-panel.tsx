@@ -71,13 +71,16 @@ export function DevicePanel() {
             cache: "no-store",
             body: JSON.stringify({ action: "revoke-others" }),
           });
-          if (!others.ok) throw new Error("Couldn't confirm other-device revocation. Refresh and retry.");
+          if (!others.ok)
+            throw new Error("Couldn't confirm other-device revocation. Refresh and retry.");
         }
         const result = await authClient.signOut();
         if (result.error)
-          throw new Error(target === "all"
-            ? "Other sessions were revoked, but signing out this device could not be confirmed. Retry signing out here."
-            : "Couldn't sign out this device. Please retry.");
+          throw new Error(
+            target === "all"
+              ? "Other sessions were revoked, but signing out this device could not be confirmed. Retry signing out here."
+              : "Couldn't sign out this device. Please retry."
+          );
         router.replace("/login");
         router.refresh();
         return;
@@ -139,8 +142,12 @@ export function DevicePanel() {
         >
           Sign out other devices
         </button>
-        <button type="button" className="mm-device-danger" disabled={busy || loading}
-          onClick={() => setConfirm("all")}>
+        <button
+          type="button"
+          className="mm-device-danger"
+          disabled={busy || loading}
+          onClick={() => setConfirm("all")}
+        >
           Sign out all devices
         </button>
       </div>
