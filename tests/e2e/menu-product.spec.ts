@@ -479,7 +479,7 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
   await expect(studio.getByLabel("QR inventory at a glance")).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeVisible();
-  await studio.getByRole("button", { name: "About Active codes" }).click();
+  await studio.locator('summary[aria-label="About Active codes"]').click();
   await expect(studio.getByText("Currently usable permanent destination tokens.")).toBeVisible();
   const printPreview = studio.getByLabel("Table Stand print preview");
   await expect(printPreview).toBeVisible();
