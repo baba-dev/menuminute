@@ -7,12 +7,13 @@ export async function GET(req: Request) {
     const { actor, restaurant } = await requestContext(req);
     const rows = await getRestaurantQrCodes(actor, restaurant.id);
     return NextResponse.json(
-      rows.map(({ id, label, destinationToken, isActive, tableId }) => ({
+      rows.map(({ id, label, destinationToken, isActive, tableId, pointLabel }) => ({
         id,
         label,
         destinationToken,
         isActive,
         tableId,
+        pointLabel,
       }))
     );
   } catch (e) {
