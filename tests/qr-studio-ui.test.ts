@@ -13,6 +13,7 @@ const codes: QR[] = [
     destinationToken: "secure-token",
     isActive: true,
     tableId: null,
+    pointLabel: null,
   },
   {
     id: "two",
@@ -20,6 +21,7 @@ const codes: QR[] = [
     destinationToken: "table-token",
     isActive: true,
     tableId: "point-4",
+    pointLabel: "Table 4",
   },
   {
     id: "three",
@@ -27,6 +29,7 @@ const codes: QR[] = [
     destinationToken: "old-token",
     isActive: false,
     tableId: "point-1",
+    pointLabel: "Old Window",
   },
 ];
 
