@@ -413,15 +413,15 @@ migration lineage verification, fresh verified off-host backup, bundled checksum
 runner and public SHA verification. Missing prerequisites fail closed instead of producing a
 successfully staged-only run. Do not assume the root-owned installed copy has changed on merge.
 
-## Current successor: configuration preflight and incident recovery (helper v6)
+## Current successor: full FORCE-RLS backup and incident recovery (helper v7)
 
-Helper v6 preserves the v4 append-only migration, off-host backup and public-readiness contract.
+Helper v7 retains the v6 configuration preflight, append-only migration, off-host backup and public-readiness contract. Its pre-migration dump now verifies the existing local postgres OS account can connect as a PostgreSQL superuser through peer authentication, and streams a complete forced-RLS-safe custom dump to a root-only file without passing migration or root environment secrets. The existing Restic verification remains mandatory.
 Before migration work it executes the candidate's bundled `dist/env-validate.mjs` through a
 transient systemd unit as the unprivileged `menuminute` user with the root-managed web environment.
 Invalid configuration stops with variable names only.
 
-Install v6 with the pinned merge-SHA and independently verified Git-blob procedure above, changing
-the final expected version to `6`. Keep the previous executable. Source merge does not install this
+Install v7 with the pinned merge-SHA and independently verified Git-blob procedure above, changing
+the final expected version to `7`. Keep the previous executable. Source merge does not install this
 root-owned control plane.
 
 For an unhealthy-current-service incident only, create a root-owned mode-0600 authorization at
