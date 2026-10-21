@@ -1,7 +1,7 @@
 {
   "package": "MenuMinute Dashboard 2.0 — Editorial Media PR A",
   "version": 1,
-  "status": "Awaiting binary upload; see docs/dashboard-editorial-media.md",
+  "status": "Four source WebPs committed. Mobile PNG masters converted to WebP by Dashboard 2.0 build.",
   "assets": [
     {
       "path": "/brand/dashboard/editorial/hero-desktop-light.webp",
@@ -46,6 +46,26 @@
       "alpha": true,
       "bytes": 27480,
       "sha256": "4020d30a6d739e7a2abe40e15e36b189d267b3f4a2db0de18625d00d65f85df2"
+    }
+  ],
+  "mobileSources": [
+    {
+      "path": "/brand/dashboard/editorial/hero-mobile-light.webp.png",
+      "sourceFormat": "PNG",
+      "generatedRuntimePath": "/brand/dashboard/editorial/hero-mobile-light.webp",
+      "generatedDimensions": [
+        960,
+        1120
+      ]
+    },
+    {
+      "path": "/brand/dashboard/editorial/hero-mobile-dark.webp.png",
+      "sourceFormat": "PNG",
+      "generatedRuntimePath": "/brand/dashboard/editorial/hero-mobile-dark.webp",
+      "generatedDimensions": [
+        960,
+        1120
+      ]
     }
   ]
 }
