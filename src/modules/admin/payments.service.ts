@@ -45,53 +45,53 @@ export async function listSubscriptions(
   params: { page?: number; limit?: number; status?: string } = {}
 ) {
   return withActor({ userId: actor.id }, async (db) => {
-  const page = Math.max(1, params.page || 1);
-  const limit = Math.min(100, Math.max(1, params.limit || 20));
-  const offset = (page - 1) * limit;
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 20));
+    const offset = (page - 1) * limit;
 
-  const conditions = [];
-  if (params.status) {
-    conditions.push(eq(restaurantSubscriptions.status, params.status as any));
-  }
+    const conditions = [];
+    if (params.status) {
+      conditions.push(eq(restaurantSubscriptions.status, params.status as any));
+    }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(restaurantSubscriptions)
-    .where(whereClause);
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(restaurantSubscriptions)
+      .where(whereClause);
 
-  const total = countResult?.count ?? 0;
+    const total = countResult?.count ?? 0;
 
-  const rows = await db
-    .select({
-      id: restaurantSubscriptions.id,
-      restaurantId: restaurantSubscriptions.restaurantId,
-      restaurantName: restaurants.name,
-      organizationId: restaurants.organizationId,
-      planId: restaurantSubscriptions.planId,
-      planName: subscriptionPlans.displayName,
-      status: restaurantSubscriptions.status,
-      currentPeriodStart: restaurantSubscriptions.currentPeriodStart,
-      currentPeriodEnd: restaurantSubscriptions.currentPeriodEnd,
-      cancelledAt: restaurantSubscriptions.cancelledAt,
-      createdAt: restaurantSubscriptions.createdAt,
-    })
-    .from(restaurantSubscriptions)
-    .innerJoin(restaurants, eq(restaurants.id, restaurantSubscriptions.restaurantId))
-    .innerJoin(subscriptionPlans, eq(subscriptionPlans.id, restaurantSubscriptions.planId))
-    .where(whereClause)
-    .orderBy(desc(restaurantSubscriptions.createdAt))
-    .limit(limit)
-    .offset(offset);
+    const rows = await db
+      .select({
+        id: restaurantSubscriptions.id,
+        restaurantId: restaurantSubscriptions.restaurantId,
+        restaurantName: restaurants.name,
+        organizationId: restaurants.organizationId,
+        planId: restaurantSubscriptions.planId,
+        planName: subscriptionPlans.displayName,
+        status: restaurantSubscriptions.status,
+        currentPeriodStart: restaurantSubscriptions.currentPeriodStart,
+        currentPeriodEnd: restaurantSubscriptions.currentPeriodEnd,
+        cancelledAt: restaurantSubscriptions.cancelledAt,
+        createdAt: restaurantSubscriptions.createdAt,
+      })
+      .from(restaurantSubscriptions)
+      .innerJoin(restaurants, eq(restaurants.id, restaurantSubscriptions.restaurantId))
+      .innerJoin(subscriptionPlans, eq(subscriptionPlans.id, restaurantSubscriptions.planId))
+      .where(whereClause)
+      .orderBy(desc(restaurantSubscriptions.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-  return {
-    subscriptions: rows,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+    return {
+      subscriptions: rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   });
 }
 
@@ -105,56 +105,56 @@ export async function listEntitlementGrants(
   } = {}
 ) {
   return withActor({ userId: actor.id }, async (db) => {
-  const page = Math.max(1, params.page || 1);
-  const limit = Math.min(100, Math.max(1, params.limit || 20));
-  const offset = (page - 1) * limit;
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 20));
+    const offset = (page - 1) * limit;
 
-  const conditions = [];
-  if (params.organizationId) {
-    conditions.push(eq(entitlementGrants.organizationId, params.organizationId));
-  }
-  if (params.activeOnly) {
-    conditions.push(sql`ends_at > now()`);
-    conditions.push(sql`revoked_at IS NULL`);
-  }
+    const conditions = [];
+    if (params.organizationId) {
+      conditions.push(eq(entitlementGrants.organizationId, params.organizationId));
+    }
+    if (params.activeOnly) {
+      conditions.push(sql`ends_at > now()`);
+      conditions.push(sql`revoked_at IS NULL`);
+    }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(entitlementGrants)
-    .where(whereClause);
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(entitlementGrants)
+      .where(whereClause);
 
-  const total = countResult?.count ?? 0;
+    const total = countResult?.count ?? 0;
 
-  const rows = await db
-    .select({
-      id: entitlementGrants.id,
-      organizationId: entitlementGrants.organizationId,
-      organizationName: organizations.name,
-      capability: entitlementGrants.capability,
-      billingCurrency: entitlementGrants.billingCurrency,
-      startsAt: entitlementGrants.startsAt,
-      endsAt: entitlementGrants.endsAt,
-      revokedAt: entitlementGrants.revokedAt,
-      operator: entitlementGrants.operator,
-      reason: entitlementGrants.reason,
-      createdAt: entitlementGrants.createdAt,
-    })
-    .from(entitlementGrants)
-    .innerJoin(organizations, eq(organizations.id, entitlementGrants.organizationId))
-    .where(whereClause)
-    .orderBy(desc(entitlementGrants.createdAt))
-    .limit(limit)
-    .offset(offset);
+    const rows = await db
+      .select({
+        id: entitlementGrants.id,
+        organizationId: entitlementGrants.organizationId,
+        organizationName: organizations.name,
+        capability: entitlementGrants.capability,
+        billingCurrency: entitlementGrants.billingCurrency,
+        startsAt: entitlementGrants.startsAt,
+        endsAt: entitlementGrants.endsAt,
+        revokedAt: entitlementGrants.revokedAt,
+        operator: entitlementGrants.operator,
+        reason: entitlementGrants.reason,
+        createdAt: entitlementGrants.createdAt,
+      })
+      .from(entitlementGrants)
+      .innerJoin(organizations, eq(organizations.id, entitlementGrants.organizationId))
+      .where(whereClause)
+      .orderBy(desc(entitlementGrants.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-  return {
-    grants: rows,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+    return {
+      grants: rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   });
 }
 
@@ -253,41 +253,40 @@ export async function revokeEntitlementGrant(actor: AdminActor, grantId: string,
 
 export async function getFinancialAnalytics(actor: AdminActor) {
   return withActor({ userId: actor.id }, async (db) => {
-
-  // Aggregate orders GMV strictly grouped by currency
-  const currencyTotals = await db.execute<{
-    currency: string;
-    order_count: string;
-    total_minor: string;
-  }>(
-    sql`SELECT currency, count(*)::text as order_count, coalesce(sum(total_minor), 0)::text as total_minor
+    // Aggregate orders GMV strictly grouped by currency
+    const currencyTotals = await db.execute<{
+      currency: string;
+      order_count: string;
+      total_minor: string;
+    }>(
+      sql`SELECT currency, count(*)::text as order_count, coalesce(sum(total_minor), 0)::text as total_minor
         FROM orders
         GROUP BY currency
         ORDER BY count(*) DESC`
-  );
+    );
 
-  // Subscriptions count by plan
-  const planCounts = await db.execute<{
-    plan_name: string;
-    count: string;
-  }>(
-    sql`SELECT p.display_name as plan_name, count(s.id)::text as count
+    // Subscriptions count by plan
+    const planCounts = await db.execute<{
+      plan_name: string;
+      count: string;
+    }>(
+      sql`SELECT p.display_name as plan_name, count(s.id)::text as count
         FROM subscription_plans p
         LEFT JOIN restaurant_subscriptions s ON s.plan_id = p.id AND s.status = 'active'
         GROUP BY p.display_name, p.sort_order
         ORDER BY p.sort_order`
-  );
+    );
 
-  return {
-    byCurrency: currencyTotals.rows.map((r) => ({
-      currency: r.currency,
-      orderCount: parseInt(r.order_count, 10) || 0,
-      totalMinor: parseInt(r.total_minor, 10) || 0,
-    })),
-    planSubscriptions: planCounts.rows.map((r) => ({
-      planName: r.plan_name,
-      count: parseInt(r.count, 10) || 0,
-    })),
-  };
+    return {
+      byCurrency: currencyTotals.rows.map((r) => ({
+        currency: r.currency,
+        orderCount: parseInt(r.order_count, 10) || 0,
+        totalMinor: parseInt(r.total_minor, 10) || 0,
+      })),
+      planSubscriptions: planCounts.rows.map((r) => ({
+        planName: r.plan_name,
+        count: parseInt(r.count, 10) || 0,
+      })),
+    };
   });
 }

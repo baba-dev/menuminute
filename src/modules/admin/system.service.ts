@@ -46,9 +46,11 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 
   const redis = await redisHealth();
 
-  const outboxCountsRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ status: string; count: string }>(
-    sql`SELECT status, count(*)::text as count FROM outbox_events GROUP BY status`
-  ));
+  const outboxCountsRes = await withActor({ userId: actor.id }, (tx) =>
+    tx.execute<{ status: string; count: string }>(
+      sql`SELECT status, count(*)::text as count FROM outbox_events GROUP BY status`
+    )
+  );
   const counts: Record<string, number> = {
     pending: 0,
     dispatched: 0,
@@ -61,9 +63,11 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
     }
   }
 
-  const oldestDueRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ oldest_due: string | null }>(
-    sql`SELECT min(next_attempt_at)::text as oldest_due FROM outbox_events WHERE status IN ('pending', 'failed')`
-  ));
+  const oldestDueRes = await withActor({ userId: actor.id }, (tx) =>
+    tx.execute<{ oldest_due: string | null }>(
+      sql`SELECT min(next_attempt_at)::text as oldest_due FROM outbox_events WHERE status IN ('pending', 'failed')`
+    )
+  );
   const oldestDue = oldestDueRes.rows[0]?.oldest_due || null;
 
   return {
@@ -93,24 +97,26 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 }
 
 export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
-  const res = await withActor({ userId: actor.id }, (tx) => tx.execute<{
-    id: string;
-    organization_id: string;
-    outlet_id: string | null;
-    type: string;
-    attempts: number;
-    max_attempts: number;
-    last_error: string | null;
-    payload: unknown;
-    created_at: string;
-    next_attempt_at: string;
-  }>(
-    sql`SELECT id, organization_id, outlet_id, type, attempts, max_attempts, last_error, payload, created_at::text, next_attempt_at::text
+  const res = await withActor({ userId: actor.id }, (tx) =>
+    tx.execute<{
+      id: string;
+      organization_id: string;
+      outlet_id: string | null;
+      type: string;
+      attempts: number;
+      max_attempts: number;
+      last_error: string | null;
+      payload: unknown;
+      created_at: string;
+      next_attempt_at: string;
+    }>(
+      sql`SELECT id, organization_id, outlet_id, type, attempts, max_attempts, last_error, payload, created_at::text, next_attempt_at::text
         FROM outbox_events
         WHERE status = 'failed'
         ORDER BY created_at DESC
         LIMIT ${limit}`
-  ));
+    )
+  );
   return res.rows;
 }
 
@@ -135,18 +141,20 @@ export async function retryOutboxEvent(actor: AdminActor, eventId: string) {
 }
 
 export async function listDomainProjections(actor: AdminActor, limit = 30) {
-  const res = await withActor({ userId: actor.id }, (tx) => tx.execute<{
-    organization_id: string;
-    org_name: string;
-    version: number;
-    updated_at: string;
-    snapshot: unknown;
-  }>(
-    sql`SELECT p.organization_id, coalesce(o.name, 'Unknown') as org_name, p.version, p.updated_at::text, p.snapshot
+  const res = await withActor({ userId: actor.id }, (tx) =>
+    tx.execute<{
+      organization_id: string;
+      org_name: string;
+      version: number;
+      updated_at: string;
+      snapshot: unknown;
+    }>(
+      sql`SELECT p.organization_id, coalesce(o.name, 'Unknown') as org_name, p.version, p.updated_at::text, p.snapshot
         FROM domain_projections p
         LEFT JOIN organizations o ON o.id = p.organization_id
         ORDER BY p.updated_at DESC
         LIMIT ${limit}`
-  ));
+    )
+  );
   return res.rows;
 }

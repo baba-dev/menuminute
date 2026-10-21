@@ -121,16 +121,16 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
   // Get organization memberships
   const memberships = await withActor({ userId: actor.id }, (tx) =>
     tx
-    .select({
-      membershipId: organizationMembers.id,
-      organizationId: organizationMembers.organizationId,
-      organizationName: organizations.name,
-      role: organizationMembers.role,
-      isActive: organizationMembers.isActive,
-    })
-    .from(organizationMembers)
-    .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-    .where(eq(organizationMembers.userId, userId))
+      .select({
+        membershipId: organizationMembers.id,
+        organizationId: organizationMembers.organizationId,
+        organizationName: organizations.name,
+        role: organizationMembers.role,
+        isActive: organizationMembers.isActive,
+      })
+      .from(organizationMembers)
+      .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
+      .where(eq(organizationMembers.userId, userId))
   );
 
   // Get two-factor state
