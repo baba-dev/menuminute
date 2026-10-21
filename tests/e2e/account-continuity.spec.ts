@@ -23,7 +23,7 @@ test("workspace selection persists after login on a fresh browser and device rev
   }
   await login(page);
   await page.goto("/account");
-  await page.getByRole("button",{name:/Second Continuity/}).click();
+  await page.getByRole("button",{name:"Second Continuity",exact:true}).click();
   await expect(page.getByText("Default workspace saved across your devices.")).toBeVisible();
   const firstSelection=await page.request.get("/api/context");
   expect((await firstSelection.json()).selectedOutletId).toBe(second.id);

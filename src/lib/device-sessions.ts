@@ -34,7 +34,7 @@ export async function revokeDeviceSessions(userId: string, currentSessionId: str
   if (deleted.rowCount) {
     // No credentials or session identifiers in email. Delivery does not alter revocation.
     void alertSecurityEvent(userId, target === "others"
-      ? "Other MenuMinute devices were signed out" : "A MenuMinute device was signed out");
+      ? "Other MenuMinute devices were signed out" : "A MenuMinute device was signed out").catch(() => {});
   }
   return deleted.rowCount ?? 0;
 }
