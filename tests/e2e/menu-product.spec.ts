@@ -460,7 +460,10 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   }
 });
 
-test("Tabletop Press is responsive and uses real QR media for all printable formats", async ({ page, request }, info) => {
+test("Tabletop Press is responsive and uses real QR media for all printable formats", async ({
+  page,
+  request,
+}, info) => {
   test.setTimeout(90000);
   const owner = await seed(true);
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
@@ -486,14 +489,30 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: info.outputPath("tabletop-press-light-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("tabletop-press-light-mobile.png"),
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.screenshot({ path: info.outputPath("tabletop-press-dark-mobile.png"), fullPage: true });
-  for (const name of ["hero-desktop-light.webp", "hero-desktop-dark.webp", "hero-mobile-light.webp", "hero-mobile-dark.webp", "first-qr-empty-illustration.webp", "print-studio-illustration.webp", "qr-creation-celebration.webp"]) {
+  await page.screenshot({
+    path: info.outputPath("tabletop-press-dark-mobile.png"),
+    fullPage: true,
+  });
+  for (const name of [
+    "hero-desktop-light.webp",
+    "hero-desktop-dark.webp",
+    "hero-mobile-light.webp",
+    "hero-mobile-dark.webp",
+    "first-qr-empty-illustration.webp",
+    "print-studio-illustration.webp",
+    "qr-creation-celebration.webp",
+  ]) {
     const response = await request.get("/brand/qr-studio/tabletop-press/" + name);
     expect(response.status(), name).toBe(200);
     expect(response.headers()["content-type"], name).toContain("image/webp");
