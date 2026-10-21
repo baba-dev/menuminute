@@ -39,6 +39,7 @@ describe("QR Studio inventory semantics", () => {
   });
   it("keeps status and search filtering outlet-inventory-local and non-mutating", () => {
     expect(filterQrCodes(codes, "table", "active").map((q) => q.id)).toEqual(["two"]);
+    expect(filterQrCodes(codes, "Table 4", "active").map((q) => q.id)).toEqual(["two"]);
     expect(filterQrCodes(codes, "", "revoked").map((q) => q.id)).toEqual(["three"]);
     expect(filterQrCodes(codes, "OLD", "all").map((q) => q.id)).toEqual(["three"]);
     expect(codes).toHaveLength(3);
