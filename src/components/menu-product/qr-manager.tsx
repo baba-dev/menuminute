@@ -75,9 +75,6 @@ export function QrManager({
     window.addEventListener("afterprint", clear);
     return () => window.removeEventListener("afterprint", clear);
   }, []);
-  useEffect(() => {
-    setShown(pageSize);
-  }, [filter, query]);
 
   async function refresh() {
     const response = await fetch("/api/qr", {
@@ -409,7 +406,7 @@ export function QrManager({
                 <input
                   type="search"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => { setQuery(e.target.value); setShown(pageSize); }}
                   placeholder="Find a code by label"
                 />
               </label>
@@ -419,7 +416,7 @@ export function QrManager({
                     type="button"
                     key={value}
                     aria-pressed={filter === value}
-                    onClick={() => setFilter(value)}
+                    onClick={() => { setFilter(value); setShown(pageSize); }}
                   >
                     {value === "all" ? "All codes" : value === "active" ? "Active" : "Revoked"}
                   </button>
