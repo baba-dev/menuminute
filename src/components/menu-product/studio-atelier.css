@@ -889,3 +889,27 @@
     padding: 20px;
   }
 }
+
+.atelier-assignment-workspace {
+  min-width: 0;
+}
+.product.studio-atelier .atelier-assignment-lock {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.product.studio-atelier .atelier-assignment-warning {
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--ember);
+  background: var(--atelier-soft);
+  color: var(--ink);
+  font-size: 12px;
+}
+@media (max-width: 720px) {
+  .atelier-metric:nth-child(even) .atelier-hint p {
+    left: auto;
+    right: 0;
+  }
+}
