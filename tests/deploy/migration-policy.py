@@ -13,6 +13,25 @@ assert len(blocks) == 2, "Both embedded Python preflight blocks must remain cove
 for block in blocks:
     compile(block, "<root-helper-python>", "exec")
 
+# The pre-migration backup must cover FORCE ROW LEVEL SECURITY rows.
+# An owner-authenticated dump fails or is incomplete on such tables; never
+# silently enable filtered exports or turn off the database protection.
+backup = blocks[1]
+assert '"menuminute_owner"' in backup
+assert '"postgres"' in backup and '"runuser"' in backup
+assert '"env", "-i"' in backup, "Do not inherit privileged root/app credentials"
+assert '"PGHOST=/var/run/postgresql"' in backup
+assert 'check.stdout.strip() != "t"' in backup, "Require a superuser role for the full backup"
+assert '"pg_dump", "--format=custom", "--no-owner", "--no-acl"' in backup
+assert 'with open(sys.argv[1], "xb") as dump:' in backup
+assert 'os.fchmod(dump.fileno(), 0o600)' in backup
+assert "--enable-row-security" not in backup
+assert "--exclude-table" not in backup
+assert "ALTER TABLE" not in backup
+assert 'pg_restore -l "$backup_dir/database.dump"' in source
+assert 'OFF_HOST_PREDEPLOY_BACKUP_VERIFIED' in source
+assert 'if [[ "${1:-}" == --version' in source\nassert '  echo 7' in source
+
 
 def journal(root, tags):
     (root / "meta").mkdir(parents=True, exist_ok=True)
