@@ -48,7 +48,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 
   const outboxCountsRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ status: string; count: string }>(
     sql`SELECT status, count(*)::text as count FROM outbox_events GROUP BY status`
-  }));
+  ));
   const counts: Record<string, number> = {
     pending: 0,
     dispatched: 0,
@@ -63,7 +63,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
 
   const oldestDueRes = await withActor({ userId: actor.id }, (tx) => tx.execute<{ oldest_due: string | null }>(
     sql`SELECT min(next_attempt_at)::text as oldest_due FROM outbox_events WHERE status IN ('pending', 'failed')`
-  }));
+  ));
   const oldestDue = oldestDueRes.rows[0]?.oldest_due || null;
 
   return {
@@ -110,7 +110,7 @@ export async function listFailedOutboxEvents(actor: AdminActor, limit = 50) {
         WHERE status = 'failed'
         ORDER BY created_at DESC
         LIMIT ${limit}`
-  }));
+  ));
   return res.rows;
 }
 
@@ -147,6 +147,6 @@ export async function listDomainProjections(actor: AdminActor, limit = 30) {
         LEFT JOIN organizations o ON o.id = p.organization_id
         ORDER BY p.updated_at DESC
         LIMIT ${limit}`
-  }));
+  ));
   return res.rows;
 }
