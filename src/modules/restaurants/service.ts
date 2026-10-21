@@ -1,5 +1,5 @@
 import { scheduleSchema } from "@/modules/menu-product/contracts";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createHash } from "node:crypto";
 import { z } from "zod";
@@ -77,11 +77,7 @@ export async function getRestaurantQrCodes(actor: Actor, id: string) {
   return withOutlet(actor, id, "menu.read", (tx) =>
     tx
       .select({
-        id: qrCodes.id,
-        label: qrCodes.label,
-        destinationToken: qrCodes.destinationToken,
-        isActive: qrCodes.isActive,
-        tableId: qrCodes.tableId,
+        ...getTableColumns(qrCodes),
         pointLabel: restaurantTables.label,
       })
       .from(qrCodes)
