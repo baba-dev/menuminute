@@ -26,7 +26,8 @@ export function filterQrCodes(codes: QR[], query: string, filter: QRFilter) {
       (filter === "all" || (filter === "active" ? q.isActive : !q.isActive)) &&
       (!needle ||
         (q.label ?? "Menu QR").toLocaleLowerCase().includes(needle) ||
-        (q.tableId && "service point".includes(needle)))
+        (q.pointLabel ?? "").toLocaleLowerCase().includes(needle) ||
+        (q.tableId !== null && "service point".includes(needle)))
   );
 }
 
