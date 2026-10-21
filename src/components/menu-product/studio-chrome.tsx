@@ -197,7 +197,7 @@ export function StudioActions({
   onSave: () => void;
   onPublish: () => void;
 }) {
-  const disabled = busy || archived || !writable || pending;
+  const disabled = busy || archived || !writable || pending || preview;
   return (
     <div className="atelier-actionbar" role="group" aria-label="Draft and publication actions">
       <div className="atelier-save-state" aria-live="polite">
@@ -208,6 +208,7 @@ export function StudioActions({
           {publishedRevision ? "Public release " + publishedRevision : "Not published"}
         </small>
         {pending && <small>Review selected Composer dishes first</small>}
+        {preview && <small>Return to edit before saving or publishing</small>}
       </div>
       <div className="atelier-actionbuttons">
         <button
