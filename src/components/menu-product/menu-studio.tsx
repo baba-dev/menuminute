@@ -490,7 +490,9 @@ export function MenuStudio({
                           className={tab === t ? "ember" : ""}
                           onClick={() => {
                             if (t !== tab && form.current && !form.current.reportValidity()) {
-                              setError("Check the highlighted fields before switching editor sections.");
+                              setError(
+                                "Check the highlighted fields before switching editor sections."
+                              );
                               return;
                             }
                             setError("");
