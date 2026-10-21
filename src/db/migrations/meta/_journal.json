@@ -92,6 +92,20 @@
       "when": 1792450000005,
       "tag": "0012_registration_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792504800000,
+      "tag": "0013_kitchen_pro_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792599900000,
+      "tag": "0014_kitchen_expo_hardening",
+      "breakpoints": true
     }
   ]
 }

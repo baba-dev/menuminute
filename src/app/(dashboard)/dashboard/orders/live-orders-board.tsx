@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import {
   ShoppingBag,
   Clock,
@@ -54,6 +55,7 @@ export type MerchantOrder = {
   orderNumber: number;
   version: number;
   canManagePayment: boolean;
+  kitchenManaged: boolean;
   createdAt: string;
   updatedAt: string;
   items: MerchantOrderItem[];
@@ -461,16 +463,28 @@ export function LiveOrdersBoard({
                     <span className="text-xs font-bold text-stone-900 dark:text-white">
                       {formatPrice(order.totalMinor, currency)}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleTransition(order, order.status === "accepted" ? "preparing" : "ready")
-                      }
-                      className="flex items-center gap-1 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-orange-700"
-                    >
-                      <Utensils size={13} />{" "}
-                      {order.status === "accepted" ? "Start Preparing" : "Mark Ready"}
-                    </button>
+                    {order.kitchenManaged && order.status === "preparing" ? (
+                      <Link
+                        href="/kitchen#expeditor"
+                        className="flex min-h-10 items-center gap-1 rounded-xl bg-orange-600 px-3 py-2 text-xs font-bold text-white"
+                      >
+                        <ChefHat size={13} /> Expeditor release required
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleTransition(
+                            order,
+                            order.status === "accepted" ? "preparing" : "ready"
+                          )
+                        }
+                        className="flex min-h-10 items-center gap-1 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-orange-700"
+                      >
+                        <Utensils size={13} />{" "}
+                        {order.status === "accepted" ? "Start Preparing" : "Mark Ready"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
