@@ -45,8 +45,12 @@ async function signIn(email: string, rememberMe: boolean) {
     })
   );
 }
-async function getSession(cookie: string) {
-  return authServer.handler(new Request(origin + "/api/auth/get-session", { headers: { cookie } }));
+async function getSession(cookie: string, readOnly = false) {
+  return authServer.handler(
+    new Request(origin + "/api/auth/get-session" + (readOnly ? "?disableRefresh=true" : ""), {
+      headers: { cookie },
+    })
+  );
 }
 describe("session persistence and browser renewal", () => {
   it("uses a 30-day sliding database session and a persistent first-party cookie when remembered", async () => {
@@ -77,6 +81,18 @@ describe("session persistence and browser renewal", () => {
         [id]
       );
     });
+    // A Server Component validation-only read must NOT steal the cookie renewal.
+    const readOnly = await getSession(cookie, true);
+    expect(readOnly.status).toBe(200);
+    expect((await readOnly.json()).user.email).toBe(email);
+    expect(readOnly.headers.getSetCookie().some((c) => c.includes("session_token="))).toBe(false);
+    const passive = await getPool().query<{ expires_at: Date }>(
+      "select expires_at from sessions where user_id=$1",
+      [id]
+    );
+    expect(passive.rows[0]!.expires_at.getTime()).toBeLessThan(
+      Date.now() + 2 * 24 * 60 * 60 * 1000
+    );
     const renewed = await getSession(cookie);
     expect(renewed.status).toBe(200);
     expect((await renewed.json()).user.email).toBe(email);

@@ -12,8 +12,9 @@ library's non-persistent browser-session cookie and does not persist an account 
 The browser hint, when enabled, stores **only an email** after completed sign-in
 (including a successful two-factor challenge). It never authorizes anything.
 
-Server Component `getSession` reads verify the user and DB record, but cannot
-forward updated Set-Cookie headers to a browser. The private dashboard, admin,
+Server Component / shared `auth()` reads call `getSession` with `disableRefresh: true`:
+they verify the user and DB record without consuming the rolling-renewal window
+or attempting to forward Set-Cookie headers from a read-only render. The private dashboard, admin,
 account/security and onboarding mount an unobtrusive browser-side GET to the
 same-origin Better Auth get-session endpoint on mount, focus, online/visibility
 events (at most once/minute) and every four hours while visible. Only the library

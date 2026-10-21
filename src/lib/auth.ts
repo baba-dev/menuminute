@@ -116,7 +116,12 @@ export const authServer = betterAuth({
   ],
 });
 export async function auth() {
-  const session = await authServer.api.getSession({ headers: await headers() });
+  // RSC/API reads authenticate without consuming the rolling-renewal window:
+  // only writable browser Route Handlers can deliver a renewed Set-Cookie.
+  const session = await authServer.api.getSession({
+    headers: await headers(),
+    query: { disableRefresh: true },
+  });
   return session?.user.emailVerified
     ? { ...session, activeOutletId: (await cookies()).get("menuminute.outlet")?.value }
     : null;
