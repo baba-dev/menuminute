@@ -8,6 +8,7 @@ test("workspace selection persists after login on a fresh browser and device rev
   browser,
 }) => {
   test.setTimeout(75_000);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const id = crypto.randomUUID(),
     email = "continuity-" + id + "@browser.invalid";
   const password = "continuity-browser-password";
@@ -53,6 +54,7 @@ test("workspace selection persists after login on a fresh browser and device rev
     ignoreHTTPSErrors: true,
   });
   try {
+    await other.setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
     const tab = await other.newPage();
     await login(tab);
     const restored = await tab.request.get("/api/context");

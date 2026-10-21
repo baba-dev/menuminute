@@ -19,7 +19,7 @@ export function DevicePanel() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState<string | "others" | "current" | null>(null);
+  const [confirm, setConfirm] = useState<string | "others" | "current" | "all" | null>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const load = useCallback(async () => {
@@ -38,14 +38,28 @@ export function DevicePanel() {
   useEffect(() => {
     void load();
   }, [load]);
-  async function revoke(target: string | "others" | "current") {
+  async function revoke(target: string | "others" | "current" | "all") {
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      if (target === "current") {
+      if (target === "current" || target === "all") {
+        if (target === "all") {
+          // First revoke other DB sessions; only then sign out this device.
+          // Never claim all-device success when either operation fails.
+          const others = await fetch("/api/security/devices", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({ action: "revoke-others" }),
+          });
+          if (!others.ok) throw new Error("Couldn't confirm other-device revocation. Refresh and retry.");
+        }
         const result = await authClient.signOut();
-        if (result.error) throw new Error("Couldn't sign out this device. Please retry.");
+        if (result.error)
+          throw new Error(target === "all"
+            ? "Other sessions were revoked, but signing out this device could not be confirmed. Retry signing out here."
+            : "Couldn't sign out this device. Please retry.");
         router.replace("/login");
         router.refresh();
         return;
@@ -107,6 +121,10 @@ export function DevicePanel() {
         >
           Sign out other devices
         </button>
+        <button type="button" className="mm-device-danger" disabled={busy || loading}
+          onClick={() => setConfirm("all")}>
+          Sign out all devices
+        </button>
       </div>
       {loading ? (
         <p role="status">Loading your devices…</p>
@@ -158,7 +176,9 @@ export function DevicePanel() {
               ? "Sign out this device?"
               : confirm === "others"
                 ? "Sign out all other devices?"
-                : "Revoke this session?"}
+                : confirm === "all"
+                  ? "Sign out on every device?"
+                  : "Revoke this session?"}
           </strong>
           <p>Access will end immediately. Affected devices will need to sign in again.</p>
           <div className="mm-device-toolbar">

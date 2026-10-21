@@ -34,8 +34,8 @@ export async function listDevices(userId: string, currentSessionId: string) {
     updated_at: Date;
     expires_at: Date;
   }>(
-    "select id,user_agent,created_at,updated_at,expires_at from sessions where user_id=$1 and expires_at>now() order by updated_at desc,id limit 50",
-    [userId]
+    "select id,user_agent,created_at,updated_at,expires_at from sessions where user_id=$1 and expires_at>now() order by (id=$2) desc,updated_at desc,id limit 50",
+    [userId, currentSessionId]
   );
   return result.rows.map(({ id, user_agent, created_at, updated_at, expires_at }) => ({
     id,
