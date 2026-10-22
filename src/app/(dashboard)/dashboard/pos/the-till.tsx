@@ -299,9 +299,13 @@ export function TheTill({
           </p>
         </div>
         <div className="till-heading-actions">
-          <Link href="/dashboard/pos/ledger">The Ledger <BookOpenText size={15} /></Link>
-        <Link href="/dashboard/pos/closing">Closing Desk <ClipboardCheck size={15} /></Link>
-        <Link href="/dashboard/orders">
+          <Link href="/dashboard/pos/ledger">
+            The Ledger <BookOpenText size={15} />
+          </Link>
+          <Link href="/dashboard/pos/closing">
+            Closing Desk <ClipboardCheck size={15} />
+          </Link>
+          <Link href="/dashboard/orders">
             Service Counter <ArrowRight size={15} />
           </Link>
           <Link href="/kitchen">
