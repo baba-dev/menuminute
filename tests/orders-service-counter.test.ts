@@ -59,7 +59,13 @@ describe("Service Counter presentation invariants", () => {
   it("searches and filters only the supplied outlet-scoped rows", () => {
     const source = [
       order(),
-      order({ id: "ord-two", orderNumber: 50, customerName: "Kiran", fulfillmentMode: "pickup" }),
+      order({
+        id: "ord-two",
+        orderNumber: 50,
+        customerName: "Kiran",
+        servicePoint: null,
+        fulfillmentMode: "pickup",
+      }),
     ];
     expect(filterRail(source, "#42", "all").map((item) => item.id)).toEqual(["ord-one"]);
     expect(filterRail(source, "kiran", "pickup").map((item) => item.id)).toEqual(["ord-two"]);
