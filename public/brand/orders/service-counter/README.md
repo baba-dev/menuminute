@@ -27,3 +27,7 @@ In the GitHub UI, **switch to this PR branch** `design/orders-service-counter-me
 5. Run required final-head CI after the complete package is present; only then mark the draft ready for review. The future Orders implementation PR should integrate these assets, use build-time verification, and keep all Order/Kitchen Pro state and commercial gates unchanged.
 
 The existing Orders screen and deployment paths are not changed by this PR.
+
+## Orders 2.0 implementation PR #140 media integration
+
+The combined implementation uses the uploaded two **PNG desktop source masters** (`hero-desktop-light.png`, `hero-desktop-dark.png`) and the five committed mobile/spot WebPs. At development and production build time `scripts/prepare-orders-media.mjs` validates both panoramic PNGs, creates optimized **2880 × 800 opaque desktop WebPs**, and `scripts/verify-orders-media.mjs` validates the resulting seven runtime WebPs, dimensions, actual spot transparency, inventory and recorded digests when provided. The live CSS references only `.webp` runtime hero paths. The source PNGs are not renamed to WebP. The two sources must still pass visual review for legible overlay composition and correct light/dark content. PR #140 should be reviewed and merged as the combined implementation rather than merging this initial upload scaffold by itself.

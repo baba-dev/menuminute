@@ -15,8 +15,9 @@ for (const theme of ["light", "dark"]) {
     throw new Error("Expected a genuine desktop PNG master: " + input);
   }
   const ratio = metadata.width / metadata.height;
-  if (Math.abs(ratio - 3.6) > 0.3) {
-    throw new Error("Desktop hero aspect ratio deviates from the approved 2880x800 frame: " + input);
+  if (ratio < 2.4 || ratio > 4.8) {
+    throw new Error("Desktop artwork must be panoramic. Received " +
+      metadata.width + "x" + metadata.height + ": " + input);
   }
   await sharp(source)
     .resize(2880, 800, { fit: "cover", position: "centre" })

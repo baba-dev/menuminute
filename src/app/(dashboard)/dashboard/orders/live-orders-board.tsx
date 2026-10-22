@@ -102,6 +102,7 @@ export function LiveOrdersBoard({
   const [page, setPage] = useState(0);
   const [history, setHistory] = useState<HistoryResult | null>(null);
   const [historyBusy, setHistoryBusy] = useState(false);
+  const [historyRevision, setHistoryRevision] = useState(0);
   const [selected, setSelected] = useState<MerchantOrder | null>(null);
   const [activity, setActivity] = useState<Activity[] | null>(null);
   const [activityTruncated, setActivityTruncated] = useState(false);
@@ -268,7 +269,12 @@ export function LiveOrdersBoard({
       history?.orders.find((order) => order.id === selected.id) ??
       selected);
   const show = (lane: string) => {
-    if (lane === "history") setTab("history");
+    if (lane === "today") {
+      const date = new Intl.DateTimeFormat("en-CA", {
+        timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+      }).format(new Date());
+      setHistoryStatus("completed"); setFrom(date); setTo(date); setPage(0); setTab("history");
+    } else if (lane === "history") setTab("history");
     else {
       setTab("active");
       setRail(lane === "incoming" || lane === "preparing" || lane === "ready" ? lane : "all");
@@ -308,6 +314,7 @@ export function LiveOrdersBoard({
       await responseData(result);
       setDeclining(null);
       setPaying(null);
+      setHistoryRevision((value) => value + 1);
       await refresh();
     } catch (cause) {
       await refresh();

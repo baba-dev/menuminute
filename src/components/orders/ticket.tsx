@@ -47,7 +47,7 @@ export function ServicePulseRail({
       value: pulse?.completedToday,
       hint: "Outlet business date",
       icon: UtensilsCrossed,
-      lane: "history",
+      lane: "today",
     },
   ];
   return (
