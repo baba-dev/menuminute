@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { completePendingLoginPreference } from "@/lib/remembered-account";
 import { authNextKey, safeReturnPath } from "@/lib/auth-return";
 import { AuthShell } from "@/components/auth/auth-shell";
 export default function TwoFactorPage() {
@@ -37,6 +38,7 @@ export default function TwoFactorPage() {
               setError("Invalid or expired code. Try again.");
               return;
             }
+            completePendingLoginPreference();
             let next = "";
             try {
               next = safeReturnPath(sessionStorage.getItem(authNextKey), "");

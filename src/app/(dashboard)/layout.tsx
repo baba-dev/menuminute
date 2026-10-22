@@ -11,6 +11,7 @@ import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { auth, authServer } from "@/lib/auth";
+import { SessionContinuity } from "@/components/auth/session-continuity";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
 import {
   getDefaultOrActiveRestaurant,
@@ -48,6 +49,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="mm-workspace-shell">
+      <SessionContinuity />
       <aside className="mm-workspace-sidebar">
         <div className="mm-workspace-brand">
           <Link href="/" aria-label="MenuMinute homepage" className="mm-workspace-brand-link">

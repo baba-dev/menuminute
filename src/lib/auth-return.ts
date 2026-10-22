@@ -15,6 +15,9 @@ export function safeReturnPath(candidate: string | null | undefined, fallback = 
       parsed.pathname.startsWith("/api/") ||
       parsed.pathname === "/login" ||
       parsed.pathname === "/register" ||
+      parsed.pathname === "/two-factor" ||
+      parsed.pathname === "/verify-email" ||
+      parsed.pathname === "/forgot-password" ||
       parsed.pathname.startsWith("/reset-password")
     )
       return fallback;

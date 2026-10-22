@@ -3,11 +3,32 @@
 location / {
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
+    # Preserve canonical first-party host/scheme; never trust user supplied forwarding headers.
+    # Cloudflare must use Full (strict), not Flexible TLS; preserve Set-Cookie unmodified.
     proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     # Overwrite untrusted client forwarding headers; configure real_ip only for trusted proxies.
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_read_timeout 60s;
     client_max_body_size 1m;
+}
+
+# Authentication responses, including renewed session cookies, must never be edge cached.
+# Apply equivalent authenticated-path cache bypass in Cloudflare; this file is an example,
+# not proof that the installed production vhost has been changed.
+location ^~ /api/auth/ {
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+    add_header Cache-Control "private, no-store" always;
+    proxy_read_timeout 60s;
+    client_max_body_size 16k;
 }
