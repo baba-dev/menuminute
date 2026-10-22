@@ -17,7 +17,8 @@ export function stationGroups(work: readonly KitchenWorkView[], stationId: strin
   const relevant = work.filter((item) => item.stationId === stationId);
   const byAge = (a: KitchenWorkView, b: KitchenWorkView) =>
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
-    a.orderNumber - b.orderNumber || a.id.localeCompare(b.id);
+    a.orderNumber - b.orderNumber ||
+    a.id.localeCompare(b.id);
   return {
     queued: relevant.filter((item) => item.status === "queued").sort(byAge),
     preparing: relevant.filter((item) => item.status === "preparing").sort(byAge),

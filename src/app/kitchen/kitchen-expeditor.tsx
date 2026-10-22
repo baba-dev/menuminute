@@ -21,7 +21,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
     }
     const latest = (await response.json()) as KitchenExpoSnapshot;
     if (active.current && request === sequence.current)
-      setData((current) => latest.cursor >= current.cursor ? latest : current);
+      setData((current) => (latest.cursor >= current.cursor ? latest : current));
   }, [base]);
   useEffect(() => {
     active.current = true;
@@ -83,11 +83,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
     }
   }
   return (
-    <section
-      id="expeditor"
-      aria-label="Expeditor"
-      className="kk-expeditor scroll-mt-6 p-4 md:p-6"
-    >
+    <section id="expeditor" aria-label="Expeditor" className="kk-expeditor scroll-mt-6 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-orange-400">
@@ -138,10 +134,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
       )}
       <div className="kk-expeditor-orders mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {data.orders.map((order) => (
-          <article
-            key={order.id}
-            className="kk-expo-card p-4"
-          >
+          <article key={order.id} className="kk-expo-card p-4">
             <div className="flex justify-between gap-2">
               <h4 className="text-lg font-black">#{order.orderNumber}</h4>
               <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">

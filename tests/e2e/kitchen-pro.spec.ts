@@ -78,13 +78,20 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(page.getByRole("button", { name: "Start preparing" })).toHaveCount(0);
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("group", { name: "Filter preparation lanes" })
-    .getByRole("button", { name: "Preparing", exact: false }).click();
-  await expect(page.getByRole("group", { name: "Filter preparation lanes" })
-    .getByRole("button", { name: "Preparing", exact: false })).toHaveAttribute("aria-pressed", "true");
+  await page
+    .getByRole("group", { name: "Filter preparation lanes" })
+    .getByRole("button", { name: "Preparing", exact: false })
+    .click();
+  await expect(
+    page
+      .getByRole("group", { name: "Filter preparation lanes" })
+      .getByRole("button", { name: "Preparing", exact: false })
+  ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Sync", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Grill", exact: true })).toBeVisible();
 });
