@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { redirect } from "next/navigation";
 import { SecurityConsole } from "./security-console";
+import "./device-panel.css";
 export const metadata = { title: "Account security — MenuMinute" };
 export default async function AccountSecurityPage() {
   const session = await auth();

@@ -85,6 +85,10 @@ test("new owner enrolls MFA, confirms privileged action, and recovers sign-in wi
   await page.getByRole("button", { name: "Confirm privileged action" }).click();
   await expect(page.getByRole("status")).toContainText("Confirmed.");
   await page.getByRole("button", { name: "Sign out all devices" }).click();
+  await expect(page.getByRole("group", { name: "Confirm session revocation" })).toContainText(
+    "Sign out on every device?"
+  );
+  await page.getByRole("button", { name: "Confirm sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);

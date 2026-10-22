@@ -1,21 +1,12 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { DevicePanel } from "./device-panel";
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { authClient } from "@/lib/auth-client";
 import { ThemeControl } from "@/components/menu-product/theme-control";
-type Device = {
-  id: string;
-  token: string;
-  userAgent?: string | null;
-  ipAddress?: string | null;
-  createdAt: Date;
-  expiresAt: Date;
-};
 export function SecurityConsole({ initialMfa }: { initialMfa: boolean }) {
-  const router = useRouter();
   const [mfa, setMfa] = useState(initialMfa);
   const [password, setPassword] = useState("");
   const [uri, setUri] = useState("");
@@ -25,17 +16,6 @@ export function SecurityConsole({ initialMfa }: { initialMfa: boolean }) {
   const [stepPassword, setStepPassword] = useState("");
   const [stepCode, setStepCode] = useState("");
   const [message, setMessage] = useState("");
-  const [devices, setDevices] = useState<Device[]>([]);
-  const load = useCallback(async () => {
-    const result = await authClient.listSessions();
-    if (result.data) setDevices(result.data as Device[]);
-  }, []);
-  useEffect(() => {
-    // Resolve remote state asynchronously rather than synchronously cascading an effect update.
-    void authClient.listSessions().then((result) => {
-      if (result.data) setDevices(result.data as Device[]);
-    });
-  }, []);
   async function enroll() {
     setMessage("");
     const result = await authClient.twoFactor.enable({ password });
@@ -216,50 +196,7 @@ export function SecurityConsole({ initialMfa }: { initialMfa: boolean }) {
       <p role="status" aria-live="polite">
         {message}
       </p>
-      <section className="grid min-w-0 gap-3 rounded-xl border p-4 sm:p-5">
-        <h2 className="text-xl font-bold">Active sessions</h2>
-        <div className="flex flex-wrap gap-3">
-          <button
-            className="underline"
-            onClick={async () => {
-              await authClient.revokeOtherSessions();
-              await load();
-            }}
-          >
-            Sign out other devices
-          </button>
-          <button
-            className="underline"
-            onClick={async () => {
-              await authClient.revokeSessions();
-              router.replace("/login");
-              router.refresh();
-            }}
-          >
-            Sign out all devices
-          </button>
-        </div>
-        {devices.map((d) => (
-          <div key={d.id} className="flex items-center justify-between gap-3 border-t pt-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{d.userAgent || "Unknown device"}</p>
-              <p className="text-xs">
-                Created {new Date(d.createdAt).toLocaleString()} · Expires{" "}
-                {new Date(d.expiresAt).toLocaleString()}
-              </p>
-            </div>
-            <button
-              className="shrink-0 text-sm text-red-600 underline"
-              onClick={async () => {
-                await authClient.revokeSession({ token: d.token });
-                await load();
-              }}
-            >
-              Revoke
-            </button>
-          </div>
-        ))}
-      </section>
+      <DevicePanel />
     </main>
   );
 }

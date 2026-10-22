@@ -143,6 +143,10 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await reactivate.getByRole("button", { name: "Reactivate organization" }).click();
   await expect(page.getByRole("button", { name: "Suspend organization" })).toBeVisible();
   await page.getByRole("button", { name: "Sign out" }).click();
+  // The logout is a server action. Do not race its cookie deletion with the
+  // next server-rendered /login request (which redirects valid sessions).
+  await expect(page).toHaveURL(/\/login(?:\?|$)/);
+  await expect(page.getByLabel("Email address")).toBeVisible();
   await login(page, f.memberEmail, f.password);
   await page.goto("/dashboard/organization");
   await expect(
