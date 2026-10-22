@@ -112,9 +112,7 @@ export const posSaleLines = pgTable(
     saleId: text("sale_id")
       .notNull()
       .references(() => posSales.id),
-    orderItemId: text("order_item_id")
-      .notNull()
-      .references(() => orderItems.id),
+    orderItemId: text("order_item_id").notNull(),
     nameSnapshot: text("name_snapshot").notNull(),
     variantSnapshot: text("variant_snapshot"),
     optionsSnapshot: jsonb("options_snapshot").notNull().default([]),
@@ -126,6 +124,10 @@ export const posSaleLines = pgTable(
     foreignKey({
       columns: [t.outletId, t.saleId],
       foreignColumns: [posSales.outletId, posSales.id],
+    }),
+    foreignKey({
+      columns: [t.outletId, t.orderItemId],
+      foreignColumns: [orderItems.restaurantId, orderItems.id],
     }),
     unique("pos_sale_lines_order_item_unique").on(t.saleId, t.orderItemId),
   ]
