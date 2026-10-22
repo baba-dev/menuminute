@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
+
+// The isolated browser TLS proxy gives each fixture its own synthetic client address.
+// Keep real authentication limits enabled instead of sharing a source budget across the entire suite.
+test.beforeEach(async ({ page }) => {
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+});
 async function seed() {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
