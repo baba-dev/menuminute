@@ -287,7 +287,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,publi
 DECLARE r restaurants%ROWTYPE; gate pos_finance_gates%ROWTYPE; prior pos_finance_commands%ROWTYPE;
  seller pos_seller_profiles%ROWTYPE; bill pos_bills%ROWTYPE; sale pos_sales%ROWTYPE;
  shift pos_shifts%ROWTYPE; t pos_tenders%ROWTYPE; original pos_documents%ROWTYPE;
- result jsonb; quote jsonb; id text; year integer; serial integer; document_no text; kind text;
+ result jsonb; quote jsonb; v_new_id text; year integer; serial integer; document_no text; kind text;
  sum_paid bigint; sum_refund bigint; due bigint; amt bigint; tendered bigint; opening bigint;
  expected_cash bigint; signed_move bigint; line jsonb; actor text:=NULLIF(current_setting('app.actor_id',true),'');
  action_permission text;
@@ -346,10 +346,10 @@ BEGIN
   IF length(btrim(COALESCE(p_data->>'registerName',''))) NOT BETWEEN 2 AND 40 THEN RAISE EXCEPTION 'Invalid register name' USING ERRCODE='22023'; END IF;
   opening:=(p_data->>'openingMinor')::bigint;
   IF opening<0 OR opening>2147483647 THEN RAISE EXCEPTION 'Invalid opening float' USING ERRCODE='22023'; END IF;
-  id:='shift-'||gen_random_uuid()::text;
+  v_new_id:='shift-'||gen_random_uuid()::text;
   INSERT INTO pos_shifts(id,organization_id,outlet_id,register_name,actor_id,currency,opening_minor)
-  VALUES(id,r.organization_id,p_outlet,btrim(p_data->>'registerName'),actor,r.currency,opening);
-  result:=jsonb_build_object('shiftId',id,'state','open','openingMinor',opening::text,'currency',r.currency);
+  VALUES(v_new_id,r.organization_id,p_outlet,btrim(p_data->>'registerName'),actor,r.currency,opening);
+  result:=jsonb_build_object('shiftId',v_new_id,'state','open','openingMinor',opening::text,'currency',r.currency);
  WHEN 'cash_move' THEN
   SELECT * INTO shift FROM pos_shifts WHERE id=p_data->>'shiftId' AND outlet_id=p_outlet FOR UPDATE;
   IF NOT FOUND OR shift.state<>'open' OR (shift.actor_id<>actor AND NOT app_private.pos_access(p_outlet,'close'))
@@ -381,9 +381,9 @@ BEGIN
   SELECT COALESCE(sum(amount_minor),0) INTO sum_paid FROM pos_tenders WHERE sale_id=sale.id AND outlet_id=p_outlet;
   due:=bill.total_minor-sum_paid;
   IF amt>due THEN RAISE EXCEPTION 'Tender exceeds balance' USING ERRCODE='40001'; END IF;
-  id:='tender-'||gen_random_uuid()::text;
+  v_new_id:='tender-'||gen_random_uuid()::text;
   INSERT INTO pos_tenders(id,organization_id,outlet_id,sale_id,shift_id,method,amount_minor,tendered_minor,change_minor,reference,actor_id)
-  VALUES(id,r.organization_id,p_outlet,sale.id,shift.id,p_data->>'method',amt,tendered,tendered-amt,
+  VALUES(v_new_id,r.organization_id,p_outlet,sale.id,shift.id,p_data->>'method',amt,tendered,tendered-amt,
     NULLIF(btrim(p_data->>'reference'),''),actor);
   IF amt=due THEN
    UPDATE orders SET payment_status='paid',version=version+1,updated_at=clock_timestamp()
@@ -393,7 +393,7 @@ BEGIN
    SELECT gen_random_uuid()::text,r.organization_id,p_outlet,'order.payment_changed',1,version,
     jsonb_build_object('orderId',sale.order_id,'paymentStatus','paid') FROM orders WHERE id=sale.order_id;
   END IF;
-  result:=jsonb_build_object('tenderId',id,'saleId',sale.id,'appliedMinor',amt::text,
+  result:=jsonb_build_object('tenderId',v_new_id,'saleId',sale.id,'appliedMinor',amt::text,
    'changeMinor',(tendered-amt)::text,'remainingMinor',(due-amt)::text,
    'status',CASE WHEN amt=due THEN 'paid' ELSE 'partial' END,'evidence','staff_recorded');
  WHEN 'close_shift' THEN
@@ -434,9 +434,9 @@ BEGIN
   ON CONFLICT(outlet_id,fiscal_year,kind) DO UPDATE
   SET last_number=pos_document_sequences.last_number+1 RETURNING last_number INTO serial;
   document_no:=upper(kind)||'-'||year::text||'-'||lpad(serial::text,6,'0');
-  id:='doc-'||gen_random_uuid()::text;
+  v_new_id:='doc-'||gen_random_uuid()::text;
   INSERT INTO pos_documents(id,organization_id,outlet_id,sale_id,kind,fiscal_year,serial,document_number,snapshot,issued_by)
-  VALUES(id,r.organization_id,p_outlet,sale.id,kind,year,serial,document_no,
+  VALUES(v_new_id,r.organization_id,p_outlet,sale.id,kind,year,serial,document_no,
    jsonb_build_object('bill',jsonb_build_object('subtotalMinor',bill.subtotal_minor::text,
     'taxableBaseMinor',bill.taxable_base_minor::text,'taxMinor',bill.tax_minor::text,
     'totalMinor',bill.total_minor::text,'currency',bill.currency,'seller',bill.seller_snapshot,
@@ -445,7 +445,7 @@ BEGIN
     'reference',t.reference,'evidence',t.evidence) ORDER BY t.created_at,t.id) FROM pos_tenders t WHERE t.sale_id=sale.id),'[]'::jsonb),
     'legalStatus',CASE WHEN kind='receipt' THEN 'non_tax_receipt' ELSE 'merchant_invoice_approval_required' END,
     'orderId',sale.order_id),actor);
-  result:=jsonb_build_object('documentId',id,'documentNumber',document_no,'kind',kind,'saleId',sale.id);
+  result:=jsonb_build_object('documentId',v_new_id,'documentNumber',document_no,'kind',kind,'saleId',sale.id);
  WHEN 'refund' THEN
   IF NOT gate.documents_enabled THEN RAISE EXCEPTION 'Document gate closed' USING ERRCODE='42501'; END IF;
   SELECT * INTO sale FROM pos_sales WHERE id=p_data->>'saleId' AND outlet_id=p_outlet FOR UPDATE;
@@ -472,13 +472,13 @@ BEGIN
   ON CONFLICT(outlet_id,fiscal_year,kind) DO UPDATE
   SET last_number=pos_document_sequences.last_number+1 RETURNING last_number INTO serial;
   document_no:='CREDIT-'||year::text||'-'||lpad(serial::text,6,'0');
-  id:='doc-'||gen_random_uuid()::text;
+  v_new_id:='doc-'||gen_random_uuid()::text;
   INSERT INTO pos_documents(id,organization_id,outlet_id,sale_id,kind,fiscal_year,serial,document_number,source_document_id,snapshot,issued_by)
-  VALUES(id,r.organization_id,p_outlet,sale.id,'credit_note',year,serial,document_no,original.id,
+  VALUES(v_new_id,r.organization_id,p_outlet,sale.id,'credit_note',year,serial,document_no,original.id,
    jsonb_build_object('reverses',original.document_number,'reason',btrim(p_data->>'reason'),
    'bill',original.snapshot->'bill','refundMethod','original_tenders','totalMinor',bill.total_minor::text,
    'legalStatus','merchant_credit_document_review_required'),actor);
-  result:=jsonb_build_object('documentId',id,'kind','credit_note','documentNumber',document_no,
+  result:=jsonb_build_object('documentId',v_new_id,'kind','credit_note','documentNumber',document_no,
    'originalDocumentId',original.id,'refundedMinor',bill.total_minor::text,'status','staff_recorded');
  ELSE RAISE EXCEPTION 'Unknown finance action' USING ERRCODE='22023';
  END CASE;
