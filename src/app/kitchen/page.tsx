@@ -7,9 +7,12 @@ import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { KitchenBoard } from "./kitchen-board";
 import { ForbiddenError } from "@/lib/errors";
-export const metadata = {
-  title: "Kitchen Pro — MenuMinute",
-  description: "Outlet-scoped preparation stations and live kitchen work",
+import type { Metadata } from "next";
+import "./kitchen.css";
+export const metadata: Metadata = {
+  title: "The Chef’s Pass | Kitchen Pro",
+  description: "Private, outlet-scoped preparation stations and expeditor workspace.",
+  robots: { index: false, follow: false },
 };
 export default async function KitchenPage() {
   const session = await auth();

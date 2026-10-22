@@ -56,6 +56,9 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/kitchen");
   await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  await expect(page.getByTestId("chefs-pass")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Chef’s Pass." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Visible kitchen workload" })).toBeVisible();
   await expect(page.getByText("Kitchen setup mode.", { exact: false })).toBeVisible();
   await expect(page.getByText("Kitchen Dashboard Coming in Phase D")).toHaveCount(0);
   await page.getByRole("button", { name: "Station setup" }).click();
@@ -73,8 +76,15 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   expect(body.enabled).toBe(false);
   expect(body.stations.map((s) => s.name)).toContain("Grill");
   await expect(page.getByRole("button", { name: "Start preparing" })).toHaveCount(0);
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("group", { name: "Filter preparation lanes" })
+    .getByRole("button", { name: "Preparing", exact: false }).click();
+  await expect(page.getByRole("group", { name: "Filter preparation lanes" })
+    .getByRole("button", { name: "Preparing", exact: false })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Sync", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Grill", exact: true })).toBeVisible();
 });

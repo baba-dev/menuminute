@@ -17,10 +17,14 @@ import {
   Settings2,
   AlertTriangle,
   LoaderCircle,
+  ArrowRight,
+  ClipboardList,
 } from "lucide-react";
 import { playOrderChime } from "@/lib/sound";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
+import { ThemeControl } from "@/components/menu-product/theme-control";
+import { kitchenPulse, stationGroups, outstandingDishes } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
   organizationId: string;
@@ -48,19 +52,19 @@ function Ticket({
       : Math.max(0, Math.floor((now - new Date(work.createdAt).getTime()) / 60000));
   return (
     <article
-      className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900"
+      className={"kk-ticket kk-ticket-" + work.status + (age !== null && age >= 20 && work.status !== "complete" ? " kk-ticket-aging" : "")}
       aria-label={`Order ${work.orderNumber}: ${work.dishName}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-lg bg-stone-950 px-2.5 py-1 text-sm font-extrabold text-white dark:bg-orange-500 dark:text-stone-950">
+        <span className="kk-ticket-number">
           #{work.orderNumber}
         </span>
-        <span className="flex items-center gap-1 text-xs font-semibold text-stone-500 dark:text-stone-300">
+        <span className="kk-ticket-age">
           <Clock3 size={13} aria-hidden="true" />
           {age === null ? "—" : age} min
         </span>
       </div>
-      <p className="mt-2 text-xs font-bold tracking-wide text-orange-700 uppercase dark:text-orange-400">
+      <p className="kk-ticket-meta">
         {work.fulfillmentMode === "pickup"
           ? "Pickup"
           : work.tableLabel
@@ -68,14 +72,14 @@ function Ticket({
             : "Dine-in"}{" "}
         · {work.brandLabel}
       </p>
-      <h4 className="mt-2 text-lg leading-tight font-extrabold text-stone-950 dark:text-white">
+      <h4 className="kk-ticket-dish">
         {work.quantity} × {work.dishName}
       </h4>
       {work.variantName && (
-        <p className="mt-1 text-sm text-stone-700 dark:text-stone-200">{work.variantName}</p>
+        <p className="kk-ticket-variant">{work.variantName}</p>
       )}
       {work.selectedOptions.length > 0 && (
-        <ul className="mt-2 space-y-1 text-sm text-stone-700 dark:text-stone-200">
+        <ul className="kk-ticket-addons">
           {work.selectedOptions.map((o, i) => (
             <li key={i}>
               {o.groupName}: {o.optionName}
@@ -84,12 +88,12 @@ function Ticket({
         </ul>
       )}
       {work.notes && (
-        <p className="mt-3 rounded-lg border-l-4 border-orange-500 bg-orange-50 p-2 text-sm font-medium text-stone-950 dark:bg-orange-950/40 dark:text-orange-100">
+        <p className="kk-ticket-note">
           Item note: {work.notes}
         </p>
       )}
       {work.orderNotes && (
-        <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">
+        <p className="kk-ticket-order-note">
           Order note: {work.orderNotes}
         </p>
       )}
@@ -98,7 +102,7 @@ function Ticket({
           type="button"
           disabled={busy}
           onClick={() => onAction(work, work.status === "queued" ? "start" : "complete")}
-          className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 active:scale-[.99] disabled:cursor-wait disabled:opacity-60"
+          className="kk-ticket-action"
         >
           {busy ? (
             <LoaderCircle className="animate-spin" size={17} />
@@ -111,7 +115,7 @@ function Ticket({
         </button>
       )}
       {work.status === "complete" && (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+        <p className="kk-ticket-done">
           <CheckCheck size={17} /> Completed · Awaiting expeditor
         </p>
       )}
@@ -135,6 +139,7 @@ export function KitchenBoard({
   const [busy, setBusy] = useState("");
   const [sound, setSound] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [mobileLane, setMobileLane] = useState<"all" | "queued" | "preparing" | "complete">("all");
   const [stationName, setStationName] = useState("");
   const [dishId, setDishId] = useState(menuDishes[0]?.id ?? "");
   const [routeStation, setRouteStation] = useState(initial.stations[0]?.id ?? "");
@@ -144,20 +149,26 @@ export function KitchenBoard({
   const [reassignStation, setReassignStation] = useState("");
   const [reassignReason, setReassignReason] = useState("");
   const seen = useRef(new Set(initial.work.map((w) => w.id)));
+  const cursorRef = useRef(initial.cursor);
+  const soundRef = useRef(false);
+  const inflight = useRef(new Set<string>());
   const revoked = useRef(false);
   const stream = useRef<EventSource | null>(null);
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/kitchen`;
   const apply = useCallback(
     (data: KitchenSnapshot) => {
-      if (revoked.current) return;
+      if (revoked.current || data.cursor < cursorRef.current) return;
+      cursorRef.current = data.cursor;
       const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
       seen.current = new Set(data.work.map((w) => w.id));
       setSnapshot(data);
       setLastSync(new Date());
       setConnection("live");
-      if (sound && newcomers.length) playOrderChime();
+      if (soundRef.current && newcomers.length) {
+        try { playOrderChime(); } catch { /* Browser audio may require a gesture. */ }
+      }
     },
-    [sound]
+    []
   );
   const refresh = useCallback(async () => {
     if (revoked.current) return;
@@ -176,7 +187,9 @@ export function KitchenBoard({
     const initial = requestAnimationFrame(() => {
       setNow(Date.now());
       try {
-        setSound(localStorage.getItem("menuminute.kitchen.sound") === "true");
+        const saved = localStorage.getItem("menuminute.kitchen.sound") === "true";
+        soundRef.current = saved;
+        setSound(saved);
       } catch {}
     });
     const clock = setInterval(() => setNow(Date.now()), 15000);
@@ -229,22 +242,9 @@ export function KitchenBoard({
     () => snapshot.work.filter((w) => w.stationId === station?.id),
     [snapshot.work, station?.id]
   );
-  const groups = useMemo(
-    () => ({
-      queued: work.filter((w) => w.status === "queued"),
-      preparing: work.filter((w) => w.status === "preparing"),
-      complete: work.filter((w) => w.status === "complete"),
-    }),
-    [work]
-  );
-  const allDay = useMemo(() => {
-    const totals = new Map<string, number>();
-    for (const ticket of work) {
-      if (ticket.status !== "queued" && ticket.status !== "preparing") continue;
-      totals.set(ticket.dishName, (totals.get(ticket.dishName) ?? 0) + ticket.quantity);
-    }
-    return [...totals].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, [work]);
+  const groups = useMemo(() => stationGroups(snapshot.work, station?.id), [snapshot.work, station?.id]);
+  const allDay = useMemo(() => outstandingDishes(work), [work]);
+  const pulse = useMemo(() => kitchenPulse(snapshot.work), [snapshot.work]);
   async function command(url: string, body: unknown) {
     const res = await fetch(url, {
       method: "POST",
@@ -260,14 +260,19 @@ export function KitchenBoard({
     await refresh();
   }
   async function action(work: KitchenWorkView, op: "start" | "complete") {
+    if (revoked.current || inflight.current.has(work.id)) return;
+    inflight.current.add(work.id);
     setBusy(work.id);
     setError("");
     try {
-      await command(base + "/work", { workId: work.id, action: op, expectedVersion: work.version });
+      await command(base + "/work", {
+        workId: work.id, action: op, expectedVersion: work.version, key: crypto.randomUUID(),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action could not be saved");
       void refresh().catch(() => {});
     } finally {
+      inflight.current.delete(work.id);
       setBusy("");
     }
   }
@@ -315,69 +320,54 @@ export function KitchenBoard({
     { key: "complete" as const, title: "Completed", icon: CheckCheck },
   ];
   return (
-    <main className="min-h-screen bg-[#fffaf4] pb-12 text-stone-950 dark:bg-[#161310] dark:text-stone-100">
-      <header className="border-b border-stone-200 bg-white/95 px-4 py-4 md:px-8 dark:border-stone-800 dark:bg-stone-950/95">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-gradient-to-br from-orange-600 to-amber-400 p-3 text-white">
-              <ChefHat size={24} aria-hidden="true" />
+    <main className="product mm-kitchen" data-testid="chefs-pass">
+      <header className="kk-topbar">
+        <div className="kk-topbar-inner">
+          <div className="kk-identity"><span className="kk-brand-icon"><ChefHat size={22} aria-hidden="true" /></span>
+            <div><span className="kk-eyebrow">MENUMINUTE / KITCHEN PRO</span>
+              <h2>{outletName}</h2></div></div>
+          <div className="kk-tools">
+            <span role="status" aria-live="polite" className={"kk-connection kk-connection-" + connection}>
+              {connection === "live" ? <Wifi size={16} aria-hidden="true" /> : <WifiOff size={16} aria-hidden="true" />}
+              {connection === "live" ? "Connected" : connection === "revoked" ? "Access changed" : "Reconnecting"}
             </span>
-            <div>
-              <p className="text-xs font-black tracking-[.2em] text-orange-700 uppercase dark:text-orange-400">
-                MenuMinute · Kitchen Pro
-              </p>
-              <h1 className="text-xl font-extrabold tracking-tight md:text-2xl">{outletName}</h1>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              role="status"
-              aria-live="polite"
-              className="flex min-h-10 items-center gap-2 rounded-lg border border-stone-200 px-3 text-xs font-semibold dark:border-stone-700"
-            >
-              {connection === "live" ? (
-                <Wifi size={16} className="text-emerald-600" />
-              ) : (
-                <WifiOff size={16} className="text-orange-600" />
-              )}
-              {connection === "live"
-                ? "Connected"
-                : connection === "revoked"
-                  ? "Access changed"
-                  : "Reconnecting"}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const enabled = !sound;
-                try {
-                  localStorage.setItem("menuminute.kitchen.sound", String(enabled));
-                } catch {}
-                if (enabled) playOrderChime();
-                setSound(enabled);
-              }}
-              className="flex min-h-10 items-center gap-2 rounded-lg border border-stone-200 px-3 text-xs font-semibold dark:border-stone-700"
-              aria-pressed={sound}
-            >
-              {sound ? <Volume2 size={16} /> : <VolumeX size={16} />}Sound {sound ? "on" : "off"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void refresh().catch((e) => setError(String(e)))}
-              className="flex min-h-10 items-center gap-2 rounded-lg border border-stone-200 px-3 text-xs font-semibold dark:border-stone-700"
-            >
-              <RefreshCw size={16} /> Sync
-            </button>
-            <Link
-              href="/dashboard/orders"
-              className="flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-bold underline"
-            >
-              <ArrowLeft size={16} /> Merchant orders
-            </Link>
+            <button type="button" aria-pressed={sound} className="kk-tool" onClick={() => {
+              const enabled = !sound;
+              try { localStorage.setItem("menuminute.kitchen.sound", String(enabled)); } catch {}
+              soundRef.current = enabled;
+              if (enabled) { try { playOrderChime(); } catch {} }
+              setSound(enabled);
+            }}>{sound ? <Volume2 size={17} /> : <VolumeX size={17} />} <span>Sound {sound ? "on" : "off"}</span></button>
+            <button type="button" className="kk-tool" onClick={() => void refresh().catch((e) => setError(String(e)))}
+              disabled={connection === "revoked"}><RefreshCw size={17} aria-hidden="true" /> Sync</button>
+            <ThemeControl />
+            <Link href="/dashboard/orders" className="kk-tool kk-return"><ArrowLeft size={16} aria-hidden="true" /> Orders</Link>
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-[1600px] space-y-6 px-4 pt-6 md:px-8">
+      <section className="kk-hero" aria-labelledby="kk-title">
+        <div className="kk-hero-content"><span className="kk-eyebrow">01 / THE KITCHEN WORKSPACE</span>
+          <h1 id="kk-title">The Chef’s Pass.</h1>
+          <p className="kk-tagline">Every dish has its place. Every ticket moves with purpose.</p>
+          <p className="kk-hero-note">From first fire to final handoff. Your preparation stations, live queue, and expeditor—together on one focused surface.</p>
+          <div className="kk-hero-actions"><a href="#station-rail" className="kk-hero-primary">Open station rail <ArrowRight size={16} aria-hidden="true" /></a>
+            {canManage && <a href="#expeditor" className="kk-hero-outline">Go to expeditor <ClipboardList size={16} aria-hidden="true" /></a>}</div>
+        </div>
+        <div className="kk-pass-art" aria-hidden="true"><span className="kk-pass-hanger" /><span className="kk-pass-ticket kk-pass-ticket-one" />
+          <span className="kk-pass-ticket kk-pass-ticket-two" /><span className="kk-pass-ticket kk-pass-ticket-three" />
+          <span className="kk-pass-rail" /><span className="kk-pass-lamp" /></div>
+      </section>
+      <div className="kk-content">
+        <section className="kk-pulse" aria-label="Visible kitchen workload">
+          <div className="kk-section-heading"><div><span className="kk-eyebrow">LIVE / ON THIS DEVICE</span><h2>The kitchen pulse.</h2></div><span>Authorized visible station tickets · not outlet-wide totals</span></div>
+          <div className="kk-pulse-grid">{[
+            { title: "Waiting to start", count: pulse.queued, icon: ListChecks },
+            { title: "On the fire", count: pulse.preparing, icon: Flame },
+            { title: "Station complete", count: pulse.completed, icon: CheckCheck },
+            { title: "Active orders", count: pulse.activeOrders, icon: ClipboardList },
+          ].map(({ title, count, icon: Icon }) => <div className="kk-pulse-cell" key={title}>
+            <span><Icon size={19} aria-hidden="true" /> {title}</span><strong>{count}</strong></div>)}</div>
+        </section>
         {snapshot.workOverflow && (
           <p
             role="alert"
@@ -417,7 +407,7 @@ export function KitchenBoard({
             </button>
           </div>
         )}
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="kk-section-heading kk-station-heading">
           <div>
             <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-amber-400">
               Prep stations
@@ -435,25 +425,21 @@ export function KitchenBoard({
               type="button"
               onClick={() => setShowSettings((v) => !v)}
               aria-expanded={showSettings}
-              className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-300 px-4 text-sm font-bold dark:border-stone-700"
+              className="kk-setup-toggle"
             >
               <Settings2 size={17} /> Station setup
             </button>
           )}
         </div>
         {snapshot.stations.length > 0 && (
-          <nav aria-label="Kitchen stations" className="flex flex-wrap gap-2">
+          <nav id="station-rail" aria-label="Kitchen stations" className="kk-stations">
             {snapshot.stations.map((s) => (
               <button
                 type="button"
                 key={s.id}
                 aria-current={station?.id === s.id ? "page" : undefined}
                 onClick={() => setSelected(s.id)}
-                className={
-                  station?.id === s.id
-                    ? "min-h-12 rounded-xl bg-stone-950 px-5 text-sm font-bold text-white dark:bg-amber-500 dark:text-stone-950"
-                    : "min-h-12 rounded-xl border border-stone-300 bg-white px-5 text-sm font-bold dark:border-stone-700 dark:bg-stone-900"
-                }
+                className={"kk-station-tab" + (station?.id === s.id ? " is-selected" : "")}
               >
                 {s.name}
               </button>
@@ -463,17 +449,17 @@ export function KitchenBoard({
         {allDay.length > 0 && (
           <section
             aria-label="All-day outstanding preparation counts"
-            className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900"
+            className="kk-all-day"
           >
             <h3 className="text-sm font-extrabold">All-day · Remaining to prepare</h3>
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
               Live outstanding quantities on this station; completed tickets are excluded.
             </p>
-            <ul className="mt-3 flex flex-wrap gap-2">
+            <ul className="kk-all-day-list">
               {allDay.map(([name, quantity]) => (
                 <li
                   key={name}
-                  className="rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-stone-900 dark:bg-stone-800 dark:text-stone-100"
+                  className="kk-all-day-item"
                 >
                   <span className="font-extrabold text-orange-700 tabular-nums dark:text-amber-400">
                     {quantity} ×
@@ -490,7 +476,7 @@ export function KitchenBoard({
         {showSettings && canManage && (
           <section
             aria-label="Station configuration"
-            className="grid gap-5 rounded-2xl border border-stone-200 bg-white p-5 md:grid-cols-2 dark:border-stone-700 dark:bg-stone-900"
+            className="kk-configuration"
           >
             <form
               onSubmit={(e) => {
@@ -772,29 +758,37 @@ export function KitchenBoard({
             </form>
           </section>
         )}
-        <section aria-label="Station ticket board" className="grid gap-4 lg:grid-cols-3">
+        <section aria-label="Station ticket board" className="kk-workspace">
+          <div className="kk-section-heading"><div><span className="kk-eyebrow">02 / STATION TICKETS</span><h2>Preparation rail.</h2></div>
+            <span>{station?.name ?? "Choose a station"} · oldest ticket first</span></div>
+          <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
+            {([{ key: "all", label: "All" }, { key: "queued", label: "To prepare" }, { key: "preparing", label: "Preparing" }, { key: "complete", label: "Completed" }] as const)
+              .map((lane) => <button type="button" key={lane.key} aria-pressed={mobileLane === lane.key}
+                onClick={() => setMobileLane(lane.key)}>{lane.label}{lane.key !== "all" && <span>{groups[lane.key].length}</span>}</button>)}
+          </div>
+          <div className="kk-lanes">
           {lanes.map((lane) => {
             const Icon = lane.icon;
             return (
               <div
                 key={lane.key}
-                className="min-h-64 rounded-2xl border border-stone-200 bg-stone-100/70 p-3 dark:border-stone-800 dark:bg-stone-950/60"
+                className={"kk-lane kk-lane-" + lane.key + (mobileLane !== "all" && mobileLane !== lane.key ? " kk-mobile-hidden" : "")}
               >
-                <h3 className="mb-3 flex items-center justify-between px-2 py-1 text-base font-black">
-                  <span className="flex items-center gap-2">
+                <h3 className="kk-lane-heading">
+                  <span className="kk-lane-label">
                     <Icon size={20} className="text-orange-600 dark:text-amber-400" />
                     {lane.title}
                   </span>
-                  <span className="rounded-full bg-stone-200 px-3 py-1 text-sm tabular-nums dark:bg-stone-800">
+                  <span className="kk-lane-count">
                     {groups[lane.key].length}
                   </span>
                 </h3>
-                <div className="space-y-3">
+                <div className="kk-ticket-list">
                   {groups[lane.key].map((w) => (
                     <Ticket key={w.id} work={w} now={now} busy={busy === w.id} onAction={action} />
                   ))}
                   {groups[lane.key].length === 0 && (
-                    <p className="rounded-xl border border-dashed border-stone-300 p-5 text-center text-sm text-stone-600 dark:border-stone-700 dark:text-stone-400">
+                    <p className="kk-lane-empty">
                       No {lane.title.toLowerCase()} items
                     </p>
                   )}
@@ -802,11 +796,9 @@ export function KitchenBoard({
               </div>
             );
           })}
+          </div>
         </section>
-        <p className="text-xs text-stone-600 dark:text-stone-400">
-          Kitchen Pro A–D · Station completion is not guest-facing Ready. Expeditor release and full
-          merchant integration are part of the next guarded package.
-        </p>
+        <p className="kk-footnote">Station completion does not mark an order Ready for guests. Only an authorized expeditor can release an eligible, fully completed order. Kitchen Pro commercial activation remains gated.</p>
       </div>
     </main>
   );
