@@ -32,37 +32,8 @@ BEGIN
  IF website_value IS NOT NULL AND website_value !~* '^https?://[^[:space:]]+\.[^[:space:]]+$' THEN
  RAISE EXCEPTION 'Invalid website' USING ERRCODE='22023'; END IF;
  IF (p_data->>'primaryColor') IS NULL OR (p_data->>'secondaryColor') IS NULL
- OR (p_data->>'primaryColor') !~ '^#[0-9a-fA-F]{6}
- RAISE EXCEPTION 'Invalid branding color' USING ERRCODE='22023'; END IF;
- UPDATE restaurants SET description=NULLIF(trim(p_data->>'description'),''),
- phone=NULLIF(trim(p_data->>'phone'),''), email=lower(email_value), website=website_value,
- address_line1=NULLIF(trim(p_data->>'addressLine1'),''),address_line2=NULLIF(trim(p_data->>'addressLine2'),''),
- city=NULLIF(trim(p_data->>'city'),''),state=NULLIF(trim(p_data->>'state'),''),
- postal_code=NULLIF(trim(p_data->>'postalCode'),''),primary_color=p_data->>'primaryColor',
- secondary_color=p_data->>'secondaryColor',profile_version=profile_version+1,updated_at=now()
- WHERE id=p_outlet;
- INSERT INTO audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id)
- VALUES(gen_random_uuid()::text,actor,p_outlet,'settings.profile.update','outlet',p_outlet);
- RETURN p_expected+1;
-END $$;
-REVOKE ALL ON FUNCTION app_private.update_outlet_profile(text,text,integer,jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_private.update_outlet_profile(text,text,integer,jsonb) TO menuminute_app;
- OR (p_data->>'secondaryColor') !~ '^#[0-9a-fA-F]{6}
- RAISE EXCEPTION 'Invalid branding color' USING ERRCODE='22023'; END IF;
- UPDATE restaurants SET description=NULLIF(trim(p_data->>'description'),''),
- phone=NULLIF(trim(p_data->>'phone'),''), email=lower(email_value), website=website_value,
- address_line1=NULLIF(trim(p_data->>'addressLine1'),''),address_line2=NULLIF(trim(p_data->>'addressLine2'),''),
- city=NULLIF(trim(p_data->>'city'),''),state=NULLIF(trim(p_data->>'state'),''),
- postal_code=NULLIF(trim(p_data->>'postalCode'),''),primary_color=p_data->>'primaryColor',
- secondary_color=p_data->>'secondaryColor',profile_version=profile_version+1,updated_at=now()
- WHERE id=p_outlet;
- INSERT INTO audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id)
- VALUES(gen_random_uuid()::text,actor,p_outlet,'settings.profile.update','outlet',p_outlet);
- RETURN p_expected+1;
-END $$;
-REVOKE ALL ON FUNCTION app_private.update_outlet_profile(text,text,integer,jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_private.update_outlet_profile(text,text,integer,jsonb) TO menuminute_app;
- THEN
+ OR (p_data->>'primaryColor') !~ '^#[0-9a-fA-F]{6}$'
+ OR (p_data->>'secondaryColor') !~ '^#[0-9a-fA-F]{6}$' THEN
  RAISE EXCEPTION 'Invalid branding color' USING ERRCODE='22023'; END IF;
  UPDATE restaurants SET description=NULLIF(trim(p_data->>'description'),''),
  phone=NULLIF(trim(p_data->>'phone'),''), email=lower(email_value), website=website_value,
