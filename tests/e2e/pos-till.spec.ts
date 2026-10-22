@@ -127,4 +127,11 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   } finally {
     await pool.end();
   }
+  await page.goto("/dashboard/pos/ledger");
+  await expect(page.getByRole("heading", { name: "The Ledger." })).toBeVisible();
+  await expect(page.getByText("LIVE FINANCE GATE IS CLOSED")).toBeVisible();
+  await expect(page.getByText("No sale records yet.")).toHaveCount(0);
+  await page.goto("/dashboard/pos/closing");
+  await expect(page.getByRole("heading", { name: "The Closing Desk." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
 });
