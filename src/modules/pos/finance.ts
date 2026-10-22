@@ -33,7 +33,7 @@ const commands = z.discriminatedUnion("action", [
    tenderedMinor:positive,reference:z.string().trim().max(80).nullable()}).strict()}).strict(),
  z.object({action:z.literal("close_shift"),key,data:z.object({shiftId:id,countedMinor:amount}).strict()}).strict(),
  z.object({action:z.literal("issue"),key,data:z.object({saleId:id}).strict()}).strict(),
- z.object({action:z.literal("refund"),key,data:z.object({saleId:id,shiftId:id,reason}).strict()}).strict(),
+ z.object({action:z.literal("refund"),key,data:z.object({saleId:id,shiftId:id,reason,externalRefundAttested:z.boolean()}).strict()}).strict(),
 ]);
 export type FinanceCommand = z.infer<typeof commands>;
 export type FinanceContext = {paymentsEnabled:boolean;documentsEnabled:boolean;fiscalApproved:boolean;
