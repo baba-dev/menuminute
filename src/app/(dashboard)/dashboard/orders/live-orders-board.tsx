@@ -165,14 +165,15 @@ export function LiveOrdersBoard({ organizationId, outletId, outletName, currency
     return () => controller.abort();
   }, [tab, historyStatus, mode, payment, page, debounced, from, to, base, lastSync]);
 
+  const selectedId = selected?.id;
   useEffect(() => {
-    if (!selected) { setActivity(null); return; }
+    if (!selectedId) { setActivity(null); return; }
     const controller = new AbortController();
     const load = async () => {
       setActivity(null);
       try {
         const result = await responseData<{ events: Activity[]; truncated: boolean }>(await fetch(
-          base + "/" + encodeURIComponent(selected.id) + "/activity",
+          base + "/" + encodeURIComponent(selectedId) + "/activity",
           { cache: "no-store", signal: controller.signal }
         ));
         if (!controller.signal.aborted) {
@@ -185,7 +186,7 @@ export function LiveOrdersBoard({ organizationId, outletId, outletName, currency
     };
     void load();
     return () => controller.abort();
-  }, [base, selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [base, selectedId]);
 
   const currentSelected = selected && (
     orders.find((order) => order.id === selected.id) ??
@@ -216,8 +217,8 @@ export function LiveOrdersBoard({ organizationId, outletId, outletName, currency
         }
       );
       if (result.status === 409) {
-        setError("The ticket changed or its acceptance window expired. Refreshing the authoritative state.");
         await refresh();
+        setError("The ticket changed or its acceptance window expired. The authoritative queue was reloaded.");
         return;
       }
       await responseData(result);
@@ -245,7 +246,7 @@ export function LiveOrdersBoard({ organizationId, outletId, outletName, currency
       <div className="sc-hero-copy"><span className="sc-eyebrow">SERVICE DESK / LIVE ORDERS</span>
         <h1>The Service Counter.</h1>
         <p className="sc-hero-tagline">Every order, beautifully in motion.</p>
-        <p className="sc-hero-intro">Keep {outletName}&apos;s service moving from the first incoming ticket to the final handoff.</p>
+        <p className="sc-hero-intro">Keep {outletName}&apos;s service moving from the first incoming ticket to the final handoff. <span className="sc-currency">· {currency}</span></p>
         <div className="sc-hero-actions">
           <button type="button" className="sc-hero-primary" onClick={() => show("all")}>View live queue <ArrowRight size={17} aria-hidden="true"/></button>
           <button type="button" className="sc-hero-secondary" onClick={() => show("history")}>Order history <History size={16} aria-hidden="true"/></button>
