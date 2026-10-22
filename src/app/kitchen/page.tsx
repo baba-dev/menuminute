@@ -7,9 +7,12 @@ import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { KitchenBoard } from "./kitchen-board";
 import { ForbiddenError } from "@/lib/errors";
-export const metadata = {
-  title: "Kitchen Pro — MenuMinute",
-  description: "Outlet-scoped preparation stations and live kitchen work",
+import type { Metadata } from "next";
+import "./kitchen.css";
+export const metadata: Metadata = {
+  title: "The Chef’s Pass | Kitchen Pro",
+  description: "Private, outlet-scoped preparation stations and expeditor workspace.",
+  robots: { index: false, follow: false },
 };
 export default async function KitchenPage() {
   const session = await auth();
@@ -17,11 +20,10 @@ export default async function KitchenPage() {
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
   if (!outlet)
     return (
-      <main className="mx-auto max-w-xl p-8">
-        <h1 className="text-2xl font-bold">Select an outlet</h1>
-        <p>Finish outlet setup before opening Kitchen Pro.</p>
-        <Link href="/dashboard">Return to dashboard</Link>
-      </main>
+      <KitchenUnavailable
+        title="Select an outlet"
+        detail="Finish outlet setup before opening preparation stations."
+      />
     );
   const actor = { userId: session.user.id, sessionId: session.session.id };
   let initial;
@@ -30,16 +32,10 @@ export default async function KitchenPage() {
   } catch (error) {
     if (!(error instanceof ForbiddenError)) throw error;
     return (
-      <main className="mx-auto max-w-xl p-8">
-        <h1 className="text-2xl font-bold">Kitchen access unavailable</h1>
-        <p className="mt-2">
-          Ask an outlet administrator to assign you to a station. If you were just added, sign in
-          again.
-        </p>
-        <Link className="mt-4 inline-block underline" href="/dashboard">
-          Return to dashboard
-        </Link>
-      </main>
+      <KitchenUnavailable
+        title="Kitchen access unavailable"
+        detail="Ask an outlet administrator to assign you to a station. Sign in again if access was recently updated."
+      />
     );
   }
   const canManage = await kitchenCanManage(actor, outlet.id);
@@ -70,5 +66,24 @@ export default async function KitchenPage() {
       canManage={canManage}
       menuDishes={dishList}
     />
+  );
+}
+
+function KitchenUnavailable({ title, detail }: { title: string; detail: string }) {
+  return (
+    <main className="product mm-kitchen kk-locked">
+      <section className="kk-hero">
+        <div className="kk-hero-content">
+          <span className="kk-eyebrow">KITCHEN PRO / PRIVATE WORKSPACE</span>
+          <h1>{title}</h1>
+          <p className="kk-hero-note">{detail}</p>
+          <div className="kk-hero-actions">
+            <Link href="/dashboard" className="kk-hero-primary">
+              Return to dashboard
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

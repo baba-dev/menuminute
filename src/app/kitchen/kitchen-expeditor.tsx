@@ -8,16 +8,23 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
   const active = useRef(true);
+  const sequence = useRef(0);
   const sync = useCallback(async () => {
+    const request = ++sequence.current;
     const response = await fetch(base + "/expo", { cache: "no-store" });
     if (!response.ok) {
-      setData({ cursor: 0, overflow: false, orders: [] });
+      if (!active.current || request !== sequence.current) return;
+      if (active.current && request === sequence.current)
+        setData({ cursor: 0, overflow: false, orders: [] });
       throw new Error(
         "Expeditor access or connection has changed. Refresh and verify permissions."
       );
     }
     const latest = (await response.json()) as KitchenExpoSnapshot;
-    if (active.current) setData(latest);
+    if (active.current && request === sequence.current) {
+      setData((current) => (latest.cursor >= current.cursor ? latest : current));
+      setError("");
+    }
   }, [base]);
   useEffect(() => {
     active.current = true;
@@ -33,6 +40,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
     );
     return () => {
       active.current = false;
+      sequence.current += 1;
       clearInterval(timer);
     };
   }, [sync]);
@@ -45,6 +53,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   async function release(order: KitchenExpoOrder) {
     if (
       pending ||
+      error ||
       !enabled ||
       order.status !== "preparing" ||
       order.total === 0 ||
@@ -78,11 +87,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
     }
   }
   return (
-    <section
-      id="expeditor"
-      aria-label="Expeditor"
-      className="scroll-mt-6 rounded-2xl border border-stone-200 bg-white p-4 md:p-6 dark:border-stone-700 dark:bg-stone-900"
-    >
+    <section id="expeditor" aria-label="Expeditor" className="kk-expeditor scroll-mt-6 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-orange-400">
@@ -131,12 +136,9 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
           {error}
         </p>
       )}
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="kk-expeditor-orders mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {data.orders.map((order) => (
-          <article
-            key={order.id}
-            className="rounded-xl border border-stone-200 bg-[#fffaf4] p-4 dark:border-stone-700 dark:bg-stone-950"
-          >
+          <article key={order.id} className="kk-expo-card p-4">
             <div className="flex justify-between gap-2">
               <h4 className="text-lg font-black">#{order.orderNumber}</h4>
               <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">
@@ -171,6 +173,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
               type="button"
               disabled={
                 !enabled ||
+                !!error ||
                 !!pending ||
                 order.status !== "preparing" ||
                 order.total === 0 ||
