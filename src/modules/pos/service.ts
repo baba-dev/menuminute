@@ -124,7 +124,10 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
   const context = await posContext(actor, organizationId, outletId);
   if (!context.enabled) return { context, menus: [], recent: [], attachable: [] };
   const [product, recentResult, attachableResult] = await Promise.all([
-    catalog(context, outletId),
+    catalog(context, outletId).catch((error: unknown) => {
+      if (error instanceof ConflictError || error instanceof ValidationError) return null;
+      throw error;
+    }),
     posCall(actor, outletId, (run) =>
       run(sql`select app_private.pos_recent_sales(${outletId}) as data`)
     ),
@@ -166,6 +169,9 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
         }[];
       }
     ).rows[0]?.data ?? [];
+  // An enabled outlet may not yet have a published menu or active QR. Keep finance history
+  // accessible rather than turning the entire private page into an error screen.
+  if (!product) return { context, menus: [], recent, attachable };
   const instant = new Date(product.now);
   const menus = product.menus.map((menu) => ({
     id: menu.id,
