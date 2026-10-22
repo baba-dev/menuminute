@@ -79,19 +79,21 @@ async function catalog(context: PosContext, outletId: string): Promise<PublicPro
 }
 export async function posWorkspace(actor: Actor, organizationId: string, outletId: string) {
   const context = await posContext(actor, organizationId, outletId);
-  if (!context.enabled) return { context, menus: [], recent: [] };
-  const [product, recentResult] = await Promise.all([
+  if (!context.enabled) return { context, menus: [], recent: [], attachable: [] };
+  const [product, recentResult, attachableResult] = await Promise.all([
     catalog(context, outletId),
     posCall(actor, outletId, (run) => run(sql`select app_private.pos_recent_sales(${outletId}) as data`)),
+    posCall(actor, outletId, (run) => run(sql`select app_private.pos_attachable_orders(${outletId}) as data`)),
   ]);
-  const recent = (recentResult as { rows: { data: unknown[] }[] }).rows[0]?.data ?? [];
+  const recent = (recentResult as { rows: { data: Array<{saleId:string;orderId:string;orderNumber:number;origin:string;currency:string;subtotalMinor:string;status:string;createdAt:string}> }[] }).rows[0]?.data ?? [];
+  const attachable = (attachableResult as { rows: {data: Array<{orderId:string;orderNumber:number;customerName:string|null;fulfillmentMode:string;status:string;currency:string;subtotalMinor:string;createdAt:string}>}[] }).rows[0]?.data ?? [];
   const instant = new Date(product.now);
   const menus = product.menus.map((menu) => ({
     id: menu.id, revision: menu.revision,
     name: menu.document.name,
     ...projectMenu(menu.document, product.outlet.timezone, instant, menu.overrides),
   }));
-  return { context, menus, recent };
+  return { context, menus, recent, attachable };
 }
 export async function posConfigure(actor: Actor, organizationId: string, outletId: string, raw: unknown) {
   const input = sellerSettingsSchema.parse(raw);
@@ -149,3 +151,5 @@ export async function posAttachOrder(actor: Actor, organizationId: string, outle
     return r.rows[0]!.data;
   });
 }
+
+export type PosWorkspace = Awaited<ReturnType<typeof posWorkspace>>;
