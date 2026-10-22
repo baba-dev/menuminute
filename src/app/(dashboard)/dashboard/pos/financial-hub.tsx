@@ -12,12 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
-import type {
-  Detail,
-  FinanceContext,
-  LedgerRow,
-  ShiftRow,
-} from "@/modules/pos/finance";
+import type { Detail, FinanceContext, LedgerRow, ShiftRow } from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
 type Preview = {
