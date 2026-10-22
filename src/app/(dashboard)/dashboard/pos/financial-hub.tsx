@@ -203,7 +203,7 @@ export function FinancialHub({mode,outletId,organizationId,workspace,initialFina
      <button disabled={!finance.documentsEnabled||!finance.canIssue||busy||selected.documents.some(d=>d.kind!=="credit_note")} onClick={()=>void command("issue",{saleId:selected.saleId})}><FileText size={17}/> Issue document when fully paid</button>
      <label>Full-sale reversal reason<input minLength={5} maxLength={200} value={refundReason} onChange={ev=>setRefundReason(ev.target.value)} placeholder="Explain reversal"/></label>
      <button disabled={!finance.documentsEnabled||!finance.canRefund||!activeShift||refundReason.trim().length<5||busy||selected.refunds.length>0}
-      onClick={()=>{if(window.confirm("Record a FULL-SALE reversal and issue a linked credit document? This does not contact any external payment provider."))void command("refund",{saleId:selected.saleId,shiftId:activeShift!.id,reason:refundReason.trim()})}}>
+      onClick={()=>{if(window.confirm("Record a FULL-SALE reversal and issue a linked credit document? This does not contact any external payment provider."))void command("refund",{saleId:selected.saleId,shiftId:activeShift!.id,reason:refundReason.trim(),externalRefundAttested:true})}}>
       Reverse full sale & create credit
      </button>
     </div>}
