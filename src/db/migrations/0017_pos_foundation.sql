@@ -107,7 +107,7 @@ BEGIN
  SELECT COALESCE(jsonb_agg(jsonb_build_object('id',id,'label',COALESCE(label,'Table '||table_number))
  ORDER BY table_number,id),'[]'::jsonb) INTO t FROM restaurant_tables
  WHERE restaurant_id=p_outlet AND is_active;
- RETURN jsonb_build_object('enabled',COALESCE(s.enabled,false),'revision',COALESCE(s.revision,0),
+ RETURN jsonb_build_object('organizationId',r.organization_id,'enabled',COALESCE(s.enabled,false),'revision',COALESCE(s.revision,0),
   'canConfigure',app_private.pos_access(p_outlet,'configure'),
   'seller',CASE WHEN p.outlet_id IS NULL THEN NULL ELSE jsonb_build_object('legalName',p.legal_name,
   'registeredAddress',p.registered_address,'country',p.country,'taxRegime',p.tax_regime,
@@ -206,10 +206,10 @@ BEGIN
    qty:=(line->>'quantity')::integer;
    IF qty NOT BETWEEN 1 AND 99 OR jsonb_typeof(line->'groups') IS DISTINCT FROM 'array'
    THEN RAISE EXCEPTION 'Invalid quantity/options' USING ERRCODE='22023'; END IF;
-   SELECT i, c INTO dish,category FROM jsonb_array_elements(doc->'categories') c
-    CROSS JOIN LATERAL jsonb_array_elements(c->'items') i
-    WHERE i->>'id'=line->>'dishId' AND COALESCE((c->>'archived')::boolean,false)=false
-    AND COALESCE((i->>'archived')::boolean,false)=false LIMIT 1;
+   SELECT i.value, c.value INTO dish,category FROM jsonb_array_elements(doc->'categories') c(value)
+    CROSS JOIN LATERAL jsonb_array_elements(c.value->'items') i(value)
+    WHERE i.value->>'id'=line->>'dishId' AND COALESCE((c.value->>'archived')::boolean,false)=false
+    AND COALESCE((i.value->>'archived')::boolean,false)=false LIMIT 1;
    IF dish IS NULL OR COALESCE((dish->>'soldOut')::boolean,false) THEN RAISE EXCEPTION 'Dish unavailable' USING ERRCODE='40001'; END IF;
    SELECT value INTO override_row FROM jsonb_array_elements(COALESCE(m->'overrides','[]'::jsonb))
      WHERE value->>'dishId'=line->>'dishId' LIMIT 1;
@@ -225,9 +225,9 @@ BEGIN
      v_base:=COALESCE((override_row->>'priceMinor')::bigint,(dish->>'priceMinor')::bigint);
    END IF;
    unit_price:=v_base; v_options:='[]'::jsonb;
-   IF EXISTS(SELECT 1 FROM jsonb_array_elements(line->'groups') chosen
-     WHERE NOT EXISTS(SELECT 1 FROM jsonb_array_elements(dish->'addOnGroups') valid
-       WHERE valid->>'id'=chosen->>'groupId')) THEN
+   IF EXISTS(SELECT 1 FROM jsonb_array_elements(line->'groups') chosen(value)
+     WHERE NOT EXISTS(SELECT 1 FROM jsonb_array_elements(dish->'addOnGroups') valid(value)
+       WHERE valid.value->>'id'=chosen.value->>'groupId')) THEN
      RAISE EXCEPTION 'Invalid add-on group' USING ERRCODE='22023'; END IF;
    FOR grp IN SELECT value FROM jsonb_array_elements(dish->'addOnGroups') LOOP
      SELECT value INTO picked FROM jsonb_array_elements(line->'groups') WHERE value->>'groupId'=grp->>'id' LIMIT 1;
@@ -237,8 +237,8 @@ BEGIN
      IF n<(grp->>'min')::integer OR n>(grp->>'max')::integer THEN RAISE EXCEPTION 'Add-on bounds' USING ERRCODE='22023'; END IF;
      IF (SELECT count(DISTINCT value) FROM jsonb_array_elements_text(COALESCE(picked->'optionIds','[]'::jsonb)))<>n
      THEN RAISE EXCEPTION 'Duplicate add-on' USING ERRCODE='22023'; END IF;
-     FOR opt IN SELECT o FROM jsonb_array_elements(COALESCE(picked->'optionIds','[]'::jsonb)) choice
-       CROSS JOIN LATERAL jsonb_array_elements(grp->'options') o WHERE o->>'id'=choice#>>'{}' LOOP
+     FOR opt IN SELECT o.value FROM jsonb_array_elements(COALESCE(picked->'optionIds','[]'::jsonb)) choice(value)
+       CROSS JOIN LATERAL jsonb_array_elements(grp->'options') o(value) WHERE o.value->>'id'=choice.value#>>'{}' LOOP
        IF NOT COALESCE((opt->>'isAvailable')::boolean,true) THEN RAISE EXCEPTION 'Add-on unavailable' USING ERRCODE='40001'; END IF;
        unit_price:=unit_price+(opt->>'priceMinor')::bigint;
        v_options:=v_options||jsonb_build_array(jsonb_build_object('groupId',grp->>'id','groupName',grp->>'name',
@@ -267,8 +267,8 @@ BEGIN
  VALUES(sale_id,r.organization_id,p_outlet,order_id,'staff',r.currency,subtotal,actor);
  -- Values re-read from the verified released catalogue: never copy a browser-supplied unit price.
  FOR line IN SELECT value FROM jsonb_array_elements(p_data->'lines') LOOP
-   SELECT i INTO dish FROM jsonb_array_elements(doc->'categories') c
-   CROSS JOIN LATERAL jsonb_array_elements(c->'items') i WHERE i->>'id'=line->>'dishId' LIMIT 1;
+   SELECT i.value INTO dish FROM jsonb_array_elements(doc->'categories') c(value)
+   CROSS JOIN LATERAL jsonb_array_elements(c.value->'items') i(value) WHERE i.value->>'id'=line->>'dishId' LIMIT 1;
    SELECT value INTO override_row FROM jsonb_array_elements(COALESCE(m->'overrides','[]'::jsonb))
     WHERE value->>'dishId'=line->>'dishId' LIMIT 1;
    variant:=NULL; v_variant_name:=NULL; v_options:='[]'::jsonb;
@@ -279,8 +279,8 @@ BEGIN
    ELSE unit_price:=COALESCE((override_row->>'priceMinor')::bigint,(dish->>'priceMinor')::bigint); END IF;
    FOR grp IN SELECT value FROM jsonb_array_elements(dish->'addOnGroups') LOOP
     SELECT value INTO picked FROM jsonb_array_elements(line->'groups') WHERE value->>'groupId'=grp->>'id' LIMIT 1;
-    FOR opt IN SELECT o FROM jsonb_array_elements(COALESCE(picked->'optionIds','[]'::jsonb)) choice
-     CROSS JOIN LATERAL jsonb_array_elements(grp->'options') o WHERE o->>'id'=choice#>>'{}' LOOP
+    FOR opt IN SELECT o.value FROM jsonb_array_elements(COALESCE(picked->'optionIds','[]'::jsonb)) choice(value)
+     CROSS JOIN LATERAL jsonb_array_elements(grp->'options') o(value) WHERE o.value->>'id'=choice.value#>>'{}' LOOP
        unit_price:=unit_price+(opt->>'priceMinor')::bigint;
        v_options:=v_options||jsonb_build_array(jsonb_build_object('groupId',grp->>'id','groupName',grp->>'name',
        'optionId',opt->>'id','optionName',opt->>'name','priceMinor',(opt->>'priceMinor')::integer));
