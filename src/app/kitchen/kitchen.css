@@ -211,7 +211,7 @@
   gap: 9px;
   margin-top: 19px;
 }
-.kk-hero-actions a {
+.kk-hero-actions a, .kk-hero-actions button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -883,3 +883,5 @@
     scroll-behavior: auto !important;
   }
 }
+
+.kk-locked { display:block; } .kk-locked .kk-hero { min-height:64dvh; } .kk-locked .kk-hero-content { width:min(100%,640px); }

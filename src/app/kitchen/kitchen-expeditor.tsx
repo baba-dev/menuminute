@@ -13,6 +13,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
     const request = ++sequence.current;
     const response = await fetch(base + "/expo", { cache: "no-store" });
     if (!response.ok) {
+      if (!active.current || request !== sequence.current) return;
       if (active.current && request === sequence.current)
         setData({ cursor: 0, overflow: false, orders: [] });
       throw new Error(
@@ -20,8 +21,10 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
       );
     }
     const latest = (await response.json()) as KitchenExpoSnapshot;
-    if (active.current && request === sequence.current)
+    if (active.current && request === sequence.current) {
       setData((current) => (latest.cursor >= current.cursor ? latest : current));
+      setError("");
+    }
   }, [base]);
   useEffect(() => {
     active.current = true;
@@ -50,6 +53,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   async function release(order: KitchenExpoOrder) {
     if (
       pending ||
+      error ||
       !enabled ||
       order.status !== "preparing" ||
       order.total === 0 ||
@@ -169,6 +173,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
               type="button"
               disabled={
                 !enabled ||
+                !!error ||
                 !!pending ||
                 order.status !== "preparing" ||
                 order.total === 0 ||

@@ -18,32 +18,14 @@ export default async function KitchenPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?next=%2Fkitchen");
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
-  if (!outlet)
-    return (
-      <main className="mx-auto max-w-xl p-8">
-        <h1 className="text-2xl font-bold">Select an outlet</h1>
-        <p>Finish outlet setup before opening Kitchen Pro.</p>
-        <Link href="/dashboard">Return to dashboard</Link>
-      </main>
-    );
+  if (!outlet) return <KitchenUnavailable title="Select an outlet" detail="Finish outlet setup before opening preparation stations." />;
   const actor = { userId: session.user.id, sessionId: session.session.id };
   let initial;
   try {
     initial = await kitchenSnapshot(actor, outlet.organizationId, outlet.id);
   } catch (error) {
     if (!(error instanceof ForbiddenError)) throw error;
-    return (
-      <main className="mx-auto max-w-xl p-8">
-        <h1 className="text-2xl font-bold">Kitchen access unavailable</h1>
-        <p className="mt-2">
-          Ask an outlet administrator to assign you to a station. If you were just added, sign in
-          again.
-        </p>
-        <Link className="mt-4 inline-block underline" href="/dashboard">
-          Return to dashboard
-        </Link>
-      </main>
-    );
+    return <KitchenUnavailable title="Kitchen access unavailable" detail="Ask an outlet administrator to assign you to a station. Sign in again if access was recently updated." />;
   }
   const canManage = await kitchenCanManage(actor, outlet.id);
   const dishList: Array<{ id: string; name: string }> = [];
@@ -74,4 +56,12 @@ export default async function KitchenPage() {
       menuDishes={dishList}
     />
   );
+}
+
+function KitchenUnavailable({ title, detail }: { title: string; detail: string }) {
+  return <main className="product mm-kitchen kk-locked"><section className="kk-hero">
+    <div className="kk-hero-content"><span className="kk-eyebrow">KITCHEN PRO / PRIVATE WORKSPACE</span>
+      <h1>{title}</h1><p className="kk-hero-note">{detail}</p>
+      <div className="kk-hero-actions"><Link href="/dashboard" className="kk-hero-primary">Return to dashboard</Link></div>
+    </div></section></main>;
 }
