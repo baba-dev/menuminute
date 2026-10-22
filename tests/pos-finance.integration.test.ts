@@ -50,7 +50,7 @@ async function setup(mode: "non_registered" | "classified" = "non_registered") {
       expectedRevision: 2,
       lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
     },
-    fulfillmentMode: "pickup",
+    fulfillmentMode: "dine_in",
     tableId: null,
     expectedSubtotalMinor: "28000",
   });
