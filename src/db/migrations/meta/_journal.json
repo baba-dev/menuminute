@@ -120,6 +120,13 @@
       "when": 1792700000000,
       "tag": "0016_account_continuity",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792780000000,
+      "tag": "0017_pos_foundation",
+      "breakpoints": true
     }
   ]
 }
