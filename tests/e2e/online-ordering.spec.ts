@@ -136,7 +136,16 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await owner.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(owner).toHaveURL(/dashboard/);
     await owner.goto("/dashboard/orders");
-    await expect(owner.getByRole("heading", { name: "Live Orders Manager" })).toBeVisible();
+    await expect(owner.getByRole("heading", { name: "The Service Counter." })).toBeVisible();
+    await expect(owner.getByTestId("service-counter")).toBeVisible();
+    await expect(owner.getByText("Today's service pulse")).toBeVisible();
+    await expect(owner.getByRole("tab", { name: /Live orders/ })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    await owner.getByRole("button", { name: "Details", exact: false }).first().click();
+    await expect(owner.getByRole("dialog", { name: /Order #/ })).toBeVisible();
+    await owner.getByRole("button", { name: "Close order details" }).click();
     await owner.getByRole("button", { name: "Accept", exact: true }).click();
     await expect(page.getByText("Order Accepted!")).toBeVisible({ timeout: 15000 });
     await owner.getByRole("button", { name: "Start Preparing" }).click();
@@ -144,11 +153,20 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await owner.getByRole("button", { name: "Mark Ready" }).click();
     await expect(page.getByText("Order Ready!")).toBeVisible({ timeout: 15000 });
     await owner.getByRole("button", { name: "Record Paid" }).click();
+    await owner.getByRole("button", { name: "Confirm cash received" }).click();
     await expect(page.getByText("Your payment has been received.")).toBeVisible({
       timeout: 15000,
     });
     await owner.getByRole("button", { name: "Mark Served" }).click();
     await expect(page.getByText("Order Complete")).toBeVisible({ timeout: 15000 });
+    await owner.getByRole("tab", { name: "History" }).click();
+    await expect(owner.getByText("matching concluded orders")).toBeVisible();
+    for (const width of [360, 390, 768, 1024, 1440]) {
+      await owner.setViewportSize({ width, height: 900 });
+      expect(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true
+      );
+    }
   } finally {
     await owner.close();
   }

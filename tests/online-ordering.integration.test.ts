@@ -218,3 +218,74 @@ describe("Core online ordering restricted-role integration", () => {
     expect(served.currentStatus).toBe("served");
   });
 });
+
+describe("Service Counter outlet-scoped read models", () => {
+  it("separates accurate pulse, active rail, history and canonical events", async () => {
+    const f = await publishedOutlet();
+    const {
+      listServiceRail,
+      servicePulse,
+      listServiceHistory,
+      serviceOrderActivity,
+      historyQuerySchema,
+    } = await import("../src/modules/orders/workspace");
+    const submissionResult = await submitGuestOrder(f.outlet.publicId, submission());
+    const active = await listServiceRail(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(active.overflow).toBe(false);
+    expect(active.orders.some((item) => item.id === submissionResult.orderId)).toBe(true);
+    expect((await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id)).pending).toBe(1);
+    const filter = historyQuerySchema.parse({ status: "completed" });
+    expect(
+      (await listServiceHistory(f.actor, f.outlet.organizationId, f.outlet.id, filter)).total
+    ).toBe(0);
+    await transitionOutletOrder(
+      f.actor,
+      f.outlet.id,
+      submissionResult.orderId,
+      { targetStatus: "accepted", expectedVersion: 1 },
+      f.outlet.organizationId
+    );
+    await transitionOutletOrder(
+      f.actor,
+      f.outlet.id,
+      submissionResult.orderId,
+      { targetStatus: "preparing", expectedVersion: 2 },
+      f.outlet.organizationId
+    );
+    await transitionOutletOrder(
+      f.actor,
+      f.outlet.id,
+      submissionResult.orderId,
+      { targetStatus: "ready", expectedVersion: 3 },
+      f.outlet.organizationId
+    );
+    await transitionOutletOrder(
+      f.actor,
+      f.outlet.id,
+      submissionResult.orderId,
+      { targetStatus: "served", expectedVersion: 4 },
+      f.outlet.organizationId
+    );
+    const pulse = await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(pulse.active).toBe(0);
+    expect(pulse.completedToday).toBe(1);
+    const history = await listServiceHistory(f.actor, f.outlet.organizationId, f.outlet.id, filter);
+    expect(history.total).toBe(1);
+    expect(history.orders[0]?.status).toBe("served");
+    const activity = await serviceOrderActivity(
+      f.actor,
+      f.outlet.organizationId,
+      f.outlet.id,
+      submissionResult.orderId
+    );
+    expect(activity.events.map((event) => event.toStatus)).toContain("served");
+    await expect(
+      listServiceRail(f.actor, "not-this-organization", f.outlet.id)
+    ).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    await expect(
+      serviceOrderActivity(f.actor, f.outlet.organizationId, f.outlet.id, "not-an-order")
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
