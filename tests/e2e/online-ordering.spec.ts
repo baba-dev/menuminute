@@ -139,7 +139,10 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await expect(owner.getByRole("heading", { name: "The Service Counter." })).toBeVisible();
     await expect(owner.getByTestId("service-counter")).toBeVisible();
     await expect(owner.getByText("Today's service pulse")).toBeVisible();
-    await expect(owner.getByRole("tab", { name: /Live orders/ })).toHaveAttribute("aria-selected", "true");
+    await expect(owner.getByRole("tab", { name: /Live orders/ })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
     await owner.getByRole("button", { name: "Details", exact: false }).first().click();
     await expect(owner.getByRole("dialog", { name: /Order #/ })).toBeVisible();
     await owner.getByRole("button", { name: "Close order details" }).click();
@@ -160,7 +163,9 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await expect(owner.getByText("matching concluded orders")).toBeVisible();
     for (const width of [360, 390, 768, 1024, 1440]) {
       await owner.setViewportSize({ width, height: 900 });
-      expect(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      expect(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true
+      );
     }
   } finally {
     await owner.close();

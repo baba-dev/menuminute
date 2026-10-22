@@ -1,9 +1,16 @@
 import type { MerchantOrder } from "@/components/orders/types";
 export const statusLabels: Record<string, string> = {
-  pending: "Awaiting acceptance", accepted: "Accepted", preparing: "In preparation",
-  ready: "Ready for handoff", served: "Served", collected: "Collected",
-  rejected: "Declined", cancelled: "Cancelled", expired: "Acceptance expired",
-  confirmed: "Confirmed", delivered: "Delivered",
+  pending: "Awaiting acceptance",
+  accepted: "Accepted",
+  preparing: "In preparation",
+  ready: "Ready for handoff",
+  served: "Served",
+  collected: "Collected",
+  rejected: "Declined",
+  cancelled: "Cancelled",
+  expired: "Acceptance expired",
+  confirmed: "Confirmed",
+  delivered: "Delivered",
 };
 export function laneFor(status: string): "incoming" | "preparing" | "ready" | null {
   if (status === "pending") return "incoming";
@@ -13,10 +20,14 @@ export function laneFor(status: string): "incoming" | "preparing" | "ready" | nu
 }
 export function filterRail(orders: MerchantOrder[], search: string, mode: string) {
   const query = search.trim().toLowerCase().replace(/^#/, "");
-  return orders.filter((order) => (mode === "all" || order.fulfillmentMode === mode) &&
-    (!query || String(order.orderNumber).includes(query) ||
-      (order.customerName ?? "").toLowerCase().includes(query) ||
-      (order.servicePoint ?? "").toLowerCase().includes(query)));
+  return orders.filter(
+    (order) =>
+      (mode === "all" || order.fulfillmentMode === mode) &&
+      (!query ||
+        String(order.orderNumber).includes(query) ||
+        (order.customerName ?? "").toLowerCase().includes(query) ||
+        (order.servicePoint ?? "").toLowerCase().includes(query))
+  );
 }
 export function actionFor(order: MerchantOrder): { label: string; status: string } | null {
   if (order.status === "pending" && order.canAccept) return { label: "Accept", status: "accepted" };

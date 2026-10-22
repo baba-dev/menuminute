@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
-import { historyQuerySchema, listServiceHistory, listServiceRail, servicePulse } from "@/modules/orders/workspace";
-export async function GET(req: Request, context: { params: Promise<{ organizationId: string; outletId: string }> }) {
+import {
+  historyQuerySchema,
+  listServiceHistory,
+  listServiceRail,
+  servicePulse,
+} from "@/modules/orders/workspace";
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ organizationId: string; outletId: string }> }
+) {
   try {
     const actor = await requestActor(req);
     const { organizationId, outletId } = await context.params;
@@ -14,8 +22,15 @@ export async function GET(req: Request, context: { params: Promise<{ organizatio
     else {
       const params = Object.fromEntries(url.searchParams.entries());
       delete params.view;
-      data = await listServiceHistory(actor, organizationId, outletId, historyQuerySchema.parse(params));
+      data = await listServiceHistory(
+        actor,
+        organizationId,
+        outletId,
+        historyQuerySchema.parse(params)
+      );
     }
     return NextResponse.json(data, { headers: { "cache-control": "private, no-store" } });
-  } catch (error) { return errorResponse(error); }
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
