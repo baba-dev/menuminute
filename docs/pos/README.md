@@ -19,16 +19,16 @@ This is worldwide software. Outlet country, ISO currency, locale, IANA timezone,
 
 ## Connected merchant journeys
 
-| Entry point | POS flow | Shared behavior |
-| --- | --- | --- |
-| Walk-in / counter | Start sale, select published menu and variants/add-ons, choose takeaway/dine-in and place order | Creates canonical outlet order, kitchen receives a ticket where food preparation is required |
-| Existing QR order | Find and attach an eligible unpaid ticket to a bill | Does not recreate or duplicate an existing order |
-| Existing Service Counter order | Open settlement from the order details | Order keeps its independent fulfillment lifecycle and version checks |
-| Dine-in table | View eligible open tickets and explicitly attach selected orders to a bill | Further repeat orders are separate tickets; bill assignment is audited |
-| Split group bill | Assign selected full/partial line quantities into distinct settlement groups where policy allows | No order item is billed beyond its original quantity; immutable allocation |
-| Multiple tender | Cash, card terminal, UPI, bank transfer or authorized custom tender, in one or many captures | Each capture has independent ID, currency, amount, method, source and status |
-| Refund/return | Authorized refund against tender and credit/debit note as legally appropriate | Never delete a payment or overwrite an issued invoice |
-| Shift closing | Count cash, view expected cash, declare variance, close and export | Shift report is immutable; supervisor corrections are follow-up records |
+| Entry point                    | POS flow                                                                                         | Shared behavior                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Walk-in / counter              | Start sale, select published menu and variants/add-ons, choose takeaway/dine-in and place order  | Creates canonical outlet order, kitchen receives a ticket where food preparation is required |
+| Existing QR order              | Find and attach an eligible unpaid ticket to a bill                                              | Does not recreate or duplicate an existing order                                             |
+| Existing Service Counter order | Open settlement from the order details                                                           | Order keeps its independent fulfillment lifecycle and version checks                         |
+| Dine-in table                  | View eligible open tickets and explicitly attach selected orders to a bill                       | Further repeat orders are separate tickets; bill assignment is audited                       |
+| Split group bill               | Assign selected full/partial line quantities into distinct settlement groups where policy allows | No order item is billed beyond its original quantity; immutable allocation                   |
+| Multiple tender                | Cash, card terminal, UPI, bank transfer or authorized custom tender, in one or many captures     | Each capture has independent ID, currency, amount, method, source and status                 |
+| Refund/return                  | Authorized refund against tender and credit/debit note as legally appropriate                    | Never delete a payment or overwrite an issued invoice                                        |
+| Shift closing                  | Count cash, view expected cash, declare variance, close and export                               | Shift report is immutable; supervisor corrections are follow-up records                      |
 
 ## Initial delivery scope
 

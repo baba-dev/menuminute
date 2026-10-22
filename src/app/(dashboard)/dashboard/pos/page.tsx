@@ -18,13 +18,36 @@ export default async function PosPage() {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
-  if (!outlet) return <main className="till-page"><h1>Select an outlet</h1><Link href="/onboarding">Set up an outlet</Link></main>;
+  if (!outlet)
+    return (
+      <main className="till-page">
+        <h1>Select an outlet</h1>
+        <Link href="/onboarding">Set up an outlet</Link>
+      </main>
+    );
   try {
-    const workspace = await posWorkspace({ userId: session.user.id, sessionId: session.session.id }, outlet.organizationId, outlet.id);
-    return <TheTill key={outlet.id} organizationId={outlet.organizationId} outletId={outlet.id} initial={workspace} />;
+    const workspace = await posWorkspace(
+      { userId: session.user.id, sessionId: session.session.id },
+      outlet.organizationId,
+      outlet.id
+    );
+    return (
+      <TheTill
+        key={outlet.id}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        initial={workspace}
+      />
+    );
   } catch (error) {
     if (error instanceof ForbiddenError)
-      return <main className="till-page"><h1>POS access required</h1><p>Your current outlet assignment does not permit the Till.</p><Link href="/dashboard">Return to dashboard</Link></main>;
+      return (
+        <main className="till-page">
+          <h1>POS access required</h1>
+          <p>Your current outlet assignment does not permit the Till.</p>
+          <Link href="/dashboard">Return to dashboard</Link>
+        </main>
+      );
     throw error;
   }
 }
