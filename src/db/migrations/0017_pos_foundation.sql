@@ -383,3 +383,20 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.pos_lookup_command(text,text,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.pos_lookup_command(text,text,text,text) TO menuminute_app;
+
+-- Bounded picker for eligible existing tickets; never exposes guest tracking capabilities.
+CREATE FUNCTION app_private.pos_attachable_orders(p_outlet text) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+ IF NOT app_private.pos_access(p_outlet,'read') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ RETURN COALESCE((SELECT jsonb_agg(jsonb_build_object('orderId',x.id,'orderNumber',x.order_number,
+ 'customerName',x.customer_name,'fulfillmentMode',x.fulfillment_mode,'status',x.status,
+ 'currency',x.currency,'subtotalMinor',x.subtotal_minor::text,'createdAt',x.created_at)
+ ORDER BY x.created_at DESC,x.id DESC)
+ FROM (SELECT o.* FROM orders o WHERE o.restaurant_id=p_outlet
+ AND o.status IN ('accepted','preparing','ready','served','collected') AND o.payment_status='unpaid'
+ AND NOT EXISTS(SELECT 1 FROM pos_sales s WHERE s.outlet_id=p_outlet AND s.order_id=o.id)
+ ORDER BY o.created_at DESC,o.id DESC LIMIT 30) x),'[]'::jsonb);
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_attachable_orders(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.pos_attachable_orders(text) TO menuminute_app;
