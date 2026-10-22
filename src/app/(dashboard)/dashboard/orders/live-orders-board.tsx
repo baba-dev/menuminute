@@ -271,9 +271,16 @@ export function LiveOrdersBoard({
   const show = (lane: string) => {
     if (lane === "today") {
       const date = new Intl.DateTimeFormat("en-CA", {
-        timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
       }).format(new Date());
-      setHistoryStatus("completed"); setFrom(date); setTo(date); setPage(0); setTab("history");
+      setHistoryStatus("completed");
+      setFrom(date);
+      setTo(date);
+      setPage(0);
+      setTab("history");
     } else if (lane === "history") setTab("history");
     else {
       setTab("active");
@@ -553,7 +560,10 @@ export function LiveOrdersBoard({
                               key={order.id}
                               order={order}
                               now={now || Date.now()}
-                              open={(item) => { setActivity(null); setSelected(item); }}
+                              open={(item) => {
+                                setActivity(null);
+                                setSelected(item);
+                              }}
                               busy={busyId === order.id}
                               perform={(ticket, status) => void mutate(ticket, status)}
                               decline={(ticket) => {
@@ -671,7 +681,10 @@ export function LiveOrdersBoard({
                       <button
                         type="button"
                         className="sc-secondary"
-                        onClick={() => { setActivity(null); setSelected(order); }}
+                        onClick={() => {
+                          setActivity(null);
+                          setSelected(order);
+                        }}
                       >
                         Details
                       </button>
@@ -710,7 +723,10 @@ export function LiveOrdersBoard({
       <Dialog.Root
         open={Boolean(currentSelected)}
         onOpenChange={(open) => {
-          if (!open) { setSelected(null); setActivity(null); }
+          if (!open) {
+            setSelected(null);
+            setActivity(null);
+          }
         }}
       >
         <Dialog.Portal>
