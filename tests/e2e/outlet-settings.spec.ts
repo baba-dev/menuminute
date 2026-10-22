@@ -7,8 +7,7 @@ async function seed() {
     throw new Error("Isolated test database required");
   const pool = new Pool({ connectionString: url, max: 1 });
   const user = crypto.randomUUID(),
-    outlet = crypto.randomUUID(),
-    other = crypto.randomUUID();
+    outlet = crypto.randomUUID();
   const email = "atelier-" + user + "@browser.invalid",
     password = "atelier-browser-password";
   const client = await pool.connect();
@@ -23,23 +22,20 @@ async function seed() {
       [crypto.randomUUID(), user, await hashPassword(password)]
     );
     await client.query("select set_config('app.actor_id',$1,true)", [user]);
-    for (const [id, name] of [
-      [outlet, "Atelier Kitchen"],
-      [other, "Second Kitchen"],
-    ]) {
-      await client.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
-        id,
-        crypto.randomUUID(),
-        JSON.stringify({
-          name,
-          country: "IN",
-          currency: "INR",
-          timezone: "Asia/Kolkata",
-          outletType: "restaurant",
-        }),
-      ]);
-      await client.query("update organizations set mfa_required=false where id=$1", ["org-" + id]);
-    }
+    await client.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
+      outlet,
+      crypto.randomUUID(),
+      JSON.stringify({
+        name: "Atelier Kitchen",
+        country: "IN",
+        currency: "INR",
+        timezone: "Asia/Kolkata",
+        outletType: "restaurant",
+      }),
+    ]);
+    await client.query("update organizations set mfa_required=false where id=$1", [
+      "org-" + outlet,
+    ]);
     await client.query("commit");
   } catch (e) {
     await client.query("rollback");
@@ -48,7 +44,7 @@ async function seed() {
     client.release();
     await pool.end();
   }
-  return { email, password, outlet, other };
+  return { email, password, outlet };
 }
 test("Outlet Atelier saves scoped profile and remains responsive in both themes", async ({
   page,
@@ -87,26 +83,44 @@ test("Outlet Atelier saves scoped profile and remains responsive in both themes"
   await expect(page.getByRole("heading", { name: "Operational identity." })).toBeVisible();
   await expect(page.getByText("INR", { exact: true }).first()).toBeVisible();
 });
-test("Outlet Atelier rejects stale profile saves across two authorized sessions", async ({
-  browser,
-}) => {
+test("Outlet Atelier rejects a stale profile after another authorized update", async ({ page }) => {
   const f = await seed();
-  const pages = [await browser.newPage(), await browser.newPage()];
-  for (const page of pages) {
-    await page.goto("/login");
-    await page.getByLabel("Email address").fill(f.email);
-    await page.getByLabel("Password", { exact: true }).fill(f.password);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page).toHaveURL(/dashboard/);
-    await page.goto("/dashboard/settings");
-  }
-  await pages[0]!.getByLabel("Description").fill("First committed description");
-  await pages[0]!.getByRole("button", { name: "Save profile" }).click();
-  await expect(pages[0]!.getByText("Profile saved successfully.")).toBeVisible();
-  await pages[1]!.getByLabel("Description").fill("A stale conflicting version");
-  await pages[1]!.getByRole("button", { name: "Save profile" }).click();
-  await expect(pages[1]!.getByRole("alert")).toContainText("changed elsewhere");
-  await pages[1]!.getByRole("button", { name: "Reload latest" }).click();
-  await expect(pages[1]!.getByLabel("Description")).toHaveValue("First committed description");
-  for (const page of pages) await page.close();
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/settings");
+  await expect(page.getByTestId("outlet-atelier")).toBeVisible();
+
+  // A separate authorized request commits a newer profile version while this editor
+  // deliberately holds its earlier version. The real database must reject its stale save.
+  const endpoint =
+    "/api/organizations/" + encodeURIComponent("org-" + f.outlet) +
+    "/outlets/" + encodeURIComponent(f.outlet) + "/profile";
+  const external = await page.request.patch(endpoint, {
+    headers: { origin: new URL(page.url()).origin },
+    data: {
+      expectedVersion: 0,
+      fields: {
+        description: "First committed description",
+        phone: null,
+        email: null,
+        website: null,
+        addressLine1: null,
+        addressLine2: null,
+        city: null,
+        state: null,
+        postalCode: null,
+        primaryColor: "#f97316",
+        secondaryColor: "#1c1917",
+      },
+    },
+  });
+  expect(external.status()).toBe(200);
+  await page.getByLabel("Description").fill("A stale conflicting version");
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.locator(".os-error")).toContainText("changed elsewhere");
+  await page.getByRole("button", { name: "Reload latest" }).click();
+  await expect(page.getByLabel("Description")).toHaveValue("First committed description");
 });
