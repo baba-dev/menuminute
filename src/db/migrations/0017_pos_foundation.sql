@@ -174,7 +174,7 @@ BEGIN
   AND actor_id=actor AND request_key=p_key FOR UPDATE;
  IF FOUND THEN
   IF prior.action<>'submit_order' OR prior.request_hash<>p_hash THEN RAISE EXCEPTION 'Key conflict' USING ERRCODE='40001'; END IF;
-  RETURN prior.result;
+  RETURN prior.result || jsonb_build_object('duplicate',true);
  END IF;
  IF p_data->>'fulfillmentMode' IS NULL OR p_data->>'fulfillmentMode' NOT IN ('dine_in','pickup')
  OR NOT (p_data->>'fulfillmentMode'=ANY(r.fulfillment_modes))
@@ -333,7 +333,7 @@ BEGIN
  AND actor_id=actor AND request_key=p_key FOR UPDATE;
  IF FOUND THEN
  IF prev.action<>'attach_order' OR prev.request_hash<>p_hash THEN RAISE EXCEPTION 'Key conflict' USING ERRCODE='40001'; END IF;
- RETURN prev.result;
+ RETURN prev.result || jsonb_build_object('duplicate',true);
  END IF;
  SELECT * INTO o FROM orders WHERE id=p_order AND restaurant_id=p_outlet FOR UPDATE;
  IF NOT FOUND OR o.status NOT IN ('accepted','preparing','ready','served','collected')
