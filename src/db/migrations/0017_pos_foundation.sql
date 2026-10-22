@@ -40,11 +40,12 @@ ALTER TABLE orders ADD CONSTRAINT orders_outlet_id_pos_unique UNIQUE (restaurant
 ALTER TABLE pos_sales ADD CONSTRAINT pos_sale_order_scope
  FOREIGN KEY (outlet_id,order_id) REFERENCES orders(restaurant_id,id) ON DELETE RESTRICT;
 CREATE INDEX pos_sales_scope_time ON pos_sales(outlet_id,created_at DESC,id DESC);
+ALTER TABLE order_items ADD CONSTRAINT pos_order_item_outlet_unique UNIQUE (restaurant_id,id);
 CREATE TABLE pos_sale_lines (
   id text PRIMARY KEY,
   outlet_id text NOT NULL,
   sale_id text NOT NULL,
-  order_item_id text NOT NULL REFERENCES order_items(id) ON DELETE RESTRICT,
+  order_item_id text NOT NULL,
   name_snapshot text NOT NULL,
   variant_snapshot text,
   options_snapshot jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -52,6 +53,7 @@ CREATE TABLE pos_sale_lines (
   unit_minor bigint NOT NULL CHECK(unit_minor>=0),
   line_minor bigint NOT NULL CHECK(line_minor>=0 AND line_minor=unit_minor*quantity::bigint),
   FOREIGN KEY (outlet_id,sale_id) REFERENCES pos_sales(outlet_id,id) ON DELETE RESTRICT,
+  FOREIGN KEY (outlet_id,order_item_id) REFERENCES order_items(restaurant_id,id) ON DELETE RESTRICT,
   UNIQUE(sale_id,order_item_id)
 );
 CREATE TABLE pos_commands (
