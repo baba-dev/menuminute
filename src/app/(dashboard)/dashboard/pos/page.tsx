@@ -25,29 +25,30 @@ export default async function PosPage() {
         <Link href="/onboarding">Set up an outlet</Link>
       </main>
     );
+  let workspace: Awaited<ReturnType<typeof posWorkspace>> | null = null;
   try {
-    const workspace = await posWorkspace(
+    workspace = await posWorkspace(
       { userId: session.user.id, sessionId: session.session.id },
       outlet.organizationId,
       outlet.id
     );
-    return (
-      <TheTill
-        key={outlet.id}
-        organizationId={outlet.organizationId}
-        outletId={outlet.id}
-        initial={workspace}
-      />
-    );
   } catch (error) {
-    if (error instanceof ForbiddenError)
-      return (
-        <main className="till-page">
-          <h1>POS access required</h1>
-          <p>Your current outlet assignment does not permit the Till.</p>
-          <Link href="/dashboard">Return to dashboard</Link>
-        </main>
-      );
-    throw error;
+    if (!(error instanceof ForbiddenError)) throw error;
   }
+  if (!workspace)
+    return (
+      <main className="till-page">
+        <h1>POS access required</h1>
+        <p>Your current outlet assignment does not permit the Till.</p>
+        <Link href="/dashboard">Return to dashboard</Link>
+      </main>
+    );
+  return (
+    <TheTill
+      key={outlet.id}
+      organizationId={outlet.organizationId}
+      outletId={outlet.id}
+      initial={workspace}
+    />
+  );
 }
