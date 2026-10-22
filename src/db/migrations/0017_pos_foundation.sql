@@ -201,6 +201,9 @@ BEGIN
  IF p_data->>'quotedAt' IS NULL OR (p_data->>'quotedAt')::timestamptz < clock_timestamp()-interval '30 seconds'
  OR (p_data->>'quotedAt')::timestamptz>clock_timestamp()+interval '2 seconds'
  THEN RAISE EXCEPTION 'Stale POS quote' USING ERRCODE='40001'; END IF;
+ IF p_data->>'expiresAt' IS NULL OR (p_data->>'expiresAt')::timestamptz<=clock_timestamp()
+ OR (p_data->>'expiresAt')::timestamptz>clock_timestamp()+interval '2 hours'
+ THEN RAISE EXCEPTION 'Invalid pending-order expiry' USING ERRCODE='22023'; END IF;
  -- First verify all lines before any business insert.
  FOR line IN SELECT value FROM jsonb_array_elements(p_data->'lines') LOOP
    qty:=(line->>'quantity')::integer;
@@ -262,7 +265,7 @@ BEGIN
  subtotal_minor,tax_minor,total_minor,subtotal_paise,tax_paise,total_paise,notes,business_date,order_number,version,expires_at)
  VALUES(order_id,p_outlet,v_table,NULLIF(p_data->>'customerName',''),p_data->>'fulfillmentMode','pending','unpaid',
  r.currency,subtotal,0,subtotal,subtotal,0,subtotal,NULLIF(p_data->>'notes',''),v_date,v_number,1,
- clock_timestamp()+interval '2 hours');
+ (p_data->>'expiresAt')::timestamptz);
  INSERT INTO pos_sales(id,organization_id,outlet_id,order_id,origin,currency,subtotal_minor,actor_id)
  VALUES(sale_id,r.organization_id,p_outlet,order_id,'staff',r.currency,subtotal,actor);
  -- Values re-read from the verified released catalogue: never copy a browser-supplied unit price.
