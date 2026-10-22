@@ -324,6 +324,18 @@ BEGIN
    (quote->>'taxableBaseMinor')::bigint,(quote->>'taxMinor')::bigint,(quote->>'totalMinor')::bigint,
    quote->'seller',COALESCE(p_data->'customer','{}'::jsonb),quote->'lines',
    (quote->>'taxProfileRevision')::integer,quote->>'taxMode');
+  -- Synchronize the operational order with the same snapshot. Inclusive prices
+  -- use the taxable base, so order subtotal + tax always equals total.
+  UPDATE orders SET subtotal_minor=(quote->>'taxableBaseMinor')::integer,
+   subtotal_paise=(quote->>'taxableBaseMinor')::integer,
+   tax_minor=(quote->>'taxMinor')::integer,tax_paise=(quote->>'taxMinor')::integer,
+   total_minor=(quote->>'totalMinor')::integer,total_paise=(quote->>'totalMinor')::integer,
+   version=version+1,updated_at=clock_timestamp()
+   WHERE id=sale.order_id AND restaurant_id=p_outlet;
+  INSERT INTO outbox_events(id,organization_id,outlet_id,type,schema_version,aggregate_version,payload)
+   SELECT gen_random_uuid()::text,r.organization_id,p_outlet,'order.financials_changed',1,version,
+   jsonb_build_object('orderId',sale.order_id,'totalMinor',total_minor,'currency',currency)
+   FROM orders WHERE id=sale.order_id;
   result:=quote||jsonb_build_object('frozen',true);
  WHEN 'open_shift' THEN
   IF length(btrim(COALESCE(p_data->>'registerName',''))) NOT BETWEEN 2 AND 40 THEN RAISE EXCEPTION 'Invalid register name' USING ERRCODE='22023'; END IF;
@@ -583,7 +595,7 @@ BEGIN
  UNION ALL
  SELECT b.sale_id,'bill_line_total_mismatch' FROM pos_bills b
  WHERE b.outlet_id=p_outlet AND
-  COALESCE((SELECT sum((l->>'totalMinor')::bigint) FROM jsonb_array_elements(b.line_snapshot) l),0)<>b.total_minor
+  COALESCE((SELECT sum((l.value->>'totalMinor')::bigint) FROM jsonb_array_elements(b.line_snapshot) l(value)),0)<>b.total_minor
  UNION ALL
  SELECT b.sale_id,'settlement_order_mismatch' FROM pos_bills b JOIN pos_sales s ON s.id=b.sale_id
  JOIN orders o ON o.id=s.order_id WHERE b.outlet_id=p_outlet AND o.payment_status='paid'
