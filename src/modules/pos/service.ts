@@ -91,7 +91,6 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
   const instant = new Date(product.now);
   const menus = product.menus.map((menu) => ({
     id: menu.id, revision: menu.revision,
-    name: menu.document.name,
     ...projectMenu(menu.document, product.outlet.timezone, instant, menu.overrides),
   }));
   return { context, menus, recent, attachable };
