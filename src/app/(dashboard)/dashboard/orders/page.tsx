@@ -1,37 +1,27 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { LiveOrdersBoard } from "./live-orders-board";
+import "@/components/orders/service-counter.css";
 
-export const metadata = {
-  title: "Live Orders — MenuMinute",
-  description: "Real-time customer table and takeaway order management.",
+export const metadata: Metadata = {
+  title: "The Service Counter | Orders",
+  description: "Private outlet-specific order operations and service history.",
+  robots: { index: false, follow: false },
 };
 
 export default async function OrdersPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-
-  const actor = { userId: session.user.id };
-  const outlet = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
-
-  if (!outlet) {
-    return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
-        <h1 className="text-lg font-bold text-stone-900 dark:text-white">Select an outlet</h1>
-        <p className="mt-1 text-xs text-stone-500">
-          Please select or set up a restaurant outlet to view incoming orders.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <LiveOrdersBoard
-      key={outlet.id}
-      organizationId={outlet.organizationId}
-      outletId={outlet.id}
-      currency={outlet.currency}
-    />
-  );
+  if (!session?.user.id) redirect("/login");
+  const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
+  if (!outlet) return <main className="service-counter sc-no-outlet">
+    <span className="sc-eyebrow">THE SERVICE COUNTER</span>
+    <h1>Select an outlet</h1>
+    <p>Choose or create an outlet before managing incoming orders.</p>
+    <Link href="/onboarding" className="sc-hero-primary">Set up an outlet →</Link>
+  </main>;
+  return <LiveOrdersBoard key={outlet.id} organizationId={outlet.organizationId}
+    outletId={outlet.id} outletName={outlet.name} currency={outlet.currency} timezone={outlet.timezone}/>;
 }
