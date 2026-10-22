@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
+
+test.beforeEach(async ({ page }) => {
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+});
 async function seed() {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
@@ -96,8 +100,11 @@ test("Outlet Atelier rejects a stale profile after another authorized update", a
   // A separate authorized request commits a newer profile version while this editor
   // deliberately holds its earlier version. The real database must reject its stale save.
   const endpoint =
-    "/api/organizations/" + encodeURIComponent("org-" + f.outlet) +
-    "/outlets/" + encodeURIComponent(f.outlet) + "/profile";
+    "/api/organizations/" +
+    encodeURIComponent("org-" + f.outlet) +
+    "/outlets/" +
+    encodeURIComponent(f.outlet) +
+    "/profile";
   const external = await page.request.patch(endpoint, {
     headers: { origin: new URL(page.url()).origin },
     data: {
