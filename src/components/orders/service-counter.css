@@ -58,7 +58,7 @@
   isolation: isolate;
   min-height: 392px;
   overflow: hidden;
-  background: #f5e0c5 url("/brand/orders/service-counter/hero-desktop-light.png") center right /
+  background: #f5e0c5 url("/brand/orders/service-counter/hero-desktop-light.webp") center right /
     cover no-repeat;
   color: #39251b;
 }
@@ -72,7 +72,7 @@
 }
 :root[data-theme="dark"] .sc-hero {
   background-color: #211812;
-  background-image: url("/brand/orders/service-counter/hero-desktop-dark.png");
+  background-image: url("/brand/orders/service-counter/hero-desktop-dark.webp");
   color: #fff0dd;
 }
 :root[data-theme="dark"] .sc-hero::before {

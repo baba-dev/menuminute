@@ -2,8 +2,8 @@
   "collection": "MenuMinute Orders 2.0 — The Service Counter",
   "version": 1,
   "basePath": "/brand/orders/service-counter/",
-  "status": "AWAITING_UPLOAD",
-  "integration": "media-only; not referenced by the live Orders route",
+  "status": "BUILD_GENERATED_FROM_APPROVED_PNG_MASTERS",
+  "integration": "Desktop WebPs are generated at build/dev time from committed PNG masters; other five WebPs are committed.",
   "assets": [
     {
       "filename": "hero-desktop-light.webp",
@@ -12,7 +12,8 @@
       "transparent": false,
       "usage": "Full-bleed desktop light hero",
       "bytes": null,
-      "sha256": null
+      "sha256": null,
+      "sourceFile": "hero-desktop-light.png"
     },
     {
       "filename": "hero-desktop-dark.webp",
@@ -21,7 +22,8 @@
       "transparent": false,
       "usage": "Full-bleed desktop dark hero",
       "bytes": null,
-      "sha256": null
+      "sha256": null,
+      "sourceFile": "hero-desktop-dark.png"
     },
     {
       "filename": "hero-mobile-light.webp",

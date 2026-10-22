@@ -9,14 +9,12 @@ import {
   BellRing,
   CheckCircle2,
   ChefHat,
-  Clock3,
   History,
   RefreshCw,
   Search,
   Volume2,
   VolumeX,
   X,
-  UtensilsCrossed,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { playOrderChime } from "@/lib/sound";
@@ -123,11 +121,15 @@ export function LiveOrdersBoard({
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    setSound(window.localStorage.getItem("menuminute.orders.sound") === "enabled");
-    const tick = () => setNow(Date.now());
-    tick();
-    const id = window.setInterval(tick, 30000);
-    return () => window.clearInterval(id);
+    const restore = window.setTimeout(
+      () => setSound(window.localStorage.getItem("menuminute.orders.sound") === "enabled"),
+      0
+    );
+    const id = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => {
+      window.clearTimeout(restore);
+      window.clearInterval(id);
+    };
   }, []);
   useEffect(() => {
     soundRef.current = sound;
@@ -181,7 +183,7 @@ export function LiveOrdersBoard({
   }, [base]);
 
   useEffect(() => {
-    void refresh();
+    const start = window.setTimeout(() => void refresh(), 0);
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 5000);
@@ -192,6 +194,7 @@ export function LiveOrdersBoard({
     document.addEventListener("visibilitychange", onReturn);
     return () => {
       refreshController.current?.abort();
+      window.clearTimeout(start);
       window.clearInterval(interval);
       window.removeEventListener("online", onReturn);
       document.removeEventListener("visibilitychange", onReturn);
@@ -237,13 +240,9 @@ export function LiveOrdersBoard({
 
   const selectedId = selected?.id;
   useEffect(() => {
-    if (!selectedId) {
-      setActivity(null);
-      return;
-    }
+    if (!selectedId) return;
     const controller = new AbortController();
     const load = async () => {
-      setActivity(null);
       try {
         const result = await responseData<{ events: Activity[]; truncated: boolean }>(
           await fetch(base + "/" + encodeURIComponent(selectedId) + "/activity", {
@@ -311,11 +310,11 @@ export function LiveOrdersBoard({
       setPaying(null);
       await refresh();
     } catch (cause) {
+      await refresh();
       setError(
         (cause instanceof Error ? cause.message : "The outcome is uncertain.") +
           " If connectivity was lost, synchronize before attempting the action again."
       );
-      await refresh();
     } finally {
       busyRef.current.delete(order.id);
       setBusyId(null);
@@ -547,7 +546,7 @@ export function LiveOrdersBoard({
                               key={order.id}
                               order={order}
                               now={now || Date.now()}
-                              open={setSelected}
+                              open={(item) => { setActivity(null); setSelected(item); }}
                               busy={busyId === order.id}
                               perform={(ticket, status) => void mutate(ticket, status)}
                               decline={(ticket) => {
@@ -665,7 +664,7 @@ export function LiveOrdersBoard({
                       <button
                         type="button"
                         className="sc-secondary"
-                        onClick={() => setSelected(order)}
+                        onClick={() => { setActivity(null); setSelected(order); }}
                       >
                         Details
                       </button>
@@ -704,7 +703,7 @@ export function LiveOrdersBoard({
       <Dialog.Root
         open={Boolean(currentSelected)}
         onOpenChange={(open) => {
-          if (!open) setSelected(null);
+          if (!open) { setSelected(null); setActivity(null); }
         }}
       >
         <Dialog.Portal>
