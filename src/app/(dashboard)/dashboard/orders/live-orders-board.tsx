@@ -237,7 +237,7 @@ export function LiveOrdersBoard({
     };
     void load();
     return () => controller.abort();
-  }, [tab, historyStatus, mode, payment, page, debounced, from, to, base, lastSync]);
+  }, [tab, historyStatus, mode, payment, page, debounced, from, to, base, historyRevision]);
 
   const selectedId = selected?.id;
   useEffect(() => {
