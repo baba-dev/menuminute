@@ -268,9 +268,14 @@ CREATE FUNCTION app_private.pos_finance_replay(p_outlet text,p_key text,p_hash t
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE prev pos_finance_commands%ROWTYPE;
 BEGIN
- IF NOT app_private.pos_access(p_outlet,'read') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ IF NOT app_private.pos_access(p_outlet,CASE p_action WHEN 'profile' THEN 'configure'
+  WHEN 'freeze' THEN 'sale' WHEN 'open_shift' THEN 'shift' WHEN 'cash_move' THEN 'shift'
+  WHEN 'tender' THEN 'collect' WHEN 'close_shift' THEN 'close' WHEN 'issue' THEN 'document'
+  WHEN 'refund' THEN 'refund' ELSE '' END) THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO prev FROM pos_finance_commands WHERE outlet_id=p_outlet AND request_key=p_key;
  IF NOT FOUND THEN RETURN NULL; END IF;
+ IF prev.actor_id IS DISTINCT FROM NULLIF(current_setting('app.actor_id',true),'') THEN
+  RAISE EXCEPTION 'Replay belongs to a different actor' USING ERRCODE='42501'; END IF;
  IF prev.request_hash<>p_hash OR prev.action<>p_action THEN RAISE EXCEPTION 'Key conflict' USING ERRCODE='40001'; END IF;
  RETURN prev.result||jsonb_build_object('duplicate',true);
 END $$;
@@ -453,7 +458,10 @@ BEGIN
   THEN RAISE EXCEPTION 'Document, reason and open shift required' USING ERRCODE='22023'; END IF;
   IF EXISTS(SELECT 1 FROM pos_refunds WHERE sale_id=sale.id) THEN
    RAISE EXCEPTION 'Full sale refund already recorded' USING ERRCODE='40001'; END IF;
-  -- Full-sale refund only in this phase; every tender is reversed to its original method.
+  IF EXISTS(SELECT 1 FROM pos_tenders WHERE sale_id=sale.id AND method<>'cash')
+    AND p_data->>'externalRefundAttested' IS DISTINCT FROM 'true' THEN
+   RAISE EXCEPTION 'External reversal requires staff attestation' USING ERRCODE='22023'; END IF;
+  -- Staff-recorded full-sale reversal, not a payment-provider refund API call.
   FOR t IN SELECT * FROM pos_tenders WHERE sale_id=sale.id AND outlet_id=p_outlet ORDER BY id LOOP
    INSERT INTO pos_refunds(id,organization_id,outlet_id,sale_id,tender_id,shift_id,amount_minor,reason,actor_id)
    VALUES('refund-'||gen_random_uuid()::text,r.organization_id,p_outlet,sale.id,t.id,shift.id,
