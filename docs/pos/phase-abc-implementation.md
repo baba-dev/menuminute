@@ -19,7 +19,7 @@ Do not confuse a merged PR, passing CI or a schema migration with an activated f
 
 ## B — durable restricted schema
 
-- Additive migration: `src/db/migrations/0017_pos_foundation.sql`.
+- Additive migration: `src/db/migrations/0018_pos_foundation.sql`.
 - New tables: `pos_outlet_settings`, `pos_seller_profiles`, `pos_sales`,
   `pos_sale_lines` and `pos_commands`.
 - Composite organization/outlet and outlet/order relationships and a unique outlet/order sale
