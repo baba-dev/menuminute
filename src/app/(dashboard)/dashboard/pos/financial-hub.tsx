@@ -3,7 +3,6 @@ import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  Banknote,
   BookOpenText,
   ClipboardCheck,
   FileText,
@@ -11,12 +10,10 @@ import {
   Printer,
   RefreshCcw,
   ShieldCheck,
-  WalletCards,
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
 import type {
   Detail,
-  DocumentDetail,
   FinanceContext,
   LedgerRow,
   ShiftRow,
