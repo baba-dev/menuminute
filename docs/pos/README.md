@@ -15,7 +15,7 @@ This is worldwide software. Outlet country, ISO currency, locale, IANA timezone,
 - The owner-only app_private.record_order_payment function in migration 0006 changes unpaid to paid/voided, logs an audit and emits an outbox event. This is NOT a tender ledger, split payment, gateway transaction or invoice.
 - Service Counter, Kitchen Pro, outlet ACLs and the transactional outbox already exist. Integrate through their service contracts rather than direct cross-module writes.
 - docs/architecture.md and docs/domain-invariants.md mandate PostgreSQL authority, explicit tenant scope, immutable historical money, versioned commands and duplicate-safe delivery.
-- The currently reviewed SQL migration journal ends at 0016. Never edit its historical migrations or imply that main equals the deployed VPS revision.
+- The currently reviewed SQL migration journal ends at 0017. Never edit its historical migrations or imply that main equals the deployed VPS revision.
 
 ## Connected merchant journeys
 
