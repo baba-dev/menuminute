@@ -176,7 +176,7 @@ BEGIN
   IF prior.action<>'submit_order' OR prior.request_hash<>p_hash THEN RAISE EXCEPTION 'Key conflict' USING ERRCODE='40001'; END IF;
   RETURN prior.result;
  END IF;
- IF p_data->>'fulfillmentMode' NOT IN ('dine_in','pickup')
+ IF p_data->>'fulfillmentMode' IS NULL OR p_data->>'fulfillmentMode' NOT IN ('dine_in','pickup')
  OR NOT (p_data->>'fulfillmentMode'=ANY(r.fulfillment_modes))
  OR jsonb_typeof(p_data->'lines') IS DISTINCT FROM 'array'
  OR jsonb_array_length(p_data->'lines') NOT BETWEEN 1 AND 50
@@ -198,7 +198,7 @@ BEGIN
  doc:=m->'document';
  IF doc->>'currency' IS DISTINCT FROM r.currency THEN RAISE EXCEPTION 'Currency mismatch' USING ERRCODE='22023'; END IF;
  -- The server separately checks item/menu schedules at quote time. Limit the short request-to-commit interval.
- IF (p_data->>'quotedAt')::timestamptz < clock_timestamp()-interval '30 seconds'
+ IF p_data->>'quotedAt' IS NULL OR (p_data->>'quotedAt')::timestamptz < clock_timestamp()-interval '30 seconds'
  OR (p_data->>'quotedAt')::timestamptz>clock_timestamp()+interval '2 seconds'
  THEN RAISE EXCEPTION 'Stale POS quote' USING ERRCODE='40001'; END IF;
  -- First verify all lines before any business insert.
@@ -225,9 +225,9 @@ BEGIN
      v_base:=COALESCE((override_row->>'priceMinor')::bigint,(dish->>'priceMinor')::bigint);
    END IF;
    unit_price:=v_base; v_options:='[]'::jsonb;
-   IF jsonb_array_length(line->'groups')<>jsonb_array_length((SELECT COALESCE(jsonb_agg(value),'[]'::jsonb)
-    FROM jsonb_array_elements(dish->'addOnGroups') WHERE EXISTS
-    (SELECT 1 FROM jsonb_array_elements(line->'groups') g WHERE g->>'groupId'=value->>'id'))) THEN
+   IF EXISTS(SELECT 1 FROM jsonb_array_elements(line->'groups') chosen
+     WHERE NOT EXISTS(SELECT 1 FROM jsonb_array_elements(dish->'addOnGroups') valid
+       WHERE valid->>'id'=chosen->>'groupId')) THEN
      RAISE EXCEPTION 'Invalid add-on group' USING ERRCODE='22023'; END IF;
    FOR grp IN SELECT value FROM jsonb_array_elements(dish->'addOnGroups') LOOP
      SELECT value INTO picked FROM jsonb_array_elements(line->'groups') WHERE value->>'groupId'=grp->>'id' LIMIT 1;
@@ -367,3 +367,19 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.pos_recent_sales(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.pos_recent_sales(text) TO menuminute_app;
+
+-- Recover an already-committed command before re-quoting a changed menu or after HTTP loss.
+CREATE FUNCTION app_private.pos_lookup_command(p_outlet text,p_key text,p_hash text,p_action text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE existing pos_commands%ROWTYPE;
+BEGIN
+ IF NOT app_private.pos_access(p_outlet,'read') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ SELECT * INTO existing FROM pos_commands WHERE outlet_id=p_outlet AND
+ actor_id=NULLIF(current_setting('app.actor_id',true),'') AND request_key=p_key;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ IF existing.request_hash<>p_hash OR existing.action<>p_action THEN
+ RAISE EXCEPTION 'Key conflict' USING ERRCODE='40001'; END IF;
+ RETURN existing.result || jsonb_build_object('duplicate',true);
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_lookup_command(text,text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.pos_lookup_command(text,text,text,text) TO menuminute_app;
