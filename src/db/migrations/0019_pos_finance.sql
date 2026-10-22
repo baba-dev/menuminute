@@ -286,7 +286,7 @@ CREATE FUNCTION app_private.pos_finance_command(p_outlet text,p_key text,p_hash 
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE r restaurants%ROWTYPE; gate pos_finance_gates%ROWTYPE; prior pos_finance_commands%ROWTYPE;
  seller pos_seller_profiles%ROWTYPE; bill pos_bills%ROWTYPE; sale pos_sales%ROWTYPE;
- shift pos_shifts%ROWTYPE; t pos_tenders%ROWTYPE; original pos_documents%ROWTYPE;
+ shift pos_shifts%ROWTYPE; v_tender pos_tenders%ROWTYPE; original pos_documents%ROWTYPE;
  result jsonb; quote jsonb; v_new_id text; year integer; serial integer; document_no text; v_kind text;
  sum_paid bigint; sum_refund bigint; due bigint; amt bigint; tendered bigint; opening bigint;
  expected_cash bigint; signed_move bigint; line jsonb; actor text:=NULLIF(current_setting('app.actor_id',true),'');
@@ -462,10 +462,10 @@ BEGIN
     AND p_data->>'externalRefundAttested' IS DISTINCT FROM 'true' THEN
    RAISE EXCEPTION 'External reversal requires staff attestation' USING ERRCODE='22023'; END IF;
   -- Staff-recorded full-sale reversal, not a payment-provider refund API call.
-  FOR t IN SELECT * FROM pos_tenders WHERE sale_id=sale.id AND outlet_id=p_outlet ORDER BY id LOOP
+  FOR v_tender IN SELECT * FROM pos_tenders WHERE sale_id=sale.id AND outlet_id=p_outlet ORDER BY id LOOP
    INSERT INTO pos_refunds(id,organization_id,outlet_id,sale_id,tender_id,shift_id,amount_minor,reason,actor_id)
-   VALUES('refund-'||gen_random_uuid()::text,r.organization_id,p_outlet,sale.id,t.id,shift.id,
-    t.amount_minor,btrim(p_data->>'reason'),actor);
+   VALUES('refund-'||gen_random_uuid()::text,r.organization_id,p_outlet,sale.id,v_tender.id,shift.id,
+    v_tender.amount_minor,btrim(p_data->>'reason'),actor);
   END LOOP;
   year:=extract(year FROM clock_timestamp() AT TIME ZONE r.timezone)::integer;v_kind:='credit_note';
   INSERT INTO pos_document_sequences(outlet_id,fiscal_year,kind,last_number) VALUES(p_outlet,year,v_kind,1)
