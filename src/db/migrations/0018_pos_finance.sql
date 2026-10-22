@@ -71,7 +71,7 @@ CREATE TABLE pos_tenders (
  FOREIGN KEY(outlet_id,sale_id) REFERENCES pos_bills(outlet_id,sale_id),
  FOREIGN KEY(outlet_id,shift_id) REFERENCES pos_shifts(outlet_id,id),
  FOREIGN KEY(organization_id,outlet_id) REFERENCES restaurants(organization_id,id),
- UNIQUE(outlet_id,id),
+ UNIQUE(outlet_id,id),UNIQUE(outlet_id,sale_id,id),
  CHECK(method='cash' OR (change_minor=0 AND reference IS NOT NULL AND length(btrim(reference)) BETWEEN 3 AND 80))
 );
 CREATE INDEX pos_tender_sale ON pos_tenders(outlet_id,sale_id,created_at);
@@ -82,7 +82,7 @@ CREATE TABLE pos_refunds (
  reason text NOT NULL CHECK(length(btrim(reason)) BETWEEN 5 AND 200),
  actor_id text NOT NULL REFERENCES users(id),created_at timestamptz NOT NULL DEFAULT now(),
  FOREIGN KEY(outlet_id,sale_id) REFERENCES pos_bills(outlet_id,sale_id),
- FOREIGN KEY(outlet_id,tender_id) REFERENCES pos_tenders(outlet_id,id),
+ FOREIGN KEY(outlet_id,sale_id,tender_id) REFERENCES pos_tenders(outlet_id,sale_id,id),
  FOREIGN KEY(outlet_id,shift_id) REFERENCES pos_shifts(outlet_id,id),
  FOREIGN KEY(organization_id,outlet_id) REFERENCES restaurants(organization_id,id),
  UNIQUE(outlet_id,id)
@@ -96,13 +96,13 @@ CREATE TABLE pos_documents (
  id text PRIMARY KEY,organization_id text NOT NULL,outlet_id text NOT NULL,
  sale_id text NOT NULL,kind text NOT NULL CHECK(kind IN ('receipt','invoice','credit_note')),
  fiscal_year integer NOT NULL,serial integer NOT NULL CHECK(serial>0),
- document_number text NOT NULL,source_document_id text REFERENCES pos_documents(id),
+ document_number text NOT NULL,source_document_id text,
  snapshot jsonb NOT NULL,issued_by text NOT NULL REFERENCES users(id),
  issued_at timestamptz NOT NULL DEFAULT now(),
  FOREIGN KEY(outlet_id,sale_id) REFERENCES pos_bills(outlet_id,sale_id),
  FOREIGN KEY(organization_id,outlet_id) REFERENCES restaurants(organization_id,id),
  UNIQUE(outlet_id,fiscal_year,kind,serial),UNIQUE(outlet_id,document_number),
- UNIQUE(outlet_id,id)
+ UNIQUE(outlet_id,id),FOREIGN KEY(outlet_id,source_document_id) REFERENCES pos_documents(outlet_id,id)
 );
 CREATE UNIQUE INDEX pos_one_original_document ON pos_documents(outlet_id,sale_id)
  WHERE kind IN ('receipt','invoice');
@@ -197,7 +197,7 @@ BEGIN
  OR (item->>'rateBps')::integer NOT BETWEEN 0 AND 10000
  THEN RAISE EXCEPTION 'Invalid tax classification' USING ERRCODE='22023'; END IF;
  END LOOP;
- IF (SELECT count(DISTINCT item->>'dishId') FROM jsonb_array_elements(p_data->'classes') item)
+ IF (SELECT count(DISTINCT item.value->>'dishId') FROM jsonb_array_elements(p_data->'classes') item(value))
  <>jsonb_array_length(p_data->'classes') THEN RAISE EXCEPTION 'Duplicate tax class' USING ERRCODE='22023'; END IF;
  INSERT INTO pos_tax_profiles(outlet_id,organization_id,mode,inclusive,tax_label,revision)
  VALUES(p_outlet,r.organization_id,p_data->>'mode',(p_data->>'inclusive')::boolean,p_data->>'taxLabel',1)
@@ -206,8 +206,8 @@ BEGIN
  RETURNING revision INTO v;
  DELETE FROM pos_tax_classes WHERE outlet_id=p_outlet;
  INSERT INTO pos_tax_classes(outlet_id,dish_id,rate_bps,classification)
- SELECT p_outlet,item->>'dishId',(item->>'rateBps')::integer,item->>'classification'
- FROM jsonb_array_elements(p_data->'classes') item;
+ SELECT p_outlet,item.value->>'dishId',(item.value->>'rateBps')::integer,item.value->>'classification'
+ FROM jsonb_array_elements(p_data->'classes') item(value);
  result:=jsonb_build_object('revision',v,'mode',p_data->>'mode');
  INSERT INTO pos_finance_commands(organization_id,outlet_id,request_key,request_hash,action,result,actor_id)
  VALUES(r.organization_id,p_outlet,p_key,p_hash,'profile',result,current_setting('app.actor_id',true));
@@ -352,8 +352,9 @@ BEGIN
   IF bill.sale_id IS NULL OR shift.id IS NULL OR shift.state<>'open' OR shift.currency<>bill.currency OR
    (shift.actor_id<>actor AND NOT app_private.pos_access(p_outlet,'close'))
   THEN RAISE EXCEPTION 'Open assigned shift and frozen bill required' USING ERRCODE='42501'; END IF;
-  IF EXISTS(SELECT 1 FROM orders WHERE id=sale.order_id AND status IN ('rejected','cancelled','expired'))
-  THEN RAISE EXCEPTION 'Cancelled order cannot be paid' USING ERRCODE='22023'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM orders WHERE id=sale.order_id AND restaurant_id=p_outlet
+   AND status IN ('accepted','preparing','ready','served','collected'))
+  THEN RAISE EXCEPTION 'Order must be accepted before collection' USING ERRCODE='22023'; END IF;
   IF p_data->>'method' NOT IN ('cash','card_external','upi_external','bank_external')
   THEN RAISE EXCEPTION 'Invalid payment method' USING ERRCODE='22023'; END IF;
   amt:=(p_data->>'amountMinor')::bigint;tendered:=(p_data->>'tenderedMinor')::bigint;
