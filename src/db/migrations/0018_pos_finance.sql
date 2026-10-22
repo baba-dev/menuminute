@@ -512,10 +512,10 @@ BEGIN
   ORDER BY d.issued_at,d.serial) FROM pos_documents d WHERE d.sale_id=s.id),'[]'::jsonb));
 END $$;
 CREATE FUNCTION app_private.pos_document_detail(p_outlet text,p_document text) RETURNS jsonb
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $
 DECLARE d pos_documents%ROWTYPE;
 BEGIN
- IF NOT app_private.pos_access(p_outlet,'document') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ IF NOT app_private.pos_access(p_outlet,'ledger') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO d FROM pos_documents WHERE outlet_id=p_outlet AND id=p_document;
  IF NOT FOUND THEN RAISE EXCEPTION 'Document unavailable' USING ERRCODE='22023'; END IF;
  RETURN jsonb_build_object('id',d.id,'number',d.document_number,'kind',d.kind,'issuedAt',d.issued_at,
