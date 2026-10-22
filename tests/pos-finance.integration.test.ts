@@ -79,7 +79,7 @@ describe("POS D–G real PostgreSQL finance integration",()=>{
   expect(printable.number).toBe(issued.documentNumber);
   expect(printable.snapshot.bill.totalMinor).toBe("28000");
   const refunded=await f.cmd("refund",{saleId:f.sale.saleId,shiftId:opened.shiftId,
-   reason:"Customer received full reversal"}) as {kind:string;refundedMinor:string};
+   reason:"Customer received full reversal",externalRefundAttested:true}) as {kind:string;refundedMinor:string};
   expect(refunded).toMatchObject({kind:"credit_note",refundedMinor:"28000"});
   const closing=await f.cmd("close_shift",{shiftId:opened.shiftId,countedMinor:"10000"}) as {expectedMinor:string;varianceMinor:string};
   // Opening 10000 + applied cash 10000 - fully reversed cash 10000.
