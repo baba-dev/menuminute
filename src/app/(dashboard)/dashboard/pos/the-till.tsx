@@ -6,13 +6,14 @@ import { ArrowRight, CheckCircle2, ClipboardList, Minus, Plus, RefreshCcw, Searc
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 
+type Menu = PosWorkspace["menus"][number];
 type Dish = Menu["categories"][number]["items"][number];
 type Line = QuoteInput["lines"][number];
 type CartLine = { id: string; line: Line; name: string; variantName: string | null; unitMinor: number };
 type AttachOrder = PosWorkspace["attachable"][number];
 
 function money(minor: number | string, currency: string) {
-  const precision = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+  const precision = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
   const amount = Number(minor) / 10 ** precision;
   return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
 }
