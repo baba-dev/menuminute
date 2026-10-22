@@ -112,7 +112,7 @@ BEGIN
   'seller',CASE WHEN p.outlet_id IS NULL THEN NULL ELSE jsonb_build_object('legalName',p.legal_name,
   'registeredAddress',p.registered_address,'country',p.country,'taxRegime',p.tax_regime,
   'taxRegistration',p.tax_registration,'revision',p.revision) END,
-  'currency',r.currency,'outletName',r.name,'token',token,'tables',t);
+  'currency',r.currency,'country',r.country,'fulfillmentModes',r.fulfillment_modes,'outletName',r.name,'token',token,'tables',t);
 END $$;
 REVOKE ALL ON FUNCTION app_private.pos_context(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.pos_context(text) TO menuminute_app;
