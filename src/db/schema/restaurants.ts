@@ -47,6 +47,7 @@ export const restaurants = pgTable(
     secondaryColor: text("secondary_color").default("#1c1917"),
     // Currency — ISO 4217 code (INR, USD, etc.)
     currency: text("currency").notNull().default("INR"),
+    profileVersion: integer("profile_version").notNull().default(0),
     // Status
     isActive: boolean("is_active").notNull().default(true),
     isDemoData: boolean("is_demo_data").notNull().default(false),
