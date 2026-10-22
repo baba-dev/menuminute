@@ -1,0 +1,91 @@
+# POS financial and integration contracts (proposed)
+
+Status: RFC for [POS epic #142](https://github.com/baba-dev/menuminute/issues/142); schema names are proposed, not yet migrated.
+
+## Source of truth and boundaries
+
+- PostgreSQL is the ONLY durable authority for sales, tender allocations, fiscal documents, register shifts, audit and event intent. Redis and client state are projections, not financial ledgers.
+- Organization and outlet isolation is enforced in service commands, restricted SECURITY DEFINER SQL entry points and composite references. No authenticated direct INSERT/UPDATE/DELETE privileges on financial tables.
+- A POS sale optionally links one or more canonical orders through scoped sale_order_bindings. A canonical order must not be double-billed, including across simultaneous terminals; split-line allocation, when enabled, locks and limits quantity.
+- A POS-originated kitchen food sale creates a regular order using server-published-menu selection and staff authentication. Existing order acceptance/preparation/release authority remains in the orders/kitchen modules.
+- Outlet currency is an immutable sale snapshot. Store integer minor-unit decimal strings at application boundaries, use checked bigint in SQL and BigInt/decimal arithmetic in server calculations. Respect ISO exponent (e.g. OMR 3). Do not use floating point for taxes or proportional discounts.
+
+## State machines
+
+Sale: draft -> open -> finalized or cancelled. Finalized is a financial snapshot; later corrections are linked adjustments. No hard delete of completed sale.
+
+Bill: draft -> approved -> issued (where required by jurisdiction). A draft pro-forma has no fiscal serial. Only issue commits immutable numbers, fiscal seller/tax/buyer/line snapshots and an audit/outbox event. Invoice issuance and payment are not forced to happen in either universal order.
+
+Tender attempt: initiated -> pending_external -> captured or failed/uncertain. A manual tender entry is marked as staff-recorded, not external provider-confirmed. Duplicate provider callbacks or repeated commands resolve the same attempt, and uncertain outcomes must be reconciled before retrying collection.
+
+Refund: requested -> approved -> pending_external -> recorded/confirmed or uncertain/rejected, linked to original captured tender. A refund and any credit/debit note are distinct legal/accounting events and must agree under applicable policy; no silent invoice deletion.
+
+Shift: open -> counting -> closed. Once closed the declared count and Z snapshot are immutable; new corrections are follow-up audit records. Cash drops/payouts are explicit movements, not negative sales.
+
+## Proposed data ownership
+
+| Table / entity                              | Key fields and constraints                                                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| pos_merchant_profiles                       | organization, issuing legal entity, country, legal name/address; versioned and never used to rewrite history                                    |
+| pos_outlet_tax_profiles                     | composite outlet/organization scope, regime, registration IDs, timezone/currency, effective interval, enabled document types, validation status |
+| pos_registers and pos_shifts                | outlet/register identity, assigned device/actor, opening float, expected/declaration snapshots, immutable closing/report sequence               |
+| pos_sales and pos_sale_lines                | organization/outlet, origin, currency/exponent, snapshot price/quantity/discount/tax/totals, version, sale business date and status             |
+| pos_sale_order_bindings                     | sale/order/outlet relation with unique allocation constraints; double billing prohibited                                                        |
+| pos_tender_attempts and pos_tender_entries  | sale, method, currency, captured/refunded amount, external reference/type, idempotency key/hash, actor, timestamps; append-only money movements |
+| pos_documents and pos_document_lines        | outlet/fiscal series/type/serial unique, issued_at, immutable seller/buyer/tax/item/total snapshots, rendered artifact provenance/hash          |
+| pos_document_tax_lines                      | tax code, taxable base, basis points/amount, jurisdiction attributes, rate/profile version and rounding provenance                              |
+| pos_document_corrections                    | credit/debit note and original-document relation, reason, approvals and immutable financial deltas                                              |
+| pos_fiscal_sequences                        | locked issuer/outlet/document-type/fiscal-year series and last allocation; serials never generated by MAX+1                                     |
+| pos_cash_movements                          | shift, signed amount, reason, actor, supervisory approval and immutable timestamp                                                               |
+| pos_commands / domain_audit / outbox_events | scoped idempotency, actor/session audit, aggregate version, redacted event payload and durable effects                                          |
+
+DB should enforce check constraints for currency/positive quantities/non-negative payable totals, relationship scope, immutable issued records, unique series, tender external idempotency and monetary bound. Prefer append-only entries to a mutable balance column; derive balances transactionally and expose bounded read projections.
+
+## Financial computation contract
+
+A server-only, versioned calculation policy must specify:
+
+1. Re-read released menu/variant/add-on price and availability (never client amounts).
+2. Apply merchant-approved line/order discounts with recorded actor/reason and bounded limits, defining promotion ordering.
+3. Evaluate the seller/outlet jurisdiction, supply type, tax regime, item tax classification, buyer/place of supply and profile effective at issue; disallow unknown/disabled rules rather than silently defaulting to 0%.
+4. Compute taxable bases, inclusive/exclusive component tax amounts with a published deterministic rounding policy for individual components and document reconciliation. Explicitly define how a document-level discount is allocated to items and how rounding remainder is assigned.
+5. Include service charge/tip only according to separate policy and labeling; never silently treat it as tax. Preserve line-by-line and component-by-component snapshots.
+6. Return signed aggregate totals and an explainable calculation trace; hash canonical input, profile version and snapshot so a stale quoted checkout must be reconfirmed.
+7. Use one currency for a financial document. Never aggregate raw INR/USD/OMR amounts or assume two fraction digits.
+
+The quote module in src/modules/orders/quote.ts says taxAndFeesCalculated:false. It is a selection producer, not the fiscal-calculation interface. Preserve it until an integrated and tested producer/consumer contract is ready. Current guest-order tax_minor=0 is not a statement of the outlet's actual tax liability.
+
+## Tender allocation and settlement
+
+A tender allocation always records the actual applied amount, not cash handed over. Example: a bill due 120.00 paid with a 200.00 cash note records capture 120.00 and cash change 80.00 in its own audited cash movement/projection. Partial/mixed tender captures must not exceed the due balance; multiple attempts have unique scoped idempotency keys and independently recoverable outcomes. No negative captures; corrections are linked reversal/refund entries. Return/credit note may cause a refund obligation, not an automatic mutation of historic captured value.
+
+Manual tender: cash, UPI/QR shown by merchant, external card terminal, transfer or other allowed method. Store method and optional reference only; require staff attestation. Provider adapters later use a common attempt identity, signed callback validation, receipt reconciliation and rate limits. Never collect PAN/CVV or claim a logged reference proves gateway settlement.
+
+## Document issuance and compliance boundaries
+
+- Draft quote/pro-forma may be discarded without consuming a fiscal invoice serial. Issued documents are immutable and private.
+- Numbering must be unique inside issuer/jurisdiction/year/type/series according to applicable rules, allocated in an issue transaction with locked counter; represent intentionally skipped/failed allocations explicitly.
+- An invoice stores the legal seller profile, name/address/registration, supply date, issue timestamp/timezone, buyer data where required, item classification (e.g. HSN/SAC for applicable India documents), currency, taxable bases/tax components and reference to source orders.
+- Rendered PDF/print/email is a DERIVATIVE of the same immutable document snapshot and has a content hash/version. A failed printer/email must be safely retryable and must never reissue a new invoice number.
+- Use appropriate 58mm/80mm receipt layouts and A4 PDF, with supplier logo, tax document type, serial, seller/buyer details, item rows, tax breakup, method/status and appropriate disclosures. Never fabricate certification marks.
+- Region adapters govern invoice/bill-of-supply/credit/debit documents, fields, retention, rounding and government reporting. India GST e-invoice IRP registration/IRN/signed QR (where legally applicable) is a separate authenticated integration and cannot be represented by an ordinary generated QR/PDF.
+- Any claimed legal compliance or production enablement needs current qualified local accounting/tax review; a worldwide generic invoice generator is insufficient.
+
+## Service/API command contract (proposed)
+
+All resources are under /api/organizations/{organizationId}/outlets/{outletId}/pos. Commands: POST /sales, POST /sales/{id}/orders:attach, POST /sales/{id}/quote, POST /sales/{id}/finalize, POST /sales/{id}/tenders, POST /tenders/{id}/reconcile, POST /documents/{id}/issue, POST /documents/{id}/correct, POST /tenders/{id}/refund, POST /registers/{id}/shifts, POST /shifts/{id}/close; scoped, paginated GET for ledger/documents/registers/exports. These are design routes, not currently available endpoints.
+
+Every mutating command requires a UUID request key, strict schema/size/rate validation, expected aggregate version, current actor/session, organization/outlet binding and precise POS permission. The API must never accept direct trusted prices/tax rates/total amounts from the browser. In a short transaction: lock authoritative rows, recheck entitlement/policy, calculate, atomically persist snapshot/movements/audit/outbox/command result. Commit before response, avoid network I/O in the transaction. A lost HTTP response is recovered by same-key replay + read; same key with different canonical command conflicts.
+
+## Authorization and release isolation
+
+Do not reuse subscription billing.manage for cashiers. Introduce independent outlet-scoped permissions pos.sale, pos.collect, pos.discount, pos.refund, pos.invoice, pos.close, pos.report and pos.settings, with minimum bundles for cashier, supervisor, finance and owner. Server and SQL both enforce current revocation, device/session state and org/outlet. Elevated discounts/refunds/shift corrections require distinct approval policies. Sensitive invoice exports are access-audited.
+
+POS new-sale entitlement is independent of ordering.new/kitchen.new and must be feature-disabled by default. Legacy payment endpoint must be reconciled or switched atomically at cutover, not left as a parallel path that can mark an order paid without tender evidence. Previously accepted orders and legally retained documents must remain accessible after entitlement expiry. Deployment preserves ERP isolation, PostgreSQL migration checks, paired web/worker identity and verified off-host backup.
+
+## Relevant source references
+
+- src/modules/orders/service.ts; src/modules/orders/quote.ts; src/modules/orders/workspace.ts
+- src/db/schema/orders.ts; src/db/schema/billing.ts; src/db/schema/core-domains.ts
+- src/db/migrations/0006_online_ordering.sql; src/db/migrations/0001_tenant_security.sql
+- src/modules/tenancy/service.ts; docs/domain-invariants.md; docs/architecture.md; docs/product-requirements.md
