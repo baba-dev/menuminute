@@ -8,7 +8,6 @@ import {
   Check,
   ChevronRight,
   ClipboardList,
-  ExternalLink,
   Globe2,
   LockKeyhole,
   MapPin,
@@ -20,9 +19,7 @@ import {
   Store,
   UsersRound,
   Wallet,
-  X,
   Mail,
-  Phone,
 } from "lucide-react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
