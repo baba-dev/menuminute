@@ -125,6 +125,9 @@ DECLARE r restaurants%ROWTYPE; s pos_outlet_settings%ROWTYPE; p pos_seller_profi
 BEGIN
  IF NOT app_private.pos_access(p_outlet,'configure') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO r FROM restaurants WHERE id=p_outlet FOR SHARE;
+ PERFORM 1 FROM organizations WHERE id=r.organization_id FOR SHARE;
+ IF NOT app_private.pos_access(p_outlet,'configure') THEN
+   RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO s FROM pos_outlet_settings WHERE outlet_id=p_outlet FOR UPDATE;
  IF COALESCE(s.revision,0)<>p_expected THEN RAISE EXCEPTION 'Stale POS settings' USING ERRCODE='40001'; END IF;
  IF jsonb_typeof(p_data) IS DISTINCT FROM 'object'
@@ -166,7 +169,10 @@ DECLARE r restaurants%ROWTYPE; prior pos_commands%ROWTYPE; cat jsonb; m jsonb; d
 BEGIN
  IF NOT app_private.pos_access(p_outlet,'sale') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO r FROM restaurants WHERE id=p_outlet AND is_published AND NOT is_demo_data FOR SHARE;
- IF NOT FOUND OR NOT EXISTS(SELECT 1 FROM pos_outlet_settings WHERE outlet_id=p_outlet AND enabled)
+ IF NOT FOUND THEN RAISE EXCEPTION 'POS outlet unavailable' USING ERRCODE='42501'; END IF;
+ PERFORM 1 FROM organizations WHERE id=r.organization_id FOR SHARE;
+ IF NOT app_private.pos_access(p_outlet,'sale') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM pos_outlet_settings WHERE outlet_id=p_outlet AND enabled)
  THEN RAISE EXCEPTION 'POS not enabled' USING ERRCODE='42501'; END IF;
  IF p_key !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
  OR p_hash !~ '^[0-9a-f]{64}$' OR jsonb_typeof(p_data) IS DISTINCT FROM 'object'
@@ -326,6 +332,8 @@ DECLARE r restaurants%ROWTYPE; o orders%ROWTYPE; prev pos_commands%ROWTYPE; resu
 BEGIN
  IF NOT app_private.pos_access(p_outlet,'sale') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  SELECT * INTO r FROM restaurants WHERE id=p_outlet FOR SHARE;
+ PERFORM 1 FROM organizations WHERE id=r.organization_id FOR SHARE;
+ IF NOT app_private.pos_access(p_outlet,'sale') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  IF NOT EXISTS(SELECT 1 FROM pos_outlet_settings WHERE outlet_id=p_outlet AND enabled) THEN
  RAISE EXCEPTION 'POS not enabled' USING ERRCODE='42501'; END IF;
  IF p_key !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
