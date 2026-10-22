@@ -31,7 +31,7 @@ export const posAttachSchema = z.object({ key, orderId: identity }).strict();
 
 export type PosContext = {
   organizationId: string; enabled: boolean; revision: number; canConfigure: boolean;
-  currency: string; outletName: string; token: string | null;
+  currency: string; country: string; fulfillmentModes: string[]; outletName: string; token: string | null;
   seller: null | { legalName: string; registeredAddress: string; country: string;
     taxRegime: "unconfigured" | "not_registered" | "requires_review";
     taxRegistration: string | null; revision: number };
