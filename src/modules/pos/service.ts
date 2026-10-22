@@ -5,6 +5,7 @@ import { withActor, type Actor } from "@/modules/tenancy/service";
 import { publicProduct, type PublicProduct } from "@/modules/menu-product/service";
 import { quoteInputSchema, quotePublishedSelection } from "@/modules/orders/quote";
 import { projectMenu } from "@/modules/menu-product/projector";
+import { availableNow } from "@/modules/menu-product/contracts";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 
 const identity = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -126,8 +127,26 @@ export async function posSubmit(actor: Actor, organizationId: string, outletId: 
     throw new ConflictError("The published price changed. Review the revised cart.");
   if (input.tableId && input.fulfillmentMode !== "dine_in")
     throw new ValidationError("A table can only be selected for dine-in service");
+  const menuRelease = product.menus.find((m) => m.id === quote.menuId)!;
+  const chosenDishIds = new Set(input.selection.lines.map((line) => line.dishId));
+  const schedules = menuRelease.document.categories.flatMap((category) =>
+    category.items.filter((item) => chosenDishIds.has(item.id)).map((item) => ({
+      menu: menuRelease.document.schedule, dish: item.schedule,
+    }))
+  );
+  let expiresAt = new Date(instant.getTime() + 2 * 60 * 60 * 1000);
+  if (schedules.some((schedule) => schedule.menu || schedule.dish)) {
+    for (let minute = 1; minute <= 120; minute++) {
+      const at = new Date(instant.getTime() + minute * 60000);
+      if (schedules.some((schedule) =>
+        !availableNow(schedule.menu, product.outlet.timezone, at) ||
+        !availableNow(schedule.dish, product.outlet.timezone, at))) {
+        expiresAt = at; break;
+      }
+    }
+  }
   const payload = {
-    token: context.token, menuId: quote.menuId, revision: quote.revision,
+    token: context.token, expiresAt: expiresAt.toISOString(), menuId: quote.menuId, revision: quote.revision,
     catalogFingerprint: product.catalogFingerprint, quotedAt: instant.toISOString(),
     fulfillmentMode: input.fulfillmentMode, tableId: input.tableId,
     customerName: input.customerName, notes: input.notes,
