@@ -287,7 +287,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,publi
 DECLARE r restaurants%ROWTYPE; gate pos_finance_gates%ROWTYPE; prior pos_finance_commands%ROWTYPE;
  seller pos_seller_profiles%ROWTYPE; bill pos_bills%ROWTYPE; sale pos_sales%ROWTYPE;
  shift pos_shifts%ROWTYPE; t pos_tenders%ROWTYPE; original pos_documents%ROWTYPE;
- result jsonb; quote jsonb; v_new_id text; year integer; serial integer; document_no text; kind text;
+ result jsonb; quote jsonb; v_new_id text; year integer; serial integer; document_no text; v_kind text;
  sum_paid bigint; sum_refund bigint; due bigint; amt bigint; tendered bigint; opening bigint;
  expected_cash bigint; signed_move bigint; line jsonb; actor text:=NULLIF(current_setting('app.actor_id',true),'');
  action_permission text;
@@ -424,28 +424,28 @@ BEGIN
   THEN RAISE EXCEPTION 'Already issued or not frozen' USING ERRCODE='40001'; END IF;
   SELECT COALESCE(sum(amount_minor),0) INTO sum_paid FROM pos_tenders WHERE sale_id=sale.id;
   IF sum_paid<>bill.total_minor THEN RAISE EXCEPTION 'Outstanding balance' USING ERRCODE='40001'; END IF;
-  IF bill.tax_mode='non_registered' THEN kind:='receipt';
-  ELSE kind:='invoice';
+  IF bill.tax_mode='non_registered' THEN v_kind:='receipt';
+  ELSE v_kind:='invoice';
    IF NOT gate.fiscal_approved OR seller.tax_regime<>'requires_review' OR seller.tax_registration IS NULL
    THEN RAISE EXCEPTION 'Fiscal adapter not approved' USING ERRCODE='42501'; END IF;
   END IF;
   year:=extract(year FROM clock_timestamp() AT TIME ZONE r.timezone)::integer;
-  INSERT INTO pos_document_sequences(outlet_id,fiscal_year,kind,last_number) VALUES(p_outlet,year,kind,1)
+  INSERT INTO pos_document_sequences(outlet_id,fiscal_year,kind,last_number) VALUES(p_outlet,year,v_kind,1)
   ON CONFLICT(outlet_id,fiscal_year,kind) DO UPDATE
   SET last_number=pos_document_sequences.last_number+1 RETURNING last_number INTO serial;
-  document_no:=upper(kind)||'-'||year::text||'-'||lpad(serial::text,6,'0');
+  document_no:=upper(v_kind)||'-'||year::text||'-'||lpad(serial::text,6,'0');
   v_new_id:='doc-'||gen_random_uuid()::text;
   INSERT INTO pos_documents(id,organization_id,outlet_id,sale_id,kind,fiscal_year,serial,document_number,snapshot,issued_by)
-  VALUES(v_new_id,r.organization_id,p_outlet,sale.id,kind,year,serial,document_no,
+  VALUES(v_new_id,r.organization_id,p_outlet,sale.id,v_kind,year,serial,document_no,
    jsonb_build_object('bill',jsonb_build_object('subtotalMinor',bill.subtotal_minor::text,
     'taxableBaseMinor',bill.taxable_base_minor::text,'taxMinor',bill.tax_minor::text,
     'totalMinor',bill.total_minor::text,'currency',bill.currency,'seller',bill.seller_snapshot,
     'customer',bill.customer_snapshot,'lines',bill.line_snapshot,'taxMode',bill.tax_mode),
     'settlement',COALESCE((SELECT jsonb_agg(jsonb_build_object('method',t.method,'amountMinor',t.amount_minor::text,
     'reference',t.reference,'evidence',t.evidence) ORDER BY t.created_at,t.id) FROM pos_tenders t WHERE t.sale_id=sale.id),'[]'::jsonb),
-    'legalStatus',CASE WHEN kind='receipt' THEN 'non_tax_receipt' ELSE 'merchant_invoice_approval_required' END,
+    'legalStatus',CASE WHEN v_kind='receipt' THEN 'non_tax_receipt' ELSE 'merchant_invoice_approval_required' END,
     'orderId',sale.order_id),actor);
-  result:=jsonb_build_object('documentId',v_new_id,'documentNumber',document_no,'kind',kind,'saleId',sale.id);
+  result:=jsonb_build_object('documentId',v_new_id,'documentNumber',document_no,'kind',v_kind,'saleId',sale.id);
  WHEN 'refund' THEN
   IF NOT gate.documents_enabled THEN RAISE EXCEPTION 'Document gate closed' USING ERRCODE='42501'; END IF;
   SELECT * INTO sale FROM pos_sales WHERE id=p_data->>'saleId' AND outlet_id=p_outlet FOR UPDATE;
@@ -467,8 +467,8 @@ BEGIN
    VALUES('refund-'||gen_random_uuid()::text,r.organization_id,p_outlet,sale.id,t.id,shift.id,
     t.amount_minor,btrim(p_data->>'reason'),actor);
   END LOOP;
-  year:=extract(year FROM clock_timestamp() AT TIME ZONE r.timezone)::integer;kind:='credit_note';
-  INSERT INTO pos_document_sequences(outlet_id,fiscal_year,kind,last_number) VALUES(p_outlet,year,kind,1)
+  year:=extract(year FROM clock_timestamp() AT TIME ZONE r.timezone)::integer;v_kind:='credit_note';
+  INSERT INTO pos_document_sequences(outlet_id,fiscal_year,kind,last_number) VALUES(p_outlet,year,v_kind,1)
   ON CONFLICT(outlet_id,fiscal_year,kind) DO UPDATE
   SET last_number=pos_document_sequences.last_number+1 RETURNING last_number INTO serial;
   document_no:='CREDIT-'||year::text||'-'||lpad(serial::text,6,'0');
