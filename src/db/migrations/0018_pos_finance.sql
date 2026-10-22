@@ -548,3 +548,47 @@ DO $$ DECLARE x text; BEGIN
  EXECUTE 'GRANT EXECUTE ON FUNCTION '||x||' TO menuminute_app';
  END LOOP;
 END $$;
+
+CREATE FUNCTION app_private.pos_finance_context(p_outlet text) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE g pos_finance_gates%ROWTYPE; p pos_tax_profiles%ROWTYPE;
+BEGIN
+ IF NOT app_private.pos_access(p_outlet,'read') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ SELECT * INTO g FROM pos_finance_gates WHERE outlet_id=p_outlet;
+ SELECT * INTO p FROM pos_tax_profiles WHERE outlet_id=p_outlet;
+ RETURN jsonb_build_object('paymentsEnabled',COALESCE(g.payments_enabled,false),
+ 'documentsEnabled',COALESCE(g.documents_enabled,false),'fiscalApproved',COALESCE(g.fiscal_approved,false),
+ 'taxProfile',CASE WHEN p.outlet_id IS NULL THEN NULL ELSE jsonb_build_object('mode',p.mode,'inclusive',p.inclusive,
+ 'taxLabel',p.tax_label,'revision',p.revision,'classes',COALESCE(
+ (SELECT jsonb_agg(jsonb_build_object('dishId',c.dish_id,'classification',c.classification,
+ 'rateBps',c.rate_bps) ORDER BY c.dish_id) FROM pos_tax_classes c WHERE c.outlet_id=p_outlet),'[]'::jsonb)) END,
+ 'canManage',app_private.pos_access(p_outlet,'configure'),
+ 'canCollect',app_private.pos_access(p_outlet,'collect'),
+ 'canRefund',app_private.pos_access(p_outlet,'refund'),
+ 'canIssue',app_private.pos_access(p_outlet,'document'));
+END $$;
+CREATE FUNCTION app_private.pos_reconciliation(p_outlet text) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+ IF NOT app_private.pos_access(p_outlet,'close') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
+ RETURN jsonb_build_object('checkedAt',now(),'outletId',p_outlet,'anomalies',
+ COALESCE((SELECT jsonb_agg(jsonb_build_object('saleId',x.sale_id,'reason',x.reason))
+ FROM (
+ SELECT b.sale_id,'tender_exceeds_bill'::text AS reason FROM pos_bills b
+ WHERE b.outlet_id=p_outlet AND COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)>b.total_minor
+ UNION ALL
+ SELECT b.sale_id,'refund_exceeds_collection' FROM pos_bills b
+ WHERE b.outlet_id=p_outlet AND COALESCE((SELECT sum(f.amount_minor) FROM pos_refunds f WHERE f.sale_id=b.sale_id),0)>
+ COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)
+ UNION ALL
+ SELECT b.sale_id,'bill_line_total_mismatch' FROM pos_bills b
+ WHERE b.outlet_id=p_outlet AND
+  COALESCE((SELECT sum((l->>'totalMinor')::bigint) FROM jsonb_array_elements(b.line_snapshot) l),0)<>b.total_minor
+ UNION ALL
+ SELECT b.sale_id,'settlement_order_mismatch' FROM pos_bills b JOIN pos_sales s ON s.id=b.sale_id
+ JOIN orders o ON o.id=s.order_id WHERE b.outlet_id=p_outlet AND o.payment_status='paid'
+ AND COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)<>b.total_minor
+ ) x),'[]'::jsonb));
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_finance_context(text),app_private.pos_reconciliation(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.pos_finance_context(text),app_private.pos_reconciliation(text) TO menuminute_app;
