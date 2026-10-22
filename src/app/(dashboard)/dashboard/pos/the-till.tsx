@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ClipboardList, CreditCard, Minus, Plus, RefreshCcw, Search, Settings2, ShoppingBasket, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, Minus, Plus, RefreshCcw, Search, Settings2, ShoppingBasket, X } from "lucide-react";
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 
-type Menu = PosWorkspace["menus"][number];
 type Dish = Menu["categories"][number]["items"][number];
 type Line = QuoteInput["lines"][number];
 type CartLine = { id: string; line: Line; name: string; variantName: string | null; unitMinor: number };
@@ -35,7 +34,7 @@ export function TheTill({ organizationId, outletId, initial }: { organizationId:
   const [groups, setGroups] = useState<Record<string,string[]>>({});
   const [customer, setCustomer] = useState("");
   const [note, setNote] = useState("");
-  const [mode, setMode] = useState<"dine_in" | "pickup">("pickup");
+  const [mode, setMode] = useState<"dine_in" | "pickup">(initial.context.fulfillmentModes.includes("pickup") ? "pickup" : "dine_in");
   const [tableId, setTableId] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,18 +61,16 @@ export function TheTill({ organizationId, outletId, initial }: { organizationId:
     setWorkspace(fresh);
     if (!fresh.menus.some((m)=>m.id===selectedMenu)) setSelectedMenu(fresh.menus[0]?.id ?? "");
   }
-  async function configure(event: React.FormEvent) {
+  async function configure(event: FormEvent) {
     event.preventDefault(); setMessage(""); setBusy(true);
     try {
       await json(await fetch(endpoint+"/settings", { method:"POST", headers:{"content-type":"application/json"},
         body: JSON.stringify({expectedRevision:workspace.context.revision, enabled:true, legalName, registeredAddress:address,
-          country:workspace.context.seller?.country ?? countryFromCurrency(), taxRegime, taxRegistration:taxRegistration || null}) }));
+          country:workspace.context.country, taxRegime, taxRegistration:taxRegistration || null}) }));
       await refresh(); setEditingSettings(false);
       setMessage("The Till is enabled for unpaid, pre-tax order recording. No tax invoice or payment collection is enabled.");
     } catch(e){ setMessage(e instanceof Error ? e.message : "Unable to save settings."); } finally { setBusy(false); }
   }
-  // Seller country is read from the outlet context (not guessed from currency).
-  function countryFromCurrency() { return workspace.context.country; }
   function openDish(item: Dish) {
     if (item.soldOut || !item.open) return;
     setDish(item); setVariant(""); setGroups({}); setMessage("");
@@ -168,7 +165,7 @@ export function TheTill({ organizationId, outletId, initial }: { organizationId:
       </section>
       <aside className="till-cart" aria-label="Staff order cart">
         <div className="till-sectionhead"><div><span className="till-eyebrow">03 / ORDER PAD</span><h2>Current ticket</h2></div><ShoppingBasket size={22}/></div>
-        <div className="till-fields"><label>Fulfillment<select value={mode} onChange={(e)=>setMode(e.target.value as typeof mode)}><option value="pickup">Pickup / counter</option><option value="dine_in">Dine-in</option></select></label>
+        <div className="till-fields"><label>Fulfillment<select value={mode} onChange={(e)=>setMode(e.target.value as typeof mode)}>{workspace.context.fulfillmentModes.includes("pickup") && <option value="pickup">Pickup / counter</option>}{workspace.context.fulfillmentModes.includes("dine_in") && <option value="dine_in">Dine-in</option>}</select></label>
           {mode==="dine_in" && <label>Table / service point<select value={tableId} onChange={(e)=>setTableId(e.target.value)}><option value="">No assigned table</option>{workspace.context.tables.map((t)=><option key={t.id} value={t.id}>{t.label}</option>)}</select></label>}
           <label>Guest name (optional)<input maxLength={80} value={customer} onChange={(e)=>setCustomer(e.target.value)} placeholder="Walk-in customer"/></label></div>
         {cart.length ? cart.map((entry)=><div className="till-cartline" key={entry.id}><div><strong>{entry.name}</strong><small>{entry.variantName ?? "Regular"} · {money(entry.unitMinor,currency)} each</small></div><div className="till-quantity"><button aria-label={"Reduce "+entry.name} onClick={()=>changeQty(entry.id,-1)} type="button"><Minus size={13}/></button><span>{entry.line.quantity}</span><button aria-label={"Increase "+entry.name} onClick={()=>changeQty(entry.id,1)} type="button" disabled={entry.line.quantity>=99}><Plus size={13}/></button></div></div>) : <p className="till-empty">Select a dish to start an order.</p>}
