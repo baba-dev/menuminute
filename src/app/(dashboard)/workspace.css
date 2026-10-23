@@ -396,7 +396,6 @@
   border-color: #745a42;
 }
 
-
 .mm-dashboard-hero-copy {
   position: relative;
   max-width: 700px;
@@ -1409,5 +1408,15 @@
 }
 
 /* Reuse the editorial dashboard bar across every workspace route. */
-.mm-shared-topbar { width: 100%; flex: none; background: var(--paper); position: relative; z-index: 3; }
-.mm-workspace-main:has(> .mm-shared-topbar + .studio-atelier) { max-width: none; margin: 0; padding: 0; }
+.mm-shared-topbar {
+  width: 100%;
+  flex: none;
+  background: var(--paper);
+  position: relative;
+  z-index: 3;
+}
+.mm-workspace-main:has(> .mm-shared-topbar + .studio-atelier) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}

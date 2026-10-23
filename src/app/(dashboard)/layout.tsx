@@ -41,10 +41,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     columns: { isSuperAdmin: true },
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
-  const codes = restaurant ? await getRestaurantQrCodes({ userId: session.user.id }, restaurant.id) : [];
+  const codes = restaurant
+    ? await getRestaurantQrCodes({ userId: session.user.id }, restaurant.id)
+    : [];
   const qr = preferredMenuQr(codes);
   const projection = qr ? await publicProduct(qr.destinationToken) : null;
-  const publicHref = projection?.menus.length && qr ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
+  const publicHref =
+    projection?.menus.length && qr ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
   const name = session.user.name || "Restaurant admin";
   const initials = name
     .trim()

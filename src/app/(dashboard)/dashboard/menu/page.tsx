@@ -45,7 +45,11 @@ export default async function Page() {
       key={outlet.id}
       outlet={outlet}
       initialList={list}
-      initialDetail={list.length ? await menuDetail(actor, (list.find((menu) => !menu.archived) ?? list[0]!).id) : null}
+      initialDetail={
+        list.length
+          ? await menuDetail(actor, (list.find((menu) => !menu.archived) ?? list[0]!).id)
+          : null
+      }
       initialMedia={JSON.parse(JSON.stringify(await mediaList(actor, outlet.id)))}
       outletChoices={await getRestaurantsByUserId(actor.userId)}
       brandChoices={await withActor(actor, (tx) =>
