@@ -6,6 +6,7 @@ import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
 import "@/styles/menu-product.css";
+import "@/styles/public-dining.css";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
