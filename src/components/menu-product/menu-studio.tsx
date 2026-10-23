@@ -946,7 +946,9 @@ export function MenuStudio({
                   </div>
                 )}
               </div>
-              {!preview && <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />}
+              {!preview && (
+                <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
+              )}
             </div>
             <dialog
               ref={previewDialog}
