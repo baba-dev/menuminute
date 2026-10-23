@@ -122,8 +122,8 @@ export type FeaturedDish = {
 };
 export function featuredForMenu(
   menuId: string,
-  view: MenuDocument & {
-    categories: (MenuDocument["categories"][number] & { items: FeaturedDish["dish"][] })[];
+  view: Pick<MenuDocument, "presentation" | "currency"> & {
+    categories: { name: string; items: FeaturedDish["dish"][] }[];
   }
 ): FeaturedDish[] {
   const ids = view.presentation?.featuredDishIds ?? [];

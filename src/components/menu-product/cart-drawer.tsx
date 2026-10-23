@@ -277,7 +277,7 @@ export function CartDrawer({
                   >
                     {images[item.dishId] && (
                       <div className="dining-cart-thumb">
-                        <DiningImage visual={images[item.dishId]} />
+                        <DiningImage visual={images[item.dishId]!} />
                       </div>
                     )}
                     <div className="stack" style={{ gap: "0.25rem", flex: 1 }}>
