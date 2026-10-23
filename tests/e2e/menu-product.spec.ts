@@ -278,7 +278,7 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await page.getByRole("link", { name: "Skip to dishes" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#dishes")).toBeFocused();
-  for (const width of [360, 390, 768, 1024, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true
@@ -287,7 +287,7 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await page.getByLabel("Search the menu", { exact: true }).fill("not-a-real-dish");
   await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).click();
-  await page.getByLabel("Dietary filter", { exact: true }).selectOption("vegan");
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Vegan" }).click();
   await expect(page.getByRole("heading", { name: "Signature thali" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /An intentionally long dish name/ })

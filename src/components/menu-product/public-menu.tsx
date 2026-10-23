@@ -442,7 +442,7 @@ export function PublicMenu({
                               aria-label={"View " + dish.name + " details"}
                             >
                               <DiningImage visual={image} />
-                              {dish.soldOut && <span className="dining-sold">Sold out</span>}
+                              {dish.soldOut && <span className="dining-sold">Sold Out</span>}
                             </button>
                             <div className="dining-dish-content">
                               <div className="dining-dish-title">
