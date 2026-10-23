@@ -115,7 +115,6 @@ describe("Public Menu 2.0 presentation and artwork contract", () => {
       "/icons/category-default.svg"
     );
     expect(nextDishImageSource(restaurant, "/icons/category-default.svg")).toBeNull();
-
   });
 
   it("builds an additive scoped release projection without archived content or inferred claims", () => {
