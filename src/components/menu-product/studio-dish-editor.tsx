@@ -31,6 +31,8 @@ export function StudioDishEditor({
 }) {
   return (
     <div className="atelier-dish-row dish-editor stack">
+      {/* Private authenticated media must use its existing scoped API route. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="atelier-dish-artwork"
         src={dishImageSrc(dish, "private")}
