@@ -305,3 +305,38 @@ it("validates flat options, prices, duplicate IDs, weekly overnight/date excepti
   expect(availableNow(dst, "America/New_York", new Date("2026-11-01T05:30:00Z"))).toBe(true);
   expect(availableNow(dst, "America/New_York", new Date("2026-11-01T06:30:00Z"))).toBe(true);
 });
+
+it("archives a published menu without destroying its release, blocks foreign deletion, and restores as private", async () => {
+  const f = await fixture();
+  const stranger = await fixture();
+  const id = await create(f);
+  await command(f, id, "publish");
+  expect((await menuDetail(f.actor, id)).everPublished).toBe(true);
+  const revision = (await menuDetail(f.actor, id)).revision;
+  await expect(
+    commandMenu(stranger.actor, stranger.outlet.id, id, {
+      key: crypto.randomUUID(),
+      expectedRevision: revision,
+      action: "archive",
+      data: {},
+    })
+  ).rejects.toMatchObject({ statusCode: 403 });
+  await command(f, id, "archive");
+  const archived = await menuDetail(f.actor, id);
+  expect(archived.archived).toBe(true);
+  expect(archived.publishedRevision).toBeNull();
+  expect(archived.everPublished).toBe(true);
+  expect(await publicProduct(f.outlet.publicId)).toBeNull();
+  await admin(async (_, pool) => {
+    const result = await pool.query("select count(*)::int as count from menu_releases where menu_id=$1", [id]);
+    expect(result.rows[0].count).toBe(1);
+  });
+  await command(f, id, "restore");
+  const restored = await menuDetail(f.actor, id);
+  expect(restored.archived).toBe(false);
+  expect(restored.publishedRevision).toBeNull();
+  expect(restored.document.name).toBe("Lunch menu");
+  expect(await publicProduct(f.outlet.publicId)).toBeNull();
+  await command(f, id, "publish");
+  expect((await publicProduct(f.outlet.publicId))?.menus[0]?.document.name).toBe("Lunch menu");
+});
