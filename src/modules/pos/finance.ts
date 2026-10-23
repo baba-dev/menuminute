@@ -275,6 +275,9 @@ export async function financeRead(
       return run<{
         checkedAt: string;
         outletId: string;
+        scanLimit: number;
+        scannedCount: number;
+        partial: boolean;
         anomalies: { saleId: string; reason: string }[];
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
     case "sale":
