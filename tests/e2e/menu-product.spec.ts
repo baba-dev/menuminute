@@ -501,10 +501,9 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
   await expect(page.getByLabel("Quick photo for Butter Chicken")).toHaveValue("artwork");
   await page.getByLabel("Quick price for Butter Chicken").fill("12.500");
   await page.getByRole("button", { name: "Add 1 to private draft" }).click();
-  await expect(page.getByRole("img", { name: "Selected image for Butter Chicken" })).toHaveAttribute(
-    "src",
-    "/assets/food/dishes/indian/butter-chicken.png"
-  );
+  await expect(
+    page.getByRole("img", { name: "Selected image for Butter Chicken" })
+  ).toHaveAttribute("src", "/assets/food/dishes/indian/butter-chicken.png");
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   await page.reload();
