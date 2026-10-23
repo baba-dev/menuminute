@@ -9,6 +9,7 @@ import { domainError } from "@/modules/organizations/service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
+import { artworkById } from "./dish-artwork";
 export async function listMenus(actor: Actor, outletId: string) {
   await getRestaurantById(actor, outletId);
   return withActor(actor, async (tx) => {
@@ -70,6 +71,13 @@ export async function menuDetail(actor: Actor, id: string) {
 export async function commandMenu(actor: Actor, outletId: string, id: string, raw: unknown) {
   entityId.parse(id);
   const input = validateMenuCommand(raw);
+  if (input.action === "save" || input.action === "create") {
+    const doc = input.data.document as MenuDocument;
+    for (const category of doc.categories) for (const dish of category.items) {
+      if (dish.artworkId && !artworkById(dish.artworkId))
+        throw new ValidationError("Unknown curated dish illustration");
+    }
+  }
   try {
     return await withActor(
       actor,

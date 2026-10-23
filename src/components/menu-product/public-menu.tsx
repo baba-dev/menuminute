@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UtensilsCrossed, Search, Leaf, Clock, Plus } from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
+import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
@@ -275,12 +276,8 @@ export function PublicMenu({
                           <div className="dish-image">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={
-                                i.mediaId
-                                  ? `/api/public-media/${i.mediaId}?size=thumb`
-                                  : "/icons/category-default.svg"
-                              }
-                              alt={i.mediaId ? i.name : "Dish illustration"}
+                              src={dishImageSrc(i, preview ? "private" : "public")}
+                              alt={i.imageMode === "none" ? "" : i.name}
                               width={160}
                               height={160}
                               loading="lazy"
