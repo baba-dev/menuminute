@@ -1,5 +1,5 @@
-import manifest from "../../../docs/food-artwork/manifest.json";
-import { normalizeDishText } from "./dish-intelligence";
+import approvedRuntimeArt from "@/data/approved-dish-artwork.json";
+import { normalizeDishText } from "./normalize-dish-text";
 
 export type ArtworkAsset = {
   label: string;
@@ -26,7 +26,7 @@ const defaultIllustration = "/icons/category-default.svg";
  */
 export function approvedArtworkForDish(
   name: string,
-  assets: readonly ArtworkAsset[] = manifest.assets
+  assets: readonly ArtworkAsset[] = approvedRuntimeArt
 ): { path: string; label: string } | null {
   const wanted = normalizeDishText(name);
   if (!wanted) return null;
@@ -60,7 +60,7 @@ export function categoryIllustration(categoryName: string): string {
  */
 export function resolveDishVisual(
   dish: { name: string; mediaId: string | null; categoryName: string },
-  assets: readonly ArtworkAsset[] = manifest.assets
+  assets: readonly ArtworkAsset[] = approvedRuntimeArt
 ): DishVisual {
   const artwork = approvedArtworkForDish(dish.name, assets);
   const category = categoryIllustration(dish.categoryName);

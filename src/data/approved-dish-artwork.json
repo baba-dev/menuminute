@@ -1,0 +1,254 @@
+[
+  {
+    "label": "Biryani",
+    "path": "/assets/food/dishes/indian/biryani.png",
+    "state": "approved",
+    "slug": "biryani",
+    "category": "indian"
+  },
+  {
+    "label": "Butter Chicken",
+    "path": "/assets/food/dishes/indian/butter-chicken.png",
+    "state": "approved",
+    "slug": "butter-chicken",
+    "category": "indian"
+  },
+  {
+    "label": "Masala Dosa",
+    "path": "/assets/food/dishes/indian/masala-dosa.png",
+    "state": "approved",
+    "slug": "masala-dosa",
+    "category": "indian"
+  },
+  {
+    "label": "Idli Sambar",
+    "path": "/assets/food/dishes/indian/idli-sambar.png",
+    "state": "approved",
+    "slug": "idli-sambar",
+    "category": "indian"
+  },
+  {
+    "label": "Paneer Tikka",
+    "path": "/assets/food/dishes/indian/paneer-tikka.png",
+    "state": "approved",
+    "slug": "paneer-tikka",
+    "category": "indian"
+  },
+  {
+    "label": "Samosa",
+    "path": "/assets/food/dishes/indian/samosa.png",
+    "state": "approved",
+    "slug": "samosa",
+    "category": "indian"
+  },
+  {
+    "label": "Chole Bhature",
+    "path": "/assets/food/dishes/indian/chole-bhature.png",
+    "state": "approved",
+    "slug": "chole-bhature",
+    "category": "indian"
+  },
+  {
+    "label": "Rajma Chawal",
+    "path": "/assets/food/dishes/indian/rajma-chawal.png",
+    "state": "approved",
+    "slug": "rajma-chawal",
+    "category": "indian"
+  },
+  {
+    "label": "Naan",
+    "path": "/assets/food/dishes/indian/naan.png",
+    "state": "approved",
+    "slug": "naan",
+    "category": "indian"
+  },
+  {
+    "label": "Dal Tadka",
+    "path": "/assets/food/dishes/indian/dal-tadka.png",
+    "state": "approved",
+    "slug": "dal-tadka",
+    "category": "indian"
+  },
+  {
+    "label": "Vada Pav",
+    "path": "/assets/food/dishes/indian/vada-pav.png",
+    "state": "approved",
+    "slug": "vada-pav",
+    "category": "indian"
+  },
+  {
+    "label": "Gulab Jamun",
+    "path": "/assets/food/dishes/indian/gulab-jamun.png",
+    "state": "approved",
+    "slug": "gulab-jamun",
+    "category": "indian"
+  },
+  {
+    "label": "Burger",
+    "path": "/assets/food/dishes/western/burger.png",
+    "state": "approved",
+    "slug": "burger",
+    "category": "western"
+  },
+  {
+    "label": "Steak",
+    "path": "/assets/food/dishes/western/steak.png",
+    "state": "approved",
+    "slug": "steak",
+    "category": "western"
+  },
+  {
+    "label": "Sandwich",
+    "path": "/assets/food/dishes/western/sandwich.png",
+    "state": "approved",
+    "slug": "sandwich",
+    "category": "western"
+  },
+  {
+    "label": "Caesar Salad",
+    "path": "/assets/food/dishes/western/caesar-salad.png",
+    "state": "approved",
+    "slug": "caesar-salad",
+    "category": "western"
+  },
+  {
+    "label": "Fried Chicken",
+    "path": "/assets/food/dishes/western/fried-chicken.png",
+    "state": "approved",
+    "slug": "fried-chicken",
+    "category": "western"
+  },
+  {
+    "label": "French Fries",
+    "path": "/assets/food/dishes/western/french-fries.png",
+    "state": "approved",
+    "slug": "french-fries",
+    "category": "western"
+  },
+  {
+    "label": "Pancakes",
+    "path": "/assets/food/dishes/western/pancakes.png",
+    "state": "approved",
+    "slug": "pancakes",
+    "category": "western"
+  },
+  {
+    "label": "Hot Dog",
+    "path": "/assets/food/dishes/western/hot-dog.png",
+    "state": "approved",
+    "slug": "hot-dog",
+    "category": "western"
+  },
+  {
+    "label": "Mac & Cheese",
+    "path": "/assets/food/dishes/western/mac-and-cheese.png",
+    "state": "approved",
+    "slug": "mac-and-cheese",
+    "category": "western"
+  },
+  {
+    "label": "Grilled Fish",
+    "path": "/assets/food/dishes/western/grilled-fish.png",
+    "state": "approved",
+    "slug": "grilled-fish",
+    "category": "western"
+  },
+  {
+    "label": "Donut",
+    "path": "/assets/food/dishes/western/donut.png",
+    "state": "approved",
+    "slug": "donut",
+    "category": "western"
+  },
+  {
+    "label": "Milkshake",
+    "path": "/assets/food/dishes/western/milkshake.png",
+    "state": "approved",
+    "slug": "milkshake",
+    "category": "western"
+  },
+  {
+    "label": "Pizza Margherita",
+    "path": "/assets/food/dishes/italian/pizza-margherita.png",
+    "state": "approved",
+    "slug": "pizza-margherita",
+    "category": "italian"
+  },
+  {
+    "label": "Spaghetti",
+    "path": "/assets/food/dishes/italian/spaghetti.png",
+    "state": "approved",
+    "slug": "spaghetti",
+    "category": "italian"
+  },
+  {
+    "label": "Penne Alfredo",
+    "path": "/assets/food/dishes/italian/penne-alfredo.png",
+    "state": "approved",
+    "slug": "penne-alfredo",
+    "category": "italian"
+  },
+  {
+    "label": "Lasagna",
+    "path": "/assets/food/dishes/italian/lasagna.png",
+    "state": "approved",
+    "slug": "lasagna",
+    "category": "italian"
+  },
+  {
+    "label": "Risotto",
+    "path": "/assets/food/dishes/italian/risotto.png",
+    "state": "approved",
+    "slug": "risotto",
+    "category": "italian"
+  },
+  {
+    "label": "Ravioli",
+    "path": "/assets/food/dishes/italian/ravioli.png",
+    "state": "approved",
+    "slug": "ravioli",
+    "category": "italian"
+  },
+  {
+    "label": "Bruschetta",
+    "path": "/assets/food/dishes/italian/bruschetta.png",
+    "state": "approved",
+    "slug": "bruschetta",
+    "category": "italian"
+  },
+  {
+    "label": "Gnocchi",
+    "path": "/assets/food/dishes/italian/gnocchi.png",
+    "state": "approved",
+    "slug": "gnocchi",
+    "category": "italian"
+  },
+  {
+    "label": "Caprese Salad",
+    "path": "/assets/food/dishes/italian/caprese-salad.png",
+    "state": "approved",
+    "slug": "caprese-salad",
+    "category": "italian"
+  },
+  {
+    "label": "Focaccia",
+    "path": "/assets/food/dishes/italian/focaccia.png",
+    "state": "approved",
+    "slug": "focaccia",
+    "category": "italian"
+  },
+  {
+    "label": "Tiramisu",
+    "path": "/assets/food/dishes/italian/tiramisu.png",
+    "state": "approved",
+    "slug": "tiramisu",
+    "category": "italian"
+  },
+  {
+    "label": "Gelato",
+    "path": "/assets/food/dishes/italian/gelato.png",
+    "state": "approved",
+    "slug": "gelato",
+    "category": "italian"
+  }
+]

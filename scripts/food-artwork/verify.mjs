@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const manifest = JSON.parse(readFileSync(join(root, "docs/food-artwork/manifest.json"), "utf8"));
 const errors = [];
+const runtimeArt = JSON.parse(readFileSync(join(root, "src/data/approved-dish-artwork.json"), "utf8"));
 const groups = Object.entries(manifest.groups);
 const thirdGroups = new Set([
   "bengal-odisha-delights",
@@ -132,6 +133,12 @@ for (const [category, expected] of groups) {
     }
   }
 }
+
+const approvedForRuntime = manifest.assets
+  .filter((asset) => asset.state === "approved")
+  .map(({ label, path, state, slug, category }) => ({ label, path, state, slug, category }));
+if (JSON.stringify(runtimeArt) !== JSON.stringify(approvedForRuntime))
+  errors.push("Public runtime artwork index differs from approved manifest entries");
 
 if (approvedCount !== 36 || pendingCount !== 188 || manifest.approvalSummary?.approvedOriginal !== 36 || manifest.approvalSummary?.pendingOwnerReview !== 188)
   errors.push("Approved/pending artwork reconciliation mismatch");

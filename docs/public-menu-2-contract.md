@@ -15,7 +15,7 @@ Resolution order:
 3. Broad category-matched bundled SVG.
 4. Bundled generic icon.
 
-Only canonical asset paths under `/assets/food/dishes/<category>/<slug>.png` with manifest `state: approved` qualify. Public assets on disk are not automatically approved, fuzzy names never silently substitute another food, and user uploads are not replaced or altered. The existing public media endpoint remains the security authority. The browser handles a failed image with a bounded local fallback chain.
+The guest runtime imports only the small `src/data/approved-dish-artwork.json` index, not the full manifest/dish-suggestion engine. CI verifies exact equality with the manifest's approved entries. Only canonical asset paths under `/assets/food/dishes/<category>/<slug>.png` with manifest `state: approved` qualify. Public assets on disk are not automatically approved, fuzzy names never silently substitute another food, and user uploads are not replaced or altered. The existing public media endpoint remains the security authority. The browser handles a failed image with a bounded local fallback chain.
 
 The original 36 assets are proposed as the baseline on the owner's directive to integrate their uploaded artwork; 188 later assets retain their pending statuses. Visual review of the original 36 is required before merging. Existing `scripts/food-artwork/verify.mjs` is part of the four-lane CI gate and checks files, dimensions, hashes where present, approval counts and recognized approval basis. Every future approval batch needs its own explicit verification-policy update.
 
