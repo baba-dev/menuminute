@@ -69,7 +69,10 @@ export default async function DashboardPage() {
     hasPublicMenu: stats.hasPublicMenu,
     hasActiveQr: stats.activeQrCount > 0,
   });
-  const publicHref = stats.hasPublicMenu && primaryQr ? "/m/" + encodeURIComponent(primaryQr.destinationToken) : null;
+  const publicHref =
+    stats.hasPublicMenu && primaryQr
+      ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
+      : null;
   const kpis = [
     {
       label: "Published menus",
