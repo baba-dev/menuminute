@@ -74,7 +74,7 @@ export function ItemCustomizer({
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   useEffect(() => {
     if (!isOpen) return;
     const prior = document.activeElement instanceof HTMLElement ? document.activeElement : null;
