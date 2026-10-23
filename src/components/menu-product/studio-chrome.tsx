@@ -16,8 +16,13 @@ import {
   Send,
 } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
-import { currencyExponent } from "@/lib/money";
-import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import { formatPrice } from "@/lib/utils";
+import {
+  coverFor,
+  dishVisual,
+  startingPriceMinor,
+} from "@/modules/menu-product/public-presentation";
+import { DiningImage } from "./dining-image";
 
 const art = "/brand/menu-studio/recipe-atelier/";
 
@@ -306,7 +311,6 @@ export function StudioPreview({
   currency: string;
   timezone: string;
 }) {
-  const exponent = currencyExponent(currency) ?? 2;
   const allSections = doc.categories.filter((c) => !c.archived);
   const sections = allSections.slice(0, 4);
   return (
@@ -316,9 +320,20 @@ export function StudioPreview({
         <span>LIVE EDITS</span>
       </div>
       <div className="atelier-preview-window">
-        <div className="atelier-preview-cover">
-          <span>FROM OUR KITCHEN</span>
+        <div
+          className="atelier-preview-cover"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg,rgba(255,250,243,.95),rgba(255,250,243,.66)),url(" +
+              coverFor(doc) +
+              ")",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <span>YOUR DIGITAL STOREFRONT</span>
           <h2>{doc.name || "Your menu"}</h2>
+          <small>{doc.presentation?.headline || "Made with care. Served with joy."}</small>
           <small>
             {currency} · {timezone}
           </small>
@@ -336,15 +351,9 @@ export function StudioPreview({
                 .slice(0, 8)
                 .map((dish) => (
                   <div key={dish.id} className="atelier-preview-dish">
-                    {/* Private authenticated media and curated assets use their existing stable URL routes. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <DiningImage
                       className="atelier-preview-thumb"
-                      src={dishImageSrc(dish, "private")}
-                      alt=""
-                      width={48}
-                      height={44}
-                      loading="lazy"
+                      visual={dishVisual(dish, cat.name, true)}
                     />
                     <div>
                       <strong>{dish.name || "Untitled dish"}</strong>
@@ -352,7 +361,8 @@ export function StudioPreview({
                       {dish.soldOut && <em>Sold out</em>}
                     </div>
                     <b>
-                      {(dish.priceMinor / 10 ** exponent).toFixed(exponent)} {currency}
+                      {dish.variants.length ? "From " : ""}
+                      {formatPrice(startingPriceMinor(dish), currency)}
                     </b>
                   </div>
                 ))}

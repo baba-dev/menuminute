@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
 import { artworkById } from "@/modules/menu-product/dish-artwork";
+import { covers, type CoverPreset } from "@/modules/menu-product/public-presentation";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
 import {
   findDishDuplicate,
@@ -622,7 +623,7 @@ export function MenuStudio({
             <div className="atelier-workspace studio-layout">
               <div className="atelier-editor stack">
                 <nav className="atelier-editor-tabs row" aria-label="Menu editor sections">
-                  {["dishes", "schedule", "media", "assignments"].map((t) => (
+                  {["dishes", "storefront", "schedule", "media", "assignments"].map((t) => (
                     <button
                       type="button"
                       key={t}
@@ -895,6 +896,128 @@ export function MenuStudio({
                             </section>
                           ))}
                       </>
+                    )}
+                    {tab === "storefront" && (
+                      <section
+                        className="panel stack dining-studio-controls"
+                        aria-labelledby="storefront-title"
+                      >
+                        <span className="eyebrow">THE DINING CANVAS</span>
+                        <h2 id="storefront-title">Your guest storefront</h2>
+                        <p>
+                          Choose an illustrated cover, introduce your restaurant, and handpick
+                          dishes to feature. These settings follow the saved draft and become public
+                          only after you publish.
+                        </p>
+                        <fieldset className="dining-cover-picker">
+                          <legend>Restaurant cover</legend>
+                          <div className="dining-cover-options">
+                            {(Object.entries(covers) as [CoverPreset, string][]).map(
+                              ([key, src]) => (
+                                <label
+                                  key={key}
+                                  className={
+                                    (doc.presentation?.cover ?? "indian-restaurant") === key
+                                      ? "is-selected"
+                                      : ""
+                                  }
+                                >
+                                  <input
+                                    type="radio"
+                                    name="cover-preset"
+                                    checked={
+                                      (doc.presentation?.cover ?? "indian-restaurant") === key
+                                    }
+                                    onChange={() =>
+                                      change({
+                                        ...doc,
+                                        presentation: {
+                                          cover: key,
+                                          headline: doc.presentation?.headline ?? "",
+                                          featuredDishIds: doc.presentation?.featuredDishIds ?? [],
+                                        },
+                                      })
+                                    }
+                                  />
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={src} alt="" width={290} height={100} loading="lazy" />
+                                  <span>{key.replaceAll("-", " ")}</span>
+                                </label>
+                              )
+                            )}
+                          </div>
+                        </fieldset>
+                        <label className="field">
+                          Hero introduction{" "}
+                          <small className="quiet">Optional · 110 characters maximum</small>
+                          <input
+                            type="text"
+                            maxLength={110}
+                            value={doc.presentation?.headline ?? ""}
+                            placeholder="Made with care. Served with joy."
+                            onChange={(event) =>
+                              change({
+                                ...doc,
+                                presentation: {
+                                  cover: doc.presentation?.cover ?? "indian-restaurant",
+                                  headline: event.target.value,
+                                  featuredDishIds: doc.presentation?.featuredDishIds ?? [],
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                        <fieldset className="dining-feature-picker">
+                          <legend>Feature up to eight dishes</legend>
+                          <p>
+                            These selections power the featured section and complementary order
+                            suggestions. No best-seller, discount or dietary claims are inferred.
+                          </p>
+                          <div className="dining-feature-options">
+                            {doc.categories
+                              .filter((category) => !category.archived)
+                              .flatMap((category) =>
+                                category.items
+                                  .filter((dish) => !dish.archived)
+                                  .map((dish) => {
+                                    const featured = doc.presentation?.featuredDishIds ?? [];
+                                    const selected = featured.includes(dish.id);
+                                    return (
+                                      <label key={dish.id}>
+                                        <input
+                                          type="checkbox"
+                                          checked={selected}
+                                          disabled={!selected && featured.length >= 8}
+                                          onChange={() =>
+                                            change({
+                                              ...doc,
+                                              presentation: {
+                                                cover:
+                                                  doc.presentation?.cover ?? "indian-restaurant",
+                                                headline: doc.presentation?.headline ?? "",
+                                                featuredDishIds: selected
+                                                  ? featured.filter((id) => id !== dish.id)
+                                                  : [...featured, dish.id],
+                                              },
+                                            })
+                                          }
+                                        />
+                                        <span>{dish.name}</span>
+                                        {dish.soldOut && (
+                                          <small>Sold out · hidden from public highlights</small>
+                                        )}
+                                      </label>
+                                    );
+                                  })
+                              )}
+                          </div>
+                        </fieldset>
+                        <p className="quiet">
+                          Preview draft uses this very same guest component and current unsaved
+                          data. Published QR menus continue to show the last explicitly published
+                          release.
+                        </p>
+                      </section>
                     )}
                     {tab === "schedule" && (
                       <section className="panel stack">

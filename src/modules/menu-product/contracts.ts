@@ -80,6 +80,16 @@ export const menuDocumentSchema = z
     name: title,
     currency: z.string().refine((v) => currencyExponent(v) !== null, "Unsupported currency"),
     schedule: scheduleSchema.nullable().default(null),
+    presentation: z
+      .object({
+        cover: z
+          .enum(["artisan-bakery", "cafe-coffee", "indian-restaurant", "street-food-cloud-kitchen"])
+          .default("indian-restaurant"),
+        headline: z.string().trim().max(110).default(""),
+        featuredDishIds: z.array(entityId).max(8).default([]),
+      })
+      .strict()
+      .optional(),
     categories: z
       .array(
         z

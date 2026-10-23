@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem } from "./item-customizer";
+import type { CartItem, CustomizerDish } from "./item-customizer";
+import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
+import { DiningImage } from "./dining-image";
 
 export function CartDrawer({
   items,
@@ -12,6 +14,9 @@ export function CartDrawer({
   outletName,
   point,
   fulfillmentModes = ["dine_in"],
+  images = {},
+  suggestions = [],
+  onChooseSuggestion,
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
@@ -23,6 +28,14 @@ export function CartDrawer({
   outletName: string;
   point: string | null;
   fulfillmentModes?: string[];
+  images?: Record<string, DiningVisual>;
+  suggestions?: {
+    dish: CustomizerDish;
+    category: string;
+    currency: string;
+    visual: DiningVisual;
+  }[];
+  onChooseSuggestion?: (dish: CustomizerDish, category: string) => void;
   onUpdateQuantity: (index: number, newQty: number) => void;
   onRemoveItem: (index: number) => void;
   onClearCart: () => void;
@@ -40,6 +53,46 @@ export function CartDrawer({
   const [customerPhone, setCustomerPhone] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const cartRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSubmitting) {
+        event.preventDefault();
+        setIsOpen(false);
+      }
+      if (event.key !== "Tab" || !cartRef.current) return;
+      const elements = Array.from(
+        cartRef.current.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (!elements.length) return;
+      const first = elements[0]!;
+      const last = elements[elements.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = oldOverflow;
+      restoreRef.current?.focus();
+    };
+  }, [isOpen, isSubmitting]);
+
   const submissionKeyRef = useRef<string>("");
   useEffect(() => {
     submissionKeyRef.current = "";
@@ -150,16 +203,18 @@ export function CartDrawer({
           aria-modal="true"
           aria-labelledby="cart-drawer-title"
         >
-          <div className="cart-drawer stack">
+          <div className="cart-drawer stack dining-cart" ref={cartRef}>
             {/* Header */}
             <div className="cart-header row between">
               <div className="stack" style={{ gap: "0.2rem" }}>
                 <span className="eyebrow">{outletName}</span>
                 <h2 id="cart-drawer-title" style={{ margin: 0 }}>
-                  Review Your Order
+                  Your order
                 </h2>
+                <small>Almost something delicious.</small>
               </div>
               <button
+                ref={closeRef}
                 type="button"
                 className="icon-btn"
                 onClick={() => setIsOpen(false)}
@@ -220,6 +275,11 @@ export function CartDrawer({
                     className="cart-item-card row between"
                     style={{ alignItems: "flex-start" }}
                   >
+                    {images[item.dishId] && (
+                      <div className="dining-cart-thumb">
+                        <DiningImage visual={images[item.dishId]!} />
+                      </div>
+                    )}
                     <div className="stack" style={{ gap: "0.25rem", flex: 1 }}>
                       <div className="row between">
                         <strong style={{ fontSize: "1rem" }}>{item.dishName}</strong>
@@ -301,6 +361,38 @@ export function CartDrawer({
                 ))}
               </div>
 
+              {suggestions.length > 0 && onChooseSuggestion && (
+                <section className="dining-cart-suggestions" aria-labelledby="dining-pair-title">
+                  <div className="row between">
+                    <h3 id="dining-pair-title">Complete your meal</h3>
+                    <small>Selected by the restaurant</small>
+                  </div>
+                  <div className="dining-cart-suggestion-list">
+                    {suggestions.map(({ dish, category, currency: suggestionCurrency, visual }) => (
+                      <div className="dining-cart-suggestion" key={dish.id}>
+                        <DiningImage visual={visual} />
+                        <div>
+                          <strong>{dish.name}</strong>
+                          <small>
+                            {dish.variants.length ? "From " : ""}
+                            {formatPrice(startingPriceMinor(dish), suggestionCurrency)}
+                          </small>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={"View " + dish.name + " and customize"}
+                          onClick={() => {
+                            setIsOpen(false);
+                            onChooseSuggestion(dish, category);
+                          }}
+                        >
+                          <Plus size={17} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
               {/* Guest Details */}
               <div className="cart-section stack" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
                 <span className="section-title">Your Details (Optional)</span>
@@ -340,10 +432,10 @@ export function CartDrawer({
                   <span>Subtotal</span>
                   <span className="money">{formatPrice(subtotalMinor, currency)}</span>
                 </div>
-                <div className="row between">
-                  <span>Taxes</span>
-                  <small className="quiet">Included in price</small>
-                </div>
+                <small className="quiet">
+                  Item subtotal is estimated. The restaurant validates prices and any applicable
+                  charges before accepting your order.
+                </small>
                 <div
                   className="row between"
                   style={{
@@ -352,7 +444,7 @@ export function CartDrawer({
                     fontWeight: 800,
                   }}
                 >
-                  <span>Total</span>
+                  <span>Estimated item subtotal</span>
                   <span className="money" style={{ fontSize: "1.2rem" }}>
                     {formatPrice(subtotalMinor, currency)}
                   </span>
@@ -363,9 +455,9 @@ export function CartDrawer({
               <div className="alert-notice stack" style={{ gap: "0.2rem" }}>
                 <strong>Important Dining Information</strong>
                 <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.4 }}>
-                  Submitting your order sends it directly to our team. An order being submitted does
-                  not mean the restaurant has accepted it yet. You will see live confirmation once
-                  the kitchen acknowledges your ticket. Payment is completed at the counter.
+                  Submitting your order sends it to the restaurant team; it does not mean they have
+                  accepted it yet. Follow your tracking page for confirmation and the restaurant’s
+                  instructions for payment.
                 </p>
               </div>
 
@@ -398,8 +490,8 @@ export function CartDrawer({
                 onClick={handleSubmitOrder}
               >
                 {isSubmitting
-                  ? "Sending to Kitchen..."
-                  : `Send Order · ${formatPrice(subtotalMinor, currency)}`}
+                  ? "Submitting your order..."
+                  : `Submit order · ${formatPrice(subtotalMinor, currency)}`}
               </button>
             </div>
           </div>

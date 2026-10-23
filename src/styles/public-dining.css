@@ -1,0 +1,865 @@
+/* Dining Canvas: guest-only styles. Do not apply to dashboard .product elements. */
+.dining-canvas {
+  --dc-paper: #fff9f0;
+  --dc-surface: #fff;
+  --dc-ink: #302017;
+  --dc-muted: #715d50;
+  --dc-line: #e9d9c8;
+  --dc-ember: #a93608;
+  --dc-soft: #f9eddb;
+  background: var(--dc-paper);
+  color: var(--dc-ink);
+  min-height: 100dvh;
+}
+:root[data-theme="dark"] .dining-canvas {
+  --dc-paper: #1c1918;
+  --dc-surface: #292320;
+  --dc-ink: #fff2df;
+  --dc-muted: #d2bba5;
+  --dc-line: #594438;
+  --dc-ember: #ffc268;
+  --dc-soft: #372920;
+}
+.dining-canvas :where(button, a, input):focus-visible {
+  outline: 3px solid var(--dc-ember);
+  outline-offset: 3px;
+}
+.dining-canvas :where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+.dining-canvas button {
+  cursor: pointer;
+}
+.dining-canvas button:disabled {
+  cursor: not-allowed;
+}
+.dining-cover {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: clamp(320px, 34vw, 520px);
+  overflow: hidden;
+  background: #f8ebd8;
+  color: #302017;
+}
+.dining-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: -2;
+}
+.dining-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 250, 243, 0.9),
+    rgba(255, 250, 243, 0.65) 42%,
+    transparent 74%
+  );
+  pointer-events: none;
+}
+.dining-cover-content {
+  width: min(1180px, 100%);
+  padding: clamp(1.5rem, 5vw, 5rem) clamp(1.25rem, 6vw, 5rem);
+  margin: auto;
+}
+.dining-cover-content h1 {
+  max-width: 13ch;
+  font-size: clamp(2.7rem, 6vw, 5.3rem);
+  line-height: 1;
+  margin: 0.7rem 0 1rem;
+  color: #302017;
+  text-wrap: balance;
+}
+.dining-cover-content p {
+  font-size: clamp(1.05rem, 1.7vw, 1.3rem);
+  max-width: 35ch;
+  color: #4e3729;
+}
+.dining-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--dc-ember);
+}
+.dining-cover .dining-kicker {
+  color: #a93608;
+}
+.dining-cover-details {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0;
+}
+.dining-cover-details span,
+.dining-cover-details strong {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid #e2ccb6;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+}
+.dining-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: #a93608;
+  color: #fff;
+  border-radius: 999px;
+  text-decoration: none;
+  padding: 0.7rem 1.2rem;
+  font-weight: 800;
+}
+.dining-shell {
+  max-width: 1180px;
+  margin: auto;
+  padding: clamp(1.2rem, 4vw, 3.2rem) clamp(1rem, 3vw, 2rem);
+}
+.dining-notice {
+  padding: 1rem 1.25rem;
+  background: var(--dc-soft);
+  border-left: 4px solid var(--dc-ember);
+  border-radius: 12px;
+  color: var(--dc-ink);
+}
+.dining-heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  margin: 0 0 1.2rem;
+}
+.dining-heading-row h2 {
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  margin: 0.35rem 0 0;
+  color: var(--dc-ink);
+}
+.dining-count,
+.dining-caption {
+  font-size: 0.87rem;
+  color: var(--dc-muted);
+}
+.dining-find {
+  display: grid;
+  gap: 1rem;
+}
+.dining-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--dc-surface);
+  border: 1px solid var(--dc-line);
+  border-radius: 16px;
+  padding: 0 1rem;
+  min-height: 58px;
+}
+.dining-search input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: none;
+  color: var(--dc-ink);
+  background: transparent;
+  font-size: 1rem;
+}
+.dining-search button {
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  color: var(--dc-ember);
+}
+.dining-diets {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.dining-diets button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 40px;
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  color: var(--dc-ink);
+  padding: 0.45rem 0.9rem;
+  background: var(--dc-surface);
+  font-weight: 700;
+  font-size: 0.83rem;
+}
+.dining-diets button.is-active {
+  color: #fff;
+  background: #a93608;
+  border-color: #a93608;
+}
+:root[data-theme="dark"] .dining-diets button.is-active {
+  background: #ffc268;
+  border-color: #ffc268;
+  color: #28150e;
+}
+.dining-categories {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.8rem;
+  padding: 1.5rem 0 1.1rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.dining-category-tile {
+  min-width: 155px;
+  max-width: 190px;
+  flex: 1 0 155px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.4rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--dc-line);
+  background: var(--dc-surface);
+  border-radius: 17px;
+  padding: 0.4rem 0.65rem 0.8rem;
+  text-decoration: none;
+  color: var(--dc-ink);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.dining-category-tile img {
+  width: 92px;
+  height: 78px;
+  object-fit: contain;
+}
+.dining-category-tile svg {
+  display: none;
+}
+.dining-category-tile:hover {
+  border-color: var(--dc-ember);
+  transform: translateY(-2px);
+}
+.dining-featured {
+  padding: 1.75rem 0;
+}
+.dining-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+.dining-feature-card {
+  display: flex;
+  overflow: hidden;
+  min-height: 190px;
+  background: var(--dc-surface);
+  border: 1px solid var(--dc-line);
+  border-radius: 18px;
+}
+.dining-feature-card img {
+  width: 44%;
+  object-fit: contain;
+  background: var(--dc-soft);
+}
+.dining-feature-card > div {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.55rem;
+}
+.dining-feature-card h3 {
+  font-size: 1.2rem;
+  color: var(--dc-ink);
+  margin: 0;
+}
+.dining-feature-card button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: auto;
+  background: transparent;
+  color: var(--dc-ember);
+  border: 0;
+  font-weight: 800;
+  padding: 0.3rem 0;
+}
+.dining-price {
+  font-weight: 800;
+  color: var(--dc-ink);
+}
+.dining-menu-release {
+  padding-top: 1.5rem;
+}
+.dining-release-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--dc-line);
+  padding-bottom: 1rem;
+}
+.dining-release-header h2 {
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  margin: 0.3rem 0 0;
+  color: var(--dc-ink);
+}
+.dining-service {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--dc-line);
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--dc-muted);
+}
+.dining-section {
+  padding: 2rem 0;
+  scroll-margin-top: 1rem;
+  border-bottom: 1px solid var(--dc-line);
+}
+.dining-section-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.dining-section-head img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  background: var(--dc-soft);
+  border-radius: 18px;
+}
+.dining-section-head h2 {
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  margin: 0.15rem 0;
+  color: var(--dc-ink);
+}
+.dining-section-head p {
+  font-size: 0.9rem;
+  margin: 0.2rem 0;
+  color: var(--dc-muted);
+}
+.dining-section-count {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--dc-muted);
+  font-size: 0.8rem;
+}
+.dining-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.dining-dish {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(125px, 36%) 1fr;
+  min-height: 190px;
+  background: var(--dc-surface);
+  border: 1px solid var(--dc-line);
+  border-radius: 18px;
+}
+.dining-photo-button {
+  border: 0;
+  padding: 0;
+  background: var(--dc-soft);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.dining-photo-button img {
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  object-fit: contain;
+  display: block;
+}
+.dining-sold {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  background: #352722;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  padding: 0.3rem 0.55rem;
+  font-weight: 800;
+}
+.dining-dish-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1rem;
+}
+.dining-dish-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.5rem;
+}
+.dining-dish-title h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--dc-ink);
+}
+.dining-dish-title strong {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  color: var(--dc-ink);
+}
+.dining-dish-content p {
+  color: var(--dc-muted);
+  font-size: 0.85rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dining-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.dining-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  color: var(--dc-muted);
+  padding: 0.2rem 0.45rem;
+  text-transform: capitalize;
+}
+.dining-dish-cta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-self: start;
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border: 0;
+  border-radius: 10px;
+  background: #a93608;
+  color: #fff;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+.dining-dish-cta.is-quiet {
+  border: 1px solid var(--dc-line);
+  background: var(--dc-soft);
+  color: var(--dc-ink);
+}
+.dining-dish.is-unavailable .dining-photo-button img {
+  opacity: 0.65;
+}
+.dining-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  gap: 0.8rem;
+  border: 1px dashed var(--dc-line);
+  background: var(--dc-surface);
+  padding: 3rem 1rem;
+  margin: 2rem 0;
+  border-radius: 18px;
+}
+.dining-empty h2 {
+  color: var(--dc-ink);
+}
+.dining-empty p {
+  max-width: 40ch;
+}
+.dining-empty button {
+  background: var(--dc-ember);
+  color: var(--dc-paper);
+  border: 0;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+.dining-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: var(--dc-muted);
+  padding: 2rem 0;
+}
+@media (max-width: 800px) {
+  .dining-grid {
+    grid-template-columns: 1fr;
+  }
+  .dining-cover {
+    min-height: 390px;
+  }
+  .dining-cover-image {
+    object-position: 65% center;
+  }
+  .dining-cover::after {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 250, 243, 0.94),
+      rgba(255, 250, 243, 0.68) 62%,
+      rgba(255, 250, 243, 0.18)
+    );
+  }
+}
+@media (max-width: 450px) {
+  .dining-cover {
+    min-height: 360px;
+  }
+  .dining-cover-content h1 {
+    font-size: 2.6rem;
+  }
+  .dining-cover-content p {
+    font-size: 1rem;
+    max-width: 26ch;
+  }
+  .dining-heading-row {
+    align-items: start;
+  }
+  .dining-section-count {
+    display: none;
+  }
+  .dining-dish {
+    grid-template-columns: 120px minmax(0, 1fr);
+    min-height: 168px;
+  }
+  .dining-photo-button img {
+    min-height: 168px;
+  }
+  .dining-dish-content {
+    padding: 0.7rem;
+  }
+  .dining-dish-title {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .dining-dish-title h3 {
+    font-size: 1rem;
+  }
+  .dining-dish-content p {
+    font-size: 0.78rem;
+  }
+  .dining-category-tile {
+    min-width: 125px;
+    flex-basis: 125px;
+  }
+  .dining-category-tile img {
+    width: 75px;
+    height: 68px;
+  }
+  .dining-diets {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+  }
+  .dining-diets button {
+    white-space: nowrap;
+  }
+  .dining-service {
+    max-width: 150px;
+  }
+  .dining-section-head img {
+    width: 64px;
+    height: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dining-category-tile,
+  .dining-dish-cta {
+    transition: none;
+    animation: none;
+  }
+}
+@media print {
+  .dining-canvas .no-print,
+  .dining-explore {
+    display: none !important;
+  }
+  .dining-cover {
+    min-height: 150px;
+  }
+  .dining-cover-image {
+    opacity: 0.3;
+  }
+  .dining-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dining-dish {
+    break-inside: avoid;
+  }
+}
+
+/* Product-details sheet */
+.dining-modal .customizer-sheet {
+  max-width: 690px;
+  max-height: min(92dvh, 970px);
+  border-radius: 22px 22px 0 0;
+  background: var(--dc-surface);
+  color: var(--dc-ink);
+}
+.dining-modal .customizer-header,
+.dining-modal .customizer-footer {
+  background: var(--dc-surface);
+  border-color: var(--dc-line);
+}
+.dining-customizer-photo {
+  width: 100%;
+  min-height: 175px;
+  max-height: 240px;
+  overflow: hidden;
+  background: var(--dc-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dining-customizer-photo img {
+  display: block;
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+}
+.dining-modal .customizer-header h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--dc-ink);
+}
+.dining-modal .customizer-body {
+  overscroll-behavior: contain;
+}
+.dining-detail-hint {
+  font-size: 0.85rem;
+  color: var(--dc-muted);
+  border-left: 3px solid var(--dc-ember);
+  padding: 0.5rem 0.75rem;
+  background: var(--dc-soft);
+}
+.dining-modal .option-card {
+  background: var(--dc-paper);
+  color: var(--dc-ink);
+  border-color: var(--dc-line);
+}
+.dining-modal .option-card.selected {
+  border-color: var(--dc-ember);
+  background: var(--dc-soft);
+}
+@media (min-width: 850px) {
+  .dining-modal {
+    justify-content: center;
+    align-items: center;
+  }
+  .dining-modal .customizer-sheet {
+    border-radius: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dining-modal,
+  .dining-modal .customizer-sheet {
+    animation: none;
+  }
+}
+
+/* Checkout presentation: items and truthful merchandising */
+.dining-cart {
+  background: var(--dc-surface);
+  color: var(--dc-ink);
+  max-width: 710px;
+  overscroll-behavior: contain;
+}
+.dining-cart .cart-header,
+.dining-cart .cart-footer {
+  background: var(--dc-surface);
+  border-color: var(--dc-line);
+}
+.dining-cart .cart-body {
+  padding: 1.1rem 1.4rem;
+  overscroll-behavior: contain;
+}
+.dining-cart .cart-item-card {
+  display: flex;
+  gap: 0.75rem;
+  background: var(--dc-paper);
+  border-color: var(--dc-line);
+  align-items: start;
+}
+.dining-cart-thumb {
+  width: 82px;
+  height: 82px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--dc-soft);
+}
+.dining-cart-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.dining-cart-suggestions {
+  border-top: 1px solid var(--dc-line);
+  padding-top: 1rem;
+}
+.dining-cart-suggestions h3 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--dc-ink);
+}
+.dining-cart-suggestions small {
+  color: var(--dc-muted);
+}
+.dining-cart-suggestion-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+.dining-cart-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem;
+  border: 1px solid var(--dc-line);
+  border-radius: 12px;
+  background: var(--dc-paper);
+}
+.dining-cart-suggestion img {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  background: var(--dc-soft);
+  border-radius: 8px;
+}
+.dining-cart-suggestion div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.dining-cart-suggestion button {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--dc-ember);
+  color: var(--dc-paper);
+  display: grid;
+  place-items: center;
+}
+.dining-cart-suggestion button:focus-visible {
+  outline: 3px solid var(--dc-ember);
+  outline-offset: 3px;
+}
+.dining-cart .cart-footer button {
+  min-height: 54px;
+}
+@media (min-width: 850px) {
+  .dining-cart {
+    max-height: min(93dvh, 950px);
+    border-radius: 22px 22px 0 0;
+  }
+}
+
+/* Merchant controls are explicitly scoped to the Studio section. */
+.dining-studio-controls {
+  gap: 1.25rem;
+}
+.dining-cover-picker,
+.dining-feature-picker {
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.dining-cover-picker legend,
+.dining-feature-picker legend {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 0.65rem;
+}
+.dining-cover-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.dining-cover-options label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+  border: 2px solid var(--decorative);
+  border-radius: 12px;
+  padding: 0.5rem;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+.dining-cover-options label.is-selected {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ember) 24%, transparent);
+}
+.dining-cover-options label input {
+  align-self: start;
+}
+.dining-cover-options label img {
+  display: block;
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.dining-feature-picker p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.dining-feature-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.dining-feature-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--decorative);
+  border-radius: 9px;
+  padding: 0.65rem;
+}
+.dining-feature-options label small {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+@media (max-width: 650px) {
+  .dining-feature-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Keep food sections reachable without losing category context. */
+.dining-categories {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--dc-paper);
+}
+.dining-section {
+  scroll-margin-top: 9rem;
+}

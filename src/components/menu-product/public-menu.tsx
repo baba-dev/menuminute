@@ -1,13 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UtensilsCrossed, Search, Leaf, Clock, Plus } from "lucide-react";
+import {
+  Search,
+  Leaf,
+  Clock,
+  Plus,
+  ArrowUpRight,
+  ChefHat,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
-import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import {
+  coverFor,
+  categoryImage,
+  dishVisual,
+  featuredForMenu,
+  startingPriceMinor,
+} from "@/modules/menu-product/public-presentation";
+import { DiningImage } from "./dining-image";
+import { restoreGuestCart } from "@/modules/menu-product/cart-storage";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
-import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
-import { CartDrawer } from "./cart-drawer";
+import dynamic from "next/dynamic";
+import type { CustomizerDish, CartItem } from "./item-customizer";
+const ItemCustomizer = dynamic(
+  () => import("./item-customizer").then((mod) => mod.ItemCustomizer),
+  { ssr: false }
+);
+const CartDrawer = dynamic(() => import("./cart-drawer").then((mod) => mod.CartDrawer), {
+  ssr: false,
+});
 
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
@@ -36,7 +60,14 @@ export function PublicMenu({
       try {
         const stored = sessionStorage.getItem(`cart_${token}`);
         const parsed = stored ? JSON.parse(stored) : [];
-        setCartItems(Array.isArray(parsed) ? parsed : []);
+        const available = new Set(
+          initial.menus.flatMap((menu) =>
+            menu.document.categories.flatMap((category) =>
+              category.items.filter((item) => !item.archived).map((item) => item.id)
+            )
+          )
+        );
+        setCartItems(restoreGuestCart(parsed, available));
       } catch {
         setCartItems([]);
       } finally {
@@ -47,9 +78,10 @@ export function PublicMenu({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [token]);
+  }, [token, initial]);
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
+  const [customizingCategory, setCustomizingCategory] = useState("");
 
   // Sync cart to sessionStorage
   useEffect(() => {
@@ -74,6 +106,12 @@ export function PublicMenu({
             if (r.status === 404 || r.status === 410) {
               // Revoked/deleted QR must not leave stale published dishes on screen.
               setData((previous) => ({ ...previous, menus: [] }));
+              setCartItems([]);
+              try {
+                sessionStorage.removeItem("cart_" + token);
+              } catch {
+                /* storage unavailable */
+              }
               setStatus("This menu is no longer available. Please ask the staff.");
             } else {
               setStatus("Menu updates could not be checked. This view may be outdated.");
@@ -132,6 +170,34 @@ export function PublicMenu({
     0
   );
 
+  const featured = docs.flatMap((menu) => featuredForMenu(menu.id, menu.view));
+  const ordering = Boolean(
+    data.outlet.orderingEnabled && !preview && token && !status.includes("no longer")
+  );
+  const browseOnly = !ordering;
+  const openDish = (dish: CustomizerDish, category: string) => {
+    setCustomizingCategory(category);
+    setCustomizingDish(dish);
+  };
+  const suggestions = docs
+    .flatMap((menu) =>
+      menu.view.categories.flatMap((category) =>
+        category.items
+          .filter(
+            (dish) =>
+              !dish.soldOut && dish.open && !cartItems.some((item) => item.dishId === dish.id)
+          )
+          .filter((dish) => (menu.view.presentation?.featuredDishIds ?? []).includes(dish.id))
+          .map((dish) => ({
+            dish,
+            category: category.name,
+            currency: menu.view.currency,
+            visual: dishVisual(dish, category.name, preview),
+          }))
+      )
+    )
+    .slice(0, 3);
+
   const handleAddToCart = (item: CartItem) => {
     setCartItems((prev) => [...prev, item]);
   };
@@ -173,204 +239,261 @@ export function PublicMenu({
   };
 
   return (
-    <div className="product" style={{ paddingBottom: cartItems.length > 0 ? "5rem" : "2rem" }}>
+    <div
+      className="product dining-canvas"
+      style={{ paddingBottom: cartItems.length > 0 ? "6rem" : "2rem" }}
+    >
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>
-      <div className="public-shell stack">
-        <header className="hero">
-          <div className="stack">
-            <span className="eyebrow">Made to be savoured · Digital menu</span>
-            <h1>{data.outlet.name}</h1>
-            <div className="row">
-              <span className="badge">{data.outlet.outletType.replaceAll("_", " ")}</span>
-              {data.point && <span className="badge">{data.point}</span>}
-              <span className="badge">{data.outlet.currency}</span>
-              {data.outlet.isDemoData && <span className="badge">Sample Menu</span>}
-              {preview && <span className="badge">Draft preview — not public</span>}
-            </div>
-            <p>
-              {data.outlet.orderingEnabled
-                ? "Explore our dishes. Add to your order and pay with the restaurant team."
-                : "Explore our digital menu. Online ordering is not enabled for this outlet."}
-            </p>
-          </div>
-          <UtensilsCrossed className="hero-mark" aria-hidden="true" />
-        </header>
-
-        <div className="public-toolbar stack no-print">
-          <div className="row">
-            <label className="field" style={{ flex: 2 }}>
-              <span className="row">
-                <Search size={16} />
-                Search the menu
-              </span>
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="A dish, ingredient or category"
-              />
-            </label>
-            <label className="field">
-              Dietary filter
-              <select
-                aria-label="Dietary filter"
-                value={diet}
-                onChange={(e) => setDiet(e.target.value)}
-              >
-                <option value="all">All dishes</option>
-                <option value="vegetarian">Vegetarian</option>
-                <option value="vegan">Vegan</option>
-                <option value="gluten_free">Gluten free</option>
-              </select>
-            </label>
-          </div>
-          <nav aria-label="Menu categories" className="scroll-links">
-            {docs.flatMap((m) =>
-              m.view.categories
-                .filter((c) => c.items.some((i) => matches(i, c.name)))
-                .map((c) => (
-                  <a className="action" key={m.id + c.id} href={`#c-${m.id}-${c.id}`}>
-                    {c.name}
-                  </a>
-                ))
-            )}
-          </nav>
-          <p className="quiet" role="status">
-            {shown} {shown === 1 ? "dish" : "dishes"} shown
+      <header className="dining-cover">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="dining-cover-image"
+          src={coverFor(docs[0]?.view)}
+          alt=""
+          width={2172}
+          height={724}
+          fetchPriority="high"
+        />
+        <div className="dining-cover-content">
+          <span className="dining-kicker">
+            THE DINING CANVAS <span aria-hidden="true">✳</span> YOUR DIGITAL MENU
+          </span>
+          <h1>{data.outlet.name}</h1>
+          <p>
+            {docs[0]?.view.presentation?.headline ||
+              "Made with care. Served with joy. Find something delicious."}
           </p>
+          <div className="dining-cover-details">
+            <span>{data.outlet.outletType.replaceAll("_", " ")}</span>
+            {data.point && <span>{data.point}</span>}
+            {data.outlet.isDemoData && <span>Sample menu</span>}
+            {preview && <strong>Draft preview — not public</strong>}
+            {ordering && <span>Order with the restaurant</span>}
+          </div>
+          <a href="#dishes" className="dining-explore">
+            Explore our food <ArrowRight size={16} aria-hidden="true" />
+          </a>
         </div>
-
+      </header>
+      <div className="dining-shell">
         {status && (
-          <p role="status" className="error">
+          <p role="status" className="dining-notice">
             {status}
           </p>
         )}
-
-        <main tabIndex={-1} id="dishes" className="stack">
-          {docs.map((m) => (
-            <div key={m.id} className="stack">
-              <div className="row between">
+        <div className="dining-find no-print" aria-label="Find dishes">
+          <div className="dining-heading-row">
+            <div>
+              <span className="dining-kicker">A LITTLE SOMETHING FOR EVERYONE</span>
+              <h2>What sounds good?</h2>
+            </div>
+            <span className="dining-count" role="status">
+              {shown} {shown === 1 ? "dish" : "dishes"} shown
+            </span>
+          </div>
+          <label className="dining-search">
+            <Search size={21} aria-hidden="true" />
+            <span className="sr-only">Search the menu</span>
+            <input
+              aria-label="Search the menu"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search dishes, descriptions or categories…"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
+                Clear
+              </button>
+            )}
+          </label>
+          <div className="dining-diets" role="group" aria-label="Dietary filter">
+            {(
+              [
+                ["all", "All dishes"],
+                ["vegetarian", "Vegetarian"],
+                ["vegan", "Vegan"],
+                ["gluten_free", "Gluten free"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={diet === value}
+                className={diet === value ? "is-active" : ""}
+                onClick={() => setDiet(value)}
+              >
+                {value === "vegetarian" && <Leaf size={15} aria-hidden="true" />}
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <nav className="dining-categories no-print" aria-label="Menu categories">
+          {docs.flatMap((menu) =>
+            menu.view.categories
+              .filter((category) => category.items.some((item) => matches(item, category.name)))
+              .map((category) => (
+                <a
+                  key={menu.id + category.id}
+                  href={"#c-" + menu.id + "-" + category.id}
+                  className="dining-category-tile"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={categoryImage(category.name)}
+                    alt=""
+                    width={96}
+                    height={96}
+                    loading="lazy"
+                  />
+                  <span>{category.name}</span>
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              ))
+          )}
+        </nav>
+        {featured.length > 0 && !search && diet === "all" && (
+          <section className="dining-featured no-print" aria-labelledby="dining-featured-title">
+            <div className="dining-heading-row">
+              <div>
+                <span className="dining-kicker">
+                  <Sparkles size={14} aria-hidden="true" /> HANDPICKED BY THE RESTAURANT
+                </span>
+                <h2 id="dining-featured-title">From our favourites</h2>
+              </div>
+              <span className="dining-caption">A little inspiration for your order.</span>
+            </div>
+            <div className="dining-featured-grid">
+              {featured.map(({ menuId, categoryName, dish, currency }) => (
+                <article key={menuId + ":" + dish.id} className="dining-feature-card">
+                  <DiningImage visual={dishVisual(dish, categoryName, preview)} />
+                  <div>
+                    <span className="dining-kicker">{categoryName}</span>
+                    <h3>{dish.name}</h3>
+                    <span className="dining-price">
+                      {dish.variants.length ? "From " : ""}
+                      {formatPrice(startingPriceMinor(dish), currency)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openDish(dish, categoryName)}
+                      aria-label={"View " + dish.name + " details"}
+                    >
+                      Discover dish <ArrowUpRight size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+        <main id="dishes" tabIndex={-1} className="dining-menu">
+          {docs.map((menu) => (
+            <div key={menu.id} className="dining-menu-release">
+              <div className="dining-release-header">
                 <div>
-                  <span className="eyebrow">{m.brand ?? "From our kitchen"}</span>
-                  <h2>{m.view.name}</h2>
+                  <span className="dining-kicker">{menu.brand ?? "FRESH FROM OUR KITCHEN"}</span>
+                  <h2>{menu.view.name}</h2>
                 </div>
-                <span className="badge">
-                  <Clock size={13} style={{ display: "inline" }} />{" "}
-                  {m.view.open ? "Current service" : "Outside scheduled service"}
+                <span className="dining-service">
+                  <Clock size={14} aria-hidden="true" />{" "}
+                  {menu.view.open ? "Current service" : "Outside scheduled service"}
                 </span>
               </div>
-              {m.view.categories.map((c) => {
-                const items = c.items.filter((i) => matches(i, c.name));
+              {menu.view.categories.map((category) => {
+                const items = category.items.filter((item) => matches(item, category.name));
                 if (!items.length) return null;
                 return (
-                  <section key={c.id} id={`c-${m.id}-${c.id}`} className="stack">
-                    <div>
-                      <h2>{c.name}</h2>
-                      {c.description && <p>{c.description}</p>}
+                  <section
+                    key={category.id}
+                    id={"c-" + menu.id + "-" + category.id}
+                    className="dining-section"
+                    aria-labelledby={"title-" + menu.id + "-" + category.id}
+                  >
+                    <div className="dining-section-head">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={categoryImage(category.name)}
+                        alt=""
+                        width={84}
+                        height={84}
+                        loading="lazy"
+                      />
+                      <div>
+                        <span className="dining-kicker">EXPLORE THE MENU</span>
+                        <h2 id={"title-" + menu.id + "-" + category.id}>{category.name}</h2>
+                        {category.description && <p>{category.description}</p>}
+                      </div>
+                      <span className="dining-section-count">
+                        {items.length} {items.length === 1 ? "dish" : "dishes"}
+                      </span>
                     </div>
-                    <div className="dish-grid">
-                      {items.map((i) => (
-                        <article key={i.id} className={`dish-card ${i.soldOut ? "sold-out" : ""}`}>
-                          <div className="dish-image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={dishImageSrc(i, preview ? "private" : "public")}
-                              alt={i.imageMode === "none" ? "" : i.name}
-                              width={160}
-                              height={160}
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.onerror = null;
-                                e.currentTarget.src = "/icons/category-default.svg";
-                              }}
-                            />
-                            {i.soldOut && <span className="sold-label">Sold Out</span>}
-                          </div>
-                          <div className="stack" style={{ gap: ".4rem", flex: 1 }}>
-                            <div className="row between">
-                              <h3>{i.name}</h3>
-                              <span className="money">
-                                {i.variants.length ? "From " : ""}
-                                {formatPrice(
-                                  i.variants.length
-                                    ? Math.min(
-                                        ...(i.variants.some((v) => v.isAvailable)
-                                          ? i.variants.filter((v) => v.isAvailable)
-                                          : i.variants
-                                        ).map((v) => v.priceMinor)
-                                      )
-                                    : i.priceMinor,
-                                  m.view.currency
-                                )}
-                              </span>
-                            </div>
-                            {i.description && <p>{i.description}</p>}
-                            {!data.outlet.orderingEnabled &&
-                              (i.variants.length > 0 || i.addOnGroups.length > 0) && (
-                                <div className="stack" aria-label={`Options for ${i.name}`}>
-                                  <small className="quiet">Variants & add-ons</small>
-                                  {i.variants.map((variant) => (
-                                    <small key={variant.id}>
-                                      {variant.name} ·{" "}
-                                      {formatPrice(variant.priceMinor, m.view.currency)}
-                                    </small>
-                                  ))}
-                                  {i.addOnGroups.map((group) => (
-                                    <div key={group.id} className="stack">
-                                      <small className="quiet">{group.name}</small>
-                                      {group.options.map((option) => (
-                                        <small key={option.id}>
-                                          {option.name} ·{" "}
-                                          {formatPrice(option.priceMinor, m.view.currency)}
-                                        </small>
-                                      ))}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            {!i.open && <span className="badge">Outside service time</span>}
-                            <div className="row">
-                              {i.dietary.map((d) => (
-                                <span key={d} className="badge">
-                                  <Leaf size={12} style={{ display: "inline" }} />{" "}
-                                  {d.replaceAll("_", " ")}
-                                </span>
-                              ))}
-                            </div>
-
-                            {/* Add to Cart CTA Button */}
-                            <div
-                              className="row between"
-                              style={{ marginTop: "auto", paddingTop: "0.5rem" }}
+                    <div className="dining-grid">
+                      {items.map((dish) => {
+                        const unavailable = dish.soldOut || !dish.open;
+                        const image = dishVisual(dish, category.name, preview);
+                        const price = startingPriceMinor(dish);
+                        return (
+                          <article
+                            key={dish.id}
+                            className={"dining-dish " + (unavailable ? "is-unavailable" : "")}
+                          >
+                            <button
+                              type="button"
+                              className="dining-photo-button"
+                              onClick={() => openDish(dish, category.name)}
+                              aria-label={"View " + dish.name + " details"}
                             >
+                              <DiningImage visual={image} />
+                              {dish.soldOut && <span className="dining-sold">Sold Out</span>}
+                            </button>
+                            <div className="dining-dish-content">
+                              <div className="dining-dish-title">
+                                <h3>{dish.name}</h3>
+                                <strong>
+                                  {dish.variants.length ? "From " : ""}
+                                  {formatPrice(price, menu.view.currency)}
+                                </strong>
+                              </div>
+                              {dish.description && <p>{dish.description}</p>}
+                              <div className="dining-tags">
+                                {dish.dietary.map((value) => (
+                                  <span key={value}>
+                                    <Leaf size={12} aria-hidden="true" />
+                                    {value.replaceAll("_", " ")}
+                                  </span>
+                                ))}
+                                {dish.variants.length + dish.addOnGroups.length > 0 && (
+                                  <span>Customizable</span>
+                                )}
+                                {!dish.open && <span>Outside service time</span>}
+                              </div>
                               <button
                                 type="button"
-                                className="action"
-                                style={{
-                                  borderRadius: "10px",
-                                  padding: "0.45rem 0.9rem",
-                                  fontSize: "0.85rem",
-                                  gap: "0.3rem",
-                                }}
-                                disabled={
-                                  i.soldOut || !i.open || preview || !data.outlet.orderingEnabled
+                                className={
+                                  "dining-dish-cta " + (unavailable || browseOnly ? "is-quiet" : "")
                                 }
-                                onClick={() => setCustomizingDish(i)}
+                                disabled={unavailable && !browseOnly}
+                                onClick={() => openDish(dish, category.name)}
                               >
-                                <Plus size={14} /> Add
+                                {browseOnly
+                                  ? "View dish"
+                                  : unavailable
+                                    ? "Unavailable"
+                                    : "Add to order"}
+                                {browseOnly ? (
+                                  <ArrowUpRight size={17} aria-hidden="true" />
+                                ) : (
+                                  <Plus size={17} aria-hidden="true" />
+                                )}
                               </button>
-
-                              {(i.variants.length > 0 || i.addOnGroups.length > 0) && (
-                                <small className="quiet" style={{ fontSize: "0.75rem" }}>
-                                  Customizable
-                                </small>
-                              )}
                             </div>
-                          </div>
-                        </article>
-                      ))}
+                          </article>
+                        );
+                      })}
                     </div>
                   </section>
                 );
@@ -378,17 +501,19 @@ export function PublicMenu({
             </div>
           ))}
           {shown === 0 && (
-            <div className="panel quiet">
+            <div className="dining-empty">
+              <ChefHat size={34} aria-hidden="true" />
               <h2>
                 {search || diet !== "all" ? "No matching dishes" : "No dishes in this service"}
               </h2>
               <p>
                 {search || diet !== "all"
                   ? "Try another search or clear your filters."
-                  : "Please ask the team about today’s menu."}
+                  : "Please ask the restaurant team about today’s menu."}
               </p>
               {(search || diet !== "all") && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSearch("");
                     setDiet("all");
@@ -400,27 +525,30 @@ export function PublicMenu({
             </div>
           )}
         </main>
-
-        <footer className="row between">
+        <footer className="dining-footer">
           <small>
             Dietary information is supplied by the restaurant. Ask staff about allergens.
           </small>
-          <small>Powered by MenuMinute · Free QR menus & Online Ordering</small>
+          <small>Made to be savoured · Powered by MenuMinute</small>
         </footer>
       </div>
-
-      {/* Item Customizer Modal */}
-      <ItemCustomizer
-        key={customizingDish?.id ?? "empty"}
-        dish={customizingDish}
-        currency={data.outlet.currency}
-        isOpen={!!customizingDish}
-        onClose={() => setCustomizingDish(null)}
-        onAddToCart={handleAddToCart}
-      />
-
-      {/* Sticky Cart Drawer */}
-      {token && data.outlet.orderingEnabled && (
+      {customizingDish && (
+        <ItemCustomizer
+          key={customizingDish?.id ?? "empty"}
+          dish={customizingDish}
+          visual={
+            customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null
+          }
+          currency={data.outlet.currency}
+          readOnly={
+            browseOnly || Boolean(customizingDish?.soldOut || customizingDish?.open === false)
+          }
+          isOpen={Boolean(customizingDish)}
+          onClose={() => setCustomizingDish(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
+      {ordering && token && (
         <CartDrawer
           items={cartItems}
           currency={data.outlet.currency}
@@ -428,6 +556,17 @@ export function PublicMenu({
           outletName={data.outlet.name}
           point={data.point}
           fulfillmentModes={data.outlet.fulfillmentModes}
+          images={Object.fromEntries(
+            docs.flatMap((menu) =>
+              menu.view.categories.flatMap((category) =>
+                category.items.map(
+                  (dish) => [dish.id, dishVisual(dish, category.name, preview)] as const
+                )
+              )
+            )
+          )}
+          suggestions={suggestions}
+          onChooseSuggestion={(dish, category) => openDish(dish, category)}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveItem}
           onClearCart={handleClearCart}

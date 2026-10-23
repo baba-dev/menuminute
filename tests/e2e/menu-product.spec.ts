@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import sharp from "sharp";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
+import { formatPrice } from "../../src/lib/utils";
 async function seed(publish = false) {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
@@ -204,10 +205,15 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   const guest = await page.context().newPage();
   await guest.goto(`/m/${f.token}`);
   await expect(guest.getByRole("heading", { name: "Signature thali" })).toBeVisible();
-  // The QR-only tier displays variants and add-ons read-only, without paid checkout.
-  await expect(guest.getByText("Variants & add-ons", { exact: true })).toBeVisible();
-  await expect(guest.getByText(/Regular.*15/)).toBeVisible();
-  await expect(guest.getByRole("button", { name: "Add", exact: true })).toBeDisabled();
+  // QR-only menus still show option prices inside the read-only details sheet, never checkout.
+  await guest.getByRole("button", { name: "View Signature thali details" }).first().click();
+  const guestDetails = guest.getByRole("dialog", { name: "Signature thali" });
+  await expect(guestDetails.getByText("Regular", { exact: true })).toBeVisible();
+  await expect(guestDetails.getByText(formatPrice(15000, "OMR"), { exact: true })).toBeVisible();
+  await expect(guestDetails.getByText(/Browse the available options and pricing/)).toBeVisible();
+  await expect(guestDetails.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
+  await guestDetails.getByRole("button", { name: "Back to menu" }).click();
+  await expect(guest.getByRole("button", { name: "View order cart" })).toHaveCount(0);
   await expect(guest.getByText("Sold Out", { exact: true })).toHaveCount(0);
   await page.getByLabel("Sold out", { exact: true }).check();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
@@ -278,7 +284,7 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await page.getByRole("link", { name: "Skip to dishes" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#dishes")).toBeFocused();
-  for (const width of [360, 390, 768, 1024, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true
@@ -287,7 +293,10 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await page.getByLabel("Search the menu", { exact: true }).fill("not-a-real-dish");
   await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).click();
-  await page.getByLabel("Dietary filter", { exact: true }).selectOption("vegan");
+  await page
+    .getByRole("group", { name: "Dietary filter" })
+    .getByRole("button", { name: "Vegan" })
+    .click();
   await expect(page.getByRole("heading", { name: "Signature thali" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /An intentionally long dish name/ })
