@@ -245,7 +245,7 @@ export function StudioActions({
           onClick={onPreview}
           aria-pressed={preview}
         >
-          <Eye size={16} aria-hidden="true" /> {preview ? "Back to edit" : "Preview draft"}
+          <Eye size={16} aria-hidden="true" /> {preview ? "Preview open" : "Preview draft"}
         </button>
         <button type="button" className="ember" disabled={disabled} onClick={onSave}>
           <Save size={16} aria-hidden="true" />
