@@ -3,6 +3,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { Field, Money } from "./studio-fields";
 import { ScheduleEditor } from "./schedule-editor";
+import { artworkForDish, artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
 
 type Dish = MenuDocument["categories"][number]["items"][number];
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
@@ -31,23 +32,12 @@ export function StudioDishEditor({
 }) {
   return (
     <div className="atelier-dish-row dish-editor stack">
-      {canWrite &&
-        dish.mediaId &&
-        media.some((m) => m.id === dish.mediaId && m.status === "ready" && m.approvedAt) && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={"/api/media/" + encodeURIComponent(dish.mediaId)}
-            alt={"Uploaded photograph for " + dish.name}
-            width={104}
-            height={84}
-            style={{
-              width: 104,
-              height: 84,
-              objectFit: "cover",
-              borderRadius: 10,
-            }}
-          />
-        )}
+      <img
+        className="atelier-dish-artwork"
+        src={dishImageSrc(dish, "private")}
+        alt={dish.imageMode === "none" ? "" : "Selected image for " + dish.name}
+        width={104} height={84} loading="lazy"
+      />
       <div className="row between">
         <span className="eyebrow">Dish {di + 1}</span>
         <div className="row" aria-label={`Reorder ${dish.name || "untitled dish"}`}>
@@ -125,23 +115,27 @@ export function StudioDishEditor({
         ))}
       </div>
       <label className="field">
-        Dish photo
+        Dish image
         <select
           aria-label={`Dish photo ${ci + 1}.${di + 1}`}
-          value={dish.mediaId ?? ""}
-          onChange={(e) => onUpdate({ mediaId: e.target.value || null })}
+          value={dish.imageMode === "auto" ? "auto" : dish.imageMode === "photo" ? "photo:" + (dish.mediaId ?? "") : dish.imageMode}
+          onChange={(e) => {
+            const value = e.target.value;
+            const art = artworkById(dish.artworkId) ?? artworkForDish(dish.name);
+            onUpdate(value.startsWith("photo:")
+              ? { imageMode: "photo", mediaId: value.slice(6) }
+              : value === "artwork" && art
+                ? { imageMode: "artwork", artworkId: art.id }
+                : { imageMode: value as Dish["imageMode"] });
+          }}
         >
-          <option value="">Local illustration</option>
-          {dish.mediaId && !media.some((a) => a.id === dish.mediaId) && (
-            <option value={dish.mediaId}>Current approved photo</option>
-          )}
-          {media
-            .filter((a) => a.status === "ready" && a.approvedAt)
-            .map((a, n) => (
-              <option key={a.id} value={a.id}>
-                Approved photo {n + 1}
-              </option>
-            ))}
+          {dish.imageMode === "auto" && <option value="auto">Automatic · legacy selection</option>}
+          {(artworkById(dish.artworkId) ?? artworkForDish(dish.name)) && <option value="artwork">Curated illustration</option>}
+          <option value="none">No image</option>
+          {dish.mediaId && !media.some((a) => a.id === dish.mediaId) && <option value={"photo:" + dish.mediaId}>Current approved photo</option>}
+          {media.filter((a) => a.status === "ready" && a.approvedAt).map((a, n) => (
+            <option key={a.id} value={"photo:" + a.id}>Approved photo {n + 1}</option>
+          ))}
         </select>
       </label>
       <details>

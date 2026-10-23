@@ -1,6 +1,6 @@
 import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
-import { menus, menuAssignments, menuOverrides, dishMedia } from "@/db/schema";
+import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { getPool } from "@/db";
 import { getPublicMenu, getRestaurantById } from "@/modules/restaurants/service";
@@ -54,6 +54,7 @@ export async function menuDetail(actor: Actor, id: string) {
     const allowed = await tx.execute<{ allowed: boolean }>(
       sql`select app_private.menu_access(${id},'menu.write') as allowed`
     );
+    const historicalRelease = await tx.select({ revision: menuReleases.revision }).from(menuReleases).where(eq(menuReleases.menuId, id)).limit(1);
     const assignments = await tx
       .select()
       .from(menuAssignments)
@@ -63,6 +64,7 @@ export async function menuDetail(actor: Actor, id: string) {
       ...row,
       document: menuDocumentSchema.parse(row.document),
       canWrite: allowed.rows[0]?.allowed ?? false,
+      everPublished: historicalRelease.length > 0,
       assignments,
       overrides,
     };
