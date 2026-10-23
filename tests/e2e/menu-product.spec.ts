@@ -204,10 +204,15 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   const guest = await page.context().newPage();
   await guest.goto(`/m/${f.token}`);
   await expect(guest.getByRole("heading", { name: "Signature thali" })).toBeVisible();
-  // The QR-only tier displays variants and add-ons read-only, without paid checkout.
-  await expect(guest.getByText("Variants & add-ons", { exact: true })).toBeVisible();
-  await expect(guest.getByText(/Regular.*15/)).toBeVisible();
-  await expect(guest.getByRole("button", { name: "Add", exact: true })).toBeDisabled();
+  // QR-only menus still show option prices inside the read-only details sheet, never checkout.
+  await guest.getByRole("button", { name: "View Signature thali details" }).first().click();
+  const guestDetails = guest.getByRole("dialog", { name: "Signature thali" });
+  await expect(guestDetails.getByText("Regular", { exact: true })).toBeVisible();
+  await expect(guestDetails.getByText(/15[.,]000/)).toBeVisible();
+  await expect(guestDetails.getByText(/Browse the available options and pricing/)).toBeVisible();
+  await expect(guestDetails.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
+  await guestDetails.getByRole("button", { name: "Back to menu" }).click();
+  await expect(guest.getByRole("button", { name: "View order cart" })).toHaveCount(0);
   await expect(guest.getByText("Sold Out", { exact: true })).toHaveCount(0);
   await page.getByLabel("Sold out", { exact: true }).check();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();

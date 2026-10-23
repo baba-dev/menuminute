@@ -99,8 +99,11 @@ test("the free QR-only outlet retains its public menu but does not offer checkou
   const fixture = await seedOrdering(false);
   await page.goto(`/m/${fixture.tableToken}`);
   await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
-  await expect(page.getByText("Online ordering is not enabled for this outlet.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Add", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
+  const detail = page.getByRole("dialog", { name: "Paneer Curry" });
+  await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
+  await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
+  await detail.getByRole("button", { name: "Back to menu" }).click();
   await expect(page.getByRole("button", { name: "View order cart" })).toHaveCount(0);
 });
 
@@ -111,11 +114,11 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   const fixture = await seedOrdering(true);
   await page.goto(`/m/${fixture.tableToken}`);
   await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
-  await page.getByRole("button", { name: "Add", exact: true }).click();
-  await page.getByRole("button", { name: /Add to Order/ }).click();
+  await page.getByRole("button", { name: "Add to order", exact: true }).click();
+  await page.getByRole("dialog", { name: "Paneer Curry" }).getByRole("button", { name: /Add to Order/ }).click();
   await page.getByRole("button", { name: "View order cart" }).click();
   await expect(page.getByText("Table 4", { exact: false }).first()).toBeVisible();
-  await page.getByRole("button", { name: /Send Order/ }).click();
+  await page.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
   await expect(page.getByText("Order Sent to Restaurant")).toBeVisible();
 
