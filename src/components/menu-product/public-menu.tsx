@@ -7,7 +7,11 @@ import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
 import { CartDrawer } from "./cart-drawer";
-import { resolveDishVisual, type DishVisual } from "@/modules/menu-product/dish-artwork";
+import {
+  nextDishImageSource,
+  resolveDishVisual,
+  type DishVisual,
+} from "@/modules/menu-product/dish-artwork";
 
 /** Every failed restaurant photo falls back to approved catalogue artwork, then a local category
  * icon. Never retry a broken source or send the browser to an arbitrary external URL. */
@@ -23,15 +27,11 @@ function PublicDishImage({ visual }: { visual: DishVisual }) {
       style={{ objectFit: visual.source === "restaurant" ? "cover" : "contain" }}
       onError={(event) => {
         const image = event.currentTarget;
-        const current = image.getAttribute("src");
+        const current = image.getAttribute("src") ?? "";
+        const next = nextDishImageSource(visual, current);
         image.style.objectFit = "contain";
-        if (current !== visual.fallbackSrc && visual.fallbackSrc !== visual.src) {
-          image.src = visual.fallbackSrc;
-        } else if (current !== "/icons/category-default.svg") {
-          image.src = "/icons/category-default.svg";
-        } else {
-          image.onerror = null;
-        }
+        if (next) image.src = next;
+        else image.onerror = null;
       }}
     />
   );

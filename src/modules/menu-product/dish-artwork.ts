@@ -13,6 +13,7 @@ export type DishVisual = {
   source: "restaurant" | "catalogue" | "category";
   src: string;
   fallbackSrc: string;
+  categorySrc: string;
   alt: string;
 };
 
@@ -68,6 +69,7 @@ export function resolveDishVisual(
       source: "restaurant",
       src: `/api/public-media/${encodeURIComponent(dish.mediaId)}?size=thumb`,
       fallbackSrc,
+      categorySrc: category,
       alt: `Photo of ${dish.name}`,
     };
   }
@@ -76,8 +78,22 @@ export function resolveDishVisual(
       source: "catalogue",
       src: artwork.path,
       fallbackSrc: category,
+      categorySrc: category,
       alt: `Illustration of ${dish.name}`,
     };
   }
-  return { source: "category", src: category, fallbackSrc: defaultIllustration, alt: "" };
+  return {
+    source: "category",
+    src: category,
+    fallbackSrc: defaultIllustration,
+    categorySrc: category,
+    alt: "",
+  };
+}
+
+/** A bounded, local-only retry order, deduplicated so missing assets cannot loop. */
+export function nextDishImageSource(visual: DishVisual, current: string): string | null {
+  const sources = [...new Set([visual.src, visual.fallbackSrc, visual.categorySrc, defaultIllustration])];
+  const at = sources.indexOf(current);
+  return at < 0 ? null : (sources[at + 1] ?? null);
 }

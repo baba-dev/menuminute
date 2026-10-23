@@ -4,6 +4,7 @@ import { menuDocumentSchema } from "../src/modules/menu-product/contracts";
 import {
   approvedArtworkForDish,
   categoryIllustration,
+  nextDishImageSource,
   resolveDishVisual,
 } from "../src/modules/menu-product/dish-artwork";
 import { buildPublicPresentation } from "../src/modules/menu-product/public-presentation";
@@ -101,6 +102,20 @@ describe("Public Menu 2.0 presentation and artwork contract", () => {
         .source
     ).toBe("catalogue");
     expect(categoryIllustration("Desserts & Sweets")).toBe("/icons/category-desserts.svg");
+    const restaurant = resolveDishVisual({
+      name: "Paneer Tikka",
+      mediaId: "photo-1",
+      categoryName: "Starters",
+    });
+    expect(nextDishImageSource(restaurant, restaurant.src)).toBe(restaurant.fallbackSrc);
+    expect(nextDishImageSource(restaurant, restaurant.fallbackSrc)).toBe(
+      "/icons/category-starters.svg"
+    );
+    expect(nextDishImageSource(restaurant, "/icons/category-starters.svg")).toBe(
+      "/icons/category-default.svg"
+    );
+    expect(nextDishImageSource(restaurant, "/icons/category-default.svg")).toBeNull();
+
   });
 
   it("builds an additive scoped release projection without archived content or inferred claims", () => {
