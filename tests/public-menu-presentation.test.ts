@@ -68,23 +68,38 @@ describe("Public Menu 2.0 presentation and artwork contract", () => {
       slug: "paneer-tikka",
     };
     expect(approvedArtworkForDish("Paneer Tikka", [sample])).toBeNull();
-    expect(approvedArtworkForDish("Paneer Tikka", [{ ...sample, state: "approved", path: "//evil.invalid/p.png" }])).toBeNull();
-    expect(approvedArtworkForDish("Paneer Tikka", [{ ...sample, state: "approved", slug: "other" }])).toBeNull();
+    expect(
+      approvedArtworkForDish("Paneer Tikka", [
+        { ...sample, state: "approved", path: "//evil.invalid/p.png" },
+      ])
+    ).toBeNull();
+    expect(
+      approvedArtworkForDish("Paneer Tikka", [{ ...sample, state: "approved", slug: "other" }])
+    ).toBeNull();
     expect(approvedArtworkForDish("Paneer Tikka with Chilli")).toBeNull();
   });
 
   it("prioritizes restaurant media and uses an approved local fallback", () => {
-    expect(resolveDishVisual({ name: "Paneer Tikka", mediaId: "photo-1", categoryName: "Mains" })).toMatchObject({
+    expect(
+      resolveDishVisual({ name: "Paneer Tikka", mediaId: "photo-1", categoryName: "Mains" })
+    ).toMatchObject({
       source: "restaurant",
       src: "/api/public-media/photo-1?size=thumb",
       fallbackSrc: "/assets/food/dishes/indian/paneer-tikka.png",
     });
-    expect(resolveDishVisual({ name: "Paneer Tikka", mediaId: null, categoryName: "Mains" }).source).toBe("catalogue");
-    expect(resolveDishVisual({ name: "Dal Dhokli", mediaId: null, categoryName: "Rice" })).toMatchObject({
+    expect(
+      resolveDishVisual({ name: "Paneer Tikka", mediaId: null, categoryName: "Mains" }).source
+    ).toBe("catalogue");
+    expect(
+      resolveDishVisual({ name: "Dal Dhokli", mediaId: null, categoryName: "Rice" })
+    ).toMatchObject({
       source: "category",
       src: "/icons/category-rice.svg",
     });
-    expect(resolveDishVisual({ name: "Paneer Tikka", mediaId: "not/a/media", categoryName: "Mains" }).source).toBe("catalogue");
+    expect(
+      resolveDishVisual({ name: "Paneer Tikka", mediaId: "not/a/media", categoryName: "Mains" })
+        .source
+    ).toBe("catalogue");
     expect(categoryIllustration("Desserts & Sweets")).toBe("/icons/category-desserts.svg");
   });
 
@@ -101,6 +116,8 @@ describe("Public Menu 2.0 presentation and artwork contract", () => {
     expect(result.dishImages).not.toHaveProperty("published:private");
     expect(result.categoryImages).not.toHaveProperty("published:old");
     expect(JSON.stringify(result)).not.toMatch(/priceMinor|allergen|nutrition|discount|popularity/);
-    expect(buildPublicPresentation({ ...input, outlet: { ...input.outlet, orderingEnabled: true } }).mode).toBe("ordering");
+    expect(
+      buildPublicPresentation({ ...input, outlet: { ...input.outlet, orderingEnabled: true } }).mode
+    ).toBe("ordering");
   });
 });

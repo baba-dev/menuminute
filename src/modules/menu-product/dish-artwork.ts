@@ -47,11 +47,9 @@ export function categoryIllustration(categoryName: string): string {
     return "/icons/category-desserts.svg";
   if (/beverage|drink|coffee|tea|juice|shake|lassi/.test(category))
     return "/icons/category-beverages.svg";
-  if (/bread|naan|roti|paratha|kulcha/.test(category))
-    return "/icons/category-breads.svg";
+  if (/bread|naan|roti|paratha|kulcha/.test(category)) return "/icons/category-breads.svg";
   if (/rice|biryani|pulao/.test(category)) return "/icons/category-rice.svg";
-  if (/starter|snack|appetizer|small bite/.test(category))
-    return "/icons/category-starters.svg";
+  if (/starter|snack|appetizer|small bite/.test(category)) return "/icons/category-starters.svg";
   return defaultIllustration;
 }
 
