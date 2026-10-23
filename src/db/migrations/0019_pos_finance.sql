@@ -319,6 +319,12 @@ BEGIN
   IF EXISTS(SELECT 1 FROM pos_bills WHERE sale_id=sale.id) THEN RAISE EXCEPTION 'Bill already frozen' USING ERRCODE='40001'; END IF;
   IF EXISTS(SELECT 1 FROM orders WHERE id=sale.order_id AND restaurant_id=p_outlet
    AND status IN ('rejected','cancelled','expired') ) THEN RAISE EXCEPTION 'Cancelled order cannot be billed' USING ERRCODE='22023'; END IF;
+  -- Hold both sources for the entire bill-freeze transaction. A concurrent seller
+  -- or tax-profile update must finish before this snapshot starts, or wait until it commits.
+  PERFORM 1 FROM pos_seller_profiles WHERE outlet_id=p_outlet FOR SHARE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Seller setup required' USING ERRCODE='22023'; END IF;
+  PERFORM 1 FROM pos_tax_profiles WHERE outlet_id=p_outlet FOR SHARE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Tax setup required' USING ERRCODE='22023'; END IF;
   quote:=app_private.pos_preview(p_outlet,sale.id);
   IF quote->>'totalMinor' IS DISTINCT FROM p_data->>'expectedTotalMinor' OR
     (quote->>'taxProfileRevision')::integer<>(p_data->>'expectedTaxRevision')::integer
