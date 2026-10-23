@@ -328,7 +328,10 @@ it("archives a published menu without destroying its release, blocks foreign del
   expect(archived.everPublished).toBe(true);
   expect(await publicProduct(f.outlet.publicId)).toBeNull();
   await admin(async (_, pool) => {
-    const result = await pool.query("select count(*)::int as count from menu_releases where menu_id=$1", [id]);
+    const result = await pool.query(
+      "select count(*)::int as count from menu_releases where menu_id=$1",
+      [id]
+    );
     expect(result.rows[0].count).toBe(1);
   });
   await command(f, id, "restore");
