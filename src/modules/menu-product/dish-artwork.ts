@@ -93,7 +93,9 @@ export function resolveDishVisual(
 
 /** A bounded, local-only retry order, deduplicated so missing assets cannot loop. */
 export function nextDishImageSource(visual: DishVisual, current: string): string | null {
-  const sources = [...new Set([visual.src, visual.fallbackSrc, visual.categorySrc, defaultIllustration])];
-  const at = sources.indexOf(current);
-  return at < 0 ? null : (sources[at + 1] ?? null);
+  const sources = [visual.src, visual.fallbackSrc, visual.categorySrc, defaultIllustration];
+  const uniqueSources = [...new Set(sources)];
+  const at = uniqueSources.indexOf(current);
+  if (at < 0) return null;
+  return uniqueSources[at + 1] ?? null;
 }
