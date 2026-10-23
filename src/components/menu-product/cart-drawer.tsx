@@ -29,7 +29,12 @@ export function CartDrawer({
   point: string | null;
   fulfillmentModes?: string[];
   images?: Record<string, DiningVisual>;
-  suggestions?: { dish: CustomizerDish; category: string; currency: string; visual: DiningVisual }[];
+  suggestions?: {
+    dish: CustomizerDish;
+    category: string;
+    currency: string;
+    visual: DiningVisual;
+  }[];
   onChooseSuggestion?: (dish: CustomizerDish, category: string) => void;
   onUpdateQuantity: (index: number, newQty: number) => void;
   onRemoveItem: (index: number) => void;
@@ -53,24 +58,39 @@ export function CartDrawer({
   const restoreRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!isOpen) return;
-    restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isSubmitting) { event.preventDefault(); setIsOpen(false); }
+      if (event.key === "Escape" && !isSubmitting) {
+        event.preventDefault();
+        setIsOpen(false);
+      }
       if (event.key !== "Tab" || !cartRef.current) return;
-      const elements = Array.from(cartRef.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
-      ));
+      const elements = Array.from(
+        cartRef.current.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
+        )
+      );
       if (!elements.length) return;
       const first = elements[0]!;
       const last = elements[elements.length - 1]!;
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = oldOverflow; restoreRef.current?.focus(); };
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = oldOverflow;
+      restoreRef.current?.focus();
+    };
   }, [isOpen, isSubmitting]);
 
   const submissionKeyRef = useRef<string>("");
@@ -188,7 +208,9 @@ export function CartDrawer({
             <div className="cart-header row between">
               <div className="stack" style={{ gap: "0.2rem" }}>
                 <span className="eyebrow">{outletName}</span>
-                <h2 id="cart-drawer-title" style={{ margin: 0 }}>Your order</h2>
+                <h2 id="cart-drawer-title" style={{ margin: 0 }}>
+                  Your order
+                </h2>
                 <small>Almost something delicious.</small>
               </div>
               <button
@@ -253,7 +275,11 @@ export function CartDrawer({
                     className="cart-item-card row between"
                     style={{ alignItems: "flex-start" }}
                   >
-                    {images[item.dishId] && <div className="dining-cart-thumb"><DiningImage visual={images[item.dishId]} /></div>}
+                    {images[item.dishId] && (
+                      <div className="dining-cart-thumb">
+                        <DiningImage visual={images[item.dishId]} />
+                      </div>
+                    )}
                     <div className="stack" style={{ gap: "0.25rem", flex: 1 }}>
                       <div className="row between">
                         <strong style={{ fontSize: "1rem" }}>{item.dishName}</strong>
@@ -337,13 +363,28 @@ export function CartDrawer({
 
               {suggestions.length > 0 && onChooseSuggestion && (
                 <section className="dining-cart-suggestions" aria-labelledby="dining-pair-title">
-                  <div className="row between"><h3 id="dining-pair-title">Complete your meal</h3><small>Selected by the restaurant</small></div>
+                  <div className="row between">
+                    <h3 id="dining-pair-title">Complete your meal</h3>
+                    <small>Selected by the restaurant</small>
+                  </div>
                   <div className="dining-cart-suggestion-list">
                     {suggestions.map(({ dish, category, currency: suggestionCurrency, visual }) => (
                       <div className="dining-cart-suggestion" key={dish.id}>
                         <DiningImage visual={visual} />
-                        <div><strong>{dish.name}</strong><small>{formatPrice(dish.priceMinor, suggestionCurrency)}</small></div>
-                        <button type="button" aria-label={"View " + dish.name + " and customize"} onClick={() => { setIsOpen(false); onChooseSuggestion(dish, category); }}><Plus size={17} aria-hidden="true" /></button>
+                        <div>
+                          <strong>{dish.name}</strong>
+                          <small>{formatPrice(dish.priceMinor, suggestionCurrency)}</small>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={"View " + dish.name + " and customize"}
+                          onClick={() => {
+                            setIsOpen(false);
+                            onChooseSuggestion(dish, category);
+                          }}
+                        >
+                          <Plus size={17} aria-hidden="true" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -388,7 +429,10 @@ export function CartDrawer({
                   <span>Subtotal</span>
                   <span className="money">{formatPrice(subtotalMinor, currency)}</span>
                 </div>
-                <small className="quiet">Item subtotal is estimated. The restaurant validates prices and any applicable charges before accepting your order.</small>
+                <small className="quiet">
+                  Item subtotal is estimated. The restaurant validates prices and any applicable
+                  charges before accepting your order.
+                </small>
                 <div
                   className="row between"
                   style={{

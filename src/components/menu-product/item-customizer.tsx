@@ -82,19 +82,33 @@ export function ItemCustomizer({
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); onCloseRef.current(); }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+      }
       if (event.key !== "Tab" || !sheetRef.current) return;
-      const controls = Array.from(sheetRef.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
-      ));
+      const controls = Array.from(
+        sheetRef.current.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
+        )
+      );
       if (!controls.length) return;
       const first = controls[0]!;
       const last = controls[controls.length - 1]!;
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => { document.removeEventListener("keydown", onKeyDown); document.body.style.overflow = overflow; prior?.focus(); };
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = overflow;
+      prior?.focus();
+    };
   }, [isOpen]);
 
   // Re-initialize state when dish opens
@@ -158,7 +172,14 @@ export function ItemCustomizer({
     // Validate required add-on groups
     for (const group of activeDish.addOnGroups) {
       const chosen = selectedOptions[group.id] || [];
-      if (chosen.length < group.min || chosen.length > group.max || chosen.some((optionId) => !group.options.some((option) => option.id === optionId && option.isAvailable))) {
+      if (
+        chosen.length < group.min ||
+        chosen.length > group.max ||
+        chosen.some(
+          (optionId) =>
+            !group.options.some((option) => option.id === optionId && option.isAvailable)
+        )
+      ) {
         setValidationError(`Please select at least ${group.min} choice(s) for "${group.name}".`);
         return;
       }
@@ -203,7 +224,11 @@ export function ItemCustomizer({
       aria-labelledby="customizer-title"
     >
       <div className="customizer-sheet stack" ref={sheetRef}>
-        {visual && <div className="dining-customizer-photo"><DiningImage visual={visual} eager /></div>}
+        {visual && (
+          <div className="dining-customizer-photo">
+            <DiningImage visual={visual} eager />
+          </div>
+        )}
         <div className="customizer-header row between">
           <div className="stack" style={{ gap: "0.2rem" }}>
             <span className="eyebrow">{readOnly ? "From our kitchen" : "Make it yours"}</span>
@@ -241,7 +266,11 @@ export function ItemCustomizer({
           )}
 
           {/* Variants section */}
-          {readOnly && <p className="dining-detail-hint">Browse the available options and pricing. Ask the restaurant team to order.</p>}
+          {readOnly && (
+            <p className="dining-detail-hint">
+              Browse the available options and pricing. Ask the restaurant team to order.
+            </p>
+          )}
           {activeDish.variants.length > 0 && (
             <div className="customizer-section stack">
               <div className="row between">
@@ -336,19 +365,19 @@ export function ItemCustomizer({
           })}
 
           {/* Cooking notes input */}
-          {!readOnly && <div className="customizer-section stack">
-            <span className="section-title">Special Instructions</span>
-            <input
-              type="text"
-              placeholder="e.g. Less spicy, dressing on side, allergies"
-              value={itemNotes}
-              maxLength={200}
-              onChange={(e) => setItemNotes(e.target.value)}
-              className="field-input"
-            />
-          </div>
-
-          }
+          {!readOnly && (
+            <div className="customizer-section stack">
+              <span className="section-title">Special Instructions</span>
+              <input
+                type="text"
+                placeholder="e.g. Less spicy, dressing on side, allergies"
+                value={itemNotes}
+                maxLength={200}
+                onChange={(e) => setItemNotes(e.target.value)}
+                className="field-input"
+              />
+            </div>
+          )}
           {validationError && (
             <p className="error" role="alert" style={{ margin: "0.2rem 0" }}>
               {validationError}
@@ -358,39 +387,50 @@ export function ItemCustomizer({
 
         {/* Customizer footer with quantity stepper and add to cart button */}
         <div className="customizer-footer row between">
-          {readOnly ? <button type="button" className="action ember" style={{ width:"100%" }} onClick={onClose}>Back to menu</button> : (<>
-          <div className="stepper row" style={{ gap: "0.5rem", alignItems: "center" }}>
+          {readOnly ? (
             <button
               type="button"
-              className="action icon-btn"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              disabled={quantity <= 1}
-              aria-label="Decrease quantity"
+              className="action ember"
+              style={{ width: "100%" }}
+              onClick={onClose}
             >
-              <Minus size={16} />
+              Back to menu
             </button>
-            <span style={{ fontWeight: 700, minWidth: "1.5rem", textAlign: "center" }}>
-              {quantity}
-            </span>
-            <button
-              type="button"
-              className="action icon-btn"
-              onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-              aria-label="Increase quantity"
-            >
-              <Plus size={16} />
-            </button>
-          </div>
+          ) : (
+            <>
+              <div className="stepper row" style={{ gap: "0.5rem", alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="action icon-btn"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={16} />
+                </button>
+                <span style={{ fontWeight: 700, minWidth: "1.5rem", textAlign: "center" }}>
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  className="action icon-btn"
+                  onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
 
-          <button
-            type="button"
-            className="action ember"
-            style={{ flex: 1, minHeight: "48px", marginLeft: "1rem" }}
-            onClick={handleSubmit}
-          >
-            Add to Order · {formatPrice(grandTotal, currency)}
-          </button>
-          </>)}
+              <button
+                type="button"
+                className="action ember"
+                style={{ flex: 1, minHeight: "48px", marginLeft: "1rem" }}
+                onClick={handleSubmit}
+              >
+                Add to Order · {formatPrice(grandTotal, currency)}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

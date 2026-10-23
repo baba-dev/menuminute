@@ -317,7 +317,17 @@ export function StudioPreview({
         <span>LIVE EDITS</span>
       </div>
       <div className="atelier-preview-window">
-        <div className="atelier-preview-cover" style={{ backgroundImage: "linear-gradient(90deg,rgba(255,250,243,.95),rgba(255,250,243,.66)),url(" + coverFor(doc) + ")", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div
+          className="atelier-preview-cover"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg,rgba(255,250,243,.95),rgba(255,250,243,.66)),url(" +
+              coverFor(doc) +
+              ")",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           <span>YOUR DIGITAL STOREFRONT</span>
           <h2>{doc.name || "Your menu"}</h2>
           <small>{doc.presentation?.headline || "Made with care. Served with joy."}</small>

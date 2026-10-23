@@ -82,7 +82,9 @@ export const menuDocumentSchema = z
     schedule: scheduleSchema.nullable().default(null),
     presentation: z
       .object({
-        cover: z.enum(["artisan-bakery", "cafe-coffee", "indian-restaurant", "street-food-cloud-kitchen"]).default("indian-restaurant"),
+        cover: z
+          .enum(["artisan-bakery", "cafe-coffee", "indian-restaurant", "street-food-cloud-kitchen"])
+          .default("indian-restaurant"),
         headline: z.string().trim().max(110).default(""),
         featuredDishIds: z.array(entityId).max(8).default([]),
       })

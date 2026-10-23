@@ -28,7 +28,8 @@ const categoryArt = {
 
 export function categoryImage(name: string): string {
   const s = normalizeDishText(name);
-  if (/dessert|sweet|cake|pastr|bakery|mithai|ice cream|pudding/.test(s)) return categoryArt.desserts;
+  if (/dessert|sweet|cake|pastr|bakery|mithai|ice cream|pudding/.test(s))
+    return categoryArt.desserts;
   if (/beverage|drink|coffee|tea|juice|shake|lassi|smoothie/.test(s)) return categoryArt.beverages;
   if (/bread|naan|roti|paratha|kulcha|bun|flatbread/.test(s)) return categoryArt.breads;
   if (/rice|biryani|pulao|fried rice/.test(s)) return categoryArt.rice;
@@ -47,20 +48,30 @@ type VisualDish = {
   artworkId?: string | null;
   imageMode?: "auto" | "artwork" | "photo" | "none";
 };
-export type DiningVisual = { src: string; alternatives: string[]; alt: string; fit: "cover" | "contain" };
+export type DiningVisual = {
+  src: string;
+  alternatives: string[];
+  alt: string;
+  fit: "cover" | "contain";
+};
 const safeMedia = /^[A-Za-z0-9_-]{1,128}$/;
 const approved = approvedArt as readonly {
-  label: string; path: string; state: string; slug: string; category: string
+  label: string;
+  path: string;
+  state: string;
+  slug: string;
+  category: string;
 }[];
 const canonicalArt = /^\/assets\/food\/dishes\/[a-z0-9-]+\/[a-z0-9-]+\.png$/;
 function artworkFor(dish: VisualDish): string | null {
-  const chosen = approved.filter((a) =>
-    a.state === "approved" &&
-    canonicalArt.test(a.path) &&
-    a.path === `/assets/food/dishes/${a.category}/${a.slug}.png` &&
-    (dish.artworkId
-      ? dish.artworkId === `${a.category}__${a.slug}`
-      : normalizeDishText(a.label) === normalizeDishText(dish.name))
+  const chosen = approved.filter(
+    (a) =>
+      a.state === "approved" &&
+      canonicalArt.test(a.path) &&
+      a.path === `/assets/food/dishes/${a.category}/${a.slug}.png` &&
+      (dish.artworkId
+        ? dish.artworkId === `${a.category}__${a.slug}`
+        : normalizeDishText(a.label) === normalizeDishText(dish.name))
   );
   return chosen.length === 1 ? chosen[0]!.path : null;
 }
@@ -69,17 +80,30 @@ export function dishVisual(dish: VisualDish, category: string, preview = false):
   if (dish.imageMode === "none") {
     return { src: genericFoodIcon, alternatives: [], alt: "", fit: "contain" };
   }
-  const photo = dish.mediaId && safeMedia.test(dish.mediaId)
-    ? (preview ? "/api/media/" : "/api/public-media/") + encodeURIComponent(dish.mediaId) + (preview ? "" : "?size=thumb")
-    : null;
+  const photo =
+    dish.mediaId && safeMedia.test(dish.mediaId)
+      ? (preview ? "/api/media/" : "/api/public-media/") +
+        encodeURIComponent(dish.mediaId) +
+        (preview ? "" : "?size=thumb")
+      : null;
   const artwork = artworkFor(dish);
-  const first = dish.imageMode === "artwork" ? artwork : dish.imageMode === "photo" ? photo : (photo ?? artwork);
-  const alternatives = [...new Set([first, artwork, fallback, genericFoodIcon].filter((s): s is string => Boolean(s)))];
+  const first =
+    dish.imageMode === "artwork"
+      ? artwork
+      : dish.imageMode === "photo"
+        ? photo
+        : (photo ?? artwork);
+  const alternatives = [
+    ...new Set([first, artwork, fallback, genericFoodIcon].filter((s): s is string => Boolean(s))),
+  ];
   const src = alternatives.shift() ?? genericFoodIcon;
   return {
     src,
     alternatives,
-    alt: src === genericFoodIcon ? "" : `${first === photo ? "Photo" : "Illustration"} of ${dish.name}`,
+    alt:
+      src === genericFoodIcon
+        ? ""
+        : `${first === photo ? "Photo" : "Illustration"} of ${dish.name}`,
     fit: src === photo ? "cover" : "contain",
   };
 }
@@ -98,12 +122,16 @@ export type FeaturedDish = {
 };
 export function featuredForMenu(
   menuId: string,
-  view: MenuDocument & { categories: (MenuDocument["categories"][number] & { items: FeaturedDish["dish"][] })[] },
+  view: MenuDocument & {
+    categories: (MenuDocument["categories"][number] & { items: FeaturedDish["dish"][] })[];
+  }
 ): FeaturedDish[] {
   const ids = view.presentation?.featuredDishIds ?? [];
   return ids.flatMap((id) => {
     for (const category of view.categories) {
-      const dish = category.items.find((item) => item.id === id && !item.archived && !item.soldOut && item.open);
+      const dish = category.items.find(
+        (item) => item.id === id && !item.archived && !item.soldOut && item.open
+      );
       if (dish) return [{ menuId, categoryName: category.name, dish, currency: view.currency }];
     }
     return [];

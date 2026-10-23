@@ -9,11 +9,13 @@ PR C introduced four static restaurant covers and six transparent category image
 - H: bounded image fallback, approved-only public artwork index, review ledger validation, accessible focus, motion preferences, narrow viewport layouts, metadata, unit/Playwright coverage.
 
 ## Security and operational invariants
+
 No external merchant-provided image URLs: only hard-coded cover/category paths, checked local catalogue paths and existing authorized media endpoints. The 36 original illustrations are the initial proposed approved baseline; 188 other imported illustrations remain blocked from automatic guest usage. Owner visual sign-off of the original collection and image QA in both themes are required before merge.
 
 The public QR revocation and published-release RLS remain enforced by the existing service; order API re-quotes the submitted IDs/variants/add-ons and is the sole authority for prices. Client storage must not be trusted. An order is not accepted until the restaurant explicitly acknowledges it. The menu does not imply unverified tax, allergen, best-seller or promotional information.
 
 ## Required release gate
+
 1. Reconcile with latest main and retire/rebase overlapping draft PR #149 only after comparing its remaining scope; do not merge both changes blindly.
 2. Four required CI lanes including strict TypeScript, prettier/lint, PostgreSQL/Redis tests, ARM64 production build and Playwright.
 3. Inspect desktop/mobile at 320, 360, 390, 768, 1024, 1440px, light/dark, reduced motion; verify accurate crop and readability.
