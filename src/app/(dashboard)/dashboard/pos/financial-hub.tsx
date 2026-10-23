@@ -127,7 +127,9 @@ export function FinancialHub({
     checkedAt: string;
     anomalies: { saleId: string; reason: string }[];
   } | null>(null);
-  const activeShift = shifts.find((s) => s.state === "open");
+  const activeShift =
+    shifts.find((s) => s.state === "open" && s.id === shiftId) ??
+    shifts.find((s) => s.state === "open");
   const dishes = workspace.menus
     .flatMap((m) => m.categories.flatMap((c) => c.items))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i);
@@ -796,6 +798,23 @@ export function FinancialHub({
             <section className="finance-panel">
               <span className="till-eyebrow">02 / LIVE DRAWER</span>
               <h2>{activeShift.registerName}</h2>
+              {shifts.filter((s) => s.state === "open").length > 1 && (
+                <label>
+                  Choose open register
+                  <select
+                    value={activeShift.id}
+                    onChange={(event) => setShiftId(event.target.value)}
+                  >
+                    {shifts
+                      .filter((s) => s.state === "open")
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.registerName} · {s.id.slice(0, 12)}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
               <p>
                 Opened {new Date(activeShift.openedAt).toLocaleString()} · Float{" "}
                 {money(activeShift.openingMinor, currency)}
