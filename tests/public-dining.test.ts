@@ -4,6 +4,7 @@ import {
   coverFor,
   dishVisual,
   nextVisualSource,
+  startingPriceMinor,
 } from "../src/modules/menu-product/public-presentation";
 import { menuDocumentSchema } from "../src/modules/menu-product/contracts";
 
@@ -55,5 +56,9 @@ describe("Dining Canvas asset and configuration boundaries", () => {
       "/icons/category-default.svg"
     );
     expect(categoryImage("Desserts")).toContain("desserts.webp");
+  });
+  it("shows the lowest available variant as the genuine starting price", () => {
+    expect(startingPriceMinor({ priceMinor: 1000, variants: [{ priceMinor: 1500, isAvailable: false }, { priceMinor: 1700, isAvailable: true }] })).toBe(1700);
+    expect(startingPriceMinor({ priceMinor: 1000, variants: [] })).toBe(1000);
   });
 });

@@ -17,6 +17,7 @@ import {
   categoryImage,
   dishVisual,
   featuredForMenu,
+  startingPriceMinor,
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 import { restoreGuestCart } from "@/modules/menu-product/cart-storage";
@@ -372,7 +373,8 @@ export function PublicMenu({
                   <div>
                     <span className="dining-kicker">{categoryName}</span>
                     <h3>{dish.name}</h3>
-                    <span className="dining-price">{formatPrice(dish.priceMinor, currency)}</span>
+                    <span className="dining-price">{dish.variants.length ? "From " : ""}
+                    {formatPrice(startingPriceMinor(dish), currency)}</span>
                     <button
                       type="button"
                       onClick={() => openDish(dish, categoryName)}
@@ -431,12 +433,7 @@ export function PublicMenu({
                       {items.map((dish) => {
                         const unavailable = dish.soldOut || !dish.open;
                         const image = dishVisual(dish, category.name, preview);
-                        const variants = dish.variants.some((v) => v.isAvailable)
-                          ? dish.variants.filter((v) => v.isAvailable)
-                          : dish.variants;
-                        const price = variants.length
-                          ? Math.min(...variants.map((v) => v.priceMinor))
-                          : dish.priceMinor;
+                        const price = startingPriceMinor(dish);
                         return (
                           <article
                             key={dish.id}

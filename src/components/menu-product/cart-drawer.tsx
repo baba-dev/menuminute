@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem, CustomizerDish } from "./item-customizer";
-import type { DiningVisual } from "@/modules/menu-product/public-presentation";
+import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 
 export function CartDrawer({
@@ -373,7 +373,8 @@ export function CartDrawer({
                         <DiningImage visual={visual} />
                         <div>
                           <strong>{dish.name}</strong>
-                          <small>{formatPrice(dish.priceMinor, suggestionCurrency)}</small>
+                          <small>{dish.variants.length ? "From " : ""}
+                            {formatPrice(startingPriceMinor(dish), suggestionCurrency)}</small>
                         </div>
                         <button
                           type="button"

@@ -115,7 +115,10 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   await page.goto(`/m/${fixture.tableToken}`);
   await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
   await page.getByRole("button", { name: "Add to order", exact: true }).click();
-  await page.getByRole("dialog", { name: "Paneer Curry" }).getByRole("button", { name: /Add to Order/ }).click();
+  await page
+    .getByRole("dialog", { name: "Paneer Curry" })
+    .getByRole("button", { name: /Add to Order/ })
+    .click();
   await page.getByRole("button", { name: "View order cart" }).click();
   await expect(page.getByText("Table 4", { exact: false }).first()).toBeVisible();
   await page.getByRole("button", { name: /Submit order/ }).click();

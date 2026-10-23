@@ -114,6 +114,15 @@ export function nextVisualSource(visual: DiningVisual, current: string): string 
   return index < 0 ? null : (ordered[index + 1] ?? null);
 }
 
+export function startingPriceMinor(dish: {
+  priceMinor: number;
+  variants: readonly { priceMinor: number; isAvailable: boolean }[];
+}): number {
+  const available = dish.variants.filter((variant) => variant.isAvailable);
+  const options = available.length ? available : dish.variants;
+  return options.length ? Math.min(...options.map((variant) => variant.priceMinor)) : dish.priceMinor;
+}
+
 export type FeaturedDish = {
   menuId: string;
   categoryName: string;
