@@ -41,6 +41,13 @@ export function CartDrawer({
   }) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [fulfillmentMode, setFulfillmentMode] = useState<"dine_in" | "pickup">(() => {
+    return fulfillmentModes.includes("dine_in") ? "dine_in" : "pickup";
+  });
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -65,13 +72,7 @@ export function CartDrawer({
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = oldOverflow; restoreRef.current?.focus(); };
   }, [isOpen, isSubmitting]);
-  const [fulfillmentMode, setFulfillmentMode] = useState<"dine_in" | "pickup">(() => {
-    return fulfillmentModes.includes("dine_in") ? "dine_in" : "pickup";
-  });
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [orderNotes, setOrderNotes] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const submissionKeyRef = useRef<string>("");
   useEffect(() => {
     submissionKeyRef.current = "";

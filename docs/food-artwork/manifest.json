@@ -1,10 +1,10 @@
 {
   "collection": "menu-minute-approved-dish-artwork",
-  "version": 5,
+  "version": 6,
   "assetCount": 224,
   "sourceFormat": "AI-rendered reference sheets (PNG)",
   "exportFormat": "360×280 transparent PNG (RGBA), not native SVG",
-  "status": "assets-imported-awaiting-owner-review",
+  "status": "partially-approved-original-collection",
   "groups": {
     "indian": 12,
     "western": 12,
@@ -38,7 +38,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -48,7 +49,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -58,7 +60,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -68,7 +71,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -78,7 +82,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -88,7 +93,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -98,7 +104,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -108,7 +115,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -118,7 +126,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -128,7 +137,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -138,7 +148,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "indian",
@@ -148,7 +159,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -158,7 +170,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -168,7 +181,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -178,7 +192,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -188,7 +203,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -198,7 +214,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -208,7 +225,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -218,7 +236,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -228,7 +247,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -238,7 +258,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -248,7 +269,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -258,7 +280,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "western",
@@ -268,7 +291,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -278,7 +302,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -288,7 +313,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -298,7 +324,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -308,7 +335,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -318,7 +346,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -328,7 +357,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -338,7 +368,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -348,7 +379,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -358,7 +390,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -368,7 +401,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -378,7 +412,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "italian",
@@ -388,7 +423,8 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported"
+      "state": "approved",
+      "approvalBasis": "owner-directed-original-collection-2026-10-23"
     },
     {
       "category": "north-indian-classics",
@@ -3012,5 +3048,10 @@
     "first50": 50,
     "second50": 50,
     "third50": 50
+  },
+  "approvalSummary": {
+    "approvedOriginal": 36,
+    "pendingOwnerReview": 188,
+    "policy": "Only assets with state=approved and canonical in-repository paths are available to the guest runtime. Owner visual review is required before merging."
   }
 }

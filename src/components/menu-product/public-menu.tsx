@@ -208,7 +208,7 @@ export function PublicMenu({
             <span>{data.outlet.outletType.replaceAll("_", " ")}</span>
             {data.point && <span>{data.point}</span>}
             {data.outlet.isDemoData && <span>Sample menu</span>}
-            {preview && <strong>Private draft preview — not public</strong>}
+            {preview && <strong>Draft preview — not public</strong>}
             {ordering && <span>Order with the restaurant</span>}
           </div>
           <a href="#dishes" className="dining-explore">Explore our food <ArrowRight size={16} aria-hidden="true" /></a>
