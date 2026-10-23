@@ -1,6 +1,6 @@
-# Menu-Minute dish artwork — Draft review
+# MenuMinute dish artwork — runtime approval ledger
 
-There are **224 separately named transparent 360×280 RGBA PNG illustrations across 22 collections**. The first 186 existing artwork files are unchanged. Sheets A–D added 38 unique images from 40 illustrated cells: two dishes (Veg Hakka Noodles and Chicken Fried Rice) appear on both A and B, with B as the canonical file.
+There are **224 separately named transparent 360×280 RGBA PNG illustrations across 22 collections**. Under the owner's Public Menu 2.0 integration directive, the **36 original Indian/Western/Italian illustrations** are proposed as the approved runtime baseline. The other **188 remain pending owner visual review**; this PR does not bulk-approve them. Review the original 36 in both themes before merging. The manifest state is the source of truth; file existence is not approval. The first 186 existing artwork files are unchanged. Sheets A–D added 38 unique images from 40 illustrated cells: two dishes (Veg Hakka Noodles and Chicken Fried Rice) appear on both A and B, with B as the canonical file.
 
 - [Browse all artwork](gallery.md) · [canonical manifest](manifest.json)
 - New source groups: `high-demand-essentials (8)`, `indo-chinese-mains-soups (10)`, `north-indian-rajasthani (10)`, `regional-restaurant-favorites (10)`.
@@ -15,4 +15,4 @@ These are cutouts from original AI-generated raster contact sheets, **not native
 
 New artwork has exact matched `datasetId` from the separate 200-dish Draft PR #16 where available. Variants not listed in that CSV (Chicken Biryani, Plain Veg Dosa, Chicken Nuggets, White Chocolate Cake) are not assigned fictitious IDs. The Sheet C regional Makki da Saag combo uses the real dataset's alternate slug, and shared Sheet A/B duplicates have no repeated manifest entries. Do not update PR #16's status before owner review and merge agreement.
 
-Run `node scripts/food-artwork/verify.mjs`, require fresh CI on the final head, and visually approve all four sheets in both themes before merging. No runtime menu changes or auto-replacement of eatery-uploaded photography; do not infer dietary/allergen/certification data from an illustration.
+Run `node scripts/food-artwork/verify.mjs`, require fresh CI on the final head, and visually approve the original 36 in both themes before merging. Later batches require a separate explicit approval and manifest update, including corresponding verifier-policy changes. Runtime resolution is exact normalized dish-label matching only and always prefers the restaurant's existing approved public photo. Imported/pending art cannot be used as a runtime illustration. Never infer dietary, allergen, certification or sales claims from an illustration.

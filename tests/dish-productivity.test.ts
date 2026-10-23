@@ -97,6 +97,10 @@ describe("PR C productivity contracts", () => {
         { ...items[1]!, path: "https://external.invalid/image.png" },
       ])
     ).toBeNull();
-    expect(approvedArtworkForDish("Paneer Tikka")).toBeNull();
+    expect(approvedArtworkForDish("Paneer Tikka")).toEqual({
+      path: "/assets/food/dishes/indian/paneer-tikka.png",
+      label: "Paneer Tikka",
+    });
+    expect(approvedArtworkForDish("Dal Dhokli")).toBeNull();
   });
 });
