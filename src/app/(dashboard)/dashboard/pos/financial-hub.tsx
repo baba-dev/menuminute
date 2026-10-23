@@ -125,6 +125,9 @@ export function FinancialHub({
   const pending = useRef<Record<string, string>>({});
   const [reconciliation, setReconciliation] = useState<{
     checkedAt: string;
+    scanLimit: number;
+    scannedCount: number;
+    partial: boolean;
     anomalies: { saleId: string; reason: string }[];
   } | null>(null);
   const activeShift =
@@ -958,7 +961,12 @@ export function FinancialHub({
               <p role="status">
                 {reconciliation.anomalies.length
                   ? reconciliation.anomalies.map((a) => a.saleId + " · " + a.reason).join("; ")
-                  : "No invariant mismatch found in this scan. This is not bank reconciliation or compliance certification."}
+                  : "No invariant mismatch detected in the inspected bills."}
+                {" "}Inspected {reconciliation.scannedCount} recent bills (limit {reconciliation.scanLimit}).
+                {reconciliation.partial
+                  ? " Older records are not included; request full historical reconciliation separately."
+                  : " All currently recorded bills were included."}
+                {" "}This is not bank reconciliation or compliance certification.
               </p>
             )}
           </section>
