@@ -317,6 +317,9 @@ BEGIN
   SELECT * INTO sale FROM pos_sales WHERE id=p_data->>'saleId' AND outlet_id=p_outlet FOR UPDATE;
   IF NOT FOUND OR sale.state<>'order_submitted' THEN RAISE EXCEPTION 'Unavailable sale' USING ERRCODE='22023'; END IF;
   IF EXISTS(SELECT 1 FROM pos_bills WHERE sale_id=sale.id) THEN RAISE EXCEPTION 'Bill already frozen' USING ERRCODE='40001'; END IF;
+  -- Prevent a fulfillment cancellation racing the irreversible financial snapshot.
+  PERFORM 1 FROM orders WHERE id=sale.order_id AND restaurant_id=p_outlet FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Source order unavailable' USING ERRCODE='22023'; END IF;
   IF EXISTS(SELECT 1 FROM orders WHERE id=sale.order_id AND restaurant_id=p_outlet
    AND status IN ('rejected','cancelled','expired') ) THEN RAISE EXCEPTION 'Cancelled order cannot be billed' USING ERRCODE='22023'; END IF;
   -- Hold both sources for the entire bill-freeze transaction. A concurrent seller
@@ -370,6 +373,9 @@ BEGIN
  WHEN 'tender' THEN
   SELECT * INTO sale FROM pos_sales WHERE id=p_data->>'saleId' AND outlet_id=p_outlet FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Unknown sale' USING ERRCODE='22023'; END IF;
+  -- Keep accepted-state validation stable until the allocation and order update commit.
+  PERFORM 1 FROM orders WHERE id=sale.order_id AND restaurant_id=p_outlet FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Source order unavailable' USING ERRCODE='22023'; END IF;
   SELECT * INTO bill FROM pos_bills WHERE sale_id=sale.id AND outlet_id=p_outlet;
   SELECT * INTO shift FROM pos_shifts WHERE id=p_data->>'shiftId' AND outlet_id=p_outlet FOR UPDATE;
   IF bill.sale_id IS NULL OR shift.id IS NULL OR shift.state<>'open' OR shift.currency<>bill.currency OR
