@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import sharp from "sharp";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
+import { formatPrice } from "../../src/lib/utils";
 async function seed(publish = false) {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
@@ -208,7 +209,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await guest.getByRole("button", { name: "View Signature thali details" }).first().click();
   const guestDetails = guest.getByRole("dialog", { name: "Signature thali" });
   await expect(guestDetails.getByText("Regular", { exact: true })).toBeVisible();
-  await expect(guestDetails.getByText(/15[.,]000/)).toBeVisible();
+  await expect(guestDetails.getByText(formatPrice(15000, "OMR"), { exact: true })).toBeVisible();
   await expect(guestDetails.getByText(/Browse the available options and pricing/)).toBeVisible();
   await expect(guestDetails.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
   await guestDetails.getByRole("button", { name: "Back to menu" }).click();
