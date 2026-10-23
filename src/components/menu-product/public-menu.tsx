@@ -5,6 +5,7 @@ import { Search, Leaf, Clock, Plus, ArrowUpRight, ChefHat, ArrowRight, Sparkles 
 import { projectMenu } from "@/modules/menu-product/projector";
 import { coverFor, categoryImage, dishVisual, featuredForMenu } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
+import { restoreGuestCart } from "@/modules/menu-product/cart-storage";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
@@ -37,7 +38,8 @@ export function PublicMenu({
       try {
         const stored = sessionStorage.getItem(`cart_${token}`);
         const parsed = stored ? JSON.parse(stored) : [];
-        setCartItems(Array.isArray(parsed) ? parsed : []);
+        const available = new Set(initial.menus.flatMap((menu) => menu.document.categories.flatMap((category) => category.items.filter((item) => !item.archived).map((item) => item.id))));
+        setCartItems(restoreGuestCart(parsed, available));
       } catch {
         setCartItems([]);
       } finally {
@@ -48,7 +50,7 @@ export function PublicMenu({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [token]);
+  }, [token, initial]);
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
   const [customizingCategory, setCustomizingCategory] = useState("");
