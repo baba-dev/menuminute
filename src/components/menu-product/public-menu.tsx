@@ -333,7 +333,7 @@ export function PublicMenu({
       </div>
       <ItemCustomizer key={customizingDish?.id ?? "empty"} dish={customizingDish}
         visual={customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null}
-        currency={data.outlet.currency} readOnly={browseOnly} isOpen={Boolean(customizingDish)}
+        currency={data.outlet.currency} readOnly={browseOnly || Boolean(customizingDish?.soldOut || customizingDish?.open === false)} isOpen={Boolean(customizingDish)}
         onClose={() => setCustomizingDish(null)} onAddToCart={handleAddToCart} />
       {ordering && token && (
         <CartDrawer items={cartItems} currency={data.outlet.currency} token={token}

@@ -73,3 +73,16 @@
 @media(max-width:450px) { .dining-cover {min-height:360px;}.dining-cover-content h1 {font-size:2.6rem;}.dining-cover-content p {font-size:1rem;max-width:26ch;}.dining-heading-row {align-items:start;}.dining-section-count {display:none;}.dining-dish {grid-template-columns:120px minmax(0,1fr);min-height:168px;}.dining-photo-button img {min-height:168px;}.dining-dish-content {padding:.7rem;}.dining-dish-title {flex-direction:column;gap:.2rem;}.dining-dish-title h3 {font-size:1rem;}.dining-dish-content p {font-size:.78rem;}.dining-category-tile {min-width:125px;flex-basis:125px;}.dining-category-tile img {width:75px;height:68px;}.dining-diets {flex-wrap:nowrap;overflow-x:auto;padding-bottom:.3rem;}.dining-diets button {white-space:nowrap;}.dining-service {max-width:150px;}.dining-section-head img {width:64px;height:64px;} }
 @media(prefers-reduced-motion:reduce) { .dining-category-tile,.dining-dish-cta {transition:none;animation:none;} }
 @media print { .dining-canvas .no-print,.dining-explore {display:none!important;}.dining-cover {min-height:150px;}.dining-cover-image {opacity:.3;}.dining-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.dining-dish {break-inside:avoid;} }
+
+/* Product-details sheet */
+.dining-modal .customizer-sheet { max-width:690px;max-height:min(92dvh,970px);border-radius:22px 22px 0 0;background:var(--dc-surface);color:var(--dc-ink); }
+.dining-modal .customizer-header,.dining-modal .customizer-footer {background:var(--dc-surface);border-color:var(--dc-line);}
+.dining-customizer-photo {width:100%;min-height:175px;max-height:240px;overflow:hidden;background:var(--dc-soft);display:flex;align-items:center;justify-content:center;}
+.dining-customizer-photo img {display:block;width:100%;height:240px;object-fit:contain;}
+.dining-modal .customizer-header h2 {font-size:clamp(1.4rem,3vw,2rem);color:var(--dc-ink);}
+.dining-modal .customizer-body {overscroll-behavior:contain;}
+.dining-detail-hint {font-size:.85rem;color:var(--dc-muted);border-left:3px solid var(--dc-ember);padding:.5rem .75rem;background:var(--dc-soft);}
+.dining-modal .option-card {background:var(--dc-paper);color:var(--dc-ink);border-color:var(--dc-line); }
+.dining-modal .option-card.selected {border-color:var(--dc-ember);background:var(--dc-soft);}
+@media(min-width:850px) { .dining-modal {justify-content:center;align-items:center;} .dining-modal .customizer-sheet {border-radius:24px;} }
+@media(prefers-reduced-motion:reduce) { .dining-modal,.dining-modal .customizer-sheet {animation:none;} }
