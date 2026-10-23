@@ -349,14 +349,22 @@ export function MenuStudio({
                 Select a menu
               </option>
               <optgroup label="Active menus">
-                {list.filter((m) => !m.archived).map((m) => (
-                  <option key={m.id} value={m.id}>{(m.document as MenuDocument).name}</option>
-                ))}
+                {list
+                  .filter((m) => !m.archived)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {(m.document as MenuDocument).name}
+                    </option>
+                  ))}
               </optgroup>
               <optgroup label="Recently deleted · recoverable">
-                {list.filter((m) => m.archived).map((m) => (
-                  <option key={m.id} value={m.id}>{(m.document as MenuDocument).name} (deleted)</option>
-                ))}
+                {list
+                  .filter((m) => m.archived)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {(m.document as MenuDocument).name} (deleted)
+                    </option>
+                  ))}
               </optgroup>
             </select>
           </label>
