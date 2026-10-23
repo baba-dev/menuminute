@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChefHat,
   FilePenLine,
+  ExternalLink,
   Globe2,
   Layers3,
   Plus,
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
     hasPublicMenu: stats.hasPublicMenu,
     hasActiveQr: stats.activeQrCount > 0,
   });
+  const publicHref = stats.hasPublicMenu && primaryQr ? "/m/" + encodeURIComponent(primaryQr.destinationToken) : null;
   const kpis = [
     {
       label: "Published menus",

@@ -32,7 +32,17 @@ export function artworkForDish(name: string, catalogueId?: string | null): DishA
   return matches.length === 1 ? matches[0]! : null;
 }
 /** Compatibility alias for existing Composer call sites. */
-export const approvedArtworkForDish = artworkForDish;
+export function approvedArtworkForDish(
+  name: string,
+  assets: readonly ArtworkAsset[] = manifest.assets
+): { path: string; label: string } | null {
+  const wanted = normalizeDishText(name);
+  if (!wanted) return null;
+  const exact = assets.find(
+    (asset) => asset.state === "approved" && canonical.test(asset.path) && normalizeDishText(asset.label) === wanted
+  );
+  return exact ? { path: exact.path, label: exact.label } : null;
+}
 
 export function dishImageSrc(
   dish: { name: string; mediaId?: string | null; artworkId?: string | null; imageMode?: "auto" | "artwork" | "photo" | "none" },
