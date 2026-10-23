@@ -9,6 +9,7 @@ import {
   QrCode,
   Settings,
   ShoppingBag,
+  ReceiptText,
   UtensilsCrossed,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ const links = [
   { href: "/dashboard/menu", label: "Menu Studio", Icon: UtensilsCrossed },
   { href: "/dashboard/qr-codes", label: "QR codes", Icon: QrCode },
   { href: "/dashboard/orders", label: "Orders", Icon: ShoppingBag },
+  { href: "/dashboard/pos", label: "The Till", Icon: ReceiptText },
   { href: "/kitchen", label: "Kitchen", Icon: ChefHat },
   {
     href: "/dashboard/organization",
