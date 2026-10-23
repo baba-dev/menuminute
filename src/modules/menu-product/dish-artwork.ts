@@ -8,7 +8,7 @@ export type ArtworkAsset = {
   state: string;
   slug: string;
   category: string;
-  datasetId?: string;
+  datasetId?: string | null;
 };
 const canonical = /^\/assets\/food\/dishes\/[a-z0-9-]+\/[a-z0-9-]+\.png$/;
 const allowedStates = new Set([
