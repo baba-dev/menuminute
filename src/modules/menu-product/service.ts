@@ -9,6 +9,7 @@ import { domainError } from "@/modules/organizations/service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
+import { buildPublicPresentation, type PublicMenuPresentation } from "./public-presentation";
 export async function listMenus(actor: Actor, outletId: string) {
   await getRestaurantById(actor, outletId);
   return withActor(actor, async (tx) => {
@@ -184,6 +185,8 @@ export type PublicProduct = {
   point: string | null;
   catalogFingerprint: string;
   now: string;
+  /** Guest-only display projection; optional for legacy/studio preview callers. */
+  presentation?: PublicMenuPresentation;
   menus: {
     id: string;
     revision: number;
@@ -252,5 +255,6 @@ export async function publicProduct(token: string): Promise<PublicProduct | null
         .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
     },
   }));
+  data.presentation = buildPublicPresentation(data);
   return data;
 }

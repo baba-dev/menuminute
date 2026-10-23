@@ -7,6 +7,35 @@ import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
 import { CartDrawer } from "./cart-drawer";
+import { resolveDishVisual, type DishVisual } from "@/modules/menu-product/dish-artwork";
+
+/** Every failed restaurant photo falls back to approved catalogue artwork, then a local category
+ * icon. Never retry a broken source or send the browser to an arbitrary external URL. */
+function PublicDishImage({ visual }: { visual: DishVisual }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={visual.src}
+      alt={visual.alt}
+      width={160}
+      height={160}
+      loading="lazy"
+      style={{ objectFit: visual.source === "restaurant" ? "cover" : "contain" }}
+      onError={(event) => {
+        const image = event.currentTarget;
+        const current = image.getAttribute("src");
+        image.style.objectFit = "contain";
+        if (current !== visual.fallbackSrc && visual.fallbackSrc !== visual.src) {
+          image.src = visual.fallbackSrc;
+        } else if (current !== "/icons/category-default.svg") {
+          image.src = "/icons/category-default.svg";
+        } else {
+          image.onerror = null;
+        }
+      }}
+    />
+  );
+}
 
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
@@ -273,21 +302,15 @@ export function PublicMenu({
                       {items.map((i) => (
                         <article key={i.id} className={`dish-card ${i.soldOut ? "sold-out" : ""}`}>
                           <div className="dish-image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={
-                                i.mediaId
-                                  ? `/api/public-media/${i.mediaId}?size=thumb`
-                                  : "/icons/category-default.svg"
+                            <PublicDishImage
+                              visual={
+                                data.presentation?.dishImages[`${m.id}:${i.id}`] ??
+                                resolveDishVisual({
+                                  name: i.name,
+                                  mediaId: i.mediaId,
+                                  categoryName: c.name,
+                                })
                               }
-                              alt={i.mediaId ? i.name : "Dish illustration"}
-                              width={160}
-                              height={160}
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.onerror = null;
-                                e.currentTarget.src = "/icons/category-default.svg";
-                              }}
                             />
                             {i.soldOut && <span className="sold-label">Sold Out</span>}
                           </div>

@@ -24,6 +24,9 @@ if (groups.reduce((sum, [, count]) => sum + count, 0) !== manifest.assetCount) {
   errors.push("Group totals disagree with assetCount");
 }
 
+const allowedStates = new Set(["approved", "assets-imported", "assets-imported-awaiting-owner-review"]);
+let approvedCount = 0;
+let pendingCount = 0;
 const knownPaths = new Set();
 const knownKeys = new Set();
 const counted = new Map();
@@ -36,6 +39,16 @@ const newGroups = new Set([
 
 for (const asset of manifest.assets) {
   const key = asset.category + "/" + asset.slug;
+  if (!allowedStates.has(asset.state)) errors.push("Unknown approval state: " + key);
+  if (asset.state === "approved") {
+    approvedCount++;
+    if (asset.approvalBasis !== "owner-directed-original-collection-2026-10-23")
+      errors.push("Approved art has no recognized owner directive: " + key);
+    if (!["indian", "western", "italian"].includes(asset.category))
+      errors.push("Pending review batch unexpectedly approved: " + key);
+  } else {
+    pendingCount++;
+  }
   if (knownPaths.has(asset.path)) {
     errors.push("Duplicate path: " + asset.path);
   }
@@ -119,6 +132,9 @@ for (const [category, expected] of groups) {
     }
   }
 }
+
+if (approvedCount !== 36 || pendingCount !== 188 || manifest.approvalSummary?.approvedOriginal !== 36 || manifest.approvalSummary?.pendingOwnerReview !== 188)
+  errors.push("Approved/pending artwork reconciliation mismatch");
 
 if (errors.length > 0) {
   console.error(errors.join("\n"));
