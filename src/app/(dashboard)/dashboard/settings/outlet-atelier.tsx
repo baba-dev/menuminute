@@ -21,7 +21,6 @@ import {
   Wallet,
   Mail,
 } from "lucide-react";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 type Outlet = {
   name: string;
@@ -178,19 +177,6 @@ export function OutletAtelier({
   return (
     <div className="product mm-settings" data-testid="outlet-atelier">
       <header className="os-hero">
-        <div className="os-topbar">
-          <nav aria-label="Breadcrumb" className="os-breadcrumb">
-            <Link href="/dashboard">Workspace</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Settings</span>
-          </nav>
-          <div className="os-top-actions">
-            <ThemeControl />
-            <Link href="/account">
-              My account <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
         <div className="os-hero-copy">
           <span className="os-eyebrow">THE OUTLET ATELIER / SETTINGS</span>
           <h1>

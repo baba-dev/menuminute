@@ -251,7 +251,7 @@
   padding: 24px;
 }
 
-.mm-workspace-main:has(> .mm-dashboard) {
+.mm-workspace-main:has(> .mm-shared-topbar + .mm-dashboard) {
   max-width: none;
   margin: 0;
   padding: 0;
@@ -394,10 +394,6 @@
   background: rgb(48 32 22 / 88%);
   color: #ffe8d1;
   border-color: #745a42;
-}
-
-.mm-workspace-shell:has(.mm-dashboard) .mm-workspace-profile .mm-theme-toggle {
-  display: none;
 }
 
 .mm-dashboard-hero-copy {
@@ -1409,4 +1405,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 24px;
   }
+}
+
+/* Reuse the editorial dashboard bar across every workspace route. */
+.mm-shared-topbar {
+  width: 100%;
+  flex: none;
+  background: var(--paper);
+  position: relative;
+  z-index: 3;
+}
+.mm-workspace-main:has(> .mm-shared-topbar + .studio-atelier) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }

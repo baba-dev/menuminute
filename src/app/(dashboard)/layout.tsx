@@ -9,7 +9,10 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
-import { ThemeControl } from "@/components/menu-product/theme-control";
+import { WorkspaceTopbar } from "./workspace-topbar";
+import { getRestaurantQrCodes } from "@/modules/restaurants/service";
+import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
+import { publicProduct } from "@/modules/menu-product/service";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
@@ -38,6 +41,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     columns: { isSuperAdmin: true },
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
+  const codes = restaurant
+    ? await getRestaurantQrCodes({ userId: session.user.id }, restaurant.id)
+    : [];
+  const qr = preferredMenuQr(codes);
+  const projection = qr ? await publicProduct(qr.destinationToken) : null;
+  const publicHref =
+    projection?.menus.length && qr ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
   const name = session.user.name || "Restaurant admin";
   const initials = name
     .trim()
@@ -97,7 +107,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <small>Account &amp; security</small>
             </span>
           </Link>
-          <ThemeControl />
           <form
             action={async () => {
               "use server";
@@ -117,6 +126,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
       <main id="workspace-main" className="mm-workspace-main">
+        <WorkspaceTopbar userName={name} publicHref={publicHref} />
         {children}
       </main>
     </div>

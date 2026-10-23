@@ -54,6 +54,12 @@ export const dishSchema = z
     soldOut: z.boolean().default(false),
     archived: z.boolean().default(false),
     mediaId: entityId.nullable().default(null),
+    artworkId: z
+      .string()
+      .regex(/^[a-z0-9-]+__[a-z0-9-]+$/)
+      .nullable()
+      .default(null),
+    imageMode: z.enum(["auto", "artwork", "photo", "none"]).default("auto"),
     dietary: z
       .array(z.enum(["vegetarian", "vegan", "gluten_free"]))
       .max(3)
@@ -62,7 +68,13 @@ export const dishSchema = z
     addOnGroups: z.array(group).max(30).default([]),
     schedule: scheduleSchema.nullable().default(null),
   })
-  .strict();
+  .strict()
+  .superRefine((dish, ctx) => {
+    if (dish.imageMode === "photo" && !dish.mediaId)
+      ctx.addIssue({ code: "custom", path: ["mediaId"], message: "Select an approved photo" });
+    if (dish.imageMode === "artwork" && !dish.artworkId)
+      ctx.addIssue({ code: "custom", path: ["artworkId"], message: "Select an illustration" });
+  });
 export const menuDocumentSchema = z
   .object({
     name: title,

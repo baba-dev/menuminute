@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { currencyExponent } from "@/lib/money";
+import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
 
 const art = "/brand/menu-studio/recipe-atelier/";
 
@@ -76,12 +77,18 @@ export function StudioOverview({
   publishedRevision,
   revision,
   dirty,
+  archived,
+  everPublished,
+  outletName,
 }: {
   doc: MenuDocument | null;
   imports: StudioImport[];
   publishedRevision: number | null | undefined;
   revision: number | undefined;
   dirty: boolean;
+  archived: boolean;
+  everPublished: boolean;
+  outletName: string;
 }) {
   const sections = doc?.categories.filter((c) => !c.archived) ?? [];
   const metrics = [
@@ -100,16 +107,24 @@ export function StudioOverview({
     },
     {
       label: "Publication",
-      count: !publishedRevision
-        ? "Draft"
-        : dirty || (revision ?? 0) > publishedRevision
-          ? "Live + draft"
-          : "Live",
+      count: archived
+        ? "Archived"
+        : !publishedRevision
+          ? everPublished
+            ? "Unpublished"
+            : "Private draft"
+          : dirty || (revision ?? 0) > publishedRevision
+            ? "Live + draft"
+            : "Live",
       note: dirty
         ? "Local changes unsaved"
-        : publishedRevision
-          ? "Guest release exists"
-          : "Explicit publish only",
+        : archived
+          ? "Recoverable menu"
+          : publishedRevision
+            ? "Guest release exists"
+            : everPublished
+              ? "Taken offline"
+              : "Explicit publish only",
       Icon: CheckCircle2,
     },
   ];
@@ -117,7 +132,20 @@ export function StudioOverview({
     <section className="atelier-metrics" aria-label="Menu Studio overview">
       <div className="atelier-metrics-heading">
         <h2 className="atelier-eyebrow">THIS MENU AT A GLANCE</h2>
-        <span>Current outlet · Private draft</span>
+        <span>
+          {outletName} ·{" "}
+          {archived
+            ? "Archived"
+            : dirty
+              ? "Unsaved draft changes"
+              : publishedRevision
+                ? (revision ?? 0) > publishedRevision
+                  ? "Live + draft changes"
+                  : "Live"
+                : everPublished
+                  ? "Unpublished"
+                  : "Private draft"}
+        </span>
       </div>
       <div className="atelier-metrics-grid">
         {metrics.map(({ label, count, note, Icon }, index) => (
@@ -217,7 +245,7 @@ export function StudioActions({
           onClick={onPreview}
           aria-pressed={preview}
         >
-          <Eye size={16} aria-hidden="true" /> {preview ? "Back to edit" : "Preview draft"}
+          <Eye size={16} aria-hidden="true" /> {preview ? "Preview open" : "Preview draft"}
         </button>
         <button type="button" className="ember" disabled={disabled} onClick={onSave}>
           <Save size={16} aria-hidden="true" />
@@ -308,6 +336,16 @@ export function StudioPreview({
                 .slice(0, 8)
                 .map((dish) => (
                   <div key={dish.id} className="atelier-preview-dish">
+                    {/* Private authenticated media and curated assets use their existing stable URL routes. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      className="atelier-preview-thumb"
+                      src={dishImageSrc(dish, "private")}
+                      alt=""
+                      width={48}
+                      height={44}
+                      loading="lazy"
+                    />
                     <div>
                       <strong>{dish.name || "Untitled dish"}</strong>
                       {dish.description && <small>{dish.description}</small>}
