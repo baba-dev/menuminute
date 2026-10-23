@@ -14,7 +14,6 @@ export function StudioDishEditor({
   ci,
   di,
   dishCount,
-  canWrite,
   currency,
   media,
   onUpdate,

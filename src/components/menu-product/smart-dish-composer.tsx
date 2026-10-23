@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { ImagePlus, Plus, Search, ShoppingBasket, X } from "lucide-react";
 import { displayToMinor } from "@/lib/money";
-import { approvedArtworkForDish, artworkForDish, artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import { artworkForDish, artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
 /* eslint-disable @next/next/no-img-element -- Authenticated private media must use its existing scoped route. */
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import {

@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
+import { artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
 import {
   findDishDuplicate,
@@ -72,6 +73,9 @@ export function MenuStudio({
   const [organizationDishes, setOrganizationDishes] = useState<OrganizationDish[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [lifecycleAction, setLifecycleAction] = useState<"archive" | "unpublish" | null>(null);
+  const [confirmName, setConfirmName] = useState("");
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [milestone, setMilestone] = useState(false);
   const selected = useRef(initialDetail?.id ?? "");
@@ -80,6 +84,8 @@ export function MenuStudio({
   const commandRetry = useRef({ signature: "", key: "" });
   const form = useRef<HTMLFormElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const lifecycleDialog = useRef<HTMLDialogElement>(null);
+  const previewDialog = useRef<HTMLDialogElement>(null);
   const headers = { "content-type": "application/json", "x-outlet-id": outlet.id };
   const path = (menuId: string) => `/api/catalog/${menuId}`;
   useEffect(() => {
@@ -152,6 +158,7 @@ export function MenuStudio({
       setComposerPending(false);
       setComposerSelection([]);
     }
+    if (changedMenu) { previewDialog.current?.close(); setPreview(false); }
     setDirty(false);
   }
   function change(next: MenuDocument) {
@@ -268,6 +275,7 @@ export function MenuStudio({
       const photo = media.some((m) => m.id === item.mediaId && m.status === "ready" && m.approvedAt)
         ? item.mediaId
         : null;
+      const art = artworkById(item.artworkId);
       category.items.push({
         id: id(),
         name: item.name.trim(),
@@ -276,6 +284,8 @@ export function MenuStudio({
         soldOut: false,
         archived: false,
         mediaId: photo,
+        artworkId: art?.id ?? null,
+        imageMode: item.imageMode === "photo" && photo ? "photo" : item.imageMode === "artwork" && art ? "artwork" : "none",
         dietary: [],
         variants: [],
         addOnGroups: [],
@@ -369,8 +379,66 @@ export function MenuStudio({
             <Plus size={16} />
             Create menu
           </button>
+          {detail && (
+            <details className="atelier-menu-actions">
+              <summary aria-label="Menu actions" aria-haspopup="true">Menu actions</summary>
+              <div className="atelier-menu-actions-list">
+                {detail.archived ? (
+                  <button type="button" disabled={busy || !detail.canWrite} onClick={() => void run(async () => {
+                    await command("restore");
+                    setList(await json("/api/catalog"));
+                    await load(detail.id);
+                    setMessage("Menu restored as an unpublished draft.");
+                  })}><ArchiveRestore size={16} /> Restore menu</button>
+                ) : (
+                  <>
+                    {detail.publishedRevision && (
+                      <button type="button" disabled={busy || !detail.canWrite} onClick={() => { setLifecycleAction("unpublish"); setConfirmName(""); lifecycleDialog.current?.showModal(); }}>
+                        <EyeOff size={16} /> Unpublish menu
+                      </button>
+                    )}
+                    <button type="button" className="atelier-danger" disabled={busy || !detail.canWrite} onClick={() => { setLifecycleAction("archive"); setConfirmName(""); lifecycleDialog.current?.showModal(); }}>
+                      <Trash2 size={16} /> Delete menu
+                    </button>
+                  </>
+                )}
+              </div>
+            </details>
+          )}
         </div>
+        <dialog ref={lifecycleDialog} className="atelier-lifecycle-dialog" aria-labelledby="atelier-lifecycle-title" onClose={() => setLifecycleAction(null)}>
+          {detail && lifecycleAction && (
+            <form method="dialog" className="stack" onSubmit={(event) => {
+              event.preventDefault();
+              if (lifecycleAction === "archive" && confirmName !== doc?.name) return;
+              const action = lifecycleAction;
+              lifecycleDialog.current?.close();
+              void run(async () => {
+                await command(action);
+                const next = await json("/api/catalog");
+                setList(next);
+                await load(detail.id);
+                setMessage(action === "archive" ? "Menu deleted from active menus. Restore it from Menu actions." : "Menu unpublished. Historical releases were retained.");
+              });
+            }}>
+              <span className="atelier-eyebrow">MENU LIFECYCLE</span>
+              <h2 id="atelier-lifecycle-title">{lifecycleAction === "archive" ? "Delete this menu?" : "Take this menu offline?"}</h2>
+              <p>{lifecycleAction === "archive" ? "The menu will be removed from your active workspace and unpublished. It remains recoverable; historical orders and financial records are preserved." : "The current public release will be taken offline. Its saved draft and publication history remain available."}</p>
+              <p className="atelier-lifecycle-warning">This menu is assigned to {detail.assignments.length} {detail.assignments.length === 1 ? "outlet" : "outlets"}. Existing QR identities are retained, but this menu will stop being shown to guests. Other live menus, if any, remain available. Any unsaved local changes will be discarded.</p>
+              {lifecycleAction === "archive" && <label className="field">Type <strong>{doc?.name}</strong> to confirm deletion
+                <input autoComplete="off" value={confirmName} onChange={(event) => setConfirmName(event.target.value)} />
+              </label>}
+              <div className="row">
+                <button type="button" onClick={() => lifecycleDialog.current?.close()}>Cancel</button>
+                <button type="submit" className="ember ink-press" disabled={busy || (lifecycleAction === "archive" && confirmName !== doc?.name)}>{lifecycleAction === "archive" ? "Delete menu" : "Unpublish menu"}</button>
+              </div>
+            </form>
+          )}
+        </dialog>
         <StudioOverview
+          archived={detail?.archived ?? false}
+          everPublished={detail?.everPublished ?? false}
+          outletName={outlet.name}
           doc={doc}
           imports={imports}
           publishedRevision={detail?.publishedRevision}
@@ -412,7 +480,10 @@ export function MenuStudio({
               revision={detail.revision}
               publishedRevision={detail.publishedRevision}
               preview={preview}
-              onPreview={() => setPreview((current) => !current)}
+              onPreview={() => {
+                if (previewDialog.current?.open) previewDialog.current.close();
+                else { setPreview(true); setPreviewDevice("desktop"); previewDialog.current?.showModal(); }
+              }}
               onSave={() =>
                 void run(async () => {
                   await save();
@@ -460,27 +531,6 @@ export function MenuStudio({
             </dialog>
             <div className="atelier-workspace studio-layout">
               <div className="atelier-editor stack">
-                {preview ? (
-                  <PublicMenu
-                    preview
-                    initial={{
-                      outlet: { ...outlet, versioned: true, isDemoData: false },
-                      point: null,
-                      catalogFingerprint: "",
-                      now: new Date().toISOString(),
-                      menus: [
-                        {
-                          id: detail.id,
-                          revision: detail.revision,
-                          document: doc,
-                          brand: null,
-                          overrides: [],
-                        },
-                      ],
-                    }}
-                  />
-                ) : (
-                  <>
                     <nav className="atelier-editor-tabs row" aria-label="Menu editor sections">
                       {["dishes", "schedule", "media", "assignments"].map((t) => (
                         <button
@@ -805,13 +855,30 @@ export function MenuStudio({
                         </fieldset>
                       </div>
                     )}
-                  </>
-                )}
               </div>
-              {!preview && (
-                <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
-              )}
+              <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
             </div>
+            <dialog ref={previewDialog} className="atelier-preview-dialog" aria-labelledby="atelier-preview-title" onClose={() => setPreview(false)}>
+              <div className="atelier-preview-dialog-head">
+                <div><span className="atelier-eyebrow">PRIVATE DRAFT PREVIEW</span><h2 id="atelier-preview-title">{doc.name}</h2><small>Draft preview — not public · Includes unsaved edits</small></div>
+                <div className="row">
+                  <div className="atelier-preview-device" aria-label="Preview viewport">
+                    <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
+                    <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
+                  </div>
+                  <button type="button" className="atelier-preview-close" aria-label="Back to edit" onClick={() => previewDialog.current?.close()}><X size={20} /> <span>Back to edit</span></button>
+                </div>
+              </div>
+              <div className="atelier-preview-stage">
+                <div className={"atelier-preview-viewport " + (previewDevice === "mobile" ? "is-mobile" : "")}>
+                  <PublicMenu preview initial={{
+                    outlet: { ...outlet, versioned: true, isDemoData: false },
+                    point: null, catalogFingerprint: "", now: new Date().toISOString(),
+                    menus: [{ id: detail.id, revision: detail.revision, document: doc, brand: null, overrides: [] }],
+                  }} />
+                </div>
+              </div>
+            </dialog>
           </>
         )}
       </div>
