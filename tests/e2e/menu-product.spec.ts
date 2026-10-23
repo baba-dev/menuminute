@@ -467,6 +467,52 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   }
 });
 
+test("Menu Studio 3.1 carries curated artwork into draft and gives review and preview a clear arrival", async ({
+  page,
+}) => {
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+  await expect(page.locator(".mm-shared-topbar")).toBeVisible();
+  await expect(page.locator(".mm-workspace-sidebar .mm-theme-toggle")).toHaveCount(0);
+  await page.getByRole("button", { name: "Add category", exact: true }).click();
+  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
+  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  await page.getByLabel("Search the dish catalogue").fill("Butter Chicken");
+  const result = page.getByRole("option", { name: /Butter Chicken/ });
+  await expect(result.locator("img")).toHaveAttribute(
+    "src",
+    "/assets/food/dishes/indian/butter-chicken.png"
+  );
+  await result.click();
+  await page.getByRole("button", { name: "Review & Add 1 dish" }).click();
+  const review = page.getByLabel("Review selected dishes");
+  await expect(review).toHaveClass(/smart-review-arrival/);
+  await expect(review.getByRole("heading", { name: /Review prices, categories/ })).toBeFocused();
+  await expect(page.getByLabel("Quick photo for Butter Chicken")).toHaveValue("artwork");
+  await page.getByLabel("Quick price for Butter Chicken").fill("12.500");
+  await page.getByRole("button", { name: "Add 1 to private draft" }).click();
+  await expect(page.getByRole("img", { name: "Selected image for Butter Chicken" })).toHaveAttribute(
+    "src",
+    "/assets/food/dishes/indian/butter-chicken.png"
+  );
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("img", { name: "Selected image for Butter Chicken" })).toBeVisible();
+  await page.getByRole("button", { name: "Preview draft" }).click();
+  await expect(page.locator(".atelier-preview-dialog")).toBeVisible();
+  await expect(page.locator(".atelier-preview-viewport")).toBeVisible();
+  await expect(page.getByText("Draft preview — not public", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back to edit" }).click();
+  await expect(page.locator(".atelier-preview-dialog")).toBeHidden();
+});
+
 test("Tabletop Press is responsive and uses real QR media for all printable formats", async ({
   page,
   request,
