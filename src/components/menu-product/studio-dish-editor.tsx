@@ -36,7 +36,7 @@ export function StudioDishEditor({
       <img
         className="atelier-dish-artwork"
         src={dishImageSrc(dish, "private")}
-        alt={dish.imageMode === "none" ? "" : "Selected image for " + dish.name}
+        alt={dish.imageMode === "none" ? "" : (dish.imageMode === "photo" || (dish.imageMode === "auto" && dish.mediaId)) ? "Uploaded photograph for " + dish.name : "Selected image for " + dish.name}
         width={104}
         height={84}
         loading="lazy"

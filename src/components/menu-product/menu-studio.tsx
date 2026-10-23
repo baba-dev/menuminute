@@ -946,7 +946,7 @@ export function MenuStudio({
                   </div>
                 )}
               </div>
-              <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
+              {!preview && <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />}
             </div>
             <dialog
               ref={previewDialog}
@@ -958,7 +958,7 @@ export function MenuStudio({
                 <div>
                   <span className="atelier-eyebrow">PRIVATE DRAFT PREVIEW</span>
                   <h2 id="atelier-preview-title">{doc.name}</h2>
-                  <small>Draft preview — not public · Includes unsaved edits</small>
+                  <small>Includes unsaved edits · Guest menu unchanged</small>
                 </div>
                 <div className="row">
                   <div className="atelier-preview-device" aria-label="Preview viewport">
