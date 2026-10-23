@@ -22,8 +22,10 @@ import { DiningImage } from "./dining-image";
 import { restoreGuestCart } from "@/modules/menu-product/cart-storage";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
-import { ItemCustomizer, type CustomizerDish, type CartItem } from "./item-customizer";
-import { CartDrawer } from "./cart-drawer";
+import dynamic from "next/dynamic";
+import type { CustomizerDish, CartItem } from "./item-customizer";
+const ItemCustomizer = dynamic(() => import("./item-customizer").then((mod) => mod.ItemCustomizer), { ssr: false });
+const CartDrawer = dynamic(() => import("./cart-drawer").then((mod) => mod.CartDrawer), { ssr: false });
 
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
@@ -526,7 +528,8 @@ export function PublicMenu({
           <small>Made to be savoured · Powered by MenuMinute</small>
         </footer>
       </div>
-      <ItemCustomizer
+      {customizingDish && (
+        <ItemCustomizer
         key={customizingDish?.id ?? "empty"}
         dish={customizingDish}
         visual={customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null}
@@ -537,7 +540,8 @@ export function PublicMenu({
         isOpen={Boolean(customizingDish)}
         onClose={() => setCustomizingDish(null)}
         onAddToCart={handleAddToCart}
-      />
+        />
+      )}
       {ordering && token && (
         <CartDrawer
           items={cartItems}
