@@ -214,8 +214,14 @@ describe("POS D–G real PostgreSQL finance integration", () => {
     const registers = (await f.view("shifts")) as Array<{ id: string; state: string }>;
     expect(registers.find((s) => s.id === opened.shiftId)?.state).toBe("closed");
     expect(registers.find((s) => s.id === auxiliary.shiftId)?.state).toBe("open");
-    const reconciliation = (await f.view("reconcile")) as { anomalies: unknown[] };
+    const reconciliation = (await f.view("reconcile")) as {
+      anomalies: unknown[];
+      scanLimit: number;
+      scannedCount: number;
+      partial: boolean;
+    };
     expect(reconciliation.anomalies).toEqual([]);
+    expect(reconciliation).toMatchObject({ scanLimit: 500, scannedCount: 1, partial: false });
     const docs = await admin(async (_db, pool) =>
       pool.query(
         "select kind,document_number,source_document_id from pos_documents where sale_id=$1 order by issued_at",
