@@ -287,7 +287,10 @@ test("public menu is responsive, searchable and accessible in light/dark/system 
   await page.getByLabel("Search the menu", { exact: true }).fill("not-a-real-dish");
   await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).click();
-  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Vegan" }).click();
+  await page
+    .getByRole("group", { name: "Dietary filter" })
+    .getByRole("button", { name: "Vegan" })
+    .click();
   await expect(page.getByRole("heading", { name: "Signature thali" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /An intentionally long dish name/ })
