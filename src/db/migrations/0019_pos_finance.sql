@@ -599,26 +599,42 @@ BEGIN
  'canRefund',app_private.pos_access(p_outlet,'refund'),
  'canIssue',app_private.pos_access(p_outlet,'document'));
 END $$;
+-- Bounded interactive scan. Historical/full-ledger and provider reconciliation must run
+-- through a separate paged operator workflow; never imply a partial scan is comprehensive.
+CREATE INDEX pos_bills_scope_time ON pos_bills(outlet_id,created_at DESC,sale_id DESC);
 CREATE FUNCTION app_private.pos_reconciliation(p_outlet text) RETURNS jsonb
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 BEGIN
  IF NOT app_private.pos_access(p_outlet,'close') THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
- RETURN jsonb_build_object('checkedAt',now(),'outletId',p_outlet,'anomalies',
- COALESCE((SELECT jsonb_agg(jsonb_build_object('saleId',x.sale_id,'reason',x.reason))
+ RETURN jsonb_build_object('checkedAt',now(),'outletId',p_outlet,'scanLimit',500,
+ 'scannedCount',(SELECT count(*) FROM (SELECT sale_id FROM pos_bills WHERE outlet_id=p_outlet
+    ORDER BY created_at DESC,sale_id DESC LIMIT 500) recent_count),
+ 'partial',EXISTS(SELECT 1 FROM pos_bills WHERE outlet_id=p_outlet
+    ORDER BY created_at DESC,sale_id DESC OFFSET 500 LIMIT 1),
+ 'anomalies',
+ COALESCE((WITH recent AS (
+ SELECT sale_id FROM pos_bills WHERE outlet_id=p_outlet ORDER BY created_at DESC,sale_id DESC LIMIT 500
+ )
+ SELECT jsonb_agg(jsonb_build_object('saleId',x.sale_id,'reason',x.reason))
  FROM (
  SELECT b.sale_id,'tender_exceeds_bill'::text AS reason FROM pos_bills b
+ JOIN recent rs ON rs.sale_id=b.sale_id
  WHERE b.outlet_id=p_outlet AND COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)>b.total_minor
  UNION ALL
  SELECT b.sale_id,'refund_exceeds_collection' FROM pos_bills b
+ JOIN recent rs ON rs.sale_id=b.sale_id
  WHERE b.outlet_id=p_outlet AND COALESCE((SELECT sum(f.amount_minor) FROM pos_refunds f WHERE f.sale_id=b.sale_id),0)>
  COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)
  UNION ALL
  SELECT b.sale_id,'bill_line_total_mismatch' FROM pos_bills b
+ JOIN recent rs ON rs.sale_id=b.sale_id
  WHERE b.outlet_id=p_outlet AND
   COALESCE((SELECT sum((l.value->>'totalMinor')::bigint) FROM jsonb_array_elements(b.line_snapshot) l(value)),0)<>b.total_minor
  UNION ALL
- SELECT b.sale_id,'settlement_order_mismatch' FROM pos_bills b JOIN pos_sales s ON s.id=b.sale_id
- JOIN orders o ON o.id=s.order_id WHERE b.outlet_id=p_outlet AND o.payment_status='paid'
+ SELECT b.sale_id,'settlement_order_mismatch' FROM pos_bills b
+ JOIN recent rs ON rs.sale_id=b.sale_id
+ JOIN pos_sales s ON s.id=b.sale_id JOIN orders o ON o.id=s.order_id
+ WHERE b.outlet_id=p_outlet AND o.payment_status='paid'
  AND COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=b.sale_id),0)<>b.total_minor
  ) x),'[]'::jsonb));
 END $$;
