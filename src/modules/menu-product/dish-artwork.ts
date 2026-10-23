@@ -11,14 +11,18 @@ export type ArtworkAsset = {
   datasetId?: string;
 };
 const canonical = /^\/assets\/food\/dishes\/[a-z0-9-]+\/[a-z0-9-]+\.png$/;
-const allowedStates = new Set(["approved", "assets-imported", "assets-imported-awaiting-owner-review"]);
+const allowedStates = new Set([
+  "approved",
+  "assets-imported",
+  "assets-imported-awaiting-owner-review",
+]);
 export const artworkAssets = (manifest.assets as ArtworkAsset[])
   .filter((a) => allowedStates.has(a.state) && canonical.test(a.path))
   .map((a) => ({ ...a, id: a.category + "__" + a.slug }));
 export type DishArtwork = (typeof artworkAssets)[number];
 
 export function artworkById(id: string | null | undefined): DishArtwork | null {
-  return id ? artworkAssets.find((a) => a.id === id) ?? null : null;
+  return id ? (artworkAssets.find((a) => a.id === id) ?? null) : null;
 }
 export function artworkForDish(name: string, catalogueId?: string | null): DishArtwork | null {
   const wanted = normalizeDishText(name);
@@ -39,21 +43,33 @@ export function approvedArtworkForDish(
   const wanted = normalizeDishText(name);
   if (!wanted) return null;
   const exact = assets.find(
-    (asset) => asset.state === "approved" && canonical.test(asset.path) && normalizeDishText(asset.label) === wanted
+    (asset) =>
+      asset.state === "approved" &&
+      canonical.test(asset.path) &&
+      normalizeDishText(asset.label) === wanted
   );
   return exact ? { path: exact.path, label: exact.label } : null;
 }
 
 export function dishImageSrc(
-  dish: { name: string; mediaId?: string | null; artworkId?: string | null; imageMode?: "auto" | "artwork" | "photo" | "none" },
+  dish: {
+    name: string;
+    mediaId?: string | null;
+    artworkId?: string | null;
+    imageMode?: "auto" | "artwork" | "photo" | "none";
+  },
   visibility: "public" | "private" = "public"
 ): string {
   if (dish.imageMode === "none") return "/icons/category-default.svg";
   const photo = dish.mediaId
-    ? (visibility === "public" ? "/api/public-media/" : "/api/media/") + encodeURIComponent(dish.mediaId) + (visibility === "public" ? "?size=thumb" : "")
+    ? (visibility === "public" ? "/api/public-media/" : "/api/media/") +
+      encodeURIComponent(dish.mediaId) +
+      (visibility === "public" ? "?size=thumb" : "")
     : null;
   if (dish.imageMode === "photo") return photo ?? "/icons/category-default.svg";
-  const art = artworkById(dish.artworkId) ?? (dish.imageMode === "auto" || !dish.imageMode ? artworkForDish(dish.name) : null);
+  const art =
+    artworkById(dish.artworkId) ??
+    (dish.imageMode === "auto" || !dish.imageMode ? artworkForDish(dish.name) : null);
   if (dish.imageMode === "artwork") return art?.path ?? "/icons/category-default.svg";
   return photo ?? art?.path ?? "/icons/category-default.svg";
 }
