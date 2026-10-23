@@ -133,6 +133,11 @@ describe("POS D–G real PostgreSQL finance integration", () => {
       registerName: "counter",
       openingMinor: "10000",
     })) as { shiftId: string };
+    const auxiliary = (await f.cmd("open_shift", {
+      registerName: "auxiliary",
+      openingMinor: "500",
+    })) as { shiftId: string };
+    expect(auxiliary.shiftId).not.toBe(opened.shiftId);
     const firstCommand = {
       action: "tender",
       key: crypto.randomUUID(),
@@ -206,6 +211,9 @@ describe("POS D–G real PostgreSQL finance integration", () => {
     })) as { expectedMinor: string; varianceMinor: string };
     // Opening 10000 + applied cash 10000 - fully reversed cash 10000.
     expect(closing).toMatchObject({ expectedMinor: "10000", varianceMinor: "0" });
+    const registers = (await f.view("shifts")) as Array<{ id: string; state: string }>;
+    expect(registers.find((s) => s.id === opened.shiftId)?.state).toBe("closed");
+    expect(registers.find((s) => s.id === auxiliary.shiftId)?.state).toBe("open");
     const reconciliation = (await f.view("reconcile")) as { anomalies: unknown[] };
     expect(reconciliation.anomalies).toEqual([]);
     const docs = await admin(async (_db, pool) =>
