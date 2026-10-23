@@ -570,8 +570,8 @@ export function SmartDishComposer({
                       const value = e.target.value;
                       const art = artworkById(item.artworkId) ?? artworkForDish(item.name);
                       if (value.startsWith("photo:")) update(item.key, { mediaId: value.slice(6), imageMode: "photo" });
-                      else if (value === "artwork" && art) update(item.key, { artworkId: art.id, imageMode: "artwork" });
-                      else update(item.key, { imageMode: "none" });
+                      else if (value === "artwork" && art) update(item.key, { artworkId: art.id, imageMode: "artwork", mediaId: null });
+                      else update(item.key, { imageMode: "none", mediaId: null });
                     }}
                   >
                     {(artworkById(item.artworkId) ?? artworkForDish(item.name)) && <option value="artwork">Curated illustration · default</option>}

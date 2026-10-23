@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
-import { artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import { artworkById } from "@/modules/menu-product/dish-artwork";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
 import {
   findDishDuplicate,

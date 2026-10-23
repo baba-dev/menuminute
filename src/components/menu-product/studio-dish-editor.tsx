@@ -124,8 +124,8 @@ export function StudioDishEditor({
             onUpdate(value.startsWith("photo:")
               ? { imageMode: "photo", mediaId: value.slice(6) }
               : value === "artwork" && art
-                ? { imageMode: "artwork", artworkId: art.id }
-                : { imageMode: value as Dish["imageMode"] });
+                ? { imageMode: "artwork", artworkId: art.id, mediaId: null }
+                : { imageMode: value as Dish["imageMode"], mediaId: null });
           }}
         >
           {dish.imageMode === "auto" && <option value="auto">Automatic · legacy selection</option>}
