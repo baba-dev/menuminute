@@ -8,7 +8,6 @@ import {
   Check,
   CheckCircle2,
   ChefHat,
-  ExternalLink,
   FilePenLine,
   Globe2,
   Layers3,
@@ -24,7 +23,6 @@ import {
   dashboardSummary,
   preferredMenuQr,
 } from "@/modules/menu-product/dashboard-summary";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 import { DashboardTooltip } from "./dashboard-tooltip";
 
 export const metadata: Metadata = {
@@ -70,17 +68,6 @@ export default async function DashboardPage() {
     hasPublicMenu: stats.hasPublicMenu,
     hasActiveQr: stats.activeQrCount > 0,
   });
-  const publicHref =
-    stats.hasPublicMenu && primaryQr
-      ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
-      : null;
-  const userName = session.user.name?.trim() || "Restaurant admin";
-  const initials = userName
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
   const kpis = [
     {
       label: "Published menus",
@@ -184,40 +171,6 @@ export default async function DashboardPage() {
   return (
     <div className="mm-dashboard product" data-testid="editorial-dashboard">
       <header className="mm-dashboard-hero">
-        <div className="mm-dashboard-topbar">
-          <nav aria-label="Breadcrumb" className="mm-dashboard-breadcrumb">
-            <span>Workspace</span>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Restaurant overview</span>
-          </nav>
-          <div className="mm-dashboard-top-actions">
-            {publicHref ? (
-              <Link
-                href={publicHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mm-dashboard-preview"
-              >
-                Preview <ExternalLink size={14} aria-hidden="true" />
-              </Link>
-            ) : (
-              <span
-                className="mm-dashboard-preview mm-dashboard-preview--unavailable"
-                title="Publish your menu to enable public preview"
-              >
-                Preview unavailable
-              </span>
-            )}
-            <ThemeControl />
-            <Link
-              className="mm-dashboard-user"
-              href="/account"
-              aria-label={"Account settings for " + userName}
-            >
-              {initials || "MM"}
-            </Link>
-          </div>
-        </div>
         <div className="mm-dashboard-hero-copy">
           <span className="mm-dashboard-eyebrow">
             A little more than a dashboard <span aria-hidden="true">—</span>

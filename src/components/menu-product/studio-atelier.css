@@ -1,5 +1,5 @@
 /* Recipe Atelier: scoped private merchant workspace. */
-.mm-workspace-main:has(> .studio-atelier) {
+.mm-workspace-main:has(> .mm-shared-topbar + .studio-atelier) {
   max-width: none;
   margin: 0;
   padding: 0;
