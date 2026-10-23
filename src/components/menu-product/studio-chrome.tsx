@@ -336,6 +336,8 @@ export function StudioPreview({
                 .slice(0, 8)
                 .map((dish) => (
                   <div key={dish.id} className="atelier-preview-dish">
+                    {/* Private authenticated media and curated assets use their existing stable URL routes. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       className="atelier-preview-thumb"
                       src={dishImageSrc(dish, "private")}
