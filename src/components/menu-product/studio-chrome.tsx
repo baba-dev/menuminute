@@ -18,6 +18,7 @@ import {
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { currencyExponent } from "@/lib/money";
 import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import { coverFor } from "@/modules/menu-product/public-presentation";
 
 const art = "/brand/menu-studio/recipe-atelier/";
 
@@ -316,9 +317,10 @@ export function StudioPreview({
         <span>LIVE EDITS</span>
       </div>
       <div className="atelier-preview-window">
-        <div className="atelier-preview-cover">
-          <span>FROM OUR KITCHEN</span>
+        <div className="atelier-preview-cover" style={{ backgroundImage: "linear-gradient(90deg,rgba(255,250,243,.95),rgba(255,250,243,.66)),url(" + coverFor(doc) + ")", backgroundSize: "cover", backgroundPosition: "center" }}>
+          <span>YOUR DIGITAL STOREFRONT</span>
           <h2>{doc.name || "Your menu"}</h2>
+          <small>{doc.presentation?.headline || "Made with care. Served with joy."}</small>
           <small>
             {currency} · {timezone}
           </small>
