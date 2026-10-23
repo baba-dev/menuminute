@@ -239,6 +239,23 @@ describe("POS D–G real PostgreSQL finance integration", () => {
       expectedTaxRevision: quote.taxProfileRevision,
       customer: {},
     });
+    // Changing merchant rates after a successful freeze must never alter
+    // the permanent tax/line snapshot or its eventual document.
+    await f.cmd("profile", {
+      expectedRevision: 1,
+      mode: "classified",
+      inclusive: false,
+      taxLabel: "Changed tax",
+      classes: [{ dishId: "plate", classification: "CHANGED", rateBps: 1000 }],
+    });
+    const locked = (await f.view("sale", f.sale.saleId)) as {
+      bill: { totalMinor: string; taxMinor: string; taxProfileRevision: number };
+    };
+    expect(locked.bill).toMatchObject({
+      totalMinor: "29400",
+      taxMinor: "1400",
+      taxProfileRevision: 1,
+    });
     const order = await admin(async (_db, pool) =>
       pool.query("select subtotal_minor,tax_minor,total_minor from orders where id=$1", [
         f.sale.orderId,
