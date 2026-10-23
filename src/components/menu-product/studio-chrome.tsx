@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { formatPrice } from "@/lib/utils";
-import { coverFor, dishVisual, startingPriceMinor } from "@/modules/menu-product/public-presentation";
+import {
+  coverFor,
+  dishVisual,
+  startingPriceMinor,
+} from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 
 const art = "/brand/menu-studio/recipe-atelier/";

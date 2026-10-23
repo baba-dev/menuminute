@@ -120,7 +120,9 @@ export function startingPriceMinor(dish: {
 }): number {
   const available = dish.variants.filter((variant) => variant.isAvailable);
   const options = available.length ? available : dish.variants;
-  return options.length ? Math.min(...options.map((variant) => variant.priceMinor)) : dish.priceMinor;
+  return options.length
+    ? Math.min(...options.map((variant) => variant.priceMinor))
+    : dish.priceMinor;
 }
 
 export type FeaturedDish = {

@@ -373,8 +373,10 @@ export function CartDrawer({
                         <DiningImage visual={visual} />
                         <div>
                           <strong>{dish.name}</strong>
-                          <small>{dish.variants.length ? "From " : ""}
-                            {formatPrice(startingPriceMinor(dish), suggestionCurrency)}</small>
+                          <small>
+                            {dish.variants.length ? "From " : ""}
+                            {formatPrice(startingPriceMinor(dish), suggestionCurrency)}
+                          </small>
                         </div>
                         <button
                           type="button"

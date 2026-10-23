@@ -373,8 +373,10 @@ export function PublicMenu({
                   <div>
                     <span className="dining-kicker">{categoryName}</span>
                     <h3>{dish.name}</h3>
-                    <span className="dining-price">{dish.variants.length ? "From " : ""}
-                    {formatPrice(startingPriceMinor(dish), currency)}</span>
+                    <span className="dining-price">
+                      {dish.variants.length ? "From " : ""}
+                      {formatPrice(startingPriceMinor(dish), currency)}
+                    </span>
                     <button
                       type="button"
                       onClick={() => openDish(dish, categoryName)}

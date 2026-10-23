@@ -58,7 +58,15 @@ describe("Dining Canvas asset and configuration boundaries", () => {
     expect(categoryImage("Desserts")).toContain("desserts.webp");
   });
   it("shows the lowest available variant as the genuine starting price", () => {
-    expect(startingPriceMinor({ priceMinor: 1000, variants: [{ priceMinor: 1500, isAvailable: false }, { priceMinor: 1700, isAvailable: true }] })).toBe(1700);
+    expect(
+      startingPriceMinor({
+        priceMinor: 1000,
+        variants: [
+          { priceMinor: 1500, isAvailable: false },
+          { priceMinor: 1700, isAvailable: true },
+        ],
+      })
+    ).toBe(1700);
     expect(startingPriceMinor({ priceMinor: 1000, variants: [] })).toBe(1000);
   });
 });
