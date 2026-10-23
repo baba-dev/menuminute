@@ -54,7 +54,11 @@ export async function menuDetail(actor: Actor, id: string) {
     const allowed = await tx.execute<{ allowed: boolean }>(
       sql`select app_private.menu_access(${id},'menu.write') as allowed`
     );
-    const historicalRelease = await tx.select({ revision: menuReleases.revision }).from(menuReleases).where(eq(menuReleases.menuId, id)).limit(1);
+    const historicalRelease = await tx
+      .select({ revision: menuReleases.revision })
+      .from(menuReleases)
+      .where(eq(menuReleases.menuId, id))
+      .limit(1);
     const assignments = await tx
       .select()
       .from(menuAssignments)
@@ -75,10 +79,11 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
   const input = validateMenuCommand(raw);
   if (input.action === "save" || input.action === "create") {
     const doc = input.data.document as MenuDocument;
-    for (const category of doc.categories) for (const dish of category.items) {
-      if (dish.artworkId && !artworkById(dish.artworkId))
-        throw new ValidationError("Unknown curated dish illustration");
-    }
+    for (const category of doc.categories)
+      for (const dish of category.items) {
+        if (dish.artworkId && !artworkById(dish.artworkId))
+          throw new ValidationError("Unknown curated dish illustration");
+      }
   }
   try {
     return await withActor(
