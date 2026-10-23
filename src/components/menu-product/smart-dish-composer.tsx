@@ -62,12 +62,18 @@ export function SmartDishComposer({
   useEffect(() => {
     if (!review) return;
     const frame = requestAnimationFrame(() => {
-      reviewRef.current?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      reviewRef.current?.scrollIntoView({
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
       reviewHeading.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
   }, [review, reviewPulse]);
-  const enterReview = () => { setReview(true); setReviewPulse((n) => n + 1); };
+  const enterReview = () => {
+    setReview(true);
+    setReviewPulse((n) => n + 1);
+  };
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState(0);
   const [newSection, setNewSection] = useState("");
@@ -380,7 +386,12 @@ export function SmartDishComposer({
             >
               {matches.map((item, i) => {
                 const image = approved.some((m) => m.id === item.mediaId) ? item.mediaId : null;
-                const artwork = image ? null : artworkForDish(item.name, item.key.startsWith("catalogue:") ? item.key.slice(10) : null);
+                const artwork = image
+                  ? null
+                  : artworkForDish(
+                      item.name,
+                      item.key.startsWith("catalogue:") ? item.key.slice(10) : null
+                    );
                 return (
                   <button
                     id={"smart-option-" + i}
@@ -476,7 +487,13 @@ export function SmartDishComposer({
               <ul className="smart-tray-items">
                 {selection.map((item) => (
                   <li key={item.key}>
-                    <img src={dishImageSrc(item, "private")} alt="" width={42} height={36} loading="lazy" />
+                    <img
+                      src={dishImageSrc(item, "private")}
+                      alt=""
+                      width={42}
+                      height={36}
+                      loading="lazy"
+                    />
                     <span>{item.name}</span>
                     <button
                       type="button"
@@ -506,9 +523,17 @@ export function SmartDishComposer({
         </aside>
       </div>
       {review && selection.length > 0 && (
-        <div ref={reviewRef} key={reviewPulse} className="smart-review smart-review-arrival" aria-label="Review selected dishes" aria-live="polite">
+        <div
+          ref={reviewRef}
+          key={reviewPulse}
+          className="smart-review smart-review-arrival"
+          aria-label="Review selected dishes"
+          aria-live="polite"
+        >
           <div className="row between">
-            <h3 tabIndex={-1} ref={reviewHeading}>Review prices, categories &amp; photographs</h3>
+            <h3 tabIndex={-1} ref={reviewHeading}>
+              Review prices, categories &amp; photographs
+            </h3>
             <button type="button" onClick={() => setReview(false)}>
               Close review
             </button>
@@ -565,19 +590,31 @@ export function SmartDishComposer({
                   Dish image
                   <select
                     aria-label={"Quick photo for " + item.name}
-                    value={item.imageMode === "photo" ? "photo:" + (item.mediaId ?? "") : item.imageMode}
+                    value={
+                      item.imageMode === "photo" ? "photo:" + (item.mediaId ?? "") : item.imageMode
+                    }
                     onChange={(e) => {
                       const value = e.target.value;
                       const art = artworkById(item.artworkId) ?? artworkForDish(item.name);
-                      if (value.startsWith("photo:")) update(item.key, { mediaId: value.slice(6), imageMode: "photo" });
-                      else if (value === "artwork" && art) update(item.key, { artworkId: art.id, imageMode: "artwork", mediaId: null });
+                      if (value.startsWith("photo:"))
+                        update(item.key, { mediaId: value.slice(6), imageMode: "photo" });
+                      else if (value === "artwork" && art)
+                        update(item.key, {
+                          artworkId: art.id,
+                          imageMode: "artwork",
+                          mediaId: null,
+                        });
                       else update(item.key, { imageMode: "none", mediaId: null });
                     }}
                   >
-                    {(artworkById(item.artworkId) ?? artworkForDish(item.name)) && <option value="artwork">Curated illustration · default</option>}
+                    {(artworkById(item.artworkId) ?? artworkForDish(item.name)) && (
+                      <option value="artwork">Curated illustration · default</option>
+                    )}
                     <option value="none">No image</option>
                     {approved.map((photo, index) => (
-                      <option value={"photo:" + photo.id} key={photo.id}>Approved photo {index + 1}</option>
+                      <option value={"photo:" + photo.id} key={photo.id}>
+                        Approved photo {index + 1}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -596,8 +633,20 @@ export function SmartDishComposer({
                 This item is free
               </label>
               <div className="smart-artwork-hint">
-                <img src={dishImageSrc(item, "private")} alt="" width={72} height={60} loading="lazy" />
-                <span>{item.imageMode === "artwork" ? "Curated illustration selected. Replace it with an approved restaurant photograph whenever you like." : item.imageMode === "photo" ? "Your selected photograph replaces the illustration." : "No image selected. You can add one later."}</span>
+                <img
+                  src={dishImageSrc(item, "private")}
+                  alt=""
+                  width={72}
+                  height={60}
+                  loading="lazy"
+                />
+                <span>
+                  {item.imageMode === "artwork"
+                    ? "Curated illustration selected. Replace it with an approved restaurant photograph whenever you like."
+                    : item.imageMode === "photo"
+                      ? "Your selected photograph replaces the illustration."
+                      : "No image selected. You can add one later."}
+                </span>
               </div>
               {approved.length > 0 && (
                 <div className="smart-upload-picker">
@@ -619,10 +668,16 @@ export function SmartDishComposer({
                         <button
                           type="button"
                           key={photo.id}
-                          className={photo.id === item.mediaId && item.imageMode === "photo" ? "is-selected" : ""}
+                          className={
+                            photo.id === item.mediaId && item.imageMode === "photo"
+                              ? "is-selected"
+                              : ""
+                          }
                           aria-pressed={photo.id === item.mediaId && item.imageMode === "photo"}
                           aria-label={"Use approved photo " + (index + 1) + " for " + item.name}
-                          onClick={() => update(item.key, { mediaId: photo.id, imageMode: "photo" })}
+                          onClick={() =>
+                            update(item.key, { mediaId: photo.id, imageMode: "photo" })
+                          }
                         >
                           <img
                             src={"/api/media/" + encodeURIComponent(photo.id)}
@@ -646,16 +701,18 @@ export function SmartDishComposer({
                   )}
                 </div>
               )}
-              {item.imageMode === "photo" && item.mediaId && approved.some((m) => m.id === item.mediaId) && (
-                <span className="smart-photo-preview">
-                  <img
-                    src={"/api/media/" + encodeURIComponent(item.mediaId)}
-                    alt={"Selected uploaded photo for " + item.name}
-                    width={84}
-                    height={70}
-                  />
-                </span>
-              )}
+              {item.imageMode === "photo" &&
+                item.mediaId &&
+                approved.some((m) => m.id === item.mediaId) && (
+                  <span className="smart-photo-preview">
+                    <img
+                      src={"/api/media/" + encodeURIComponent(item.mediaId)}
+                      alt={"Selected uploaded photo for " + item.name}
+                      width={84}
+                      height={70}
+                    />
+                  </span>
+                )}
             </div>
           ))}
           {selection.some((row) => row.categoryId === "new") && (

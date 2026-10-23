@@ -54,7 +54,11 @@ export const dishSchema = z
     soldOut: z.boolean().default(false),
     archived: z.boolean().default(false),
     mediaId: entityId.nullable().default(null),
-    artworkId: z.string().regex(/^[a-z0-9-]+__[a-z0-9-]+$/).nullable().default(null),
+    artworkId: z
+      .string()
+      .regex(/^[a-z0-9-]+__[a-z0-9-]+$/)
+      .nullable()
+      .default(null),
     imageMode: z.enum(["auto", "artwork", "photo", "none"]).default("auto"),
     dietary: z
       .array(z.enum(["vegetarian", "vegan", "gluten_free"]))
