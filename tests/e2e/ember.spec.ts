@@ -107,9 +107,7 @@ async function signIn(page: import("@playwright/test").Page, f: Fixture) {
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  expect((await switchOutlet(page, f.first)).ok()).toBe(
-    true
-  );
+  expect((await switchOutlet(page, f.first)).ok()).toBe(true);
   await page.reload();
   await expect(page.getByRole("button", { name: "Open Ember assistant" })).toBeVisible();
 }
@@ -187,9 +185,7 @@ test("switching outlets resets the assistant and keeps history scoped", async ({
   await dialog.getByRole("button", { name: "New chat" }).click();
   await expect(dialog.getByText("For First Ember Outlet")).toBeVisible();
   await dialog.getByRole("button", { name: "Close assistant" }).click();
-  expect((await switchOutlet(page, f.second)).ok()).toBe(
-    true
-  );
+  expect((await switchOutlet(page, f.second)).ok()).toBe(true);
   await page.reload();
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
   const other = page.getByRole("dialog", { name: /Ember/ });
@@ -197,9 +193,7 @@ test("switching outlets resets the assistant and keeps history scoped", async ({
   await other.getByRole("button", { name: "History" }).click();
   await expect(other.getByText("No conversations yet.")).toBeVisible();
   await other.getByRole("button", { name: "Close assistant" }).click();
-  expect((await switchOutlet(page, f.first)).ok()).toBe(
-    true
-  );
+  expect((await switchOutlet(page, f.first)).ok()).toBe(true);
   await page.reload();
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
   const first = page.getByRole("dialog", { name: /Ember/ });
