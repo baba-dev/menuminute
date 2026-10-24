@@ -370,6 +370,8 @@ describe("POS D–G real PostgreSQL finance integration", () => {
     const replay = await f.cmd("partial_refund", command, key);
     expect(first).toMatchObject({ refundedMinor: "28000", state: "staff_recorded" });
     expect(replay).toMatchObject({ refundedMinor: "28000", duplicate: true });
+    const second = await f.cmd("partial_refund", command);
+    expect(second).toMatchObject({ refundedMinor: "28000", state: "staff_recorded" });
     await expect(f.cmd("partial_refund", command)).rejects.toMatchObject({ statusCode: 409 });
     const documents = await admin(async (_db, pool) =>
       pool.query(
@@ -379,6 +381,7 @@ describe("POS D–G real PostgreSQL finance integration", () => {
     );
     expect(documents.rows).toEqual([
       { kind: "receipt", source_document_id: null },
+      { kind: "credit_note", source_document_id: source.documentId },
       { kind: "credit_note", source_document_id: source.documentId },
     ]);
     const reconciliation = (await f.view("reconcile")) as { anomalies: unknown[] };
