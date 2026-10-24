@@ -330,374 +330,380 @@ export function TheTill({
             </button>
           )}
         </div>
-        <span className="pos-hero-caption" aria-hidden="true">CRAFTED FOR THE COUNTER</span>
+        <span className="pos-hero-caption" aria-hidden="true">
+          CRAFTED FOR THE COUNTER
+        </span>
       </header>
       <div className="pos-body">
-      <PosNavigation active="till" />
-      <section className="till-status" aria-label="Financial status">
-        <span>OUTLET · {workspace.context.outletName}</span>
-        <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
-        <span>TAX NOT CALCULATED · NO PAYMENT CAPTURE · NO INVOICE ISSUANCE</span>
-      </section>
-      <section className="pos-overview" aria-label="POS overview">
-        <div className="pos-section-header">
-          <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
-          <small>Current outlet · Operational snapshot</small>
-        </div>
-        <div className="pos-metrics">
-          <div className="pos-metric">
-            <ShoppingBasket aria-hidden="true" />
-            <span>Draft POS</span>
-            <strong>{workspace.context.enabled ? "Ready" : "Off"}</strong>
-            <small>Order recording only</small>
+        <PosNavigation active="till" />
+        <section className="till-status" aria-label="Financial status">
+          <span>OUTLET · {workspace.context.outletName}</span>
+          <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
+          <span>TAX NOT CALCULATED · NO PAYMENT CAPTURE · NO INVOICE ISSUANCE</span>
+        </section>
+        <section className="pos-overview" aria-label="POS overview">
+          <div className="pos-section-header">
+            <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
+            <small>Current outlet · Operational snapshot</small>
           </div>
-          <div className="pos-metric">
-            <BookOpenText aria-hidden="true" />
-            <span>Published menus</span>
-            <strong>{workspace.menus.length}</strong>
-            <small>Available in this workspace</small>
-          </div>
-          <div className="pos-metric">
-            <ClipboardCheck aria-hidden="true" />
-            <span>Eligible tickets</span>
-            <strong>{workspace.attachable.length}</strong>
-            <small>Unpaid orders available to link</small>
-          </div>
-          <div className="pos-metric">
-            <ClipboardList aria-hidden="true" />
-            <span>Recent drafts</span>
-            <strong>{workspace.recent.length}</strong>
-            <small>Returned by the register</small>
-          </div>
-        </div>
-      </section>
-      {message && (
-        <div role="alert" className="till-notice">
-          {message}
-        </div>
-      )}
-      {success && (
-        <div role="status" className="till-success">
-          <CheckCircle2 size={20} />
-          <div>
-            <strong>Recorded · Order #{success.orderNumber}</strong>
-            <p>
-              Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax. This
-              is not a receipt or tax invoice. Follow through in Service Counter.
-            </p>
-          </div>
-          <Link href="/dashboard/orders">View orders</Link>
-        </div>
-      )}
-      {editingSettings && workspace.context.canConfigure && (
-        <form className="till-settings" onSubmit={(e) => void configure(e)}>
-          <div>
-            <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
-            <h2>Activate draft POS</h2>
-            <p>
-              Record genuine merchant identity. Tax profiles and legally issued documents are
-              separately release-gated; selecting a status here is not tax certification.
-            </p>
-          </div>
-          <label>
-            Legal seller name
-            <input
-              required
-              maxLength={160}
-              value={legalName}
-              onChange={(e) => setLegalName(e.target.value)}
-            />
-          </label>
-          <label>
-            Registered seller address
-            <textarea
-              required
-              minLength={5}
-              maxLength={500}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </label>
-          <label>
-            Tax review status
-            <select
-              value={taxRegime}
-              onChange={(e) => setTaxRegime(e.target.value as typeof taxRegime)}
-            >
-              <option value="unconfigured">Not configured</option>
-              <option value="requires_review">Requires accountant review</option>
-              <option value="not_registered">Merchant declares not registered (unverified)</option>
-            </select>
-          </label>
-          <label>
-            Tax registration, if any
-            <input
-              maxLength={64}
-              value={taxRegistration}
-              onChange={(e) => setTaxRegistration(e.target.value)}
-            />
-          </label>
-          <button className="till-primary" type="submit" disabled={busy}>
-            {busy ? "Saving…" : "Save identity and enable draft orders"}
-          </button>
-        </form>
-      )}
-      {workspace.context.enabled && (
-        <div className="till-layout">
-          <section className="till-catalog" aria-label="Published menu">
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">01 / FAST ENTRY</span>
-                <h2>Published menu</h2>
-              </div>
-              <span>{dishes.length} dishes</span>
+          <div className="pos-metrics">
+            <div className="pos-metric">
+              <ShoppingBasket aria-hidden="true" />
+              <span>Draft POS</span>
+              <strong>{workspace.context.enabled ? "Ready" : "Off"}</strong>
+              <small>Order recording only</small>
             </div>
-            <div className="till-tools">
-              <select
-                aria-label="Published menu"
-                value={menu?.id ?? ""}
-                onChange={(e) => {
-                  if (cart.length) {
-                    setMessage("Clear your current cart before switching menus.");
-                    return;
-                  }
-                  setSelectedMenu(e.target.value);
-                  setCategory("");
-                }}
-              >
-                {workspace.menus.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} · revision {m.revision}
-                  </option>
-                ))}
-              </select>
-              <label className="till-search">
-                <Search size={17} />
-                <input
-                  aria-label="Find a dish"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Find a dish…"
-                />
-              </label>
+            <div className="pos-metric">
+              <BookOpenText aria-hidden="true" />
+              <span>Published menus</span>
+              <strong>{workspace.menus.length}</strong>
+              <small>Available in this workspace</small>
             </div>
-            <div className="till-categories">
-              <button
-                type="button"
-                className={!category ? "active" : ""}
-                onClick={() => setCategory("")}
-              >
-                All dishes
-              </button>
-              {menu?.categories.map((c) => (
-                <button
-                  type="button"
-                  key={c.id}
-                  className={category === c.id ? "active" : ""}
-                  onClick={() => setCategory(c.id)}
-                >
-                  {c.name}
-                </button>
-              ))}
+            <div className="pos-metric">
+              <ClipboardCheck aria-hidden="true" />
+              <span>Eligible tickets</span>
+              <strong>{workspace.attachable.length}</strong>
+              <small>Unpaid orders available to link</small>
             </div>
-            {!menu?.open && (
-              <p className="till-notice">This menu is outside its scheduled service window.</p>
-            )}
-            <div className="till-dishes">
-              {dishes.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  disabled={item.soldOut || !item.open || !menu?.open || busy || cart.length >= 50}
-                  onClick={() => openDish(item)}
-                  className="till-dish"
-                >
-                  <strong>{item.name}</strong>
-                  <span>
-                    {item.soldOut
-                      ? "Sold out"
-                      : !item.open
-                        ? "Outside service"
-                        : money(item.variants[0]?.priceMinor ?? item.priceMinor, currency)}
-                  </span>
-                  <Plus size={18} />
-                </button>
-              ))}
+            <div className="pos-metric">
+              <ClipboardList aria-hidden="true" />
+              <span>Recent drafts</span>
+              <strong>{workspace.recent.length}</strong>
+              <small>Returned by the register</small>
             </div>
-            {!dishes.length && (
-              <p className="till-empty">No dishes found. Publish a menu or adjust the search.</p>
-            )}
-            <section className="till-existing">
-              <div className="till-sectionhead">
-                <div>
-                  <span className="till-eyebrow">02 / EXISTING TICKETS</span>
-                  <h2>Link an order</h2>
-                </div>
-              </div>
+          </div>
+        </section>
+        {message && (
+          <div role="alert" className="till-notice">
+            {message}
+          </div>
+        )}
+        {success && (
+          <div role="status" className="till-success">
+            <CheckCircle2 size={20} />
+            <div>
+              <strong>Recorded · Order #{success.orderNumber}</strong>
               <p>
-                Eligible accepted, preparing, ready and completed unpaid orders. Each order can be
-                attached only once.
+                Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax.
+                This is not a receipt or tax invoice. Follow through in Service Counter.
               </p>
-              {workspace.attachable.map((o) => (
-                <div className="till-existing-row" key={o.orderId}>
-                  <div>
-                    <strong>
-                      #{o.orderNumber} · {o.customerName || o.fulfillmentMode.replace("_", " ")}
-                    </strong>
-                    <small>
-                      {o.status} · {money(o.subtotalMinor, o.currency)}
-                    </small>
-                  </div>
-                  <button type="button" disabled={busy} onClick={() => void attach(o)}>
-                    Attach <ArrowRight size={15} />
-                  </button>
-                </div>
-              ))}
-              {!workspace.attachable.length && (
-                <p className="till-empty">No eligible unpaid tickets currently available.</p>
-              )}
-            </section>
-          </section>
-          <aside className="till-cart" aria-label="Staff order cart">
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">03 / ORDER PAD</span>
-                <h2>Current ticket</h2>
-              </div>
-              <ShoppingBasket size={22} />
             </div>
-            <div className="till-fields">
-              <label>
-                Fulfillment
-                <select value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
-                  {workspace.context.fulfillmentModes.includes("pickup") && (
-                    <option value="pickup">Pickup / counter</option>
-                  )}
-                  {workspace.context.fulfillmentModes.includes("dine_in") && (
-                    <option value="dine_in">Dine-in</option>
-                  )}
-                </select>
-              </label>
-              {mode === "dine_in" && (
-                <label>
-                  Table / service point
-                  <select value={tableId} onChange={(e) => setTableId(e.target.value)}>
-                    <option value="">No assigned table</option>
-                    {workspace.context.tables.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <label>
-                Guest name (optional)
-                <input
-                  maxLength={80}
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  placeholder="Walk-in customer"
-                />
-              </label>
+            <Link href="/dashboard/orders">View orders</Link>
+          </div>
+        )}
+        {editingSettings && workspace.context.canConfigure && (
+          <form className="till-settings" onSubmit={(e) => void configure(e)}>
+            <div>
+              <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
+              <h2>Activate draft POS</h2>
+              <p>
+                Record genuine merchant identity. Tax profiles and legally issued documents are
+                separately release-gated; selecting a status here is not tax certification.
+              </p>
             </div>
-            {cart.length ? (
-              cart.map((entry) => (
-                <div className="till-cartline" key={entry.id}>
-                  <div>
-                    <strong>{entry.name}</strong>
-                    <small>
-                      {entry.variantName ?? "Regular"} · {money(entry.unitMinor, currency)} each
-                    </small>
-                  </div>
-                  <div className="till-quantity">
-                    <button
-                      aria-label={"Reduce " + entry.name}
-                      onClick={() => changeQty(entry.id, -1)}
-                      type="button"
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <span>{entry.line.quantity}</span>
-                    <button
-                      aria-label={"Increase " + entry.name}
-                      onClick={() => changeQty(entry.id, 1)}
-                      type="button"
-                      disabled={entry.line.quantity >= 99}
-                    >
-                      <Plus size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="till-empty">Select a dish to start an order.</p>
-            )}
-            <label className="till-notefield">
-              Order note (optional)
-              <textarea
-                maxLength={500}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Kitchen instructions or service notes"
+            <label>
+              Legal seller name
+              <input
+                required
+                maxLength={160}
+                value={legalName}
+                onChange={(e) => setLegalName(e.target.value)}
               />
             </label>
-            <div className="till-total">
-              <span>Pre-tax subtotal</span>
-              <strong>{money(subtotal.toString(), currency)}</strong>
-            </div>
-            <p className="till-disclaimer">
-              This is an unpaid operational order, not the amount due on a fiscal bill. Tax, tender
-              and invoicing will be added in subsequent PRs.
-            </p>
-            <button
-              type="button"
-              className="till-primary"
-              disabled={!canCheckout}
-              onClick={() => void submit()}
-            >
-              {busy ? "Recording…" : "Send to Service Counter"} <ArrowRight size={17} />
+            <label>
+              Registered seller address
+              <textarea
+                required
+                minLength={5}
+                maxLength={500}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </label>
+            <label>
+              Tax review status
+              <select
+                value={taxRegime}
+                onChange={(e) => setTaxRegime(e.target.value as typeof taxRegime)}
+              >
+                <option value="unconfigured">Not configured</option>
+                <option value="requires_review">Requires accountant review</option>
+                <option value="not_registered">
+                  Merchant declares not registered (unverified)
+                </option>
+              </select>
+            </label>
+            <label>
+              Tax registration, if any
+              <input
+                maxLength={64}
+                value={taxRegistration}
+                onChange={(e) => setTaxRegistration(e.target.value)}
+              />
+            </label>
+            <button className="till-primary" type="submit" disabled={busy}>
+              {busy ? "Saving…" : "Save identity and enable draft orders"}
             </button>
-            <button
-              type="button"
-              className="till-clear"
-              disabled={busy || !cart.length}
-              onClick={() => {
-                setCart([]);
-                commandRef.current = null;
-              }}
-            >
-              Clear cart
-            </button>
-          </aside>
-        </div>
-      )}
-      {workspace.context.enabled && (
-        <section className="till-recent">
-          <div className="till-sectionhead">
-            <div>
-              <span className="till-eyebrow">04 / DRAFT REGISTER</span>
-              <h2>Recently recorded</h2>
-            </div>
-            <ClipboardList size={20} />
-          </div>
-          {workspace.recent.map((sale) => (
-            <div className="till-existing-row" key={sale.saleId}>
-              <div>
-                <strong>
-                  Order #{sale.orderNumber} ·{" "}
-                  {sale.origin === "staff" ? "Staff entry" : "Existing ticket"}
-                </strong>
-                <small>
-                  {sale.saleId} · {sale.status}
-                </small>
+          </form>
+        )}
+        {workspace.context.enabled && (
+          <div className="till-layout">
+            <section className="till-catalog" aria-label="Published menu">
+              <div className="till-sectionhead">
+                <div>
+                  <span className="till-eyebrow">01 / FAST ENTRY</span>
+                  <h2>Published menu</h2>
+                </div>
+                <span>{dishes.length} dishes</span>
               </div>
-              <span>{money(sale.subtotalMinor, sale.currency)}</span>
+              <div className="till-tools">
+                <select
+                  aria-label="Published menu"
+                  value={menu?.id ?? ""}
+                  onChange={(e) => {
+                    if (cart.length) {
+                      setMessage("Clear your current cart before switching menus.");
+                      return;
+                    }
+                    setSelectedMenu(e.target.value);
+                    setCategory("");
+                  }}
+                >
+                  {workspace.menus.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} · revision {m.revision}
+                    </option>
+                  ))}
+                </select>
+                <label className="till-search">
+                  <Search size={17} />
+                  <input
+                    aria-label="Find a dish"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Find a dish…"
+                  />
+                </label>
+              </div>
+              <div className="till-categories">
+                <button
+                  type="button"
+                  className={!category ? "active" : ""}
+                  onClick={() => setCategory("")}
+                >
+                  All dishes
+                </button>
+                {menu?.categories.map((c) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    className={category === c.id ? "active" : ""}
+                    onClick={() => setCategory(c.id)}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              {!menu?.open && (
+                <p className="till-notice">This menu is outside its scheduled service window.</p>
+              )}
+              <div className="till-dishes">
+                {dishes.map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    disabled={
+                      item.soldOut || !item.open || !menu?.open || busy || cart.length >= 50
+                    }
+                    onClick={() => openDish(item)}
+                    className="till-dish"
+                  >
+                    <strong>{item.name}</strong>
+                    <span>
+                      {item.soldOut
+                        ? "Sold out"
+                        : !item.open
+                          ? "Outside service"
+                          : money(item.variants[0]?.priceMinor ?? item.priceMinor, currency)}
+                    </span>
+                    <Plus size={18} />
+                  </button>
+                ))}
+              </div>
+              {!dishes.length && (
+                <p className="till-empty">No dishes found. Publish a menu or adjust the search.</p>
+              )}
+              <section className="till-existing">
+                <div className="till-sectionhead">
+                  <div>
+                    <span className="till-eyebrow">02 / EXISTING TICKETS</span>
+                    <h2>Link an order</h2>
+                  </div>
+                </div>
+                <p>
+                  Eligible accepted, preparing, ready and completed unpaid orders. Each order can be
+                  attached only once.
+                </p>
+                {workspace.attachable.map((o) => (
+                  <div className="till-existing-row" key={o.orderId}>
+                    <div>
+                      <strong>
+                        #{o.orderNumber} · {o.customerName || o.fulfillmentMode.replace("_", " ")}
+                      </strong>
+                      <small>
+                        {o.status} · {money(o.subtotalMinor, o.currency)}
+                      </small>
+                    </div>
+                    <button type="button" disabled={busy} onClick={() => void attach(o)}>
+                      Attach <ArrowRight size={15} />
+                    </button>
+                  </div>
+                ))}
+                {!workspace.attachable.length && (
+                  <p className="till-empty">No eligible unpaid tickets currently available.</p>
+                )}
+              </section>
+            </section>
+            <aside className="till-cart" aria-label="Staff order cart">
+              <div className="till-sectionhead">
+                <div>
+                  <span className="till-eyebrow">03 / ORDER PAD</span>
+                  <h2>Current ticket</h2>
+                </div>
+                <ShoppingBasket size={22} />
+              </div>
+              <div className="till-fields">
+                <label>
+                  Fulfillment
+                  <select value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
+                    {workspace.context.fulfillmentModes.includes("pickup") && (
+                      <option value="pickup">Pickup / counter</option>
+                    )}
+                    {workspace.context.fulfillmentModes.includes("dine_in") && (
+                      <option value="dine_in">Dine-in</option>
+                    )}
+                  </select>
+                </label>
+                {mode === "dine_in" && (
+                  <label>
+                    Table / service point
+                    <select value={tableId} onChange={(e) => setTableId(e.target.value)}>
+                      <option value="">No assigned table</option>
+                      {workspace.context.tables.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label>
+                  Guest name (optional)
+                  <input
+                    maxLength={80}
+                    value={customer}
+                    onChange={(e) => setCustomer(e.target.value)}
+                    placeholder="Walk-in customer"
+                  />
+                </label>
+              </div>
+              {cart.length ? (
+                cart.map((entry) => (
+                  <div className="till-cartline" key={entry.id}>
+                    <div>
+                      <strong>{entry.name}</strong>
+                      <small>
+                        {entry.variantName ?? "Regular"} · {money(entry.unitMinor, currency)} each
+                      </small>
+                    </div>
+                    <div className="till-quantity">
+                      <button
+                        aria-label={"Reduce " + entry.name}
+                        onClick={() => changeQty(entry.id, -1)}
+                        type="button"
+                      >
+                        <Minus size={13} />
+                      </button>
+                      <span>{entry.line.quantity}</span>
+                      <button
+                        aria-label={"Increase " + entry.name}
+                        onClick={() => changeQty(entry.id, 1)}
+                        type="button"
+                        disabled={entry.line.quantity >= 99}
+                      >
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="till-empty">Select a dish to start an order.</p>
+              )}
+              <label className="till-notefield">
+                Order note (optional)
+                <textarea
+                  maxLength={500}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Kitchen instructions or service notes"
+                />
+              </label>
+              <div className="till-total">
+                <span>Pre-tax subtotal</span>
+                <strong>{money(subtotal.toString(), currency)}</strong>
+              </div>
+              <p className="till-disclaimer">
+                This is an unpaid operational order, not the amount due on a fiscal bill. Tax,
+                tender and invoicing will be added in subsequent PRs.
+              </p>
+              <button
+                type="button"
+                className="till-primary"
+                disabled={!canCheckout}
+                onClick={() => void submit()}
+              >
+                {busy ? "Recording…" : "Send to Service Counter"} <ArrowRight size={17} />
+              </button>
+              <button
+                type="button"
+                className="till-clear"
+                disabled={busy || !cart.length}
+                onClick={() => {
+                  setCart([]);
+                  commandRef.current = null;
+                }}
+              >
+                Clear cart
+              </button>
+            </aside>
+          </div>
+        )}
+        {workspace.context.enabled && (
+          <section className="till-recent">
+            <div className="till-sectionhead">
+              <div>
+                <span className="till-eyebrow">04 / DRAFT REGISTER</span>
+                <h2>Recently recorded</h2>
+              </div>
+              <ClipboardList size={20} />
             </div>
-          ))}
-          {!workspace.recent.length && <p className="till-empty">The draft register is empty.</p>}
-        </section>
-      )}
+            {workspace.recent.map((sale) => (
+              <div className="till-existing-row" key={sale.saleId}>
+                <div>
+                  <strong>
+                    Order #{sale.orderNumber} ·{" "}
+                    {sale.origin === "staff" ? "Staff entry" : "Existing ticket"}
+                  </strong>
+                  <small>
+                    {sale.saleId} · {sale.status}
+                  </small>
+                </div>
+                <span>{money(sale.subtotalMinor, sale.currency)}</span>
+              </div>
+            ))}
+            {!workspace.recent.length && <p className="till-empty">The draft register is empty.</p>}
+          </section>
+        )}
       </div>
       {dish && (
         <div className="till-modal-backdrop" role="presentation">

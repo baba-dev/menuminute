@@ -2,9 +2,27 @@ import Link from "next/link";
 import { BookOpenText, ClipboardCheck, ShoppingBasket } from "lucide-react";
 
 const workspaces = [
-  { key: "till", href: "/dashboard/pos", title: "The Till", description: "Record orders and build tickets", Icon: ShoppingBasket },
-  { key: "ledger", href: "/dashboard/pos/ledger", title: "The Ledger", description: "Review sales and documents", Icon: BookOpenText },
-  { key: "closing", href: "/dashboard/pos/closing", title: "Closing Desk", description: "Manage registers and shifts", Icon: ClipboardCheck },
+  {
+    key: "till",
+    href: "/dashboard/pos",
+    title: "The Till",
+    description: "Record orders and build tickets",
+    Icon: ShoppingBasket,
+  },
+  {
+    key: "ledger",
+    href: "/dashboard/pos/ledger",
+    title: "The Ledger",
+    description: "Review sales and documents",
+    Icon: BookOpenText,
+  },
+  {
+    key: "closing",
+    href: "/dashboard/pos/closing",
+    title: "Closing Desk",
+    description: "Manage registers and shifts",
+    Icon: ClipboardCheck,
+  },
 ] as const;
 
 export function PosNavigation({ active }: { active: "till" | "ledger" | "closing" }) {
