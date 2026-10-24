@@ -263,7 +263,10 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await revokeDialog.getByLabel("Type REVOKE to continue").fill("REVOKE");
   await revokeDialog.getByRole("button", { name: "Confirm revoke" }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code revoked");
-  await page.getByRole("navigation", { name: "QR workspace" }).getByRole("button", { name: "Print Studio", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "QR workspace" })
+    .getByRole("button", { name: "Print Studio", exact: true })
+    .click();
   await expect(page.getByLabel("Table Stand print preview")).toBeVisible();
   await expect(
     page.getByLabel("Table Stand print preview").locator('img[src*="format=svg"]')
@@ -551,7 +554,10 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeVisible();
   await studio.locator('summary[aria-label="About Active codes"]').click();
   await expect(studio.getByText("Currently usable permanent destination tokens.")).toBeVisible();
-  await studio.getByRole("navigation", { name: "QR workspace" }).getByRole("button", { name: "Print Studio", exact: true }).click();
+  await studio
+    .getByRole("navigation", { name: "QR workspace" })
+    .getByRole("button", { name: "Print Studio", exact: true })
+    .click();
   const atelier = studio.getByTestId("qr-print-atelier");
   const printPreview = atelier.getByLabel("Table Stand print preview");
   await expect(printPreview).toBeVisible();
