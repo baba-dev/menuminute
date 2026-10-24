@@ -22,8 +22,7 @@ export async function optionalDashboardServicePulse(
     if (!(error instanceof ForbiddenError)) {
       // Do not serialize raw PostgreSQL errors: they can contain SQL or params.
       // SQLSTATE plus error kind is sufficient to correlate a server incident.
-      const code =
-        error && typeof error === "object" && "code" in error ? error.code : undefined;
+      const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
       console.error("[dashboard] Optional service pulse unavailable", {
         kind: error instanceof Error ? error.name : "unknown",
         sqlstate: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined,
