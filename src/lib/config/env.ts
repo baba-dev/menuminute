@@ -51,8 +51,56 @@ export const envSchema = z
     PEXELS_API_KEY: z.string().optional(),
     AI_FEATURES_ENABLED: strictBoolean.default(false),
     IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
+    // Ember provider hub: independent activation from the existing review-only import engine.
+    AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
+    AI_NVIDIA_ENABLED: strictBoolean.default(false),
+    AI_NVIDIA_COMMERCIAL_APPROVED: strictBoolean.default(false),
+    AI_NVIDIA_MODEL: z.string().max(128).optional(),
+    AI_NVIDIA_TOOLS_VERIFIED: strictBoolean.default(false),
+    AI_CLOUDFLARE_ENABLED: strictBoolean.default(false),
+    AI_CLOUDFLARE_MODEL: z.string().max(128).optional(),
+    AI_CLOUDFLARE_TOOLS_VERIFIED: strictBoolean.default(false),
   })
   .superRefine((e, ctx) => {
+    if (e.AI_ORCHESTRATOR_ENABLED) {
+      if (!e.AI_FEATURES_ENABLED)
+        ctx.addIssue({
+          code: "custom",
+          path: ["AI_FEATURES_ENABLED"],
+          message: "AI master flag required",
+        });
+      if (!e.AI_NVIDIA_ENABLED && !e.AI_CLOUDFLARE_ENABLED)
+        ctx.addIssue({
+          code: "custom",
+          path: ["AI_ORCHESTRATOR_ENABLED"],
+          message: "Enable an approved provider",
+        });
+      if (
+        e.AI_NVIDIA_ENABLED &&
+        (!e.AI_NVIDIA_COMMERCIAL_APPROVED ||
+          !e.NVIDIA_API_KEY ||
+          !e.AI_NVIDIA_MODEL ||
+          !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_NVIDIA_MODEL))
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["AI_NVIDIA_MODEL"],
+          message: "Approved NVIDIA model, key and commercial entitlement required",
+        });
+      if (
+        e.AI_CLOUDFLARE_ENABLED &&
+        (!e.CLOUDFLARE_ACCOUNT_ID ||
+          !/^[a-f0-9]{32}$/i.test(e.CLOUDFLARE_ACCOUNT_ID) ||
+          !e.CLOUDFLARE_API_TOKEN ||
+          !e.AI_CLOUDFLARE_MODEL ||
+          !/^@cf\/[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_CLOUDFLARE_MODEL))
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["AI_CLOUDFLARE_MODEL"],
+          message: "Configured Cloudflare Workers AI model/account/token required",
+        });
+    }
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
       ctx.addIssue({
         code: "custom",
