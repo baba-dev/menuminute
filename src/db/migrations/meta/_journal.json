@@ -148,6 +148,13 @@
       "when": 1792820000000,
       "tag": "0020_checkout_scheduling",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792900000000,
+      "tag": "0021_intelligence_conversations",
+      "breakpoints": true
     }
   ]
 }

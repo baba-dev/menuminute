@@ -25,3 +25,5 @@ export * from "./kitchen";
 export * from "./continuity";
 
 export * from "./pos";
+
+export * from "./assistant";

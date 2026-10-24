@@ -53,6 +53,7 @@ export const envSchema = z
     IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
     // Ember provider hub: independent activation from the existing review-only import engine.
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
+    AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_COMMERCIAL_APPROVED: strictBoolean.default(false),
     AI_NVIDIA_MODEL: z.string().max(128).optional(),
@@ -62,6 +63,20 @@ export const envSchema = z
     AI_CLOUDFLARE_TOOLS_VERIFIED: strictBoolean.default(false),
   })
   .superRefine((e, ctx) => {
+    if (
+      e.AI_ASSISTANT_READ_ONLY_ENABLED &&
+      (!e.AI_FEATURES_ENABLED ||
+        !e.AI_ORCHESTRATOR_ENABLED ||
+        !(
+          (e.AI_NVIDIA_ENABLED && e.AI_NVIDIA_TOOLS_VERIFIED) ||
+          (e.AI_CLOUDFLARE_ENABLED && e.AI_CLOUDFLARE_TOOLS_VERIFIED)
+        ))
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["AI_ASSISTANT_READ_ONLY_ENABLED"],
+        message: "Ember requires the master flags and an enabled, verified tool-capable provider",
+      });
     if (e.AI_ORCHESTRATOR_ENABLED) {
       if (!e.AI_FEATURES_ENABLED)
         ctx.addIssue({
