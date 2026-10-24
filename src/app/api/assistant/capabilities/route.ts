@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { env } from "@/lib/config/env";
-import { conversationInput } from "@/modules/intelligence/store";
+import { conversationInput, assertAssistantScope } from "@/modules/intelligence/store";
 import { authorizedToolDefinitions } from "@/modules/intelligence/read-tools";
 import { withActor } from "@/modules/tenancy/service";
 import { sql } from "drizzle-orm";
@@ -13,6 +13,7 @@ export async function GET(req: Request) {
       .omit({ key: true })
       .parse(Object.fromEntries(new URL(req.url).searchParams));
     const s = { ...scope, actor };
+    await assertAssistantScope(s);
     const tools = await authorizedToolDefinitions(s);
     const menuWrite = await withActor(actor, async (tx) => {
       await tx.execute(sql`select set_config('app.outlet_id',${scope.outletId},true)`);

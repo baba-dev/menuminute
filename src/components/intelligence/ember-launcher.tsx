@@ -103,7 +103,7 @@ export function EmberLauncher({
   const [acknowledged, setAcknowledged] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
-  const decisionKeys = useRef(new Map<string, string>());
+  const decisionKeys = useRef(new Map<string, { key: string; decision: "confirm" | "reject" }>());
   const currentId = useRef<string | null>(null);
   const [pendingPoll, setPendingPoll] = useState(0);
   const currentMenu = options.find((m) => m.id === menuId);
@@ -208,6 +208,7 @@ export function EmberLauncher({
       });
       currentId.current = row.id;
       setConversationId(row.id);
+      setPendingPoll(0);
       setTurns([]);
       setProposals([]);
       setHistoryOpen(false);
@@ -238,6 +239,7 @@ export function EmberLauncher({
         id = row.id;
         currentId.current = id;
         setConversationId(id);
+        setPendingPoll(0);
         setTurns([]);
         setProposals([]);
       }
@@ -315,8 +317,10 @@ export function EmberLauncher({
     if (!conversationId || busy || p.status !== "pending") return;
     setBusy(true);
     setError("");
-    const key = decisionKeys.current.get(p.id) ?? crypto.randomUUID();
-    decisionKeys.current.set(p.id, key);
+    const previousDecision = decisionKeys.current.get(p.id);
+    const key =
+      previousDecision?.decision === decision ? previousDecision.key : crypto.randomUUID();
+    decisionKeys.current.set(p.id, { key, decision });
     try {
       const result = await api<{ id: string; status: Proposal["status"]; message?: string }>(
         "/api/assistant/actions/" + encodeURIComponent(p.id),
@@ -456,6 +460,7 @@ export function EmberLauncher({
                       onClick={() => {
                         currentId.current = c.id;
                         setConversationId(c.id);
+                        setPendingPoll(0);
                         setHistoryOpen(false);
                         setError("");
                       }}

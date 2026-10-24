@@ -133,6 +133,9 @@ describe("Ember proposals, atomic confirmation and restricted navigation", () =>
       foreign = await fixture();
     const p = await proposeAvailability(s.scope, input(s));
     await expect(
+      availabilityOptions({ ...s.scope, organizationId: foreign.outlet.organizationId })
+    ).rejects.toMatchObject({ statusCode: 403 });
+    await expect(
       decideAvailability({ ...scopeFields(s), actor: foreign.actor }, p.id, {
         ...scopeFields(s),
         key: id(),
