@@ -1,9 +1,18 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { posContext } from "@/modules/pos/service";
 import { ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
+import { env } from "@/lib/config/env";
+import {
+  createStripeCheckout,
+  createStripeRefund,
+  PaymentProviderError,
+  verifyStripeWebhook,
+} from "./stripe";
+import { getPool } from "@/db";
+import { sendTransactionalEmail } from "@/lib/email";
 
 const key = z.string().uuid();
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -108,12 +117,49 @@ const commands = z.discriminatedUnion("action", [
         .strict(),
     })
     .strict(),
+  z
+    .object({
+      action: z.literal("provider_checkout"),
+      key,
+      data: z.object({ saleId: id }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("partial_refund"),
+      key,
+      data: z
+        .object({
+          saleId: id,
+          mode: z.enum(["staff_attested", "stripe"]),
+          shiftId: id.nullable(),
+          reason,
+          externalRefundAttested: z.boolean(),
+          lines: z
+            .array(z.object({ lineId: id, quantity: z.number().int().positive() }).strict())
+            .min(1)
+            .max(100),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("deliver_document"),
+      key,
+      data: z.object({ documentId: id, email: z.email().max(254) }).strict(),
+    })
+    .strict(),
 ]);
 export type FinanceCommand = z.infer<typeof commands>;
 export type FinanceContext = {
   paymentsEnabled: boolean;
   documentsEnabled: boolean;
   fiscalApproved: boolean;
+  providerEnabled: boolean;
+  providerConfigured: boolean;
+  documentDeliveryEnabled: boolean;
+  jurisdictionPolicy: "non_registered_receipt_v1" | "registered_external_adapter_required_v1";
   taxProfile: null | {
     mode: "non_registered" | "classified";
     inclusive: boolean;
@@ -175,16 +221,43 @@ export type Detail = {
     changeMinor: string;
     reference: string | null;
     evidence: string;
-    shiftId: string;
+    shiftId: string | null;
     createdAt: string;
   }>;
-  refunds: Array<{ tenderId: string; amountMinor: string; reason: string; createdAt: string }>;
+  refunds: Array<{
+    tenderId: string;
+    amountMinor: string;
+    reason: string;
+    evidence?: string;
+    createdAt: string;
+  }>;
   documents: Array<{
     id: string;
     number: string;
     kind: string;
     sourceDocumentId: string | null;
     issuedAt: string;
+  }>;
+  providerAttempts: Array<{
+    id: string;
+    kind: "checkout" | "refund";
+    state: "preparing" | "pending" | "succeeded" | "failed" | "uncertain";
+    amountMinor: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  credits: Array<{
+    id: string;
+    state:
+      | "prepared"
+      | "staff_recorded"
+      | "provider_pending"
+      | "provider_confirmed"
+      | "failed"
+      | "uncertain";
+    amountMinor: string;
+    documentId: string | null;
+    createdAt: string;
   }>;
 };
 export type DocumentDetail = {
@@ -254,11 +327,14 @@ export async function financeRead(
   await posContext(actor, organizationId, outletId);
   switch (input.view) {
     case "context":
-      return run<FinanceContext>(
-        actor,
-        outletId,
-        sql`select app_private.pos_finance_context(${outletId}) as result`
-      );
+      return {
+        ...(await run<Omit<FinanceContext, "providerConfigured">>(
+          actor,
+          outletId,
+          sql`select app_private.pos_finance_context(${outletId}) as result`
+        )),
+        providerConfigured: env.POS_STRIPE_ENABLED,
+      };
     case "ledger":
       return run<LedgerRow[]>(
         actor,
@@ -306,9 +382,14 @@ export async function financeCommand(
   organizationId: string,
   outletId: string,
   raw: unknown
-) {
+): Promise<Record<string, unknown>> {
   const cmd = commands.parse(raw);
   await posContext(actor, organizationId, outletId);
+  if (cmd.action === "provider_checkout")
+    return providerCheckout(actor, outletId, cmd.key, cmd.data.saleId);
+  if (cmd.action === "partial_refund") return partialRefund(actor, outletId, cmd.key, cmd.data);
+  if (cmd.action === "deliver_document")
+    return deliverDocument(actor, outletId, cmd.key, cmd.data.documentId, cmd.data.email);
   if (cmd.action === "profile") {
     if (cmd.data.mode === "non_registered" && cmd.data.classes.length)
       throw new ValidationError("Non-registered profile cannot classify taxable items.");
@@ -352,3 +433,277 @@ export async function financeCommand(
   );
 }
 export const financeCommandSchema = commands;
+
+async function providerCheckout(
+  actor: Actor,
+  outletId: string,
+  requestKey: string,
+  saleId: string
+) {
+  const digest = createHash("sha256")
+    .update(JSON.stringify({ action: "provider_checkout", data: { saleId } }))
+    .digest("hex");
+  const prepared = await run<{
+    attemptId: string;
+    orderId: string;
+    amountMinor: string;
+    currency: string;
+    state: string;
+    checkoutUrl?: string | null;
+  }>(
+    actor,
+    outletId,
+    sql`select app_private.pos_provider_checkout_prepare(${outletId},${requestKey}::uuid,${digest},${saleId}) as result`
+  );
+  if (prepared.checkoutUrl || ["succeeded", "failed"].includes(prepared.state)) return prepared;
+  try {
+    const checkout = await createStripeCheckout({
+      attemptId: prepared.attemptId,
+      amountMinor: prepared.amountMinor,
+      currency: prepared.currency,
+      orderLabel: `MenuMinute order ${prepared.orderId.slice(0, 16)}`,
+    });
+    return run<Record<string, unknown>>(
+      actor,
+      outletId,
+      sql`select app_private.pos_provider_attempt_result(${outletId},${prepared.attemptId},'pending',
+        ${checkout.externalId},${checkout.externalPaymentId},${checkout.checkoutUrl},${checkout.expiresAt}::timestamptz) as result`
+    );
+  } catch (error) {
+    const uncertain = error instanceof PaymentProviderError && error.uncertain;
+    await run(
+      actor,
+      outletId,
+      sql`select app_private.pos_provider_attempt_result(${outletId},${prepared.attemptId},
+        ${uncertain ? "uncertain" : "failed"},${null},${null},${null},${null}::timestamptz) as result`
+    );
+    throw error;
+  }
+}
+
+async function partialRefund(
+  actor: Actor,
+  outletId: string,
+  requestKey: string,
+  data: Extract<FinanceCommand, { action: "partial_refund" }>["data"]
+) {
+  if (new Set(data.lines.map((line) => line.lineId)).size !== data.lines.length)
+    throw new ValidationError("Each refunded line may appear once per request.");
+  if (data.mode === "staff_attested" && !data.shiftId)
+    throw new ValidationError("An open shift is required for a staff-recorded refund.");
+  if (data.mode === "stripe" && data.shiftId)
+    throw new ValidationError("Provider refunds are not drawer movements.");
+  const digest = createHash("sha256")
+    .update(JSON.stringify({ action: "partial_refund", data }))
+    .digest("hex");
+  const prepared = await run<{
+    attemptId?: string;
+    creditId: string;
+    amountMinor: string;
+    currency: string;
+    externalPaymentId?: string;
+    state: string;
+  }>(
+    actor,
+    outletId,
+    sql`select app_private.pos_partial_refund_prepare(${outletId},${requestKey},${digest},
+      ${JSON.stringify(data)}::jsonb) as result`
+  );
+  if (data.mode === "staff_attested" || !prepared.attemptId || !prepared.externalPaymentId)
+    return prepared;
+  try {
+    const refund = await createStripeRefund({
+      attemptId: prepared.attemptId,
+      paymentIntentId: prepared.externalPaymentId,
+      amountMinor: prepared.amountMinor,
+    });
+    await run(
+      actor,
+      outletId,
+      sql`select app_private.pos_provider_attempt_external_result(${outletId},${prepared.attemptId},
+       ${refund.state},${refund.externalId}) as result`
+    );
+    if (refund.state === "succeeded")
+      return applyProviderEvent({
+        eventId: `stripe-api-${refund.externalId}`,
+        type: "refund.updated",
+        attemptId: prepared.attemptId,
+        externalId: refund.externalId,
+        paymentId: refund.externalPaymentId,
+        amountMinor: prepared.amountMinor,
+        currency: prepared.currency,
+        state: "succeeded",
+      });
+    return { ...prepared, externalId: refund.externalId, state: refund.state };
+  } catch (error) {
+    const uncertain = error instanceof PaymentProviderError && error.uncertain;
+    await run(
+      actor,
+      outletId,
+      sql`select app_private.pos_provider_attempt_external_result(${outletId},${prepared.attemptId},
+       ${uncertain ? "uncertain" : "failed"},${null}) as result`
+    );
+    throw error;
+  }
+}
+
+type ProviderEvent = {
+  eventId: string;
+  type: "checkout.completed" | "checkout.failed" | "refund.updated";
+  attemptId: string;
+  externalId: string;
+  paymentId: string | null;
+  amountMinor: string;
+  currency: string;
+  state: "pending" | "succeeded" | "failed";
+};
+
+async function applyProviderEvent(event: ProviderEvent) {
+  const result = await getPool().query<{ result: Record<string, unknown> }>(
+    `select app_private.pos_provider_event($1,$2,$3,$4,$5,$6::bigint,$7,$8) as result`,
+    [
+      event.eventId,
+      event.type,
+      event.attemptId,
+      event.externalId,
+      event.paymentId,
+      event.amountMinor,
+      event.currency,
+      event.state,
+    ]
+  );
+  return result.rows[0]!.result;
+}
+
+export async function applyStripeWebhook(body: Buffer, signature: string | null) {
+  const event = verifyStripeWebhook(body, signature);
+  const object = event.data.object;
+  const metadata =
+    object.metadata && typeof object.metadata === "object"
+      ? (object.metadata as Record<string, unknown>)
+      : {};
+  const attemptId =
+    typeof metadata.menuminute_attempt_id === "string"
+      ? metadata.menuminute_attempt_id
+      : typeof object.client_reference_id === "string"
+        ? object.client_reference_id
+        : "";
+  if (!attemptId) throw new ValidationError("Provider event is missing its attempt identity.");
+  if (event.type.startsWith("checkout.session.")) {
+    const externalId = typeof object.id === "string" ? object.id : "";
+    const paymentId = typeof object.payment_intent === "string" ? object.payment_intent : null;
+    const amount = typeof object.amount_total === "number" ? object.amount_total : 0;
+    const currency = typeof object.currency === "string" ? object.currency : "";
+    const succeeded =
+      (event.type === "checkout.session.completed" ||
+        event.type === "checkout.session.async_payment_succeeded") &&
+      object.payment_status === "paid";
+    return applyProviderEvent({
+      eventId: event.id,
+      type:
+        event.type === "checkout.session.completed" || succeeded
+          ? "checkout.completed"
+          : "checkout.failed",
+      attemptId,
+      externalId,
+      paymentId,
+      amountMinor: String(amount),
+      currency,
+      state: succeeded
+        ? "succeeded"
+        : event.type === "checkout.session.completed"
+          ? "pending"
+          : "failed",
+    });
+  }
+  const externalId = typeof object.id === "string" ? object.id : "";
+  const paymentId = typeof object.payment_intent === "string" ? object.payment_intent : null;
+  const amount = typeof object.amount === "number" ? object.amount : 0;
+  const currency = typeof object.currency === "string" ? object.currency : "";
+  const rawState = typeof object.status === "string" ? object.status : "";
+  return applyProviderEvent({
+    eventId: event.id,
+    type: "refund.updated",
+    attemptId,
+    externalId,
+    paymentId,
+    amountMinor: String(amount),
+    currency,
+    state:
+      rawState === "succeeded"
+        ? "succeeded"
+        : rawState === "failed" || rawState === "canceled" || event.type === "refund.failed"
+          ? "failed"
+          : "pending",
+  });
+}
+
+async function deliverDocument(
+  actor: Actor,
+  outletId: string,
+  requestKey: string,
+  documentId: string,
+  recipient: string
+) {
+  const normalizedRecipient = recipient.trim().toLowerCase();
+  const recipientHash = createHmac("sha256", env.AUTH_SECRET)
+    .update(normalizedRecipient)
+    .digest("hex");
+  const prepared = await run<{
+    deliveryId: string;
+    state: string;
+    documentNumber?: string;
+    kind?: string;
+    snapshot?: Record<string, unknown>;
+  }>(
+    actor,
+    outletId,
+    sql`select app_private.pos_document_delivery_prepare(${outletId},${documentId},
+      ${requestKey}::uuid,${recipientHash}) as result`
+  );
+  if (prepared.state === "sent" || !prepared.documentNumber || !prepared.snapshot) return prepared;
+  const bill =
+    prepared.snapshot.bill && typeof prepared.snapshot.bill === "object"
+      ? (prepared.snapshot.bill as Record<string, unknown>)
+      : null;
+  const currency = typeof bill?.currency === "string" ? bill.currency : "";
+  const total =
+    typeof bill?.totalMinor === "string"
+      ? bill.totalMinor
+      : typeof prepared.snapshot.totalMinor === "string"
+        ? prepared.snapshot.totalMinor
+        : "";
+  const text = [
+    "MenuMinute private financial document",
+    "",
+    `Document: ${prepared.documentNumber}`,
+    `Type: ${prepared.kind ?? "document"}`,
+    currency && total ? `Recorded total: ${total} minor units (${currency})` : "",
+    typeof prepared.snapshot.legalStatus === "string"
+      ? `Status: ${prepared.snapshot.legalStatus}`
+      : "",
+    "",
+    "This message is a delivery of the immutable merchant record. It is not proof of bank settlement or government fiscal registration.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  try {
+    await sendTransactionalEmail({
+      to: normalizedRecipient,
+      subject: `MenuMinute document ${prepared.documentNumber}`,
+      text,
+    });
+    return run<Record<string, unknown>>(
+      actor,
+      outletId,
+      sql`select app_private.pos_document_delivery_result(${outletId},${prepared.deliveryId},'sent') as result`
+    );
+  } catch (error) {
+    await run(
+      actor,
+      outletId,
+      sql`select app_private.pos_document_delivery_result(${outletId},${prepared.deliveryId},'uncertain') as result`
+    );
+    throw error;
+  }
+}

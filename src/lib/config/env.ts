@@ -62,6 +62,17 @@ export const envSchema = z
     AI_CLOUDFLARE_ENABLED: strictBoolean.default(false),
     AI_CLOUDFLARE_MODEL: z.string().max(128).optional(),
     AI_CLOUDFLARE_TOOLS_VERIFIED: strictBoolean.default(false),
+    POS_STRIPE_ENABLED: strictBoolean.default(false),
+    POS_STRIPE_SECRET_KEY: z
+      .string()
+      .trim()
+      .regex(/^sk_(?:test|live)_[A-Za-z0-9]+$/)
+      .optional(),
+    POS_STRIPE_WEBHOOK_SECRET: z
+      .string()
+      .trim()
+      .regex(/^whsec_[A-Za-z0-9]+$/)
+      .optional(),
   })
   .superRefine((e, ctx) => {
     if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
@@ -123,6 +134,12 @@ export const envSchema = z
           message: "Configured Cloudflare Workers AI model/account/token required",
         });
     }
+    if (e.POS_STRIPE_ENABLED && (!e.POS_STRIPE_SECRET_KEY || !e.POS_STRIPE_WEBHOOK_SECRET))
+      ctx.addIssue({
+        code: "custom",
+        path: [!e.POS_STRIPE_SECRET_KEY ? "POS_STRIPE_SECRET_KEY" : "POS_STRIPE_WEBHOOK_SECRET"],
+        message: "Stripe secret and webhook signing secret are required",
+      });
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
       ctx.addIssue({
         code: "custom",

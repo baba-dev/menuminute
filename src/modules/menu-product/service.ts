@@ -2,14 +2,21 @@ import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
-import { getPool } from "@/db";
+import { getPool, type Transaction } from "@/db";
 import { getPublicMenu, getRestaurantById } from "@/modules/restaurants/service";
 import { getFullMenu } from "@/modules/menus/service";
 import { domainError } from "@/modules/organizations/service";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
 import { artworkById } from "./dish-artwork";
+import {
+  applyMenuTranslation,
+  menuLocaleSchema,
+  menuTranslationDocumentSchema,
+  sameTranslationShape,
+  type MenuTranslation,
+} from "./translations";
 export async function listMenus(actor: Actor, outletId: string) {
   await getRestaurantById(actor, outletId);
   return withActor(actor, async (tx) => {
@@ -55,10 +62,23 @@ export async function menuDetail(actor: Actor, id: string) {
       sql`select app_private.menu_access(${id},'menu.write') as allowed`
     );
     const historicalRelease = await tx
-      .select({ revision: menuReleases.revision })
+      .select({ revision: menuReleases.revision, document: menuReleases.document })
       .from(menuReleases)
       .where(eq(menuReleases.menuId, id))
+      .orderBy(desc(menuReleases.revision))
       .limit(1);
+    const publishedRelease = row.publishedRevision
+      ? (historicalRelease.find((release) => release.revision === row.publishedRevision) ??
+        (
+          await tx
+            .select({ revision: menuReleases.revision, document: menuReleases.document })
+            .from(menuReleases)
+            .where(
+              and(eq(menuReleases.menuId, id), eq(menuReleases.revision, row.publishedRevision))
+            )
+            .limit(1)
+        )[0])
+      : undefined;
     const assignments = await tx
       .select()
       .from(menuAssignments)
@@ -69,10 +89,74 @@ export async function menuDetail(actor: Actor, id: string) {
       document: menuDocumentSchema.parse(row.document),
       canWrite: allowed.rows[0]?.allowed ?? false,
       everPublished: historicalRelease.length > 0,
+      publishedDocument: publishedRelease
+        ? menuDocumentSchema.parse(publishedRelease.document)
+        : null,
       assignments,
       overrides,
+      translations: await translationListInTransaction(tx, id),
     };
   });
+}
+
+async function translationListInTransaction(tx: Transaction, menuId: string) {
+  const rows = await tx.execute<{ result: MenuTranslation[] }>(
+    sql`select app_private.menu_translation_list(${menuId}) as result`
+  );
+  return rows.rows[0]?.result ?? [];
+}
+
+export async function listMenuTranslations(actor: Actor, menuId: string) {
+  entityId.parse(menuId);
+  return withActor(actor, (tx) => translationListInTransaction(tx, menuId));
+}
+
+export async function saveMenuTranslation(
+  actor: Actor,
+  outletId: string,
+  menuId: string,
+  raw: unknown
+) {
+  entityId.parse(menuId);
+  const input = z
+    .object({
+      key: z.uuid(),
+      locale: menuLocaleSchema,
+      sourceRevision: z.number().int().positive(),
+      expectedRevision: z.number().int().nonnegative(),
+      reviewConfirmed: z.literal(true),
+      document: menuTranslationDocumentSchema,
+    })
+    .strict()
+    .parse(raw);
+  const detail = await menuDetail(actor, menuId);
+  if (!detail.publishedRevision || detail.publishedRevision !== input.sourceRevision)
+    throw new ConflictError("The published source changed. Refresh the translation before review.");
+  const release = await withActor(actor, async (tx) => {
+    const rows = await tx
+      .select({ document: menuReleases.document })
+      .from(menuReleases)
+      .where(and(eq(menuReleases.menuId, menuId), eq(menuReleases.revision, input.sourceRevision)))
+      .limit(1);
+    return rows[0]?.document;
+  });
+  const canonical = menuDocumentSchema.parse(release);
+  if (!sameTranslationShape(canonical, input.document))
+    throw new ValidationError(
+      "Translation structure no longer matches the published menu. Refresh and translate again."
+    );
+  try {
+    return await withActor(actor, async (tx) => {
+      const rows = await tx.execute<{ result: MenuTranslation }>(
+        sql`select app_private.menu_translation_command(
+          ${outletId},${menuId},${input.locale},${input.sourceRevision},${input.expectedRevision},
+          ${JSON.stringify(input.document)}::jsonb,${input.key}) as result`
+      );
+      return rows.rows[0]!.result;
+    });
+  } catch (error) {
+    domainError(error);
+  }
 }
 export async function commandMenu(actor: Actor, outletId: string, id: string, raw: unknown) {
   entityId.parse(id);
@@ -202,6 +286,8 @@ export type PublicProduct = {
   point: string | null;
   catalogFingerprint: string;
   now: string;
+  locale?: string | null;
+  availableLocales?: string[];
   menus: {
     id: string;
     revision: number;
@@ -210,8 +296,13 @@ export type PublicProduct = {
     overrides: { dishId: string; priceMinor: number | null; soldOut: boolean | null }[];
   }[];
 };
-export async function publicProduct(token: string): Promise<PublicProduct | null> {
+export async function publicProduct(
+  token: string,
+  requestedLocale?: string | null
+): Promise<PublicProduct | null> {
   if (!z.string().min(1).max(128).safeParse(token).success) return null;
+  const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
+  const locale = parsedLocale?.success ? parsedLocale.data : null;
   const r = await getPool().query<{
     data: PublicProduct | null;
     fingerprint: string | null;
@@ -221,13 +312,21 @@ export async function publicProduct(token: string): Promise<PublicProduct | null
       slotMinutes: number;
       advanceDays: number;
     } | null;
+    locales: string[] | null;
+    translations: Array<{
+      menuId: string;
+      sourceRevision: number;
+      document: unknown;
+    }> | null;
   }>(
     `with p as (select app_private.free_menu_public($1) as data)
      select data, md5((data->'menus')::text) as fingerprint,
        app_private.public_ordering_enabled($1) as ordering_enabled,
-       app_private.public_pickup_settings($1) as pickup_settings
+       app_private.public_pickup_settings($1) as pickup_settings,
+       app_private.public_menu_locales($1) as locales,
+       app_private.public_menu_translations($1,$2) as translations
      from p`,
-    [token]
+    [token, locale]
   );
   const data = r.rows[0]?.data;
   if (data) {
@@ -236,6 +335,8 @@ export async function publicProduct(token: string): Promise<PublicProduct | null
     data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
     data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
     data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
+    data.availableLocales = r.rows[0]?.locales ?? [];
+    data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
   }
   if (!data) return null;
   if (!data.outlet.versioned) {
@@ -272,6 +373,19 @@ export async function publicProduct(token: string): Promise<PublicProduct | null
     ];
   } else
     data.menus = data.menus.map((m) => ({ ...m, document: menuDocumentSchema.parse(m.document) }));
+  if (data.locale) {
+    const translations = new Map(
+      (r.rows[0]?.translations ?? []).map((translation) => [translation.menuId, translation])
+    );
+    data.menus = data.menus.map((menu) => {
+      const translation = translations.get(menu.id);
+      if (!translation || translation.sourceRevision !== menu.revision) return menu;
+      const parsed = menuTranslationDocumentSchema.safeParse(translation.document);
+      return parsed.success
+        ? { ...menu, document: applyMenuTranslation(menu.document, parsed.data) }
+        : menu;
+    });
+  }
   // Public payload contains display data only; opaque identities remain internal to API/DOM as needed.
   data.menus = data.menus.map((m) => ({
     ...m,
