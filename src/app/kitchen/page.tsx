@@ -7,6 +7,9 @@ import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { KitchenBoard } from "./kitchen-board";
 import { ForbiddenError } from "@/lib/errors";
+import { env } from "@/lib/config/env";
+import { assertAssistantScope } from "@/modules/intelligence/store";
+import { EmberLauncher } from "@/components/intelligence/ember-launcher";
 import type { Metadata } from "next";
 import "./kitchen.css";
 export const metadata: Metadata = {
@@ -57,15 +60,37 @@ export default async function KitchenPage() {
     for (const [id, name] of seen) if (!ambiguous.has(id)) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
+  let showEmber = false;
+  if (env.AI_ASSISTANT_READ_ONLY_ENABLED) {
+    try {
+      await assertAssistantScope({
+        actor,
+        organizationId: outlet.organizationId,
+        outletId: outlet.id,
+      });
+      showEmber = true;
+    } catch (error) {
+      if (!(error instanceof ForbiddenError)) throw error;
+    }
+  }
   return (
-    <KitchenBoard
-      organizationId={outlet.organizationId}
-      outletId={outlet.id}
-      outletName={outlet.name}
-      initial={initial}
-      canManage={canManage}
-      menuDishes={dishList}
-    />
+    <>
+      <KitchenBoard
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        outletName={outlet.name}
+        initial={initial}
+        canManage={canManage}
+        menuDishes={dishList}
+      />
+      {showEmber && (
+        <EmberLauncher
+          organizationId={outlet.organizationId}
+          outletId={outlet.id}
+          outletName={outlet.name}
+        />
+      )}
+    </>
   );
 }
 
