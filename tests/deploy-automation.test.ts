@@ -17,10 +17,10 @@ describe("provenance-bound main-only production delivery", () => {
     expect(ci).toContain("pnpm install --frozen-lockfile");
   });
 
-  it("tolerates optional cache and evidence transport failures, never release archive failure", () => {
-    expect(ci.match(/uses: actions\\/cache@v4/g)).toHaveLength(5);
+  it("keeps optional cache/evidence failures separate from mandatory archive upload", () => {
+    expect(ci.match(/uses: actions\/cache@v4/g)).toHaveLength(5);
     expect(ci.match(/continue-on-error: true/g)).toHaveLength(7);
-    expect(ci).toContain("name: Cache Playwright Chromium\\n        continue-on-error: true");
+    expect(ci).toContain("name: Cache Playwright Chromium\n        continue-on-error: true");
     expect(ci).toContain("name: browser-failure-evidence");
     expect(ci).toContain("name: ember-browser-failure-evidence");
 
