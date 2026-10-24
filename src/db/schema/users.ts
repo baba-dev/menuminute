@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   isSuperAdmin: boolean("is_super_admin").notNull().default(false),
   image: text("image"),
   isDemoData: boolean("is_demo_data").notNull().default(false),
+  termsVersion: text("terms_version"),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
   createdAt: instant("created_at"),
   updatedAt: instant("updated_at"),
 });

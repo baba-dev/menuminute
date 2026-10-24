@@ -16,6 +16,8 @@ import { publicProduct } from "@/modules/menu-product/service";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
+import { billingState } from "@/modules/billing/service";
+import { ForbiddenError } from "@/lib/errors";
 import {
   getDefaultOrActiveRestaurant,
   getRestaurantsByUserId,
@@ -41,6 +43,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     columns: { isSuperAdmin: true },
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
+  let capabilities: { ordering: boolean; kitchen: boolean } | undefined;
+  if (restaurant) {
+    try {
+      const state = await billingState(
+        { userId: session.user.id, sessionId: session.session.id },
+        restaurant.organizationId
+      );
+      capabilities = { ordering: state.ordering, kitchen: state.kitchen };
+    } catch (error) {
+      if (!(error instanceof ForbiddenError)) throw error;
+    }
+  }
   const codes = restaurant
     ? await getRestaurantQrCodes({ userId: session.user.id }, restaurant.id)
     : [];
@@ -90,7 +104,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </p>
           <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
         </div>
-        <WorkspaceNavigation />
+        <WorkspaceNavigation capabilities={capabilities} />
         {isSuperAdmin && (
           <Link href="/admin" className="mm-workspace-nav-link">
             <ShieldAlert size={19} aria-hidden="true" />

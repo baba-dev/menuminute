@@ -82,6 +82,7 @@ export function Ticket({
   decline,
   pay,
   busy,
+  timezone,
 }: {
   order: MerchantOrder;
   now: number;
@@ -90,6 +91,7 @@ export function Ticket({
   decline: (order: MerchantOrder) => void;
   pay: (order: MerchantOrder) => void;
   busy: boolean;
+  timezone: string;
 }) {
   const action = actionFor(order);
   const age = Math.max(0, Math.floor((now - new Date(order.createdAt).getTime()) / 60000));
@@ -116,6 +118,16 @@ export function Ticket({
           <Clock3 size={13} aria-hidden="true" /> {age} min ago
         </span>
       </div>
+      {order.requestedFulfillmentAt && (
+        <p className="sc-ticket-customer">
+          <Clock3 size={14} aria-hidden="true" /> Pickup due{" "}
+          {new Intl.DateTimeFormat(undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+            timeZone: timezone,
+          }).format(new Date(order.requestedFulfillmentAt))}
+        </p>
+      )}
       {order.customerName && <p className="sc-ticket-customer">{order.customerName}</p>}
       <div className="sc-ticket-items">
         {order.items.map((item) => (

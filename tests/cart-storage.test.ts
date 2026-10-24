@@ -20,16 +20,24 @@ describe("guest cart restoration", () => {
   });
   it("rejects tampered prices, quantities, URLs and large payloads", () => {
     expect(restoreGuestCart([{ ...example, unitPriceMinor: -1 }], published)).toEqual([]);
-    expect(restoreGuestCart([{ ...example, quantity: 500 }], published)).toEqual([]);
+    expect(restoreGuestCart([{ ...example, quantity: 1000 }], published)).toEqual([]);
     expect(
       restoreGuestCart([{ ...example, imageSrc: "https://evil.invalid/" }], published)
     ).toEqual([]);
     expect(
       restoreGuestCart(
-        Array.from({ length: 41 }, () => example),
+        Array.from({ length: 51 }, () => example),
         published
       )
     ).toEqual([]);
     expect(restoreGuestCart({ items: [example] }, published)).toEqual([]);
+  });
+  it("supports the shared 50-line checkout boundary", () => {
+    expect(
+      restoreGuestCart(
+        Array.from({ length: 50 }, () => example),
+        published
+      )
+    ).toHaveLength(50);
   });
 });

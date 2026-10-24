@@ -5,6 +5,7 @@ import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
 import { X, Plus, Minus, Leaf, Check } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
 
 export type CustomizerDish = {
   id: string;
@@ -416,7 +417,7 @@ export function ItemCustomizer({
                 <button
                   type="button"
                   className="action icon-btn"
-                  onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                  onClick={() => setQuantity((q) => Math.min(MAX_ITEM_QUANTITY, q + 1))}
                   aria-label="Increase quantity"
                 >
                   <Plus size={16} />

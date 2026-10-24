@@ -20,7 +20,7 @@ import {
   startingPriceMinor,
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
-import { restoreGuestCart } from "@/modules/menu-product/cart-storage";
+import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -60,14 +60,20 @@ export function PublicMenu({
       try {
         const stored = sessionStorage.getItem(`cart_${token}`);
         const parsed = stored ? JSON.parse(stored) : [];
-        const available = new Set(
-          initial.menus.flatMap((menu) =>
-            menu.document.categories.flatMap((category) =>
-              category.items.filter((item) => !item.archived).map((item) => item.id)
-            )
-          )
+        const currentDishes = initial.menus.flatMap((menu) =>
+          projectMenu(
+            menu.document,
+            initial.outlet.timezone,
+            new Date(initial.now),
+            menu.overrides
+          ).categories.flatMap((category) => category.items)
         );
-        setCartItems(restoreGuestCart(parsed, available));
+        const reconciled = reconcileGuestCart(parsed, currentDishes);
+        setCartItems(reconciled.items);
+        if (reconciled.changed)
+          setStatus(
+            `${reconciled.changed} saved cart ${reconciled.changed === 1 ? "item was" : "items were"} updated or removed because the menu changed.`
+          );
       } catch {
         setCartItems([]);
       } finally {
@@ -119,10 +125,24 @@ export function PublicMenu({
           }
           return;
         }
-        const next = await r.json();
+        const next = (await r.json()) as PublicProduct;
         if (!stopped) {
           setData(next);
-          setStatus("");
+          const currentDishes = next.menus.flatMap((menu) =>
+            projectMenu(
+              menu.document,
+              next.outlet.timezone,
+              new Date(next.now),
+              menu.overrides
+            ).categories.flatMap((category) => category.items)
+          );
+          const reconciled = reconcileGuestCart(cartItems, currentDishes);
+          setCartItems(reconciled.items);
+          setStatus(
+            reconciled.changed
+              ? `${reconciled.changed} cart ${reconciled.changed === 1 ? "item was" : "items were"} updated or removed because the menu changed.`
+              : ""
+          );
         }
       } catch {
         if (!stopped)
@@ -141,7 +161,7 @@ export function PublicMenu({
       window.removeEventListener("online", refresh);
       window.removeEventListener("offline", offline);
     };
-  }, [token, preview]);
+  }, [token, preview, cartItems]);
 
   const docs = data.menus.map((m) => ({
     ...m,
@@ -556,6 +576,10 @@ export function PublicMenu({
           outletName={data.outlet.name}
           point={data.point}
           fulfillmentModes={data.outlet.fulfillmentModes}
+          timezone={data.outlet.timezone}
+          pickupLeadMinutes={data.outlet.pickupLeadMinutes}
+          pickupSlotMinutes={data.outlet.pickupSlotMinutes}
+          pickupAdvanceDays={data.outlet.pickupAdvanceDays}
           images={Object.fromEntries(
             docs.flatMap((menu) =>
               menu.view.categories.flatMap((category) =>

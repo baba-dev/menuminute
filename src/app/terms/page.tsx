@@ -5,15 +5,16 @@ import { ArrowLeft, ArrowUpRight, BookOpenCheck, Download, Mail, Scale } from "l
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { termsSections } from "@/content/terms";
+import { TERMS_EFFECTIVE_LABEL } from "@/content/legal";
 import "../privacy/privacy.css";
 import "./terms.css";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Legal review draft",
+  title: "Terms of Service",
   description:
-    "Review draft of MenuMinute's merchant and guest service terms, software licensing, QR menus, ordering, AI and future subscriptions.",
+    "MenuMinute terms for merchant accounts, QR menus, ordering, kitchen tools and related services.",
   alternates: { canonical: "https://food.bababuilds.com/terms" },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 };
 
 function TermsArtwork() {
@@ -179,10 +180,10 @@ export default function TermsPage() {
               A clear understanding between restaurants, guests and the platform behind every menu.
             </p>
             <p className="privacy-review-status" role="status">
-              Legal and operational review draft — not yet effective or ready for acceptance.
+              Effective {TERMS_EFFECTIVE_LABEL}
             </p>
             <div className="privacy-hero-meta">
-              <span>Draft prepared: 19 October 2026</span>
+              <span>Effective: {TERMS_EFFECTIVE_LABEL}</span>
               <span>BabaBuilds · India</span>
             </div>
           </div>
@@ -214,15 +215,14 @@ export default function TermsPage() {
               <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
           </aside>
-          <main className="privacy-copy" aria-label="Terms of Service draft">
+          <main className="privacy-copy" aria-label="Terms of Service">
             <div className="privacy-note">
               <Scale size={22} aria-hidden="true" />
               <div>
-                <strong>Legally reviewed terms require an actual release decision.</strong>
+                <strong>Terms matched to the services currently offered.</strong>
                 <p>
-                  This draft distinguishes present functions from proposed billing, ordering and
-                  native apps. The complete address, commercial checkout, acceptance mechanism and
-                  applicable local-law provisions need confirmation before publication.
+                  Planned or account-gated capabilities apply only when MenuMinute enables them for
+                  the relevant outlet. Restaurant sales remain between the guest and restaurant.
                 </p>
               </div>
             </div>
@@ -284,16 +284,14 @@ export default function TermsPage() {
               <div>
                 <span>HAVE A QUESTION?</span>
                 <h2>We build for the people behind every plate.</h2>
-                <p>
-                  Contact BabaBuilds about your account, Merchant operations or these draft terms.
-                </p>
+                <p>Contact BabaBuilds about your account, Merchant operations or these Terms.</p>
               </div>
               <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Terms%20Enquiry">
                 <Mail size={18} aria-hidden="true" /> Contact the operator
               </a>
             </div>
             <p className="privacy-print-hint">
-              <Download size={14} aria-hidden="true" /> Print or save this draft for legal review.
+              <Download size={14} aria-hidden="true" /> Print or save a copy for your records.
             </p>
           </main>
         </div>

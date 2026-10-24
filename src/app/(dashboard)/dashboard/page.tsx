@@ -25,6 +25,8 @@ import {
   preferredMenuQr,
 } from "@/modules/menu-product/dashboard-summary";
 import { DashboardTooltip } from "./dashboard-tooltip";
+import { servicePulse } from "@/modules/orders/workspace";
+import { ForbiddenError } from "@/lib/errors";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -69,6 +71,12 @@ export default async function DashboardPage() {
     hasPublicMenu: stats.hasPublicMenu,
     hasActiveQr: stats.activeQrCount > 0,
   });
+  let operations: Awaited<ReturnType<typeof servicePulse>> | null = null;
+  try {
+    operations = await servicePulse(actor, outlet.organizationId, outlet.id);
+  } catch (error) {
+    if (!(error instanceof ForbiddenError)) throw error;
+  }
   const publicHref =
     stats.hasPublicMenu && primaryQr
       ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
@@ -302,6 +310,34 @@ export default async function DashboardPage() {
               <ArrowRight className="mm-dashboard-publish-arrow" size={22} aria-hidden="true" />
             </Link>
           </section>
+
+          {operations && (
+            <section className="mm-dashboard-operations" aria-labelledby="mm-operations-title">
+              <div>
+                <span className="mm-dashboard-eyebrow">LIVE SERVICE</span>
+                <h2 id="mm-operations-title">What needs attention now</h2>
+                <p>Current outlet counts from the authoritative order ledger.</p>
+              </div>
+              <div className="mm-dashboard-operations-grid">
+                <Link href="/dashboard/orders">
+                  <strong>{operations.pending}</strong>
+                  <span>Awaiting acceptance</span>
+                </Link>
+                <Link href="/dashboard/orders">
+                  <strong>{operations.preparing}</strong>
+                  <span>In preparation</span>
+                </Link>
+                <Link href="/dashboard/orders">
+                  <strong>{operations.ready}</strong>
+                  <span>Ready for handoff</span>
+                </Link>
+                <Link href="/dashboard/orders">
+                  <strong>{operations.completedToday}</strong>
+                  <span>Completed today</span>
+                </Link>
+              </div>
+            </section>
+          )}
 
           <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
             <div className="mm-dashboard-health-head">

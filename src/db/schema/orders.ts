@@ -27,6 +27,7 @@ export const orders = pgTable(
     customerName: text("customer_name"),
     customerPhone: text("customer_phone"),
     fulfillmentMode: text("fulfillment_mode").notNull().default("dine_in"), // "dine_in" | "pickup"
+    requestedFulfillmentAt: timestamp("requested_fulfillment_at", { withTimezone: true }),
 
     // Canonical Status lifecycle: pending -> accepted -> preparing -> ready -> served/collected
     status: text("status", {

@@ -11,6 +11,7 @@ test("failed outlet setup keeps the retry key for identical input and changes it
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("phase4-password-123");
   await page.getByLabel("Confirm password").fill("phase4-password-123");
+  await page.getByRole("checkbox", { name: /I agree to the/ }).check();
   await page.getByRole("button", { name: "Create free account" }).click();
   await expect(page).toHaveURL(/\/verify-email/);
   await admin(async (_db, pool) => {

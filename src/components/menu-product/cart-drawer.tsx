@@ -6,6 +6,76 @@ import { formatPrice } from "@/lib/utils";
 import type { CartItem, CustomizerDish } from "./item-customizer";
 import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
+import {
+  clearPendingGuestOrder,
+  pendingOrderStorageKey,
+  readPendingGuestOrder,
+  writePendingGuestOrder,
+  type PendingGuestOrder,
+} from "@/modules/orders/guest-checkout";
+
+function outletInputValue(value: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(value);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((entry) => entry.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
+
+function outletInputToIso(value: string, timezone: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) throw new Error("Choose a valid pickup time.");
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute);
+  let instant = wallClockAsUtc;
+
+  // Resolve the outlet's UTC offset at the target instant. The second pass handles DST boundaries.
+  for (let pass = 0; pass < 2; pass += 1) {
+    const representedWallClock = outletInputValue(new Date(instant), timezone);
+    const represented = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(representedWallClock);
+    if (!represented) throw new Error("Choose a valid pickup time.");
+    const rYear = Number(represented[1]);
+    const rMonth = Number(represented[2]);
+    const rDay = Number(represented[3]);
+    const rHour = Number(represented[4]);
+    const rMinute = Number(represented[5]);
+    instant += wallClockAsUtc - Date.UTC(rYear, rMonth - 1, rDay, rHour, rMinute);
+  }
+
+  const resolved = new Date(instant);
+  if (outletInputValue(resolved, timezone) !== value) {
+    throw new Error("That local time does not exist. Choose another pickup time.");
+  }
+  return resolved.toISOString();
+}
+
+function nextPickupSlot(
+  openedAt: number,
+  leadMinutes: number,
+  slotMinutes: number,
+  timezone: string
+) {
+  let candidate = Math.ceil((openedAt + leadMinutes * 60000) / 60000) * 60000;
+  for (let minute = 0; minute <= 120; minute += 1) {
+    const local = outletInputValue(new Date(candidate), timezone);
+    const localHour = Number(local.slice(11, 13));
+    const localMinute = Number(local.slice(14, 16));
+    if ((localHour * 60 + localMinute) % slotMinutes === 0) return new Date(candidate);
+    candidate += 60000;
+  }
+  return new Date(candidate);
+}
 
 export function CartDrawer({
   items,
@@ -14,6 +84,10 @@ export function CartDrawer({
   outletName,
   point,
   fulfillmentModes = ["dine_in"],
+  timezone,
+  pickupLeadMinutes = 15,
+  pickupSlotMinutes = 15,
+  pickupAdvanceDays = 7,
   images = {},
   suggestions = [],
   onChooseSuggestion,
@@ -28,6 +102,10 @@ export function CartDrawer({
   outletName: string;
   point: string | null;
   fulfillmentModes?: string[];
+  timezone: string;
+  pickupLeadMinutes?: number;
+  pickupSlotMinutes?: number;
+  pickupAdvanceDays?: number;
   images?: Record<string, DiningVisual>;
   suggestions?: {
     dish: CustomizerDish;
@@ -52,7 +130,10 @@ export function CartDrawer({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [pendingRecovery, setPendingRecovery] = useState<PendingGuestOrder | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutOpenedAt] = useState(() => Date.now());
   const cartRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -93,10 +174,26 @@ export function CartDrawer({
     };
   }, [isOpen, isSubmitting]);
 
-  const submissionKeyRef = useRef<string>("");
   useEffect(() => {
-    submissionKeyRef.current = "";
-  }, [items, fulfillmentMode, customerName, customerPhone, orderNotes]);
+    const timer = window.setTimeout(() => {
+      const recovered = readPendingGuestOrder(
+        sessionStorage.getItem(pendingOrderStorageKey(token)),
+        token
+      );
+      if (!recovered) return;
+      setPendingRecovery(recovered);
+      setFulfillmentMode(recovered.fulfillmentMode);
+      setCustomerName(recovered.customerName);
+      setCustomerPhone(recovered.customerPhone);
+      setOrderNotes(recovered.notes);
+      setPickupTime(
+        recovered.requestedFulfillmentAt
+          ? outletInputValue(new Date(recovered.requestedFulfillmentAt), timezone)
+          : ""
+      );
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [token, timezone]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -105,43 +202,59 @@ export function CartDrawer({
   if (items.length === 0) return null;
 
   const handleSubmitOrder = async () => {
+    if (fulfillmentMode === "pickup" && !pickupTime && !pendingRecovery) {
+      setErrorMessage("Choose a pickup time before submitting your order.");
+      setIsOpen(true);
+      return;
+    }
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const clientSubmissionKey = submissionKeyRef.current || crypto.randomUUID();
-      submissionKeyRef.current = clientSubmissionKey;
+      const freshBody: PendingGuestOrder = {
+        token,
+        clientSubmissionKey: crypto.randomUUID(),
+        quotedTotalMinor: subtotalMinor,
+        fulfillmentMode,
+        requestedFulfillmentAt:
+          fulfillmentMode === "pickup" && pickupTime
+            ? outletInputToIso(pickupTime, timezone)
+            : null,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
+        notes: orderNotes.trim(),
+        items: items.map((i) => ({
+          dishId: i.dishId,
+          variantId: i.variantId,
+          selectedAddOns: i.selectedAddOns.map((a) => ({
+            groupId: a.groupId,
+            optionId: a.optionId,
+          })),
+          quantity: i.quantity,
+          itemNotes: i.itemNotes,
+        })),
+      };
+      const body = pendingRecovery ?? freshBody;
+      writePendingGuestOrder(body);
 
       const response = await fetch("/api/public-orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          clientSubmissionKey,
-          quotedTotalMinor: subtotalMinor,
-          fulfillmentMode,
-          customerName: customerName.trim(),
-          customerPhone: customerPhone.trim(),
-          notes: orderNotes.trim(),
-          items: items.map((i) => ({
-            dishId: i.dishId,
-            variantId: i.variantId,
-            selectedAddOns: i.selectedAddOns.map((a) => ({
-              groupId: a.groupId,
-              optionId: a.optionId,
-            })),
-            quantity: i.quantity,
-            itemNotes: i.itemNotes,
-          })),
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to submit order. Please try again.");
+        if (response.status < 500 && response.status !== 429) {
+          clearPendingGuestOrder(token);
+          setPendingRecovery(null);
+        }
+        throw new Error(data.message || "The restaurant could not accept this order request.");
       }
 
+      clearPendingGuestOrder(token);
+      setPendingRecovery(null);
       onClearCart();
       setIsOpen(false);
       onOrderSubmitted({
@@ -150,8 +263,15 @@ export function CartDrawer({
         orderNumber: data.orderNumber,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Submission failed";
-      setErrorMessage(message);
+      const message = err instanceof Error ? err.message : "Submission outcome is unknown";
+      setPendingRecovery(
+        readPendingGuestOrder(sessionStorage.getItem(pendingOrderStorageKey(token)), token)
+      );
+      setErrorMessage(
+        message === "Failed to fetch"
+          ? "We could not confirm the response. Check the previous submission before trying again."
+          : message
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -263,6 +383,39 @@ export function CartDrawer({
                         : "Dine In"}
                   </span>
                 </div>
+              )}
+              {fulfillmentMode === "pickup" && (
+                <label className="field-label" htmlFor="pickup-time">
+                  <span>Pickup time</span>
+                  <input
+                    id="pickup-time"
+                    type="datetime-local"
+                    className="field-input"
+                    required
+                    min={outletInputValue(
+                      nextPickupSlot(
+                        checkoutOpenedAt,
+                        pickupLeadMinutes,
+                        pickupSlotMinutes,
+                        timezone
+                      ),
+                      timezone
+                    )}
+                    max={outletInputValue(
+                      new Date(checkoutOpenedAt + pickupAdvanceDays * 86400000),
+                      timezone
+                    )}
+                    value={pickupTime}
+                    step={pickupSlotMinutes * 60}
+                    disabled={Boolean(pendingRecovery)}
+                    onChange={(event) => setPickupTime(event.target.value)}
+                  />
+                  <small>Times are shown in {timezone}.</small>
+                  <small>
+                    Earliest pickup is {pickupLeadMinutes} minutes from now. The restaurant must
+                    still accept your order.
+                  </small>
+                </label>
               )}
             </div>
 
@@ -478,6 +631,26 @@ export function CartDrawer({
                   )}
                 </div>
               )}
+              {pendingRecovery && (
+                <div className="alert-notice stack" role="status">
+                  <strong>Previous submission needs confirmation</strong>
+                  <p>
+                    We kept the original recovery key. Checking it cannot create a duplicate order.
+                  </p>
+                  <button
+                    type="button"
+                    className="action"
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      clearPendingGuestOrder(token);
+                      setPendingRecovery(null);
+                      setErrorMessage(null);
+                    }}
+                  >
+                    Discard this attempt and edit the cart
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Footer Submit Button */}
@@ -490,8 +663,10 @@ export function CartDrawer({
                 onClick={handleSubmitOrder}
               >
                 {isSubmitting
-                  ? "Submitting your order..."
-                  : `Submit order · ${formatPrice(subtotalMinor, currency)}`}
+                  ? "Checking your order..."
+                  : pendingRecovery
+                    ? "Check previous submission"
+                    : `Submit order · ${formatPrice(subtotalMinor, currency)}`}
               </button>
             </div>
           </div>

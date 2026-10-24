@@ -121,6 +121,9 @@ test("Outlet Atelier rejects a stale profile after another authorized update", a
         postalCode: null,
         primaryColor: "#f97316",
         secondaryColor: "#1c1917",
+        pickupLeadMinutes: 15,
+        pickupSlotMinutes: 15,
+        pickupAdvanceDays: 7,
       },
     },
   });
