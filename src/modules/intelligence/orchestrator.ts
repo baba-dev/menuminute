@@ -8,11 +8,7 @@ import {
   type InferenceResult,
   type InferenceMessage,
 } from "./index";
-import {
-  authorizedToolDefinitions,
-  executeReadTool,
-  type ToolContext,
-} from "./read-tools";
+import { authorizedToolDefinitions, executeReadTool, type ToolContext } from "./read-tools";
 import {
   assertAssistantScope,
   reserveAttempt,
