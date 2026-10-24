@@ -10,7 +10,11 @@ import {
   finishTurn,
   conversationInput,
 } from "../src/modules/intelligence/store";
-import { executeReadTool, toolDefinitions } from "../src/modules/intelligence/read-tools";
+import {
+  authorizedToolDefinitions,
+  executeReadTool,
+  toolDefinitions,
+} from "../src/modules/intelligence/read-tools";
 import { boundedJson } from "../src/modules/intelligence/request";
 import { runReadOnlyTurn } from "../src/modules/intelligence/orchestrator";
 import { createProviderHub } from "../src/modules/intelligence";
@@ -117,6 +121,12 @@ describe("Ember scoped persistence and read-only execution", () => {
   it("runs two fake provider attempts and persists bounded, redacted evidence", async () => {
     const f = await fixture(),
       scope = { actor: f.actor, organizationId: f.outlet.organizationId, outletId: f.outlet.id };
+    expect((await authorizedToolDefinitions(scope)).map((tool) => tool.name)).toEqual([
+      "orders.pulse",
+      "orders.history",
+      "kitchen.pulse",
+      "menu.summary",
+    ]);
     const convo = await createConversation(scope, uuid());
     const start = await beginTurn(scope, convo.id, {
       key: uuid(),

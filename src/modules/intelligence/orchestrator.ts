@@ -8,7 +8,11 @@ import {
   type InferenceResult,
   type InferenceMessage,
 } from "./index";
-import { executeReadTool, toolDefinitions, type ToolContext } from "./read-tools";
+import {
+  authorizedToolDefinitions,
+  executeReadTool,
+  type ToolContext,
+} from "./read-tools";
 import {
   assertAssistantScope,
   reserveAttempt,
@@ -61,6 +65,8 @@ export async function runReadOnlyTurn(
   if (!enabled) throw new IntelligenceError("disabled");
   try {
     await assertAssistantScope(scope);
+    const definitions = await authorizedToolDefinitions(scope);
+    if (!definitions.length) throw new ValidationError("No authorized read-only tools");
     const model = preferred(hub);
     const provider = model.provider as ProviderId;
     const messages: InferenceMessage[] = [
@@ -76,7 +82,7 @@ export async function runReadOnlyTurn(
           provider,
           capability,
           messages,
-          tools: capability === "tools" ? toolDefinitions() : [],
+          tools: capability === "tools" ? definitions : [],
           temperature: 0,
           maxOutputTokens: round === 1 ? 600 : 1024,
         });

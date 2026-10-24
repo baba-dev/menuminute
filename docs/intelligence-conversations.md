@@ -15,7 +15,7 @@ All POST handlers require same-origin authenticated JSON, MFA enrollment policy 
 
 ## Tool contract and truthful outcomes
 
-Bounded tools: orders.pulse, orders.history, kitchen.pulse, menu.summary. Calls reuse existing domain authorization and return narrow snapshots stripped of customer phone, notes and names. Order totals are NOT collected revenue. Draft menus are NOT live publication state. Kitchen metrics are the currently visible work only and surface overflow. Each evidence item has server source and capturedAt. Model output is always accompanied by the actual evidence in the response. No-tool or malformed first response fails, never hallucinates business facts.
+Bounded tools: orders.pulse, orders.history, kitchen.pulse, menu.summary. The model-visible tools are filtered by freshly checked `menu.read` and `orders.read` permissions before inference. Calls additionally reuse existing domain authorization and return narrow snapshots stripped of customer phone, notes and names. Order totals are NOT collected revenue. Draft menus are NOT live publication state. Kitchen metrics are the currently visible work only and surface overflow. Each evidence item has server source and capturedAt. Model output is always accompanied by the actual evidence in the response. No-tool or malformed first response fails, never hallucinates business facts.
 
 ## Durable accounting and failure semantics
 

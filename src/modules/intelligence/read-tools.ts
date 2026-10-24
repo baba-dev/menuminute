@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 import { servicePulse, listServiceHistory, historyQuerySchema } from "@/modules/orders/workspace";
 import { kitchenSnapshot } from "@/modules/kitchen/service";
 import { kitchenPulse } from "@/modules/kitchen/presentation";
@@ -6,7 +7,7 @@ import { getRestaurantById } from "@/modules/restaurants/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { NotFoundError } from "@/lib/errors";
-import type { Actor } from "@/modules/tenancy/service";
+import { withActor, type Actor } from "@/modules/tenancy/service";
 
 /** Tool descriptions are authored server-side. No SQL, URLs or write tools exist here. */
 export type ToolContext = { actor: Actor; organizationId: string; outletId: string };
@@ -140,6 +141,20 @@ export const readTools = [
 export type ReadToolName = (typeof readTools)[number]["name"];
 export function toolDefinitions() {
   return readTools.map(({ name, description, parameters }) => ({ name, description, parameters }));
+}
+/** Filter the model-visible registry using current SQL permissions, not the browser role. */
+export async function authorizedToolDefinitions(context: ToolContext) {
+  const access = await withActor(context.actor, async (tx) => {
+    await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
+    const response = await tx.execute<{ menu: boolean; orders: boolean }>(
+      sql`select app_private.can_outlet(${context.outletId},'menu.read') as menu,
+        app_private.can_outlet(${context.outletId},'orders.read') as orders`
+    );
+    return response.rows[0];
+  });
+  return toolDefinitions().filter((definition) =>
+    definition.name === "menu.summary" ? access?.menu === true : access?.orders === true
+  );
 }
 export async function executeReadTool(context: ToolContext, name: string, untrusted: unknown) {
   // Deliberately dispatch individually so TypeScript and Zod validate each handler.
