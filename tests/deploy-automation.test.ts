@@ -17,6 +17,22 @@ describe("provenance-bound main-only production delivery", () => {
     expect(ci).toContain("pnpm install --frozen-lockfile");
   });
 
+  it("tolerates optional cache and evidence transport failures, never release archive failure", () => {
+    expect(ci.match(/uses: actions\\/cache@v4/g)).toHaveLength(5);
+    expect(ci.match(/continue-on-error: true/g)).toHaveLength(7);
+    expect(ci).toContain("name: Cache Playwright Chromium\\n        continue-on-error: true");
+    expect(ci).toContain("name: browser-failure-evidence");
+    expect(ci).toContain("name: ember-browser-failure-evidence");
+
+    const requiredArchive = ci
+      .split("      - name: Upload main production archive")[1]!
+      .split("      - if: failure()")[0]!;
+    expect(requiredArchive).toContain("if: success() && github.event_name == 'push'");
+    expect(requiredArchive).toContain("if-no-files-found: error");
+    expect(requiredArchive).not.toContain("continue-on-error");
+    expect(ci).toContain('test "$result" = success');
+  });
+
   it("packages the exact pre-seed production compilation once", () => {
     expect(ci.indexOf("Compile production artifact before browser fixtures")).toBeLessThan(
       ci.indexOf("pnpm db:seed")
