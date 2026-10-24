@@ -1,13 +1,16 @@
 # POS D–G: release and operator sign-off
 
-**Status:** implementation PR #147; this is a gated finance engine, not a certified worldwide fiscal product. Work is reconciled with latest main: 0017 is the existing outlet-settings migration, 0018 is POS A–C, 0019 is POS finance. Do not rename, rewrite or reapply historical migrations. Earlier PRs #145 and #146 are superseded for merge order by #147.
+**Status:** the original D–G engine shipped in PR #147; production work package F–H extends it in
+migration 0022. This remains a gated finance engine, not a certified worldwide fiscal product. Read
+[the current F–H release contract](../production-f-h.md) before activation. Do not rename, rewrite
+or reapply historical migrations.
 
 ## Implemented and deliberate limits
 
 - **D:** Frozen bill first, then multiple positive staff-recorded cash/card-terminal/UPI/bank tenders; outlet-currency-only allocations, bounded by outstanding balance, explicit cash tendered/change, per-register opening float/cash in/out/immutable Z close and variance. All money movements are append-only and scoped to outlet. Manual external references are not charges, captures, provider verification or bank settlement.
 - **E:** Seller profile, explicit nonregistered or dish-classified tax profile. Deterministic integer-minor-unit per-line half-up arithmetic, inclusive/exclusive pricing, immutable seller/buyer/line/tax snapshots, transactional per-outlet/year/type serial allocation, private browser-printable A4 and 80mm output (browser Print > Save PDF), and full-sale refund with one linked credit document. Partial returns/credits are **not** shipped. No downloadable server-generated PDF or email delivery is claimed. Classified rate is a **single configurable generic component**: no implied Indian CGST/SGST/IGST decomposition, jurisdiction determination, HSN/SAC review, official fiscal approval, IRN or signed government QR. This is not an IRP e-invoice integration.
 - **F:** The Till links into The Ledger and The Closing Desk. Ledger supports explicit tax setup, preview, bill freeze, staff-attested split tender, private detail and reprint, original document issue where permitted and full reversal. Closing Desk supports register float, movements, historical X/Z data and discrepancy scan. Ink & Ember responsive light/dark styles, noindex and private API no-store, reduced-motion.
-- **G:** Restricted functions and no direct app/worker finance-table rights, scoped composite relations, immutable posted-record triggers, operator-only finance gate OFF by default, command key/hash replay, actor/role revocation recheck, outbox/audit, bounded reads, exact-sha CI/real PostgreSQL integration and browser QA. Read-only interactive reconciliation checks four invariant mismatch classes across the latest 500 bills and reports scannedCount/partial explicitly. Older history requires a separate paged operator audit. This is NOT external bank/gateway reconciliation.
+- **G:** Restricted functions and no direct app/worker finance-table rights, scoped composite relations, immutable posted-record triggers, operator-only finance gates OFF by default, command key/hash replay, actor/role revocation recheck, outbox/audit, bounded reads, exact-sha CI/real PostgreSQL integration and browser QA. Migration 0022 adds guarded Stripe Checkout/refunds, partial line credits and private document delivery. The latest 500 bills include provider/credit/delivery anomaly classes; older history still requires a separate paged operator audit. This is not bank-statement reconciliation.
 
 ## Production operator release gate — DO NOT bypass
 
@@ -23,8 +26,8 @@
 ## Required next specialized work before broad commercial rollout
 
 - Jurisdiction adapter for invoice types and exact statutory line-tax components, per-supply/place-of-supply classification, fiscal-year numbering and statutory fields; IRP integration where legally required. Obtain professional sign-off against CURRENT regulations.
-- Actual payment-provider adapter with callback signature validation and reconciliation of pending/uncertain outcomes, not just merchant manual entries.
-- Partial returns/line-level credit-note allocation with immutable original-line linking and legal tax reversal; customer delivery/email/S3-or-private PDF artifact retention if required.
+- Independent payment-provider and webhook security review, production canary evidence and bank-statement reconciliation remain required before broad rollout.
+- Jurisdiction-specific validation of partial tax reversal and any statutory retention/artifact requirements remains required.
 - Bank reconciliation, finance audit retention policy and independent vulnerability and load tests for real concurrent terminals.
 
 ## Test map

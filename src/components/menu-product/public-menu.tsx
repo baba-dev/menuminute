@@ -10,6 +10,7 @@ import {
   ChefHat,
   ArrowRight,
   Sparkles,
+  Languages,
 } from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
 import {
@@ -104,7 +105,8 @@ export function PublicMenu({
     let stopped = false;
     const refresh = async () => {
       try {
-        const r = await fetch(`/api/public-menu/${encodeURIComponent(token)}`, {
+        const language = data.locale ? `?lang=${encodeURIComponent(data.locale)}` : "";
+        const r = await fetch(`/api/public-menu/${encodeURIComponent(token)}${language}`, {
           cache: "no-store",
         });
         if (!r.ok) {
@@ -161,7 +163,17 @@ export function PublicMenu({
       window.removeEventListener("online", refresh);
       window.removeEventListener("offline", offline);
     };
-  }, [token, preview, cartItems]);
+  }, [token, preview, cartItems, data.locale]);
+
+  const languageName = (locale: string) => {
+    try {
+      return (
+        new Intl.DisplayNames([data.locale ?? "en"], { type: "language" }).of(locale) ?? locale
+      );
+    } catch {
+      return locale;
+    }
+  };
 
   const docs = data.menus.map((m) => ({
     ...m,
@@ -313,6 +325,29 @@ export function PublicMenu({
               {shown} {shown === 1 ? "dish" : "dishes"} shown
             </span>
           </div>
+          {(data.availableLocales?.length ?? 0) > 0 && (
+            <label className="dining-language">
+              <Languages size={18} aria-hidden="true" />
+              <span>Menu language</span>
+              <select
+                aria-label="Menu language"
+                value={data.locale ?? ""}
+                onChange={(event) => {
+                  const url = new URL(window.location.href);
+                  if (event.target.value) url.searchParams.set("lang", event.target.value);
+                  else url.searchParams.delete("lang");
+                  router.replace(url.pathname + url.search);
+                }}
+              >
+                <option value="">Original language</option>
+                {(data.availableLocales ?? []).map((locale) => (
+                  <option key={locale} value={locale}>
+                    {languageName(locale)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="dining-search">
             <Search size={21} aria-hidden="true" />
             <span className="sr-only">Search the menu</span>

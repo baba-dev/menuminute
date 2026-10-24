@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { sql } from "drizzle-orm";
 import { admin, fixture } from "./helpers";
 import { commandMenu } from "../src/modules/menu-product/service";
 import { posConfigure, posContext, posSubmit } from "../src/modules/pos/service";
 import { financeRead, financeCommand } from "../src/modules/pos/finance";
 import { transitionOutletOrder } from "../src/modules/orders/service";
 import { getPool } from "../src/db";
+import { withActor } from "../src/modules/tenancy/service";
 
-async function setup(mode: "non_registered" | "classified" = "non_registered") {
+async function setup(mode: "non_registered" | "classified" = "non_registered", quantity = 1) {
   const f = await fixture();
   const menuId = crypto.randomUUID();
   await commandMenu(f.actor, f.outlet.id, menuId, {
@@ -48,11 +50,11 @@ async function setup(mode: "non_registered" | "classified" = "non_registered") {
     selection: {
       menuId,
       expectedRevision: 2,
-      lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
+      lines: [{ dishId: "plate", variantId: null, groups: [], quantity }],
     },
     fulfillmentMode: "dine_in",
     tableId: null,
-    expectedSubtotalMinor: "28000",
+    expectedSubtotalMinor: String(28000 * quantity),
   });
   await transitionOutletOrder(f.actor, f.outlet.id, sale.orderId, {
     targetStatus: "accepted",
@@ -66,12 +68,19 @@ async function setup(mode: "non_registered" | "classified" = "non_registered") {
   }
   return { ...f, sale, cmd, view };
 }
-async function operatorGate(outletId: string, orgId: string, fiscal = false) {
+async function operatorGate(
+  outletId: string,
+  orgId: string,
+  fiscal = false,
+  provider = false,
+  delivery = false
+) {
   await admin(async (_db, pool) =>
     pool.query(
-      `insert into pos_finance_gates(outlet_id,organization_id,payments_enabled,documents_enabled,fiscal_approved,approval_note)
-   values($1,$2,true,true,$3,'isolated integration test only')`,
-      [outletId, orgId, fiscal]
+      `insert into pos_finance_gates(outlet_id,organization_id,payments_enabled,documents_enabled,
+       fiscal_approved,provider_enabled,document_delivery_enabled,approval_note)
+   values($1,$2,true,true,$3,$4,$5,'isolated integration test only')`,
+      [outletId, orgId, fiscal, provider, delivery]
     )
   );
 }
@@ -299,11 +308,150 @@ describe("POS D–G real PostgreSQL finance integration", () => {
         f.outlet.id,
       ])
     );
-    const invoice = await f.cmd("issue", { saleId: f.sale.saleId });
-    expect(invoice.kind).toBe("invoice");
+    // A gate is operational approval, not a jurisdiction implementation. Generic registered
+    // invoices stay fail-closed until a separately reviewed statutory adapter is installed.
+    await expect(f.cmd("issue", { saleId: f.sale.saleId })).rejects.toMatchObject({
+      statusCode: 403,
+    });
     const other = await fixture();
     await expect(
       financeRead(f.actor, other.outlet.organizationId, other.outlet.id, { view: "ledger" })
     ).rejects.toMatchObject({ statusCode: 403 });
+  });
+  it("allocates line-level partial refunds once and links each credit note to its source", async () => {
+    const f = await setup("non_registered", 2);
+    await operatorGate(f.outlet.id, f.outlet.organizationId);
+    await f.cmd("profile", {
+      expectedRevision: 0,
+      mode: "non_registered",
+      inclusive: false,
+      taxLabel: "No tax",
+      classes: [],
+    });
+    const quote = (await f.view("preview", f.sale.saleId)) as {
+      totalMinor: string;
+      taxProfileRevision: number;
+    };
+    await f.cmd("freeze", {
+      saleId: f.sale.saleId,
+      expectedTotalMinor: quote.totalMinor,
+      expectedTaxRevision: quote.taxProfileRevision,
+      customer: {},
+    });
+    const shift = (await f.cmd("open_shift", {
+      registerName: "returns",
+      openingMinor: "0",
+    })) as { shiftId: string };
+    await f.cmd("tender", {
+      saleId: f.sale.saleId,
+      shiftId: shift.shiftId,
+      method: "cash",
+      amountMinor: quote.totalMinor,
+      tenderedMinor: quote.totalMinor,
+      reference: null,
+    });
+    const source = (await f.cmd("issue", { saleId: f.sale.saleId })) as {
+      documentId: string;
+    };
+    const detail = (await f.view("sale", f.sale.saleId)) as {
+      bill: { lines: Array<{ id: string }> };
+    };
+    const lineId = detail.bill.lines[0]!.id;
+    const key = crypto.randomUUID();
+    const command = {
+      saleId: f.sale.saleId,
+      mode: "staff_attested",
+      shiftId: shift.shiftId,
+      reason: "One of two plates was returned",
+      externalRefundAttested: false,
+      lines: [{ lineId, quantity: 1 }],
+    };
+    const first = await f.cmd("partial_refund", command, key);
+    const replay = await f.cmd("partial_refund", command, key);
+    expect(first).toMatchObject({ refundedMinor: "28000", state: "staff_recorded" });
+    expect(replay).toMatchObject({ refundedMinor: "28000", duplicate: true });
+    const second = await f.cmd("partial_refund", command);
+    expect(second).toMatchObject({ refundedMinor: "28000", state: "staff_recorded" });
+    await expect(f.cmd("partial_refund", command)).rejects.toMatchObject({ statusCode: 409 });
+    const documents = await admin(async (_db, pool) =>
+      pool.query(
+        "select kind,source_document_id from pos_documents where outlet_id=$1 and sale_id=$2 order by issued_at",
+        [f.outlet.id, f.sale.saleId]
+      )
+    );
+    expect(documents.rows).toEqual([
+      { kind: "receipt", source_document_id: null },
+      { kind: "credit_note", source_document_id: source.documentId },
+      { kind: "credit_note", source_document_id: source.documentId },
+    ]);
+    const reconciliation = (await f.view("reconcile")) as { anomalies: unknown[] };
+    expect(reconciliation.anomalies).toEqual([]);
+  });
+  it("reconciles concurrent provider confirmations into exactly one verified tender", async () => {
+    const f = await setup();
+    await operatorGate(f.outlet.id, f.outlet.organizationId, false, true);
+    await f.cmd("profile", {
+      expectedRevision: 0,
+      mode: "non_registered",
+      inclusive: false,
+      taxLabel: "No tax",
+      classes: [],
+    });
+    const quote = (await f.view("preview", f.sale.saleId)) as {
+      totalMinor: string;
+      taxProfileRevision: number;
+    };
+    await f.cmd("freeze", {
+      saleId: f.sale.saleId,
+      expectedTotalMinor: quote.totalMinor,
+      expectedTaxRevision: quote.taxProfileRevision,
+      customer: {},
+    });
+    const requestKey = crypto.randomUUID();
+    const prepared = await withActor(f.actor, async (tx) => {
+      await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
+      const row = await tx.execute<{ result: { attemptId: string } }>(
+        sql`select app_private.pos_provider_checkout_prepare(
+          ${f.outlet.id},${requestKey}::uuid,${"a".repeat(64)},${f.sale.saleId}
+        ) as result`
+      );
+      return row.rows[0]!.result;
+    });
+    await withActor(f.actor, async (tx) => {
+      await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
+      await tx.execute(sql`select app_private.pos_provider_attempt_result(
+        ${f.outlet.id},${prepared.attemptId},'pending','cs_test_contract123',
+        'pi_contract123','https://checkout.stripe.com/c/pay/cs_test_contract123',null
+      )`);
+    });
+    const eventArgs = [
+      "evt_concurrent_contract123",
+      "checkout.completed",
+      prepared.attemptId,
+      "cs_test_contract123",
+      "pi_contract123",
+      quote.totalMinor,
+      f.outlet.currency,
+      "succeeded",
+    ];
+    const confirmations = await Promise.all(
+      [0, 1].map(() =>
+        getPool().query<{ result: { duplicate?: boolean } }>(
+          "select app_private.pos_provider_event($1,$2,$3,$4,$5,$6::bigint,$7,$8) as result",
+          eventArgs
+        )
+      )
+    );
+    expect(confirmations.filter((result) => result.rows[0]!.result.duplicate)).toHaveLength(1);
+    const detail = (await f.view("sale", f.sale.saleId)) as {
+      tenders: Array<{ evidence: string; method: string }>;
+      providerAttempts: Array<{ state: string }>;
+    };
+    expect(detail.tenders).toEqual([
+      expect.objectContaining({ method: "stripe_checkout", evidence: "provider_confirmed" }),
+    ]);
+    expect(detail.providerAttempts).toEqual([expect.objectContaining({ state: "succeeded" })]);
+    const reconciliation = (await f.view("reconcile")) as { anomalies: unknown[] };
+    expect(reconciliation.anomalies).toEqual([]);
   });
 });

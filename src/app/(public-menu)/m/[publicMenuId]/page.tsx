@@ -5,9 +5,12 @@ import { publicProduct } from "@/modules/menu-product/service";
 import { PublicMenu } from "@/components/menu-product/public-menu";
 
 export const dynamic = "force-dynamic";
-type Props = { params: Promise<{ publicMenuId: string }> };
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = await publicProduct((await params).publicMenuId);
+type Props = {
+  params: Promise<{ publicMenuId: string }>;
+  searchParams: Promise<{ lang?: string }>;
+};
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const data = await publicProduct((await params).publicMenuId, (await searchParams).lang);
   if (!data) return { title: "Menu unavailable", robots: { index: false, follow: false } };
   const headline = data.menus[0]?.document.presentation?.headline;
   const description =
@@ -32,9 +35,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { publicMenuId } = await params;
-  const data = await publicProduct(publicMenuId);
+  const data = await publicProduct(publicMenuId, (await searchParams).lang);
   if (!data) notFound();
-  return <PublicMenu initial={data} token={publicMenuId} />;
+  return <PublicMenu key={data.locale ?? "canonical"} initial={data} token={publicMenuId} />;
 }
