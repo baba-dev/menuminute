@@ -242,6 +242,20 @@
   max-width: 100%;
   padding-inline: 24px;
 }
+.finance-evidence {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--till-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--till-paper) 92%, var(--till-ember));
+  font-size: 12px;
+}
+.finance-evidence span,
+.finance-evidence small {
+  overflow-wrap: anywhere;
+}
 .finance-document {
   display: flex;
   align-items: center;
