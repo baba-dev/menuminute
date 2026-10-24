@@ -84,6 +84,7 @@ export function EmberLauncher({
   const router = useRouter();
   const qs = new URLSearchParams({ organizationId, outletId }).toString();
   const [open, setOpen] = useState(false);
+  const [now, setNow] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -157,8 +158,16 @@ export function EmberLauncher({
   useEffect(() => {
     if (!open || !conversationId) return;
     currentId.current = conversationId;
-    void loadHistory(conversationId).catch((e) => setError(message(e)));
+    const timeout = window.setTimeout(() => {
+      void loadHistory(conversationId).catch((e) => setError(message(e)));
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [open, conversationId, loadHistory]);
+  useEffect(() => {
+    if (!open) return;
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [open]);
   useEffect(() => {
     if (
       !open ||
@@ -343,6 +352,7 @@ export function EmberLauncher({
         type="button"
         className="mm-ember-launch"
         onClick={() => {
+          setNow(Date.now());
           setOpen(true);
           setError("");
         }}
@@ -663,7 +673,7 @@ export function EmberLauncher({
                     Revision {p.expectedRevision} · Expires{" "}
                     {new Date(p.expiresAt).toLocaleTimeString()}
                   </small>
-                  {p.status === "pending" && new Date(p.expiresAt).getTime() > Date.now() ? (
+                  {p.status === "pending" && new Date(p.expiresAt).getTime() > now ? (
                     <>
                       <label className="mm-ember-ack">
                         <input
