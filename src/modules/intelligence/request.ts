@@ -22,6 +22,9 @@ export async function boundedJson(req: Request): Promise<unknown> {
   }
   const buffer = new Uint8Array(size);
   let offset = 0;
-  for (const part of chunks) { buffer.set(part, offset); offset += part.byteLength; }
+  for (const part of chunks) {
+    buffer.set(part, offset);
+    offset += part.byteLength;
+  }
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(buffer));
 }

@@ -1,13 +1,22 @@
 import { env } from "@/lib/config/env";
 import { ValidationError } from "@/lib/errors";
 import {
-  createProviderHub, IntelligenceError, type ProviderHub, type ProviderId,
-  type InferenceResult, type InferenceMessage,
+  createProviderHub,
+  IntelligenceError,
+  type ProviderHub,
+  type ProviderId,
+  type InferenceResult,
+  type InferenceMessage,
 } from "./index";
 import { executeReadTool, toolDefinitions, type ToolContext } from "./read-tools";
 import {
-  assertAssistantScope, reserveAttempt, settleAttempt, finishTurn, failTurn,
-  type Scope, type StoredTurn,
+  assertAssistantScope,
+  reserveAttempt,
+  settleAttempt,
+  finishTurn,
+  failTurn,
+  type Scope,
+  type StoredTurn,
 } from "./store";
 
 const systemPrompt = [
@@ -24,12 +33,16 @@ const systemPrompt = [
 type Evidence = { tool: string; source: string; capturedAt: string; data: unknown };
 type Infer = ProviderHub["infer"];
 export type AssistantRun = {
-  turnId: string; status: "completed" | "failed";
-  answer?: string; evidence?: Evidence[]; errorCode?: string;
+  turnId: string;
+  status: "completed" | "failed";
+  answer?: string;
+  evidence?: Evidence[];
+  errorCode?: string;
 };
 function preferred(hub: ProviderHub) {
   const verified = hub.available().filter((m) => m.supportsTools);
-  const model = verified.find((m) => m.provider === "cloudflare") ??
+  const model =
+    verified.find((m) => m.provider === "cloudflare") ??
     verified.find((m) => m.provider === "nvidia");
   if (!model) throw new IntelligenceError("unsupported_capability");
   return model;
@@ -39,7 +52,8 @@ function preferred(hub: ProviderHub) {
  * External calls are OUTSIDE transactions. The attempt is durable before transmission.
  */
 export async function runReadOnlyTurn(
-  scope: Scope, turn: StoredTurn,
+  scope: Scope,
+  turn: StoredTurn,
   hub: ProviderHub = createProviderHub(env),
   execute: typeof executeReadTool = executeReadTool,
   enabled = env.AI_ASSISTANT_READ_ONLY_ENABLED
@@ -59,8 +73,12 @@ export async function runReadOnlyTurn(
       let result: InferenceResult;
       try {
         result = await (hub.infer as Infer)({
-          provider, capability, messages, tools: capability === "tools" ? toolDefinitions() : [],
-          temperature: 0, maxOutputTokens: round === 1 ? 600 : 1024,
+          provider,
+          capability,
+          messages,
+          tools: capability === "tools" ? toolDefinitions() : [],
+          temperature: 0,
+          maxOutputTokens: round === 1 ? 600 : 1024,
         });
       } catch (error) {
         await settleAttempt(scope, attemptId, null);
@@ -70,7 +88,11 @@ export async function runReadOnlyTurn(
       return result;
     };
     const first = await invoke(1, "tools");
-    if (first.finishReason !== "tool_calls" || first.toolCalls.length < 1 || first.toolCalls.length > 3)
+    if (
+      first.finishReason !== "tool_calls" ||
+      first.toolCalls.length < 1 ||
+      first.toolCalls.length > 3
+    )
       throw new ValidationError("No verified operational facts returned");
     messages.push({ role: "assistant", content: first.content, toolCalls: first.toolCalls });
     const evidence: Evidence[] = [];
@@ -94,11 +116,19 @@ export async function runReadOnlyTurn(
     await finishTurn(scope, turn.id, final.content, evidence);
     return { turnId: turn.id, status: "completed", answer: final.content, evidence };
   } catch (error) {
-    const code = error instanceof IntelligenceError ? error.code :
-      error instanceof ValidationError ? "invalid_response" : "processing_failed";
+    const code =
+      error instanceof IntelligenceError
+        ? error.code
+        : error instanceof ValidationError
+          ? "invalid_response"
+          : "processing_failed";
     // A revoked actor may lose the ability to settle their own stored turn. That
     // intentionally fails closed, leaving a non-retryable processing receipt.
-    try { await failTurn(scope, turn.id, code); } catch { /* revocation or DB outage */ }
+    try {
+      await failTurn(scope, turn.id, code);
+    } catch {
+      /* revocation or DB outage */
+    }
     return { turnId: turn.id, status: "failed", errorCode: code };
   }
 }
