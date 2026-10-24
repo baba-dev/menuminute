@@ -26,31 +26,55 @@ async function seed() {
       [crypto.randomUUID(), user, await hashPassword(password)]
     );
     await client.query("select set_config('app.actor_id',$1,true)", [user]);
-    for (const [id, name] of [[first, "First Ember Outlet"], [second, "Second Ember Outlet"]]) {
+    for (const [id, name] of [
+      [first, "First Ember Outlet"],
+      [second, "Second Ember Outlet"],
+    ]) {
       await client.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
-        id, crypto.randomUUID(), JSON.stringify({
-          name, country: "IN", currency: "INR", timezone: "Asia/Kolkata",
+        id,
+        crypto.randomUUID(),
+        JSON.stringify({
+          name,
+          country: "IN",
+          currency: "INR",
+          timezone: "Asia/Kolkata",
           outletType: "restaurant",
         }),
       ]);
       await client.query("update organizations set mfa_required=false where id=$1", ["org-" + id]);
     }
     const document = menuDocumentSchema.parse({
-      name: "Ember published lunch", currency: "INR",
-      categories: [{ id: "mains", name: "Mains", items: [
-        { id: "paneer", name: "Paneer Tikka", priceMinor: 15000 },
-      ] }],
+      name: "Ember published lunch",
+      currency: "INR",
+      categories: [
+        {
+          id: "mains",
+          name: "Mains",
+          items: [{ id: "paneer", name: "Paneer Tikka", priceMinor: 15000 }],
+        },
+      ],
     });
     await client.query("select app_private.menu_command($1,$2,'save',$3::jsonb,$4,1)", [
-      first, menuId, JSON.stringify({ document }), crypto.randomUUID(),
+      first,
+      menuId,
+      JSON.stringify({ document }),
+      crypto.randomUUID(),
     ]);
     await client.query("select app_private.menu_command($1,$2,'publish','{}'::jsonb,$3,2)", [
-      first, menuId, crypto.randomUUID(),
+      first,
+      menuId,
+      crypto.randomUUID(),
     ]);
     await client.query("select app_private.menu_command($1,$2,'override',$3::jsonb,$4,3)", [
-      first, menuId, JSON.stringify({
-        outletId: first, dishId: "paneer", priceMinor: 13500, soldOut: null,
-      }), crypto.randomUUID(),
+      first,
+      menuId,
+      JSON.stringify({
+        outletId: first,
+        dishId: "paneer",
+        priceMinor: 13500,
+        soldOut: null,
+      }),
+      crypto.randomUUID(),
     ]);
     await client.query("COMMIT");
   } catch (error) {
@@ -64,6 +88,13 @@ async function seed() {
 }
 type Fixture = Awaited<ReturnType<typeof seed>>;
 
+async function switchOutlet(page: import("@playwright/test").Page, outletId: string) {
+  return page.request.post("/api/context", {
+    headers: { origin: "https://localhost:3443" },
+    data: { outletId },
+  });
+}
+
 test.beforeEach(async ({ page }) => {
   expect(process.env["AI_ASSISTANT_READ_ONLY_ENABLED"]).toBe("true");
   expect(process.env["AI_ASSISTANT_ACTIONS_ENABLED"]).toBe("true");
@@ -76,11 +107,15 @@ async function signIn(page: import("@playwright/test").Page, f: Fixture) {
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  expect((await page.request.post("/api/context", { data: { outletId: f.first } })).ok()).toBe(true);
+  expect((await switchOutlet(page, f.first)).ok()).toBe(
+    true
+  );
   await page.reload();
   await expect(page.getByRole("button", { name: "Open Ember assistant" })).toBeVisible();
 }
-test("mobile bounds, keyboard trap, Escape, reduced-motion and restored focus", async ({ page }) => {
+test("mobile bounds, keyboard trap, Escape, reduced-motion and restored focus", async ({
+  page,
+}) => {
   const f = await seed();
   await signIn(page, f);
   const launcher = page.getByRole("button", { name: "Open Ember assistant" });
@@ -106,7 +141,9 @@ test("mobile bounds, keyboard trap, Escape, reduced-motion and restored focus", 
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
 });
-test("explicit action acknowledgement, authoritative persistence and reload recovery", async ({ page }) => {
+test("explicit action acknowledgement, authoritative persistence and reload recovery", async ({
+  page,
+}) => {
   const f = await seed();
   await signIn(page, f);
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
@@ -137,7 +174,9 @@ test("explicit action acknowledgement, authoritative persistence and reload reco
   }
   await page.reload();
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
-  await expect(page.getByRole("region", { name: "Availability action proposal" })).toContainText("CONFIRMED");
+  await expect(page.getByRole("region", { name: "Availability action proposal" })).toContainText(
+    "CONFIRMED"
+  );
   await expect(page.getByRole("button", { name: "Confirm change" })).toHaveCount(0);
 });
 test("switching outlets resets the assistant and keeps history scoped", async ({ page }) => {
@@ -148,7 +187,9 @@ test("switching outlets resets the assistant and keeps history scoped", async ({
   await dialog.getByRole("button", { name: "New chat" }).click();
   await expect(dialog.getByText("For First Ember Outlet")).toBeVisible();
   await dialog.getByRole("button", { name: "Close assistant" }).click();
-  expect((await page.request.post("/api/context", { data: { outletId: f.second } })).ok()).toBe(true);
+  expect((await switchOutlet(page, f.second)).ok()).toBe(
+    true
+  );
   await page.reload();
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
   const other = page.getByRole("dialog", { name: /Ember/ });
@@ -156,7 +197,9 @@ test("switching outlets resets the assistant and keeps history scoped", async ({
   await other.getByRole("button", { name: "History" }).click();
   await expect(other.getByText("No conversations yet.")).toBeVisible();
   await other.getByRole("button", { name: "Close assistant" }).click();
-  expect((await page.request.post("/api/context", { data: { outletId: f.first } })).ok()).toBe(true);
+  expect((await switchOutlet(page, f.first)).ok()).toBe(
+    true
+  );
   await page.reload();
   await page.getByRole("button", { name: "Open Ember assistant" }).click();
   const first = page.getByRole("dialog", { name: /Ember/ });
