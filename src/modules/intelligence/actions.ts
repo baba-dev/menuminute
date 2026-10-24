@@ -126,8 +126,9 @@ export async function availabilityOptions(s: Scope) {
       revision: number;
       name: string;
       document: unknown;
+      draft: unknown;
       overrides: unknown;
-    }>(sql`select m.id,m.revision,m.document->>'name' as name,rel.document,
+    }>(sql`select m.id,m.revision,rel.document->>'name' as name,rel.document,m.document as draft,
    coalesce((select jsonb_agg(jsonb_build_object('dishId',o.dish_id,'soldOut',o.sold_out))
      from menu_overrides o where o.menu_id=m.id and o.outlet_id=${s.outletId}), '[]'::jsonb) as overrides
    from menus m join menu_assignments a on a.menu_id=m.id
@@ -139,7 +140,10 @@ export async function availabilityOptions(s: Scope) {
     return rows.rows
       .map((row) => {
         const d = menuDocumentSchema.safeParse(row.document);
-        if (!d.success) return null;
+        const draft = menuDocumentSchema.safeParse(row.draft);
+        if (!d.success || !draft.success) return null;
+        const currentIds = new Set(draft.data.categories.filter(c => !c.archived).flatMap(c =>
+          c.items.filter(i => !i.archived).map(i => i.id)));
         const overrides = z
           .array(z.object({ dishId: identity, soldOut: z.boolean().nullable() }))
           .safeParse(row.overrides);
@@ -153,7 +157,7 @@ export async function availabilityOptions(s: Scope) {
             .filter((c) => !c.archived)
             .flatMap((c) =>
               c.items
-                .filter((i) => !i.archived)
+                .filter((i) => !i.archived && currentIds.has(i.id))
                 .map((i) => ({
                   id: i.id,
                   name: i.name,

@@ -69,20 +69,19 @@ BEGIN
    AND c.value->>'archived'='false' AND i.value->>'archived'='false'
    AND i.value->>'id'=p_dish LIMIT 1;
  IF dish IS NULL OR NOT EXISTS(
-   SELECT 1 FROM menu_releases rel,
-     jsonb_array_elements(rel.document->'categories') c,
+   SELECT 1 FROM jsonb_array_elements(m.document->'categories') c,
      jsonb_array_elements(c.value->'items') i
-   WHERE rel.menu_id=p_menu AND rel.revision=m.published_revision
-     AND c.value->>'archived'='false' AND i.value->>'archived'='false'
+   WHERE c.value->>'archived'='false' AND i.value->>'archived'='false'
      AND i.value->>'id'=p_dish
- ) THEN RAISE EXCEPTION 'Dish not in the current published menu' USING ERRCODE='22023'; END IF;
+ ) THEN RAISE EXCEPTION 'Dish must exist in the published menu and current draft' USING ERRCODE='22023'; END IF;
  SELECT * INTO o FROM menu_overrides WHERE menu_id=p_menu AND outlet_id=p_outlet AND dish_id=p_dish;
  before_value:=coalesce(o.sold_out,(dish->>'soldOut')::boolean,false);
  IF before_value=p_sold_out THEN RAISE EXCEPTION 'Dish already has requested availability' USING ERRCODE='22023'; END IF;
  IF (SELECT count(*) FROM assistant_action_proposals
      WHERE user_id=actor AND created_at>=now()-interval '24 hours')>=30 THEN
    RAISE EXCEPTION 'Assistant action preview limit reached' USING ERRCODE='22023'; END IF;
- menu_name:=left(m.document->>'name',100);
+ SELECT left(document->>'name',100) INTO menu_name FROM menu_releases
+   WHERE menu_id=p_menu AND revision=m.published_revision;
  INSERT INTO assistant_action_proposals(organization_id,outlet_id,user_id,conversation_id,request_key,
    menu_id,dish_id,dish_name,menu_name,previous_sold_out,desired_sold_out,expected_revision)
  VALUES(p_org,p_outlet,actor,p_conversation,p_key,p_menu,p_dish,left(dish->>'name',100),

@@ -190,6 +190,16 @@ describe("Ember proposals, atomic confirmation and restricted navigation", () =>
     await expect(
       proposeAvailability(s.scope, { ...input(s), dishId: "missing" })
     ).rejects.toMatchObject({ statusCode: 422 });
+    // A dish visible in the published release but removed from the current draft
+    // cannot be proposed: the downstream menu command would reject its identity.
+    const current = await menuDetail(s.f.actor, s.menuId);
+    const draft = document();
+    draft.categories[0]!.items = draft.categories[0]!.items.filter(i => i.id !== "paneer");
+    await commandMenu(s.f.actor, s.f.outlet.id, s.menuId, {
+      key: id(), expectedRevision: current.revision, action: "save", data: { document: draft },
+    });
+    expect((await availabilityOptions(s.scope))[0]?.items.some(i => i.id === "paneer")).toBe(false);
+    await expect(proposeAvailability(s.scope, input(s))).rejects.toMatchObject({ statusCode: 422 });
   });
   it("routes evidence only through server-defined, permission-filtered first-party destinations", () => {
     const allowed = navigationForPermissions({
