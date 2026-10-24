@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useMemo, useRef, useState } from "react";
 import {
   BookOpen,
   ChevronRight,
@@ -22,9 +21,8 @@ import {
   X,
 } from "lucide-react";
 import { filterQrCodes, qrDestination, qrStatistics } from "./qr-studio-types";
-import type { QR, QRFilter, PrintFormat } from "./qr-studio-types";
-import { QrPrintSheet } from "./qr-print-sheet";
-import styles from "./qr-print.module.css";
+import type { QR, QRFilter } from "./qr-studio-types";
+import { QrPrintStudio } from "./qr-print-studio";
 
 const art = "/brand/qr-studio/tabletop-press/";
 const pageSize = 24;
@@ -59,8 +57,7 @@ export function QrManager({
   const [label, setLabel] = useState("");
   const [pointLabel, setPointLabel] = useState("");
   const [showCreate, setShowCreate] = useState(true);
-  const [format, setFormat] = useState<PrintFormat>("stand");
-  const [printId, setPrintId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"library" | "print">("library");
   const [danger, setDanger] = useState<Danger | null>(null);
   const [confirmed, setConfirmed] = useState("");
   const retry = useRef({ signature: "", key: "" });
@@ -73,11 +70,6 @@ export function QrManager({
   const visible = useMemo(() => filterQrCodes(codes, query, filter), [codes, query, filter]);
   const selected = codes.find((q) => q.id === selectedId) ?? null;
   const selectedUrl = selected ? qrDestination(origin, selected.destinationToken) : "";
-  useEffect(() => {
-    const clear = () => setPrintId(null);
-    window.addEventListener("afterprint", clear);
-    return () => window.removeEventListener("afterprint", clear);
-  }, []);
 
   async function refresh() {
     const response = await fetch("/api/qr", {
@@ -186,7 +178,7 @@ export function QrManager({
   }
   function selectCode(id: string) {
     setSelectedId(id);
-    if (window.matchMedia("(max-width: 1050px)").matches) {
+    if (tab === "library" && window.matchMedia("(max-width: 1050px)").matches) {
       window.requestAnimationFrame(() => {
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         detailRef.current?.scrollIntoView({
@@ -206,12 +198,8 @@ export function QrManager({
       return;
     }
     setSelectedId(active.id);
-    window.requestAnimationFrame(() => scrollToSection("qr-print-studio"));
-  }
-  function print(q: QR) {
-    if (!q.isActive) return;
-    flushSync(() => setPrintId(q.id));
-    window.print();
+    setTab("print");
+    window.requestAnimationFrame(() => scrollToSection("qr-tab-navigation"));
   }
   function ask(action: Danger["action"], q: QR) {
     setDanger({ action, qr: q });
@@ -273,6 +261,11 @@ export function QrManager({
           )}
           <p role="status">{message}</p>
         </div>
+        <nav id="qr-tab-navigation" className="qr-tab-nav" aria-label="QR workspace">
+          <button type="button" aria-current={tab === "library" ? "page" : undefined} onClick={() => setTab("library")}><QrCode size={18} aria-hidden="true" /> QR Library <span>Manage permanent destinations</span></button>
+          <button type="button" aria-current={tab === "print" ? "page" : undefined} onClick={openPrintStudio}><Printer size={18} aria-hidden="true" /> Print Studio <span>Design beautiful printed invitations</span></button>
+        </nav>
+        {tab === "library" && (<>
         <section className="qr-overview" aria-label="QR inventory at a glance">
           <div className="qr-heading">
             <h2 className="qr-eyebrow">YOUR QR COLLECTION</h2>
@@ -487,13 +480,12 @@ export function QrManager({
                 </button>
               )}
             </section>
-            <div className={styles.cards} data-print-selected={printId !== null}>
+            <div className="qr-details">
               {selected ? (
                 <section
                   className="qr-selected"
                   ref={detailRef}
                   tabIndex={-1}
-                  data-print-target={printId === selected.id}
                   data-qr-active={selected.isActive}
                   aria-labelledby="qr-selected-title"
                 >
@@ -547,8 +539,8 @@ export function QrManager({
                         >
                           <FileImage size={16} aria-hidden="true" /> Download SVG
                         </a>
-                        <button type="button" onClick={() => print(selected)}>
-                          <Printer size={16} aria-hidden="true" /> Print
+                        <button type="button" className="qr-design-action" onClick={openPrintStudio}>
+                          <Printer size={16} aria-hidden="true" /> Design & Print
                         </button>
                         <button type="button" onClick={() => void copyLink()}>
                           <ClipboardCopy size={16} aria-hidden="true" /> Copy link
@@ -564,56 +556,6 @@ export function QrManager({
                       <div className="qr-fallback">
                         <span>Permanent fallback URL</span>
                         <code>{selectedUrl}</code>
-                      </div>
-                      <div className="qr-print-studio" id="qr-print-studio">
-                        <div className="qr-print-intro">
-                          <div>
-                            <span className="qr-eyebrow">THE PRINT STUDIO</span>
-                            <h3>From screen to tabletop.</h3>
-                            <p>
-                              Choose a physical format. The design uses this QR&apos;s real
-                              downloadable matrix.
-                            </p>
-                          </div>
-                          <Image
-                            src={art + "print-studio-illustration.webp"}
-                            width={126}
-                            height={95}
-                            alt=""
-                          />
-                        </div>
-                        <div className="qr-format-picker" role="group" aria-label="Print template">
-                          {(
-                            [
-                              { id: "stand", name: "Table Stand" },
-                              { id: "sticker", name: "Window / Counter Sticker" },
-                              { id: "insert", name: "Menu Insert" },
-                            ] as const
-                          ).map((t) => (
-                            <button
-                              key={t.id}
-                              type="button"
-                              aria-pressed={format === t.id}
-                              onClick={() => setFormat(t.id)}
-                            >
-                              {t.name}
-                            </button>
-                          ))}
-                        </div>
-                        <QrPrintSheet
-                          qr={selected}
-                          format={format}
-                          restaurant={outletName}
-                          origin={origin}
-                          active={printId === selected.id}
-                        />
-                        <button
-                          type="button"
-                          className="ember qr-print-action"
-                          onClick={() => print(selected)}
-                        >
-                          <Printer size={16} aria-hidden="true" /> Print this design
-                        </button>
                       </div>
                       {canRevoke && (
                         <details className="qr-danger">
@@ -683,6 +625,18 @@ export function QrManager({
               <X size={18} />
             </button>
           </section>
+        )}
+        </>)}
+        {tab === "print" && (
+          <QrPrintStudio
+            codes={codes}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onBack={() => setTab("library")}
+            restaurant={outletName}
+            origin={origin}
+            outletId={outletId}
+          />
         )}
       </div>
       <dialog
