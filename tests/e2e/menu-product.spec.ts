@@ -236,14 +236,21 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   const patioCard = page
     .getByRole("heading", { name: "Patio menu", exact: true })
     .locator("xpath=ancestor::section");
+  await expect(patioCard.locator(".qr-fallback code")).toContainText("/m/");
+  await patioCard.getByRole("button", { name: "Design & Print" }).click();
+  const atelier = page.getByTestId("qr-print-atelier");
+  const preview = atelier.getByLabel("Table Stand print preview");
+  await expect(preview).toContainText("Table 4");
+  await expect(preview.locator("[data-real-qr-matrix]")).toHaveJSProperty("complete", true);
+  await atelier
+    .getByText("I reviewed the restaurant, table label and destination", { exact: false })
+    .click();
   await page.evaluate(() => {
     window.print = () => {};
   });
-  await patioCard.getByRole("button", { name: "Print", exact: true }).click();
-  await expect(patioCard).toHaveAttribute("data-print-target", "true");
-  await expect(patioCard.locator("xpath=..")).toHaveAttribute("data-print-selected", "true");
-  await expect(patioCard.locator(".qr-fallback code")).toContainText("/m/");
-  await expect(patioCard.getByLabel("Table Stand print preview")).toContainText("Table 4");
+  await atelier.getByRole("button", { name: "Print / Save as PDF" }).click();
+  await expect(preview).toHaveAttribute("data-print-ready", "true");
+  await atelier.getByRole("button", { name: "Back to QR Library" }).click();
   const download = await page.request.get(`/api/qr/${q.id}/download`);
   expect(download.status()).toBe(200);
   expect(download.headers()["content-type"]).toBe("image/png");
@@ -256,7 +263,10 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await revokeDialog.getByLabel("Type REVOKE to continue").fill("REVOKE");
   await revokeDialog.getByRole("button", { name: "Confirm revoke" }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code revoked");
-  await page.getByRole("button", { name: "Print Studio", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "QR workspace" })
+    .getByRole("button", { name: "Print Studio", exact: true })
+    .click();
   await expect(page.getByLabel("Table Stand print preview")).toBeVisible();
   await expect(
     page.getByLabel("Table Stand print preview").locator('img[src*="format=svg"]')
@@ -544,13 +554,26 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeVisible();
   await studio.locator('summary[aria-label="About Active codes"]').click();
   await expect(studio.getByText("Currently usable permanent destination tokens.")).toBeVisible();
-  const printPreview = studio.getByLabel("Table Stand print preview");
+  await studio
+    .getByRole("navigation", { name: "QR workspace" })
+    .getByRole("button", { name: "Print Studio", exact: true })
+    .click();
+  const atelier = studio.getByTestId("qr-print-atelier");
+  const printPreview = atelier.getByLabel("Table Stand print preview");
   await expect(printPreview).toBeVisible();
   await expect(printPreview.locator('img[src*="format=svg"]')).toHaveCount(1);
-  await studio.getByRole("button", { name: "Window / Counter Sticker" }).click();
+  await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeHidden();
+  await atelier.getByRole("button", { name: "Classic Ember" }).click();
+  await atelier.getByRole("button", { name: "Midnight Ink" }).click();
+  await expect(printPreview.locator("article")).toHaveAttribute("data-palette", "ink");
+  await atelier.getByRole("button", { name: /Window \/ Counter Sticker/ }).click();
   await expect(studio.getByLabel("Window / Counter Sticker print preview")).toBeVisible();
-  await studio.getByRole("button", { name: "Menu Insert" }).click();
+  await atelier.getByRole("button", { name: /Menu Insert/ }).click();
   await expect(studio.getByLabel("Menu Insert print preview")).toBeVisible();
+  await atelier.getByLabel("Guest invitation").fill("Discover today's menu");
+  await expect(atelier.getByLabel("Menu Insert print preview")).toContainText(
+    "Discover today's menu"
+  );
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
