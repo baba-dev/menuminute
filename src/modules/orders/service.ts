@@ -38,6 +38,42 @@ function mapOrderDatabaseError(error: unknown): never {
   throw error;
 }
 
+export function validatePickupInstant(input: {
+  value: string;
+  now: Date;
+  timezone: string;
+  leadMinutes: number;
+  slotMinutes: number;
+  advanceDays: number;
+}) {
+  const requested = new Date(input.value);
+  if (!Number.isFinite(requested.getTime()))
+    throw new ValidationError("Choose a valid pickup time.");
+  const earliest = input.now.getTime() + input.leadMinutes * 60000;
+  const latest = input.now.getTime() + input.advanceDays * 86400000;
+  if (requested.getTime() < earliest)
+    throw new ConflictError(
+      `Pickup requires at least ${input.leadMinutes} minutes of preparation.`
+    );
+  if (requested.getTime() > latest)
+    throw new ValidationError(`Pickup can be scheduled up to ${input.advanceDays} days ahead.`);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: input.timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(requested);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value);
+  if (
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute) ||
+    (hour * 60 + minute) % input.slotMinutes
+  )
+    throw new ValidationError(`Choose a pickup time on a ${input.slotMinutes}-minute interval.`);
+  return requested;
+}
+
 // ─── Guest Order Submission ───────────────────────────────────────────────────
 
 export async function submitGuestOrder(token: string, raw: unknown) {
@@ -84,11 +120,23 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     );
   }
 
+  const requestedFulfillmentAt = input.requestedFulfillmentAt
+    ? validatePickupInstant({
+        value: input.requestedFulfillmentAt,
+        now: new Date(data.now),
+        timezone: outlet.timezone,
+        leadMinutes: outlet.pickupLeadMinutes ?? 15,
+        slotMinutes: outlet.pickupSlotMinutes ?? 15,
+        advanceDays: outlet.pickupAdvanceDays ?? 7,
+      })
+    : null;
+
   // Revalidate at the trusted server boundary before final transactional commit.
   // 4. Project live menu categories and dishes for server-side price & availability verification
   const now = new Date(data.now);
+  const serviceInstant = requestedFulfillmentAt ?? now;
   const projectedMenus = data.menus.map((m) =>
-    projectMenu(m.document, outlet.timezone, now, m.overrides)
+    projectMenu(m.document, outlet.timezone, serviceInstant, m.overrides)
   );
 
   const allCategories = projectedMenus.flatMap((m) => m.categories);
@@ -233,7 +281,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     )
   );
   let expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-  if (schedules.some((s) => s.menu || s.dish)) {
+  if (!requestedFulfillmentAt && schedules.some((s) => s.menu || s.dish)) {
     for (let minute = 1; minute <= 120; minute++) {
       const instant = new Date(now.getTime() + minute * 60000);
       if (
@@ -254,6 +302,7 @@ export async function submitGuestOrder(token: string, raw: unknown) {
     catalogFingerprint: data.catalogFingerprint,
     expiresAt: expiresAt.toISOString(),
     currency: outlet.currency,
+    requestedFulfillmentAt: requestedFulfillmentAt?.toISOString() ?? null,
     subtotalMinor,
     taxMinor,
     totalMinor,
@@ -372,6 +421,7 @@ export async function listOutletOrders(
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       fulfillmentMode: order.fulfillmentMode,
+      requestedFulfillmentAt: order.requestedFulfillmentAt,
       status: order.status,
       paymentStatus: order.paymentStatus,
       currency: order.currency,

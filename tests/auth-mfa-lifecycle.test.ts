@@ -5,6 +5,7 @@ import { authServer } from "../src/lib/auth";
 import { drainAuthTestMessages } from "../src/lib/auth-email";
 import { confirmStepUp } from "../src/lib/step-up";
 import { getPool } from "../src/db";
+import { TERMS_VERSION } from "../src/content/legal";
 
 const root = "http://localhost:3000";
 // Isolated CI-only authenticator: the secret is supplied by the test enrollment response.
@@ -70,7 +71,13 @@ it("enrolls a real TOTP, requires it at sign-in, accepts a backup code and verif
   drainAuthTestMessages();
   const email = nanoid() + "@test.invalid";
   const password = "mfa-lifecycle-123";
-  const signup = await send("sign-up/email", { name: "Security fixture", email, password });
+  const signup = await send("sign-up/email", {
+    name: "Security fixture",
+    email,
+    password,
+    termsVersion: TERMS_VERSION,
+    termsAcceptedAt: new Date(),
+  });
   expect(signup.status).toBe(200);
   const message = drainAuthTestMessages().find((m) => m.subject.includes("Verify"));
   expect(message).toBeDefined();

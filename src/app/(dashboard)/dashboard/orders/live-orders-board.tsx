@@ -560,6 +560,7 @@ export function LiveOrdersBoard({
                               key={order.id}
                               order={order}
                               now={now || Date.now()}
+                              timezone={timezone}
                               open={(item) => {
                                 setActivity(null);
                                 setSelected(item);

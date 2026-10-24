@@ -2,6 +2,7 @@ import { it, expect } from "vitest";
 import { authServer } from "../src/lib/auth";
 import { drainAuthTestMessages } from "../src/lib/auth-email";
 import { nanoid } from "nanoid";
+import { TERMS_VERSION } from "../src/content/legal";
 const root = "http://localhost:3000";
 function send(path: string, body: unknown) {
   return authServer.handler(
@@ -19,6 +20,8 @@ it("verifies email only with a delivered single-use token; recovery revokes old 
     name: "Recovered Owner",
     email,
     password: "original-test-123",
+    termsVersion: TERMS_VERSION,
+    termsAcceptedAt: new Date(),
   });
   expect(signup.status).toBe(200);
   const blocked = await send("sign-in/email", { email, password: "original-test-123" });

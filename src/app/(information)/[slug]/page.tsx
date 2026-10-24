@@ -15,10 +15,10 @@ const pages = {
   },
   ordering: {
     title: "Online ordering",
-    category: "Product roadmap",
-    description: "Dine-in and pickup experiences are in development.",
+    category: "Optional outlet capability",
+    description: "Dine-in and scheduled pickup ordering for enabled restaurants.",
     detail:
-      "This feature preview is not an offer of a currently available ordering or payment service. Explore our free QR menu in the meantime.",
+      "Restaurants with an active ordering entitlement can receive server-priced dine-in and scheduled pickup requests from a published menu. Submission is not acceptance: guests receive a tracking page and the restaurant confirms each order. Payment availability is shown separately and staff-recorded payment is not represented as a provider-confirmed online charge.",
   },
   careers: {
     title: "Careers",
@@ -29,9 +29,9 @@ const pages = {
   contact: {
     title: "Contact us",
     category: "Get in touch",
-    description: "A dedicated contact experience is on its way.",
+    description: "Contact BabaBuilds about MenuMinute accounts, privacy or product support.",
     detail:
-      "The contact form and support channels are being prepared. For general company information, visit the BabaBuilds website linked below.",
+      "Email admin@bababuilds.com. Include the outlet name and a concise description of the issue, but never send passwords, one-time codes, payment credentials or private API keys.",
   },
   help: {
     title: "Help centre",
@@ -152,10 +152,18 @@ export default async function InformationPage({ params }: { params: Promise<{ sl
         <p className="mt-5 text-xl text-stone-600">{page.description}</p>
         <div className="mt-10 w-full rounded-3xl border border-orange-200 bg-white p-7 shadow-sm sm:p-10">
           <p className="mb-3 text-xs font-extrabold tracking-widest text-orange-700 uppercase">
-            Content pending
+            Product information
           </p>
           <p className="max-w-2xl leading-8 text-stone-700">{page.detail}</p>
           <div className="mt-7 flex flex-wrap gap-5">
+            {slug === "contact" && (
+              <a
+                className="font-semibold text-orange-700 underline underline-offset-4"
+                href="mailto:admin@bababuilds.com"
+              >
+                Email MenuMinute support
+              </a>
+            )}
             <Link
               className="font-semibold text-orange-700 underline underline-offset-4"
               href="/demo"

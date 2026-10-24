@@ -1,6 +1,6 @@
 # Terms of Service — release and legal review
 
-**Status:** draft only. Authored 19 October 2026. Part of PR #97, together with /privacy, /delete-account, footer and a common Ink & Ember reading design.
+**Status:** Terms v2026-10-24 published by product-owner decision; Privacy Policy remains effective 20 October 2026. Account deletion remains a contact-based process pending full lifecycle automation.
 
 ## Scope and identity
 
@@ -12,7 +12,7 @@ This is an identity correction, **not** evidence that all the remaining mandator
 
 ## What has been drafted
 
-`src/content/terms.ts` is the source for 24 anchored sections. `src/app/terms/page.tsx` and `terms.css` reuse the privacy document's shell with original 'The Shared Table' SVG. This is a **noindex, visible review draft**, not an agreement asserted to be binding. Existing generic /terms placeholder removed from `(information)/[slug]` to avoid duplicate routing/copy.
+`src/content/terms.ts` is the source for 24 anchored sections. `src/app/terms/page.tsx` and `terms.css` reuse the privacy document's shell with original 'The Shared Table' SVG. The Terms route is public and indexable; new registration records the accepted version and timestamp. This repository does not claim external legal certification. Existing generic /terms placeholder is removed from `(information)/[slug]` to avoid duplicate routing/copy.
 
 The Terms allocate the software/restaurant/guest relationship, age and eligibility, business licenses, merchant content rights, published menu links, permission boundaries, order submission versus restaurant acceptance, restaurant safety and allergen statements, payment separation, restrictions, optional AI, data/retention, suspension, cancellation, liability, indemnity, governing law and future mobile-app distribution. A zero-fee QR menu does not create a subscription charge, and the document does not claim a live diner gateway, courier delivery or native binary.
 

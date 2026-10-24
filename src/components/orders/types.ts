@@ -24,6 +24,7 @@ export type MerchantOrder = {
   customerName: string | null;
   customerPhone: string | null;
   fulfillmentMode: string;
+  requestedFulfillmentAt?: string | null;
   status: string;
   paymentStatus: string;
   currency: string;

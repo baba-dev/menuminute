@@ -9,12 +9,14 @@ import { authClient } from "@/lib/auth-client";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegistrationChallenge } from "@/components/auth/turnstile";
 import { safeReturnPath } from "@/lib/auth-return";
+import { TERMS_VERSION } from "@/content/legal";
 const schema = z
   .object({
     name: z.string().trim().min(2, "Enter your name (at least 2 characters).").max(100),
     email: z.email("Enter a valid email address.").max(254),
     password: z.string().min(8, "Use at least 8 characters.").max(128),
     confirmPassword: z.string().min(1, "Confirm your password."),
+    acceptTerms: z.literal(true, { error: "Accept the Terms and Privacy Policy to continue." }),
   })
   .refine((v) => v.password === v.confirmPassword, {
     message: "Passwords do not match.",
@@ -60,10 +62,12 @@ function RegistrationForm() {
               name: values.name,
               email: values.email,
               password: values.password,
+              termsVersion: TERMS_VERSION,
+              termsAcceptedAt: new Date(),
               fetchOptions: challenge
                 ? { headers: { "x-captcha-response": challenge } }
                 : undefined,
-            });
+            } as Parameters<typeof authClient.signUp.email>[0]);
             if (response.error) {
               setError(response.error.message ?? "Unable to register. Try again.");
               return;
@@ -156,18 +160,18 @@ function RegistrationForm() {
             </small>
           )}
         </label>
-        <p className="mm-auth-secondary">
-          Learn how your information is handled in our{" "}
-          <Link href="/privacy" target="_blank" rel="noopener noreferrer">
-            Privacy Policy
-          </Link>
-          . You can also read our{" "}
+        <label className="mm-auth-secondary">
+          <input type="checkbox" {...register("acceptTerms")} /> I agree to the{" "}
           <Link href="/terms" target="_blank" rel="noopener noreferrer">
             Terms of Service
           </Link>{" "}
-          draft, which is not yet effective. Acceptance will be requested only after publication of
-          approved terms.
-        </p>
+          and acknowledge the{" "}
+          <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </Link>
+          .
+        </label>
+        {errors.acceptTerms && <small role="alert">{errors.acceptTerms.message}</small>}
         <RegistrationChallenge onToken={setChallenge} />
         <button
           className="mm-auth-submit"
