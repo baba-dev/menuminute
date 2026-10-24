@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_CART_LINES, MAX_ITEM_QUANTITY } from "./guest-checkout";
 
 export const orderItemSubmissionSchema = z.object({
   dishId: z.string().min(1).max(128),
@@ -17,19 +18,37 @@ export const orderItemSubmissionSchema = z.object({
         ctx.addIssue({ code: "custom", message: "Duplicate add-on option" });
     })
     .default([]),
-  quantity: z.number().int().min(1).max(99),
+  quantity: z.number().int().min(1).max(MAX_ITEM_QUANTITY),
   itemNotes: z.string().trim().max(200).optional(),
 });
 
-export const orderSubmissionSchema = z.object({
-  clientSubmissionKey: z.string().uuid(),
-  quotedTotalMinor: z.number().int().min(0).max(2147483647),
-  fulfillmentMode: z.enum(["dine_in", "pickup"]).default("dine_in"),
-  customerName: z.string().trim().max(80).optional().default(""),
-  customerPhone: z.string().trim().max(30).optional().default(""),
-  notes: z.string().trim().max(500).optional().default(""),
-  items: z.array(orderItemSubmissionSchema).min(1).max(50),
-});
+export const orderSubmissionSchema = z
+  .object({
+    clientSubmissionKey: z.string().uuid(),
+    quotedTotalMinor: z.number().int().min(0).max(2147483647),
+    fulfillmentMode: z.enum(["dine_in", "pickup"]).default("dine_in"),
+    requestedFulfillmentAt: z.iso.datetime().nullable().optional().default(null),
+    customerName: z.string().trim().max(80).optional().default(""),
+    customerPhone: z.string().trim().max(30).optional().default(""),
+    notes: z.string().trim().max(500).optional().default(""),
+    items: z.array(orderItemSubmissionSchema).min(1).max(MAX_CART_LINES),
+  })
+  .superRefine((value, ctx) => {
+    if (value.fulfillmentMode === "pickup" && !value.requestedFulfillmentAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["requestedFulfillmentAt"],
+        message: "Choose a pickup time",
+      });
+    }
+    if (value.fulfillmentMode !== "pickup" && value.requestedFulfillmentAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["requestedFulfillmentAt"],
+        message: "Only pickup orders can be scheduled",
+      });
+    }
+  });
 
 export const orderTransitionSchema = z.object({
   targetStatus: z.enum([

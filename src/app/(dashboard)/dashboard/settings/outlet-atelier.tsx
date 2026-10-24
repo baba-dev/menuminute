@@ -20,6 +20,7 @@ import {
   UsersRound,
   Wallet,
   Mail,
+  Clock3,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 type Outlet = {
@@ -61,6 +62,7 @@ const anchors = [
   { id: "profile", label: "Restaurant profile", Icon: Store },
   { id: "contact", label: "Contact & location", Icon: MapPin },
   { id: "branding", label: "Brand appearance", Icon: Palette },
+  { id: "pickup", label: "Pickup scheduling", Icon: Clock3 },
   { id: "operations", label: "Operational identity", Icon: ClipboardList },
   { id: "plan", label: "Plan & capabilities", Icon: Wallet },
   { id: "access", label: "People & security", Icon: ShieldCheck },
@@ -407,6 +409,43 @@ export function OutletAtelier({
                   rules.
                 </p>
               </section>
+              {outlet.fulfillmentModes.includes("pickup") && (
+                <section id="pickup" className="os-panel" aria-labelledby="os-pickup-title">
+                  <div className="os-panel-head">
+                    <span className="os-panel-icon">
+                      <Clock3 size={20} />
+                    </span>
+                    <div>
+                      <span className="os-eyebrow">04 / PICKUP PROMISE</span>
+                      <h2 id="os-pickup-title">Pickup scheduling.</h2>
+                      <p>Set the booking window guests can actually choose.</p>
+                    </div>
+                  </div>
+                  <div className="os-fields-two">
+                    {(
+                      [
+                        ["pickupLeadMinutes", "Minimum preparation time", 0, 240, "minutes"],
+                        ["pickupSlotMinutes", "Pickup slot interval", 5, 120, "minutes"],
+                        ["pickupAdvanceDays", "Advance booking window", 1, 30, "days"],
+                      ] as const
+                    ).map(([key, label, min, max, unit]) => (
+                      <label className="os-field" key={key}>
+                        <span>{label}</span>
+                        <input
+                          type="number"
+                          min={min}
+                          max={max}
+                          step={1}
+                          value={draft[key]}
+                          disabled={!canManage || busy}
+                          onChange={(event) => change(key, Number(event.target.value))}
+                        />
+                        <small>{unit} · validated again when the guest submits</small>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+              )}
               <div className="os-savebar">
                 <div>
                   <strong>

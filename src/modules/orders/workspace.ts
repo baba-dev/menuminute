@@ -113,6 +113,7 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
     customerName: row.customerName,
     customerPhone: row.customerPhone,
     fulfillmentMode: row.fulfillmentMode,
+    requestedFulfillmentAt: row.requestedFulfillmentAt?.toISOString() ?? null,
     status: row.status,
     paymentStatus: row.paymentStatus,
     currency: row.currency,

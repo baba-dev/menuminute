@@ -56,9 +56,34 @@ describe("Online Ordering Contracts & Validation", () => {
     expect(() =>
       orderSubmissionSchema.parse({
         clientSubmissionKey: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        items: [{ dishId: "d1", quantity: 100 }],
+        items: [{ dishId: "d1", quantity: 1000 }],
       })
     ).toThrow();
+  });
+
+  it("requires a scheduled instant for pickup and rejects it for dine-in", () => {
+    const base = {
+      clientSubmissionKey: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      quotedTotalMinor: 100,
+      items: [{ dishId: "d1", quantity: 1 }],
+    };
+    expect(orderSubmissionSchema.safeParse({ ...base, fulfillmentMode: "pickup" }).success).toBe(
+      false
+    );
+    expect(
+      orderSubmissionSchema.safeParse({
+        ...base,
+        fulfillmentMode: "pickup",
+        requestedFulfillmentAt: "2026-10-24T10:30:00.000Z",
+      }).success
+    ).toBe(true);
+    expect(
+      orderSubmissionSchema.safeParse({
+        ...base,
+        fulfillmentMode: "dine_in",
+        requestedFulfillmentAt: "2026-10-24T10:30:00.000Z",
+      }).success
+    ).toBe(false);
   });
 
   it("validates order transition state schemas", () => {

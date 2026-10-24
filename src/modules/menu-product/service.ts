@@ -193,6 +193,9 @@ export type PublicProduct = {
     timezone: string;
     outletType: string;
     fulfillmentModes: string[];
+    pickupLeadMinutes?: number;
+    pickupSlotMinutes?: number;
+    pickupAdvanceDays?: number;
     isDemoData: boolean;
     versioned: boolean;
   };
@@ -213,14 +216,26 @@ export async function publicProduct(token: string): Promise<PublicProduct | null
     data: PublicProduct | null;
     fingerprint: string | null;
     ordering_enabled: boolean;
+    pickup_settings: {
+      leadMinutes: number;
+      slotMinutes: number;
+      advanceDays: number;
+    } | null;
   }>(
-    "with p as (select app_private.free_menu_public($1) as data) select data, md5((data->'menus')::text) as fingerprint, app_private.public_ordering_enabled($1) as ordering_enabled from p",
+    `with p as (select app_private.free_menu_public($1) as data)
+     select data, md5((data->'menus')::text) as fingerprint,
+       app_private.public_ordering_enabled($1) as ordering_enabled,
+       app_private.public_pickup_settings($1) as pickup_settings
+     from p`,
     [token]
   );
   const data = r.rows[0]?.data;
   if (data) {
     data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
     data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
+    data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
+    data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
+    data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
   }
   if (!data) return null;
   if (!data.outlet.versioned) {

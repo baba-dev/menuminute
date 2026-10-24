@@ -33,6 +33,9 @@ export const outletProfileFieldsSchema = z
     postalCode: optional(24),
     primaryColor: color,
     secondaryColor: color,
+    pickupLeadMinutes: z.number().int().min(0).max(240),
+    pickupSlotMinutes: z.number().int().min(5).max(120),
+    pickupAdvanceDays: z.number().int().min(1).max(30),
   })
   .strict();
 export const outletProfileCommandSchema = z
@@ -55,6 +58,9 @@ export function editableOutletProfile(row: typeof restaurants.$inferSelect): Out
     postalCode: row.postalCode,
     primaryColor: row.primaryColor || "#f97316",
     secondaryColor: row.secondaryColor || "#1c1917",
+    pickupLeadMinutes: row.pickupLeadMinutes,
+    pickupSlotMinutes: row.pickupSlotMinutes,
+    pickupAdvanceDays: row.pickupAdvanceDays,
   };
 }
 export async function canManageOutletProfile(actor: Actor, outletId: string) {

@@ -15,6 +15,12 @@ export const authServer = betterAuth({
   appName: "MenuMinute",
   baseURL: env.APP_URL,
   secret: env.AUTH_SECRET,
+  user: {
+    additionalFields: {
+      termsVersion: { type: "string", required: true, input: true },
+      termsAcceptedAt: { type: "date", required: true, input: true },
+    },
+  },
   trustedOrigins: [new URL(env.APP_URL).origin],
   database: drizzleAdapter(getDb(), {
     provider: "pg",

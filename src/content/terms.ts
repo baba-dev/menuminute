@@ -1,6 +1,5 @@
 /**
- * TERMS OF SERVICE — DRAFT FOR LEGAL AND OPERATIONS REVIEW (19 October 2026).
- * Not in force; release conditions: docs/legal/README.md.
+ * TERMS OF SERVICE — effective 24 October 2026.
  * Keep reviewed copy aligned with /privacy, /delete-account and actual billing UX.
  */
 export type TermsSection = {
@@ -14,9 +13,9 @@ export const termsSections: TermsSection[] = [
     id: "operator",
     title: "1. Who provides MenuMinute; agreement and scope",
     paragraphs: [
-      "MenuMinute is provided by BabaBuilds, a sole proprietorship based in Pilani, Rajasthan, India (“BabaBuilds”, “MenuMinute”, “we”, “us” or “our”). You can contact us at admin@bababuilds.com. These draft Terms describe intended conditions for our website, merchant dashboard, published QR menu service, any enabled restaurant ordering and kitchen functions, progressive web app, and future native applications (together, the “Service”). This is not yet an effective published agreement.",
-      "When finalized and presented through an appropriate acceptance process, the Terms will apply to persons using the Service in their relevant capacity: a merchant or business acting through its authorized representative (“Merchant”), its authorized account holders and staff (“Users”), and diners or visitors using participating restaurants' public pages (“Guests”). A Merchant representative who accepts on behalf of an organization confirms that they are authorized to bind it. If you do not agree to applicable final Terms, do not register for or use the functions that require acceptance.",
-      "Any separately agreed written enterprise contract or expressly identified product-specific terms will control to the extent of a direct conflict for their stated scope. A posted draft or unaccepted future update is not a substitute for the required sign-up, merchant-onboarding or other legally appropriate acceptance mechanism.",
+      "MenuMinute is provided by BabaBuilds, a sole proprietorship based in Pilani, Rajasthan, India (“BabaBuilds”, “MenuMinute”, “we”, “us” or “our”). You can contact us at admin@bababuilds.com. These Terms govern our website, merchant dashboard, published QR menu service, any enabled restaurant ordering and kitchen functions, progressive web app, and future native applications (together, the “Service”).",
+      "These Terms apply to persons using the Service in their relevant capacity: a merchant or business acting through its authorized representative (“Merchant”), its authorized account holders and staff (“Users”), and diners or visitors using participating restaurants' public pages (“Guests”). A Merchant representative who accepts on behalf of an organization confirms that they are authorized to bind it. If you do not agree, do not register for or use the functions that require acceptance.",
+      "Any separately agreed written enterprise contract or expressly identified product-specific terms will control to the extent of a direct conflict for their stated scope. A future update applies only after the notice or renewed acceptance required by these Terms and applicable law.",
     ],
   },
   {
@@ -177,7 +176,7 @@ export const termsSections: TermsSection[] = [
     title: "19. Allocation and limits of liability",
     paragraphs: [
       "Each party remains responsible for its own acts and legally imposed obligations. We are not a guarantor of a Merchant's food preparation, fulfillment, business licensing or independent customer representations, nor of a Guest's misuse of another person's QR link or device. We are responsible for our own Service-related obligations to the extent imposed by these Terms and law.",
-      "To the maximum extent permitted by law, neither party is liable to the other for remote or unforeseeable indirect business losses, such as loss of prospective profits, arising solely from the Service, except where an exclusion is not legally effective. For a Merchant's ordinary contractual claim concerning a particular Service, BabaBuilds' aggregate liability is proposed to be capped at the greater of (a) the fees actually paid to BabaBuilds for that Service in the 12 months before the event giving rise to the claim, or (b) INR 5,000 (or applicable legally mandated minimum). This proposed commercial cap requires legal approval before publication.",
+      "To the maximum extent permitted by law, neither party is liable to the other for remote or unforeseeable indirect business losses, such as loss of prospective profits, arising solely from the Service, except where an exclusion is not legally effective. For a Merchant's ordinary contractual claim concerning a particular Service, BabaBuilds' aggregate liability is capped at the greater of (a) the fees actually paid to BabaBuilds for that Service in the 12 months before the event giving rise to the claim, or (b) INR 5,000, unless applicable law requires a higher amount or does not permit that limitation.",
       "The proposed cap and exclusions do not apply to liability that cannot lawfully be limited, including fraud, wilful misconduct, or legally non-excludable consumer, privacy, confidentiality, bodily injury, death or statutory obligations where applicable. No term limits a Guest's mandatory rights in relation to a food transaction or limits remedies required by applicable law.",
     ],
   },
