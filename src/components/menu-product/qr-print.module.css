@@ -1,2 +1,292 @@
 /* One real QR matrix in a format-specific physical design, independent of decorative artwork. */
-.printCanvas{display:grid;justify-items:center;gap:14px;max-width:100%;min-width:0}.sheet{box-sizing:border-box;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;width:var(--sheet-width);min-height:var(--sheet-height);padding:9mm 8mm 7mm;background:#fff9ed;color:#30251d;text-align:center;border:1px solid #d8bfa2;box-shadow:0 13px 31px #30251d2e;overflow:hidden;--accent:#bf4e1d;--soft:#fde7cf}.sheet[data-palette=ink]{background:#f7f0df;color:#19313b;--accent:#1c4350;--soft:#e1e8e5;border-color:#84979a}.sheet[data-palette=botanical]{background:#f4f0df;color:#283f2b;--accent:#426043;--soft:#e0e8d3;border-color:#a4b19a}.sheet::before{content:"";position:absolute;inset:4mm;border:1px solid var(--accent);opacity:.22;pointer-events:none}.ornament{font-size:11px;letter-spacing:.22em;color:var(--accent);font-weight:800;min-height:16px}.identity{display:grid;justify-items:center;gap:3px;max-width:100%}.kicker{font-size:9px;letter-spacing:.17em;color:var(--accent);font-weight:900}.sheet h3{margin:2px 0 0;font-size:23px;line-height:1.12;letter-spacing:-.035em;overflow-wrap:anywhere;max-width:100%;font-weight:850}.point{margin:0;font-size:11px;font-weight:750;color:var(--accent);overflow-wrap:anywhere}.matrixFrame{display:grid;place-items:center;flex:none;width:var(--matrix-size);height:var(--matrix-size);max-width:100%;background:white;padding:0}.matrix{display:block;width:100%;height:100%;object-fit:contain;background:white;image-rendering:pixelated}.invitation{display:grid;gap:5px;justify-items:center;max-width:100%}.invitation strong{font-size:14px;line-height:1.2;overflow-wrap:anywhere}.invitation p{font-size:10px;line-height:1.35;margin:0;overflow-wrap:anywhere}.fallbackUrl{font:8px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;margin:0;overflow-wrap:anywhere;max-width:100%;max-height:26px;overflow:hidden}.footer{min-height:20px;display:grid;place-items:center;width:100%;border-top:1px solid color-mix(in srgb,var(--accent),transparent 70%);padding-top:6px}.brand{display:flex;align-items:center;justify-content:center;gap:5px;font-size:9px;letter-spacing:.035em;font-weight:800;color:var(--accent)}.brand img{width:18px;height:18px}.previewCaption{font-size:11px;line-height:1.5;text-align:center;color:#5c4839}.sheet[data-format=stand] .ornament{font-size:13px}.sheet[data-format=stand] .identity{gap:5px}.sheet[data-format=stand] h3{font-size:27px}.sheet[data-format=stand] .invitation strong{font-size:17px}.sheet[data-format=stand] .invitation p{font-size:11px}.sheet[data-format=stand] .footer{padding-top:10px}.sheet[data-format=sticker]{padding:5mm;gap:3px;border-radius:3mm;--matrix-size:45mm}.sheet[data-format=sticker]::before{inset:2mm;border-radius:2mm}.sheet[data-format=sticker] .ornament{min-height:10px;font-size:10px}.sheet[data-format=sticker] .kicker{font-size:7px}.sheet[data-format=sticker] h3{font-size:16px}.sheet[data-format=sticker] .point{font-size:9px}.sheet[data-format=sticker] .invitation{gap:2px}.sheet[data-format=sticker] .invitation strong{font-size:11px}.sheet[data-format=sticker] .invitation p{display:none}.sheet[data-format=sticker] .brand{font-size:7px}.sheet[data-format=sticker] .brand img{height:12px;width:12px}.sheet[data-format=sticker] .footer{min-height:14px;padding-top:3px}.sheet[data-format=sticker] .fallbackUrl{font-size:6px;max-height:12px}.sheet[data-format=insert]{padding:7mm 6mm 6mm;gap:7px}.sheet[data-format=insert] h3{font-size:21px}.sheet[data-format=insert] .ornament{font-size:9px;letter-spacing:.08em}.sheet[data-format=insert] .invitation strong{font-size:14px}.sheet[data-format=insert] .invitation p{font-size:10px}.sheet[data-format=insert] .footer{padding-top:5px}@page{size:A4 portrait;margin:12mm}@media print{.printCanvas{display:none!important}.printCanvas[data-print-ready=true]{display:flex!important;position:fixed!important;z-index:2147483647!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;background:white!important}.printCanvas[data-print-ready=true],.printCanvas[data-print-ready=true] *{visibility:visible!important}.printCanvas[data-print-ready=true] .sheet{width:var(--sheet-width)!important;min-height:var(--sheet-height)!important;max-width:none!important;flex:none!important;box-shadow:none!important;break-inside:avoid!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.printCanvas .previewCaption{display:none!important}}@media screen and (max-width:600px){.sheet{zoom:.78}.sheet[data-format=sticker]{zoom:1}}
+.printCanvas {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 100%;
+  min-width: 0;
+}
+.sheet {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: var(--sheet-width);
+  min-height: var(--sheet-height);
+  padding: 9mm 8mm 7mm;
+  background: #fff9ed;
+  color: #30251d;
+  text-align: center;
+  border: 1px solid #d8bfa2;
+  box-shadow: 0 13px 31px #30251d2e;
+  overflow: hidden;
+  --accent: #bf4e1d;
+  --soft: #fde7cf;
+}
+.sheet[data-palette="ink"] {
+  background: #f7f0df;
+  color: #19313b;
+  --accent: #1c4350;
+  --soft: #e1e8e5;
+  border-color: #84979a;
+}
+.sheet[data-palette="botanical"] {
+  background: #f4f0df;
+  color: #283f2b;
+  --accent: #426043;
+  --soft: #e0e8d3;
+  border-color: #a4b19a;
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 4mm;
+  border: 1px solid var(--accent);
+  opacity: 0.22;
+  pointer-events: none;
+}
+.ornament {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  font-weight: 800;
+  min-height: 16px;
+}
+.identity {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  max-width: 100%;
+}
+.kicker {
+  font-size: 9px;
+  letter-spacing: 0.17em;
+  color: var(--accent);
+  font-weight: 900;
+}
+.sheet h3 {
+  margin: 2px 0 0;
+  font-size: 23px;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  font-weight: 850;
+}
+.point {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.matrixFrame {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--matrix-size);
+  height: var(--matrix-size);
+  max-width: 100%;
+  background: white;
+  padding: 0;
+}
+.matrix {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: white;
+  image-rendering: pixelated;
+}
+.invitation {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  max-width: 100%;
+}
+.invitation strong {
+  font-size: 14px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.invitation p {
+  font-size: 10px;
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fallbackUrl {
+  font:
+    8px/1.2 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  margin: 0;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  max-height: 26px;
+  overflow: hidden;
+}
+.footer {
+  min-height: 20px;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border-top: 1px solid color-mix(in srgb, var(--accent), transparent 70%);
+  padding-top: 6px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 9px;
+  letter-spacing: 0.035em;
+  font-weight: 800;
+  color: var(--accent);
+}
+.brand img {
+  width: 18px;
+  height: 18px;
+}
+.previewCaption {
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  color: #5c4839;
+}
+.sheet[data-format="stand"] .ornament {
+  font-size: 13px;
+}
+.sheet[data-format="stand"] .identity {
+  gap: 5px;
+}
+.sheet[data-format="stand"] h3 {
+  font-size: 27px;
+}
+.sheet[data-format="stand"] .invitation strong {
+  font-size: 17px;
+}
+.sheet[data-format="stand"] .invitation p {
+  font-size: 11px;
+}
+.sheet[data-format="stand"] .footer {
+  padding-top: 10px;
+}
+.sheet[data-format="sticker"] {
+  padding: 5mm;
+  gap: 3px;
+  border-radius: 3mm;
+  --matrix-size: 45mm;
+}
+.sheet[data-format="sticker"]::before {
+  inset: 2mm;
+  border-radius: 2mm;
+}
+.sheet[data-format="sticker"] .ornament {
+  min-height: 10px;
+  font-size: 10px;
+}
+.sheet[data-format="sticker"] .kicker {
+  font-size: 7px;
+}
+.sheet[data-format="sticker"] h3 {
+  font-size: 16px;
+}
+.sheet[data-format="sticker"] .point {
+  font-size: 9px;
+}
+.sheet[data-format="sticker"] .invitation {
+  gap: 2px;
+}
+.sheet[data-format="sticker"] .invitation strong {
+  font-size: 11px;
+}
+.sheet[data-format="sticker"] .invitation p {
+  display: none;
+}
+.sheet[data-format="sticker"] .brand {
+  font-size: 7px;
+}
+.sheet[data-format="sticker"] .brand img {
+  height: 12px;
+  width: 12px;
+}
+.sheet[data-format="sticker"] .footer {
+  min-height: 14px;
+  padding-top: 3px;
+}
+.sheet[data-format="sticker"] .fallbackUrl {
+  font-size: 6px;
+  max-height: 12px;
+}
+.sheet[data-format="insert"] {
+  padding: 7mm 6mm 6mm;
+  gap: 7px;
+}
+.sheet[data-format="insert"] h3 {
+  font-size: 21px;
+}
+.sheet[data-format="insert"] .ornament {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.sheet[data-format="insert"] .invitation strong {
+  font-size: 14px;
+}
+.sheet[data-format="insert"] .invitation p {
+  font-size: 10px;
+}
+.sheet[data-format="insert"] .footer {
+  padding-top: 5px;
+}
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+@media print {
+  .printCanvas {
+    display: none !important;
+  }
+  .printCanvas[data-print-ready="true"] {
+    display: flex !important;
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: white !important;
+  }
+  .printCanvas[data-print-ready="true"],
+  .printCanvas[data-print-ready="true"] * {
+    visibility: visible !important;
+  }
+  .printCanvas[data-print-ready="true"] .sheet {
+    width: var(--sheet-width) !important;
+    min-height: var(--sheet-height) !important;
+    max-width: none !important;
+    flex: none !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .printCanvas .previewCaption {
+    display: none !important;
+  }
+}
+@media screen and (max-width: 600px) {
+  .sheet {
+    zoom: 0.78;
+  }
+  .sheet[data-format="sticker"] {
+    zoom: 1;
+  }
+}

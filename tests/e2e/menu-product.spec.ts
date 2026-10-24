@@ -242,8 +242,12 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   const preview = atelier.getByLabel("Table Stand print preview");
   await expect(preview).toContainText("Table 4");
   await expect(preview.locator("[data-real-qr-matrix]")).toHaveJSProperty("complete", true);
-  await atelier.getByText("I reviewed the restaurant, table label and destination", { exact: false }).click();
-  await page.evaluate(() => { window.print = () => {}; });
+  await atelier
+    .getByText("I reviewed the restaurant, table label and destination", { exact: false })
+    .click();
+  await page.evaluate(() => {
+    window.print = () => {};
+  });
   await atelier.getByRole("button", { name: "Print / Save as PDF" }).click();
   await expect(preview).toHaveAttribute("data-print-ready", "true");
   await atelier.getByRole("button", { name: "Back to QR Library" }).click();
@@ -561,7 +565,9 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await atelier.getByRole("button", { name: /Menu Insert/ }).click();
   await expect(studio.getByLabel("Menu Insert print preview")).toBeVisible();
   await atelier.getByLabel("Guest invitation").fill("Discover today's menu");
-  await expect(atelier.getByLabel("Menu Insert print preview")).toContainText("Discover today's menu");
+  await expect(atelier.getByLabel("Menu Insert print preview")).toContainText(
+    "Discover today's menu"
+  );
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();

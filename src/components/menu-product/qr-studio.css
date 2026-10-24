@@ -852,11 +852,69 @@
 }
 
 /* QR Studio 3.0: two independent work areas, no full-sized print sheet in the QR detail column. */
-.qr-tab-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 27px;padding:7px;border:1px solid var(--qr-line);border-radius:17px;background:var(--qr-soft);scroll-margin-top:20px}
-.product.qr-studio .qr-tab-nav button{display:flex;justify-content:flex-start;align-items:center;gap:10px;min-width:0;min-height:60px;padding:12px 16px;border:1px solid transparent;background:transparent;border-radius:12px;color:var(--ink);font-weight:850;font-size:14px;text-align:left}
-.product.qr-studio .qr-tab-nav button span{margin-left:auto;font-size:11px;color:var(--muted);font-weight:550}
-.product.qr-studio .qr-tab-nav button[aria-current=page]{border-color:var(--qr-line);background:var(--paper);box-shadow:0 5px 16px #3c241011;color:var(--ember)}
-.qr-details{min-width:0}
-.product.qr-studio .qr-detail-actions .qr-design-action{background:var(--qr-soft);border-color:var(--ember);color:var(--ember)}
-@media(max-width:720px){.qr-tab-nav{gap:5px;padding:5px}.product.qr-studio .qr-tab-nav button{font-size:12px;min-height:55px;padding:9px}.product.qr-studio .qr-tab-nav button span{display:none}}
-@media print{.qr-tab-nav{display:none!important}}
+.qr-tab-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 27px;
+  padding: 7px;
+  border: 1px solid var(--qr-line);
+  border-radius: 17px;
+  background: var(--qr-soft);
+  scroll-margin-top: 20px;
+}
+.product.qr-studio .qr-tab-nav button {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 12px;
+  color: var(--ink);
+  font-weight: 850;
+  font-size: 14px;
+  text-align: left;
+}
+.product.qr-studio .qr-tab-nav button span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 550;
+}
+.product.qr-studio .qr-tab-nav button[aria-current="page"] {
+  border-color: var(--qr-line);
+  background: var(--paper);
+  box-shadow: 0 5px 16px #3c241011;
+  color: var(--ember);
+}
+.qr-details {
+  min-width: 0;
+}
+.product.qr-studio .qr-detail-actions .qr-design-action {
+  background: var(--qr-soft);
+  border-color: var(--ember);
+  color: var(--ember);
+}
+@media (max-width: 720px) {
+  .qr-tab-nav {
+    gap: 5px;
+    padding: 5px;
+  }
+  .product.qr-studio .qr-tab-nav button {
+    font-size: 12px;
+    min-height: 55px;
+    padding: 9px;
+  }
+  .product.qr-studio .qr-tab-nav button span {
+    display: none;
+  }
+}
+@media print {
+  .qr-tab-nav {
+    display: none !important;
+  }
+}

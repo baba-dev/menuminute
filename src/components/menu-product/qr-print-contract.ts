@@ -10,21 +10,25 @@ export type PrintDesign = {
   showBrand: boolean;
 };
 
-export const PRINT_FORMATS: Record<PrintFormat, {
-  name: string;
-  description: string;
-  widthMm: number;
-  heightMm: number;
-  qrMm: number;
-  guidance: string;
-}> = {
+export const PRINT_FORMATS: Record<
+  PrintFormat,
+  {
+    name: string;
+    description: string;
+    widthMm: number;
+    heightMm: number;
+    qrMm: number;
+    guidance: string;
+  }
+> = {
   stand: {
     name: "Table Stand",
     description: "A warm welcome for every table",
     widthMm: 110,
     heightMm: 145,
     qrMm: 58,
-    guidance: "Print at actual size on sturdy stock. Use a compatible stand or separately prepared folding mount.",
+    guidance:
+      "Print at actual size on sturdy stock. Use a compatible stand or separately prepared folding mount.",
   },
   sticker: {
     name: "Window / Counter Sticker",
@@ -57,5 +61,9 @@ export function normalizePrintCopy(value: string, max: number): string {
 }
 
 export function printableQr(codes: QR[], selectedId: string | null): QR | null {
-  return codes.find((qr) => qr.id === selectedId && qr.isActive) ?? codes.find((qr) => qr.isActive) ?? null;
+  return (
+    codes.find((qr) => qr.id === selectedId && qr.isActive) ??
+    codes.find((qr) => qr.isActive) ??
+    null
+  );
 }

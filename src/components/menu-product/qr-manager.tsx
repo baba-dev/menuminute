@@ -262,371 +262,399 @@ export function QrManager({
           <p role="status">{message}</p>
         </div>
         <nav id="qr-tab-navigation" className="qr-tab-nav" aria-label="QR workspace">
-          <button type="button" aria-current={tab === "library" ? "page" : undefined} onClick={() => setTab("library")}><QrCode size={18} aria-hidden="true" /> QR Library <span>Manage permanent destinations</span></button>
-          <button type="button" aria-current={tab === "print" ? "page" : undefined} onClick={openPrintStudio}><Printer size={18} aria-hidden="true" /> Print Studio <span>Design beautiful printed invitations</span></button>
+          <button
+            type="button"
+            aria-current={tab === "library" ? "page" : undefined}
+            onClick={() => setTab("library")}
+          >
+            <QrCode size={18} aria-hidden="true" /> QR Library{" "}
+            <span>Manage permanent destinations</span>
+          </button>
+          <button
+            type="button"
+            aria-current={tab === "print" ? "page" : undefined}
+            onClick={openPrintStudio}
+          >
+            <Printer size={18} aria-hidden="true" /> Print Studio{" "}
+            <span>Design beautiful printed invitations</span>
+          </button>
         </nav>
-        {tab === "library" && (<>
-        <section className="qr-overview" aria-label="QR inventory at a glance">
-          <div className="qr-heading">
-            <h2 className="qr-eyebrow">YOUR QR COLLECTION</h2>
-            <span>Current outlet · Verified inventory</span>
-          </div>
-          <div className="qr-metrics">
-            {[
-              {
-                label: "Active codes",
-                value: stats.active,
-                icon: QrCode,
-                help: "Currently usable permanent destination tokens.",
-              },
-              {
-                label: "Service points",
-                value: stats.servicePoints,
-                icon: MapPin,
-                help: "Active codes associated with a service point; this does not activate ordering.",
-              },
-              {
-                label: "Revoked codes",
-                value: stats.revoked,
-                icon: History,
-                help: "Retired destination tokens that cannot be downloaded or scanned.",
-              },
-              {
-                label: "Total codes",
-                value: stats.total,
-                icon: BookOpen,
-                help: "All codes for this outlet, including revoked entries. Not a scan count.",
-              },
-            ].map(({ label, value, icon: Icon, help }) => (
-              <div className="qr-metric" key={label}>
-                <div className="qr-metric-top">
-                  <span className="qr-metric-icon">
-                    <Icon size={20} aria-hidden="true" />
-                  </span>
-                  <strong>{label}</strong>
-                  <details>
-                    <summary aria-label={"About " + label}>
-                      <CircleHelp size={15} aria-hidden="true" />
-                    </summary>
-                    <p>{help}</p>
-                  </details>
-                </div>
-                <span className="qr-metric-value">{value.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="qr-create-section" id="qr-create" aria-labelledby="qr-create-title">
-          <div className="qr-create-head">
-            <div>
-              <span className="qr-eyebrow">MAKE A NEW CONNECTION</span>
-              <h2 id="qr-create-title">Create a permanent QR</h2>
-              <p>
-                Label it for your staff. Add an optional service-point label for a table or counter.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="qr-outline"
-              aria-expanded={showCreate}
-              aria-controls="qr-create-fields"
-              onClick={() => setShowCreate((v) => !v)}
-            >
-              {showCreate ? "Close creator" : "Open creator"}
-            </button>
-          </div>
-          {showCreate && (
-            <form
-              id="qr-create-fields"
-              className="qr-create-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const cleanLabel = label.trim(),
-                  cleanPoint = pointLabel.trim();
-                if (!cleanLabel) return;
-                void command("create", {
-                  label: cleanLabel,
-                  ...(cleanPoint ? { pointLabel: cleanPoint } : {}),
-                });
-              }}
-            >
-              <div className="qr-create-grid">
-                <label className="field">
-                  QR label{" "}
-                  <input
-                    name="label"
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    required
-                    maxLength={80}
-                    placeholder="Front counter menu"
-                  />
-                </label>
-                <label className="field">
-                  Table / counter label (optional){" "}
-                  <input
-                    ref={pointRef}
-                    name="pointLabel"
-                    value={pointLabel}
-                    onChange={(e) => setPointLabel(e.target.value)}
-                    maxLength={80}
-                    placeholder="Table 4"
-                  />
-                </label>
-              </div>
-              <div className="qr-create-bottom">
-                <p>
-                  A service-point label provides guest context. It does not enable ordering or prove
-                  physical presence.
-                </p>
-                <button className="ember" disabled={busy || !label.trim()} type="submit">
-                  <Plus size={17} aria-hidden="true" /> Create QR code
-                </button>
-              </div>
-            </form>
-          )}
-        </section>
-
-        {codes.length === 0 ? (
-          <section className="qr-empty" aria-labelledby="qr-empty-heading">
-            <Image src={art + "first-qr-empty-illustration.webp"} width={350} height={300} alt="" />
-            <div>
-              <span className="qr-eyebrow">YOUR FIRST PRINTED CONNECTION</span>
-              <h2 id="qr-empty-heading">Your table is ready. Let guests find you.</h2>
-              <p>
-                Create a permanent code above, print it, and keep updating your menu without
-                changing the printed link.
-              </p>
-            </div>
-          </section>
-        ) : (
-          <div className="qr-workspace">
-            <section className="qr-library" aria-labelledby="qr-library-heading">
+        {tab === "library" && (
+          <>
+            <section className="qr-overview" aria-label="QR inventory at a glance">
               <div className="qr-heading">
-                <h2 id="qr-library-heading">Your QR library</h2>
+                <h2 className="qr-eyebrow">YOUR QR COLLECTION</h2>
+                <span>Current outlet · Verified inventory</span>
+              </div>
+              <div className="qr-metrics">
+                {[
+                  {
+                    label: "Active codes",
+                    value: stats.active,
+                    icon: QrCode,
+                    help: "Currently usable permanent destination tokens.",
+                  },
+                  {
+                    label: "Service points",
+                    value: stats.servicePoints,
+                    icon: MapPin,
+                    help: "Active codes associated with a service point; this does not activate ordering.",
+                  },
+                  {
+                    label: "Revoked codes",
+                    value: stats.revoked,
+                    icon: History,
+                    help: "Retired destination tokens that cannot be downloaded or scanned.",
+                  },
+                  {
+                    label: "Total codes",
+                    value: stats.total,
+                    icon: BookOpen,
+                    help: "All codes for this outlet, including revoked entries. Not a scan count.",
+                  },
+                ].map(({ label, value, icon: Icon, help }) => (
+                  <div className="qr-metric" key={label}>
+                    <div className="qr-metric-top">
+                      <span className="qr-metric-icon">
+                        <Icon size={20} aria-hidden="true" />
+                      </span>
+                      <strong>{label}</strong>
+                      <details>
+                        <summary aria-label={"About " + label}>
+                          <CircleHelp size={15} aria-hidden="true" />
+                        </summary>
+                        <p>{help}</p>
+                      </details>
+                    </div>
+                    <span className="qr-metric-value">{value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="qr-create-section" id="qr-create" aria-labelledby="qr-create-title">
+              <div className="qr-create-head">
+                <div>
+                  <span className="qr-eyebrow">MAKE A NEW CONNECTION</span>
+                  <h2 id="qr-create-title">Create a permanent QR</h2>
+                  <p>
+                    Label it for your staff. Add an optional service-point label for a table or
+                    counter.
+                  </p>
+                </div>
                 <button
                   type="button"
-                  onClick={() => void sync()}
-                  disabled={busy}
-                  aria-label="Refresh QR library"
+                  className="qr-outline"
+                  aria-expanded={showCreate}
+                  aria-controls="qr-create-fields"
+                  onClick={() => setShowCreate((v) => !v)}
                 >
-                  <RefreshCw size={17} aria-hidden="true" />
+                  {showCreate ? "Close creator" : "Open creator"}
                 </button>
               </div>
-              <label className="qr-search">
-                <Search size={17} aria-hidden="true" />
-                <span className="sr-only">Search QR labels</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setShown(pageSize);
+              {showCreate && (
+                <form
+                  id="qr-create-fields"
+                  className="qr-create-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const cleanLabel = label.trim(),
+                      cleanPoint = pointLabel.trim();
+                    if (!cleanLabel) return;
+                    void command("create", {
+                      label: cleanLabel,
+                      ...(cleanPoint ? { pointLabel: cleanPoint } : {}),
+                    });
                   }}
-                  placeholder="Find a code by label"
-                />
-              </label>
-              <div className="qr-filter" role="group" aria-label="Filter QR status">
-                {(["active", "revoked", "all"] as const).map((value) => (
-                  <button
-                    type="button"
-                    key={value}
-                    aria-pressed={filter === value}
-                    onClick={() => {
-                      setFilter(value);
-                      setShown(pageSize);
-                    }}
-                  >
-                    {value === "all" ? "All codes" : value === "active" ? "Active" : "Revoked"}
-                  </button>
-                ))}
-              </div>
-              <ul className="qr-list">
-                {visible.slice(0, shown).map((q) => (
-                  <li key={q.id}>
-                    <button
-                      type="button"
-                      aria-current={selectedId === q.id ? "true" : undefined}
-                      onClick={() => selectCode(q.id)}
-                    >
-                      <span className="qr-list-icon">
-                        <QrCode size={20} aria-hidden="true" />
-                      </span>
-                      <span className="qr-list-name">
-                        <strong>{q.label ?? "Menu QR"}</strong>
-                        <small>
-                          {q.tableId ? (q.pointLabel ?? "Service-point QR") : "Menu QR"} ·{" "}
-                          {q.isActive ? "Active" : "Revoked"}
-                        </small>
-                      </span>
-                      <ChevronRight size={17} aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {!visible.length && (
-                <p className="qr-no-results">
-                  No matching codes. Try another label or status filter.
-                </p>
-              )}
-              {visible.length > shown && (
-                <button
-                  type="button"
-                  className="qr-outline qr-load"
-                  onClick={() => setShown((n) => n + pageSize)}
                 >
-                  Show more ({visible.length - shown} remaining)
-                </button>
+                  <div className="qr-create-grid">
+                    <label className="field">
+                      QR label{" "}
+                      <input
+                        name="label"
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value)}
+                        required
+                        maxLength={80}
+                        placeholder="Front counter menu"
+                      />
+                    </label>
+                    <label className="field">
+                      Table / counter label (optional){" "}
+                      <input
+                        ref={pointRef}
+                        name="pointLabel"
+                        value={pointLabel}
+                        onChange={(e) => setPointLabel(e.target.value)}
+                        maxLength={80}
+                        placeholder="Table 4"
+                      />
+                    </label>
+                  </div>
+                  <div className="qr-create-bottom">
+                    <p>
+                      A service-point label provides guest context. It does not enable ordering or
+                      prove physical presence.
+                    </p>
+                    <button className="ember" disabled={busy || !label.trim()} type="submit">
+                      <Plus size={17} aria-hidden="true" /> Create QR code
+                    </button>
+                  </div>
+                </form>
               )}
             </section>
-            <div className="qr-details">
-              {selected ? (
-                <section
-                  className="qr-selected"
-                  ref={detailRef}
-                  tabIndex={-1}
-                  data-qr-active={selected.isActive}
-                  aria-labelledby="qr-selected-title"
-                >
-                  <div className="qr-selected-heading">
-                    <div>
-                      <span className="qr-eyebrow">SELECTED QR</span>
-                      <h2 id="qr-selected-title">{selected.label ?? "Menu QR"}</h2>
-                    </div>
-                    <span className={"qr-pill" + (selected.isActive ? " is-active" : "")}>
-                      {selected.isActive ? "Active" : "Revoked"}
-                    </span>
+
+            {codes.length === 0 ? (
+              <section className="qr-empty" aria-labelledby="qr-empty-heading">
+                <Image
+                  src={art + "first-qr-empty-illustration.webp"}
+                  width={350}
+                  height={300}
+                  alt=""
+                />
+                <div>
+                  <span className="qr-eyebrow">YOUR FIRST PRINTED CONNECTION</span>
+                  <h2 id="qr-empty-heading">Your table is ready. Let guests find you.</h2>
+                  <p>
+                    Create a permanent code above, print it, and keep updating your menu without
+                    changing the printed link.
+                  </p>
+                </div>
+              </section>
+            ) : (
+              <div className="qr-workspace">
+                <section className="qr-library" aria-labelledby="qr-library-heading">
+                  <div className="qr-heading">
+                    <h2 id="qr-library-heading">Your QR library</h2>
+                    <button
+                      type="button"
+                      onClick={() => void sync()}
+                      disabled={busy}
+                      aria-label="Refresh QR library"
+                    >
+                      <RefreshCw size={17} aria-hidden="true" />
+                    </button>
                   </div>
-                  {selected.isActive ? (
-                    <>
-                      <div className="qr-selected-inner">
-                        <div className="qr-matrix-frame">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={
-                              "/api/qr/" +
-                              encodeURIComponent(selected.id) +
-                              "/download?format=svg&inline=1"
-                            }
-                            width={260}
-                            height={260}
-                            alt={"Scannable QR for " + (selected.label ?? outletName)}
-                          />
-                          <small>Real scannable destination · Keep the quiet zone intact</small>
-                        </div>
-                        <p className="qr-selected-note">
-                          {selected.tableId
-                            ? selected.pointLabel
-                              ? "This QR serves " + selected.pointLabel + "."
-                              : "Service-point context is linked to this code."
-                            : "Permanent menu destination."}{" "}
-                          The printed QR stays valid after menu edits.
-                        </p>
-                      </div>
-                      <div className="qr-detail-actions">
-                        <a
-                          href={"/api/qr/" + encodeURIComponent(selected.id) + "/download"}
-                          className="qr-download"
+                  <label className="qr-search">
+                    <Search size={17} aria-hidden="true" />
+                    <span className="sr-only">Search QR labels</span>
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        setShown(pageSize);
+                      }}
+                      placeholder="Find a code by label"
+                    />
+                  </label>
+                  <div className="qr-filter" role="group" aria-label="Filter QR status">
+                    {(["active", "revoked", "all"] as const).map((value) => (
+                      <button
+                        type="button"
+                        key={value}
+                        aria-pressed={filter === value}
+                        onClick={() => {
+                          setFilter(value);
+                          setShown(pageSize);
+                        }}
+                      >
+                        {value === "all" ? "All codes" : value === "active" ? "Active" : "Revoked"}
+                      </button>
+                    ))}
+                  </div>
+                  <ul className="qr-list">
+                    {visible.slice(0, shown).map((q) => (
+                      <li key={q.id}>
+                        <button
+                          type="button"
+                          aria-current={selectedId === q.id ? "true" : undefined}
+                          onClick={() => selectCode(q.id)}
                         >
-                          <Download size={16} aria-hidden="true" /> Download PNG
-                        </a>
-                        <a
-                          href={
-                            "/api/qr/" + encodeURIComponent(selected.id) + "/download?format=svg"
-                          }
-                          className="qr-download"
-                        >
-                          <FileImage size={16} aria-hidden="true" /> Download SVG
-                        </a>
-                        <button type="button" className="qr-design-action" onClick={openPrintStudio}>
-                          <Printer size={16} aria-hidden="true" /> Design & Print
+                          <span className="qr-list-icon">
+                            <QrCode size={20} aria-hidden="true" />
+                          </span>
+                          <span className="qr-list-name">
+                            <strong>{q.label ?? "Menu QR"}</strong>
+                            <small>
+                              {q.tableId ? (q.pointLabel ?? "Service-point QR") : "Menu QR"} ·{" "}
+                              {q.isActive ? "Active" : "Revoked"}
+                            </small>
+                          </span>
+                          <ChevronRight size={17} aria-hidden="true" />
                         </button>
-                        <button type="button" onClick={() => void copyLink()}>
-                          <ClipboardCopy size={16} aria-hidden="true" /> Copy link
-                        </button>
-                        <a
-                          href={"/m/" + encodeURIComponent(selected.destinationToken)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink size={16} aria-hidden="true" /> Open destination
-                        </a>
-                      </div>
-                      <div className="qr-fallback">
-                        <span>Permanent fallback URL</span>
-                        <code>{selectedUrl}</code>
-                      </div>
-                      {canRevoke && (
-                        <details className="qr-danger">
-                          <summary>
-                            <ShieldAlert size={17} aria-hidden="true" /> Manage QR identity
-                          </summary>
-                          <p>
-                            These are destructive operations. Existing printed codes cannot be
-                            redirected after revocation. Regeneration creates a new QR and retires
-                            the old one; if this code is the canonical outlet destination, that
-                            public destination may also rotate.
-                          </p>
-                          <div>
-                            <button
-                              type="button"
-                              className="danger"
-                              disabled={busy}
-                              onClick={() => ask("revoke", selected)}
-                            >
-                              Revoke QR
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => ask("regenerate", selected)}
-                            >
-                              Regenerate QR
-                            </button>
-                          </div>
-                        </details>
-                      )}
-                    </>
-                  ) : (
-                    <div className="qr-revoked-message">
-                      <History size={28} aria-hidden="true" />
-                      <p>
-                        This code has been revoked. It cannot be scanned, downloaded or printed.
-                        Select another active QR or create a replacement.
-                      </p>
-                    </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {!visible.length && (
+                    <p className="qr-no-results">
+                      No matching codes. Try another label or status filter.
+                    </p>
+                  )}
+                  {visible.length > shown && (
+                    <button
+                      type="button"
+                      className="qr-outline qr-load"
+                      onClick={() => setShown((n) => n + pageSize)}
+                    >
+                      Show more ({visible.length - shown} remaining)
+                    </button>
                   )}
                 </section>
-              ) : (
-                <section className="qr-selected">
-                  <p>Select a QR to preview its destination and print formats.</p>
-                </section>
-              )}
-            </div>
-          </div>
+                <div className="qr-details">
+                  {selected ? (
+                    <section
+                      className="qr-selected"
+                      ref={detailRef}
+                      tabIndex={-1}
+                      data-qr-active={selected.isActive}
+                      aria-labelledby="qr-selected-title"
+                    >
+                      <div className="qr-selected-heading">
+                        <div>
+                          <span className="qr-eyebrow">SELECTED QR</span>
+                          <h2 id="qr-selected-title">{selected.label ?? "Menu QR"}</h2>
+                        </div>
+                        <span className={"qr-pill" + (selected.isActive ? " is-active" : "")}>
+                          {selected.isActive ? "Active" : "Revoked"}
+                        </span>
+                      </div>
+                      {selected.isActive ? (
+                        <>
+                          <div className="qr-selected-inner">
+                            <div className="qr-matrix-frame">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={
+                                  "/api/qr/" +
+                                  encodeURIComponent(selected.id) +
+                                  "/download?format=svg&inline=1"
+                                }
+                                width={260}
+                                height={260}
+                                alt={"Scannable QR for " + (selected.label ?? outletName)}
+                              />
+                              <small>Real scannable destination · Keep the quiet zone intact</small>
+                            </div>
+                            <p className="qr-selected-note">
+                              {selected.tableId
+                                ? selected.pointLabel
+                                  ? "This QR serves " + selected.pointLabel + "."
+                                  : "Service-point context is linked to this code."
+                                : "Permanent menu destination."}{" "}
+                              The printed QR stays valid after menu edits.
+                            </p>
+                          </div>
+                          <div className="qr-detail-actions">
+                            <a
+                              href={"/api/qr/" + encodeURIComponent(selected.id) + "/download"}
+                              className="qr-download"
+                            >
+                              <Download size={16} aria-hidden="true" /> Download PNG
+                            </a>
+                            <a
+                              href={
+                                "/api/qr/" +
+                                encodeURIComponent(selected.id) +
+                                "/download?format=svg"
+                              }
+                              className="qr-download"
+                            >
+                              <FileImage size={16} aria-hidden="true" /> Download SVG
+                            </a>
+                            <button
+                              type="button"
+                              className="qr-design-action"
+                              onClick={openPrintStudio}
+                            >
+                              <Printer size={16} aria-hidden="true" /> Design & Print
+                            </button>
+                            <button type="button" onClick={() => void copyLink()}>
+                              <ClipboardCopy size={16} aria-hidden="true" /> Copy link
+                            </button>
+                            <a
+                              href={"/m/" + encodeURIComponent(selected.destinationToken)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink size={16} aria-hidden="true" /> Open destination
+                            </a>
+                          </div>
+                          <div className="qr-fallback">
+                            <span>Permanent fallback URL</span>
+                            <code>{selectedUrl}</code>
+                          </div>
+                          {canRevoke && (
+                            <details className="qr-danger">
+                              <summary>
+                                <ShieldAlert size={17} aria-hidden="true" /> Manage QR identity
+                              </summary>
+                              <p>
+                                These are destructive operations. Existing printed codes cannot be
+                                redirected after revocation. Regeneration creates a new QR and
+                                retires the old one; if this code is the canonical outlet
+                                destination, that public destination may also rotate.
+                              </p>
+                              <div>
+                                <button
+                                  type="button"
+                                  className="danger"
+                                  disabled={busy}
+                                  onClick={() => ask("revoke", selected)}
+                                >
+                                  Revoke QR
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => ask("regenerate", selected)}
+                                >
+                                  Regenerate QR
+                                </button>
+                              </div>
+                            </details>
+                          )}
+                        </>
+                      ) : (
+                        <div className="qr-revoked-message">
+                          <History size={28} aria-hidden="true" />
+                          <p>
+                            This code has been revoked. It cannot be scanned, downloaded or printed.
+                            Select another active QR or create a replacement.
+                          </p>
+                        </div>
+                      )}
+                    </section>
+                  ) : (
+                    <section className="qr-selected">
+                      <p>Select a QR to preview its destination and print formats.</p>
+                    </section>
+                  )}
+                </div>
+              </div>
+            )}
+            {message === "QR code created" && (
+              <section className="qr-celebration">
+                <Image src={art + "qr-creation-celebration.webp"} width={150} height={113} alt="" />
+                <div>
+                  <span className="qr-eyebrow">A NEW CONNECTION</span>
+                  <h2>Your QR is ready to serve.</h2>
+                  <p>
+                    The server confirmed creation. Download, print or share it from the selected
+                    workspace.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMessage("")}
+                  aria-label="Dismiss creation message"
+                >
+                  <X size={18} />
+                </button>
+              </section>
+            )}
+          </>
         )}
-        {message === "QR code created" && (
-          <section className="qr-celebration">
-            <Image src={art + "qr-creation-celebration.webp"} width={150} height={113} alt="" />
-            <div>
-              <span className="qr-eyebrow">A NEW CONNECTION</span>
-              <h2>Your QR is ready to serve.</h2>
-              <p>
-                The server confirmed creation. Download, print or share it from the selected
-                workspace.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMessage("")}
-              aria-label="Dismiss creation message"
-            >
-              <X size={18} />
-            </button>
-          </section>
-        )}
-        </>)}
         {tab === "print" && (
           <QrPrintStudio
             codes={codes}
