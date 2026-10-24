@@ -284,9 +284,17 @@
 }
 @media screen and (max-width: 600px) {
   .sheet {
-    zoom: 0.78;
+    zoom: 0.72;
   }
   .sheet[data-format="sticker"] {
-    zoom: 1;
+    zoom: 0.84;
+  }
+}
+@media screen and (max-width: 390px) {
+  .sheet {
+    zoom: 0.58;
+  }
+  .sheet[data-format="sticker"] {
+    zoom: 0.72;
   }
 }
