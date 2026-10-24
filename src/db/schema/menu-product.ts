@@ -7,6 +7,7 @@ import {
   timestamp,
   unique,
   foreignKey,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { organizations } from "./tenancy";
 import { restaurants } from "./restaurants";
@@ -44,6 +45,57 @@ export const menuReleases = pgTable(
     publishedAt: time("published_at").notNull().defaultNow(),
   },
   (t) => [unique("release_revision").on(t.menuId, t.revision)]
+);
+export const menuTranslations = pgTable(
+  "menu_translations",
+  {
+    organizationId: text("organization_id").notNull(),
+    menuId: text("menu_id")
+      .notNull()
+      .references(() => menus.id),
+    locale: text("locale").notNull(),
+    revision: integer("revision").notNull().default(1),
+    sourceRevision: integer("source_revision").notNull(),
+    document: jsonb("document").notNull(),
+    reviewedBy: text("reviewed_by").notNull(),
+    reviewedAt: time("reviewed_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.menuId, t.locale] }),
+    foreignKey({
+      columns: [t.organizationId, t.menuId],
+      foreignColumns: [menus.organizationId, menus.id],
+    }),
+    foreignKey({
+      columns: [t.menuId, t.sourceRevision],
+      foreignColumns: [menuReleases.menuId, menuReleases.revision],
+    }),
+  ]
+);
+export const menuTranslationRevisions = pgTable(
+  "menu_translation_revisions",
+  {
+    organizationId: text("organization_id").notNull(),
+    menuId: text("menu_id").notNull(),
+    locale: text("locale").notNull(),
+    revision: integer("revision").notNull(),
+    sourceRevision: integer("source_revision").notNull(),
+    document: jsonb("document").notNull(),
+    reviewedBy: text("reviewed_by").notNull(),
+    reviewedAt: time("reviewed_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.menuId, t.locale, t.revision] }),
+    foreignKey({
+      columns: [t.organizationId, t.menuId],
+      foreignColumns: [menus.organizationId, menus.id],
+    }),
+    foreignKey({
+      columns: [t.menuId, t.sourceRevision],
+      foreignColumns: [menuReleases.menuId, menuReleases.revision],
+    }),
+  ]
 );
 export const menuAssignments = pgTable(
   "menu_assignments",

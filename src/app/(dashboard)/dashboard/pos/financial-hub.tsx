@@ -122,6 +122,8 @@ export function FinancialHub({
     [movementReason, setMovementReason] = useState("");
   const [counted, setCounted] = useState(""),
     [refundReason, setRefundReason] = useState("");
+  const [refundLines, setRefundLines] = useState<Record<string, string>>({});
+  const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
   const [reconciliation, setReconciliation] = useState<{
     checkedAt: string;
@@ -157,7 +159,7 @@ export function FinancialHub({
     setPreview(null);
   }
   async function command(action: string, data: Record<string, unknown>) {
-    if (busy) return;
+    if (busy) return null;
     setBusy(true);
     setNotice("");
     const fingerprint = action + ":" + JSON.stringify(data);
@@ -171,6 +173,10 @@ export function FinancialHub({
         })
       );
       delete pending.current[fingerprint];
+      if (action === "provider_checkout" && typeof result.checkoutUrl === "string") {
+        window.location.assign(result.checkoutUrl);
+        return result;
+      }
       if (action === "freeze") setPreview(null);
       await refresh();
       setNotice(
@@ -178,15 +184,25 @@ export function FinancialHub({
           ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
           : action === "refund"
             ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
-            : action === "issue"
-              ? "Immutable document issued. Print or save from The Ledger."
-              : "Saved: " + JSON.stringify(result)
+            : action === "partial_refund"
+              ? result.state === "pending" || result.state === "pending_confirmation"
+                ? "Provider refund is pending confirmation. The credit remains reserved and is not shown as complete."
+                : "Line-level credit recorded with an immutable linked credit document."
+              : action === "deliver_document"
+                ? result.state === "sent"
+                  ? "Private document delivery confirmed by the configured mail transport."
+                  : "Document delivery is not confirmed. Reconcile its recorded state before retrying."
+                : action === "issue"
+                  ? "Immutable document issued. Print or save from The Ledger."
+                  : "Saved: " + JSON.stringify(result)
       );
+      return result;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to confirm this request.");
     } finally {
       setBusy(false);
     }
+    return null;
   }
   function setProfile(event: FormEvent) {
     event.preventDefault();
@@ -590,6 +606,24 @@ export function FinancialHub({
                     Each tender is independently recorded. Cash change is tracked separately;
                     external references are staff attestations, not provider-confirmed transactions.
                   </p>
+                  {selected.providerAttempts.length > 0 && (
+                    <div role="status" className="finance-evidence">
+                      <strong>Provider attempts</strong>
+                      {selected.providerAttempts.map((attempt) => (
+                        <span key={attempt.id}>
+                          {attempt.kind} · {attempt.state} · {money(attempt.amountMinor, currency)}
+                        </span>
+                      ))}
+                      {selected.providerAttempts.some((attempt) =>
+                        ["preparing", "pending", "uncertain"].includes(attempt.state)
+                      ) && (
+                        <small>
+                          Reconcile this attempt before starting another provider action. Refreshing
+                          this page does not lose its durable state.
+                        </small>
+                      )}
+                    </div>
+                  )}
                   <div className="finance-fields">
                     <label>
                       Open shift
@@ -669,6 +703,21 @@ export function FinancialHub({
                   >
                     Record tender (manual attestation)
                   </button>
+                  {finance.providerEnabled && finance.providerConfigured && (
+                    <button
+                      className="till-primary"
+                      disabled={!finance.canCollect || busy}
+                      onClick={() => void command("provider_checkout", { saleId: selected.saleId })}
+                    >
+                      Open provider-confirmed checkout
+                    </button>
+                  )}
+                  {finance.providerEnabled && !finance.providerConfigured && (
+                    <p role="status">
+                      The operator gate is open, but the server has no verified provider
+                      configuration.
+                    </p>
+                  )}
                 </section>
               )}
               {selected.documents.length > 0 && (
@@ -685,6 +734,31 @@ export function FinancialHub({
                       >
                         <Printer size={15} /> Print / save PDF
                       </Link>
+                      {finance.documentDeliveryEnabled && (
+                        <div className="finance-fields">
+                          <label>
+                            Private delivery email
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              value={deliveryEmail}
+                              onChange={(event) => setDeliveryEmail(event.target.value)}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            disabled={busy || !deliveryEmail.includes("@")}
+                            onClick={() =>
+                              void command("deliver_document", {
+                                documentId: d.id,
+                                email: deliveryEmail,
+                              })
+                            }
+                          >
+                            Deliver privately
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -719,7 +793,8 @@ export function FinancialHub({
                       !activeShift ||
                       refundReason.trim().length < 5 ||
                       busy ||
-                      selected.refunds.length > 0
+                      selected.refunds.length > 0 ||
+                      selected.tenders.some((t) => t.evidence === "provider_confirmed")
                     }
                     onClick={() => {
                       if (
@@ -737,6 +812,69 @@ export function FinancialHub({
                   >
                     Reverse full sale & create credit
                   </button>
+                  <div className="finance-flow">
+                    <h3>Partial line credit</h3>
+                    <p>
+                      Choose returned quantities. Tax and base amounts are allocated from the frozen
+                      source line, including deterministic rounding remainders.
+                    </p>
+                    {selected.bill.lines.map((line) => {
+                      const lineId = String(line.id);
+                      const quantity = Number(line.quantity);
+                      return (
+                        <label key={lineId}>
+                          {String(line.name)} · maximum {quantity}
+                          <input
+                            type="number"
+                            min="0"
+                            max={quantity}
+                            step="1"
+                            value={refundLines[lineId] ?? "0"}
+                            onChange={(event) =>
+                              setRefundLines((current) => ({
+                                ...current,
+                                [lineId]: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      disabled={
+                        busy ||
+                        !finance.canRefund ||
+                        refundReason.trim().length < 5 ||
+                        !Object.values(refundLines).some((value) => Number(value) > 0) ||
+                        (selected.tenders.some((t) => t.evidence === "provider_confirmed")
+                          ? !finance.providerEnabled || !finance.providerConfigured
+                          : !activeShift)
+                      }
+                      onClick={() => {
+                        const provider = selected.tenders.some(
+                          (t) => t.evidence === "provider_confirmed"
+                        );
+                        void command("partial_refund", {
+                          saleId: selected.saleId,
+                          mode: provider ? "stripe" : "staff_attested",
+                          shiftId: provider ? null : (activeShift?.id ?? null),
+                          reason: refundReason.trim(),
+                          externalRefundAttested: true,
+                          lines: Object.entries(refundLines)
+                            .filter(([, quantity]) => Number(quantity) > 0)
+                            .map(([lineId, quantity]) => ({
+                              lineId,
+                              quantity: Number(quantity),
+                            })),
+                        });
+                      }}
+                    >
+                      {selected.tenders.some((t) => t.evidence === "provider_confirmed")
+                        ? "Request provider refund"
+                        : "Record partial reversal"}
+                    </button>
+                  </div>
                 </div>
               )}
             </section>

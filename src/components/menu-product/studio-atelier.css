@@ -1173,3 +1173,34 @@
     border-color: var(--ember);
   }
 }
+/* Reviewed translations intentionally reuse the restrained editor field language. */
+.atelier-translation-section {
+  border: 1px solid var(--atelier-line, #d8c7b3);
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+}
+.atelier-translation-section > summary {
+  cursor: pointer;
+  font-weight: 800;
+  margin: -0.15rem 0;
+  padding: 0.25rem 0;
+}
+.atelier-translation-section[open] > summary {
+  margin-bottom: 1rem;
+}
+.atelier-translation-dish {
+  border-top: 1px solid var(--atelier-line, #d8c7b3);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.atelier-review-check {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.65rem;
+  font-weight: 700;
+}
+.atelier-review-check input {
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  width: 1.1rem;
+}

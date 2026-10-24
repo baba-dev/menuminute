@@ -6,7 +6,9 @@ import {
   menuDetail,
   publicProduct,
   qrCommand,
+  saveMenuTranslation,
 } from "../src/modules/menu-product/service";
+import { translationTemplate } from "../src/modules/menu-product/translations";
 import { menuDocumentSchema, availableNow } from "../src/modules/menu-product/contracts";
 import { projectMenu } from "../src/modules/menu-product/projector";
 import { withActor } from "../src/modules/tenancy/service";
@@ -103,6 +105,43 @@ it("keeps draft private, publishes immutable versions, retains QR through save/r
   expect(await publicProduct(f.outlet.publicId)).toBeNull();
   await command(f, id, "publish");
   expect(await publicProduct(f.outlet.publicId)).not.toBeNull();
+});
+it("publishes only human-reviewed translations for the exact immutable source revision", async () => {
+  const f = await fixture();
+  const id = await create(f);
+  await command(f, id, "publish");
+  const source = document();
+  const translated = translationTemplate(source);
+  translated.name = "दोपहर का भोजन";
+  translated.categories[0]!.name = "शुरुआत";
+  translated.categories[0]!.items[0]!.name = "पनीर थाली";
+  await saveMenuTranslation(f.actor, f.outlet.id, id, {
+    key: crypto.randomUUID(),
+    locale: "hi-in",
+    sourceRevision: 2,
+    expectedRevision: 0,
+    reviewConfirmed: true,
+    document: translated,
+  });
+  const localized = await publicProduct(f.outlet.publicId, "hi-IN");
+  expect(localized?.locale).toBe("hi-IN");
+  expect(localized?.availableLocales).toContain("hi-IN");
+  expect(localized?.menus[0]?.document.categories[0]?.items[0]?.name).toBe("पनीर थाली");
+  expect(localized?.menus[0]?.document.categories[0]?.items[0]?.priceMinor).toBe(12500);
+
+  const next = document();
+  next.categories[0]!.items[0]!.name = "Reviewed source revision";
+  await command(f, id, "save", { document: next });
+  // A draft does not make the reviewed translation stale for guests.
+  expect(
+    (await publicProduct(f.outlet.publicId, "hi-IN"))?.menus[0]?.document.categories[0]?.items[0]
+      ?.name
+  ).toBe("पनीर थाली");
+  await command(f, id, "publish");
+  const stale = await publicProduct(f.outlet.publicId, "hi-IN");
+  expect(stale?.locale).toBeNull();
+  expect(stale?.availableLocales).not.toContain("hi-IN");
+  expect(stale?.menus[0]?.document.categories[0]?.items[0]?.name).toBe("Reviewed source revision");
 });
 it("reconciles identical creation keys, rejects stale writers and checks current permission on retries", async () => {
   const f = await fixture();

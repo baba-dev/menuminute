@@ -22,6 +22,9 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN   | Optional Workers AI credentials                    |
 | PEXELS_API_KEY / RESEND_API_KEY                | Optional stock/email provider credentials          |
 | AI_FEATURES_ENABLED / IMAGE_GENERATION_ENABLED | Default off; quota and entitlement still required  |
+| POS_STRIPE_ENABLED                             | Default-off Stripe Checkout runtime gate           |
+| POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled            |
+| POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook     |
 
 Set explicit connection/request timeouts and pool/concurrency limits in validated configuration.
 Implementation may rename variables for SDK conventions, but must update the schema, examples,

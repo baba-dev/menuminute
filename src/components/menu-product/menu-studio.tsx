@@ -28,6 +28,7 @@ import {
 import type { menuDetail } from "@/modules/menu-product/service";
 import { PublicMenu } from "./public-menu";
 import { ScheduleEditor } from "./schedule-editor";
+import { TranslationEditor } from "./translation-editor";
 type Detail = Awaited<ReturnType<typeof menuDetail>>;
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
 const id = () => crypto.randomUUID();
@@ -623,27 +624,29 @@ export function MenuStudio({
             <div className="atelier-workspace studio-layout">
               <div className="atelier-editor stack">
                 <nav className="atelier-editor-tabs row" aria-label="Menu editor sections">
-                  {["dishes", "storefront", "schedule", "media", "assignments"].map((t) => (
-                    <button
-                      type="button"
-                      key={t}
-                      aria-pressed={tab === t}
-                      className={tab === t ? "ember" : ""}
-                      onClick={() => {
-                        if (t !== tab && form.current && !form.current.reportValidity()) {
-                          setError(
-                            "Check the highlighted fields before switching editor sections."
-                          );
-                          return;
-                        }
-                        setError("");
-                        setTab(t);
-                        if (t === "media") void run(refreshMedia);
-                      }}
-                    >
-                      {t[0]!.toUpperCase() + t.slice(1)}
-                    </button>
-                  ))}
+                  {["dishes", "storefront", "schedule", "translations", "media", "assignments"].map(
+                    (t) => (
+                      <button
+                        type="button"
+                        key={t}
+                        aria-pressed={tab === t}
+                        className={tab === t ? "ember" : ""}
+                        onClick={() => {
+                          if (t !== tab && form.current && !form.current.reportValidity()) {
+                            setError(
+                              "Check the highlighted fields before switching editor sections."
+                            );
+                            return;
+                          }
+                          setError("");
+                          setTab(t);
+                          if (t === "media") void run(refreshMedia);
+                        }}
+                      >
+                        {t[0]!.toUpperCase() + t.slice(1)}
+                      </button>
+                    )
+                  )}
                 </nav>
                 <form
                   key={`${detail.id}:${detail.revision}`}
@@ -661,11 +664,13 @@ export function MenuStudio({
                     className="stack"
                     style={{ minWidth: 0 }}
                   >
-                    <Field
-                      label="Menu name"
-                      value={doc.name}
-                      onChange={(name) => change({ ...doc, name })}
-                    />
+                    {tab !== "translations" && (
+                      <Field
+                        label="Menu name"
+                        value={doc.name}
+                        onChange={(name) => change({ ...doc, name })}
+                      />
+                    )}
                     {tab === "dishes" && (
                       <>
                         <div
@@ -1028,6 +1033,30 @@ export function MenuStudio({
                         />
                       </section>
                     )}
+                    {tab === "translations" &&
+                      detail.publishedRevision &&
+                      detail.publishedDocument && (
+                        <TranslationEditor
+                          key={`${detail.id}:${detail.publishedRevision}`}
+                          menuId={detail.id}
+                          outletId={outlet.id}
+                          sourceRevision={detail.publishedRevision}
+                          source={detail.publishedDocument}
+                          initial={detail.translations}
+                          disabled={busy || !detail.canWrite || detail.archived}
+                          onSaved={(translations) =>
+                            setDetail((current) =>
+                              current ? { ...current, translations } : current
+                            )
+                          }
+                        />
+                      )}
+                    {tab === "translations" &&
+                      (!detail.publishedRevision || !detail.publishedDocument) && (
+                        <p className="error">
+                          Publish the canonical menu before adding reviewed guest translations.
+                        </p>
+                      )}
                   </fieldset>
                 </form>
                 {tab === "media" && (

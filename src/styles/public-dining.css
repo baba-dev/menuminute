@@ -20,7 +20,7 @@
   --dc-ember: #ffc268;
   --dc-soft: #372920;
 }
-.dining-canvas :where(button, a, input):focus-visible {
+.dining-canvas :where(button, a, input, select):focus-visible {
   outline: 3px solid var(--dc-ember);
   outline-offset: 3px;
 }
@@ -181,6 +181,24 @@
   background: transparent;
   font-weight: 700;
   color: var(--dc-ember);
+}
+.dining-language {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: fit-content;
+  color: var(--dc-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.dining-language select {
+  min-height: 2.5rem;
+  max-width: min(17rem, 70vw);
+  border: 1px solid var(--dc-line);
+  border-radius: 999px;
+  background: var(--dc-surface);
+  color: var(--dc-ink);
+  padding: 0.45rem 2rem 0.45rem 0.8rem;
 }
 .dining-diets {
   display: flex;
