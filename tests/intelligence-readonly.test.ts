@@ -94,6 +94,11 @@ describe("Ember scoped persistence and read-only execution", () => {
         [attempt]
       );
       expect(state.rows[0]).toMatchObject({ status: "uncertain", input_tokens: null });
+      const daily = await pool.query(
+        "select conversations,turns from assistant_user_daily_budget where user_id=$1",
+        [first.actor.userId]
+      );
+      expect(daily.rows).toMatchObject([{ conversations: 1, turns: 3 }]);
       const rls = await pool.query(
         "select relname,relrowsecurity,relforcerowsecurity from pg_class where relname like 'assistant_%' and relkind='r' and relname<>'assistant_org_daily_budget'"
       );

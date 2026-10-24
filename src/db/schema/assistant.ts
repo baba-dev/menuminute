@@ -10,7 +10,6 @@ import {
   foreignKey,
   uuid,
 } from "drizzle-orm/pg-core";
-import { organizations } from "./tenancy";
 import { restaurants } from "./restaurants";
 import { users } from "./users";
 const time = (name: string) => timestamp(name, { withTimezone: true });
@@ -18,12 +17,8 @@ export const assistantConversations = pgTable(
   "assistant_conversations",
   {
     id: text("id").primaryKey(),
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organizations.id),
-    outletId: text("outlet_id")
-      .notNull()
-      .references(() => restaurants.id),
+    organizationId: text("organization_id").notNull(),
+    outletId: text("outlet_id").notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -33,7 +28,8 @@ export const assistantConversations = pgTable(
   },
   (t) => [
     unique("assistant_conversation_scope").on(t.id, t.organizationId, t.outletId, t.userId),
-    unique("assistant_conversation_request").on(t.userId, t.requestKey),
+    unique("assistant_conversation_request").on(t.userId, t.outletId, t.requestKey),
+    foreignKey({ columns: [t.organizationId, t.outletId], foreignColumns: [restaurants.organizationId, restaurants.id] }),
     index("assistant_conversations_owner").on(t.userId, t.outletId, t.createdAt),
   ]
 );

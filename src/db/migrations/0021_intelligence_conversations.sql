@@ -23,7 +23,7 @@ CREATE TABLE assistant_conversations (
  updated_at timestamptz NOT NULL DEFAULT now(),
  FOREIGN KEY(organization_id,outlet_id) REFERENCES restaurants(organization_id,id) ON DELETE RESTRICT,
  CONSTRAINT assistant_conversation_scope UNIQUE(id,organization_id,outlet_id,user_id),
- CONSTRAINT assistant_conversation_request UNIQUE(user_id,request_key)
+ CONSTRAINT assistant_conversation_request UNIQUE(user_id,outlet_id,request_key)
 );
 CREATE INDEX assistant_conversations_owner ON assistant_conversations(user_id,outlet_id,created_at DESC);
 CREATE TABLE assistant_turns (
@@ -109,3 +109,33 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.ai_reserve_org_budget(text,text,text) FROM PUBLIC,menuminute_worker;
 GRANT EXECUTE ON FUNCTION app_private.ai_reserve_org_budget(text,text,text) TO menuminute_app;
+
+-- Quota cannot be derived from a user's RLS-filtered view of just the active outlet.
+-- Keep a private cross-outlet user budget: atomic UTC-day reservations, no web SELECT privilege.
+CREATE TABLE assistant_user_daily_budget (
+ user_id text NOT NULL REFERENCES users(id),
+ day date NOT NULL,
+ conversations integer NOT NULL DEFAULT 0 CHECK(conversations BETWEEN 0 AND 12),
+ turns integer NOT NULL DEFAULT 0 CHECK(turns BETWEEN 0 AND 20),
+ PRIMARY KEY(user_id,day)
+);
+REVOKE ALL ON assistant_user_daily_budget FROM PUBLIC,menuminute_app,menuminute_worker;
+CREATE FUNCTION app_private.ai_reserve_user_budget(p_org text,p_outlet text,p_actor text,p_kind text)
+RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+ IF NOT app_private.ai_scope(p_org,p_outlet,p_actor) OR p_kind NOT IN ('conversation','turn') THEN RETURN false; END IF;
+ INSERT INTO assistant_user_daily_budget(user_id,day,conversations,turns)
+ VALUES(p_actor,(now() at time zone 'UTC')::date,
+        CASE WHEN p_kind='conversation' THEN 1 ELSE 0 END,
+        CASE WHEN p_kind='turn' THEN 1 ELSE 0 END)
+ ON CONFLICT(user_id,day) DO UPDATE
+ SET conversations=assistant_user_daily_budget.conversations+
+   CASE WHEN p_kind='conversation' THEN 1 ELSE 0 END,
+     turns=assistant_user_daily_budget.turns+
+   CASE WHEN p_kind='turn' THEN 1 ELSE 0 END
+ WHERE (p_kind='conversation' AND assistant_user_daily_budget.conversations<12)
+    OR (p_kind='turn' AND assistant_user_daily_budget.turns<20);
+ RETURN FOUND;
+END $$;
+REVOKE ALL ON FUNCTION app_private.ai_reserve_user_budget(text,text,text,text) FROM PUBLIC,menuminute_worker;
+GRANT EXECUTE ON FUNCTION app_private.ai_reserve_user_budget(text,text,text,text) TO menuminute_app;

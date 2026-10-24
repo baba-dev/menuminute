@@ -68,10 +68,10 @@ export async function createConversation(s: Scope, key: string) {
         throw new ConflictError("Request key reused");
       return row;
     }
-    const count = await tx.execute<{ total: number }>(
-      sql`select count(*)::int as total from assistant_conversations where user_id=${s.actor.userId} and created_at>=now()-interval '24 hours'`
+    const budget = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.ai_reserve_user_budget(${s.organizationId},${s.outletId},${s.actor.userId},'conversation') as allowed`
     );
-    if ((count.rows[0]?.total ?? 0) >= 12)
+    if (!budget.rows[0]?.allowed)
       throw new ForbiddenError("Daily assistant conversation limit reached");
     const r = await tx.execute<{
       id: string;
@@ -135,10 +135,10 @@ export async function beginTurn(s: Scope, id: string, raw: unknown) {
         throw new ConflictError("Request key reused with different prompt");
       return { created: false, turn: old.rows[0]! };
     }
-    const count = await tx.execute<{ total: number }>(
-      sql`select count(*)::int as total from assistant_turns where user_id=${s.actor.userId} and created_at>=now()-interval '24 hours'`
+    const budget = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.ai_reserve_user_budget(${s.organizationId},${s.outletId},${s.actor.userId},'turn') as allowed`
     );
-    if ((count.rows[0]?.total ?? 0) >= 20)
+    if (!budget.rows[0]?.allowed)
       throw new ForbiddenError("Daily assistant request limit reached");
     const active = await tx.execute(
       sql`select id from assistant_turns where conversation_id=${id} and status='processing' limit 1`
