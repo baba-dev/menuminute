@@ -22,6 +22,7 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("browser-password-123");
   await page.getByLabel("Confirm password").fill("browser-password-123");
+  await page.getByRole("checkbox", { name: /I agree to the/ }).check();
   await page.getByRole("button", { name: "Create free account" }).click();
   await expect(page).toHaveURL(/\/verify-email/);
   // Isolated synthetic browser account: simulate clicking the delivered verification link.

@@ -12,8 +12,7 @@ test("auth screens expose validated fields, legal links, theme switching and key
     "href",
     "/privacy"
   );
-  await expect(page.getByText(/draft, which is not yet effective/)).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: /I agree to the/ })).toHaveCount(0);
+  await expect(page.getByRole("checkbox", { name: /I agree to the/ })).toHaveCount(1);
   await page.getByRole("button", { name: "Create free account" }).click();
   await expect(page.getByRole("alert").first()).toBeVisible();
   const dark = page.getByRole("button", { name: "Switch to dark mode" });
