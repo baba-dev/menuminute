@@ -1,0 +1,48 @@
+{
+  "collection": "MenuMinute Organization 2.0 — The Hospitality House",
+  "version": 1,
+  "purpose": "Expected artwork specification for the manual upload to this draft PR. The binary assets are not included in the scaffold commit.",
+  "basePath": "/brand/organization/hospitality-house/",
+  "assets": [
+    {
+      "filename": "hero-desktop-light.webp",
+      "width": 2880,
+      "height": 900,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 388578,
+      "sha256": "c422dfe5fdb354690cbbfe9f4f086d125b2682415a3ee550de80d88f8b3871e1",
+      "usage": "Full-bleed desktop daylight editorial hero; preserve left text-safe area"
+    },
+    {
+      "filename": "hero-desktop-dark.webp",
+      "width": 2880,
+      "height": 900,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 395358,
+      "sha256": "abacbca10bbc95cd0c9836e0da368c49f81881d3dcf030b32e2e551575cd88f2",
+      "usage": "Full-bleed desktop evening editorial hero; preserve left text-safe area"
+    },
+    {
+      "filename": "hero-mobile-light.webp",
+      "width": 960,
+      "height": 1120,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 218348,
+      "sha256": "8a4451afbcc507e750fc0003f8bfb33066ad5ceea801e7114e544fcd49897bf1",
+      "usage": "Portrait daylight hero; preserve top text-safe area"
+    },
+    {
+      "filename": "hero-mobile-dark.webp",
+      "width": 960,
+      "height": 1120,
+      "format": "WebP",
+      "transparent": false,
+      "bytes": 220560,
+      "sha256": "aaa7bb602c7f00994a06ff420b2e4928302d571b29068866bc88535ce7697c53",
+      "usage": "Portrait evening hero; preserve top text-safe area"
+    }
+  ]
+}
