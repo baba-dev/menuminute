@@ -3,6 +3,14 @@ import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 
+// The normal production CI build deliberately keeps Ember disabled; its full flows run in
+// the separate, required, isolated Ember-enabled browser lane.
+test.skip(
+  process.env["AI_ASSISTANT_READ_ONLY_ENABLED"] !== "true" ||
+    process.env["AI_ASSISTANT_ACTIONS_ENABLED"] !== "true",
+  "Ember browser flows require the isolated enabled fixture"
+);
+
 async function seed() {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
