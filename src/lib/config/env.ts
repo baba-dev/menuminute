@@ -69,12 +69,12 @@ export const envSchema = z
         ctx.addIssue({ code: "custom", path: ["AI_ORCHESTRATOR_ENABLED"], message: "Enable an approved provider" });
       if (e.AI_NVIDIA_ENABLED &&
         (!e.AI_NVIDIA_COMMERCIAL_APPROVED || !e.NVIDIA_API_KEY || !e.AI_NVIDIA_MODEL ||
-          !/^[a-z0-9][a-z0-9._-]*(?:\\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_NVIDIA_MODEL)))
+          !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_NVIDIA_MODEL)))
         ctx.addIssue({ code: "custom", path: ["AI_NVIDIA_MODEL"], message: "Approved NVIDIA model, key and commercial entitlement required" });
       if (e.AI_CLOUDFLARE_ENABLED &&
         (!e.CLOUDFLARE_ACCOUNT_ID || !/^[a-f0-9]{32}$/i.test(e.CLOUDFLARE_ACCOUNT_ID) ||
           !e.CLOUDFLARE_API_TOKEN || !e.AI_CLOUDFLARE_MODEL ||
-          !/^@cf\\/[a-z0-9][a-z0-9._-]*(?:\\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_CLOUDFLARE_MODEL)))
+          !/^@cf\/[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_CLOUDFLARE_MODEL)))
         ctx.addIssue({ code: "custom", path: ["AI_CLOUDFLARE_MODEL"], message: "Configured Cloudflare Workers AI model/account/token required" });
     }
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
