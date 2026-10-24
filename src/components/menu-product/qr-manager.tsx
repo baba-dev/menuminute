@@ -240,7 +240,7 @@ export function QrManager({
               <Plus size={17} aria-hidden="true" /> Create QR
             </button>
             <button type="button" className="qr-secondary" onClick={openPrintStudio}>
-              <Printer size={17} aria-hidden="true" /> Print Studio
+              <Printer size={17} aria-hidden="true" /> Open Print Studio
             </button>
           </div>
         </div>
@@ -274,6 +274,7 @@ export function QrManager({
             type="button"
             aria-current={tab === "print" ? "page" : undefined}
             onClick={openPrintStudio}
+            aria-label="Print Studio"
           >
             <Printer size={18} aria-hidden="true" /> Print Studio{" "}
             <span>Design beautiful printed invitations</span>
