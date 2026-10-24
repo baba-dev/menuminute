@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
+import { PosNavigation } from "./pos-navigation";
 import type { Detail, FinanceContext, LedgerRow, ShiftRow } from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
@@ -260,8 +261,8 @@ export function FinancialHub({
     URL.revokeObjectURL(url);
   }
   return (
-    <main className="till-page finance-page">
-      <header className="till-heading">
+    <main className="till-page finance-page pos-editorial" data-testid="pos-finance">
+      <header className="till-heading pos-hero">
         <div>
           <span className="till-eyebrow">MENUMINUTE / POS OPERATIONS</span>
           <h1>{mode === "ledger" ? "The Ledger." : "The Closing Desk."}</h1>
@@ -290,7 +291,10 @@ export function FinancialHub({
             <RefreshCcw size={17} />
           </button>
         </div>
+        <span className="pos-hero-caption" aria-hidden="true">SERVICE, ACCURACY & ACCOUNTABILITY</span>
       </header>
+      <div className="pos-body">
+      <PosNavigation active={mode} />
       <div className="finance-status" role="status">
         {finance.paymentsEnabled ? <ShieldCheck size={18} /> : <LockKeyhole size={18} />}
         <strong>
@@ -1111,6 +1115,7 @@ export function FinancialHub({
           </section>
         </>
       )}
+      </div>
     </main>
   );
 }

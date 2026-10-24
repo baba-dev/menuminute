@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
+import { PosNavigation } from "./pos-navigation";
 
 type Menu = PosWorkspace["menus"][number];
 type Dish = Menu["categories"][number]["items"][number];
@@ -288,8 +289,8 @@ export function TheTill({
     }
   }
   return (
-    <main className="till-page">
-      <header className="till-heading">
+    <main className="till-page pos-editorial" data-testid="pos-till">
+      <header className="till-heading pos-hero">
         <div>
           <span className="till-eyebrow">MENUMINUTE / THE TILL</span>
           <h1>Service, meet settlement.</h1>
@@ -329,11 +330,46 @@ export function TheTill({
             </button>
           )}
         </div>
+        <span className="pos-hero-caption" aria-hidden="true">CRAFTED FOR THE COUNTER</span>
       </header>
+      <div className="pos-body">
+      <PosNavigation active="till" />
       <section className="till-status" aria-label="Financial status">
         <span>OUTLET · {workspace.context.outletName}</span>
         <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
         <span>TAX NOT CALCULATED · NO PAYMENT CAPTURE · NO INVOICE ISSUANCE</span>
+      </section>
+      <section className="pos-overview" aria-label="POS overview">
+        <div className="pos-section-header">
+          <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
+          <small>Current outlet · Operational snapshot</small>
+        </div>
+        <div className="pos-metrics">
+          <div className="pos-metric">
+            <ShoppingBasket aria-hidden="true" />
+            <span>Draft POS</span>
+            <strong>{workspace.context.enabled ? "Ready" : "Off"}</strong>
+            <small>Order recording only</small>
+          </div>
+          <div className="pos-metric">
+            <BookOpenText aria-hidden="true" />
+            <span>Published menus</span>
+            <strong>{workspace.menus.length}</strong>
+            <small>Available in this workspace</small>
+          </div>
+          <div className="pos-metric">
+            <ClipboardCheck aria-hidden="true" />
+            <span>Eligible tickets</span>
+            <strong>{workspace.attachable.length}</strong>
+            <small>Unpaid orders available to link</small>
+          </div>
+          <div className="pos-metric">
+            <ClipboardList aria-hidden="true" />
+            <span>Recent drafts</span>
+            <strong>{workspace.recent.length}</strong>
+            <small>Returned by the register</small>
+          </div>
+        </div>
       </section>
       {message && (
         <div role="alert" className="till-notice">
@@ -662,6 +698,7 @@ export function TheTill({
           {!workspace.recent.length && <p className="till-empty">The draft register is empty.</p>}
         </section>
       )}
+      </div>
       {dish && (
         <div className="till-modal-backdrop" role="presentation">
           <section
