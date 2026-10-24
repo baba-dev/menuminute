@@ -65,8 +65,11 @@ export const envSchema = z
   })
   .superRefine((e, ctx) => {
     if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
-      ctx.addIssue({code:"custom",path:["AI_ASSISTANT_ACTIONS_ENABLED"],
-        message:"Confirmed actions require enabled read-only Ember"});
+      ctx.addIssue({
+        code: "custom",
+        path: ["AI_ASSISTANT_ACTIONS_ENABLED"],
+        message: "Confirmed actions require enabled read-only Ember",
+      });
     if (
       e.AI_ASSISTANT_READ_ONLY_ENABLED &&
       (!e.AI_FEATURES_ENABLED ||

@@ -146,8 +146,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {children}
       </main>
       {restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED && (
-        <EmberLauncher key={restaurant.id} organizationId={restaurant.organizationId}
-          outletId={restaurant.id} outletName={restaurant.name} />
+        <EmberLauncher
+          key={restaurant.id}
+          organizationId={restaurant.organizationId}
+          outletId={restaurant.id}
+          outletName={restaurant.name}
+        />
       )}
     </div>
   );
