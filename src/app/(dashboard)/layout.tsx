@@ -23,6 +23,8 @@ import {
   getRestaurantsByUserId,
 } from "@/modules/restaurants/service";
 import "./workspace.css";
+import { env } from "@/lib/config/env";
+import { EmberLauncher } from "@/components/intelligence/ember-launcher";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -143,6 +145,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <WorkspaceTopbar userName={name} publicHref={publicHref} />
         {children}
       </main>
+      {restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED && (
+        <EmberLauncher key={restaurant.id} organizationId={restaurant.organizationId}
+          outletId={restaurant.id} outletName={restaurant.name} />
+      )}
     </div>
   );
 }
