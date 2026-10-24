@@ -25,8 +25,7 @@ import {
   preferredMenuQr,
 } from "@/modules/menu-product/dashboard-summary";
 import { DashboardTooltip } from "./dashboard-tooltip";
-import { servicePulse } from "@/modules/orders/workspace";
-import { ForbiddenError } from "@/lib/errors";
+import { optionalDashboardServicePulse } from "@/modules/menu-product/dashboard-optional-pulse";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -71,12 +70,9 @@ export default async function DashboardPage() {
     hasPublicMenu: stats.hasPublicMenu,
     hasActiveQr: stats.activeQrCount > 0,
   });
-  let operations: Awaited<ReturnType<typeof servicePulse>> | null = null;
-  try {
-    operations = await servicePulse(actor, outlet.organizationId, outlet.id);
-  } catch (error) {
-    if (!(error instanceof ForbiddenError)) throw error;
-  }
+  // Operational counters are optional. A failed order query must never hide the
+  // independent menu, publishing and QR workspace for this authorized outlet.
+  const operations = await optionalDashboardServicePulse(actor, outlet.organizationId, outlet.id);
   const publicHref =
     stats.hasPublicMenu && primaryQr
       ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
