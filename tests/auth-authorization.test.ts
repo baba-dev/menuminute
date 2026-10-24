@@ -4,6 +4,7 @@ import { admin } from "./helpers";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 import { drainAuthTestMessages } from "../src/lib/auth-email";
+import { TERMS_VERSION } from "../src/content/legal";
 async function request(path: string, body?: unknown, cookie?: string) {
   return authServer.handler(
     new Request(`http://localhost:3000/api/auth/${path}`, {
@@ -24,6 +25,8 @@ it("creates database sessions and revokes them without cached JWT authority", as
     name: "Owner",
     email,
     password: "test-password-123",
+    termsVersion: TERMS_VERSION,
+    termsAcceptedAt: new Date(),
   });
   expect(signup.status).toBe(200);
   expect(signup.headers.get("set-cookie")).toBeNull();
