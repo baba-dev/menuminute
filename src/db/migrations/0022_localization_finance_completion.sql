@@ -391,7 +391,7 @@ END $$;
 CREATE FUNCTION app_private.pos_finalize_credit(p_credit text,p_evidence text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE c pos_credit_groups%ROWTYPE;s pos_sales%ROWTYPE;b pos_bills%ROWTYPE;original pos_documents%ROWTYPE;
- r restaurants%ROWTYPE;year integer;serial integer;document_no text;document_id text;result jsonb;
+ r restaurants%ROWTYPE;year integer;serial integer;document_no text;v_document_id text;result jsonb;
  total_refunded bigint;
 BEGIN
  SELECT * INTO c FROM pos_credit_groups WHERE id=p_credit FOR UPDATE;
@@ -415,10 +415,10 @@ BEGIN
  VALUES(c.outlet_id,year,'credit_note',1) ON CONFLICT(outlet_id,fiscal_year,kind) DO UPDATE
  SET last_number=pos_document_sequences.last_number+1 RETURNING last_number INTO serial;
  document_no:='CREDIT-'||year::text||'-'||lpad(serial::text,6,'0');
- document_id:='doc-'||gen_random_uuid()::text;
+ v_document_id:='doc-'||gen_random_uuid()::text;
  INSERT INTO pos_documents(id,organization_id,outlet_id,sale_id,kind,fiscal_year,serial,
   document_number,source_document_id,snapshot,issued_by)
- VALUES(document_id,c.organization_id,c.outlet_id,c.sale_id,'credit_note',year,serial,document_no,
+ VALUES(v_document_id,c.organization_id,c.outlet_id,c.sale_id,'credit_note',year,serial,document_no,
   original.id,jsonb_build_object('reverses',original.document_number,'reason',c.reason,
   'creditLines',COALESCE((SELECT jsonb_agg(jsonb_build_object('lineId',line_id,'quantity',quantity,
     'baseMinor',base_minor::text,'taxMinor',tax_minor::text,'totalMinor',total_minor::text)
@@ -427,14 +427,14 @@ BEGIN
   'currency',b.currency,'evidence',p_evidence,
   'legalStatus','merchant_credit_document_review_required'),c.actor_id);
  UPDATE pos_credit_groups SET state=CASE p_evidence WHEN 'provider_confirmed' THEN 'provider_confirmed'
-  ELSE 'staff_recorded' END,document_id=document_id,completed_at=now() WHERE id=c.id;
+  ELSE 'staff_recorded' END,document_id=v_document_id,completed_at=now() WHERE id=c.id;
  SELECT COALESCE(sum(amount_minor),0) INTO total_refunded FROM pos_refunds
   WHERE outlet_id=c.outlet_id AND sale_id=c.sale_id;
  IF total_refunded=b.total_minor THEN
   UPDATE orders SET payment_status='voided',version=version+1,updated_at=clock_timestamp()
   WHERE id=s.order_id AND restaurant_id=c.outlet_id AND payment_status='paid';
  END IF;
- result:=jsonb_build_object('creditId',c.id,'documentId',document_id,'documentNumber',document_no,
+ result:=jsonb_build_object('creditId',c.id,'documentId',v_document_id,'documentNumber',document_no,
   'kind','credit_note','refundedMinor',c.amount_minor::text,
   'state',CASE p_evidence WHEN 'provider_confirmed' THEN 'provider_confirmed' ELSE 'staff_recorded' END);
  RETURN result;
@@ -448,7 +448,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $
 DECLARE r restaurants%ROWTYPE;g pos_finance_gates%ROWTYPE;s pos_sales%ROWTYPE;b pos_bills%ROWTYPE;
  original pos_documents%ROWTYPE;shift pos_shifts%ROWTYPE;prior pos_finance_commands%ROWTYPE;
  actor text:=NULLIF(current_setting('app.actor_id',true),'');cmd jsonb;result jsonb;
- credit_id text;attempt_id text;entry jsonb;source_line jsonb;line_id text;q integer;original_q integer;
+ credit_id text;attempt_id text;entry jsonb;source_line jsonb;v_line_id text;q integer;original_q integer;
  prior_q integer;base_amount bigint;tax_amount bigint;total_amount bigint;
  sum_base bigint:=0;sum_tax bigint:=0;sum_total bigint:=0;remaining bigint;available bigint;
  tender pos_tenders%ROWTYPE;payment_id text;mode text;refund_id text;
@@ -493,13 +493,13 @@ BEGIN
   tax_minor,reason,actor_id)
  VALUES(credit_id,r.organization_id,p_outlet,s.id,'prepared',1,0,0,btrim(p_data->>'reason'),actor);
  FOR entry IN SELECT value FROM jsonb_array_elements(p_data->'lines') LOOP
-  line_id:=entry->>'lineId';q:=(entry->>'quantity')::integer;
-  SELECT value INTO source_line FROM jsonb_array_elements(b.line_snapshot) WHERE value->>'id'=line_id;
+  v_line_id:=entry->>'lineId';q:=(entry->>'quantity')::integer;
+  SELECT value INTO source_line FROM jsonb_array_elements(b.line_snapshot) WHERE value->>'id'=v_line_id;
   IF source_line IS NULL OR q<=0 THEN RAISE EXCEPTION 'Unknown refund line' USING ERRCODE='22023'; END IF;
   original_q:=(source_line->>'quantity')::integer;
   SELECT COALESCE(sum(l.quantity),0) INTO prior_q FROM pos_credit_lines l
    JOIN pos_credit_groups c ON c.id=l.credit_id
-   WHERE l.outlet_id=p_outlet AND l.sale_id=s.id AND l.line_id=line_id AND c.state<>'failed';
+   WHERE l.outlet_id=p_outlet AND l.sale_id=s.id AND l.line_id=v_line_id AND c.state<>'failed';
   IF prior_q+q>original_q THEN RAISE EXCEPTION 'Refund quantity exceeds original line' USING ERRCODE='40001'; END IF;
   base_amount:=floor((source_line->>'baseMinor')::numeric*(prior_q+q)/original_q+0.5)::bigint-
    floor((source_line->>'baseMinor')::numeric*prior_q/original_q+0.5)::bigint;
@@ -511,7 +511,7 @@ BEGIN
    RAISE EXCEPTION 'Credit allocation cannot be reconciled' USING ERRCODE='22023';
   END IF;
   INSERT INTO pos_credit_lines(credit_id,outlet_id,sale_id,line_id,quantity,base_minor,tax_minor,total_minor)
-  VALUES(credit_id,p_outlet,s.id,line_id,q,base_amount,tax_amount,total_amount);
+  VALUES(credit_id,p_outlet,s.id,v_line_id,q,base_amount,tax_amount,total_amount);
   sum_base:=sum_base+base_amount;sum_tax:=sum_tax+tax_amount;sum_total:=sum_total+total_amount;
  END LOOP;
  IF sum_total<=0 OR sum_total>COALESCE((SELECT sum(t.amount_minor) FROM pos_tenders t WHERE t.sale_id=s.id),0)-
