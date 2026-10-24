@@ -78,8 +78,13 @@ describe("Ember proposals, atomic confirmation and restricted navigation", () =>
     const choices = await availabilityOptions(s.scope);
     expect(choices).toMatchObject([{ id: s.menuId, name: "Published lunch" }]);
     expect(choices[0]?.items.find((i) => i.id === "paneer")?.soldOut).toBe(false);
-    const key = id(),
-      p = await proposeAvailability(s.scope, input(s, key));
+    const key = id();
+    const simultaneous = await Promise.all([
+      proposeAvailability(s.scope, input(s, key)),
+      proposeAvailability(s.scope, input(s, key)),
+    ]);
+    expect(simultaneous[0]!.id).toBe(simultaneous[1]!.id);
+    const p = simultaneous[0]!;
     expect(p).toMatchObject({
       status: "pending",
       dishName: "Paneer Tikka",

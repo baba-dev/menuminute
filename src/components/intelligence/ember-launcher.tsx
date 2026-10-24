@@ -330,8 +330,9 @@ export function EmberLauncher({
     } catch (e) {
       setError(
         message(e) +
-          " The outcome is uncertain; reload this conversation before taking another action."
+          " The outcome is uncertain; review the durable proposal before taking another action."
       );
+      await loadHistory(conversationId).catch(() => undefined);
     } finally {
       setBusy(false);
     }

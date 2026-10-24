@@ -46,6 +46,8 @@ BEGIN
  THEN RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501'; END IF;
  IF NOT EXISTS(SELECT 1 FROM assistant_conversations WHERE id=p_conversation AND user_id=actor
    AND organization_id=p_org AND outlet_id=p_outlet) THEN RAISE EXCEPTION 'Conversation unavailable' USING ERRCODE='42501'; END IF;
+ -- Serialize across this actor's outlets: identical keys replay and quota cannot race.
+ PERFORM pg_advisory_xact_lock(hashtextextended('ai-proposals:'||actor,0));
  SELECT * INTO p FROM assistant_action_proposals WHERE user_id=actor AND outlet_id=p_outlet AND request_key=p_key;
  IF FOUND THEN
   IF p.organization_id<>p_org OR p.conversation_id<>p_conversation OR p.menu_id<>p_menu
@@ -77,6 +79,9 @@ BEGIN
  SELECT * INTO o FROM menu_overrides WHERE menu_id=p_menu AND outlet_id=p_outlet AND dish_id=p_dish;
  before_value:=coalesce(o.sold_out,(dish->>'soldOut')::boolean,false);
  IF before_value=p_sold_out THEN RAISE EXCEPTION 'Dish already has requested availability' USING ERRCODE='22023'; END IF;
+ IF (SELECT count(*) FROM assistant_action_proposals
+     WHERE user_id=actor AND created_at>=now()-interval '24 hours')>=30 THEN
+   RAISE EXCEPTION 'Assistant action preview limit reached' USING ERRCODE='22023'; END IF;
  menu_name:=left(m.document->>'name',100);
  INSERT INTO assistant_action_proposals(organization_id,outlet_id,user_id,conversation_id,request_key,
    menu_id,dish_id,dish_name,menu_name,previous_sold_out,desired_sold_out,expected_revision)
