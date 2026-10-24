@@ -37,5 +37,6 @@ Request: at most 48 messages, 8 defined tools, 8 tool calls, 4,096 output tokens
 `pnpm exec vitest run tests/intelligence-provider-hub.test.ts`, `pnpm typecheck`, `pnpm lint`, `pnpm build`. Tests inject `fetch`; no credentials or paid API calls are used. Final ARM64 CI and independent review are still required before merge. There is no migration or live activation in PR A. Rollback is reverting these new modules/config flags; existing importer is unaffected.
 
 Provider references (verify again at enablement):
+
 - NVIDIA: https://docs.api.nvidia.com/nim/reference/llm-apis
 - Cloudflare: https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/

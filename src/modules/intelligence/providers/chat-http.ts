@@ -1,36 +1,63 @@
 import { z } from "zod";
 import {
-  IntelligenceError, type InferenceRequest, type InferenceResult,
-  type ProviderModel, type ToolCall,
+  IntelligenceError,
+  type InferenceRequest,
+  type InferenceResult,
+  type ProviderModel,
+  type ToolCall,
 } from "../contracts";
 
 /** Same wire format, independent fixed NVIDIA / Cloudflare endpoints. No caller URLs. */
-const rawCompletion = z.object({
-  choices: z.array(z.object({
-    finish_reason: z.enum(["stop", "tool_calls", "length", "content_filter"]),
-    message: z.object({
-      content: z.string().max(120_000).nullable(),
-      tool_calls: z.array(z.object({
-        id: z.string().min(1).max(128),
-        type: z.literal("function"),
-        function: z.object({
-          name: z.string().min(1).max(64),
-          arguments: z.string().max(32_000),
-        }).passthrough(),
-      }).passthrough()).max(8).optional(),
-    }).passthrough(),
-  }).passthrough()).length(1),
-  usage: z.object({
-    prompt_tokens: z.number().int().nonnegative().nullable().optional(),
-    completion_tokens: z.number().int().nonnegative().nullable().optional(),
-    total_tokens: z.number().int().nonnegative().nullable().optional(),
-  }).passthrough().optional(),
-}).passthrough();
+const rawCompletion = z
+  .object({
+    choices: z
+      .array(
+        z
+          .object({
+            finish_reason: z.enum(["stop", "tool_calls", "length", "content_filter"]),
+            message: z
+              .object({
+                content: z.string().max(120_000).nullable(),
+                tool_calls: z
+                  .array(
+                    z
+                      .object({
+                        id: z.string().min(1).max(128),
+                        type: z.literal("function"),
+                        function: z
+                          .object({
+                            name: z.string().min(1).max(64),
+                            arguments: z.string().max(32_000),
+                          })
+                          .passthrough(),
+                      })
+                      .passthrough()
+                  )
+                  .max(8)
+                  .optional(),
+              })
+              .passthrough(),
+          })
+          .passthrough()
+      )
+      .length(1),
+    usage: z
+      .object({
+        prompt_tokens: z.number().int().nonnegative().nullable().optional(),
+        completion_tokens: z.number().int().nonnegative().nullable().optional(),
+        total_tokens: z.number().int().nonnegative().nullable().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
 
 function endpoint(model: ProviderModel) {
   if (model.provider === "nvidia") return "https://integrate.api.nvidia.com/v1/chat/completions";
   if (model.provider === "cloudflare" && model.accountId && /^[a-f0-9]{32}$/i.test(model.accountId))
-    return "https://api.cloudflare.com/client/v4/accounts/" + model.accountId + "/ai/v1/chat/completions";
+    return (
+      "https://api.cloudflare.com/client/v4/accounts/" + model.accountId + "/ai/v1/chat/completions"
+    );
   throw new IntelligenceError("not_configured");
 }
 
@@ -39,10 +66,17 @@ function toWireMessage(message: InferenceRequest["messages"][number]) {
     return { role: "tool", tool_call_id: message.toolCallId, content: message.content };
   if (message.role === "assistant")
     return {
-      role: "assistant", content: message.content,
-      ...(message.toolCalls.length ? { tool_calls: message.toolCalls.map((call) => ({
-        id: call.id, type: "function", function: { name: call.name, arguments: JSON.stringify(call.arguments) },
-      })) } : {}),
+      role: "assistant",
+      content: message.content,
+      ...(message.toolCalls.length
+        ? {
+            tool_calls: message.toolCalls.map((call) => ({
+              id: call.id,
+              type: "function",
+              function: { name: call.name, arguments: JSON.stringify(call.arguments) },
+            })),
+          }
+        : {}),
     };
   return { role: message.role, content: message.content };
 }
@@ -72,9 +106,15 @@ async function boundedJson(response: Response): Promise<unknown> {
   }
   const bytes = new Uint8Array(length);
   let position = 0;
-  for (const chunk of chunks) { bytes.set(chunk, position); position += chunk.length; }
-  try { return JSON.parse(new TextDecoder().decode(bytes)); }
-  catch { throw new IntelligenceError("invalid_response"); }
+  for (const chunk of chunks) {
+    bytes.set(chunk, position);
+    position += chunk.length;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    throw new IntelligenceError("invalid_response");
+  }
 }
 function normalize(raw: unknown, model: ProviderModel, input: InferenceRequest): InferenceResult {
   const parsed = rawCompletion.safeParse(raw);
@@ -84,17 +124,29 @@ function normalize(raw: unknown, model: ProviderModel, input: InferenceRequest):
   const permitted = new Set(input.tools.map((tool) => tool.name));
   const ids = new Set<string>();
   for (const candidate of choice.message.tool_calls ?? []) {
-    if (!model.supportsTools || input.capability !== "tools" || !permitted.has(candidate.function.name) || ids.has(candidate.id))
+    if (
+      !model.supportsTools ||
+      input.capability !== "tools" ||
+      !permitted.has(candidate.function.name) ||
+      ids.has(candidate.id)
+    )
       throw new IntelligenceError("invalid_response");
     ids.add(candidate.id);
     let args: unknown;
-    try { args = JSON.parse(candidate.function.arguments); }
-    catch { throw new IntelligenceError("invalid_response"); }
+    try {
+      args = JSON.parse(candidate.function.arguments);
+    } catch {
+      throw new IntelligenceError("invalid_response");
+    }
     if (!args || typeof args !== "object" || Array.isArray(args))
       throw new IntelligenceError("invalid_response");
-    calls.push({ id: candidate.id, name: candidate.function.name, arguments: args as Record<string, unknown> });
+    calls.push({
+      id: candidate.id,
+      name: candidate.function.name,
+      arguments: args as Record<string, unknown>,
+    });
   }
-  if ((choice.finish_reason === "tool_calls") !== (calls.length > 0))
+  if ((choice.finish_reason === "tool_calls") !== calls.length > 0)
     throw new IntelligenceError("invalid_response");
   if (choice.message.content === null && !calls.length && choice.finish_reason === "stop")
     throw new IntelligenceError("invalid_response");
@@ -113,9 +165,14 @@ function normalize(raw: unknown, model: ProviderModel, input: InferenceRequest):
   };
 }
 /** Single bounded non-streaming call. Never retries or fails over into a billable request. */
-export async function chatCompletion(model: ProviderModel, input: InferenceRequest, options: {
-  request?: typeof fetch; signal?: AbortSignal;
-} = {}): Promise<InferenceResult> {
+export async function chatCompletion(
+  model: ProviderModel,
+  input: InferenceRequest,
+  options: {
+    request?: typeof fetch;
+    signal?: AbortSignal;
+  } = {}
+): Promise<InferenceResult> {
   if (input.capability === "tools" && !model.supportsTools)
     throw new IntelligenceError("unsupported_capability");
   if (options.signal?.aborted) throw new IntelligenceError("cancelled");
@@ -125,26 +182,36 @@ export async function chatCompletion(model: ProviderModel, input: InferenceReque
   options.signal?.addEventListener("abort", onAbort, { once: true });
   try {
     const body = JSON.stringify({
-      model: model.model, stream: false,
+      model: model.model,
+      stream: false,
       messages: input.messages.map(toWireMessage),
       max_tokens: input.maxOutputTokens,
       temperature: input.temperature,
-      ...(input.capability === "tools" ? {
-        tools: input.tools.map((tool) => ({
-          type: "function", function: {
-            name: tool.name, description: tool.description, parameters: tool.parameters,
-          },
-        })),
-        tool_choice: "auto",
-      } : {}),
+      ...(input.capability === "tools"
+        ? {
+            tools: input.tools.map((tool) => ({
+              type: "function",
+              function: {
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.parameters,
+              },
+            })),
+            tool_choice: "auto",
+          }
+        : {}),
     });
     const response = await (options.request ?? fetch)(endpoint(model), {
       method: "POST",
       headers: {
         Authorization: "Bearer " + model.key,
-        "Content-Type": "application/json", Accept: "application/json",
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
-      body, cache: "no-store", redirect: "error", signal: controller.signal,
+      body,
+      cache: "no-store",
+      redirect: "error",
+      signal: controller.signal,
     });
     if (!response.ok) throw translateStatus(response.status);
     if (!response.headers.get("content-type")?.toLowerCase().includes("application/json"))
