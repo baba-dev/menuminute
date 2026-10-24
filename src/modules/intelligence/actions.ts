@@ -142,8 +142,11 @@ export async function availabilityOptions(s: Scope) {
         const d = menuDocumentSchema.safeParse(row.document);
         const draft = menuDocumentSchema.safeParse(row.draft);
         if (!d.success || !draft.success) return null;
-        const currentIds = new Set(draft.data.categories.filter(c => !c.archived).flatMap(c =>
-          c.items.filter(i => !i.archived).map(i => i.id)));
+        const currentIds = new Set(
+          draft.data.categories
+            .filter((c) => !c.archived)
+            .flatMap((c) => c.items.filter((i) => !i.archived).map((i) => i.id))
+        );
         const overrides = z
           .array(z.object({ dishId: identity, soldOut: z.boolean().nullable() }))
           .safeParse(row.overrides);
