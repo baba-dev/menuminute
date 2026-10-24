@@ -211,10 +211,67 @@ jobs:
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v
 
+  ember_browser:
+    name: Ember Enabled Browser (ARM64)
+    runs-on: ubuntu-24.04-arm
+    # Synthetic provider values; tests exercise real scoped SQL, never model inference.
+    env:
+      AI_FEATURES_ENABLED: "true"
+      AI_ORCHESTRATOR_ENABLED: "true"
+      AI_ASSISTANT_READ_ONLY_ENABLED: "true"
+      AI_ASSISTANT_ACTIONS_ENABLED: "true"
+      AI_CLOUDFLARE_ENABLED: "true"
+      AI_CLOUDFLARE_TOOLS_VERIFIED: "true"
+      AI_CLOUDFLARE_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      CLOUDFLARE_ACCOUNT_ID: "00000000000000000000000000000000"
+      CLOUDFLARE_API_TOKEN: "synthetic-browser-test-never-used"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: docker compose -f infra/compose.test.yml up -d --wait
+      - run: pnpm exec tsx scripts/test-bootstrap.ts
+        env:
+          NODE_ENV: test
+      - run: pnpm db:migrate
+      - name: Compile isolated Ember-enabled standalone browser fixture
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          APP_URL: https://food.bababuilds.com
+          NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
+          AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
+          EMAIL_PROVIDER: smtp
+          EMAIL_FROM: food@bababuilds.com
+          SMTP_HOST: mx.bababuilds.com
+          SMTP_PORT: "465"
+          SMTP_SECURE: "true"
+          SMTP_USER: food@bababuilds.com
+          SMTP_PASSWORD: synthetic-build-value-never-used
+          AUTH_ALLOW_TEST_EMAIL: "false"
+      - run: pnpm build:worker
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Exercise real Ember drawer, availability confirmation and outlet isolation
+        run: pnpm exec playwright test tests/e2e/ember.spec.ts
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ember-browser-failure-evidence
+          path: test-results/
+          retention-days: 7
+      - if: always()
+        run: docker compose -f infra/compose.test.yml down -v
+
   gate:
     name: Required CI quality gate
     if: always()
-    needs: [quality, typecheck, test, build]
+    needs: [quality, typecheck, test, build, ember_browser]
     runs-on: ubuntu-24.04
     steps:
       - name: Require all mandatory lanes
@@ -223,9 +280,10 @@ jobs:
           TYPECHECK: ${{ needs.typecheck.result }}
           TEST: ${{ needs.test.result }}
           BUILD: ${{ needs.build.result }}
+          EMBER_BROWSER: ${{ needs.ember_browser.result }}
         run: |
           set -euo pipefail
-          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD"; do
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$EMBER_BROWSER"; do
             test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
           done
-          echo "All four lanes passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "All five lanes (including isolated Ember browser) passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

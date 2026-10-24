@@ -54,6 +54,7 @@ export const envSchema = z
     // Ember provider hub: independent activation from the existing review-only import engine.
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
+    AI_ASSISTANT_ACTIONS_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_COMMERCIAL_APPROVED: strictBoolean.default(false),
     AI_NVIDIA_MODEL: z.string().max(128).optional(),
@@ -74,6 +75,12 @@ export const envSchema = z
       .optional(),
   })
   .superRefine((e, ctx) => {
+    if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["AI_ASSISTANT_ACTIONS_ENABLED"],
+        message: "Confirmed actions require enabled read-only Ember",
+      });
     if (
       e.AI_ASSISTANT_READ_ONLY_ENABLED &&
       (!e.AI_FEATURES_ENABLED ||

@@ -27,3 +27,4 @@ export * from "./continuity";
 export * from "./pos";
 
 export * from "./assistant";
+export * from "./assistant-actions";

@@ -8,10 +8,11 @@ const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml
 const packageScript = readFileSync(path.resolve("infra/deploy/package-release.sh"), "utf8");
 
 describe("provenance-bound main-only production delivery", () => {
-  it("parallelizes four mandatory CI lanes and fails closed at the final gate", () => {
+  it("parallelizes five mandatory CI lanes and fails closed at the final gate", () => {
     expect(ci).toContain("Required CI quality gate");
-    expect(ci).toContain("needs: [quality, typecheck, test, build]");
+    expect(ci).toContain("needs: [quality, typecheck, test, build, ember_browser]");
     expect(ci).toContain('test "$result" = success');
+    expect(ci).toContain("Ember Enabled Browser (ARM64)");
     expect(ci).not.toContain("needs: [quality, typecheck, test]\n");
     expect(ci).toContain("pnpm install --frozen-lockfile");
   });
