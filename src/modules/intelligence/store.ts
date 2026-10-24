@@ -138,8 +138,7 @@ export async function beginTurn(s: Scope, id: string, raw: unknown) {
     const budget = await tx.execute<{ allowed: boolean }>(
       sql`select app_private.ai_reserve_user_budget(${s.organizationId},${s.outletId},${s.actor.userId},'turn') as allowed`
     );
-    if (!budget.rows[0]?.allowed)
-      throw new ForbiddenError("Daily assistant request limit reached");
+    if (!budget.rows[0]?.allowed) throw new ForbiddenError("Daily assistant request limit reached");
     const active = await tx.execute(
       sql`select id from assistant_turns where conversation_id=${id} and status='processing' limit 1`
     );

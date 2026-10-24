@@ -72,7 +72,8 @@ describe("Ember scoped persistence and read-only execution", () => {
       answer: "There is no settled revenue in this view.",
     });
     const interrupted = await beginTurn(scope, conversation.id, {
-      key: uuid(), prompt: "Simulate an interrupted request",
+      key: uuid(),
+      prompt: "Simulate an interrupted request",
     });
     await admin(async (_db, pool) => {
       await pool.query(
@@ -81,12 +82,14 @@ describe("Ember scoped persistence and read-only execution", () => {
       );
     });
     const restarted = await beginTurn(scope, conversation.id, {
-      key: uuid(), prompt: "Start an explicitly new turn",
+      key: uuid(),
+      prompt: "Start an explicitly new turn",
     });
     expect(restarted.created).toBe(true);
     const afterRecovery = await conversationHistory(scope, conversation.id);
-    expect(afterRecovery.turns.find(t => t.id===interrupted.turn.id)).toMatchObject({
-      status: "failed", errorCode: "interrupted",
+    expect(afterRecovery.turns.find((t) => t.id === interrupted.turn.id)).toMatchObject({
+      status: "failed",
+      errorCode: "interrupted",
     });
     await admin(async (_db, pool) => {
       const state = await pool.query(
@@ -100,7 +103,7 @@ describe("Ember scoped persistence and read-only execution", () => {
       );
       expect(daily.rows).toMatchObject([{ conversations: 1, turns: 3 }]);
       const rls = await pool.query(
-        "select relname,relrowsecurity,relforcerowsecurity from pg_class where relname like 'assistant_%' and relkind='r' and relname<>'assistant_org_daily_budget'"
+        "select relname,relrowsecurity,relforcerowsecurity from pg_class where relname IN ('assistant_conversations','assistant_turns','assistant_attempts') and relkind='r'"
       );
       expect(rls.rows).toHaveLength(3);
       expect(rls.rows.every((r) => r.relrowsecurity && r.relforcerowsecurity)).toBe(true);

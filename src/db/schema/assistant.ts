@@ -29,7 +29,10 @@ export const assistantConversations = pgTable(
   (t) => [
     unique("assistant_conversation_scope").on(t.id, t.organizationId, t.outletId, t.userId),
     unique("assistant_conversation_request").on(t.userId, t.outletId, t.requestKey),
-    foreignKey({ columns: [t.organizationId, t.outletId], foreignColumns: [restaurants.organizationId, restaurants.id] }),
+    foreignKey({
+      columns: [t.organizationId, t.outletId],
+      foreignColumns: [restaurants.organizationId, restaurants.id],
+    }),
     index("assistant_conversations_owner").on(t.userId, t.outletId, t.createdAt),
   ]
 );
