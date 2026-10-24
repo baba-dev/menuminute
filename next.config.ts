@@ -64,6 +64,7 @@ const nextConfig: NextConfig = {
 
   // Experimental features
   experimental: {
+    agentUpgrade: "security",
     // Server Actions are stable in Next.js 14+
   },
 };
