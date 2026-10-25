@@ -225,7 +225,8 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   const f = await seed();
   await login(page, f.email, f.password);
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/dashboard/organization");
+  // The help control is within the role form; select the fixture with an eligible staff member.
+  await page.goto(`/dashboard/organization?organization=${encodeURIComponent(f.org)}`);
   await expect(page.getByRole("heading", { name: /Everything under one roof/ })).toBeVisible();
   await expect(page.locator(".oh-hero")).toHaveCSS(
     "background-image",
@@ -247,6 +248,7 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   );
 
   const help = page.getByRole("button", { name: "About outlet roles" });
+  await expect(help).toBeEnabled();
   await help.click();
   await expect(page.getByText(/Clearing them revokes that outlet access/)).toBeVisible();
   await page.keyboard.press("Escape");
