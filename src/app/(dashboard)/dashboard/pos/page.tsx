@@ -7,6 +7,7 @@ import { posWorkspace } from "@/modules/pos/service";
 import { ForbiddenError } from "@/lib/errors";
 import { TheTill } from "./the-till";
 import "./pos.css";
+import "./pos-editorial.css";
 
 export const metadata: Metadata = {
   title: "The Till | MenuMinute POS",

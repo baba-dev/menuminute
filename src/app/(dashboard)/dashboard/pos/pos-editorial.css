@@ -1,0 +1,550 @@
+/* POS editorial workspace: matches the Dashboard and Tabletop Press without changing finance behavior. */
+.mm-workspace-main:has(> .mm-shared-topbar + .till-page.pos-editorial) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.till-page.pos-editorial {
+  --pos-line: #e7dbcd;
+  --pos-soft: #faf3e9;
+  --pos-surface: #fffdf9;
+  --till-line: var(--pos-line);
+  --till-ink: var(--ink);
+  --till-ember: #b94e16;
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-dm), sans-serif;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial {
+  --pos-line: #514236;
+  --pos-soft: #31271f;
+  --pos-surface: #28231e;
+  --till-ink: var(--ink);
+  --till-ember: #ffc078;
+}
+
+.till-page.pos-editorial .pos-hero {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: clamp(335px, 28vw, 430px);
+  margin: 0;
+  padding: clamp(28px, 3.6vw, 55px);
+  background: #f4dbc1 url("/brand/qr-studio/tabletop-press/hero-desktop-light.webp") center right /
+    cover no-repeat;
+  color: #392319;
+}
+
+.till-page.pos-editorial .pos-hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(255 239 222 / 62%) 0%,
+    rgb(255 240 224 / 23%) 57%,
+    transparent 80%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero {
+  background-color: #211812;
+  background-image: url("/brand/qr-studio/tabletop-press/hero-desktop-dark.webp");
+  color: #fff1db;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero::before {
+  background: linear-gradient(
+    90deg,
+    rgb(28 17 12 / 75%) 0%,
+    rgb(28 17 12 / 28%) 62%,
+    transparent 83%
+  );
+}
+
+.till-page.pos-editorial .pos-hero > div:first-child {
+  max-width: 560px;
+}
+
+.till-page.pos-editorial .pos-hero .till-eyebrow {
+  color: #ab4410;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero .till-eyebrow {
+  color: #ffd092;
+}
+
+.till-page.pos-editorial .pos-hero h1 {
+  margin: 12px 0 15px;
+  max-width: 530px;
+  color: inherit;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(38px, 4.45vw, 65px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+}
+
+.till-page.pos-editorial .pos-hero p {
+  max-width: 440px;
+  margin: 0;
+  color: #624532;
+  font-size: 14px;
+  line-height: 1.58;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero p {
+  color: #f1d0ab;
+}
+
+.till-page.pos-editorial .pos-hero .till-heading-actions {
+  justify-content: flex-start;
+  max-width: 660px;
+  gap: 9px;
+  margin-top: 23px;
+}
+
+.till-page.pos-editorial .pos-hero .till-heading-actions a,
+.till-page.pos-editorial .pos-hero .till-heading-actions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 100px;
+  background: #44281d;
+  color: #fff9ed;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  opacity: 1;
+}
+
+.till-page.pos-editorial .pos-hero .till-heading-actions a:not(:first-child),
+.till-page.pos-editorial .pos-hero .till-heading-actions button {
+  border-color: #cda887;
+  background: rgb(255 250 241 / 88%);
+  color: #38271b;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero .till-heading-actions a {
+  background: #ffc16e;
+  color: #281600;
+}
+
+:root[data-theme="dark"]
+  .till-page.pos-editorial
+  .pos-hero
+  .till-heading-actions
+  a:not(:first-child),
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero .till-heading-actions button {
+  border-color: #8b6848;
+  background: #473020;
+  color: #ffecd2;
+}
+
+.till-page.pos-editorial .pos-hero-caption {
+  position: absolute;
+  right: 22px;
+  bottom: 15px;
+  color: #935226;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .pos-hero-caption {
+  color: #efbe85;
+}
+
+.pos-body {
+  width: 100%;
+  max-width: 1640px;
+  margin-inline: auto;
+  padding: 24px clamp(16px, 3vw, 44px) 75px;
+}
+
+.pos-page-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 27px;
+}
+
+.pos-page-nav a {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 17px 19px;
+  border: 1px solid var(--pos-line);
+  border-radius: 15px;
+  background: var(--pos-surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.pos-page-nav a[aria-current="page"] {
+  border-color: #ce865b;
+  background: var(--pos-soft);
+  box-shadow: inset 0 3px 0 #cf601e;
+}
+
+.pos-page-nav strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.pos-page-nav small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.pos-page-nav a:hover {
+  border-color: var(--till-ember);
+}
+
+.till-page.pos-editorial .till-status,
+.till-page.pos-editorial .finance-status {
+  justify-content: flex-start;
+  gap: 10px 18px;
+  margin: 0 0 26px;
+  padding: 14px 18px;
+  border: 1px solid var(--pos-line);
+  border-left: 3px solid #c5692a;
+  border-radius: 11px;
+  background: var(--pos-soft);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.till-page.pos-editorial .till-status strong,
+.till-page.pos-editorial .finance-status strong {
+  color: var(--till-ember);
+}
+
+.pos-overview {
+  margin-bottom: 29px;
+}
+
+.pos-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--pos-line);
+}
+
+.pos-section-header small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.pos-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 22px 0;
+  border-bottom: 1px solid var(--pos-line);
+}
+
+.pos-metric {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 7px;
+  padding: 0 clamp(9px, 1.6vw, 23px);
+  border-right: 1px solid var(--pos-line);
+}
+
+.pos-metric:first-child {
+  padding-left: 0;
+}
+.pos-metric:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.pos-metric svg {
+  width: 35px;
+  height: 35px;
+  padding: 8px;
+  border-radius: 11px;
+  background: #ffeadb;
+  color: #bd4d12;
+}
+
+:root[data-theme="dark"] .pos-metric svg {
+  background: #473021;
+  color: #ffc88e;
+}
+
+.pos-metric span {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.pos-metric strong {
+  overflow-wrap: anywhere;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(23px, 2.1vw, 32px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.pos-metric small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.till-page.pos-editorial .till-catalog,
+.till-page.pos-editorial .till-cart,
+.till-page.pos-editorial .till-recent,
+.till-page.pos-editorial .till-settings,
+.till-page.pos-editorial .finance-panel {
+  min-width: 0;
+  border: 1px solid var(--pos-line);
+  border-radius: 18px;
+  background: var(--pos-surface);
+  box-shadow: 0 8px 30px rgb(56 37 21 / 3%);
+}
+
+.till-page.pos-editorial .till-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 20px;
+}
+
+.till-page.pos-editorial .till-cart {
+  top: 22px;
+}
+
+.till-page.pos-editorial .till-sectionhead {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--pos-line);
+}
+
+.till-page.pos-editorial .till-sectionhead h2,
+.till-page.pos-editorial .till-settings h2,
+.till-page.pos-editorial .finance-panel h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(22px, 2vw, 28px);
+}
+
+.till-page.pos-editorial .till-eyebrow {
+  color: var(--till-ember);
+}
+
+.till-page.pos-editorial .till-dish {
+  min-height: 118px;
+  padding: 17px;
+  border-color: var(--pos-line);
+  border-radius: 13px;
+  background: var(--pos-soft);
+}
+
+.till-page.pos-editorial .till-dish:hover:not(:disabled) {
+  border-color: var(--till-ember);
+  box-shadow: 0 7px 18px rgb(93 51 23 / 9%);
+}
+
+.till-page.pos-editorial .till-categories button.active {
+  background: #4b2e20;
+  color: #fff8ef;
+}
+
+:root[data-theme="dark"] .till-page.pos-editorial .till-categories button.active {
+  background: #ffc16e;
+  color: #211600;
+}
+
+.till-page.pos-editorial .till-primary {
+  background: linear-gradient(125deg, #e75d1c, #d94b16 60%, #b93613);
+  color: white;
+  box-shadow: 0 5px 17px rgb(176 67 19 / 14%);
+}
+
+.till-page.pos-editorial .till-recent {
+  margin-top: 20px;
+}
+
+.till-page.pos-editorial .till-notice,
+.till-page.pos-editorial .till-success,
+.till-page.pos-editorial .finance-bill-total {
+  background: var(--pos-soft);
+}
+
+.till-page.pos-editorial .till-fields input,
+.till-page.pos-editorial .till-fields select,
+.till-page.pos-editorial .till-settings input,
+.till-page.pos-editorial .till-settings select,
+.till-page.pos-editorial .till-settings textarea,
+.till-page.pos-editorial .till-tools select,
+.till-page.pos-editorial .till-search,
+.till-page.pos-editorial .till-notefield textarea,
+.till-page.pos-editorial .finance-panel input,
+.till-page.pos-editorial .finance-panel select {
+  background: var(--paper);
+}
+
+.till-page.pos-editorial .finance-summary {
+  gap: 0;
+  padding: 19px 0 25px;
+  border-bottom: 1px solid var(--pos-line);
+}
+
+.till-page.pos-editorial .finance-summary > div {
+  min-height: 92px;
+  padding: 8px clamp(10px, 1.65vw, 24px);
+  border: 0;
+  border-right: 1px solid var(--pos-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.till-page.pos-editorial .finance-summary > div:first-child {
+  padding-left: 0;
+}
+.till-page.pos-editorial .finance-summary > div:last-child {
+  border-right: 0;
+}
+.till-page.pos-editorial .finance-summary strong {
+  font-family: var(--font-display), sans-serif;
+}
+
+.till-page.pos-editorial .finance-table th {
+  color: var(--muted);
+}
+
+.till-page.pos-editorial .finance-table tbody tr:hover {
+  background: var(--pos-soft);
+}
+
+.till-page.pos-editorial a:focus-visible,
+.till-page.pos-editorial button:focus-visible,
+.till-page.pos-editorial input:focus-visible,
+.till-page.pos-editorial select:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .till-page.pos-editorial .till-layout {
+    grid-template-columns: 1fr;
+  }
+  .till-page.pos-editorial .till-cart {
+    position: static;
+  }
+}
+
+@media (max-width: 780px) {
+  .pos-page-nav {
+    gap: 8px;
+  }
+  .pos-page-nav a {
+    padding: 13px 12px;
+  }
+  .pos-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 0;
+  }
+  .pos-metric:nth-child(2) {
+    border-right: 0;
+  }
+  .pos-metric:nth-child(3) {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .till-page.pos-editorial .pos-hero {
+    min-height: 400px;
+    padding: 27px 19px 48px;
+    background-image: url("/brand/qr-studio/tabletop-press/hero-mobile-light.webp");
+    background-position: center;
+  }
+  :root[data-theme="dark"] .till-page.pos-editorial .pos-hero {
+    background-image: url("/brand/qr-studio/tabletop-press/hero-mobile-dark.webp");
+  }
+  .till-page.pos-editorial .pos-hero::before {
+    background: linear-gradient(
+      90deg,
+      rgb(255 239 222 / 84%) 0%,
+      rgb(255 239 222 / 54%) 78%,
+      transparent
+    );
+  }
+  :root[data-theme="dark"] .till-page.pos-editorial .pos-hero::before {
+    background: linear-gradient(90deg, rgb(28 17 12 / 84%), rgb(28 17 12 / 55%) 80%, transparent);
+  }
+  .till-page.pos-editorial .pos-hero-caption {
+    right: 15px;
+    bottom: 12px;
+    font-size: 8px;
+  }
+  .pos-body {
+    padding: 17px 15px 50px;
+  }
+  .pos-page-nav {
+    grid-template-columns: 1fr;
+  }
+  .pos-page-nav a {
+    gap: 2px;
+    padding: 12px 14px;
+  }
+  .till-page.pos-editorial .pos-hero .till-heading-actions {
+    gap: 7px;
+  }
+  .till-page.pos-editorial .pos-hero .till-heading-actions a,
+  .till-page.pos-editorial .pos-hero .till-heading-actions button {
+    padding: 9px 13px;
+  }
+  .pos-section-header {
+    align-items: flex-start;
+  }
+  .pos-section-header small {
+    text-align: right;
+  }
+  .till-page.pos-editorial .finance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .till-page.pos-editorial .finance-summary > div:nth-child(2) {
+    border-right: 0;
+  }
+  .till-page.pos-editorial .finance-summary > div:nth-child(3) {
+    padding-left: 0;
+  }
+  .till-page.pos-editorial .till-dishes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .till-page.pos-editorial *,
+  .till-page.pos-editorial *::before,
+  .till-page.pos-editorial *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
