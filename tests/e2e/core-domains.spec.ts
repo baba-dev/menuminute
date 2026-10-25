@@ -177,8 +177,11 @@ test("organization switching ignores a late response from the previous organizat
     await gate;
     await route.fulfill({ response });
   });
-  // The delayed API response is intentional: do not wait for network completion on navigation.
-  await page.goto("/dashboard/organization", { waitUntil: "domcontentloaded" });
+  // Explicitly select the intercepted organization: the active-outlet preference may point
+  // at the other organization, making an implicit initial-request race indeterminate.
+  await page.goto(`/dashboard/organization?organization=${encodeURIComponent(f.org)}`, {
+    waitUntil: "domcontentloaded",
+  });
   await started;
   await page.getByLabel("Organization", { exact: true }).selectOption(f.otherOrg);
   await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Beta Domain");
