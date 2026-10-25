@@ -477,6 +477,9 @@ export function OrganizationManager({
                   setBilling(null);
                   setRetryMessage("");
                   setError("");
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("organization", e.target.value);
+                  window.history.replaceState(window.history.state, "", url.toString());
                   setSelected(e.target.value);
                 }}
               >

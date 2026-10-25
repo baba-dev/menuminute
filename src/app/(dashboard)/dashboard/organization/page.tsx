@@ -12,16 +12,24 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function OrganizationPage() {
+export default async function OrganizationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ organization?: string | string[] }>;
+}) {
+  const query = await searchParams;
+  const requestedOrganizationId =
+    typeof query.organization === "string" ? query.organization : undefined;
   const session = await auth();
   if (!session) redirect("/login");
   const [organizations, outlet] = await Promise.all([
     listOrganizations({ userId: session.user.id }),
     getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId),
   ]);
-  const initialOrganizationId = organizations.some((org) => org.id === outlet?.organizationId)
-    ? outlet?.organizationId
-    : undefined;
+  // Keep a validated Organization selection across reload, including suspension/recovery.
+  const initialOrganizationId =
+    organizations.find((org) => org.id === requestedOrganizationId)?.id ??
+    organizations.find((org) => org.id === outlet?.organizationId)?.id;
   return (
     <OrganizationManager
       organizations={organizations}
