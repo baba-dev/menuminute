@@ -8,9 +8,7 @@ import type { GrantActionResult } from "@/modules/admin/grant-feedback";
 
 function localDateTimeInput(date: Date) {
   // datetime-local expects wall-clock local time, not a UTC ISO timestamp.
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
 interface Plan {
