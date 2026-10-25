@@ -41,32 +41,42 @@ const expectedIllustrationNames = [
 
 describe("Hospitality House approved production artwork", () => {
   it("ships exactly the approved four hero files and twelve theme-paired illustrations", () => {
-    expect(readdirSync(root).filter((name) => /\.(png|webp)$/i.test(name)).sort()).toEqual(
-      [...expectedHeroNames].sort()
+    expect(
+      readdirSync(root)
+        .filter((name) => /\.(png|webp)$/i.test(name))
+        .sort()
+    ).toEqual([...expectedHeroNames].sort());
+    expect(
+      readdirSync(join(root, "illustrations"))
+        .filter((name) => /\.(png|webp)$/i.test(name))
+        .sort()
+    ).toEqual([...expectedIllustrationNames].sort());
+    expect(manifest.assets.map((asset) => asset.path).sort()).toEqual(
+      [
+        ...expectedHeroNames,
+        ...expectedIllustrationNames.map((name) => "illustrations/" + name),
+      ].sort()
     );
-    expect(readdirSync(join(root, "illustrations")).filter((name) => /\.(png|webp)$/i.test(name)).sort())
-      .toEqual([...expectedIllustrationNames].sort());
-    expect(manifest.assets.map((asset) => asset.path).sort()).toEqual([
-      ...expectedHeroNames,
-      ...expectedIllustrationNames.map((name) => "illustrations/" + name),
-    ].sort());
     expect(manifest.assets).toHaveLength(16);
   });
 
-  it.each(manifest.assets)("matches the approved source blob and verified dimensions: $path", async (asset) => {
-    const bytes = await readFile(join(root, asset.path));
-    const gitSha = createHash("sha1")
-      .update(Buffer.from("blob " + bytes.length + "\0"))
-      .update(bytes)
-      .digest("hex");
-    expect(bytes.length).toBe(asset.bytes);
-    expect(gitSha).toBe(asset.blobSha);
-    const metadata = await sharp(bytes).metadata();
-    expect(metadata.format).toBe(asset.format);
-    expect(metadata.width).toBe(asset.width);
-    expect(metadata.height).toBe(asset.height);
-    expect(metadata.hasAlpha).toBe(false);
-  });
+  it.each(manifest.assets)(
+    "matches the approved source blob and verified dimensions: $path",
+    async (asset) => {
+      const bytes = await readFile(join(root, asset.path));
+      const gitSha = createHash("sha1")
+        .update(Buffer.from("blob " + bytes.length + "\0"))
+        .update(bytes)
+        .digest("hex");
+      expect(bytes.length).toBe(asset.bytes);
+      expect(gitSha).toBe(asset.blobSha);
+      const metadata = await sharp(bytes).metadata();
+      expect(metadata.format).toBe(asset.format);
+      expect(metadata.width).toBe(asset.width);
+      expect(metadata.height).toBe(asset.height);
+      expect(metadata.hasAlpha).toBe(false);
+    }
+  );
 
   it("excludes superseded desktop/mobile WebPs and intermediate PNG sources", () => {
     for (const name of [

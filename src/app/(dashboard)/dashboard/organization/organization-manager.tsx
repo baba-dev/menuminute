@@ -205,48 +205,85 @@ function RoleGrantEditor({
   );
 }
 
-
-function BrandLinkEditor({ detail, disabled, send }: {
+function BrandLinkEditor({
+  detail,
+  disabled,
+  send,
+}: {
   detail: Detail;
   disabled: boolean;
   send: (action: string, data: Record<string, unknown>) => Promise<void>;
 }) {
   const [brandId, setBrandId] = useState(detail.brands[0]?.id ?? "");
   const [outletId, setOutletId] = useState(detail.outlets[0]?.id ?? "");
-  const exists = detail.links.some((link) => link.brandId === brandId && link.outletId === outletId);
+  const exists = detail.links.some(
+    (link) => link.brandId === brandId && link.outletId === outletId
+  );
   const pairKey = [brandId, outletId, exists ? "linked" : "unlinked"].join(":");
   const [draft, setDraft] = useState<{ key: string; linked: boolean } | null>(null);
   const linked = draft?.key === pairKey ? draft.linked : exists;
-  return <Form title="Brand outlets" button="Save brand link"
-    disabled={disabled || !brandId || !outletId}
-    onSave={(data) => send("brand.link", {
-      brandId: String(data.get("brandId")),
-      outletId: String(data.get("outletId")),
-      linked: data.get("linked") === "on",
-    })}>
-    <div className="oh-two">
-      <label className="oh-field">Brand
-        <select name="brandId" value={brandId} className="oh-control"
-          onChange={(event) => setBrandId(event.target.value)}>
-          {detail.brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-        </select>
+  return (
+    <Form
+      title="Brand outlets"
+      button="Save brand link"
+      disabled={disabled || !brandId || !outletId}
+      onSave={(data) =>
+        send("brand.link", {
+          brandId: String(data.get("brandId")),
+          outletId: String(data.get("outletId")),
+          linked: data.get("linked") === "on",
+        })
+      }
+    >
+      <div className="oh-two">
+        <label className="oh-field">
+          Brand
+          <select
+            name="brandId"
+            value={brandId}
+            className="oh-control"
+            onChange={(event) => setBrandId(event.target.value)}
+          >
+            {detail.brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>
+                {brand.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="oh-field">
+          Outlet
+          <select
+            name="outletId"
+            aria-label="Outlet"
+            className="oh-control"
+            value={outletId}
+            onChange={(event) => setOutletId(event.target.value)}
+          >
+            {detail.outlets.map((outlet) => (
+              <option key={outlet.id} value={outlet.id}>
+                {outlet.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label className="oh-link-choice">
+        <input
+          type="checkbox"
+          name="linked"
+          checked={linked}
+          onChange={(event) => setDraft({ key: pairKey, linked: event.target.checked })}
+        />
+        <span>Link brand to outlet</span>
       </label>
-      <label className="oh-field">Outlet
-        <select name="outletId" aria-label="Outlet" className="oh-control"
-          value={outletId} onChange={(event) => setOutletId(event.target.value)}>
-          {detail.outlets.map((outlet) => <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
-        </select>
-      </label>
-    </div>
-    <label className="oh-link-choice">
-      <input type="checkbox" name="linked" checked={linked}
-        onChange={(event) => setDraft({ key: pairKey, linked: event.target.checked })} />
-      <span>Link brand to outlet</span>
-    </label>
-    <p className="oh-hint">This pair is currently {exists ? "linked" : "not linked"}.
-      Saving will {linked ? "connect" : "disconnect"} the selected outlet.
-      {detail.links.length} links across {detail.brands.length} brands.</p>
-  </Form>;
+      <p className="oh-hint">
+        This pair is currently {exists ? "linked" : "not linked"}. Saving will{" "}
+        {linked ? "connect" : "disconnect"} the selected outlet.
+        {detail.links.length} links across {detail.brands.length} brands.
+      </p>
+    </Form>
+  );
 }
 
 export function OrganizationManager({ organizations }: { organizations: Organization[] }) {
@@ -324,7 +361,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";
   const [editingOutletId, setEditingOutletId] = useState("");
-  const editingOutlet = detail?.outlets.find((outlet) => outlet.id === editingOutletId) ?? detail?.outlets[0];
+  const editingOutlet =
+    detail?.outlets.find((outlet) => outlet.id === editingOutletId) ?? detail?.outlets[0];
   return (
     <div className="mm-organization" data-testid="hospitality-house">
       <header className="oh-hero">
@@ -532,25 +570,41 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       <div className="oh-edit-outlet">
                         <label className="oh-field">
                           Choose outlet to edit
-                          <select aria-label="Choose outlet to edit" className="oh-control"
-                            value={editingOutlet.id} onChange={(event) => setEditingOutletId(event.target.value)}>
-                            {detail.outlets.map((outlet) =>
-                              <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
+                          <select
+                            aria-label="Choose outlet to edit"
+                            className="oh-control"
+                            value={editingOutlet.id}
+                            onChange={(event) => setEditingOutletId(event.target.value)}
+                          >
+                            {detail.outlets.map((outlet) => (
+                              <option key={outlet.id} value={outlet.id}>
+                                {outlet.name}
+                              </option>
+                            ))}
                           </select>
                         </label>
-                        <Form key={selected + ":" + editingOutlet.id} title={"Settings: " + editingOutlet.name}
-                          button="Save outlet settings" disabled={!org.isActive}
-                          onSave={(form) => send("outlet.update", {
-                            outletId: editingOutlet.id,
-                            name: String(form.get("name")),
-                            country: String(form.get("country")),
-                            currency: String(form.get("currency")),
-                            timezone: String(form.get("timezone")),
-                            outletType: String(form.get("outletType")),
-                            fulfillmentModes: form.getAll("modes"),
-                          })}>
+                        <Form
+                          key={selected + ":" + editingOutlet.id}
+                          title={"Settings: " + editingOutlet.name}
+                          button="Save outlet settings"
+                          disabled={!org.isActive}
+                          onSave={(form) =>
+                            send("outlet.update", {
+                              outletId: editingOutlet.id,
+                              name: String(form.get("name")),
+                              country: String(form.get("country")),
+                              currency: String(form.get("currency")),
+                              timezone: String(form.get("timezone")),
+                              outletType: String(form.get("outletType")),
+                              fulfillmentModes: form.getAll("modes"),
+                            })
+                          }
+                        >
                           <OutletFields outlet={editingOutlet} />
-                          <p className="oh-hint">Changing currency with existing prices or orders requires a separate repricing workflow.</p>
+                          <p className="oh-hint">
+                            Changing currency with existing prices or orders requires a separate
+                            repricing workflow.
+                          </p>
                           <Link href="/dashboard/settings" className="oh-inline-link">
                             Public profile and guest-facing branding are managed in Outlet Atelier →
                           </Link>
@@ -639,7 +693,12 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     {canAdmin && (
                       <>
                         {" "}
-                        <BrandLinkEditor key={selected} detail={detail} disabled={!org.isActive} send={send} />
+                        <BrandLinkEditor
+                          key={selected}
+                          detail={detail}
+                          disabled={!org.isActive}
+                          send={send}
+                        />
                       </>
                     )}
                   </div>
