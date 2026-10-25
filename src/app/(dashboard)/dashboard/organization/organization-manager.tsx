@@ -13,6 +13,9 @@ import {
   Wallet,
   Activity,
   ShieldCheck,
+  QrCode,
+  ShoppingBag,
+  ChefHat,
 } from "lucide-react";
 import type { ReactNode } from "react";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
@@ -697,22 +700,36 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       disabled={!org.isActive}
                       send={send}
                     />
-                    <section className="oh-inset">
-                      <h2 className="oh-subtitle">People and outlet grants</h2>
-                      <ul className="mt-2 space-y-2 text-sm">
-                        {detail.members.map((m) => (
-                          <li key={m.id}>
-                            {m.name} · {m.email} · {m.role} · {m.isActive ? "active" : "revoked"}
-                            <ul>
-                              {detail.grants
-                                .filter((g) => g.memberId === m.id)
-                                .map((g) => (
-                                  <li key={g.outletId} className="oh-muted">
-                                    {detail.outlets.find((o) => o.id === g.outletId)?.name}:{" "}
-                                    {g.roles.join(", ")}
-                                  </li>
-                                ))}
-                            </ul>
+                    <section className="oh-people-directory" aria-label="People and outlet grants">
+                      <div className="oh-group-heading">
+                        <h2 className="oh-subtitle">People and outlet grants</h2>
+                        <p>Current organization membership and assigned restaurant responsibilities.</p>
+                      </div>
+                      <ul className="oh-person-grid">
+                        {detail.members.map((member) => (
+                          <li key={member.id} className="oh-person-card">
+                            <div className="oh-person-main">
+                              <span className="oh-person-avatar" aria-hidden="true">
+                                {(member.name || member.email).slice(0, 1).toUpperCase()}
+                              </span>
+                              <div>
+                                <strong>{member.name || member.email}</strong>
+                                <small>{member.email}</small>
+                              </div>
+                              <span className={"oh-role-badge " + (member.isActive ? "is-active" : "is-revoked")}>
+                                {member.role} · {member.isActive ? "Active" : "Revoked"}
+                              </span>
+                            </div>
+                            <div className="oh-person-grants">
+                              {detail.grants.filter((grant) => grant.memberId === member.id).length ? (
+                                detail.grants.filter((grant) => grant.memberId === member.id).map((grant) => (
+                                  <div className="oh-grant" key={grant.outletId}>
+                                    <span>{detail.outlets.find((outlet) => outlet.id === grant.outletId)?.name ?? "Outlet"}</span>
+                                    <small>{grant.roles.length ? grant.roles.map((role) => role.replaceAll("_", " ")).join(", ") : "No roles"}</small>
+                                  </div>
+                                ))
+                              ) : <p className="oh-hint">No outlet-specific grants.</p>}
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -798,6 +815,14 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                           Commercial plans and checkout are not available yet. Entitlement grants
                           use USD or INR billing independently of outlet currency.
                         </p>
+                        <div className="oh-capability-grid" aria-label="Live capabilities">
+                          <article className="oh-capability"><QrCode size={23} aria-hidden="true" />
+                            <strong>QR Menu</strong><small>{billing.freeMenu ? "Available" : "Unavailable"}</small></article>
+                          <article className="oh-capability"><ShoppingBag size={23} aria-hidden="true" />
+                            <strong>Online ordering</strong><small>{billing.ordering ? "Enabled" : "No active grant"}</small></article>
+                          <article className="oh-capability"><ChefHat size={23} aria-hidden="true" />
+                            <strong>Kitchen</strong><small>{billing.kitchen ? "Enabled" : "No active grant"}</small></article>
+                        </div>
                         <ul className="text-sm">
                           {billing.grants.map((g) => (
                             <li key={g.id}>
@@ -821,15 +846,20 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                   </header>
                   <div className="oh-panel-content">
                     {" "}
-                    <section>
+                    <section className="oh-activity-list" aria-label="Recent activity">
                       <h2 className="oh-subtitle">Recent activity</h2>
-                      <ul className="text-sm">
-                        {detail.audit.map((a) => (
-                          <li key={a.id}>
-                            {a.action} · {new Date(a.createdAt).toLocaleString()}
-                          </li>
-                        ))}
-                      </ul>
+                      {detail.audit.length ? (
+                        <ol className="oh-timeline">
+                          {detail.audit.map((event) => (
+                            <li key={event.id}>
+                              <span className="oh-timeline-marker" aria-hidden="true" />
+                              <div><strong>{event.action.replaceAll("_", " ")}</strong>
+                                <time dateTime={event.createdAt}>{new Date(event.createdAt).toLocaleString()}</time>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : <p className="oh-hint">There are no recent organization events.</p>}
                     </section>
                     <section className="oh-inset">
                       <div className="oh-row-head">
