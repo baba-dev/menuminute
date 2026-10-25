@@ -958,7 +958,7 @@ export function LiveOrdersBoard({
                           ? "Unable to load recorded events. Reopen the ticket to retry."
                           : "No recorded events. The order status above is authoritative."}
                       </p>
-                    )
+                    )}
                     {activityTruncated && <p>Showing the latest 60 recorded events.</p>}
                     {currentSelected.rejectionReason && (
                       <p>Decline reason: {currentSelected.rejectionReason}</p>
