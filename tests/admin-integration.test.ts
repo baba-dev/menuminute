@@ -221,7 +221,8 @@ describe("restricted-role platform command integration", () => {
       "select ends_at from entitlement_grants where id=$1 and organization_id=$2",
       [original.id, orgId]
     );
-    const endBefore = current.rows[0].ends_at.toISOString();
+    expect(current.rows).toHaveLength(1);
+    const endBefore = current.rows[0]!.ends_at.toISOString();
     const nextEnd = new Date(new Date(endBefore).getTime() + 30 * 86400000).toISOString();
     await proof();
     await extendEntitlementGrant(actor, {
