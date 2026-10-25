@@ -42,6 +42,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Cache pnpm store
+        continue-on-error: true
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
@@ -96,6 +97,7 @@ jobs:
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
+        continue-on-error: true
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
@@ -120,6 +122,7 @@ jobs:
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
+        continue-on-error: true
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
@@ -148,6 +151,7 @@ jobs:
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
+        continue-on-error: true
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
@@ -182,6 +186,7 @@ jobs:
           ALLOW_DEMO_SEED: "true"
           DEMO_PASSWORD: isolated-browser-password
       - name: Cache Playwright Chromium
+        continue-on-error: true
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -202,7 +207,8 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
-      - if: always()
+      - if: failure()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: browser-failure-evidence
@@ -260,6 +266,7 @@ jobs:
       - name: Exercise real Ember drawer, availability confirmation and outlet isolation
         run: pnpm exec playwright test tests/e2e/ember.spec.ts
       - if: failure()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: ember-browser-failure-evidence
