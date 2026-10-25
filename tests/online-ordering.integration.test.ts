@@ -326,5 +326,4 @@ describe("Service Counter outlet-scoped read models", () => {
     expect(rail.orders.every((order) => order.canAccept)).toBe(true);
     expect((await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id)).preparing).toBe(105);
   });
-
 });
