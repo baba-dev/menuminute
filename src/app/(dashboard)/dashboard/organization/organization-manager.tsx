@@ -103,11 +103,10 @@ function RoleGrantEditor({
   const assignedRoles =
     detail.grants.find((grant) => grant.outletId === outletId && grant.memberId === memberId)
       ?.roles ?? [];
-  const [roles, setRoles] = useState<string[]>(assignedRoles);
-  useEffect(() => {
-    setRoles(assignedRoles);
-    // Reconcile with actual roles on pair change and server-authoritative refresh.
-  }, [outletId, memberId, detail.grants]);
+  const assignmentKey = [outletId, memberId, assignedRoles.join(",")].join(":");
+  const [override, setOverride] = useState<{ key: string; roles: string[] } | null>(null);
+  // A changed outlet/member or server-authoritative grant automatically invalidates local edits.
+  const roles = override?.key === assignmentKey ? override.roles : assignedRoles;
   return (
     <Form
       title="Outlet roles"
@@ -170,9 +169,10 @@ function RoleGrantEditor({
               value={role}
               checked={roles.includes(role)}
               onChange={(event) =>
-                setRoles((old) =>
-                  event.target.checked ? [...old, role] : old.filter((entry) => entry !== role)
-                )
+                setOverride({
+                  key: assignmentKey,
+                  roles: event.target.checked ? [...roles, role] : roles.filter((entry) => entry !== role),
+                })
               }
             />
             <span>
@@ -193,10 +193,10 @@ function RoleGrantEditor({
       {roles.length === 0 && (
         <label className="oh-hint">
           <input type="checkbox" required aria-label="Confirm clearing outlet roles" />
-          Clear all roles to revoke this person's outlet access. Confirm before saving.
+          Clear all roles to revoke this person&apos;s outlet access. Confirm before saving.
         </label>
       )}
-      <p className="oh-hint">This replaces the member's entire role set for the selected outlet.</p>
+      <p className="oh-hint">This replaces the member&apos;s entire role set for the selected outlet.</p>
     </Form>
   );
 }
@@ -395,7 +395,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                   06 <span>Activity & delivery</span>
                 </a>
                 <a href="#governance">
-                  07 <span>Owner's office</span>
+                  07 <span>Owner&apos;s office</span>
                 </a>
                 <p>
                   Company-wide identity, people and permissions are managed separately from your
@@ -723,10 +723,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     </section>
                   </div>
                 </section>
-                <section id="governance" className="oh-panel" aria-label="THE OWNER'S OFFICE">
+                <section id="governance" className="oh-panel" aria-label="THE OWNER&apos;S OFFICE">
                   <header className="oh-panel-heading">
                     <div>
-                      <span className="oh-kicker">07 / THE OWNER'S OFFICE</span>
+                      <span className="oh-kicker">07 / THE OWNER&apos;S OFFICE</span>
                       <h2>Your house. Protected.</h2>
                       <p>
                         Privileged decisions require deliberate confirmation and server
