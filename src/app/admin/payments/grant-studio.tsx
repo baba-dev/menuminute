@@ -141,7 +141,8 @@ export function GrantStudio({
   }
   function openIssue() {
     triggerRef.current = document.activeElement as HTMLElement;
-    const start = new Date(Date.now() + 60_000);
+    // Start immediately; the local datetime picker displays minute precision.
+    const start = new Date();
     setStartAt(localDateTimeInput(start));
     setEndAt(localDateTimeInput(grantEndForPreset("trial_30", start)!));
     setPreset("trial_30");
