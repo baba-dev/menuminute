@@ -213,7 +213,9 @@ test("organization switching ignores a late response from the previous organizat
   expect((await unchanged.json()).organization.name).toBe("Alpha Domain");
 });
 
-test("Hospitality House uses approved theme art, mobile composition and accessible help", async ({ page }) => {
+test("Hospitality House uses approved theme art, mobile composition and accessible help", async ({
+  page,
+}) => {
   const f = await seed();
   await login(page, f.email, f.password);
   await page.goto("/dashboard/organization");
@@ -257,19 +259,29 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   );
 });
 
-test("outlet role grants reflect saved permissions after refresh and switching members", async ({ page }) => {
+test("outlet role grants reflect saved permissions after refresh and switching members", async ({
+  page,
+}) => {
   const f = await seed();
   await login(page, f.email, f.password);
   await page.goto("/dashboard/organization");
   await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
-  const form = page.getByRole("button", { name: "Save outlet roles" }).locator("xpath=ancestor::form");
-  await form.getByLabel("Member", { exact: true }).selectOption({ label: `Browser staff (${f.memberEmail})` });
+  const form = page
+    .getByRole("button", { name: "Save outlet roles" })
+    .locator("xpath=ancestor::form");
+  await form
+    .getByLabel("Member", { exact: true })
+    .selectOption({ label: `Browser staff (${f.memberEmail})` });
   await form.getByLabel("service", { exact: true }).check();
   await form.getByRole("button", { name: "Save outlet roles" }).click();
   await expect(form.getByRole("status")).toHaveText("Saved");
   await page.reload();
-  const restored = page.getByRole("button", { name: "Save outlet roles" }).locator("xpath=ancestor::form");
-  await restored.getByLabel("Member", { exact: true }).selectOption({ label: `Browser staff (${f.memberEmail})` });
+  const restored = page
+    .getByRole("button", { name: "Save outlet roles" })
+    .locator("xpath=ancestor::form");
+  await restored
+    .getByLabel("Member", { exact: true })
+    .selectOption({ label: `Browser staff (${f.memberEmail})` });
   await expect(restored.getByLabel("service", { exact: true })).toBeChecked();
   await restored.getByLabel("service", { exact: true }).uncheck();
   await expect(restored.getByLabel("Confirm clearing outlet roles")).toBeVisible();

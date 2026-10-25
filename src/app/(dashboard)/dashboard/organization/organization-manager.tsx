@@ -4,7 +4,16 @@ import { InvitationManager } from "@/components/auth/invitation-manager";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { Info, Store, Layers3, Building2, UsersRound, Wallet, Activity, ShieldCheck } from "lucide-react";
+import {
+  Info,
+  Store,
+  Layers3,
+  Building2,
+  UsersRound,
+  Wallet,
+  Activity,
+  ShieldCheck,
+} from "lucide-react";
 import type { ReactNode } from "react";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
@@ -150,7 +159,10 @@ function RoleGrantEditor({
     >
       <div className="oh-help-line">
         <span>Outlet permissions replace the selected member&apos;s current role set.</span>
-        <Help label="outlet roles">Roles are scoped to the selected outlet. Clearing them revokes that outlet access, not membership in the organization.</Help>
+        <Help label="outlet roles">
+          Roles are scoped to the selected outlet. Clearing them revokes that outlet access, not
+          membership in the organization.
+        </Help>
       </div>
       <div className="oh-two">
         <label className="oh-field">
@@ -269,7 +281,10 @@ function BrandLinkEditor({
     >
       <div className="oh-help-line">
         <span>Connect a brand to the restaurants that use it.</span>
-        <Help label="brand and outlet links">These links organize brands under your organization. They do not publish a menu or change the guest-facing outlet identity.</Help>
+        <Help label="brand and outlet links">
+          These links organize brands under your organization. They do not publish a menu or change
+          the guest-facing outlet identity.
+        </Help>
       </div>
       <div className="oh-two">
         <label className="oh-field">
@@ -462,7 +477,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
             </label>
             <div className="oh-help-line">
               <small>Changes here do not switch your active working restaurant.</small>
-              <Help label="organization switcher">Switching this workspace changes only the organization being administered. Your current restaurant in the sidebar stays selected.</Help>
+              <Help label="organization switcher">
+                Switching this workspace changes only the organization being administered. Your
+                current restaurant in the sidebar stays selected.
+              </Help>
             </div>
           </div>
         )}
@@ -579,7 +597,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div className="oh-tiles" aria-label="Outlet directory">
                       {detail.outlets.map((o) => (
                         <article key={o.id} className="oh-tile">
-                          <span className="oh-tile-icon" aria-hidden="true"><Store size={23} /></span>
+                          <span className="oh-tile-icon" aria-hidden="true">
+                            <Store size={23} />
+                          </span>
                           <h3>{o.name}</h3>
                           <p>
                             {o.outletType.replaceAll("_", " ")} · {o.currency} · {o.country}
@@ -712,7 +732,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div className="oh-tiles" aria-label="Brand directory">
                       {detail.brands.map((b) => (
                         <article key={b.id} className="oh-tile">
-                          <span className="oh-tile-icon" aria-hidden="true"><Layers3 size={23} /></span>
+                          <span className="oh-tile-icon" aria-hidden="true">
+                            <Layers3 size={23} />
+                          </span>
                           <h3>{b.name}</h3>
                           <p>
                             {detail.links.filter((l) => l.brandId === b.id).length} connected
@@ -762,7 +784,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       <section className="oh-inset">
                         <div className="oh-help-line">
                           <h2 className="oh-subtitle">Billing entitlements</h2>
-                          <Help label="billing entitlements">Features reflect the actual organization grants. Outlet currency is independent from billing currency. This page cannot activate paid plans.</Help>
+                          <Help label="billing entitlements">
+                            Features reflect the actual organization grants. Outlet currency is
+                            independent from billing currency. This page cannot activate paid plans.
+                          </Help>
                         </div>
                         <p className="text-sm">
                           Public QR menus: free · New ordering:{" "}
@@ -810,7 +835,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       <div className="oh-row-head">
                         <div className="oh-help-line">
                           <h2 className="oh-subtitle">Background delivery</h2>
-                          <Help label="background delivery">A successful retry request means the event was queued for another attempt, not that delivery has completed. Check its updated status.</Help>
+                          <Help label="background delivery">
+                            A successful retry request means the event was queued for another
+                            attempt, not that delivery has completed. Check its updated status.
+                          </Help>
                         </div>
                         <button className="text-sm underline" onClick={() => void load()}>
                           Refresh status
@@ -820,7 +848,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                         Recent 30 events. Pending and dispatched events recover automatically;
                         failed events require review.
                       </p>
-                      <p className="oh-retry-message" role="status" aria-live="polite">{retryMessage}</p>
+                      <p className="oh-retry-message" role="status" aria-live="polite">
+                        {retryMessage}
+                      </p>
                       <ul className="oh-event-list">
                         {detail.jobs.map((j) => (
                           <li key={j.id} className="break-all">
@@ -838,20 +868,30 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                                   setJobRetry(j.id);
                                   setRetryMessage("");
                                   try {
-                                    const r = await fetch(`/api/organizations/${encodeURIComponent(organizationId)}/jobs`, {
-                                      method: "POST",
-                                      headers: { "content-type": "application/json" },
-                                      body: JSON.stringify({ eventId: j.id }),
-                                    });
+                                    const r = await fetch(
+                                      `/api/organizations/${encodeURIComponent(organizationId)}/jobs`,
+                                      {
+                                        method: "POST",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ eventId: j.id }),
+                                      }
+                                    );
                                     const result = await r.json().catch(() => ({}));
-                                    if (!r.ok) throw new Error(result.message || "Retry request failed.");
+                                    if (!r.ok)
+                                      throw new Error(result.message || "Retry request failed.");
                                     if (activeSelection.current === organizationId) {
-                                      setRetryMessage("Retry requested. Check the updated delivery state to confirm completion.");
+                                      setRetryMessage(
+                                        "Retry requested. Check the updated delivery state to confirm completion."
+                                      );
                                       await load();
                                     }
                                   } catch (cause) {
                                     if (activeSelection.current === organizationId) {
-                                      setRetryMessage(cause instanceof Error ? cause.message : "Unable to confirm retry. Refresh the delivery status.");
+                                      setRetryMessage(
+                                        cause instanceof Error
+                                          ? cause.message
+                                          : "Unable to confirm retry. Refresh the delivery status."
+                                      );
                                     }
                                   } finally {
                                     retryRef.current = false;
@@ -873,8 +913,13 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div>
                       <span className="oh-kicker">07 / THE OWNER&apos;S OFFICE</span>
                       <h2>Your house. Protected.</h2>
-                      <p>Privileged decisions require deliberate confirmation and server authorization.
-                        <Help label="owner actions">Suspension blocks organization access and public menus. Ownership transfer relinquishes your owner privileges and requires account security checks.</Help>
+                      <p>
+                        Privileged decisions require deliberate confirmation and server
+                        authorization.
+                        <Help label="owner actions">
+                          Suspension blocks organization access and public menus. Ownership transfer
+                          relinquishes your owner privileges and requires account security checks.
+                        </Help>
                       </p>
                     </div>
                     <div aria-hidden="true" className="oh-art oh-art-owners-office" />

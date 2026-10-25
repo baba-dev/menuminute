@@ -643,9 +643,16 @@
   color: var(--oh-subtle);
   line-height: 1.5;
 }
-.oh-retry-message:empty { display: none; }
-.oh-nav a svg { flex: none; color: var(--oh-accent); }
-.oh-nav a span { overflow-wrap: anywhere; }
+.oh-retry-message:empty {
+  display: none;
+}
+.oh-nav a svg {
+  flex: none;
+  color: var(--oh-accent);
+}
+.oh-nav a span {
+  overflow-wrap: anywhere;
+}
 
 .oh-edit-outlet {
   display: grid;
