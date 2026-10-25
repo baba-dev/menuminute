@@ -44,6 +44,19 @@ const declineReasons = [
   "Restaurant is closing for service",
   "Other kitchen reason",
 ];
+class WorkspaceResponseError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+  }
+}
+
+function isAccessFailure(error: unknown): boolean {
+  return error instanceof WorkspaceResponseError && [401, 403].includes(error.status);
+}
+
 function readError(cause: unknown, fallback: string): string {
   return cause instanceof Error ? cause.message : fallback;
 }
@@ -90,7 +103,10 @@ async function responseData<T>(response: Response): Promise<T> {
                 ? payload.message
                 : "The request could not be completed.";
     const reference = response.headers.get("x-request-id");
-    throw new Error(message + (reference ? " Reference: " + reference.slice(0, 8) : ""));
+    throw new WorkspaceResponseError(
+      message + (reference ? " Reference: " + reference.slice(0, 8) : ""),
+      response.status
+    );
   }
   if (!payload || typeof payload !== "object") {
     throw new Error("The service returned an invalid response. Synchronize again.");
@@ -202,6 +218,23 @@ export function LiveOrdersBoard({
             .then(validatedPulse),
         ]);
         if (controller.signal.aborted) return;
+        if (
+          (railResult.status === "rejected" && isAccessFailure(railResult.reason)) ||
+          (pulseResult.status === "rejected" && isAccessFailure(pulseResult.reason))
+        ) {
+          setOrders([]);
+          setPulse(null);
+          setOverflow(false);
+          setHistory(null);
+          setSelected(null);
+          setActivity(null);
+          setLastSync(null);
+          setLastPulseSync(null);
+          previousPending.current = null;
+          setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+          setPulseError(null);
+          return;
+        }
         if (railResult.status === "fulfilled") {
           const live = railResult.value;
           const pending = new Set(
@@ -292,8 +325,17 @@ export function LiveOrdersBoard({
           setHistoryError(null);
         }
       } catch (cause) {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
           setHistoryError(readError(cause, "Could not load order history."));
+          if (isAccessFailure(cause)) {
+            setOrders([]);
+            setPulse(null);
+            setSelected(null);
+            setLastSync(null);
+            setLastPulseSync(null);
+            setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+          }
+        }
       } finally {
         if (!controller.signal.aborted) setHistoryBusy(false);
       }
@@ -319,10 +361,18 @@ export function LiveOrdersBoard({
           setActivityError(false);
           setActivityTruncated(result.truncated);
         }
-      } catch {
+      } catch (cause) {
         if (!controller.signal.aborted) {
           setActivity([]);
           setActivityError(true);
+          if (isAccessFailure(cause)) {
+            setSelected(null);
+            setOrders([]);
+            setPulse(null);
+            setLastSync(null);
+            setLastPulseSync(null);
+            setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+          }
         }
       }
     };
