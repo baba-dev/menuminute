@@ -21,7 +21,7 @@ The former UI used `Promise.all` for independent `rail` and `pulse` requests. An
 PR #167 contained optional dashboard pulse failures, **not the cause of the production PostgreSQL error**. A source-only PR and passing test database do not prove live migration alignment. The GitHub connector has no VPS journal/database access.
 
 1. Inspect the exact failing authorized `view=rail` and `view=pulse` requests after rollout. Record only HTTP status, request reference and SQLSTATE from `[orders] Workspace read unavailable`, never full SQL or credentials.
-2. Verify deployed full SHA for both web/worker, `drizzle` migration ledger including append-only 0024, and role ownership/EXECUTE on `app_private.kitchen_managed_orders_for_rail(text,text[])`. Also verify 0006 and 0014 installed as expected.
+2. Verify deployed full SHA for both web/worker, `drizzle` migration ledger including append-only 0024, and role ownership/EXECUTE on `app_private.kitchen_managed_orders_for_rail(text,jsonb)`. Also verify 0006 and 0014 installed as expected.
 3. If PostgreSQL reveals a further underlying failure, diagnose and repair via a **new reviewed append-only migration** before declaring incident closed. Never rewrite historical applied SQL.
 4. Test current outlet with zero, one, and many tickets. Confirm cross-outlet requests remain 403/404 and no unauthorized fallback is attempted.
 

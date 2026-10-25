@@ -78,7 +78,7 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
       : Promise.resolve([]),
     ids.length
       ? tx.execute<{ data: string[] }>(
-          sql`select app_private.kitchen_managed_orders_for_rail(${outletId}, ${ids}::text[]) as data`
+          sql`select app_private.kitchen_managed_orders_for_rail(${outletId}, ${JSON.stringify(ids)}::jsonb) as data`
         )
       : Promise.resolve({ rows: [{ data: [] as string[] }] }),
     tx.execute<{
