@@ -243,7 +243,9 @@ export function PaymentsConsole({
               onClick={() => {
                 const now = new Date();
                 setGrantStartsAt(localDateTimeInput(now));
-                setGrantEndsAt(localDateTimeInput(new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)));
+                setGrantEndsAt(
+                  localDateTimeInput(new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000))
+                );
                 setMessage(null);
                 setShowGrantModal(true);
               }}
@@ -538,7 +540,10 @@ export function PaymentsConsole({
               in a new tab before submitting.
             </p>
             {message?.type === "error" && (
-              <p role="alert" className="mt-3 rounded-lg border border-red-800 bg-red-950 p-3 text-xs text-red-200">
+              <p
+                role="alert"
+                className="mt-3 rounded-lg border border-red-800 bg-red-950 p-3 text-xs text-red-200"
+              >
                 {message.text}
               </p>
             )}

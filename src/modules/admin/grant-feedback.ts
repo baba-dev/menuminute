@@ -20,7 +20,10 @@ export function grantFailureMessage(error: unknown): string {
     if (message.includes("Kitchen Pro commercial activation is not approved")) {
       return "Kitchen Pro activation is blocked until its independent release checks are complete.";
     }
-    if (message.includes("Active organization required") || message.includes("Unknown organization")) {
+    if (
+      message.includes("Active organization required") ||
+      message.includes("Unknown organization")
+    ) {
       return "The target organization does not exist or is not active.";
     }
     if (message.includes("Invalid UTC entitlement window")) {

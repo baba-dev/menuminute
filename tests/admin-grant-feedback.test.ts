@@ -26,9 +26,9 @@ describe("grant action feedback", () => {
   });
 
   it("returns safe validated field errors", () => {
-    expect(grantFailureMessage(new ValidationError("A valid future UTC entitlement window is required"))).toContain(
-      "valid future UTC"
-    );
+    expect(
+      grantFailureMessage(new ValidationError("A valid future UTC entitlement window is required"))
+    ).toContain("valid future UTC");
   });
 
   it("never exposes unexpected database errors to clients", () => {
