@@ -13,6 +13,7 @@ import {
 import { FinancialHub } from "../financial-hub";
 import "../pos.css";
 import "../finance.css";
+import "../pos-editorial.css";
 export const metadata: Metadata = {
   title: "The Ledger | MenuMinute POS",
   robots: { index: false, follow: false },

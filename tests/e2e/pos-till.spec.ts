@@ -100,6 +100,11 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/dashboard/pos");
   await expect(page.getByRole("heading", { name: "Activate draft POS" })).toBeVisible();
+  await expect(page.getByTestId("pos-till").locator(".pos-hero")).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /The Till/ })
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("region", { name: "POS overview" })).toContainText("Published menus");
   await page.getByText("POS DISABLED").waitFor();
   await page.getByLabel("Registered seller address").fill("A registered fixture address in India");
   await page.getByRole("button", { name: "Save identity and enable draft orders" }).click();
@@ -129,9 +134,19 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   }
   await page.goto("/dashboard/pos/ledger");
   await expect(page.getByRole("heading", { name: "The Ledger." })).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "POS workspaces" })
+      .getByRole("link", { name: /The Ledger/ })
+  ).toHaveAttribute("aria-current", "page");
   await expect(page.getByText("LIVE FINANCE GATE IS CLOSED")).toBeVisible();
   await expect(page.getByText("No sale records yet.")).toHaveCount(0);
   await page.goto("/dashboard/pos/closing");
   await expect(page.getByRole("heading", { name: "The Closing Desk." })).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "POS workspaces" })
+      .getByRole("link", { name: /Closing Desk/ })
+  ).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
 });
