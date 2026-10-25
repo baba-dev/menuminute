@@ -381,20 +381,9 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
             )}
 </div></section>
 <section id="capabilities" className="oh-panel" aria-label="YOUR CAPABILITIES"><header className="oh-panel-heading"><div><span className="oh-kicker">05 / YOUR CAPABILITIES</span><h2>Everything your business can do.</h2><p>Live capability grants, independent of the restaurant menu currency.</p></div><div aria-hidden="true" className="oh-art oh-art-capabilities"/></header><div className="oh-panel-content">          {billing && (
-  </div></section>
-<section id="activity" className="oh-panel" aria-label="ACTIVITY & DELIVERY"><header className="oh-panel-heading"><div><span className="oh-kicker">06 / ACTIVITY & DELIVERY</span><h2>Every detail in motion.</h2><p>Follow recent events and recover failed delivery with confidence.</p></div><div aria-hidden="true" className="oh-art oh-art-activity"/></header><div className="oh-panel-content">          <section>
-            <h2 className="oh-subtitle">Recent activity</h2>
-            <ul className="oh-small">
-              {detail.audit.map((a) => (
-                <li key={a.id}>
-                  {a.action} · {new Date(a.createdAt).toLocaleString()}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section className="oh-inset">
-              <h2 className="oh-subtitle">Billing entitlements</h2>
-              <p className="oh-small">
+            <section className="rounded-xl border bg-white p-4">
+              <h2 className="font-bold">Billing entitlements</h2>
+              <p className="text-sm">
                 Public QR menus: free · New ordering:{" "}
                 {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
                 {billing.kitchen ? "enabled" : "no active grant"}
@@ -403,7 +392,7 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
                 Commercial plans and checkout are not available yet. Entitlement grants use USD or
                 INR billing independently of outlet currency.
               </p>
-              <ul className="oh-small">
+              <ul className="text-sm">
                 {billing.grants.map((g) => (
                   <li key={g.id}>
                     {g.capability} · {g.billingCurrency} · ends {g.endsAt}{" "}
@@ -412,15 +401,26 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
                 ))}
               </ul>
             </section>
-          )}
-          <section className="oh-inset">
+          )}</div></section>
+<section id="activity" className="oh-panel" aria-label="ACTIVITY & DELIVERY"><header className="oh-panel-heading"><div><span className="oh-kicker">06 / ACTIVITY & DELIVERY</span><h2>Every detail in motion.</h2><p>Follow recent events and recover failed delivery with confidence.</p></div><div aria-hidden="true" className="oh-art oh-art-activity"/></header><div className="oh-panel-content">          <section>
+            <h2 className="font-bold">Recent activity</h2>
+            <ul className="text-sm">
+              {detail.audit.map((a) => (
+                <li key={a.id}>
+                  {a.action} · {new Date(a.createdAt).toLocaleString()}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="rounded-xl border bg-white p-4">
             <div className="flex items-center justify-between">
-              <h2 className="oh-subtitle">Background delivery</h2>
+              <h2 className="font-bold">Background delivery</h2>
               <button className="text-sm underline" onClick={() => void load()}>
                 Refresh status
               </button>
             </div>
-            <p className="oh-hint">
+            <p className="text-xs">
               Recent 30 events. Pending and dispatched events recover automatically; failed events
               require review.
             </p>
