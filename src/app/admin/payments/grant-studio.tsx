@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -100,6 +100,7 @@ export function GrantStudio({
   onRevokeGrant,
 }: GrantStudioProps) {
   const router = useRouter();
+  const triggerRef = useRef<HTMLElement | null>(null);
   const [grants, setGrants] = useState(initialGrants);
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(1);
@@ -125,16 +126,21 @@ export function GrantStudio({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [fetchingHistory, setFetchingHistory] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyTargets, setHistoryTargets] = useState<GrantTarget[]>([]);
+  const [searchingHistory, setSearchingHistory] = useState(false);
 
   function closeDialog() {
     if (busy) return;
     setMode(null);
+    triggerRef.current?.focus();
     setPassword("");
     setTotp("");
     setError("");
     setTargetGrant(null);
   }
   function openIssue() {
+    triggerRef.current = document.activeElement as HTMLElement;
     const start = new Date(Date.now() + 60_000);
     setStartAt(localDateTimeInput(start));
     setEndAt(localDateTimeInput(grantEndForPreset("trial_30", start)!));
@@ -217,6 +223,7 @@ export function GrantStudio({
     }
   }
   function openAction(grant: GrantRow, action: "renew" | "revoke") {
+    triggerRef.current = document.activeElement as HTMLElement;
     setTargetGrant(grant);
     setMode(action);
     setReason("");
@@ -347,6 +354,48 @@ export function GrantStudio({
       setPassword("");
       setTotp("");
       setBusy(false);
+    }
+  }
+
+  async function searchHistory(event: FormEvent) {
+    event.preventDefault();
+    if (historySearch.trim().length < 2) {
+      setNotice("Enter at least two characters to find grant history by restaurant name.");
+      return;
+    }
+    setSearchingHistory(true);
+    setNotice("");
+    try {
+      const result = await onSearchTargets(historySearch);
+      if (!result.ok) throw new Error(result.message);
+      setHistoryTargets(result.targets);
+      if (!result.targets.length) setNotice("No organizations match that restaurant name.");
+    } catch {
+      setNotice("Could not search grant history. Retry the search.");
+    } finally {
+      setSearchingHistory(false);
+    }
+  }
+
+  function dialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && !busy) {
+      event.preventDefault();
+      closeDialog();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const controls = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled])'
+      )
+    ).filter((element) => element.getClientRects().length > 0);
+    if (!controls.length) return;
+    if (event.shiftKey && document.activeElement === controls[0]) {
+      event.preventDefault();
+      controls[controls.length - 1].focus();
+    } else if (!event.shiftKey && document.activeElement === controls[controls.length - 1]) {
+      event.preventDefault();
+      controls[0].focus();
     }
   }
 
@@ -524,6 +573,35 @@ export function GrantStudio({
             {notice}
           </p>
         )}
+        <form onSubmit={(event) => void searchHistory(event)} className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="grant-history-org-search" className="sr-only">
+            Find grant history by restaurant or organization name
+          </label>
+          <input
+            id="grant-history-org-search"
+            type="search"
+            maxLength={80}
+            placeholder="Find history by restaurant name"
+            value={historySearch}
+            onChange={(event) => setHistorySearch(event.target.value)}
+            className="min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-950 px-3 py-2 text-xs text-white"
+          />
+          <button type="submit" disabled={searchingHistory}
+            className="rounded-lg border border-stone-700 px-4 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50">
+            Find
+          </button>
+        </form>
+        {historyTargets.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2" aria-label="Matching history organizations">
+            {historyTargets.map((org) => (
+              <button type="button" key={org.id}
+                onClick={() => { setHistoryTargets([]); void loadHistory(1, org); }}
+                className="rounded-lg border border-orange-900 bg-orange-950/40 px-3 py-2 text-xs text-orange-200 hover:bg-orange-950">
+                {org.name} {org.outlets.length > 0 ? "· " + org.outlets.slice(0, 2).join(", ") : ""}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-4 grid gap-3">
           {visible.length === 0 && (
             <p className="rounded-xl border border-dashed border-stone-700 p-6 text-center text-sm text-stone-400">
@@ -628,6 +706,7 @@ export function GrantStudio({
             role="dialog"
             aria-modal="true"
             aria-labelledby="grant-dialog-title"
+            onKeyDown={dialogKeyDown}
             className="mx-auto w-full max-w-2xl rounded-3xl border border-stone-700 bg-stone-900 p-5 shadow-2xl sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
@@ -673,6 +752,7 @@ export function GrantStudio({
                   >
                     <input
                       id="grant-org-search"
+                    autoFocus
                       value={orgSearch}
                       onChange={(e) => setOrgSearch(e.target.value)}
                       placeholder="Search restaurant or organization"
@@ -856,6 +936,7 @@ export function GrantStudio({
                 {mode === "issue" ? "3. Audit justification" : "Audit justification"}
                 <textarea
                   value={reason}
+                autoFocus={mode !== "issue"}
                   onChange={(e) => setReason(e.target.value)}
                   minLength={5}
                   maxLength={420}
