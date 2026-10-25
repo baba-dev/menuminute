@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { playOrderChime } from "@/lib/sound";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 import { ServicePulseRail, Ticket, RailEmpty } from "@/components/orders/ticket";
 import type {
   Activity,
@@ -46,25 +45,47 @@ const declineReasons = [
   "Restaurant is closing for service",
   "Other kitchen reason",
 ];
-const emptyPulse: ServicePulse = {
-  pending: 0,
-  preparing: 0,
-  ready: 0,
-  active: 0,
-  completedToday: 0,
-};
+function readError(cause: unknown, fallback: string): string {
+  return cause instanceof Error ? cause.message : fallback;
+}
+
+function validatedRail(value: { orders: MerchantOrder[]; overflow: boolean }) {
+  if (!value || !Array.isArray(value.orders) || typeof value.overflow !== "boolean" ||
+    value.orders.some((order) => !order || !Array.isArray(order.items))) {
+    throw new Error("The live queue returned an invalid response. Synchronize again.");
+  }
+  return value;
+}
+
+function validatedPulse(value: ServicePulse) {
+  const keys: (keyof ServicePulse)[] = ["pending", "preparing", "ready", "active", "completedToday"];
+  if (!value || keys.some((key) => !Number.isSafeInteger(value[key]) || value[key] < 0)) {
+    throw new Error("Service counters returned an invalid response. Synchronize again.");
+  }
+  return value;
+}
 
 async function responseData<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
-      (payload && typeof payload.message === "string" ? payload.message : null) ||
-        (response.status === 403
-          ? "Your session no longer has access to this outlet."
+  if (!response.ok) {
+    const message =
+      response.status === 401
+        ? "Session expired. Sign in again to manage orders."
+        : response.status === 403
+          ? "You no longer have access to this outlet."
           : response.status === 409
-            ? "This order changed on another device. Please synchronize."
-            : "The request could not be completed.")
-    );
+            ? "This order changed on another device. Synchronize before acting."
+            : response.status >= 500
+              ? "Service temporarily unavailable."
+              : payload && typeof payload.message === "string"
+                ? payload.message
+                : "The request could not be completed.";
+    const reference = response.headers.get("x-request-id");
+    throw new Error(message + (reference ? " Reference: " + reference.slice(0, 8) : ""));
+  }
+  if (!payload || typeof payload !== "object") {
+    throw new Error("The service returned an invalid response. Synchronize again.");
+  }
   return payload as T;
 }
 
@@ -112,12 +133,19 @@ export function LiveOrdersBoard({
   const [busyId, setBusyId] = useState<string | null>(null);
   const busyRef = useRef(new Set<string>());
   const [error, setError] = useState<string | null>(null);
+  const [railError, setRailError] = useState<string | null>(null);
+  const [pulseError, setPulseError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [activityError, setActivityError] = useState(false);
   const [isRefreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [lastPulseSync, setLastPulseSync] = useState<string | null>(null);
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
   const [sound, setSound] = useState(false);
   const soundRef = useRef(false);
   const previousPending = useRef<Set<string> | null>(null);
   const refreshController = useRef<AbortController | null>(null);
+  const refreshInFlight = useRef(false);
   const [now, setNow] = useState(0);
   const [compact, setCompact] = useState(false);
 
@@ -126,9 +154,11 @@ export function LiveOrdersBoard({
       () => setSound(window.localStorage.getItem("menuminute.orders.sound") === "enabled"),
       0
     );
+    const tick = window.setTimeout(() => setNow(Date.now()), 0);
     const id = window.setInterval(() => setNow(Date.now()), 30000);
     return () => {
       window.clearTimeout(restore);
+      window.clearTimeout(tick);
       window.clearInterval(id);
     };
   }, []);
@@ -140,54 +170,76 @@ export function LiveOrdersBoard({
     return () => window.clearTimeout(id);
   }, [query]);
 
-  const refresh = useCallback(async () => {
-    refreshController.current?.abort();
-    const controller = new AbortController();
-    refreshController.current = controller;
-    setRefreshing(true);
-    try {
-      const [railResponse, pulseResponse] = await Promise.all([
-        fetch(base + "/workspace?view=rail", { cache: "no-store", signal: controller.signal }),
-        fetch(base + "/workspace?view=pulse", { cache: "no-store", signal: controller.signal }),
-      ]);
-      const [live, counts] = await Promise.all([
-        responseData<{ orders: MerchantOrder[]; overflow: boolean }>(railResponse),
-        responseData<ServicePulse>(pulseResponse),
-      ]);
-      if (controller.signal.aborted) return;
-      const pending = new Set(
-        live.orders.filter((order) => order.status === "pending").map((order) => order.id)
-      );
-      if (
-        soundRef.current &&
-        previousPending.current &&
-        [...pending].some((id) => !previousPending.current?.has(id))
-      ) {
-        try {
-          playOrderChime();
-        } catch {
-          /* browser audio may be blocked */
+  const refresh = useCallback(
+    async (force = false) => {
+      if (refreshInFlight.current && !force) return;
+      refreshController.current?.abort();
+      const controller = new AbortController();
+      refreshController.current = controller;
+      refreshInFlight.current = true;
+      setRefreshing(true);
+      try {
+        const [railResult, pulseResult] = await Promise.allSettled([
+          fetch(base + "/workspace?view=rail", {
+            cache: "no-store",
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
+          })
+            .then(responseData<{ orders: MerchantOrder[]; overflow: boolean }>)
+            .then(validatedRail),
+          fetch(base + "/workspace?view=pulse", {
+            cache: "no-store",
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
+          })
+            .then(responseData<ServicePulse>)
+            .then(validatedPulse),
+        ]);
+        if (controller.signal.aborted) return;
+        if (railResult.status === "fulfilled") {
+          const live = railResult.value;
+          const pending = new Set(
+            live.orders.filter((order) => order.status === "pending").map((order) => order.id)
+          );
+          if (
+            soundRef.current &&
+            previousPending.current &&
+            [...pending].some((id) => !previousPending.current?.has(id))
+          ) {
+            try {
+              playOrderChime();
+            } catch {
+              /* browser audio may be blocked */
+            }
+          }
+          previousPending.current = pending;
+          setOrders(live.orders);
+          setOverflow(live.overflow);
+          setLastSync(new Date().toISOString());
+          setRailError(null);
+        } else {
+          setRailError(readError(railResult.reason, "Live orders could not synchronize."));
+        }
+        if (pulseResult.status === "fulfilled") {
+          setPulse(pulseResult.value);
+          setLastPulseSync(new Date().toISOString());
+          setPulseError(null);
+        } else {
+          setPulseError(readError(pulseResult.reason, "Service counters are unavailable."));
+        }
+      } finally {
+        if (refreshController.current === controller) {
+          refreshInFlight.current = false;
+          setRefreshing(false);
         }
       }
-      previousPending.current = pending;
-      setOrders(live.orders);
-      setPulse(counts);
-      setOverflow(live.overflow);
-      setLastSync(new Date().toISOString());
-      setError(null);
-    } catch (cause) {
-      if (!controller.signal.aborted)
-        setError(cause instanceof Error ? cause.message : "Could not synchronize orders.");
-    } finally {
-      if (refreshController.current === controller) setRefreshing(false);
-    }
-  }, [base]);
+    },
+    [base]
+  );
 
   useEffect(() => {
     const start = window.setTimeout(() => void refresh(), 0);
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
-    }, 5000);
+    }, 8000);
     const onReturn = () => {
       if (document.visibilityState === "visible") void refresh();
     };
@@ -195,6 +247,7 @@ export function LiveOrdersBoard({
     document.addEventListener("visibilitychange", onReturn);
     return () => {
       refreshController.current?.abort();
+      refreshInFlight.current = false;
       window.clearTimeout(start);
       window.clearInterval(interval);
       window.removeEventListener("online", onReturn);
@@ -217,6 +270,8 @@ export function LiveOrdersBoard({
     if (to) params.set("to", to);
     const load = async () => {
       setHistoryBusy(true);
+      setHistory(null);
+      setHistoryError(null);
       try {
         const result = await responseData<HistoryResult>(
           await fetch(base + "/workspace?" + params.toString(), {
@@ -226,11 +281,11 @@ export function LiveOrdersBoard({
         );
         if (!controller.signal.aborted) {
           setHistory(result);
-          setError(null);
+          setHistoryError(null);
         }
       } catch (cause) {
         if (!controller.signal.aborted)
-          setError(cause instanceof Error ? cause.message : "Could not load order history.");
+          setHistoryError(readError(cause, "Could not load order history."));
       } finally {
         if (!controller.signal.aborted) setHistoryBusy(false);
       }
@@ -242,6 +297,7 @@ export function LiveOrdersBoard({
   const selectedId = selected?.id;
   useEffect(() => {
     if (!selectedId) return;
+    setActivityError(false);
     const controller = new AbortController();
     const load = async () => {
       try {
@@ -256,7 +312,10 @@ export function LiveOrdersBoard({
           setActivityTruncated(result.truncated);
         }
       } catch {
-        if (!controller.signal.aborted) setActivity([]);
+        if (!controller.signal.aborted) {
+          setActivity([]);
+          setActivityError(true);
+        }
       }
     };
     void load();
@@ -270,12 +329,14 @@ export function LiveOrdersBoard({
       selected);
   const show = (lane: string) => {
     if (lane === "today") {
-      const date = new Intl.DateTimeFormat("en-CA", {
+      const dateParts = new Intl.DateTimeFormat("en-GB", {
         timeZone: timezone,
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).format(new Date());
+      }).formatToParts(new Date());
+      const part = (type: string) => dateParts.find((item) => item.type === type)?.value ?? "";
+      const date = part("year") + "-" + part("month") + "-" + part("day");
       setHistoryStatus("completed");
       setFrom(date);
       setTo(date);
@@ -286,12 +347,20 @@ export function LiveOrdersBoard({
       setTab("active");
       setRail(lane === "incoming" || lane === "preparing" || lane === "ready" ? lane : "all");
     }
-    document.getElementById("service-rail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("service-rail")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   async function mutate(order: MerchantOrder, target: string, reason?: string, isPayment = false) {
     if (busyRef.current.has(order.id)) return;
+    if (railError) {
+      setError("The live queue must synchronize before order actions can resume.");
+      return;
+    }
     busyRef.current.add(order.id);
+    setBusyIds((previous) => new Set([...previous, order.id]));
     setBusyId(order.id);
     setError(null);
     try {
@@ -312,7 +381,7 @@ export function LiveOrdersBoard({
         }
       );
       if (result.status === 409) {
-        await refresh();
+        await refresh(true);
         setError(
           "The ticket changed or its acceptance window expired. The authoritative queue was reloaded."
         );
@@ -322,21 +391,26 @@ export function LiveOrdersBoard({
       setDeclining(null);
       setPaying(null);
       setHistoryRevision((value) => value + 1);
-      await refresh();
+      await refresh(true);
     } catch (cause) {
-      await refresh();
+      await refresh(true);
       setError(
         (cause instanceof Error ? cause.message : "The outcome is uncertain.") +
           " If connectivity was lost, synchronize before attempting the action again."
       );
     } finally {
       busyRef.current.delete(order.id);
+      setBusyIds((previous) => {
+        const next = new Set(previous);
+        next.delete(order.id);
+        return next;
+      });
       setBusyId(null);
     }
   }
 
   const visible = filterRail(orders, query, mode);
-  const statusCounts = pulse ?? emptyPulse;
+  const statusCounts = pulse;
   const isFiltered = Boolean(query || mode !== "all");
   return (
     <div className="product service-counter" data-testid="service-counter">
