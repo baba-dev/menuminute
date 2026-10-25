@@ -169,6 +169,13 @@
       "when": 1792980000000,
       "tag": "0023_assistant_action_proposals",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0024_orders_rail_kitchen_scope",
+      "breakpoints": true
     }
   ]
 }
