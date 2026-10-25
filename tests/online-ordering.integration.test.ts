@@ -305,8 +305,8 @@ describe("Service Counter outlet-scoped read models", () => {
         [f.outlet.id]
       );
       await pool.query(
-        `insert into order_items(id,order_id,restaurant_id,dish_id,item_name)
-         select 'item-' || id,id,restaurant_id,'plate','Bulk kitchen item'
+        `insert into order_items(id,order_id,restaurant_id,dish_id,item_name,unit_price_paise,total_paise)
+         select 'item-' || id,id,restaurant_id,'plate','Bulk kitchen item',0,0
          from orders where restaurant_id=$1 and id like 'bulk-' || $1 || '-%'`,
         [f.outlet.id]
       );
