@@ -44,3 +44,22 @@ END
 $$;
 REVOKE ALL ON FUNCTION app_private.next_order_number(text, date) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.next_order_number(text, date) TO menuminute_app;
+
+-- Public tokens are checked via a narrow SECURITY DEFINER function because
+-- unauthenticated guests have no app.actor_id and must not bypass RLS.
+CREATE OR REPLACE FUNCTION app_private.public_order_outlet(p_token text)
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public, pg_temp
+AS $$
+  SELECT r.id FROM qr_codes q
+  JOIN restaurants r ON r.id = q.restaurant_id
+  JOIN organizations o ON o.id = r.organization_id
+  WHERE q.destination_token = p_token AND q.is_active
+    AND r.is_active AND r.is_published AND o.is_active
+  LIMIT 1
+$$;
+REVOKE ALL ON FUNCTION app_private.public_order_outlet(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.public_order_outlet(text) TO menuminute_app;

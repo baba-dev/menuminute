@@ -113,13 +113,8 @@ export async function reserveOrderCapability(
 
 /** Cheap token-to-outlet scope lookup; authoritative order checks remain in PostgreSQL. */
 export async function publicOrderOutlet(token: string): Promise<string | null> {
-  const row = await getPool().query<{ id: string }>(
-    `select r.id from qr_codes q
-     join restaurants r on r.id=q.restaurant_id
-     join organizations o on o.id=r.organization_id
-     where q.destination_token=$1 and q.is_active
-       and r.is_active and r.is_published and o.is_active
-     limit 1`,
+  const row = await getPool().query<{ id: string | null }>(
+    "select app_private.public_order_outlet($1) as id",
     [token]
   );
   return row.rows[0]?.id ?? null;
