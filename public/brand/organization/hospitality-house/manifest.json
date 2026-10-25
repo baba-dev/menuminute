@@ -1,87 +1,153 @@
 {
-  "name": "Organization 2.0 Hospitality House (production-only artwork)",
-  "source": "Artwork approved and copied selectively from PR #164 commit 3a55ab974d62d1de91b855cef2a536e2c6199d7e",
-  "description": "Exactly four selected PNG hero banners and twelve theme-paired WebP section illustrations; no abandoned source material.",
+  "name": "Organization 2.0 — The Hospitality House",
+  "version": 1,
+  "basePath": "/public/brand/organization/hospitality-house/",
+  "source": "Approved production images from artwork PR #164 at 3a55ab974d62d1de91b855cef2a536e2c6199d7e",
+  "note": "Only the four selected PNG hero images and twelve theme-paired WebP illustrations are released. Superseded hero WebPs and unused sources are not included.",
   "assets": [
     {
       "path": "Organization-Hero-Light.png",
-      "width": null,
-      "height": null
+      "width": 2103,
+      "height": 748,
+      "bytes": 2062649,
+      "blobSha": "aaa625ff04dd1d2959055c28ef5fcea6b08c4787",
+      "format": "png",
+      "hasAlpha": false
     },
     {
       "path": "Organization-Hero-Dark.png",
-      "width": null,
-      "height": null
+      "width": 1896,
+      "height": 829,
+      "bytes": 2424749,
+      "blobSha": "f0658c81f5d790559b82a2d32c0033d154b30279",
+      "format": "png",
+      "hasAlpha": false
     },
     {
       "path": "Organization-Hero-Mobile-Light.png",
       "width": 960,
-      "height": 1120
+      "height": 1120,
+      "bytes": 1597405,
+      "blobSha": "7171820096b9327647c8400c8a9d595666796ef0",
+      "format": "png",
+      "hasAlpha": false
     },
     {
       "path": "Organization-Hero-Mobile-Dark.png",
       "width": 960,
-      "height": 1120
+      "height": 1120,
+      "bytes": 1527641,
+      "blobSha": "46717d085f9cdaad04185991d59c8a1428c826ea",
+      "format": "png",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/outlet-collection-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 292512,
+      "blobSha": "b51c0868b08643f2e6e9f7670cafc066732c5540",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/outlet-collection-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 376376,
+      "blobSha": "1d8b4c8f8b66d49c884a791d613059cc00317eba",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/team-hall-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 475198,
+      "blobSha": "57a5c2a651d6fcc2c45be21e7bd4f4010438e082",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/team-hall-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 562314,
+      "blobSha": "a74896352654a551fb22fb9310decdfa70c1b50c",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/brand-gallery-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 456974,
+      "blobSha": "290fe37f0ea400e9a78eb004a88b7f3358c40d47",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/brand-gallery-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 525802,
+      "blobSha": "3c2871d9466443bc7b60f568b93c642f9839c160",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/capabilities-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 394202,
+      "blobSha": "e1f015601a2667c55ac87e8ecac72cb91b0b1a02",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/capabilities-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 456540,
+      "blobSha": "63a8abca306e2bee952969c870969224f3bf733e",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/activity-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 391030,
+      "blobSha": "ae3cc41e49765bfa0eef1c166c06bd6f7b1b378b",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/activity-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 467734,
+      "blobSha": "8cd0c6a6aa00010d68799b09398d4ff25a01545a",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/owners-office-light.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 349658,
+      "blobSha": "91b4828c357e5498e97c74b09ba7f90537ba844c",
+      "format": "webp",
+      "hasAlpha": false
     },
     {
       "path": "illustrations/owners-office-dark.webp",
       "width": 1440,
-      "height": 1080
+      "height": 1080,
+      "bytes": 343492,
+      "blobSha": "31cb1c39c9879b10bde999924ccbd2f3472ad716",
+      "format": "webp",
+      "hasAlpha": false
     }
   ]
 }
