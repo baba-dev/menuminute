@@ -595,6 +595,58 @@
   background: #efae65;
   color: #21150e;
 }
+
+.oh-help-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: var(--oh-subtle);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.oh-help-trigger {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--oh-line);
+  border-radius: 50%;
+  background: var(--oh-soft);
+  color: var(--oh-accent);
+  cursor: pointer;
+}
+.oh-help-trigger:hover {
+  box-shadow: 0 0 0 2px var(--oh-line);
+}
+.oh-help-popover {
+  z-index: 90;
+  width: min(300px, calc(100vw - 28px));
+  padding: 13px 16px;
+  border-radius: 11px;
+  border: 1px solid var(--decorative);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 18px 34px #20100d30;
+  font-family: var(--font-dm), sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.oh-help-arrow {
+  fill: var(--paper);
+}
+.oh-retry-message {
+  font-size: 12px;
+  color: var(--oh-subtle);
+  line-height: 1.5;
+}
+.oh-retry-message:empty { display: none; }
+.oh-nav a svg { flex: none; color: var(--oh-accent); }
+.oh-nav a span { overflow-wrap: anywhere; }
+
 .oh-edit-outlet {
   display: grid;
   gap: 17px;
