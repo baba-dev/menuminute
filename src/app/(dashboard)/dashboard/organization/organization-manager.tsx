@@ -205,6 +205,50 @@ function RoleGrantEditor({
   );
 }
 
+
+function BrandLinkEditor({ detail, disabled, send }: {
+  detail: Detail;
+  disabled: boolean;
+  send: (action: string, data: Record<string, unknown>) => Promise<void>;
+}) {
+  const [brandId, setBrandId] = useState(detail.brands[0]?.id ?? "");
+  const [outletId, setOutletId] = useState(detail.outlets[0]?.id ?? "");
+  const exists = detail.links.some((link) => link.brandId === brandId && link.outletId === outletId);
+  const pairKey = [brandId, outletId, exists ? "linked" : "unlinked"].join(":");
+  const [draft, setDraft] = useState<{ key: string; linked: boolean } | null>(null);
+  const linked = draft?.key === pairKey ? draft.linked : exists;
+  return <Form title="Brand outlets" button="Save brand link"
+    disabled={disabled || !brandId || !outletId}
+    onSave={(data) => send("brand.link", {
+      brandId: String(data.get("brandId")),
+      outletId: String(data.get("outletId")),
+      linked: data.get("linked") === "on",
+    })}>
+    <div className="oh-two">
+      <label className="oh-field">Brand
+        <select name="brandId" value={brandId} className="oh-control"
+          onChange={(event) => setBrandId(event.target.value)}>
+          {detail.brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+        </select>
+      </label>
+      <label className="oh-field">Outlet
+        <select name="outletId" aria-label="Outlet" className="oh-control"
+          value={outletId} onChange={(event) => setOutletId(event.target.value)}>
+          {detail.outlets.map((outlet) => <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
+        </select>
+      </label>
+    </div>
+    <label className="oh-link-choice">
+      <input type="checkbox" name="linked" checked={linked}
+        onChange={(event) => setDraft({ key: pairKey, linked: event.target.checked })} />
+      <span>Link brand to outlet</span>
+    </label>
+    <p className="oh-hint">This pair is currently {exists ? "linked" : "not linked"}.
+      Saving will {linked ? "connect" : "disconnect"} the selected outlet.
+      {detail.links.length} links across {detail.brands.length} brands.</p>
+  </Form>;
+}
+
 export function OrganizationManager({ organizations }: { organizations: Organization[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState(organizations[0]?.id ?? "");
@@ -595,46 +639,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     {canAdmin && (
                       <>
                         {" "}
-                        <Form
-                          title="Brand outlets"
-                          button="Save brand link"
-                          disabled={!org.isActive}
-                          onSave={(f) =>
-                            send("brand.link", {
-                              brandId: String(f.get("brandId")),
-                              outletId: String(f.get("outletId")),
-                              linked: f.get("linked") === "on",
-                            })
-                          }
-                        >
-                          <label className="oh-field">
-                            Brand
-                            <select name="brandId" className={inputClass}>
-                              {detail.brands.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                  {b.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="oh-field">
-                            Outlet
-                            <select aria-label="Outlet" name="outletId" className={inputClass}>
-                              {detail.outlets.map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {o.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="oh-small">
-                            <input type="checkbox" name="linked" defaultChecked /> Link brand to
-                            outlet
-                          </label>
-                          <p className="oh-hint">
-                            {detail.links.length} links across {detail.brands.length} brands.
-                          </p>
-                        </Form>
+                        <BrandLinkEditor key={selected} detail={detail} disabled={!org.isActive} send={send} />
                       </>
                     )}
                   </div>
