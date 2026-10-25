@@ -231,7 +231,9 @@ export function LiveOrdersBoard({
           setLastSync(null);
           setLastPulseSync(null);
           previousPending.current = null;
-          setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+          setRailError(
+            "Access to this outlet changed. Sign in again or select an authorized outlet."
+          );
           setPulseError(null);
           return;
         }
@@ -333,7 +335,9 @@ export function LiveOrdersBoard({
             setSelected(null);
             setLastSync(null);
             setLastPulseSync(null);
-            setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+            setRailError(
+              "Access to this outlet changed. Sign in again or select an authorized outlet."
+            );
           }
         }
       } finally {
@@ -371,7 +375,9 @@ export function LiveOrdersBoard({
             setPulse(null);
             setLastSync(null);
             setLastPulseSync(null);
-            setRailError("Access to this outlet changed. Sign in again or select an authorized outlet.");
+            setRailError(
+              "Access to this outlet changed. Sign in again or select an authorized outlet."
+            );
           }
         }
       }
