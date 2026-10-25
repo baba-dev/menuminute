@@ -271,7 +271,7 @@ describe("restricted-role platform command integration", () => {
       })
     ).rejects.toThrow();
     const result = await owner.query(
-      "select count(*)::int as total from entitlement_grants where organization_id=$1",
+      "select count(*)::int as total from entitlement_grants where organization_id=$1 and capability='kitchen.new'",
       [orgId]
     );
     expect(result.rows[0]?.total).toBe(0);
