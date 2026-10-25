@@ -89,6 +89,65 @@ function Form({
     </form>
   );
 }
+
+function RoleGrantEditor({ detail, disabled, send }: {
+  detail: Detail;
+  disabled: boolean;
+  send: (action: string, data: Record<string, unknown>) => Promise<void>;
+}) {
+  const eligible = detail.members.filter((member) => member.role === "member" && member.isActive);
+  const [outletId, setOutletId] = useState(detail.outlets[0]?.id ?? "");
+  const [memberId, setMemberId] = useState(eligible[0]?.id ?? "");
+  const assignedRoles = detail.grants.find((grant) => grant.outletId === outletId && grant.memberId === memberId)?.roles ?? [];
+  const [roles, setRoles] = useState<string[]>(assignedRoles);
+  useEffect(() => {
+    setRoles(assignedRoles);
+    // Reconcile with actual roles on pair change and server-authoritative refresh.
+  }, [outletId, memberId, detail.grants]);
+  return <Form title="Outlet roles" button="Save outlet roles"
+    disabled={disabled || !outletId || !memberId}
+    onSave={(data) => send("outlet.roles", {
+      outletId: String(data.get("outletId")),
+      memberId: String(data.get("memberId")),
+      roles: data.getAll("roles"),
+    })}>
+    <div className="oh-two">
+      <label className="oh-field">Outlet
+        <select aria-label="Outlet" name="outletId" className="oh-control"
+          value={outletId} onChange={(event) => setOutletId(event.target.value)}>
+          {detail.outlets.map((outlet) => <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
+        </select>
+      </label>
+      <label className="oh-field">Member
+        <select aria-label="Member" name="memberId" className="oh-control"
+          value={memberId} onChange={(event) => setMemberId(event.target.value)}>
+          {eligible.map((member) =>
+            <option value={member.id} key={member.id}>{member.name} ({member.email})</option>)}
+        </select>
+      </label>
+    </div>
+    {(!detail.outlets.length || !eligible.length) && <p className="oh-hint">
+      An active member and outlet are both required before assigning roles.</p>}
+    <div className="oh-role-grid">
+      {(["manager", "service", "kitchen", "menu_editor"] as const).map((role) =>
+        <label key={role} className="oh-role-choice"><input type="checkbox" aria-label={role}
+          name="roles" value={role} checked={roles.includes(role)}
+          onChange={(event) => setRoles((old) => event.target.checked ?
+            [...old, role] : old.filter((entry) => entry !== role))}/>
+          <span><strong>{role.replaceAll("_", " ")}</strong><small>{
+            role === "manager" ? "Outlet administration" : role === "service" ?
+            "Guest service and orders" : role === "kitchen" ? "Kitchen work" : "Menu editing"
+          }</small></span>
+        </label>)}
+    </div>
+    {roles.length === 0 && <label className="oh-hint">
+      <input type="checkbox" required aria-label="Confirm clearing outlet roles" />
+      Clear all roles to revoke this person's outlet access. Confirm before saving.
+    </label>}
+    <p className="oh-hint">This replaces the member's entire role set for the selected outlet.</p>
+  </Form>;
+}
+
 export function OrganizationManager({ organizations }: { organizations: Organization[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState(organizations[0]?.id ?? "");
@@ -256,52 +315,7 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
             ))}
 </div></section>
 <section id="people" className="oh-panel" aria-label="THE TEAM HALL"><header className="oh-panel-heading"><div><span className="oh-kicker">03 / THE TEAM HALL</span><h2>Great service is teamwork.</h2><p>People, invitations and outlet-specific permissions, in one clear workspace.</p></div><div aria-hidden="true" className="oh-art oh-art-team-hall"/></header><div className="oh-panel-content">            {canAdmin && org.isActive && <InvitationManager organizationId={org.id} />}
-            <Form
-              title="Outlet roles"
-              button="Save outlet roles"
-              disabled={!org.isActive}
-              onSave={(f) =>
-                send("outlet.roles", {
-                  outletId: String(f.get("outletId")),
-                  memberId: String(f.get("memberId")),
-                  roles: f.getAll("roles"),
-                })
-              }
-            >
-              <label className="oh-field">
-                Outlet
-                <select aria-label="Outlet" name="outletId" className={inputClass}>
-                  {detail.outlets.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="oh-field">
-                Member
-                <select aria-label="Member" name="memberId" className={inputClass}>
-                  {detail.members
-                    .filter((m) => m.role === "member" && m.isActive)
-                    .map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name} ({m.email})
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <div className="oh-options">
-                {["manager", "service", "kitchen", "menu_editor"].map((r) => (
-                  <label key={r} className="oh-small">
-                    <input type="checkbox" name="roles" value={r} /> {r}
-                  </label>
-                ))}
-              </div>
-              <p className="oh-hint">
-                This replaces the member’s roles at the selected outlet. Clear all roles to revoke
-                that outlet.
-              </p>
-            </Form>
+            <RoleGrantEditor key={selected} detail={detail} disabled={!org.isActive} send={send} />
           <section className="oh-inset">
             <h2 className="oh-subtitle">People and outlet grants</h2>
             <ul className="mt-2 space-y-2 text-sm">
