@@ -4,7 +4,7 @@ import { InvitationManager } from "@/components/auth/invitation-manager";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { Info } from "lucide-react";
+import { Info, Store, Layers3, Building2, UsersRound, Wallet, Activity, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
@@ -148,6 +148,10 @@ function RoleGrantEditor({
         })
       }
     >
+      <div className="oh-help-line">
+        <span>Outlet permissions replace the selected member&apos;s current role set.</span>
+        <Help label="outlet roles">Roles are scoped to the selected outlet. Clearing them revokes that outlet access, not membership in the organization.</Help>
+      </div>
       <div className="oh-two">
         <label className="oh-field">
           Outlet
@@ -263,6 +267,10 @@ function BrandLinkEditor({
         })
       }
     >
+      <div className="oh-help-line">
+        <span>Connect a brand to the restaurants that use it.</span>
+        <Help label="brand and outlet links">These links organize brands under your organization. They do not publish a menu or change the guest-facing outlet identity.</Help>
+      </div>
       <div className="oh-two">
         <label className="oh-field">
           Brand
@@ -452,7 +460,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 ))}
               </select>
             </label>
-            <small>Changes here do not switch your active working restaurant.</small>
+            <div className="oh-help-line">
+              <small>Changes here do not switch your active working restaurant.</small>
+              <Help label="organization switcher">Switching this workspace changes only the organization being administered. Your current restaurant in the sidebar stays selected.</Help>
+            </div>
           </div>
         )}
         {error && (
@@ -498,25 +509,25 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
               <nav className="oh-nav" aria-label="Organization sections">
                 <span className="oh-kicker">EXPLORE YOUR HOUSE</span>
                 <a href="#overview">
-                  01 <span>Overview</span>
+                  <Building2 size={17} aria-hidden="true" /> <span>Overview</span>
                 </a>
                 <a href="#outlets">
-                  02 <span>Outlet collection</span>
+                  <Store size={17} aria-hidden="true" /> <span>Outlet collection</span>
                 </a>
                 <a href="#people">
-                  03 <span>Team hall</span>
+                  <UsersRound size={17} aria-hidden="true" /> <span>Team hall</span>
                 </a>
                 <a href="#brands">
-                  04 <span>Brand gallery</span>
+                  <Layers3 size={17} aria-hidden="true" /> <span>Brand gallery</span>
                 </a>
                 <a href="#capabilities">
-                  05 <span>Capabilities</span>
+                  <Wallet size={17} aria-hidden="true" /> <span>Capabilities</span>
                 </a>
                 <a href="#activity">
-                  06 <span>Activity & delivery</span>
+                  <Activity size={17} aria-hidden="true" /> <span>Activity & delivery</span>
                 </a>
                 <a href="#governance">
-                  07 <span>Owner&apos;s office</span>
+                  <ShieldCheck size={17} aria-hidden="true" /> <span>Owner&apos;s office</span>
                 </a>
                 <p>
                   Company-wide identity, people and permissions are managed separately from your
@@ -568,7 +579,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div className="oh-tiles" aria-label="Outlet directory">
                       {detail.outlets.map((o) => (
                         <article key={o.id} className="oh-tile">
-                          <span className="oh-tile-icon">⌂</span>
+                          <span className="oh-tile-icon" aria-hidden="true"><Store size={23} /></span>
                           <h3>{o.name}</h3>
                           <p>
                             {o.outletType.replaceAll("_", " ")} · {o.currency} · {o.country}
@@ -701,7 +712,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div className="oh-tiles" aria-label="Brand directory">
                       {detail.brands.map((b) => (
                         <article key={b.id} className="oh-tile">
-                          <span className="oh-tile-icon">✦</span>
+                          <span className="oh-tile-icon" aria-hidden="true"><Layers3 size={23} /></span>
                           <h3>{b.name}</h3>
                           <p>
                             {detail.links.filter((l) => l.brandId === b.id).length} connected
@@ -749,7 +760,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     {" "}
                     {billing && (
                       <section className="oh-inset">
-                        <h2 className="oh-subtitle">Billing entitlements</h2>
+                        <div className="oh-help-line">
+                          <h2 className="oh-subtitle">Billing entitlements</h2>
+                          <Help label="billing entitlements">Features reflect the actual organization grants. Outlet currency is independent from billing currency. This page cannot activate paid plans.</Help>
+                        </div>
                         <p className="text-sm">
                           Public QR menus: free · New ordering:{" "}
                           {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
@@ -794,7 +808,10 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     </section>
                     <section className="oh-inset">
                       <div className="oh-row-head">
-                        <h2 className="oh-subtitle">Background delivery</h2>
+                        <div className="oh-help-line">
+                          <h2 className="oh-subtitle">Background delivery</h2>
+                          <Help label="background delivery">A successful retry request means the event was queued for another attempt, not that delivery has completed. Check its updated status.</Help>
+                        </div>
                         <button className="text-sm underline" onClick={() => void load()}>
                           Refresh status
                         </button>
@@ -856,9 +873,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <div>
                       <span className="oh-kicker">07 / THE OWNER&apos;S OFFICE</span>
                       <h2>Your house. Protected.</h2>
-                      <p>
-                        Privileged decisions require deliberate confirmation and server
-                        authorization.
+                      <p>Privileged decisions require deliberate confirmation and server authorization.
+                        <Help label="owner actions">Suspension blocks organization access and public menus. Ownership transfer relinquishes your owner privileges and requires account security checks.</Help>
                       </p>
                     </div>
                     <div aria-hidden="true" className="oh-art oh-art-owners-office" />
