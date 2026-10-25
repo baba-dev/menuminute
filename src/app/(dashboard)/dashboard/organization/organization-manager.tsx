@@ -170,13 +170,14 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
 <div className="oh-hero-buttons"><a href="#outlets" className="oh-primary">Explore your outlets →</a><a className="oh-secondary" href="#people">Meet your team ↗</a></div>
 </div></header><div className="oh-body">
 {!organizations.length ? <section className="oh-empty"><h2>Your hospitality house begins here.</h2><p>Complete <Link href="/onboarding">onboarding</Link> to create your first outlet.</p></section>:
-<label className="oh-context oh-field"><span>Organization</span><select aria-label="Organization" value={selected} onChange={e=>{
+<div className="oh-context"><label className="oh-field"><span>Organization</span><select aria-label="Organization" value={selected} onChange={e=>{
 if(e.target.value===selected)return;
 activeSelection.current=e.target.value;requestGeneration.current++;
 setDetail(null);setBilling(null);setSelected(e.target.value);
-}}>{organizations.map(o=><option key={o.id} value={o.id}>{o.name} ({o.role})</option>)}</select>
-<small>Changes here do not switch your active working restaurant.</small></label>}
-{error&&<div className="oh-error" role="alert">{error}</div>}
+}}>{organizations.map(o=><option key={o.id} value={o.id}>{o.name} ({o.role})</option>)}</select></label>
+<small>Changes here do not switch your active working restaurant.</small></div>}
+{error&&<div className="oh-error" role="alert">{error} <button type="button" onClick={() => void load()}>Retry</button></div>}
+{!detail && organizations.length>0 && !error && <div className="oh-empty" role="status">Loading your organization workspace…</div>}
 {detail&&org&&<><div className="oh-pulse" aria-label="Organization overview">
 <div><span>RESTAURANTS</span><strong>{detail.outlets.length}</strong><small>Outlets in your house</small></div>
 <div><span>TEAM</span><strong>{detail.members.filter(m=>m.isActive).length}</strong><small>Active members</small></div>
@@ -381,14 +382,14 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
             )}
 </div></section>
 <section id="capabilities" className="oh-panel" aria-label="YOUR CAPABILITIES"><header className="oh-panel-heading"><div><span className="oh-kicker">05 / YOUR CAPABILITIES</span><h2>Everything your business can do.</h2><p>Live capability grants, independent of the restaurant menu currency.</p></div><div aria-hidden="true" className="oh-art oh-art-capabilities"/></header><div className="oh-panel-content">          {billing && (
-            <section className="rounded-xl border bg-white p-4">
-              <h2 className="font-bold">Billing entitlements</h2>
+            <section className="oh-inset">
+              <h2 className="oh-subtitle">Billing entitlements</h2>
               <p className="text-sm">
                 Public QR menus: free · New ordering:{" "}
                 {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
                 {billing.kitchen ? "enabled" : "no active grant"}
               </p>
-              <p className="mt-2 text-sm text-stone-500">
+              <p className="oh-hint">
                 Commercial plans and checkout are not available yet. Entitlement grants use USD or
                 INR billing independently of outlet currency.
               </p>
@@ -403,7 +404,7 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
             </section>
           )}</div></section>
 <section id="activity" className="oh-panel" aria-label="ACTIVITY & DELIVERY"><header className="oh-panel-heading"><div><span className="oh-kicker">06 / ACTIVITY & DELIVERY</span><h2>Every detail in motion.</h2><p>Follow recent events and recover failed delivery with confidence.</p></div><div aria-hidden="true" className="oh-art oh-art-activity"/></header><div className="oh-panel-content">          <section>
-            <h2 className="font-bold">Recent activity</h2>
+            <h2 className="oh-subtitle">Recent activity</h2>
             <ul className="text-sm">
               {detail.audit.map((a) => (
                 <li key={a.id}>
@@ -413,9 +414,9 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
             </ul>
           </section>
 
-          <section className="rounded-xl border bg-white p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold">Background delivery</h2>
+          <section className="oh-inset">
+            <div className="oh-row-head">
+              <h2 className="oh-subtitle">Background delivery</h2>
               <button className="text-sm underline" onClick={() => void load()}>
                 Refresh status
               </button>
@@ -424,7 +425,7 @@ setDetail(null);setBilling(null);setSelected(e.target.value);
               Recent 30 events. Pending and dispatched events recover automatically; failed events
               require review.
             </p>
-            <ul className="space-y-2 text-sm">
+            <ul className="oh-event-list">
               {detail.jobs.map((j) => (
                 <li key={j.id} className="break-all">
                   {j.id.slice(0, 8)} · {j.status} · attempts {j.attempts}{" "}
