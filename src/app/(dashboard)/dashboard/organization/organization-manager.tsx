@@ -703,7 +703,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     <section className="oh-people-directory" aria-label="People and outlet grants">
                       <div className="oh-group-heading">
                         <h2 className="oh-subtitle">People and outlet grants</h2>
-                        <p>Current organization membership and assigned restaurant responsibilities.</p>
+                        <p>
+                          Current organization membership and assigned restaurant responsibilities.
+                        </p>
                       </div>
                       <ul className="oh-person-grid">
                         {detail.members.map((member) => (
@@ -716,19 +718,38 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                                 <strong>{member.name || member.email}</strong>
                                 <small>{member.email}</small>
                               </div>
-                              <span className={"oh-role-badge " + (member.isActive ? "is-active" : "is-revoked")}>
+                              <span
+                                className={
+                                  "oh-role-badge " + (member.isActive ? "is-active" : "is-revoked")
+                                }
+                              >
                                 {member.role} · {member.isActive ? "Active" : "Revoked"}
                               </span>
                             </div>
                             <div className="oh-person-grants">
-                              {detail.grants.filter((grant) => grant.memberId === member.id).length ? (
-                                detail.grants.filter((grant) => grant.memberId === member.id).map((grant) => (
-                                  <div className="oh-grant" key={grant.outletId}>
-                                    <span>{detail.outlets.find((outlet) => outlet.id === grant.outletId)?.name ?? "Outlet"}</span>
-                                    <small>{grant.roles.length ? grant.roles.map((role) => role.replaceAll("_", " ")).join(", ") : "No roles"}</small>
-                                  </div>
-                                ))
-                              ) : <p className="oh-hint">No outlet-specific grants.</p>}
+                              {detail.grants.filter((grant) => grant.memberId === member.id)
+                                .length ? (
+                                detail.grants
+                                  .filter((grant) => grant.memberId === member.id)
+                                  .map((grant) => (
+                                    <div className="oh-grant" key={grant.outletId}>
+                                      <span>
+                                        {detail.outlets.find(
+                                          (outlet) => outlet.id === grant.outletId
+                                        )?.name ?? "Outlet"}
+                                      </span>
+                                      <small>
+                                        {grant.roles.length
+                                          ? grant.roles
+                                              .map((role) => role.replaceAll("_", " "))
+                                              .join(", ")
+                                          : "No roles"}
+                                      </small>
+                                    </div>
+                                  ))
+                              ) : (
+                                <p className="oh-hint">No outlet-specific grants.</p>
+                              )}
                             </div>
                           </li>
                         ))}
@@ -816,12 +837,21 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                           use USD or INR billing independently of outlet currency.
                         </p>
                         <div className="oh-capability-grid" aria-label="Live capabilities">
-                          <article className="oh-capability"><QrCode size={23} aria-hidden="true" />
-                            <strong>QR Menu</strong><small>{billing.freeMenu ? "Available" : "Unavailable"}</small></article>
-                          <article className="oh-capability"><ShoppingBag size={23} aria-hidden="true" />
-                            <strong>Online ordering</strong><small>{billing.ordering ? "Enabled" : "No active grant"}</small></article>
-                          <article className="oh-capability"><ChefHat size={23} aria-hidden="true" />
-                            <strong>Kitchen</strong><small>{billing.kitchen ? "Enabled" : "No active grant"}</small></article>
+                          <article className="oh-capability">
+                            <QrCode size={23} aria-hidden="true" />
+                            <strong>QR Menu</strong>
+                            <small>{billing.freeMenu ? "Available" : "Unavailable"}</small>
+                          </article>
+                          <article className="oh-capability">
+                            <ShoppingBag size={23} aria-hidden="true" />
+                            <strong>Online ordering</strong>
+                            <small>{billing.ordering ? "Enabled" : "No active grant"}</small>
+                          </article>
+                          <article className="oh-capability">
+                            <ChefHat size={23} aria-hidden="true" />
+                            <strong>Kitchen</strong>
+                            <small>{billing.kitchen ? "Enabled" : "No active grant"}</small>
+                          </article>
                         </div>
                         <ul className="text-sm">
                           {billing.grants.map((g) => (
@@ -853,13 +883,18 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                           {detail.audit.map((event) => (
                             <li key={event.id}>
                               <span className="oh-timeline-marker" aria-hidden="true" />
-                              <div><strong>{event.action.replaceAll("_", " ")}</strong>
-                                <time dateTime={event.createdAt}>{new Date(event.createdAt).toLocaleString()}</time>
+                              <div>
+                                <strong>{event.action.replaceAll("_", " ")}</strong>
+                                <time dateTime={event.createdAt}>
+                                  {new Date(event.createdAt).toLocaleString()}
+                                </time>
                               </div>
                             </li>
                           ))}
                         </ol>
-                      ) : <p className="oh-hint">There are no recent organization events.</p>}
+                      ) : (
+                        <p className="oh-hint">There are no recent organization events.</p>
+                      )}
                     </section>
                     <section className="oh-inset">
                       <div className="oh-row-head">
