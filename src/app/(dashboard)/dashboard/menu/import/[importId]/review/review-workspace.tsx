@@ -153,12 +153,22 @@ export function ReviewWorkspace({
   ]);
   const confirmedCount = confirmed.filter((x) => ids.includes(x)).length;
   const outstanding = ids.length - confirmedCount;
-  const visible = (id: string) => filter === "all" || (filter === "verified" ? confirmed.includes(id) : !confirmed.includes(id));
-  const visibleCategory = (cat: ImportCandidate["categories"][number]) => visible(cat.id) || cat.items.some((dish) => visible(dish.id) || dish.variants.some((v) => visible(v.id)));
-  function selectSource(id: string) { setActiveSource(id); setMobileView("source"); setZoom(100); }
+  const visible = (id: string) =>
+    filter === "all" || (filter === "verified" ? confirmed.includes(id) : !confirmed.includes(id));
+  const visibleCategory = (cat: ImportCandidate["categories"][number]) =>
+    visible(cat.id) ||
+    cat.items.some((dish) => visible(dish.id) || dish.variants.some((v) => visible(v.id)));
+  function selectSource(id: string) {
+    setActiveSource(id);
+    setMobileView("source");
+    setZoom(100);
+  }
   useEffect(() => {
     if (!dirty) return;
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
@@ -312,18 +322,32 @@ export function ReviewWorkspace({
   return (
     <div className="scan-table space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/dashboard/menu/import" className="scan-back" onClick={(event) => {
-          if (dirty && !window.confirm("Leave before saving your review changes?")) event.preventDefault();
-        }}><ArrowLeft className="size-4" /> The Scan Table</Link>
-        <span className="scan-private inline-flex items-center gap-2"><ShieldCheck className="size-4" /> Human verified · Never auto-published</span>
+        <Link
+          href="/dashboard/menu/import"
+          className="scan-back"
+          onClick={(event) => {
+            if (dirty && !window.confirm("Leave before saving your review changes?"))
+              event.preventDefault();
+          }}
+        >
+          <ArrowLeft className="size-4" /> The Scan Table
+        </Link>
+        <span className="scan-private inline-flex items-center gap-2">
+          <ShieldCheck className="size-4" /> Human verified · Never auto-published
+        </span>
       </div>
       <header className="scan-hero">
         <div className="scan-hero-copy">
           <p className="scan-eyebrow">RECIPE ATELIER / THE REVIEW DESK</p>
           <h1>Perfect every detail.</h1>
-          <p className="scan-subtitle">Compare the original photo against each extracted dish. Verify names and prices before creating a private editable menu draft.</p>
+          <p className="scan-subtitle">
+            Compare the original photo against each extracted dish. Verify names and prices before
+            creating a private editable menu draft.
+          </p>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold">
-            <span>{confirmedCount} / {ids.length} verified</span>
+            <span>
+              {confirmedCount} / {ids.length} verified
+            </span>
             <span>{outstanding} to check</span>
             <span>Revision {session.revision}</span>
             {dirty && <span role="status">Unsaved changes</span>}
@@ -331,8 +355,20 @@ export function ReviewWorkspace({
         </div>
       </header>
       <div className="scan-mobile-toggle" role="group" aria-label="Review workspace view">
-        <button className="scan-action scan-action--secondary flex-1" aria-pressed={mobileView === "source"} onClick={() => setMobileView("source")}>Original photo</button>
-        <button className="scan-action scan-action--secondary flex-1" aria-pressed={mobileView === "details"} onClick={() => setMobileView("details")}>Extracted dishes</button>
+        <button
+          className="scan-action scan-action--secondary flex-1"
+          aria-pressed={mobileView === "source"}
+          onClick={() => setMobileView("source")}
+        >
+          Original photo
+        </button>
+        <button
+          className="scan-action scan-action--secondary flex-1"
+          aria-pressed={mobileView === "details"}
+          onClick={() => setMobileView("details")}
+        >
+          Extracted dishes
+        </button>
       </div>
       {error && (
         <p role="alert" className="flex gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-800">
@@ -356,27 +392,43 @@ export function ReviewWorkspace({
           </div>
           <div className="scan-review-panel">
             <div className="scan-review-toolbar mb-3" role="group" aria-label="Source image zoom">
-              <button type="button" aria-label="Zoom out" disabled={zoom <= 100} onClick={() => setZoom((value) => Math.max(100, value - 25))}>−</button>
+              <button
+                type="button"
+                aria-label="Zoom out"
+                disabled={zoom <= 100}
+                onClick={() => setZoom((value) => Math.max(100, value - 25))}
+              >
+                −
+              </button>
               <span className="scan-status text-xs font-bold">{zoom}%</span>
-              <button type="button" aria-label="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}>+</button>
-              <button type="button" onClick={() => setZoom(100)}>Fit</button>
+              <button
+                type="button"
+                aria-label="Zoom in"
+                disabled={zoom >= 200}
+                onClick={() => setZoom((value) => Math.min(200, value + 25))}
+              >
+                +
+              </button>
+              <button type="button" onClick={() => setZoom(100)}>
+                Fit
+              </button>
             </div>
             <div className="scan-source-canvas">
-            {preview[activeSource] ? (
-              <Image
-                src={preview[activeSource]!}
-                width={800}
-                height={1000}
-                unoptimized
-                alt="Private original menu photograph"
-                className="rounded-xl object-contain"
-                style={{ width: `${zoom}%` }}
-              />
-            ) : (
-              <div className="flex h-64 items-center justify-center rounded-xl bg-stone-100 text-sm text-stone-500">
-                Private preview unavailable
-              </div>
-            )}
+              {preview[activeSource] ? (
+                <Image
+                  src={preview[activeSource]!}
+                  width={800}
+                  height={1000}
+                  unoptimized
+                  alt="Private original menu photograph"
+                  className="rounded-xl object-contain"
+                  style={{ width: `${zoom}%` }}
+                />
+              ) : (
+                <div className="flex h-64 items-center justify-center rounded-xl bg-stone-100 text-sm text-stone-500">
+                  Private preview unavailable
+                </div>
+              )}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {session.sources.map((s) => (
@@ -400,7 +452,10 @@ export function ReviewWorkspace({
             </p>
           </div>
         </aside>
-        <section className="scan-review-editor min-w-0 space-y-4" aria-label="Editable recognized dishes">
+        <section
+          className="scan-review-editor min-w-0 space-y-4"
+          aria-label="Editable recognized dishes"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-stone-900">02 / Verify extraction</h2>
             <Eye className="size-5 text-orange-600" />
@@ -422,9 +477,23 @@ export function ReviewWorkspace({
             </label>
           </div>
           <div className="scan-review-toolbar" role="group" aria-label="Review status filters">
-            <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All ({ids.length})</button>
-            <button type="button" aria-pressed={filter === "attention"} onClick={() => setFilter("attention")}>Needs review ({outstanding})</button>
-            <button type="button" aria-pressed={filter === "verified"} onClick={() => setFilter("verified")}>Verified ({confirmedCount})</button>
+            <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
+              All ({ids.length})
+            </button>
+            <button
+              type="button"
+              aria-pressed={filter === "attention"}
+              onClick={() => setFilter("attention")}
+            >
+              Needs review ({outstanding})
+            </button>
+            <button
+              type="button"
+              aria-pressed={filter === "verified"}
+              onClick={() => setFilter("verified")}
+            >
+              Verified ({confirmedCount})
+            </button>
           </div>
           {candidate.categories.map((c, ci) => (
             <section
@@ -703,7 +772,8 @@ export function ReviewWorkspace({
       <div className="scan-review-dock">
         <div className="text-xs font-semibold text-stone-600">
           <FileCheck2 className="mr-2 inline size-4 text-orange-600" />
-          {confirmedCount} of {ids.length} verified · {outstanding} remaining · Saves only a private draft
+          {confirmedCount} of {ids.length} verified · {outstanding} remaining · Saves only a private
+          draft
         </div>
         <div className="flex flex-wrap gap-2">
           <button

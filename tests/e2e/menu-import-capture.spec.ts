@@ -101,7 +101,9 @@ test("scan table allows selecting photos before creating a private session", asy
   await page.getByLabel("Choose menu photographs").setInputFiles({
     name: "baba-bakery.png",
     mimeType: "image/png",
-    buffer: await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } }).png().toBuffer(),
+    buffer: await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } })
+      .png()
+      .toBuffer(),
   });
   await expect(page.getByText("baba-bakery.png")).toBeVisible();
   await page.getByRole("button", { name: "Upload photos privately" }).click();

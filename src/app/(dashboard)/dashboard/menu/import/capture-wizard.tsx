@@ -46,7 +46,10 @@ type Session = {
   sources: Source[];
   candidate: Candidate | null;
 };
-type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status"> & { createdAt?: string; updatedAt?: string };
+type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status"> & {
+  createdAt?: string;
+  updatedAt?: string;
+};
 type Draft = {
   id: string;
   pageIndex: number;
@@ -217,7 +220,11 @@ export function CaptureWizard({
       setConsent(false);
       const createdSession = await refresh(created.id);
       if (initialFiles?.length) choose(initialFiles, createdSession);
-      setNotice(initialFiles?.length ? "Photos selected. Review and upload them privately." : "Private draft created. Your live menu remains unchanged.");
+      setNotice(
+        initialFiles?.length
+          ? "Photos selected. Review and upload them privately."
+          : "Private draft created. Your live menu remains unchanged."
+      );
       setHistory((prev) => prev.filter((i) => i.id !== created.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start import. Retry safely.");
@@ -229,8 +236,16 @@ export function CaptureWizard({
     if (!files?.length) return;
     if (!target) {
       const chosen = Array.from(files);
-      if (chosen.length > 12 || chosen.some((file) => !supported.has(file.type) || file.size === 0 || file.size > MAX_PHOTO) || chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
-        setError("Choose up to 12 JPEG, PNG or WebP photos, each under 5 MiB and at most 30 MiB combined.");
+      if (
+        chosen.length > 12 ||
+        chosen.some(
+          (file) => !supported.has(file.type) || file.size === 0 || file.size > MAX_PHOTO
+        ) ||
+        chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024
+      ) {
+        setError(
+          "Choose up to 12 JPEG, PNG or WebP photos, each under 5 MiB and at most 30 MiB combined."
+        );
         return;
       }
       void begin(chosen);
@@ -375,18 +390,34 @@ export function CaptureWizard({
     }
   }
   const collecting = session?.status === "collecting";
-  const stage = !session || collecting ? 0 : ["queued", "processing", "failed"].includes(session.status) ? 1 : 2;
+  const stage =
+    !session || collecting
+      ? 0
+      : ["queued", "processing", "failed"].includes(session.status)
+        ? 1
+        : 2;
   function onDrop(event: React.DragEvent<HTMLElement>) {
     event.preventDefault();
     setDragging(false);
     if (!busy) choose(event.dataTransfer.files);
   }
   function showHistory() {
-    if (drafts.some((draft) => draft.state === "pending" || draft.state === "uploading" || draft.state === "error") && !window.confirm("Leave these unuploaded selections? Only successfully uploaded photos will be saved.")) return;
+    if (
+      drafts.some(
+        (draft) =>
+          draft.state === "pending" || draft.state === "uploading" || draft.state === "error"
+      ) &&
+      !window.confirm(
+        "Leave these unuploaded selections? Only successfully uploaded photos will be saved."
+      )
+    )
+      return;
     setSession(null);
     setDrafts([]);
     setConsent(false);
-    void json<SessionSummary[]>("/api/menu-imports").then(setHistory).catch(() => setError("Could not refresh import history."));
+    void json<SessionSummary[]>("/api/menu-imports")
+      .then(setHistory)
+      .catch(() => setError("Could not refresh import history."));
   }
   const readyCount = session?.sources.filter((s) => s.status === "ready").length ?? 0;
   const totalCount = session?.sources.length ?? 0;
@@ -399,17 +430,28 @@ export function CaptureWizard({
   return (
     <div className="scan-table space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/dashboard/menu" className="scan-back"><ArrowLeft className="size-4" /> Back to Menu Studio</Link>
-        <span className="scan-private inline-flex items-center gap-2"><ShieldCheck className="size-4" /> Private · Review first</span>
+        <Link href="/dashboard/menu" className="scan-back">
+          <ArrowLeft className="size-4" /> Back to Menu Studio
+        </Link>
+        <span className="scan-private inline-flex items-center gap-2">
+          <ShieldCheck className="size-4" /> Private · Review first
+        </span>
       </div>
       <header className="scan-hero">
         <div className="scan-hero-copy">
           <p className="scan-eyebrow">RECIPE ATELIER / THE SCAN TABLE</p>
           <h1>Your menu. Digitized.</h1>
-          <p className="scan-subtitle">Capture, extract and perfect every dish for {outletName}. Your published menu stays untouched until you explicitly publish from Menu Studio.</p>
+          <p className="scan-subtitle">
+            Capture, extract and perfect every dish for {outletName}. Your published menu stays
+            untouched until you explicitly publish from Menu Studio.
+          </p>
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold">
-            <span className="inline-flex items-center gap-1"><ShieldCheck className="size-4" /> Private photos</span>
-            <span>Up to 12 pages</span><span>5 MiB / photo · 30 MiB total</span><span>{currency}</span>
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="size-4" /> Private photos
+            </span>
+            <span>Up to 12 pages</span>
+            <span>5 MiB / photo · 30 MiB total</span>
+            <span>{currency}</span>
           </div>
         </div>
       </header>
@@ -419,9 +461,23 @@ export function CaptureWizard({
           { title: "Extract", help: "AI interpretation" },
           { title: "Review", help: "Human verified" },
         ].map((item, index) => (
-          <div key={item.title} className="scan-step" data-state={index === stage ? "active" : index < stage ? "complete" : "upcoming"} aria-current={index === stage ? "step" : undefined}>
-            <span className="scan-step-mark">{index < stage ? <CheckCircle2 className="size-5" /> : String(index + 1).padStart(2,"0")}</span>
-            <span><strong>{item.title}</strong><small>{item.help}</small></span>
+          <div
+            key={item.title}
+            className="scan-step"
+            data-state={index === stage ? "active" : index < stage ? "complete" : "upcoming"}
+            aria-current={index === stage ? "step" : undefined}
+          >
+            <span className="scan-step-mark">
+              {index < stage ? (
+                <CheckCircle2 className="size-5" />
+              ) : (
+                String(index + 1).padStart(2, "0")
+              )}
+            </span>
+            <span>
+              <strong>{item.title}</strong>
+              <small>{item.help}</small>
+            </span>
           </div>
         ))}
       </nav>
@@ -444,44 +500,122 @@ export function CaptureWizard({
       )}
       {!session ? (
         <section className="scan-panel space-y-5">
-          <div className="scan-dropzone" data-dragging={dragging}
-            onDragOver={(event) => { event.preventDefault(); if (!busy) setDragging(true); }}
-            onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
+          <div
+            className="scan-dropzone"
+            data-dragging={dragging}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!busy) setDragging(true);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false);
+            }}
             onDrop={onDrop}
           >
-            <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700"><UploadCloud className="size-7" /></div>
+            <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
+              <UploadCloud className="size-7" />
+            </div>
             <h2 className="text-xl font-extrabold">Add your printed menu</h2>
-            <p className="scan-status mx-auto mt-2 max-w-md text-sm">Drop clear menu photos here, use your camera or choose images. A private draft is created only when you begin.</p>
+            <p className="scan-status mx-auto mt-2 max-w-md text-sm">
+              Drop clear menu photos here, use your camera or choose images. A private draft is
+              created only when you begin.
+            </p>
             <div className="scan-upload-options mt-5">
-              <label className="scan-file-picker"><Camera className="size-4"/> Use camera
-                <input aria-label="Capture menu photograph" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={busy} onChange={(event) => {choose(event.target.files);event.target.value="";}} />
+              <label className="scan-file-picker">
+                <Camera className="size-4" /> Use camera
+                <input
+                  aria-label="Capture menu photograph"
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  disabled={busy}
+                  onChange={(event) => {
+                    choose(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
               </label>
-              <label className="scan-file-picker scan-file-picker--secondary"><ImagePlus className="size-4"/> Choose photos
-                <input aria-label="Choose menu photographs" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => {choose(event.target.files);event.target.value="";}} />
+              <label className="scan-file-picker scan-file-picker--secondary">
+                <ImagePlus className="size-4" /> Choose photos
+                <input
+                  aria-label="Choose menu photographs"
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  disabled={busy}
+                  onChange={(event) => {
+                    choose(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
               </label>
             </div>
-            <p className="scan-status mt-4 text-xs">JPEG · PNG · WebP · Max 12 photos · PDFs are not supported yet</p>
-            {busy && <p role="status" className="mt-3 text-sm font-semibold">Creating your private draft…</p>}
+            <p className="scan-status mt-4 text-xs">
+              JPEG · PNG · WebP · Max 12 photos · PDFs are not supported yet
+            </p>
+            {busy && (
+              <p role="status" className="mt-3 text-sm font-semibold">
+                Creating your private draft…
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div><h2 className="text-lg font-extrabold">Recent imports</h2><p className="scan-status text-xs">Resume a session securely, without re-uploading completed pages.</p></div>
-            <button type="button" onClick={() => void begin()} disabled={busy} className="scan-action scan-action--secondary"><ImagePlus className="size-4" /> Create private draft</button>
+            <div>
+              <h2 className="text-lg font-extrabold">Recent imports</h2>
+              <p className="scan-status text-xs">
+                Resume a session securely, without re-uploading completed pages.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void begin()}
+              disabled={busy}
+              className="scan-action scan-action--secondary"
+            >
+              <ImagePlus className="size-4" /> Create private draft
+            </button>
           </div>
           {history.length === 0 ? (
-            <div className="flex items-center gap-4 rounded-xl border p-5" style={{borderColor:"var(--scan-border)"}}>
-              <Image src="/brand/menu-studio/recipe-atelier/first-menu-empty-illustration.webp" alt="" width={86} height={75} className="size-20 object-contain" />
-              <p className="scan-status text-sm">No imports yet. Add your first menu photographs above.</p>
+            <div
+              className="flex items-center gap-4 rounded-xl border p-5"
+              style={{ borderColor: "var(--scan-border)" }}
+            >
+              <Image
+                src="/brand/menu-studio/recipe-atelier/first-menu-empty-illustration.webp"
+                alt=""
+                width={86}
+                height={75}
+                className="size-20 object-contain"
+              />
+              <p className="scan-status text-sm">
+                No imports yet. Add your first menu photographs above.
+              </p>
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
               {history.map((item) => (
-                <button key={item.id} type="button" disabled={busy} onClick={() => {
-                  setDrafts([]);setConsent(false);setError("");
-                  void refresh(item.id).catch(() => setError("Could not reopen this import."));
-                }} className="scan-history-row flex items-center justify-between gap-3 p-4 text-left">
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setDrafts([]);
+                    setConsent(false);
+                    setError("");
+                    void refresh(item.id).catch(() => setError("Could not reopen this import."));
+                  }}
+                  className="scan-history-row flex items-center justify-between gap-3 p-4 text-left"
+                >
                   <span>
                     <span className="block text-sm font-bold">{statusText(item.status)}</span>
-                    <span className="scan-status block text-xs">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : "Private import"} · {item.currency}</span>
+                    <span className="scan-status block text-xs">
+                      {item.updatedAt
+                        ? new Date(item.updatedAt).toLocaleDateString()
+                        : "Private import"}{" "}
+                      · {item.currency}
+                    </span>
                   </span>
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </button>
@@ -528,7 +662,16 @@ export function CaptureWizard({
             </div>
             {collecting && (
               <div className="mt-6 space-y-5">
-                <div className="scan-dropzone" data-dragging={dragging} onDragOver={(event) => { event.preventDefault(); if (!busy) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
+                <div
+                  className="scan-dropzone"
+                  data-dragging={dragging}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (!busy) setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={onDrop}
+                >
                   <p className="mb-3 text-base font-extrabold">Add and verify your menu pages</p>
                   <div className="scan-upload-options">
                     <label className="scan-file-picker">
@@ -572,10 +715,7 @@ export function CaptureWizard({
                 {drafts.length > 0 && (
                   <div className="space-y-3">
                     {drafts.map((d) => (
-                      <div
-                        key={d.id}
-                        className="scan-image-tile flex items-center gap-3 p-3"
-                      >
+                      <div key={d.id} className="scan-image-tile flex items-center gap-3 p-3">
                         <Image
                           src={d.preview}
                           width={64}
