@@ -7,6 +7,8 @@ import {
   ImagePlus,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
   RefreshCcw,
   ScanLine,
   ShieldCheck,
@@ -295,6 +297,22 @@ export function CaptureWizard({
     });
     setDrafts((prev) => [...prev, ...items]);
     setNotice("Use a clear, flat image with all prices visible.");
+  }
+  function movePending(id: string, offset: -1 | 1) {
+    if (busy) return;
+    setDrafts((previous) => {
+      const ordered = [...previous].sort((a, b) => a.pageIndex - b.pageIndex);
+      const index = ordered.findIndex((item) => item.id === id);
+      const other = ordered[index + offset];
+      const current = ordered[index];
+      if (!current || !other || current.state !== "pending" || other.state !== "pending") return previous;
+      const pageIndex = current.pageIndex;
+      return ordered.map((item) => item.id === current.id
+        ? { ...item, pageIndex: other.pageIndex }
+        : item.id === other.id
+          ? { ...item, pageIndex }
+          : item).sort((a, b) => a.pageIndex - b.pageIndex);
+    });
   }
   function drop(id: string) {
     setDrafts((prev) =>
@@ -736,6 +754,12 @@ export function CaptureWizard({
                             </p>
                           )}
                         </div>
+                        {d.state === "pending" && (
+                          <div className="flex flex-col gap-1">
+                            <button type="button" onClick={() => movePending(d.id, -1)} disabled={busy || !drafts.some((other) => other.state === "pending" && other.pageIndex === d.pageIndex - 1)} aria-label={"Move " + d.file.name + " earlier"} className="rounded-lg border p-1 disabled:opacity-30" style={{borderColor:"var(--scan-border)"}}><ArrowUp className="size-4" /></button>
+                            <button type="button" onClick={() => movePending(d.id, 1)} disabled={busy || !drafts.some((other) => other.state === "pending" && other.pageIndex === d.pageIndex + 1)} aria-label={"Move " + d.file.name + " later"} className="rounded-lg border p-1 disabled:opacity-30" style={{borderColor:"var(--scan-border)"}}><ArrowDown className="size-4" /></button>
+                          </div>
+                        )}
                         {d.state !== "ready" && d.state !== "uploading" && (
                           <button
                             type="button"
