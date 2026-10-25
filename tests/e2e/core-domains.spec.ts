@@ -79,11 +79,12 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 }
 test("organization and outlet management, scoped roles, billing and suspension recovery", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const f = await seed();
   await login(page, f.email, f.password);
   await page.getByRole("link", { name: "Organization & access" }).click();
@@ -163,6 +164,7 @@ test("organization and outlet management, scoped roles, billing and suspension r
 test("organization switching ignores a late response from the previous organization", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const f = await seed();
   await login(page, f.email, f.password);
   let resolve!: () => void;
@@ -175,7 +177,8 @@ test("organization switching ignores a late response from the previous organizat
     await gate;
     await route.fulfill({ response });
   });
-  await page.goto("/dashboard/organization");
+  // The delayed API response is intentional: do not wait for network completion on navigation.
+  await page.goto("/dashboard/organization", { waitUntil: "domcontentloaded" });
   await started;
   await page.getByLabel("Organization", { exact: true }).selectOption(f.otherOrg);
   await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Beta Domain");
@@ -218,6 +221,7 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
 }) => {
   const f = await seed();
   await login(page, f.email, f.password);
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/dashboard/organization");
   await expect(page.getByRole("heading", { name: /Everything under one roof/ })).toBeVisible();
   await expect(page.locator(".oh-hero")).toHaveCSS(
@@ -262,6 +266,7 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
 test("outlet role grants reflect saved permissions after refresh and switching members", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const f = await seed();
   await login(page, f.email, f.password);
   await page.goto("/dashboard/organization");

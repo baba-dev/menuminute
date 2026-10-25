@@ -405,6 +405,12 @@ export function OrganizationManager({
   async function send(action: string, data: Record<string, unknown>) {
     if (!detail || detail.organization.id !== selected || activeSelection.current !== selected)
       throw new Error("Refresh organization first");
+    if (action === "organization.active") {
+      // Preserve the managed organization even if suspending it invalidates the active outlet.
+      const url = new URL(window.location.href);
+      url.searchParams.set("organization", selected);
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
     const r = await fetch(`/api/organizations/${selected}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
