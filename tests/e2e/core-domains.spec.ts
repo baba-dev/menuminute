@@ -212,3 +212,66 @@ test("organization switching ignores a late response from the previous organizat
   const unchanged = await page.request.get(`/api/organizations/${f.org}`);
   expect((await unchanged.json()).organization.name).toBe("Alpha Domain");
 });
+
+test("Hospitality House uses approved theme art, mobile composition and accessible help", async ({ page }) => {
+  const f = await seed();
+  await login(page, f.email, f.password);
+  await page.goto("/dashboard/organization");
+  await expect(page.getByRole("heading", { name: /Everything under one roof/ })).toBeVisible();
+  await expect(page.locator(".oh-hero")).toHaveCSS(
+    "background-image",
+    /Organization-Hero-Light\.png/
+  );
+  await expect(page.locator(".oh-art-outlet-collection").first()).toHaveCSS(
+    "background-image",
+    /outlet-collection-light\.webp/
+  );
+
+  await page.locator("html").evaluate((node) => node.setAttribute("data-theme", "dark"));
+  await expect(page.locator(".oh-hero")).toHaveCSS(
+    "background-image",
+    /Organization-Hero-Dark\.png/
+  );
+  await expect(page.locator(".oh-art-team-hall")).toHaveCSS(
+    "background-image",
+    /team-hall-dark\.webp/
+  );
+
+  const help = page.getByRole("button", { name: "About outlet roles" });
+  await help.click();
+  await expect(page.getByText(/Clearing them revokes that outlet access/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText(/Clearing them revokes that outlet access/)).toBeHidden();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".oh-hero")).toHaveCSS(
+    "background-image",
+    /Organization-Hero-Mobile-Dark\.png/
+  );
+  await expect(page.getByRole("navigation", { name: "Organization sections" })).toBeVisible();
+
+  await page.locator("html").evaluate((node) => node.setAttribute("data-theme", "light"));
+  await expect(page.locator(".oh-hero")).toHaveCSS(
+    "background-image",
+    /Organization-Hero-Mobile-Light\.png/
+  );
+});
+
+test("outlet role grants reflect saved permissions after refresh and switching members", async ({ page }) => {
+  const f = await seed();
+  await login(page, f.email, f.password);
+  await page.goto("/dashboard/organization");
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  const form = page.getByRole("button", { name: "Save outlet roles" }).locator("xpath=ancestor::form");
+  await form.getByLabel("Member", { exact: true }).selectOption({ label: `Browser staff (${f.memberEmail})` });
+  await form.getByLabel("service", { exact: true }).check();
+  await form.getByRole("button", { name: "Save outlet roles" }).click();
+  await expect(form.getByRole("status")).toHaveText("Saved");
+  await page.reload();
+  const restored = page.getByRole("button", { name: "Save outlet roles" }).locator("xpath=ancestor::form");
+  await restored.getByLabel("Member", { exact: true }).selectOption({ label: `Browser staff (${f.memberEmail})` });
+  await expect(restored.getByLabel("service", { exact: true })).toBeChecked();
+  await restored.getByLabel("service", { exact: true }).uncheck();
+  await expect(restored.getByLabel("Confirm clearing outlet roles")).toBeVisible();
+  await expect(restored.getByRole("button", { name: "Save outlet roles" })).toBeVisible();
+});
