@@ -4,6 +4,11 @@ import { sql } from "drizzle-orm";
 import { getPool } from "../src/db";
 import { withActor } from "../src/modules/tenancy/service";
 import { runAdminCommand, type AdminActor } from "../src/lib/admin-guard";
+import {
+  extendEntitlementGrant,
+  listEntitlementGrants,
+  searchGrantTargets,
+} from "../src/modules/admin/payments.service";
 
 // The test bootstraps a synthetic privileged actor through the isolated DB
 // owner only. No application code may directly promote an account.
@@ -194,6 +199,61 @@ describe("restricted-role platform command integration", () => {
       await owner.query("drop trigger if exists reject_isolated_admin_audit on admin_audit_logs");
       await owner.query("drop function if exists app_private.reject_isolated_admin_audit()");
     }
+  });
+
+  it("searches scoped restaurant organizations and schedules contiguous audited renewals", async () => {
+    const matches = await searchGrantTargets(actor, "Isolated platform");
+    expect(matches.some((org) => org.id === orgId)).toBe(true);
+    const unrelated = await searchGrantTargets(actor, "No matching tenant 9876598765");
+    expect(unrelated).toEqual([]);
+
+    const firstStart = new Date(Date.now() + 60_000).toISOString();
+    const firstEnd = new Date(Date.now() + 15 * 86400000).toISOString();
+    await proof();
+    const original = await runAdminCommand<{ id: string }>(actor, "entitlement.grant", orgId, {
+      capability: "ordering.new",
+      billingCurrency: "INR",
+      startsAt: firstStart,
+      endsAt: firstEnd,
+      reason: "Isolated trial billing smoke test",
+    });
+    const current = await owner.query<{ ends_at: Date }>(
+      "select ends_at from entitlement_grants where id=$1 and organization_id=$2",
+      [original.id, orgId]
+    );
+    const endBefore = current.rows[0].ends_at.toISOString();
+    const nextEnd = new Date(new Date(endBefore).getTime() + 30 * 86400000).toISOString();
+    await proof();
+    await extendEntitlementGrant(actor, {
+      grantId: original.id,
+      expectedEndsAt: endBefore,
+      newEndsAt: nextEnd,
+      reason: "Approved contiguous renewal period",
+    });
+    const all = await listEntitlementGrants(actor, { organizationId: orgId });
+    expect(all.grants).toHaveLength(2);
+    const successor = all.grants.find((grant) => grant.id !== original.id);
+    expect(successor?.startsAt.toISOString()).toBe(endBefore);
+    expect(successor?.endsAt.toISOString()).toBe(nextEnd);
+    const old = all.grants.find((grant) => grant.id === original.id);
+    expect(old?.endsAt.toISOString()).toBe(endBefore);
+    const audit = await withActor({ userId: rootId, sessionId: rootSession }, (tx) =>
+      tx.execute<{ total: number }>(
+        sql`select count(*)::int as total from admin_audit_logs where target_id=${orgId} and action='entitlement.grant'`
+      )
+    );
+    expect(audit.rows[0]?.total).toBe(2);
+    await proof();
+    await expect(
+      extendEntitlementGrant(actor, {
+        grantId: original.id,
+        expectedEndsAt: endBefore,
+        newEndsAt: nextEnd,
+        reason: "Unauthorized duplicate renewal should be denied",
+      })
+    ).rejects.toThrow();
+    const latest = await listEntitlementGrants(actor, { organizationId: orgId });
+    expect(latest.grants).toHaveLength(2);
   });
 
   it("keeps commercial Kitchen Pro activation disabled", async () => {
