@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
+        // Do not rename to "*.css": it strips CSS Module exports from "*.module.css".
       },
     },
   },

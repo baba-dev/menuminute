@@ -561,6 +561,19 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   const atelier = studio.getByTestId("qr-print-atelier");
   const printPreview = atelier.getByLabel("Table Stand print preview");
   await expect(printPreview).toBeVisible();
+  // Verify the actual CSS Modules render, not merely that print controls respond.
+  // A Turbopack "*.css" rename previously erased all imported module class names.
+  await expect(atelier).toHaveCSS("display", "grid");
+  const printHero = atelier.locator(":scope > div").first();
+  await expect(printHero).toHaveCSS("display", "flex");
+  await expect(printHero).toHaveCSS("background-image", /linear-gradient/);
+  await expect(atelier.getByRole("group", { name: "Physical print format" })).toHaveCSS(
+    "display",
+    "grid"
+  );
+  const printedSheet = printPreview.locator("article[data-format]");
+  await expect(printedSheet).toHaveCSS("display", "flex");
+  await expect(printedSheet).toHaveCSS("background-color", "rgb(255, 249, 237)");
   await expect(printPreview.locator('img[src*="format=svg"]')).toHaveCount(1);
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeHidden();
   await atelier.getByRole("button", { name: "Classic Ember" }).click();
