@@ -24,7 +24,7 @@ type Detail = {
   jobs: { id: string; status: string; attempts: number; lastError: string | null }[];
   projection: { version: number } | null;
 };
-const inputClass = "w-full rounded-md border border-stone-300 bg-white p-2 text-sm";
+const inputClass = "oh-control";
 function Field({
   label,
   name,
@@ -37,7 +37,7 @@ function Field({
   type?: string;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="oh-field">
       {label}
       <input className={inputClass} name={name} type={type} defaultValue={defaultValue} required />
     </label>
@@ -60,7 +60,7 @@ function Form({
   const [message, setMessage] = useState("");
   return (
     <form
-      className="space-y-3 rounded-xl border border-stone-200 bg-white p-4"
+      className="oh-form"
       onSubmit={async (e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
@@ -76,14 +76,14 @@ function Form({
         }
       }}
     >
-      <h2 className="font-bold">{title}</h2>
-      <fieldset disabled={busy || disabled} className="space-y-3">
+      <h2 className="oh-subtitle">{title}</h2>
+      <fieldset disabled={busy || disabled} className="oh-form-fields">
         {children}
-        <button className="rounded bg-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+        <button className="oh-primary oh-submit">
           {busy ? "Saving…" : button}
         </button>
       </fieldset>
-      <p role="status" className="text-sm">
+      <p role="status" className="oh-small">
         {message}
       </p>
     </form>
@@ -163,62 +163,37 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   }
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">Organization management</h1>
-        <p className="text-sm">
-          Admin promotion and ownership transfer require{" "}
-          <Link className="font-semibold text-orange-700 underline" href="/account/security">
-            recent password and authenticator confirmation
-          </Link>
-          .
-        </p>
-        <p className="text-sm text-stone-600">
-          Manage outlets, people and access across your organization.
-        </p>
-      </div>
-      {!organizations.length ? (
-        <p>
-          No organization yet.{" "}
-          <Link href="/onboarding" className="underline">
-            Create your first outlet
-          </Link>
-          .
-        </p>
-      ) : (
-        <label className="block max-w-md text-sm">
-          Organization
-          <select
-            aria-label="Organization"
-            className={inputClass}
-            value={selected}
-            onChange={(e) => {
-              if (e.target.value === selected) return;
-              activeSelection.current = e.target.value;
-              requestGeneration.current++;
-              setDetail(null);
-              setBilling(null);
-              setSelected(e.target.value);
-            }}
-          >
-            {organizations.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name} ({o.role})
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      {error && <p role="alert">{error}</p>}
-      {detail && org && (
-        <>
-          <p className="text-sm">
-            {org.isActive ? "Active" : "Suspended"} · Version {org.version} · Projection{" "}
-            {detail.projection?.version ?? "waiting for worker"}
-          </p>
-          <div key={selected} className="grid gap-4 lg:grid-cols-2">
-            {canAdmin && (
+  return (<div className="mm-organization" data-testid="hospitality-house">
+<header className="oh-hero"><div className="oh-hero-copy"><span className="oh-kicker">THE HOSPITALITY HOUSE / ORGANIZATION</span>
+<h2 className="oh-hero-meta">Organization management</h2><h1>Everything under<br/>one roof.</h1>
+<p>One beautiful home for your restaurants, people and brands. Every important decision, thoughtfully organized.</p>
+<div className="oh-hero-buttons"><a href="#outlets" className="oh-primary">Explore your outlets →</a><a className="oh-secondary" href="#people">Meet your team ↗</a></div>
+</div></header><div className="oh-body">
+{!organizations.length ? <section className="oh-empty"><h2>Your hospitality house begins here.</h2><p>Complete <Link href="/onboarding">onboarding</Link> to create your first outlet.</p></section>:
+<label className="oh-context oh-field"><span>Organization</span><select aria-label="Organization" value={selected} onChange={e=>{
+if(e.target.value===selected)return;
+activeSelection.current=e.target.value;requestGeneration.current++;
+setDetail(null);setBilling(null);setSelected(e.target.value);
+}}>{organizations.map(o=><option key={o.id} value={o.id}>{o.name} ({o.role})</option>)}</select>
+<small>Changes here do not switch your active working restaurant.</small></label>}
+{error&&<div className="oh-error" role="alert">{error}</div>}
+{detail&&org&&<><div className="oh-pulse" aria-label="Organization overview">
+<div><span>RESTAURANTS</span><strong>{detail.outlets.length}</strong><small>Outlets in your house</small></div>
+<div><span>TEAM</span><strong>{detail.members.filter(m=>m.isActive).length}</strong><small>Active members</small></div>
+<div><span>BRANDS</span><strong>{detail.brands.length}</strong><small>Shared identities</small></div>
+<div><span>HOUSE STATUS</span><strong>{org.isActive?"Active":"Suspended"}</strong><small>{selectedOrg?.role} · Version {org.version}</small></div></div>
+<div className="oh-layout"><nav className="oh-nav" aria-label="Organization sections">
+<span className="oh-kicker">EXPLORE YOUR HOUSE</span>
+<a href="#overview">01 <span>Overview</span></a>
+<a href="#outlets">02 <span>Outlet collection</span></a>
+<a href="#people">03 <span>Team hall</span></a>
+<a href="#brands">04 <span>Brand gallery</span></a>
+<a href="#capabilities">05 <span>Capabilities</span></a>
+<a href="#activity">06 <span>Activity & delivery</span></a>
+<a href="#governance">07 <span>Owner's office</span></a>
+<p>Company-wide identity, people and permissions are managed separately from your working outlet.</p>
+</nav><div className="oh-sections">
+<section id="overview" className="oh-panel" aria-label="THE HOUSE"><header className="oh-panel-heading"><div><span className="oh-kicker">01 / THE HOUSE</span><h2>Your organization, beautifully managed.</h2><p>Start with your business identity, then explore the spaces below.</p></div><div aria-hidden="true" className="oh-art oh-art-outlet-collection"/></header><div className="oh-panel-content">            {canAdmin && (
               <>
                 {" "}
                 <Form
@@ -231,8 +206,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 </Form>
               </>
             )}
-            {canAdmin && org.isActive && <InvitationManager organizationId={org.id} />}
-            {canAdmin && (
+</div></section>
+<section id="outlets" className="oh-panel" aria-label="THE OUTLET COLLECTION"><header className="oh-panel-heading"><div><span className="oh-kicker">02 / THE OUTLET COLLECTION</span><h2>Every restaurant. One home.</h2><p>Explore your outlets and edit their operational identity without leaving this workspace.</p></div><div aria-hidden="true" className="oh-art oh-art-outlet-collection"/></header><div className="oh-panel-content"><div className="oh-tiles" aria-label="Outlet directory">{detail.outlets.map(o=><article key={o.id} className="oh-tile"><span className="oh-tile-icon">⌂</span><h3>{o.name}</h3><p>{o.outletType.replaceAll("_"," ")} · {o.currency} · {o.country}</p><small>{o.timezone}</small></article>)}</div>            {canAdmin && (
               <>
                 {" "}
                 <Form
@@ -254,6 +229,32 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 </Form>
               </>
             )}
+            {detail.outlets.map((outlet) => (
+              <Form
+                key={outlet.id}
+                title={`Settings: ${outlet.name}`}
+                button="Save outlet settings"
+                disabled={!org.isActive}
+                onSave={(f) =>
+                  send("outlet.update", {
+                    outletId: outlet.id,
+                    name: String(f.get("name")),
+                    country: String(f.get("country")),
+                    currency: String(f.get("currency")),
+                    timezone: String(f.get("timezone")),
+                    outletType: String(f.get("outletType")),
+                    fulfillmentModes: f.getAll("modes"),
+                  })
+                }
+              >
+                <OutletFields outlet={outlet} />
+                <p className="oh-hint">
+                  Changing currency with existing prices or orders requires a repricing workflow.
+                </p>
+              </Form>
+            ))}
+</div></section>
+<section id="people" className="oh-panel" aria-label="THE TEAM HALL"><header className="oh-panel-heading"><div><span className="oh-kicker">03 / THE TEAM HALL</span><h2>Great service is teamwork.</h2><p>People, invitations and outlet-specific permissions, in one clear workspace.</p></div><div aria-hidden="true" className="oh-art oh-art-team-hall"/></header><div className="oh-panel-content">            {canAdmin && org.isActive && <InvitationManager organizationId={org.id} />}
             <Form
               title="Outlet roles"
               button="Save outlet roles"
@@ -266,7 +267,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 })
               }
             >
-              <label className="block text-sm">
+              <label className="oh-field">
                 Outlet
                 <select aria-label="Outlet" name="outletId" className={inputClass}>
                   {detail.outlets.map((o) => (
@@ -276,7 +277,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                   ))}
                 </select>
               </label>
-              <label className="block text-sm">
+              <label className="oh-field">
                 Member
                 <select aria-label="Member" name="memberId" className={inputClass}>
                   {detail.members
@@ -288,19 +289,40 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     ))}
                 </select>
               </label>
-              <div className="flex flex-wrap gap-3">
+              <div className="oh-options">
                 {["manager", "service", "kitchen", "menu_editor"].map((r) => (
-                  <label key={r} className="text-sm">
+                  <label key={r} className="oh-small">
                     <input type="checkbox" name="roles" value={r} /> {r}
                   </label>
                 ))}
               </div>
-              <p className="text-xs">
+              <p className="oh-hint">
                 This replaces the member’s roles at the selected outlet. Clear all roles to revoke
                 that outlet.
               </p>
             </Form>
-            {canAdmin && (
+          <section className="oh-inset">
+            <h2 className="oh-subtitle">People and outlet grants</h2>
+            <ul className="mt-2 space-y-2 text-sm">
+              {detail.members.map((m) => (
+                <li key={m.id}>
+                  {m.name} · {m.email} · {m.role} · {m.isActive ? "active" : "revoked"}
+                  <ul>
+                    {detail.grants
+                      .filter((g) => g.memberId === m.id)
+                      .map((g) => (
+                        <li key={g.outletId} className="oh-muted">
+                          {detail.outlets.find((o) => o.id === g.outletId)?.name}:{" "}
+                          {g.roles.join(", ")}
+                        </li>
+                      ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </section>
+</div></section>
+<section id="brands" className="oh-panel" aria-label="THE BRAND GALLERY"><header className="oh-panel-heading"><div><span className="oh-kicker">04 / THE BRAND GALLERY</span><h2>Distinct names. One family.</h2><p>Manage brand identities and link them to your outlets.</p></div><div aria-hidden="true" className="oh-art oh-art-brand-gallery"/></header><div className="oh-panel-content"><div className="oh-tiles" aria-label="Brand directory">{detail.brands.map(b=><article key={b.id} className="oh-tile"><span className="oh-tile-icon">✦</span><h3>{b.name}</h3><p>{detail.links.filter(l=>l.brandId===b.id).length} connected outlets</p></article>)}</div>            {canAdmin && (
               <>
                 {" "}
                 <Form
@@ -328,7 +350,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     })
                   }
                 >
-                  <label className="block text-sm">
+                  <label className="oh-field">
                     Brand
                     <select name="brandId" className={inputClass}>
                       {detail.brands.map((b) => (
@@ -338,7 +360,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       ))}
                     </select>
                   </label>
-                  <label className="block text-sm">
+                  <label className="oh-field">
                     Outlet
                     <select aria-label="Outlet" name="outletId" className={inputClass}>
                       {detail.outlets.map((o) => (
@@ -348,106 +370,31 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                       ))}
                     </select>
                   </label>
-                  <label className="text-sm">
+                  <label className="oh-small">
                     <input type="checkbox" name="linked" defaultChecked /> Link brand to outlet
                   </label>
-                  <p className="text-xs">
+                  <p className="oh-hint">
                     {detail.links.length} links across {detail.brands.length} brands.
                   </p>
                 </Form>
               </>
             )}
-            {detail.outlets.map((outlet) => (
-              <Form
-                key={outlet.id}
-                title={`Settings: ${outlet.name}`}
-                button="Save outlet settings"
-                disabled={!org.isActive}
-                onSave={(f) =>
-                  send("outlet.update", {
-                    outletId: outlet.id,
-                    name: String(f.get("name")),
-                    country: String(f.get("country")),
-                    currency: String(f.get("currency")),
-                    timezone: String(f.get("timezone")),
-                    outletType: String(f.get("outletType")),
-                    fulfillmentModes: f.getAll("modes"),
-                  })
-                }
-              >
-                <OutletFields outlet={outlet} />
-                <p className="text-xs">
-                  Changing currency with existing prices or orders requires a repricing workflow.
-                </p>
-              </Form>
-            ))}
-            {selectedOrg?.role === "owner" && (
-              <>
-                <Form
-                  title="Organization status"
-                  button={org.isActive ? "Suspend organization" : "Reactivate organization"}
-                  onSave={() => send("organization.active", { isActive: !org.isActive })}
-                >
-                  <p className="text-sm">
-                    Suspension disables private access and public menus for all outlets.
-                  </p>
-                  <label className="text-sm">
-                    <input type="checkbox" required /> Confirm organization status change
-                  </label>
-                </Form>
-                <Form
-                  title="Transfer ownership"
-                  button="Transfer ownership"
-                  disabled={!org.isActive}
-                  onSave={(f) =>
-                    send("owner.transfer", { memberId: String(f.get("memberId")) }).then(() =>
-                      window.location.reload()
-                    )
-                  }
-                >
-                  <label className="block text-sm">
-                    New owner
-                    <select aria-label="Member" name="memberId" required className={inputClass}>
-                      {detail.members
-                        .filter((m) => m.role !== "owner" && m.isActive)
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name} ({m.email})
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <label className="text-sm">
-                    <input type="checkbox" required /> I will become a member and lose owner access
-                  </label>
-                </Form>
-              </>
-            )}
-          </div>
-          <section className="rounded-xl border bg-white p-4">
-            <h2 className="font-bold">People and outlet grants</h2>
-            <ul className="mt-2 space-y-2 text-sm">
-              {detail.members.map((m) => (
-                <li key={m.id}>
-                  {m.name} · {m.email} · {m.role} · {m.isActive ? "active" : "revoked"}
-                  <ul>
-                    {detail.grants
-                      .filter((g) => g.memberId === m.id)
-                      .map((g) => (
-                        <li key={g.outletId} className="text-stone-500">
-                          {detail.outlets.find((o) => o.id === g.outletId)?.name}:{" "}
-                          {g.roles.join(", ")}
-                        </li>
-                      ))}
-                  </ul>
+</div></section>
+<section id="capabilities" className="oh-panel" aria-label="YOUR CAPABILITIES"><header className="oh-panel-heading"><div><span className="oh-kicker">05 / YOUR CAPABILITIES</span><h2>Everything your business can do.</h2><p>Live capability grants, independent of the restaurant menu currency.</p></div><div aria-hidden="true" className="oh-art oh-art-capabilities"/></header><div className="oh-panel-content">          {billing && (
+  </div></section>
+<section id="activity" className="oh-panel" aria-label="ACTIVITY & DELIVERY"><header className="oh-panel-heading"><div><span className="oh-kicker">06 / ACTIVITY & DELIVERY</span><h2>Every detail in motion.</h2><p>Follow recent events and recover failed delivery with confidence.</p></div><div aria-hidden="true" className="oh-art oh-art-activity"/></header><div className="oh-panel-content">          <section>
+            <h2 className="oh-subtitle">Recent activity</h2>
+            <ul className="oh-small">
+              {detail.audit.map((a) => (
+                <li key={a.id}>
+                  {a.action} · {new Date(a.createdAt).toLocaleString()}
                 </li>
               ))}
             </ul>
           </section>
-          {billing && (
-            <section className="rounded-xl border bg-white p-4">
-              <h2 className="font-bold">Billing entitlements</h2>
-              <p className="text-sm">
+          <section className="oh-inset">
+              <h2 className="oh-subtitle">Billing entitlements</h2>
+              <p className="oh-small">
                 Public QR menus: free · New ordering:{" "}
                 {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
                 {billing.kitchen ? "enabled" : "no active grant"}
@@ -456,7 +403,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                 Commercial plans and checkout are not available yet. Entitlement grants use USD or
                 INR billing independently of outlet currency.
               </p>
-              <ul className="text-sm">
+              <ul className="oh-small">
                 {billing.grants.map((g) => (
                   <li key={g.id}>
                     {g.capability} · {g.billingCurrency} · ends {g.endsAt}{" "}
@@ -466,14 +413,14 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
               </ul>
             </section>
           )}
-          <section className="rounded-xl border bg-white p-4">
+          <section className="oh-inset">
             <div className="flex items-center justify-between">
-              <h2 className="font-bold">Background delivery</h2>
+              <h2 className="oh-subtitle">Background delivery</h2>
               <button className="text-sm underline" onClick={() => void load()}>
                 Refresh status
               </button>
             </div>
-            <p className="text-xs">
+            <p className="oh-hint">
               Recent 30 events. Pending and dispatched events recover automatically; failed events
               require review.
             </p>
@@ -502,20 +449,51 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
               ))}
             </ul>
           </section>
-          <section>
-            <h2 className="font-bold">Recent activity</h2>
-            <ul className="text-sm">
-              {detail.audit.map((a) => (
-                <li key={a.id}>
-                  {a.action} · {new Date(a.createdAt).toLocaleString()}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
-    </div>
-  );
+</div></section>
+<section id="governance" className="oh-panel" aria-label="THE OWNER'S OFFICE"><header className="oh-panel-heading"><div><span className="oh-kicker">07 / THE OWNER'S OFFICE</span><h2>Your house. Protected.</h2><p>Privileged decisions require deliberate confirmation and server authorization.</p></div><div aria-hidden="true" className="oh-art oh-art-owners-office"/></header><div className="oh-panel-content">            {selectedOrg?.role === "owner" && (
+              <>
+                <Form
+                  title="Organization status"
+                  button={org.isActive ? "Suspend organization" : "Reactivate organization"}
+                  onSave={() => send("organization.active", { isActive: !org.isActive })}
+                >
+                  <p className="oh-small">
+                    Suspension disables private access and public menus for all outlets.
+                  </p>
+                  <label className="oh-small">
+                    <input type="checkbox" required /> Confirm organization status change
+                  </label>
+                </Form>
+                <Form
+                  title="Transfer ownership"
+                  button="Transfer ownership"
+                  disabled={!org.isActive}
+                  onSave={(f) =>
+                    send("owner.transfer", { memberId: String(f.get("memberId")) }).then(() =>
+                      window.location.reload()
+                    )
+                  }
+                >
+                  <label className="oh-field">
+                    New owner
+                    <select aria-label="Member" name="memberId" required className={inputClass}>
+                      {detail.members
+                        .filter((m) => m.role !== "owner" && m.isActive)
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name} ({m.email})
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="oh-small">
+                    <input type="checkbox" required /> I will become a member and lose owner access
+                  </label>
+                </Form>
+              </>
+            )}
+</div></section>
+</div></div></>}</div></div>);
 }
 function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
   const [type, setType] = useState(outlet?.outletType ?? "restaurant");
@@ -523,12 +501,12 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
   return (
     <>
       <Field label="Outlet name" name="name" defaultValue={outlet?.name} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="oh-two">
         <Field label="Country code" name="country" defaultValue={outlet?.country ?? "IN"} />
         <Field label="Currency" name="currency" defaultValue={outlet?.currency ?? "INR"} />
       </div>
       <Field label="Timezone" name="timezone" defaultValue={outlet?.timezone ?? "Asia/Kolkata"} />
-      <label className="block text-sm">
+      <label className="oh-field">
         Outlet type
         <select
           name="outletType"
@@ -548,9 +526,9 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
           ))}
         </select>
       </label>
-      <div className="flex gap-3">
+      <div className="oh-options">
         {["dine_in", "pickup"].map((m) => (
-          <label key={m} className="text-sm">
+          <label key={m} className="oh-small">
             <input
               type="checkbox"
               name="modes"
