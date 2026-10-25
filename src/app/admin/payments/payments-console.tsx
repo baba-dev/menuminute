@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TrendingUp } from "lucide-react";
-import { GrantStudio, type GrantRow, type GrantListResult, type TargetSearchResult } from "./grant-studio";
+import {
+  GrantStudio,
+  type GrantRow,
+  type GrantListResult,
+  type TargetSearchResult,
+} from "./grant-studio";
 import type { GrantActionResult } from "@/modules/admin/grant-feedback";
 
 interface Plan {
@@ -48,7 +53,12 @@ interface PaymentsConsoleProps {
     reason: string;
   }) => Promise<GrantActionResult>;
   onRevokeGrant: (grantId: string, reason: string) => Promise<GrantActionResult>;
-  onRenewGrant: (data: { grantId: string; expectedEndsAt: string; newEndsAt: string; reason: string }) => Promise<GrantActionResult>;
+  onRenewGrant: (data: {
+    grantId: string;
+    expectedEndsAt: string;
+    newEndsAt: string;
+    reason: string;
+  }) => Promise<GrantActionResult>;
   onSearchTargets: (query: string) => Promise<TargetSearchResult>;
   onListGrants: (page: number, organizationId?: string) => Promise<GrantListResult>;
 }

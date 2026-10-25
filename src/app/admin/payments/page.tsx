@@ -65,7 +65,10 @@ export default async function AdminPaymentsPage() {
     "use server";
     const currentActor = await verifySuperAdmin();
     try {
-      const targets = await searchGrantTargets(currentActor, typeof query === "string" ? query : "");
+      const targets = await searchGrantTargets(
+        currentActor,
+        typeof query === "string" ? query : ""
+      );
       return { ok: true, targets };
     } catch {
       return { ok: false, message: "Organization search is currently unavailable." };

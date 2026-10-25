@@ -203,7 +203,6 @@ export async function revokeEntitlementGrant(actor: AdminActor, grantId: string,
   return runAdminCommand(actor, "entitlement.revoke", grantId, { reason: reason.trim() });
 }
 
-
 /** Search is scoped to live superadmin sessions; it never exposes customer credentials. */
 export async function searchGrantTargets(actor: AdminActor, search: string) {
   const term = search.trim().slice(0, 80);
@@ -219,16 +218,24 @@ export async function searchGrantTargets(actor: AdminActor, search: string) {
       })
       .from(organizations)
       .leftJoin(restaurants, eq(restaurants.organizationId, organizations.id))
-      .where(or(
-        sql`${organizations.name} ILIKE ${pattern} ESCAPE '\\'`,
-        sql`${restaurants.name} ILIKE ${pattern} ESCAPE '\\'`
-      ))
+      .where(
+        or(
+          sql`${organizations.name} ILIKE ${pattern} ESCAPE '\\'`,
+          sql`${restaurants.name} ILIKE ${pattern} ESCAPE '\\'`
+        )
+      )
       .orderBy(asc(organizations.name), asc(restaurants.name))
       .limit(80);
-    const byOrg = new Map<string, { id: string; name: string; active: boolean; outlets: string[] }>();
+    const byOrg = new Map<
+      string,
+      { id: string; name: string; active: boolean; outlets: string[] }
+    >();
     for (const row of rows) {
       const item = byOrg.get(row.id) ?? {
-        id: row.id, name: row.organizationName, active: row.active, outlets: [],
+        id: row.id,
+        name: row.organizationName,
+        active: row.active,
+        outlets: [],
       };
       if (row.outletName && item.outlets.length < 4 && !item.outlets.includes(row.outletName))
         item.outlets.push(row.outletName);
@@ -245,12 +252,21 @@ export async function extendEntitlementGrant(
 ) {
   if (!data.grantId || data.grantId.length > 128) throw new ValidationError("Invalid grant");
   const nextEnd = new Date(data.newEndsAt);
-  if (!Number.isFinite(nextEnd.getTime()) ||
-      !data.reason?.trim() || data.reason.trim().length < 5 || data.reason.length > 420)
+  if (
+    !Number.isFinite(nextEnd.getTime()) ||
+    !data.reason?.trim() ||
+    data.reason.trim().length < 5 ||
+    data.reason.length > 420
+  )
     throw new ValidationError("Choose a valid renewal date and a reason of 5–420 characters");
   const existing = await withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
-    return (await db.select().from(entitlementGrants)
-      .where(eq(entitlementGrants.id, data.grantId)).limit(1))[0];
+    return (
+      await db
+        .select()
+        .from(entitlementGrants)
+        .where(eq(entitlementGrants.id, data.grantId))
+        .limit(1)
+    )[0];
   });
   if (!existing || existing.revokedAt || existing.endsAt.getTime() <= Date.now())
     throw new ValidationError("Only current or scheduled grants can be renewed");
