@@ -106,12 +106,18 @@ const server = https.createServer(
     const forwardedIp = /^[a-f0-9-]{36}$/.test(String(req.headers["x-browser-test-client"] ?? ""))
       ? "198.18." +
         Number.parseInt(
-          createHash("sha256").update(String(req.headers["x-browser-test-client"])).digest("hex").slice(0, 2),
+          createHash("sha256")
+            .update(String(req.headers["x-browser-test-client"]))
+            .digest("hex")
+            .slice(0, 2),
           16
         ) +
         "." +
         Number.parseInt(
-          createHash("sha256").update(String(req.headers["x-browser-test-client"])).digest("hex").slice(2, 4),
+          createHash("sha256")
+            .update(String(req.headers["x-browser-test-client"]))
+            .digest("hex")
+            .slice(2, 4),
           16
         )
       : "127.0.0.1";

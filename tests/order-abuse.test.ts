@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { verifiedOrderSource, reserveOrderCapability, reserveOrderSource } from "../src/modules/orders/rate-limit";
+import {
+  verifiedOrderSource,
+  reserveOrderCapability,
+  reserveOrderSource,
+} from "../src/modules/orders/rate-limit";
 
 const secret = "isolated-test-trusted-proxy-secret-with-48-chars-";
 function request(headers: Record<string, string> = {}) {
@@ -42,9 +46,9 @@ describe("order edge provenance and abuse controls", () => {
           "x-menuminute-client-ip": "203.0.113.9",
           "x-menuminute-edge-key": secret,
         }),
-        undefined
+        ""
       )
-    ).toBeDefined();
+    ).toThrow();
     expect(
       verifiedOrderSource(
         request({

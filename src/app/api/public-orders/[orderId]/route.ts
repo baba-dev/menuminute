@@ -9,7 +9,11 @@ import {
   verifiedOrderSource,
 } from "@/modules/orders/rate-limit";
 
-const tokenSchema = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const tokenSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/);
 const noStore = { "cache-control": "no-store" };
 
 export async function GET(req: Request, context: { params: Promise<{ orderId: string }> }) {
