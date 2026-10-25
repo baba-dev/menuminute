@@ -672,7 +672,7 @@ export function OrganizationManager({
                           key={selected + ":" + editingOutlet.id}
                           title={"Settings: " + editingOutlet.name}
                           button="Save outlet settings"
-                          disabled={!org.isActive}
+                          disabled={!canAdmin || !org.isActive}
                           onSave={(form) =>
                             send("outlet.update", {
                               outletId: editingOutlet.id,
@@ -712,12 +712,14 @@ export function OrganizationManager({
                   <div className="oh-panel-content">
                     {" "}
                     {canAdmin && org.isActive && <InvitationManager organizationId={org.id} />}
-                    <RoleGrantEditor
-                      key={selected}
-                      detail={detail}
-                      disabled={!org.isActive}
-                      send={send}
-                    />
+                    {canAdmin && (
+                      <RoleGrantEditor
+                        key={selected}
+                        detail={detail}
+                        disabled={!org.isActive}
+                        send={send}
+                      />
+                    )}
                     <section className="oh-people-directory" aria-label="People and outlet grants">
                       <div className="oh-group-heading">
                         <h2 className="oh-subtitle">People and outlet grants</h2>
