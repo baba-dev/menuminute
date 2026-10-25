@@ -279,6 +279,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   }
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";
+  const [editingOutletId, setEditingOutletId] = useState("");
+  const editingOutlet = detail?.outlets.find((outlet) => outlet.id === editingOutletId) ?? detail?.outlets[0];
   return (
     <div className="mm-organization" data-testid="hospitality-house">
       <header className="oh-hero">
@@ -482,31 +484,35 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                         </Form>
                       </>
                     )}
-                    {detail.outlets.map((outlet) => (
-                      <Form
-                        key={outlet.id}
-                        title={`Settings: ${outlet.name}`}
-                        button="Save outlet settings"
-                        disabled={!org.isActive}
-                        onSave={(f) =>
-                          send("outlet.update", {
-                            outletId: outlet.id,
-                            name: String(f.get("name")),
-                            country: String(f.get("country")),
-                            currency: String(f.get("currency")),
-                            timezone: String(f.get("timezone")),
-                            outletType: String(f.get("outletType")),
-                            fulfillmentModes: f.getAll("modes"),
-                          })
-                        }
-                      >
-                        <OutletFields outlet={outlet} />
-                        <p className="oh-hint">
-                          Changing currency with existing prices or orders requires a repricing
-                          workflow.
-                        </p>
-                      </Form>
-                    ))}
+                    {editingOutlet && (
+                      <div className="oh-edit-outlet">
+                        <label className="oh-field">
+                          Choose outlet to edit
+                          <select aria-label="Choose outlet to edit" className="oh-control"
+                            value={editingOutlet.id} onChange={(event) => setEditingOutletId(event.target.value)}>
+                            {detail.outlets.map((outlet) =>
+                              <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
+                          </select>
+                        </label>
+                        <Form key={selected + ":" + editingOutlet.id} title={"Settings: " + editingOutlet.name}
+                          button="Save outlet settings" disabled={!org.isActive}
+                          onSave={(form) => send("outlet.update", {
+                            outletId: editingOutlet.id,
+                            name: String(form.get("name")),
+                            country: String(form.get("country")),
+                            currency: String(form.get("currency")),
+                            timezone: String(form.get("timezone")),
+                            outletType: String(form.get("outletType")),
+                            fulfillmentModes: form.getAll("modes"),
+                          })}>
+                          <OutletFields outlet={editingOutlet} />
+                          <p className="oh-hint">Changing currency with existing prices or orders requires a separate repricing workflow.</p>
+                          <Link href="/dashboard/settings" className="oh-inline-link">
+                            Public profile and guest-facing branding are managed in Outlet Atelier →
+                          </Link>
+                        </Form>
+                      </div>
+                    )}
                   </div>
                 </section>
                 <section id="people" className="oh-panel" aria-label="THE TEAM HALL">
