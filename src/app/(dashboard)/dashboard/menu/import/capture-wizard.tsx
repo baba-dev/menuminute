@@ -65,7 +65,7 @@ function statusText(status: string) {
         queued: "Waiting for processing",
         processing: "Interpreting your menu",
         needs_review: "Ready for human review",
-        ready: "Awaiting review",
+        ready: "Review complete",
         applied: "Applied",
         failed: "Processing needs attention",
         cancelled: "Cancelled",
@@ -228,7 +228,12 @@ export function CaptureWizard({
   function choose(files: FileList | File[] | null, target: Session | null = session) {
     if (!files?.length) return;
     if (!target) {
-      void begin(Array.from(files));
+      const chosen = Array.from(files);
+      if (chosen.length > 12 || chosen.some((file) => !supported.has(file.type) || file.size === 0 || file.size > MAX_PHOTO) || chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
+        setError("Choose up to 12 JPEG, PNG or WebP photos, each under 5 MiB and at most 30 MiB combined.");
+        return;
+      }
+      void begin(chosen);
       return;
     }
     if (target.status !== "collecting") return;
@@ -241,6 +246,10 @@ export function CaptureWizard({
     const chosen = Array.from(files);
     if (chosen.some((f) => !supported.has(f.type) || f.size === 0 || f.size > MAX_PHOTO)) {
       setError("Only nonempty JPEG, PNG or WebP files up to 5 MiB each are supported.");
+      return;
+    }
+    if (chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
+      setError("Selected files exceed the 30 MiB import limit.");
       return;
     }
     const ready = target.sources.filter((s) => s.status === "ready");
