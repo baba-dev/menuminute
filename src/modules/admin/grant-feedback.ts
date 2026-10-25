@@ -26,6 +26,9 @@ export function grantFailureMessage(error: unknown): string {
     ) {
       return "The target organization does not exist or is not active.";
     }
+    if (message.includes("Only current or scheduled grants can be renewed") || message.includes("Renewal must end")) {
+      return "This grant cannot be extended with the selected date. Refresh its history and choose a later end date.";
+    }
     if (message.includes("Invalid UTC entitlement window")) {
       return "The grant must have an end date after the start date and in the future.";
     }

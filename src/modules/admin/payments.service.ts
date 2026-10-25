@@ -6,7 +6,7 @@ import {
   organizations,
   restaurants,
 } from "@/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, or, sql, asc } from "drizzle-orm";
 import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { ValidationError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
@@ -201,6 +201,73 @@ export async function revokeEntitlementGrant(actor: AdminActor, grantId: string,
   if (!reason?.trim() || reason.trim().length < 5 || reason.length > 500)
     throw new ValidationError("A revocation justification of 5–500 characters is required");
   return runAdminCommand(actor, "entitlement.revoke", grantId, { reason: reason.trim() });
+}
+
+
+/** Search is scoped to live superadmin sessions; it never exposes customer credentials. */
+export async function searchGrantTargets(actor: AdminActor, search: string) {
+  const term = search.trim().slice(0, 80);
+  if (term.length < 2) return [];
+  const pattern = "%" + term.replace(/[\\%_]/g, "\\export async function getFinancialAnalytics(actor: AdminActor) {") + "%";
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
+    const rows = await db
+      .select({
+        id: organizations.id,
+        organizationName: organizations.name,
+        active: organizations.isActive,
+        outletName: restaurants.name,
+      })
+      .from(organizations)
+      .leftJoin(restaurants, eq(restaurants.organizationId, organizations.id))
+      .where(or(
+        sql`${organizations.name} ILIKE ${pattern} ESCAPE '\\'`,
+        sql`${restaurants.name} ILIKE ${pattern} ESCAPE '\\'`
+      ))
+      .orderBy(asc(organizations.name), asc(restaurants.name))
+      .limit(80);
+    const byOrg = new Map<string, { id: string; name: string; active: boolean; outlets: string[] }>();
+    for (const row of rows) {
+      const item = byOrg.get(row.id) ?? {
+        id: row.id, name: row.organizationName, active: row.active, outlets: [],
+      };
+      if (row.outletName && item.outlets.length < 4 && !item.outlets.includes(row.outletName))
+        item.outlets.push(row.outletName);
+      byOrg.set(row.id, item);
+    }
+    return [...byOrg.values()].slice(0, 12);
+  });
+}
+
+/** Extension is a scheduled, audited successor grant, not a mutation of historical billing. */
+export async function extendEntitlementGrant(
+  actor: AdminActor,
+  data: { grantId: string; expectedEndsAt: string; newEndsAt: string; reason: string }
+) {
+  if (!data.grantId || data.grantId.length > 128) throw new ValidationError("Invalid grant");
+  const nextEnd = new Date(data.newEndsAt);
+  if (!Number.isFinite(nextEnd.getTime()) ||
+      !data.reason?.trim() || data.reason.trim().length < 5 || data.reason.length > 420)
+    throw new ValidationError("Choose a valid renewal date and a reason of 5–420 characters");
+  const existing = await withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
+    return (await db.select().from(entitlementGrants)
+      .where(eq(entitlementGrants.id, data.grantId)).limit(1))[0];
+  });
+  if (!existing || existing.revokedAt || existing.endsAt.getTime() <= Date.now())
+    throw new ValidationError("Only current or scheduled grants can be renewed");
+  if (existing.endsAt.toISOString() !== data.expectedEndsAt)
+    throw new ValidationError("The grant has changed. Refresh before scheduling a renewal");
+  if (existing.capability !== "ordering.new")
+    throw new ValidationError("Kitchen Pro activation is still blocked");
+  if (nextEnd.getTime() <= existing.endsAt.getTime())
+    throw new ValidationError("Renewal must end after the existing grant");
+  return issueEntitlementGrant(actor, {
+    organizationId: existing.organizationId,
+    capability: "ordering.new",
+    billingCurrency: existing.billingCurrency as "USD" | "INR",
+    startsAt: existing.endsAt.toISOString(),
+    endsAt: nextEnd.toISOString(),
+    reason: `Renewal of ${existing.id}: ${data.reason.trim()}`,
+  });
 }
 
 export async function getFinancialAnalytics(actor: AdminActor) {
