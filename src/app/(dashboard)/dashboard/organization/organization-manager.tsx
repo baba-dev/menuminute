@@ -171,7 +171,9 @@ function RoleGrantEditor({
               onChange={(event) =>
                 setOverride({
                   key: assignmentKey,
-                  roles: event.target.checked ? [...roles, role] : roles.filter((entry) => entry !== role),
+                  roles: event.target.checked
+                    ? [...roles, role]
+                    : roles.filter((entry) => entry !== role),
                 })
               }
             />
@@ -196,7 +198,9 @@ function RoleGrantEditor({
           Clear all roles to revoke this person&apos;s outlet access. Confirm before saving.
         </label>
       )}
-      <p className="oh-hint">This replaces the member&apos;s entire role set for the selected outlet.</p>
+      <p className="oh-hint">
+        This replaces the member&apos;s entire role set for the selected outlet.
+      </p>
     </Form>
   );
 }
@@ -723,7 +727,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                     </section>
                   </div>
                 </section>
-                <section id="governance" className="oh-panel" aria-label="THE OWNER&apos;S OFFICE">
+                <section id="governance" className="oh-panel" aria-label="THE OWNER'S OFFICE">
                   <header className="oh-panel-heading">
                     <div>
                       <span className="oh-kicker">07 / THE OWNER&apos;S OFFICE</span>
