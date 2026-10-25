@@ -139,7 +139,6 @@ export function LiveOrdersBoard({
   const [declining, setDeclining] = useState<MerchantOrder | null>(null);
   const [declineReason, setDeclineReason] = useState(declineReasons[0]);
   const [paying, setPaying] = useState<MerchantOrder | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
   const busyRef = useRef(new Set<string>());
   const [error, setError] = useState<string | null>(null);
   const [railError, setRailError] = useState<string | null>(null);
@@ -306,7 +305,6 @@ export function LiveOrdersBoard({
   const selectedId = selected?.id;
   useEffect(() => {
     if (!selectedId) return;
-    setActivityError(false);
     const controller = new AbortController();
     const load = async () => {
       try {
@@ -318,6 +316,7 @@ export function LiveOrdersBoard({
         );
         if (!controller.signal.aborted) {
           setActivity(result.events);
+          setActivityError(false);
           setActivityTruncated(result.truncated);
         }
       } catch {
@@ -370,7 +369,6 @@ export function LiveOrdersBoard({
     }
     busyRef.current.add(order.id);
     setBusyIds((previous) => new Set([...previous, order.id]));
-    setBusyId(order.id);
     setError(null);
     try {
       const result = await fetch(
@@ -414,7 +412,6 @@ export function LiveOrdersBoard({
         next.delete(order.id);
         return next;
       });
-      setBusyId(null);
     }
   }
 
@@ -1031,7 +1028,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 disabled={
-                  !declining || busyId === declining.id || !declineReason || Boolean(railError)
+                  !declining || busyIds.has(declining.id) || !declineReason || Boolean(railError)
                 }
                 className="sc-danger"
                 onClick={() => {
@@ -1068,7 +1065,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 className="sc-primary"
-                disabled={!paying || busyId === paying.id || Boolean(railError)}
+                disabled={!paying || busyIds.has(paying.id) || Boolean(railError)}
                 onClick={() => {
                   if (paying) void mutate(paying, "", undefined, true);
                 }}
