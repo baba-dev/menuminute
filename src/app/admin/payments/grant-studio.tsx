@@ -393,10 +393,10 @@ export function GrantStudio({
     if (!controls.length) return;
     if (event.shiftKey && document.activeElement === controls[0]) {
       event.preventDefault();
-      controls[controls.length - 1].focus();
+      controls.at(-1)?.focus();
     } else if (!event.shiftKey && document.activeElement === controls[controls.length - 1]) {
       event.preventDefault();
-      controls[0].focus();
+      controls[0]?.focus();
     }
   }
 
