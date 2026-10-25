@@ -208,7 +208,7 @@ export async function revokeEntitlementGrant(actor: AdminActor, grantId: string,
 export async function searchGrantTargets(actor: AdminActor, search: string) {
   const term = search.trim().slice(0, 80);
   if (term.length < 2) return [];
-  const pattern = "%" + term.replace(/[\\%_]/g, "\\export async function getFinancialAnalytics(actor: AdminActor) {") + "%";
+  const pattern = "%" + term.replace(/[\\%_]/g, (char) => "\\" + char) + "%";
   return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
     const rows = await db
       .select({
