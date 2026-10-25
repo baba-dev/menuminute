@@ -98,14 +98,16 @@ test("scan table allows selecting photos before creating a private session", asy
   await page.goto("/dashboard/menu/import");
   await expect(page.getByRole("heading", { name: "Your menu. Digitized." })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Import progress" })).toBeVisible();
-  await page.getByLabel("Choose menu photographs").setInputFiles({
-    name: "baba-bakery.png",
-    mimeType: "image/png",
-    buffer: await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } })
-      .png()
-      .toBuffer(),
-  });
+  const photo = await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } })
+    .png()
+    .toBuffer();
+  await page.getByLabel("Choose menu photographs").setInputFiles([
+    { name: "baba-bakery.png", mimeType: "image/png", buffer: photo },
+    { name: "specials.png", mimeType: "image/png", buffer: photo },
+  ]);
   await expect(page.getByText("baba-bakery.png")).toBeVisible();
+  await page.getByRole("button", { name: "Move specials.png earlier" }).click();
+  await expect(page.locator(".scan-image-tile").first()).toContainText("specials.png");
   await page.getByRole("button", { name: "Upload photos privately" }).click();
   await expect(page.getByText("Page 1 · ready")).toBeVisible();
   await page.getByRole("button", { name: "All drafts" }).click();
@@ -189,6 +191,11 @@ test("reviewer corrects an unreadable price and applies only a private draft", a
   await page.getByRole("button", { name: "Zoom in" }).click();
   await expect(page.getByText("125%")).toBeVisible();
   await page.getByRole("button", { name: "Fit" }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Original photo" }).click();
+  await expect(page.getByAltText("Private original menu photograph")).toBeVisible();
+  await page.getByRole("button", { name: "Extracted dishes" }).click();
+  await expect(page.getByLabel("Dish 1.1 price")).toBeVisible();
   await expect(page.getByText(/AI could not verify this price/)).toBeVisible();
   await page.getByLabel("Dish 1.1 price").fill("12.50");
   await page.getByLabel("I checked this category heading against the photograph").check();
