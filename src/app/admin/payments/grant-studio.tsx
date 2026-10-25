@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, CalendarClock, CheckCircle2, ChefHat, CircleHelp, Clock3,
-  Gift, LockKeyhole, Plus, Search, ShieldCheck, UtensilsCrossed, X,
+  ArrowRight, CheckCircle2, ChefHat, CircleHelp, Clock3,
+  LockKeyhole, Plus, Search, ShieldCheck, UtensilsCrossed, X,
 } from "lucide-react";
 import {
   grantEndForPreset, grantOverlaps, grantPresetDetails, grantStatus,
