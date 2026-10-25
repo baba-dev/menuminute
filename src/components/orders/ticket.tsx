@@ -15,9 +15,11 @@ import { actionFor, statusLabels } from "@/modules/orders/presentation";
 
 export function ServicePulseRail({
   pulse,
+  state,
   show,
 }: {
   pulse: ServicePulse | null;
+  state: "initial" | "stale" | "ready";
   show: (lane: string) => void;
 }) {
   const metrics = [
@@ -54,9 +56,15 @@ export function ServicePulseRail({
     <section className="sc-pulse" aria-label="Today's service pulse">
       <div className="sc-section-top">
         <h2>Today&apos;s service pulse</h2>
-        <span>Current outlet · Authoritative counts</span>
+        <span>
+          {state === "stale"
+            ? "Counters unavailable · Last verified values"
+            : state === "initial"
+              ? "Connecting · Current outlet"
+              : "Current outlet · Authoritative counts"}
+        </span>
       </div>
-      <div className="sc-pulse-grid">
+      <div className="sc-pulse-grid" data-testid="service-pulse-grid">
         {metrics.map(({ label, value, hint, icon: Icon, lane }) => (
           <button type="button" key={label} className="sc-pulse-cell" onClick={() => show(lane)}>
             <span className="sc-pulse-label">
@@ -82,6 +90,7 @@ export function Ticket({
   decline,
   pay,
   busy,
+  readOnly,
   timezone,
 }: {
   order: MerchantOrder;
@@ -91,10 +100,13 @@ export function Ticket({
   decline: (order: MerchantOrder) => void;
   pay: (order: MerchantOrder) => void;
   busy: boolean;
+  readOnly: boolean;
   timezone: string;
 }) {
   const action = actionFor(order);
-  const age = Math.max(0, Math.floor((now - new Date(order.createdAt).getTime()) / 60000));
+  const age = now
+    ? Math.max(0, Math.floor((now - new Date(order.createdAt).getTime()) / 60000))
+    : null;
   return (
     <article
       className={"sc-ticket sc-ticket-" + order.status}
@@ -115,7 +127,7 @@ export function Ticket({
           {order.servicePoint ? " · " + order.servicePoint : ""}
         </span>
         <span>
-          <Clock3 size={13} aria-hidden="true" /> {age} min ago
+          <Clock3 size={13} aria-hidden="true" /> {age === null ? "—" : age} min ago
         </span>
       </div>
       {order.requestedFulfillmentAt && (
@@ -162,7 +174,7 @@ export function Ticket({
           <button
             type="button"
             className="sc-primary"
-            disabled={busy}
+            disabled={busy || readOnly}
             onClick={() => perform(order, action.status)}
           >
             {busy ? "Updating…" : action.label}
@@ -172,7 +184,7 @@ export function Ticket({
           <button
             type="button"
             className="sc-danger-secondary"
-            disabled={busy}
+            disabled={busy || readOnly}
             onClick={() => decline(order)}
           >
             Decline
@@ -183,8 +195,10 @@ export function Ticket({
         </button>
       </div>
       <div className="sc-ticket-footer">
-        {order.canManagePayment && order.paymentStatus === "unpaid" && (
-          <button type="button" disabled={busy} onClick={() => pay(order)}>
+        {order.canManagePayment &&
+          ["ready", "served", "collected"].includes(order.status) &&
+          order.paymentStatus === "unpaid" && (
+          <button type="button" disabled={busy || readOnly} onClick={() => pay(order)}>
             Record Paid
           </button>
         )}
@@ -193,7 +207,27 @@ export function Ticket({
     </article>
   );
 }
-export function RailEmpty({ lane, filtered }: { lane: string; filtered: boolean }) {
+export function RailEmpty({
+  lane,
+  filtered,
+  state,
+}: {
+  lane: string;
+  filtered: boolean;
+  state: "loading" | "unavailable" | "ready";
+}) {
+  if (state !== "ready") {
+    return (
+      <div className="sc-empty" role="status">
+        <strong>{state === "loading" ? "Connecting to service…" : "Queue unavailable"}</strong>
+        <p>
+          {state === "loading"
+            ? "Waiting for the first verified ticket sync."
+            : "Tickets cannot be confirmed empty until service reconnects."}
+        </p>
+      </div>
+    );
+  }
   const image =
     lane === "incoming"
       ? "service-bell.webp"

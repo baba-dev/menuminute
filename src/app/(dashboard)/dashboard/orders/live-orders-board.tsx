@@ -413,21 +413,8 @@ export function LiveOrdersBoard({
   const statusCounts = pulse;
   const isFiltered = Boolean(query || mode !== "all");
   return (
-    <div className="product service-counter" data-testid="service-counter">
+    <div className="service-counter" data-testid="service-counter">
       <header className="sc-hero">
-        <div className="sc-topbar">
-          <nav aria-label="Breadcrumb" className="sc-breadcrumb">
-            <Link href="/dashboard">Workspace</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Orders</span>
-          </nav>
-          <div className="sc-top-actions">
-            <ThemeControl />
-            <Link href="/account" className="sc-account">
-              Account ↗
-            </Link>
-          </div>
-        </div>
         <div className="sc-hero-copy">
           <span className="sc-eyebrow">SERVICE DESK / LIVE ORDERS</span>
           <h1>The Service Counter.</h1>
@@ -450,7 +437,11 @@ export function LiveOrdersBoard({
         </span>
       </header>
       <main className="sc-body">
-        <ServicePulseRail pulse={pulse} show={show} />
+        <ServicePulseRail
+          pulse={pulse}
+          state={pulseError ? "stale" : lastPulseSync ? "ready" : "initial"}
+          show={show}
+        />
         <section id="service-rail" className="sc-operations" aria-labelledby="sc-title">
           <div className="sc-section-top">
             <div>
@@ -473,15 +464,17 @@ export function LiveOrdersBoard({
                 type="button"
                 role="tab"
                 aria-selected={tab === "active"}
+                aria-controls="sc-active-panel"
                 onClick={() => setTab("active")}
               >
-                Live orders <span>{statusCounts.active}</span>
+                Live orders <span>{statusCounts?.active ?? "—"}</span>
               </button>
               <button
                 id="sc-history-tab"
                 type="button"
                 role="tab"
                 aria-selected={tab === "history"}
+                aria-controls="sc-history-panel"
                 onClick={() => setTab("history")}
               >
                 History
@@ -541,7 +534,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 className="sc-tool-button"
-                onClick={() => void refresh()}
+                onClick={() => void refresh(true)}
                 disabled={isRefreshing}
               >
                 <RefreshCw size={17} className={isRefreshing ? "sc-spin" : ""} />
@@ -549,26 +542,45 @@ export function LiveOrdersBoard({
               </button>
             </div>
           </div>
-          <div className="sc-sync" role="status" aria-live="polite">
-            <span className={error ? "sc-dot sc-dot-error" : "sc-dot"} />
-            {lastSync
-              ? "Last successful sync " +
-                new Date(lastSync).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: timezone,
-                }) +
-                (isRefreshing ? " · Syncing…" : "")
-              : "Waiting for first synchronization"}
-            {error && <span> · Connection may be stale</span>}
+          <div className="sc-sync" data-testid="service-rail-status" role="status" aria-live="polite">
+            <span className={railError ? "sc-dot sc-dot-error" : "sc-dot"} />
+            {railError
+              ? lastSync
+                ? "Connection lost · Last verified tickets are shown read-only"
+                : "Live queue unavailable · No verified tickets loaded"
+              : lastSync
+                ? "Live queue synced " +
+                  new Date(lastSync).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: timezone,
+                  }) +
+                  (isRefreshing ? " · Syncing…" : "")
+                : "Connecting to the live queue…"}
           </div>
+          {railError && (
+            <div className="sc-alert" role="alert" data-testid="service-rail-error">
+              <AlertTriangle size={18} aria-hidden="true" />
+              <span>{railError} Order actions are paused until synchronization succeeds.</span>
+              <button type="button" onClick={() => void refresh(true)}>
+                Retry queue
+              </button>
+            </div>
+          )}
+          {pulseError && (
+            <div className="sc-alert" role="alert" data-testid="service-pulse-error">
+              <AlertTriangle size={18} aria-hidden="true" />
+              <span>{pulseError} Counters may be outdated; ticket synchronization is independent.</span>
+              <button type="button" onClick={() => void refresh(true)}>
+                Retry counters
+              </button>
+            </div>
+          )}
           {error && (
             <div className="sc-alert" role="alert">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={18} aria-hidden="true" />
               <span>{error}</span>
-              <button type="button" onClick={() => void refresh()}>
-                Try again
-              </button>
+              <button type="button" onClick={() => void refresh(true)}>Synchronize</button>
             </div>
           )}
           {overflow && tab === "active" && (
@@ -582,11 +594,12 @@ export function LiveOrdersBoard({
             <div
               role="tabpanel"
               aria-labelledby="sc-active-tab"
+              id="sc-active-panel"
               className={compact ? "sc-rail sc-rail-compact" : "sc-rail"}
             >
               <div className="sc-mobile-lanes" role="group" aria-label="Choose service lane">
                 <button type="button" aria-pressed={rail === "all"} onClick={() => setRail("all")}>
-                  All <span>{statusCounts.active}</span>
+                  All <span>{statusCounts?.active ?? "—"}</span>
                 </button>
                 {lanes.map((lane) => (
                   <button
@@ -596,7 +609,7 @@ export function LiveOrdersBoard({
                     onClick={() => setRail(lane.id)}
                   >
                     {lane.title}{" "}
-                    <span>{statusCounts[lane.id === "incoming" ? "pending" : lane.id]}</span>
+                    <span>{statusCounts?.[lane.id === "incoming" ? "pending" : lane.id] ?? "—"}</span>
                   </button>
                 ))}
               </div>
@@ -624,7 +637,7 @@ export function LiveOrdersBoard({
                           </div>
                         </div>
                         <span className="sc-column-count">
-                          {statusCounts[id === "incoming" ? "pending" : id]}
+                          {statusCounts?.[id === "incoming" ? "pending" : id] ?? "—"}
                         </span>
                       </div>
                       <div className="sc-column-tickets">
@@ -633,13 +646,14 @@ export function LiveOrdersBoard({
                             <Ticket
                               key={order.id}
                               order={order}
-                              now={now || Date.now()}
+                              now={now}
                               timezone={timezone}
                               open={(item) => {
                                 setActivity(null);
                                 setSelected(item);
                               }}
-                              busy={busyId === order.id}
+                              busy={busyIds.has(order.id)}
+                              readOnly={Boolean(railError)}
                               perform={(ticket, status) => void mutate(ticket, status)}
                               decline={(ticket) => {
                                 setDeclineReason(declineReasons[0]);
@@ -649,7 +663,11 @@ export function LiveOrdersBoard({
                             />
                           ))
                         ) : (
-                          <RailEmpty lane={id} filtered={isFiltered} />
+                          <RailEmpty
+                            lane={id}
+                            filtered={isFiltered}
+                            state={railError ? "unavailable" : lastSync ? "ready" : "loading"}
+                          />
                         )}
                       </div>
                     </section>
@@ -658,7 +676,12 @@ export function LiveOrdersBoard({
               </div>
             </div>
           ) : (
-            <section role="tabpanel" aria-labelledby="sc-history-tab" className="sc-history">
+            <section
+              id="sc-history-panel"
+              role="tabpanel"
+              aria-labelledby="sc-history-tab"
+              className="sc-history"
+            >
               <div className="sc-history-filters">
                 <label>
                   Status
@@ -728,6 +751,15 @@ export function LiveOrdersBoard({
                   />
                 </label>
               </div>
+              {historyError && (
+                <div className="sc-alert" role="alert">
+                  <AlertTriangle size={18} aria-hidden="true" />
+                  <span>{historyError}</span>
+                  <button type="button" onClick={() => setHistoryRevision((value) => value + 1)}>
+                    Retry history
+                  </button>
+                </div>
+              )}
               <p className="sc-history-count" role="status">
                 {historyBusy
                   ? "Loading history…"
@@ -767,7 +799,7 @@ export function LiveOrdersBoard({
                   ))}
                 </div>
               ) : (
-                !historyBusy && (
+                !historyBusy && !historyError && (
                   <div className="sc-history-empty">
                     <strong>No matching concluded orders.</strong>
                     <p>Try a different filter or date range.</p>
@@ -879,6 +911,8 @@ export function LiveOrdersBoard({
                       Payment <b>{currentSelected.paymentStatus}</b>
                     </p>
                     {currentSelected.canManagePayment &&
+                      !railError &&
+                      ["ready", "served", "collected"].includes(currentSelected.status) &&
                       currentSelected.paymentStatus === "unpaid" && (
                         <button
                           type="button"
@@ -907,8 +941,12 @@ export function LiveOrdersBoard({
                         ))}
                       </ol>
                     ) : (
-                      <p>Recorded timeline unavailable. The order status above is authoritative.</p>
-                    )}
+                      <p>
+                        {activityError
+                          ? "Unable to load recorded events. Reopen the ticket to retry."
+                          : "No recorded events. The order status above is authoritative."}
+                      </p>
+                    )
                     {activityTruncated && <p>Showing the latest 60 recorded events.</p>}
                     {currentSelected.rejectionReason && (
                       <p>Decline reason: {currentSelected.rejectionReason}</p>
@@ -956,7 +994,7 @@ export function LiveOrdersBoard({
               <Dialog.Close className="sc-secondary">Keep order</Dialog.Close>
               <button
                 type="button"
-                disabled={!declining || busyId === declining.id || !declineReason}
+                disabled={!declining || busyId === declining.id || !declineReason || Boolean(railError)}
                 className="sc-danger"
                 onClick={() => {
                   if (declining) void mutate(declining, "rejected", declineReason);
@@ -992,7 +1030,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 className="sc-primary"
-                disabled={!paying || busyId === paying.id}
+                disabled={!paying || busyId === paying.id || Boolean(railError)}
                 onClick={() => {
                   if (paying) void mutate(paying, "", undefined, true);
                 }}
