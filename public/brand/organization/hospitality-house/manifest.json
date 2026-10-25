@@ -1,0 +1,87 @@
+{
+  "name": "Organization 2.0 Hospitality House (production-only artwork)",
+  "source": "Artwork approved and copied selectively from PR #164 commit 3a55ab974d62d1de91b855cef2a536e2c6199d7e",
+  "description": "Exactly four selected PNG hero banners and twelve theme-paired WebP section illustrations; no abandoned source material.",
+  "assets": [
+    {
+      "path": "Organization-Hero-Light.png",
+      "width": null,
+      "height": null
+    },
+    {
+      "path": "Organization-Hero-Dark.png",
+      "width": null,
+      "height": null
+    },
+    {
+      "path": "Organization-Hero-Mobile-Light.png",
+      "width": 960,
+      "height": 1120
+    },
+    {
+      "path": "Organization-Hero-Mobile-Dark.png",
+      "width": 960,
+      "height": 1120
+    },
+    {
+      "path": "illustrations/outlet-collection-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/outlet-collection-dark.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/team-hall-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/team-hall-dark.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/brand-gallery-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/brand-gallery-dark.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/capabilities-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/capabilities-dark.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/activity-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/activity-dark.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/owners-office-light.webp",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "path": "illustrations/owners-office-dark.webp",
+      "width": 1440,
+      "height": 1080
+    }
+  ]
+}
