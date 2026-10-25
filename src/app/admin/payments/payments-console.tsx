@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import type { GrantActionResult } from "@/modules/admin/grant-feedback";
+
+function localDateTimeInput(date: Date) {
+  // datetime-local expects wall-clock local time, not a UTC ISO timestamp.
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
 
 interface Plan {
   id: string;
@@ -57,7 +66,7 @@ interface PaymentsConsoleProps {
     startsAt: string;
     endsAt: string;
     reason: string;
-  }) => Promise<any>;
+  }) => Promise<GrantActionResult>;
   onRevokeGrant: (grantId: string, reason: string) => Promise<any>;
 }
 
@@ -97,7 +106,7 @@ export function PaymentsConsole({
     setIsSubmittingGrant(true);
     setMessage(null);
     try {
-      await onIssueGrant({
+      const result = await onIssueGrant({
         organizationId: grantOrgId.trim(),
         capability: grantCapability,
         billingCurrency: grantCurrency,
@@ -105,13 +114,20 @@ export function PaymentsConsole({
         endsAt: new Date(grantEndsAt).toISOString(),
         reason: grantReason.trim(),
       });
+      if (!result.ok) {
+        setMessage({ text: result.message, type: "error" });
+        return;
+      }
       setMessage({ text: "Entitlement capability grant issued successfully.", type: "success" });
       setShowGrantModal(false);
       setGrantOrgId("");
       setGrantReason("");
       router.refresh();
-    } catch (err: any) {
-      setMessage({ text: err.message || "Failed to issue grant", type: "error" });
+    } catch {
+      setMessage({
+        text: "Could not confirm the grant. Refresh the grant list before retrying.",
+        type: "error",
+      });
     } finally {
       setIsSubmittingGrant(false);
     }
@@ -226,10 +242,9 @@ export function PaymentsConsole({
             <button
               onClick={() => {
                 const now = new Date();
-                setGrantStartsAt(now.toISOString().slice(0, 16));
-                setGrantEndsAt(
-                  new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
-                );
+                setGrantStartsAt(localDateTimeInput(now));
+                setGrantEndsAt(localDateTimeInput(new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)));
+                setMessage(null);
                 setShowGrantModal(true);
               }}
               className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-semibold text-white shadow transition hover:bg-orange-500"
@@ -510,6 +525,23 @@ export function PaymentsConsole({
             <p className="mt-1 text-xs text-stone-400">
               Grants new ordering or kitchen capabilities for a defined UTC window.
             </p>
+            <p className="mt-2 text-xs text-amber-200">
+              Each grant needs a fresh, single-use password and authenticator confirmation.{" "}
+              <Link
+                href="/account/security"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline underline-offset-2"
+              >
+                Confirm a privileged action
+              </Link>{" "}
+              in a new tab before submitting.
+            </p>
+            {message?.type === "error" && (
+              <p role="alert" className="mt-3 rounded-lg border border-red-800 bg-red-950 p-3 text-xs text-red-200">
+                {message.text}
+              </p>
+            )}
 
             <form onSubmit={handleIssueGrant} className="mt-4 space-y-4 text-xs">
               <div>
@@ -587,6 +619,8 @@ export function PaymentsConsole({
                   required
                   value={grantReason}
                   onChange={(e) => setGrantReason(e.target.value)}
+                  minLength={5}
+                  maxLength={500}
                   placeholder="e.g. Approved launch pilot agreement #104"
                   className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:border-orange-500 focus:outline-none"
                 />

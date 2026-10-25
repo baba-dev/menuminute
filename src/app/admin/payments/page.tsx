@@ -9,6 +9,7 @@ import {
   revokeEntitlementGrant,
 } from "@/modules/admin/payments.service";
 import { PaymentsConsole } from "./payments-console";
+import { grantFailureMessage, type GrantActionResult } from "@/modules/admin/grant-feedback";
 
 export default async function AdminPaymentsPage() {
   const actor = await verifySuperAdmin();
@@ -33,10 +34,17 @@ export default async function AdminPaymentsPage() {
     startsAt: string;
     endsAt: string;
     reason: string;
-  }) {
+  }): Promise<GrantActionResult> {
     "use server";
+    // Authentication and Next.js redirects stay outside the recovery boundary.
     const currentActor = await verifySuperAdmin();
-    return issueEntitlementGrant(currentActor, data);
+    try {
+      await issueEntitlementGrant(currentActor, data);
+      return { ok: true };
+    } catch (error) {
+      // Return only explicitly mapped, non-sensitive errors to production clients.
+      return { ok: false, message: grantFailureMessage(error) };
+    }
   }
 
   async function handleRevokeGrant(grantId: string, reason: string) {
