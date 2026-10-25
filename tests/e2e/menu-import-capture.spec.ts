@@ -190,12 +190,12 @@ test("reviewer corrects an unreadable price and applies only a private draft", a
   await page.getByRole("link", { name: /Open source-aware review/ }).click();
   await expect(page.getByRole("heading", { name: "Perfect every detail." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Needs review (2)" })).toBeVisible();
-  await page.getByRole("button", { name: "Zoom in" }).click();
-  await expect(page.getByText("125%")).toBeVisible();
-  await page.getByRole("button", { name: "Fit" }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Original photo" }).click();
   await expect(page.getByAltText("Private original menu photograph")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(page.getByText("125%")).toBeVisible();
+  await page.getByRole("button", { name: "Fit" }).click();
   await page.getByRole("button", { name: "Extracted dishes" }).click();
   await expect(page.getByLabel("Dish 1.1 price")).toBeVisible();
   await expect(page.getByText(/AI could not verify this price/)).toBeVisible();
