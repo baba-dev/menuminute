@@ -3,6 +3,8 @@ import Link from "next/link";
 import { InvitationManager } from "@/components/auth/invitation-manager";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
+import * as Popover from "@radix-ui/react-popover";
+import { Info } from "lucide-react";
 import type { ReactNode } from "react";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
@@ -25,6 +27,28 @@ type Detail = {
   projection: { version: number } | null;
 };
 const inputClass = "oh-control";
+function Help({ label, children }: { label: string; children: string }) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button type="button" className="oh-help-trigger" aria-label={"About " + label}>
+          <Info size={15} aria-hidden="true" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className="oh-help-popover"
+          aria-label={"About " + label}
+          sideOffset={8}
+          collisionPadding={12}
+        >
+          {children}
+          <Popover.Arrow className="oh-help-arrow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
 function Field({
   label,
   name,
@@ -58,11 +82,14 @@ function Form({
 }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const inFlight = useRef(false);
   return (
     <form
       className="oh-form"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (inFlight.current || disabled) return;
+        inFlight.current = true;
         const data = new FormData(e.currentTarget);
         setBusy(true);
         setMessage("");
@@ -72,6 +99,7 @@ function Form({
         } catch (e) {
           setMessage(e instanceof Error ? e.message : "Unable to save");
         } finally {
+          inFlight.current = false;
           setBusy(false);
         }
       }}
@@ -81,7 +109,7 @@ function Form({
         {children}
         <button className="oh-primary oh-submit">{busy ? "Saving…" : button}</button>
       </fieldset>
-      <p role="status" className="oh-small">
+      <p role="status" aria-live="polite" className="oh-small">
         {message}
       </p>
     </form>
@@ -291,6 +319,9 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
   const [selected, setSelected] = useState(organizations[0]?.id ?? "");
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
+  const [jobRetry, setJobRetry] = useState("");
+  const [retryMessage, setRetryMessage] = useState("");
+  const retryRef = useRef(false);
   const [billing, setBilling] = useState<{
     freeMenu: boolean;
     ordering: boolean;
@@ -409,6 +440,8 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                   requestGeneration.current++;
                   setDetail(null);
                   setBilling(null);
+                  setRetryMessage("");
+                  setError("");
                   setSelected(e.target.value);
                 }}
               >
@@ -770,6 +803,7 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                         Recent 30 events. Pending and dispatched events recover automatically;
                         failed events require review.
                       </p>
+                      <p className="oh-retry-message" role="status" aria-live="polite">{retryMessage}</p>
                       <ul className="oh-event-list">
                         {detail.jobs.map((j) => (
                           <li key={j.id} className="break-all">
@@ -777,18 +811,38 @@ export function OrganizationManager({ organizations }: { organizations: Organiza
                             {j.lastError && `· ${j.lastError}`}{" "}
                             {j.status === "failed" && (
                               <button
-                                className="ml-2 underline"
+                                type="button"
+                                className="oh-retry-button"
+                                disabled={Boolean(jobRetry)}
                                 onClick={async () => {
-                                  const r = await fetch(`/api/organizations/${selected}/jobs`, {
-                                    method: "POST",
-                                    headers: { "content-type": "application/json" },
-                                    body: JSON.stringify({ eventId: j.id }),
-                                  });
-                                  if (!r.ok) setError((await r.json()).message);
-                                  await load();
+                                  if (retryRef.current) return;
+                                  retryRef.current = true;
+                                  const organizationId = selected;
+                                  setJobRetry(j.id);
+                                  setRetryMessage("");
+                                  try {
+                                    const r = await fetch(`/api/organizations/${encodeURIComponent(organizationId)}/jobs`, {
+                                      method: "POST",
+                                      headers: { "content-type": "application/json" },
+                                      body: JSON.stringify({ eventId: j.id }),
+                                    });
+                                    const result = await r.json().catch(() => ({}));
+                                    if (!r.ok) throw new Error(result.message || "Retry request failed.");
+                                    if (activeSelection.current === organizationId) {
+                                      setRetryMessage("Retry requested. Check the updated delivery state to confirm completion.");
+                                      await load();
+                                    }
+                                  } catch (cause) {
+                                    if (activeSelection.current === organizationId) {
+                                      setRetryMessage(cause instanceof Error ? cause.message : "Unable to confirm retry. Refresh the delivery status.");
+                                    }
+                                  } finally {
+                                    retryRef.current = false;
+                                    setJobRetry("");
+                                  }
                                 }}
                               >
-                                Retry failed event
+                                {jobRetry === j.id ? "Requesting…" : "Retry failed event"}
                               </button>
                             )}
                           </li>
