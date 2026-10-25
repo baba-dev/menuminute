@@ -49,15 +49,25 @@ function readError(cause: unknown, fallback: string): string {
 }
 
 function validatedRail(value: { orders: MerchantOrder[]; overflow: boolean }) {
-  if (!value || !Array.isArray(value.orders) || typeof value.overflow !== "boolean" ||
-    value.orders.some((order) => !order || !Array.isArray(order.items))) {
+  if (
+    !value ||
+    !Array.isArray(value.orders) ||
+    typeof value.overflow !== "boolean" ||
+    value.orders.some((order) => !order || !Array.isArray(order.items))
+  ) {
     throw new Error("The live queue returned an invalid response. Synchronize again.");
   }
   return value;
 }
 
 function validatedPulse(value: ServicePulse) {
-  const keys: (keyof ServicePulse)[] = ["pending", "preparing", "ready", "active", "completedToday"];
+  const keys: (keyof ServicePulse)[] = [
+    "pending",
+    "preparing",
+    "ready",
+    "active",
+    "completedToday",
+  ];
   if (!value || keys.some((key) => !Number.isSafeInteger(value[key]) || value[key] < 0)) {
     throw new Error("Service counters returned an invalid response. Synchronize again.");
   }
@@ -466,7 +476,9 @@ export function LiveOrdersBoard({
                 event.preventDefault();
                 const next = tab === "active" ? "history" : "active";
                 setTab(next);
-                document.getElementById(next === "active" ? "sc-active-tab" : "sc-history-tab")?.focus();
+                document
+                  .getElementById(next === "active" ? "sc-active-tab" : "sc-history-tab")
+                  ?.focus();
               }}
             >
               <button
@@ -554,7 +566,12 @@ export function LiveOrdersBoard({
               </button>
             </div>
           </div>
-          <div className="sc-sync" data-testid="service-rail-status" role="status" aria-live="polite">
+          <div
+            className="sc-sync"
+            data-testid="service-rail-status"
+            role="status"
+            aria-live="polite"
+          >
             <span className={railError ? "sc-dot sc-dot-error" : "sc-dot"} />
             {railError
               ? lastSync
@@ -582,7 +599,9 @@ export function LiveOrdersBoard({
           {pulseError && (
             <div className="sc-alert" role="alert" data-testid="service-pulse-error">
               <AlertTriangle size={18} aria-hidden="true" />
-              <span>{pulseError} Counters may be outdated; ticket synchronization is independent.</span>
+              <span>
+                {pulseError} Counters may be outdated; ticket synchronization is independent.
+              </span>
               <button type="button" onClick={() => void refresh(true)}>
                 Retry counters
               </button>
@@ -592,7 +611,9 @@ export function LiveOrdersBoard({
             <div className="sc-alert" role="alert">
               <AlertTriangle size={18} aria-hidden="true" />
               <span>{error}</span>
-              <button type="button" onClick={() => void refresh(true)}>Synchronize</button>
+              <button type="button" onClick={() => void refresh(true)}>
+                Synchronize
+              </button>
             </div>
           )}
           {overflow && tab === "active" && (
@@ -621,7 +642,9 @@ export function LiveOrdersBoard({
                     onClick={() => setRail(lane.id)}
                   >
                     {lane.title}{" "}
-                    <span>{statusCounts?.[lane.id === "incoming" ? "pending" : lane.id] ?? "—"}</span>
+                    <span>
+                      {statusCounts?.[lane.id === "incoming" ? "pending" : lane.id] ?? "—"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -811,7 +834,8 @@ export function LiveOrdersBoard({
                   ))}
                 </div>
               ) : (
-                !historyBusy && !historyError && (
+                !historyBusy &&
+                !historyError && (
                   <div className="sc-history-empty">
                     <strong>No matching concluded orders.</strong>
                     <p>Try a different filter or date range.</p>
@@ -1006,7 +1030,9 @@ export function LiveOrdersBoard({
               <Dialog.Close className="sc-secondary">Keep order</Dialog.Close>
               <button
                 type="button"
-                disabled={!declining || busyId === declining.id || !declineReason || Boolean(railError)}
+                disabled={
+                  !declining || busyId === declining.id || !declineReason || Boolean(railError)
+                }
                 className="sc-danger"
                 onClick={() => {
                   if (declining) void mutate(declining, "rejected", declineReason);

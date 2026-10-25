@@ -261,12 +261,21 @@ test("Service Counter keeps verified queue and counters isolated under partial o
     );
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: info.outputPath("service-counter-light-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("service-counter-light-mobile.png"),
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.screenshot({ path: info.outputPath("service-counter-dark-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("service-counter-dark-mobile.png"),
+    fullPage: true,
+  });
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({ path: info.outputPath("service-counter-dark-desktop.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("service-counter-dark-desktop.png"),
+    fullPage: true,
+  });
   await page.getByRole("tab", { name: "Live orders" }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute("aria-selected", "true");

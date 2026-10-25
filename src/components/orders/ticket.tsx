@@ -198,10 +198,10 @@ export function Ticket({
         {order.canManagePayment &&
           ["ready", "served", "collected"].includes(order.status) &&
           order.paymentStatus === "unpaid" && (
-          <button type="button" disabled={busy || readOnly} onClick={() => pay(order)}>
-            Record Paid
-          </button>
-        )}
+            <button type="button" disabled={busy || readOnly} onClick={() => pay(order)}>
+              Record Paid
+            </button>
+          )}
         {order.kitchenManaged && <Link href="/kitchen">Open Kitchen Pro ↗</Link>}
       </div>
     </article>
