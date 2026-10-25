@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertTriangle,
@@ -436,7 +435,7 @@ export function LiveOrdersBoard({
           MENUMINUTE · SERVICE COUNTER
         </span>
       </header>
-      <main className="sc-body">
+      <div className="sc-body">
         <ServicePulseRail
           pulse={pulse}
           state={pulseError ? "stale" : lastPulseSync ? "ready" : "initial"}
@@ -458,12 +457,24 @@ export function LiveOrdersBoard({
             </button>
           </div>
           <div className="sc-toolbar">
-            <div className="sc-tabs" role="tablist" aria-label="Orders view">
+            <div
+              className="sc-tabs"
+              role="tablist"
+              aria-label="Orders view"
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                event.preventDefault();
+                const next = tab === "active" ? "history" : "active";
+                setTab(next);
+                document.getElementById(next === "active" ? "sc-active-tab" : "sc-history-tab")?.focus();
+              }}
+            >
               <button
                 id="sc-active-tab"
                 type="button"
                 role="tab"
                 aria-selected={tab === "active"}
+                tabIndex={tab === "active" ? 0 : -1}
                 aria-controls="sc-active-panel"
                 onClick={() => setTab("active")}
               >
@@ -474,6 +485,7 @@ export function LiveOrdersBoard({
                 type="button"
                 role="tab"
                 aria-selected={tab === "history"}
+                tabIndex={tab === "history" ? 0 : -1}
                 aria-controls="sc-history-panel"
                 onClick={() => setTab("history")}
               >
@@ -826,7 +838,7 @@ export function LiveOrdersBoard({
             </section>
           )}
         </section>
-      </main>
+      </div>
       <Dialog.Root
         open={Boolean(currentSelected)}
         onOpenChange={(open) => {
