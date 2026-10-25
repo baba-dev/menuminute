@@ -22,5 +22,10 @@ export default async function OrganizationPage() {
   const initialOrganizationId = organizations.some((org) => org.id === outlet?.organizationId)
     ? outlet?.organizationId
     : undefined;
-  return <OrganizationManager organizations={organizations} initialOrganizationId={initialOrganizationId} />;
+  return (
+    <OrganizationManager
+      organizations={organizations}
+      initialOrganizationId={initialOrganizationId}
+    />
+  );
 }

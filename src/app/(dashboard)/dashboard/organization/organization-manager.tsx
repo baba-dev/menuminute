@@ -340,11 +340,17 @@ function BrandLinkEditor({
   );
 }
 
-export function OrganizationManager({ organizations, initialOrganizationId }: { organizations: Organization[]; initialOrganizationId?: string }) {
+export function OrganizationManager({
+  organizations,
+  initialOrganizationId,
+}: {
+  organizations: Organization[];
+  initialOrganizationId?: string;
+}) {
   const router = useRouter();
   const initiallySelected = organizations.some((org) => org.id === initialOrganizationId)
-    ? initialOrganizationId ?? ""
-    : organizations[0]?.id ?? "";
+    ? (initialOrganizationId ?? "")
+    : (organizations[0]?.id ?? "");
   const [selected, setSelected] = useState(initiallySelected);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
