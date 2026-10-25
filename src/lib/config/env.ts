@@ -37,6 +37,7 @@ export const envSchema = z
     SMTP_USER: z.string().trim().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().optional(),
+    ORDER_EDGE_SHARED_SECRET: z.string().min(32).optional(),
     AUTH_ALLOW_TEST_EMAIL: strictBoolean.default(false),
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
@@ -178,6 +179,12 @@ export const envSchema = z
         message: "Resend credentials and verified sender are required",
       });
     if (e.NODE_ENV === "production") {
+      if (!e.ORDER_EDGE_SHARED_SECRET)
+        ctx.addIssue({
+          code: "custom",
+          path: ["ORDER_EDGE_SHARED_SECRET"],
+          message: "Production orders require a trusted reverse-proxy identity secret",
+        });
       if (e.EMAIL_PROVIDER === "test")
         ctx.addIssue({
           code: "custom",
