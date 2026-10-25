@@ -246,7 +246,7 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await expect(page.getByTestId("service-rail-error")).toBeVisible();
   await expect(page.getByTestId("service-pulse-error")).toHaveCount(0);
   await expect(page.getByTestId("service-rail-status")).toContainText("read-only");
-  await expect(page.getByText("Queue unavailable")).toBeVisible();
+  await expect(page.getByText("Queue unavailable").first()).toBeVisible();
   await expect(cells.first()).toContainText("0");
 
   await page.unroute(railPath);
