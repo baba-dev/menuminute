@@ -69,7 +69,7 @@ test("menu editor can create and privately upload a gallery image without an ena
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("link", { name: /Import from photos/ })).toBeVisible();
   await page.getByRole("link", { name: /Import from photos/ }).click();
-  await expect(page.getByRole("heading", { name: /From a paper menu/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Your menu\. Digitized\./ })).toBeVisible();
   await page.getByRole("button", { name: "Create private draft" }).click();
   await expect(page.getByRole("heading", { name: "Collect photographs" })).toBeVisible();
   await page.getByLabel("Choose menu photographs").setInputFiles({
@@ -84,6 +84,30 @@ test("menu editor can create and privately upload a gallery image without an ena
   await expect(page.getByText("Page 1 · ready")).toBeVisible();
   await expect(page.getByText(/Extraction is currently unavailable/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Start extraction" })).toHaveCount(0);
+});
+
+test("scan table allows selecting photos before creating a private session", async ({ page }) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu/import");
+  await expect(page.getByRole("heading", { name: "Your menu. Digitized." })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Import progress" })).toBeVisible();
+  await page.getByLabel("Choose menu photographs").setInputFiles({
+    name: "baba-bakery.png",
+    mimeType: "image/png",
+    buffer: await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } }).png().toBuffer(),
+  });
+  await expect(page.getByText("baba-bakery.png")).toBeVisible();
+  await page.getByRole("button", { name: "Upload photos privately" }).click();
+  await expect(page.getByText("Page 1 · ready")).toBeVisible();
+  await page.getByRole("button", { name: "All drafts" }).click();
+  await expect(page.getByRole("button", { name: /Collect photographs/ })).toBeVisible();
 });
 
 test("reviewer corrects an unreadable price and applies only a private draft", async ({ page }) => {
@@ -158,7 +182,11 @@ test("reviewer corrects an unreadable price and applies only a private draft", a
   await page.getByRole("button", { name: "Refresh import" }).click();
   await expect(page.getByRole("link", { name: /Open source-aware review/ })).toBeVisible();
   await page.getByRole("link", { name: /Open source-aware review/ }).click();
-  await expect(page.getByRole("heading", { name: "Make every detail yours." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Perfect every detail." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Needs review (2)" })).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(page.getByText("125%")).toBeVisible();
+  await page.getByRole("button", { name: "Fit" }).click();
   await expect(page.getByText(/AI could not verify this price/)).toBeVisible();
   await page.getByLabel("Dish 1.1 price").fill("12.50");
   await page.getByLabel("I checked this category heading against the photograph").check();
