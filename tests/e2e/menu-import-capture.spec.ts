@@ -98,7 +98,9 @@ test("scan table allows selecting photos before creating a private session", asy
   await page.goto("/dashboard/menu/import");
   await expect(page.getByRole("heading", { name: "Your menu. Digitized." })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Import progress" })).toBeVisible();
-  const photo = await sharp({ create: { width: 640, height: 480, channels: 3, background: "white" } })
+  const photo = await sharp({
+    create: { width: 640, height: 480, channels: 3, background: "white" },
+  })
     .png()
     .toBuffer();
   await page.getByLabel("Choose menu photographs").setInputFiles([
