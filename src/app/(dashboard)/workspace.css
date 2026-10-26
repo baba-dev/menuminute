@@ -1471,3 +1471,56 @@
   margin: 0;
   padding: 0;
 }
+
+/* Production dashboard service-pulse status: explicit freshness, failure and keyboard controls. */
+.mm-dashboard-operations-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.mm-dashboard-operations-refresh {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  background: var(--workspace-soft);
+  color: var(--ink);
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mm-dashboard-operations-refresh:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.mm-dashboard-operations-refresh:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 2px;
+}
+.mm-dashboard-operations-freshness {
+  font-size: 0.75rem;
+  color: var(--workspace-muted);
+}
+.mm-dashboard-operations-notice {
+  border: 1px solid var(--workspace-line);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--workspace-soft);
+}
+.mm-dashboard-operations-notice strong {
+  display: block;
+  font-weight: 800;
+}
+.mm-dashboard-operations-notice p {
+  margin: 0.45rem 0 0;
+}
+@media (max-width: 550px) {
+  .mm-dashboard-operations-heading {
+    flex-direction: column;
+  }
+}

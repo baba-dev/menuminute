@@ -31,3 +31,29 @@ export async function optionalDashboardServicePulse(
     return null;
   }
 }
+
+/** A typed status prevents an unavailable query from masquerading as zero orders. */
+export type DashboardPulseSnapshot =
+  | { state: "ready"; data: Awaited<ReturnType<typeof servicePulse>>; checkedAt: string }
+  | { state: "restricted" | "unavailable"; data: null; checkedAt: string };
+
+export async function dashboardPulseSnapshot(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  readPulse: typeof servicePulse = servicePulse
+): Promise<DashboardPulseSnapshot> {
+  const checkedAt = new Date().toISOString();
+  try {
+    const data = await readPulse(actor, organizationId, outletId);
+    return { state: "ready", data, checkedAt };
+  } catch (error) {
+    if (error instanceof ForbiddenError) return { state: "restricted", data: null, checkedAt };
+    const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+    console.error("[dashboard] Service pulse query failed", {
+      kind: error instanceof Error ? error.name : "unknown",
+      sqlstate: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined,
+    });
+    return { state: "unavailable", data: null, checkedAt };
+  }
+}
