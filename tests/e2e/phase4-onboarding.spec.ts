@@ -50,7 +50,7 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
     return route.continue();
   });
   await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
-  await expect(page.locator(".wizard-error-banner[role=\"alert\"]")).toContainText(
+  await expect(page.locator('.wizard-error-banner[role="alert"]')).toContainText(
     "Temporary provisioning error"
   );
   await page.reload();
