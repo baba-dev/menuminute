@@ -90,7 +90,10 @@ function toWireMessage(message: InferenceRequest["messages"][number], model: Pro
             tool_calls: message.toolCalls.map((call) => ({
               id: call.id,
               type: "function",
-              function: { name: wireToolName(model, call.name), arguments: JSON.stringify(call.arguments) },
+              function: {
+                name: wireToolName(model, call.name),
+                arguments: JSON.stringify(call.arguments),
+              },
             })),
           }
         : {}),
