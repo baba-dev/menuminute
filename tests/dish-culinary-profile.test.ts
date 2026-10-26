@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { isVerifiedFreeFrom, hasVerifiedNutrition, canQuickAddCompanion } from "../src/modules/menu-product/culinary-safety";
+import {
+  isVerifiedFreeFrom,
+  hasVerifiedNutrition,
+  canQuickAddCompanion,
+} from "../src/modules/menu-product/culinary-safety";
 import {
   dishSchema,
   nutritionSchema,
@@ -207,7 +211,9 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
   it("requires positive restaurant verification before exposing free-from filters", () => {
     const unknown = { safety: undefined, variants: [], addOnGroups: [] };
     expect(isVerifiedFreeFrom(unknown, "nuts")).toBe(false);
-    expect(isVerifiedFreeFrom({ safety: { allergens: [] }, variants: [], addOnGroups: [] }, "dairy")).toBe(false);
+    expect(
+      isVerifiedFreeFrom({ safety: { allergens: [] }, variants: [], addOnGroups: [] }, "dairy")
+    ).toBe(false);
 
     const safe = {
       safety: {
@@ -223,27 +229,54 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(isVerifiedFreeFrom(safe, "dairy")).toBe(true);
     expect(isVerifiedFreeFrom({ ...safe, variants: [{}] }, "nuts")).toBe(false);
     expect(isVerifiedFreeFrom({ ...safe, addOnGroups: [{}] }, "dairy")).toBe(false);
-    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, crossContact: "Shared kitchen" } }, "nuts")).toBe(false);
-    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, allergens: ["peanuts"] } }, "nuts")).toBe(false);
-    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, verified: false } }, "nuts")).toBe(false);
+    expect(
+      isVerifiedFreeFrom(
+        { ...safe, safety: { ...safe.safety, crossContact: "Shared kitchen" } },
+        "nuts"
+      )
+    ).toBe(false);
+    expect(
+      isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, allergens: ["peanuts"] } }, "nuts")
+    ).toBe(false);
+    expect(
+      isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, verified: false } }, "nuts")
+    ).toBe(false);
   });
 
   it("rejects contradictory claims in canonical menu contracts", () => {
-    expect(() => safetyProfileSchema.parse({
-      ingredients: ["peanuts"], allergens: ["peanuts"], verified: true,
-      verifiedFreeFrom: ["nuts"],
-    })).toThrow();
-    expect(() => safetyProfileSchema.parse({
-      ingredients: ["rice"], allergens: [], verified: false,
-      verifiedFreeFrom: ["dairy"],
-    })).toThrow();
-    expect(() => safetyProfileSchema.parse({
-      ingredients: ["rice"], allergens: [], verified: true,
-      verifiedFreeFrom: ["dairy"], crossContact: "Shared fryer",
-    })).toThrow();
-    expect(safetyProfileSchema.parse({
-      ingredients: ["rice"], allergens: [], verified: true, verifiedFreeFrom: ["dairy"],
-    }).verifiedFreeFrom).toEqual(["dairy"]);
+    expect(() =>
+      safetyProfileSchema.parse({
+        ingredients: ["peanuts"],
+        allergens: ["peanuts"],
+        verified: true,
+        verifiedFreeFrom: ["nuts"],
+      })
+    ).toThrow();
+    expect(() =>
+      safetyProfileSchema.parse({
+        ingredients: ["rice"],
+        allergens: [],
+        verified: false,
+        verifiedFreeFrom: ["dairy"],
+      })
+    ).toThrow();
+    expect(() =>
+      safetyProfileSchema.parse({
+        ingredients: ["rice"],
+        allergens: [],
+        verified: true,
+        verifiedFreeFrom: ["dairy"],
+        crossContact: "Shared fryer",
+      })
+    ).toThrow();
+    expect(
+      safetyProfileSchema.parse({
+        ingredients: ["rice"],
+        allergens: [],
+        verified: true,
+        verifiedFreeFrom: ["dairy"],
+      }).verifiedFreeFrom
+    ).toEqual(["dairy"]);
   });
 
   it("only displays confirmed nutrition and only quick-adds available, simple pairings", () => {
@@ -264,6 +297,8 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(profile).toBeTruthy();
     expect(() => culinaryProfileSchema.parse(profile?.culinary)).toThrow();
     const { suggestedPairings: _suggestedPairings, ...canonical } = profile!.culinary;
-    expect(culinaryProfileSchema.parse({ ...canonical, pairingDishIds: [] }).pairingDishIds).toEqual([]);
+    expect(
+      culinaryProfileSchema.parse({ ...canonical, pairingDishIds: [] }).pairingDishIds
+    ).toEqual([]);
   });
 });

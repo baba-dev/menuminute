@@ -1,7 +1,13 @@
 import type { DishNutrition } from "./contracts";
 
 type SafetyDish = {
-  safety?: { allergens?: readonly string[]; ingredients?: readonly string[]; crossContact?: string; verified?: boolean; verifiedFreeFrom?: readonly ("nuts" | "dairy")[] };
+  safety?: {
+    allergens?: readonly string[];
+    ingredients?: readonly string[];
+    crossContact?: string;
+    verified?: boolean;
+    verifiedFreeFrom?: readonly ("nuts" | "dairy")[];
+  };
   variants?: readonly unknown[];
   addOnGroups?: readonly unknown[];
 };
@@ -19,9 +25,16 @@ export function isVerifiedFreeFrom(dish: SafetyDish, allergen: "nuts" | "dairy")
 }
 
 export function hasVerifiedNutrition(nutrition?: DishNutrition): boolean {
-  return nutrition?.verified === true &&
-    [nutrition.calories, nutrition.proteinGrams, nutrition.carbsGrams, nutrition.fatGrams, nutrition.fiberGrams]
-      .some((value) => value !== undefined);
+  return (
+    nutrition?.verified === true &&
+    [
+      nutrition.calories,
+      nutrition.proteinGrams,
+      nutrition.carbsGrams,
+      nutrition.fatGrams,
+      nutrition.fiberGrams,
+    ].some((value) => value !== undefined)
+  );
 }
 
 type Companion = {
@@ -34,6 +47,11 @@ type Companion = {
 
 /** Public suggestions follow the same availability requirements as ordinary cart entry. */
 export function canQuickAddCompanion(dish: Companion): boolean {
-  return !dish.soldOut && !dish.archived && dish.open !== false &&
-    dish.variants.length === 0 && dish.addOnGroups.every((group) => group.min === 0);
+  return (
+    !dish.soldOut &&
+    !dish.archived &&
+    dish.open !== false &&
+    dish.variants.length === 0 &&
+    dish.addOnGroups.every((group) => group.min === 0)
+  );
 }

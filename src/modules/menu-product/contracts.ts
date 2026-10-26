@@ -90,7 +90,10 @@ export const safetyProfileSchema = z
     allergens: z.array(allergenEnum).max(11).default([]),
     crossContact: z.string().trim().max(250).optional(),
     verified: z.boolean().optional(),
-    verifiedFreeFrom: z.array(z.enum(["nuts", "dairy"])).max(2).optional(),
+    verifiedFreeFrom: z
+      .array(z.enum(["nuts", "dairy"]))
+      .max(2)
+      .optional(),
   })
   .strict()
   .superRefine((profile, ctx) => {
@@ -106,10 +109,15 @@ export const safetyProfileSchema = z
       });
     }
     if (
-      (freeFrom.includes("nuts") && profile.allergens.some((a) => a === "nuts" || a === "peanuts")) ||
+      (freeFrom.includes("nuts") &&
+        profile.allergens.some((a) => a === "nuts" || a === "peanuts")) ||
       (freeFrom.includes("dairy") && profile.allergens.includes("dairy"))
     ) {
-      ctx.addIssue({ code: "custom", path: ["verifiedFreeFrom"], message: "Free-from claim conflicts with declared allergens" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["verifiedFreeFrom"],
+        message: "Free-from claim conflicts with declared allergens",
+      });
     }
   });
 export type DishSafetyProfile = z.infer<typeof safetyProfileSchema>;
