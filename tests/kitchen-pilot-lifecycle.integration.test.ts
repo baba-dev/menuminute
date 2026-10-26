@@ -129,6 +129,13 @@ it("activates only after reviewed route/staff readiness, drains new intake and c
   await proof(0);
   const activated = await command(0, "activate");
   expect(activated.rows[0]!.state).toMatchObject({ state: "active", enabled: true });
+  // The preexisting manager command must not silently bypass the operator pilot.
+  await expect(
+    kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
+      action: "settings.disable",
+      data: {},
+    })
+  ).rejects.toThrow();
   const acceptedOrder = await submitGuestOrder(f.outlet.publicId, {
     clientSubmissionKey: crypto.randomUUID(),
     quotedTotalMinor: 15000,
