@@ -15,7 +15,7 @@ Create each scene in **1200 × 720 (5:3)**, preferably transparent or carefully 
 | Contact | `wizard-hero-contact-light.webp` | `wizard-hero-contact-dark.webp` | Dining table and QR stand |
 | Launch | `wizard-hero-launch-light.webp` | `wizard-hero-launch-dark.webp` | Celebratory golden cloche and confetti |
 
-These exact 10 WebP paths are wired into `WizardMediaSlot` with inline SVG fallback. The component reads `document.documentElement.dataset.theme` through CSS selectors, in line with MenuMinute's appearance toggle.
+The loader tries the exact WebP filename first, then the corresponding themed SVG (e.g. `wizard-hero-identity-light.svg`), then its built-in inline vector. Use **either format** for the five stage pairs; WebP is recommended for detailed rendered art. The component reads `document.documentElement.dataset.theme` through CSS selectors, in line with MenuMinute's appearance toggle.
 
 ## Optional supporting artwork — 15 files
 

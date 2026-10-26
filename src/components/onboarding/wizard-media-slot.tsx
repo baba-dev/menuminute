@@ -11,7 +11,7 @@ interface WizardMediaSlotProps {
   className?: string;
 }
 
-/** Artwork is optional. Inline vectors stay visible until a themed WebP asset loads. */
+/** Artwork is optional. Prefer themed WebP, then themed SVG, then inline vector fallback. */
 export function WizardMediaSlot({ step, alt = "", className = "" }: WizardMediaSlotProps) {
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   return (
@@ -23,17 +23,20 @@ export function WizardMediaSlot({ step, alt = "", className = "" }: WizardMediaS
       <InlineStepArt step={step} />
       {(["light", "dark"] as const).map((mode) => {
         const file = `${step}-${mode}`;
-        if (failed[file]) return null;
+        if (failed[`${file}-svg`]) return null;
+        const format = failed[`${file}-webp`] ? "svg" : "webp";
         return (
           <Image
-            key={file}
-            src={`/brand/onboarding-wizard/wizard-hero-${step}-${mode}.webp`}
+            key={`${file}-${format}`}
+            src={`/brand/onboarding-wizard/wizard-hero-${step}-${mode}.${format}`}
             alt={alt}
             width={1200}
             height={720}
             unoptimized
             className={`wizard-media-custom wizard-media-custom--${mode}`}
-            onError={() => setFailed((previous) => ({ ...previous, [file]: true }))}
+            onError={() =>
+              setFailed((previous) => ({ ...previous, [`${file}-${format}`]: true }))
+            }
           />
         );
       })}
