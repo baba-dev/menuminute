@@ -4,7 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import sharp from "sharp";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 import { formatPrice } from "../../src/lib/utils";
-async function seed(publish = false) {
+async function seed(publish = false, culinaryMode?: "verified" | "cross-contact") {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
     throw new Error("Isolated test DB required");
@@ -54,6 +54,14 @@ async function seed(publish = false) {
                   description: "A restaurant-supplied description for the test menu.",
                   priceMinor: 12500,
                   dietary: ["vegetarian"],
+                  safety: culinaryMode === "verified"
+                    ? { ingredients: ["Rice", "Peas"], allergens: [], verified: true, verifiedFreeFrom: ["nuts", "dairy"] }
+                    : culinaryMode === "cross-contact"
+                      ? { ingredients: ["Rice", "Peas"], allergens: [], verified: true, crossContact: "Prepared beside nuts on a shared surface." }
+                      : undefined,
+                  nutrition: culinaryMode === "verified"
+                    ? { calories: 400, servingSize: "350g", verified: true }
+                    : undefined,
                 },
                 { id: "sold", name: "Seasonal special", priceMinor: 9000, soldOut: true },
                 {
@@ -644,4 +652,27 @@ test("unverified culinary information never creates safe-from claims in mobile d
   await expect(dialog).toHaveCount(0);
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("confirmed culinary claims show only after explicit verification and cross-contact remains visible", async ({
+  page,
+}) => {
+  const verified = await seed(true, "verified");
+  await page.goto(`/m/${verified.token}`);
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Nut-Free" }).click();
+  await expect(page.getByRole("heading", { name: "Signature thali" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Seasonal special" })).toHaveCount(0);
+  await expect(page.getByText("400 kcal")).toBeVisible();
+  await page.getByRole("button", { name: "View Signature thali details" }).click();
+  await expect(page.getByRole("dialog").getByText("Ingredients:")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText(/not been verified/i)).toHaveCount(0);
+
+  const crossContact = await seed(true, "cross-contact");
+  await page.goto(`/m/${crossContact.token}`);
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Nut-Free" }).click();
+  await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "All dishes" }).click();
+  await page.getByRole("button", { name: "View Signature thali details" }).click();
+  await expect(page.getByRole("dialog").getByText(/Prepared beside nuts on a shared surface/)).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("Contains Allergens:")).toHaveCount(0);
 });
