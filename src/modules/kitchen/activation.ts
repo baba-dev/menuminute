@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { readFile, realpath } from "node:fs/promises";
 import { z } from "zod";
 import { withActor } from "@/modules/tenancy/service";
 import { type AdminActor } from "@/lib/admin-guard";
@@ -70,6 +71,28 @@ export type KitchenPilotTarget = {
   organizationId: string;
 };
 
+/**
+ * Read immutable deployed provenance rather than trusting a request field or
+ * build-time NEXT_PUBLIC environment value. CI/dev intentionally fail closed.
+ */
+export async function kitchenRunningReleaseSha(): Promise<string> {
+  try {
+    const [web, worker, marker] = await Promise.all([
+      realpath("/var/www/menuminute/current"),
+      realpath("/var/www/menuminute/worker-current"),
+      readFile("/var/www/menuminute/current/RELEASE-SHA", "utf8"),
+    ]);
+    const candidate = marker.trim();
+    if (sha.safeParse(candidate).success &&
+      web.endsWith("/" + candidate) && worker.endsWith("/" + candidate)) {
+      return candidate;
+    }
+  } catch {
+    // Missing or unreadable artifact is not authorization to enable a pilot.
+  }
+  return "";
+}
+
 const actorScope = (actor: AdminActor) => ({
   userId: actor.id,
   sessionId: actor.sessionId,
@@ -107,7 +130,7 @@ export async function kitchenPilotStatus(actor: AdminActor, outletId: string) {
 export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand) {
   const parsed = pilotCommandSchema.parse(input);
   if (parsed.action === "activate") {
-    const deployedSha = process.env.NEXT_PUBLIC_RELEASE_SHA;
+    const deployedSha = await kitchenRunningReleaseSha();
     if (!deployedSha || !sha.safeParse(deployedSha).success || deployedSha !== parsed.releaseSha) {
       throw new Error("The deployed release SHA does not match the reviewed candidate");
     }
