@@ -144,10 +144,7 @@ it("searches scoped outlet names with literal wildcard characters", async () => 
   const session = crypto.randomUUID();
   const needle = "pilot_%_" + crypto.randomUUID().slice(0, 8);
   await admin(async (_, pool) => {
-    await pool.query(
-      "update restaurants set name=$1 where id=$2",
-      [needle, f.outlet.id]
-    );
+    await pool.query("update restaurants set name=$1 where id=$2", [needle, f.outlet.id]);
     await pool.query(
       "insert into users(id,name,email,email_verified,two_factor_enabled,is_super_admin) values($1,'Reviewer',$2,true,true,true)",
       [uid, uid + "@pilot.invalid"]
@@ -158,7 +155,13 @@ it("searches scoped outlet names with literal wildcard characters", async () => 
     );
   });
   const matches = await findKitchenPilotTargets(
-    { id: uid, name: "Reviewer", email: uid + "@pilot.invalid", twoFactorEnabled: true, sessionId: session },
+    {
+      id: uid,
+      name: "Reviewer",
+      email: uid + "@pilot.invalid",
+      twoFactorEnabled: true,
+      sessionId: session,
+    },
     needle
   );
   expect(matches.some((item) => item.id === f.outlet.id && item.name === needle)).toBe(true);
