@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 
 test.describe("MenuMinute End-to-End Smoke Tests", () => {
   test("Homepage loads with branding, hero, and navigation", async ({ page }) => {
@@ -50,7 +51,8 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
   });
 
   test("Registration page renders all signup fields", async ({ page }) => {
-    await page.goto("/register");
+    await mockTurnstileForBrowserTests(page);
+  await page.goto("/register");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "Your next chapter starts here."
     );
