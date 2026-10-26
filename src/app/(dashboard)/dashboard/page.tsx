@@ -57,7 +57,12 @@ export default async function DashboardPage() {
   if (!outlet) {
     return (
       <div className="mm-dashboard mm-dashboard-empty">
-        <ThemedArtwork name="empty-outlet" width={720} height={540} className="wizard-empty-artwork" />
+        <ThemedArtwork
+          name="empty-outlet"
+          width={720}
+          height={540}
+          className="wizard-empty-artwork"
+        />
         <MiseEnPlaceEmpty
           title="Aprons tied, knives sharpened."
           description="Every great restaurant begins with its first outlet. Set up your dining room and kitchen to publish a permanent QR menu."

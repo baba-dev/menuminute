@@ -144,7 +144,11 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         if (onSuccess) {
           onSuccess(data.outletId);
         } else {
-          try { window.sessionStorage.removeItem("menuminute.first-outlet.step"); } catch { /* Storage may be unavailable. */ }
+          try {
+            window.sessionStorage.removeItem("menuminute.first-outlet.step");
+          } catch {
+            /* Storage may be unavailable. */
+          }
           router.replace("/dashboard/get-started");
           router.refresh();
         }
@@ -165,7 +169,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       try {
         const savedStep = window.sessionStorage.getItem("menuminute.first-outlet.step");
         if (savedStep !== null) storedStep = Number(savedStep);
-      } catch { /* Private browsing or blocked storage. */ }
+      } catch {
+        /* Private browsing or blocked storage. */
+      }
       if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep < STEPS.length)
         setCurrentStep(storedStep);
       setReady(true);
@@ -185,8 +191,11 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
   useEffect(() => {
     if (ready) {
-      try { window.sessionStorage.setItem("menuminute.first-outlet.step", String(currentStep)); }
-      catch { /* Storage disabled; server draft remains authoritative. */ }
+      try {
+        window.sessionStorage.setItem("menuminute.first-outlet.step", String(currentStep));
+      } catch {
+        /* Storage disabled; server draft remains authoritative. */
+      }
     }
   }, [ready, currentStep]);
   // Debounced auto-save function
@@ -279,7 +288,11 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         if (onSuccess) {
           onSuccess(value.outletId);
         } else {
-          try { window.sessionStorage.removeItem("menuminute.first-outlet.step"); } catch { /* Storage may be unavailable. */ }
+          try {
+            window.sessionStorage.removeItem("menuminute.first-outlet.step");
+          } catch {
+            /* Storage may be unavailable. */
+          }
           router.replace("/dashboard/get-started");
           router.refresh();
         }
