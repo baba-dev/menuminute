@@ -100,17 +100,21 @@ it("bounds anonymous public media work with the cache Redis instance", async () 
 });
 
 it("accepts blank optional R2 settings in local mode but rejects partial R2 setup", () => {
-  expect(parseMediaEnv({
-    MEDIA_STORAGE: "local",
-    MEDIA_ROOT: "/tmp/menuminute-media",
-    R2_ENDPOINT: "",
-    R2_ACCESS_KEY_ID: "",
-    R2_SECRET_ACCESS_KEY: "",
-  }).MEDIA_STORAGE).toBe("local");
-  expect(() => parseMediaEnv({
-    MEDIA_STORAGE: "r2",
-    R2_ENDPOINT: "",
-    R2_ACCESS_KEY_ID: "",
-    R2_SECRET_ACCESS_KEY: "",
-  })).toThrow("R2_ENDPOINT");
+  expect(
+    parseMediaEnv({
+      MEDIA_STORAGE: "local",
+      MEDIA_ROOT: "/tmp/menuminute-media",
+      R2_ENDPOINT: "",
+      R2_ACCESS_KEY_ID: "",
+      R2_SECRET_ACCESS_KEY: "",
+    }).MEDIA_STORAGE
+  ).toBe("local");
+  expect(() =>
+    parseMediaEnv({
+      MEDIA_STORAGE: "r2",
+      R2_ENDPOINT: "",
+      R2_ACCESS_KEY_ID: "",
+      R2_SECRET_ACCESS_KEY: "",
+    })
+  ).toThrow("R2_ENDPOINT");
 });

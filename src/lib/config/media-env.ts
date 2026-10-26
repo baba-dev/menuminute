@@ -2,8 +2,14 @@ import path from "node:path";
 import { z } from "zod";
 
 // Empty optional values are normal in local-storage .env files.
-const optionalSecret = z.preprocess(v => v === "" ? undefined : v, z.string().min(1).optional());
-const optionalEndpoint = z.preprocess(v => v === "" ? undefined : v, z.string().url().optional());
+const optionalSecret = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.string().min(1).optional()
+);
+const optionalEndpoint = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.string().url().optional()
+);
 
 export const mediaEnvShape = {
   MEDIA_STORAGE: z.enum(["local", "r2"]),

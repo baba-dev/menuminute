@@ -25,7 +25,9 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
     expect(await mediaStorageHealth()).toBe(true);
     expect(calls).toHaveLength(3);
     expect(calls[2]!.options.method).toBe("HEAD");
-    expect(calls[2]!.url).toBe("https://isolated-account.r2.cloudflarestorage.com/private-test-bucket");
+    expect(calls[2]!.url).toBe(
+      "https://isolated-account.r2.cloudflarestorage.com/private-test-bucket"
+    );
     expect(calls[0]!.url).toBe(
       "https://isolated-account.r2.cloudflarestorage.com/private-test-bucket/org-test/asset-test/original"
     );

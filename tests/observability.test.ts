@@ -32,7 +32,9 @@ it("uses one correlation ID for a redacted server-error event and response", () 
 });
 
 it("does not log path parameters such as invitation tokens", () => {
-  const request = new Request("https://menu.invalid/api/invitations/private-invite-token?email=secret");
+  const request = new Request(
+    "https://menu.invalid/api/invitations/private-invite-token?email=secret"
+  );
   const log = vi.spyOn(console, "error").mockImplementation(() => {});
   try {
     errorResponse(new Error("private detail"), request);

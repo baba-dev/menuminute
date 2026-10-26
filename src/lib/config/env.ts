@@ -43,7 +43,12 @@ export const envSchema = z
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
     PUBLIC_MEDIA_RATE_LIMIT_MAX: z.coerce.number().int().min(30).max(10_000).default(180),
-    PUBLIC_MEDIA_RATE_LIMIT_GLOBAL_MAX: z.coerce.number().int().min(1000).max(1_000_000).default(12000),
+    PUBLIC_MEDIA_RATE_LIMIT_GLOBAL_MAX: z.coerce
+      .number()
+      .int()
+      .min(1000)
+      .max(1_000_000)
+      .default(12000),
     PUBLIC_MEDIA_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(10).max(3600).default(60),
     ...mediaEnvShape,
     GEMINI_API_KEY: z.string().optional(),
