@@ -542,7 +542,6 @@ export function StudioDishEditor({
           <label className="field">
             <span>
               <input
-                disabled={!canWrite}
                 type="checkbox"
                 disabled={!canWrite}
                 checked={nutrition.verified === true}
@@ -629,7 +628,6 @@ export function StudioDishEditor({
           <label className="field">
             <span>
               <input
-                disabled={!canWrite}
                 type="checkbox"
                 disabled={!canWrite}
                 checked={safety.verified === true}
@@ -658,7 +656,6 @@ export function StudioDishEditor({
               return (
                 <label key={claim} className="row" style={{ gap: "0.4rem" }}>
                   <input
-                    disabled={!canWrite}
                     type="checkbox"
                     disabled={declared}
                     checked={checked}
@@ -696,7 +693,6 @@ export function StudioDishEditor({
               order together.
             </span>
             <input
-              disabled={!canWrite}
               type="search"
               aria-label="Search companion dishes"
               disabled={!canWrite}
