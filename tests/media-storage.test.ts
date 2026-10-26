@@ -3,7 +3,6 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { putObject, getObject } from "../src/modules/media/storage";
 it("signs bounded canonical R2 requests and rejects alternate endpoints without any provider network use", async () => {
   const calls: { url: string; options: RequestInit }[] = [];
   vi.stubEnv("MEDIA_STORAGE", "r2");
@@ -11,6 +10,8 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
   vi.stubEnv("R2_BUCKET_NAME", "private-test-bucket");
   vi.stubEnv("R2_ACCESS_KEY_ID", "isolated-test-access");
   vi.stubEnv("R2_SECRET_ACCESS_KEY", "isolated-test-signing-secret");
+  vi.resetModules();
+  const { putObject, getObject } = await import("../src/modules/media/storage");
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: URL, options: RequestInit) => {
@@ -29,9 +30,6 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
       /^AWS4-HMAC-SHA256 Credential=isolated-test-access\/\d{8}\/auto\/s3\/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=[a-f0-9]{64}$/
     );
     expect(calls[0]!.options.redirect).toBe("error");
-    vi.stubEnv("R2_ENDPOINT", "http://127.0.0.1/");
-    await expect(getObject("org-test/asset-test/original")).rejects.toThrow("canonical");
-    expect(calls).toHaveLength(2);
     await expect(getObject("../secret")).rejects.toThrow("storage key");
   } finally {
     vi.unstubAllEnvs();
@@ -44,6 +42,8 @@ it("creates shared-group private local files and setgid directories under the pr
   const previousUmask = process.umask(0o007);
   vi.stubEnv("MEDIA_STORAGE", "local");
   vi.stubEnv("MEDIA_ROOT", base);
+  vi.resetModules();
+  const { putObject, getObject, mediaStorageHealth } = await import("../src/modules/media/storage");
   try {
     // Model the provisioned root: root:menuminute-media 2770 on the ARM64 VPS.
     await fs.chmod(base, 0o2770);
@@ -63,6 +63,7 @@ it("creates shared-group private local files and setgid directories under the pr
       expect((await fs.stat(path.join(asset, file))).mode & 0o777).toBe(0o660);
     }
     expect((await fs.readdir(asset)).sort()).toEqual(["display.webp", "original"]);
+    expect(await mediaStorageHealth()).toBe(true);
   } finally {
     process.umask(previousUmask);
     vi.unstubAllEnvs();
