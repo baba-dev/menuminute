@@ -23,6 +23,7 @@ const snapshotSchema = z
   })
   .strict();
 export const consumerName = "organization-projection-v1";
+export const importQueueSuffix = "-ai-v1";
 export function workerPool(url: string) {
   const parsed = new URL(url);
   if (parsed.username !== "menuminute_worker")
@@ -94,11 +95,11 @@ export type Enqueuer = {
     options: { jobId: string; attempts: number; removeOnComplete: number; removeOnFail: number }
   ) => Promise<unknown>;
 };
-export async function dispatchOnce(pool: Pool, queue: Enqueuer) {
+export async function dispatchOnce(pool: Pool, queue: Enqueuer, importQueue: Enqueuer = queue) {
   const events = await claimEvents(pool);
   for (const event of events) {
     try {
-      await queue.add(
+      await (event.type === "menu_import.process" ? importQueue : queue).add(
         event.type,
         {
           eventId: event.id,
@@ -115,7 +116,7 @@ export async function dispatchOnce(pool: Pool, queue: Enqueuer) {
         }
       );
       await pool.query(
-        `update outbox_events set status='dispatched',lease_token=null,lease_until=null,next_attempt_at=now()+interval '60 seconds',last_error=null where id=$1 and lease_token=$2 and status in ('pending','dispatched')`,
+        `update outbox_events set status='dispatched',lease_token=null,lease_until=null,next_attempt_at=now()+case when type='menu_import.process' then interval '120 seconds' else interval '60 seconds' end,last_error=null where id=$1 and lease_token=$2 and status in ('pending','dispatched')`,
         [event.id, event.lease_token]
       );
     } catch {
@@ -132,7 +133,8 @@ export async function consumeEvent(
   pool: Pool,
   raw: unknown,
   jobId: string,
-  afterEffect?: () => Promise<void>
+  afterEffect?: () => Promise<void>,
+  lane: "domain" | "import" = "domain"
 ) {
   const data = queueData.parse(raw);
   if (jobId !== `${data.eventId}-${data.deliverySequence}`)
@@ -145,7 +147,13 @@ export async function consumeEvent(
   ).rows[0];
   if (!stored || data.deliverySequence > stored.delivery_sequence)
     throw new Error("Delivery scope mismatch");
-  if (stored.type === "menu_import.process" && stored.schema_version === 1) {
+  if (lane === "import" && stored.type !== "menu_import.process")
+    throw new Error("Import queue scope mismatch");
+  if (stored.type === "menu_import.process") {
+    // Ignore orphaned jobs on the legacy domain queue. PostgreSQL will
+    // redispatch the unchanged event into the isolated import queue.
+    if (lane !== "import") return false;
+    if (stored.schema_version !== 1) throw new Error("Invalid import event schema");
     return processImport(pool, data.eventId, data.organizationId);
   }
   if (stored.type === "media.process" && stored.schema_version === 1) {
@@ -292,15 +300,30 @@ export async function startWorker(
   const pool = workerPool(databaseUrl);
   await verifyWorkerRole(pool);
   const producer = new Queue(queueName, { connection: redisConnection(queueUrl) });
+  const importProducer = new Queue(queueName + importQueueSuffix, {
+    connection: redisConnection(queueUrl),
+  });
   const worker = new Worker(queueName, (job) => consumeEvent(pool, job.data, String(job.id)), {
     connection: redisConnection(queueUrl, true),
     concurrency: 2,
     maxStalledCount: 2,
   });
+  // Long AI requests have their own BullMQ reservations and cannot occupy
+  // the two domain delivery slots needed by kitchen/orders/media events.
+  const importWorker = new Worker(
+    queueName + importQueueSuffix,
+    (job) => consumeEvent(pool, job.data, String(job.id), undefined, "import"),
+    { connection: redisConnection(queueUrl, true), concurrency: 1, maxStalledCount: 2 }
+  );
   // Do not log payloads, URLs, provider errors or session data.
   worker.on("error", () => console.error("Queue worker connection error"));
   worker.on("failed", () => console.error("Queue delivery failed; durable state retained"));
+  importWorker.on("error", () => console.error("AI import queue connection error"));
+  importWorker.on("failed", () =>
+    console.error("AI import delivery failed; durable state retained")
+  );
   producer.on("error", () => console.error("Queue producer connection error"));
+  importProducer.on("error", () => console.error("AI import producer connection error"));
   let stopping = false;
   let pending: Promise<unknown> | undefined;
   const tick = () => {
@@ -308,7 +331,7 @@ export async function startWorker(
     pending = pool
       .query("select app_private.reconcile_media_uploads()")
       .then(() => pool.query("select app_private.expire_pending_orders()"))
-      .then(() => dispatchOnce(pool, producer))
+      .then(() => dispatchOnce(pool, producer, importProducer))
       .catch(() => console.error("Durable dispatcher unavailable"))
       .finally(() => {
         pending = undefined;
@@ -333,14 +356,16 @@ export async function startWorker(
   return {
     pool,
     worker,
+    importWorker,
     producer,
+    importProducer,
     async close() {
       stopping = true;
       clearInterval(timer);
       clearInterval(maintenanceTimer);
       await Promise.all([pending, maintenance]);
-      await worker.close();
-      await producer.close();
+      await Promise.all([worker.close(), importWorker.close()]);
+      await Promise.all([producer.close(), importProducer.close()]);
       await pool.end();
     },
   };
