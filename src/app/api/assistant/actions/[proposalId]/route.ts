@@ -17,6 +17,6 @@ export async function POST(req: Request, c: Context) {
     );
     return NextResponse.json(result, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
