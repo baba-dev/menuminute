@@ -293,7 +293,6 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 3. **Settings / Outlet Atelier Check**:
    - Visit `/dashboard/settings` -> verify address, latitude, and longitude appear in the Contact & Location section and can be edited.
 
-
 ---
 
 ## Production hardening reconciliation (2026-10-27)

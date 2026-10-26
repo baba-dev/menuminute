@@ -703,38 +703,99 @@
 }
 
 /* Theme-aware media. The built-in vector is a no-network fallback. */
-.wizard-media-svg { position: absolute; inset: 0; }
-.wizard-media-custom { position: absolute; inset: 0; object-fit: cover; }
-.wizard-media-custom--dark { display: none; }
-[data-theme="dark"] .wizard-media-custom--light { display: none; }
-[data-theme="dark"] .wizard-media-custom--dark { display: block; }
+.wizard-media-svg {
+  position: absolute;
+  inset: 0;
+}
+.wizard-media-custom {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+}
+.wizard-media-custom--dark {
+  display: none;
+}
+[data-theme="dark"] .wizard-media-custom--light {
+  display: none;
+}
+[data-theme="dark"] .wizard-media-custom--dark {
+  display: block;
+}
 
 /* Ink light surfaces follow MenuMinute's account-wide appearance setting. */
-[data-theme="light"] .wizard-container { color: #292524; }
+[data-theme="light"] .wizard-container {
+  color: #292524;
+}
 [data-theme="light"] .wizard-stepper,
 [data-theme="light"] .wizard-card,
-[data-theme="light"] .wizard-modal-content { background: #fffdf9; border-color: #e7e5e4; }
-[data-theme="light"] .wizard-step-node { color: #57534e; }
-[data-theme="light"] .wizard-step-node--active { color: #9a3412; }
-[data-theme="light"] .wizard-title { color: #1c1917; }
-[data-theme="light"] .wizard-desc { color: #57534e; }
-[data-theme="light"] .wizard-label { color: #292524; }
+[data-theme="light"] .wizard-modal-content {
+  background: #fffdf9;
+  border-color: #e7e5e4;
+}
+[data-theme="light"] .wizard-step-node {
+  color: #57534e;
+}
+[data-theme="light"] .wizard-step-node--active {
+  color: #9a3412;
+}
+[data-theme="light"] .wizard-title {
+  color: #1c1917;
+}
+[data-theme="light"] .wizard-desc {
+  color: #57534e;
+}
+[data-theme="light"] .wizard-label {
+  color: #292524;
+}
 [data-theme="light"] .wizard-input,
 [data-theme="light"] .wizard-select,
-[data-theme="light"] .wizard-textarea { background: #ffffff; border-color: #d6d3d1; color: #292524; }
+[data-theme="light"] .wizard-textarea {
+  background: #ffffff;
+  border-color: #d6d3d1;
+  color: #292524;
+}
 [data-theme="light"] .wizard-geo-panel,
 [data-theme="light"] .wizard-review-card,
-[data-theme="light"] .wizard-qr-preview-box { background: #faf8f4; border-color: #e7e5e4; color: #292524; }
+[data-theme="light"] .wizard-qr-preview-box {
+  background: #faf8f4;
+  border-color: #e7e5e4;
+  color: #292524;
+}
 [data-theme="light"] .wizard-field-group .wizard-counter,
-[data-theme="light"] .wizard-status-pill { color: #57534e; }
-[data-theme="light"] .wizard-back-btn { background: #fff; color: #44403c; border-color: #d6d3d1; }
+[data-theme="light"] .wizard-status-pill {
+  color: #57534e;
+}
+[data-theme="light"] .wizard-back-btn {
+  background: #fff;
+  color: #44403c;
+  border-color: #d6d3d1;
+}
 [data-theme="light"] .wizard-mode-card,
 [data-theme="light"] .wizard-type-tile,
-[data-theme="light"] .wizard-palette-chip { background-color: #fffdf9; color: #292524; border-color: #d6d3d1; }
-[data-theme="light"] .wizard-modal-close { background: #f5f5f4; border-color: #d6d3d1; color: #44403c; }
-[data-theme="light"] .wizard-footer { border-color: #e7e5e4; }
-[data-theme="light"] .wizard-media-slot { background: #f5f5f4; border-color: #e7e5e4; }
-[data-theme="light"] .wizard-qr-preview-box span { color: #57534e; }
+[data-theme="light"] .wizard-palette-chip {
+  background-color: #fffdf9;
+  color: #292524;
+  border-color: #d6d3d1;
+}
+[data-theme="light"] .wizard-modal-close {
+  background: #f5f5f4;
+  border-color: #d6d3d1;
+  color: #44403c;
+}
+[data-theme="light"] .wizard-footer {
+  border-color: #e7e5e4;
+}
+[data-theme="light"] .wizard-media-slot {
+  background: #f5f5f4;
+  border-color: #e7e5e4;
+}
+[data-theme="light"] .wizard-qr-preview-box span {
+  color: #57534e;
+}
 @media (prefers-reduced-motion: reduce) {
-  .wizard-container *, .wizard-modal-overlay { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .wizard-container *,
+  .wizard-modal-overlay {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

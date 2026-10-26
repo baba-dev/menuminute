@@ -113,7 +113,12 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
                   onChange("outletType", type.id);
                   if (type.defaultFulfillment.length) {
                     onChange("fulfillmentModes", type.defaultFulfillment);
-                    onChange("tableCount", type.defaultFulfillment.includes("dine_in") ? (draft.tableCount || 10) : 0);
+                    onChange(
+                      "tableCount",
+                      ["restaurant", "hotel", "mixed"].includes(type.id)
+                      ? draft.tableCount || 10
+                      : 0
+                    );
                   }
                 }}
               >

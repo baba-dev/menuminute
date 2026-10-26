@@ -57,11 +57,15 @@ const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
   state: fields.state?.trim() || null,
   postalCode: fields.postalCode?.trim() || null,
   latitude:
-    fields.latitude !== null && fields.latitude !== undefined && Number.isFinite(Number(fields.latitude))
+    fields.latitude !== null &&
+    fields.latitude !== undefined &&
+    Number.isFinite(Number(fields.latitude))
       ? Number(fields.latitude)
       : null,
   longitude:
-    fields.longitude !== null && fields.longitude !== undefined && Number.isFinite(Number(fields.longitude))
+    fields.longitude !== null &&
+    fields.longitude !== undefined &&
+    Number.isFinite(Number(fields.longitude))
       ? Number(fields.longitude)
       : null,
 });
@@ -371,11 +375,21 @@ export function OutletAtelier({
                         disabled={!canManage || busy}
                         onClick={() => {
                           if (typeof navigator !== "undefined" && navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition((pos) => {
-                              change("latitude", Number(pos.coords.latitude.toFixed(7)));
-                              change("longitude", Number(pos.coords.longitude.toFixed(7)));
-                              setNotice(`Detected GPS: ±${Math.round(pos.coords.accuracy)}m. Confirm the pin matches your outlet, not just your device.`);
-                            }, () => { setError("Location permission denied or unavailable. Enter the outlet coordinates manually."); }, { timeout: 10000 });
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                change("latitude", Number(pos.coords.latitude.toFixed(7)));
+                                change("longitude", Number(pos.coords.longitude.toFixed(7)));
+                                setNotice(
+                                  `Detected GPS: ±${Math.round(pos.coords.accuracy)}m. Confirm the pin matches your outlet, not just your device.`
+                                );
+                              },
+                              () => {
+                                setError(
+                                  "Location permission denied or unavailable. Enter the outlet coordinates manually."
+                                );
+                              },
+                              { timeout: 10000 }
+                            );
                           }
                         }}
                       >

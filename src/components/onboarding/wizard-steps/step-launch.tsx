@@ -15,8 +15,11 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
   const hasCoords = draft.latitude !== null && draft.longitude !== null;
   const handleLaunchClick = async () => {
     setCelebrating(true);
-    try { await onLaunch(); }
-    finally { setCelebrating(false); }
+    try {
+      await onLaunch();
+    } finally {
+      setCelebrating(false);
+    }
   };
   return (
     <div className="wizard-content">
@@ -24,8 +27,8 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
         <span className="wizard-eyebrow">Step 05 / Review & Create</span>
         <h2 className="wizard-title">Review your outlet details.</h2>
         <p className="wizard-desc">
-          Creating the outlet prepares a private draft menu and any selected tables.
-          Publish a menu and enable eligible ordering features separately.
+          Creating the outlet prepares a private draft menu and any selected tables. Publish a menu
+          and enable eligible ordering features separately.
         </p>
       </div>
       <div className="wizard-review-card">
@@ -35,30 +38,81 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
               {draft.name || "Untitled outlet"}
             </h3>
             <p style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem" }}>
-              {draft.outletType.replaceAll("_", " ")} · {draft.country} · {draft.currency} · {draft.timezone}
+              {draft.outletType.replaceAll("_", " ")} · {draft.country} · {draft.currency} ·{" "}
+              {draft.timezone}
             </p>
           </div>
           {draft.description && <p>{draft.description}</p>}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.8125rem" }}>
-            {draft.addressLine1 && <div><MapPin size={14} aria-hidden="true" style={{display:"inline",marginRight:6}} />{[draft.addressLine1,draft.city,draft.state].filter(Boolean).join(", ")}</div>}
-            {hasCoords && <div>GPS: {draft.latitude?.toFixed(5)}°, {draft.longitude?.toFixed(5)}°</div>}
-            <div><UtensilsCrossed size={14} aria-hidden="true" style={{display:"inline",marginRight:6}} />Dine-in: {draft.fulfillmentModes.includes("dine_in") ? "Selected" : "Off"}</div>
-            <div><Package size={14} aria-hidden="true" style={{display:"inline",marginRight:6}} />Pickup: {draft.fulfillmentModes.includes("pickup") ? "Selected" : "Off"}</div>
-            {draft.fulfillmentModes.includes("dine_in") && draft.tableCount > 0 && <div>{draft.tableCount} table records will be created. Generate table QR codes in Print Studio afterward.</div>}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+              fontSize: "0.8125rem",
+            }}
+          >
+            {draft.addressLine1 && (
+              <div>
+                <MapPin
+                  size={14}
+                  aria-hidden="true"
+                  style={{ display: "inline", marginRight: 6 }}
+                />
+                {[draft.addressLine1, draft.city, draft.state].filter(Boolean).join(", ")}
+              </div>
+            )}
+            {hasCoords && (
+              <div>
+                GPS: {draft.latitude?.toFixed(5)}°, {draft.longitude?.toFixed(5)}°
+              </div>
+            )}
+            <div>
+              <UtensilsCrossed
+                size={14}
+                aria-hidden="true"
+                style={{ display: "inline", marginRight: 6 }}
+              />
+              Dine-in: {draft.fulfillmentModes.includes("dine_in") ? "Selected" : "Off"}
+            </div>
+            <div>
+              <Package size={14} aria-hidden="true" style={{ display: "inline", marginRight: 6 }} />
+              Pickup: {draft.fulfillmentModes.includes("pickup") ? "Selected" : "Off"}
+            </div>
+            {draft.fulfillmentModes.includes("dine_in") && draft.tableCount > 0 && (
+              <div>
+                {draft.tableCount} table records will be created. Generate table QR codes in Print
+                Studio afterward.
+              </div>
+            )}
           </div>
         </div>
         <div className="wizard-qr-preview-box">
           <strong>QR MENU</strong>
-          <div className="wizard-qr-canvas" style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div
+            className="wizard-qr-canvas"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
             <QrCode size={64} color="#292524" aria-hidden="true" />
           </div>
-          <span style={{fontSize:"0.75rem"}}>Your scannable menu QR is issued with the outlet. Publish your menu before sharing it with guests.</span>
+          <span style={{ fontSize: "0.75rem" }}>
+            Your scannable menu QR is issued with the outlet. Publish your menu before sharing it
+            with guests.
+          </span>
         </div>
       </div>
-      {celebrating && <p role="status"><Sparkles size={16} aria-hidden="true" style={{display:"inline",marginRight:6}} />Creating your private outlet workspace…</p>}
-      <div style={{display:"flex",justifyContent:"flex-end"}}>
-        <button type="button" className="wizard-primary-btn wizard-launch-btn"
-          disabled={busy || celebrating || draft.name.trim().length < 2} onClick={handleLaunchClick}>
+      {celebrating && (
+        <p role="status">
+          <Sparkles size={16} aria-hidden="true" style={{ display: "inline", marginRight: 6 }} />
+          Creating your private outlet workspace…
+        </p>
+      )}
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          type="button"
+          className="wizard-primary-btn wizard-launch-btn"
+          disabled={busy || celebrating || draft.name.trim().length < 2}
+          onClick={handleLaunchClick}
+        >
           <Sparkles size={16} aria-hidden="true" />
           {busy || celebrating ? "Creating outlet…" : "Confirm & Create Outlet"}
         </button>

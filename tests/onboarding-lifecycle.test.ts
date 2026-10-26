@@ -226,18 +226,24 @@ it("provisions outlet with physical address, GPS coordinates, brand colors, and 
   });
 });
 
-
 it("does not provision dining tables for a pickup-only outlet", async () => {
   const actor = await verified();
   const input = {
-    name: "Pickup Only Kitchen", outletType: "cloud_kitchen" as const,
-    country: "IN", currency: "INR", timezone: "Asia/Kolkata",
-    fulfillmentModes: ["pickup" as const], tableCount: 10,
+    name: "Pickup Only Kitchen",
+    outletType: "cloud_kitchen" as const,
+    country: "IN",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    fulfillmentModes: ["pickup" as const],
+    tableCount: 10,
   };
   const saved = await saveOnboarding(actor, input);
   const outlet = await createRestaurant(actor.userId, input, saved.key);
-  const rows = await admin(async (_, pool) => pool.query<{ count: number }>(
-    "select count(*)::int as count from restaurant_tables where restaurant_id = $1", [outlet.id]
-  ));
+  const rows = await admin(async (_, pool) =>
+    pool.query<{ count: number }>(
+      "select count(*)::int as count from restaurant_tables where restaurant_id = $1",
+      [outlet.id]
+    )
+  );
   expect(rows.rows[0]?.count).toBe(0);
 });

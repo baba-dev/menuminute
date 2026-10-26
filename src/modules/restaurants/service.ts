@@ -31,13 +31,25 @@ export const createRestaurantSchema = z.object({
   email: z.union([z.string().email().max(254), z.literal(""), z.null()]).optional(),
   website: z
     .union([
-      z.string().url().max(512).refine((value) => /^https?:\/\//i.test(value), "Use HTTP(S)"),
+      z
+        .string()
+        .url()
+        .max(512)
+        .refine((value) => /^https?:\/\//i.test(value), "Use HTTP(S)"),
       z.literal(""),
       z.null(),
     ])
     .optional(),
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().nullable(),
-  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().nullable(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
   currency: z.string().refine((v) => currencyExponent(v) !== null, "Unsupported currency"),
   timezone: z.string().refine((v) => {
     try {

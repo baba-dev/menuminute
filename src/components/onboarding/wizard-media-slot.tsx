@@ -15,8 +15,11 @@ interface WizardMediaSlotProps {
 export function WizardMediaSlot({ step, alt = "", className = "" }: WizardMediaSlotProps) {
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   return (
-    <div className={`wizard-media-slot wizard-media-slot--${step} ${className}`.trim()}
-      data-mediawork-slot={step} aria-hidden="true">
+    <div
+      className={`wizard-media-slot wizard-media-slot--${step} ${className}`.trim()}
+      data-mediawork-slot={step}
+      aria-hidden="true"
+    >
       <InlineStepArt step={step} />
       {(["light", "dark"] as const).map((mode) => {
         const file = `${step}-${mode}`;

@@ -13,10 +13,18 @@ interface StepLocationProps {
 const regions = localeOptions();
 // These are suggestions, not compulsory timezone overrides for international operators.
 const timezoneSuggestions: Record<string, string> = {
-  IN: "Asia/Kolkata", OM: "Asia/Muscat", AE: "Asia/Dubai",
-  US: "America/New_York", GB: "Europe/London", CA: "America/Toronto",
-  AU: "Australia/Sydney", SG: "Asia/Singapore", SA: "Asia/Riyadh",
-  QA: "Asia/Qatar", KW: "Asia/Kuwait", NZ: "Pacific/Auckland",
+  IN: "Asia/Kolkata",
+  OM: "Asia/Muscat",
+  AE: "Asia/Dubai",
+  US: "America/New_York",
+  GB: "Europe/London",
+  CA: "America/Toronto",
+  AU: "Australia/Sydney",
+  SG: "Asia/Singapore",
+  SA: "Asia/Riyadh",
+  QA: "Asia/Qatar",
+  KW: "Asia/Kuwait",
+  NZ: "Pacific/Auckland",
 };
 
 export function StepLocation({ draft, onChange }: StepLocationProps) {
@@ -79,8 +87,8 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
         <span className="wizard-eyebrow">Step 02 / Location</span>
         <h2 className="wizard-title">Where is your outlet located?</h2>
         <p className="wizard-desc">
-          Add the restaurant address and pin its location. Use GPS only when you are physically
-          at the outlet; otherwise enter coordinates manually.
+          Add the restaurant address and pin its location. Use GPS only when you are physically at
+          the outlet; otherwise enter coordinates manually.
         </p>
       </div>
 

@@ -22,32 +22,61 @@ const STEPS: { id: WizardStepId; label: string; number: number }[] = [
 
 function validateStep(step: number, draft: WizardDraft): string | null {
   if (step === 0) {
-    if (draft.name.trim().length < 2 || draft.name.trim().length > 100) return "Enter a restaurant name between 2 and 100 characters.";
+    if (draft.name.trim().length < 2 || draft.name.trim().length > 100)
+      return "Enter a restaurant name between 2 and 100 characters.";
     if (draft.description.length > 500) return "The restaurant description is too long.";
-    if (![draft.primaryColor, draft.secondaryColor].every((c) => /^#[0-9a-fA-F]{6}$/.test(c))) return "Use valid six-digit HEX brand colors.";
+    if (![draft.primaryColor, draft.secondaryColor].every((c) => /^#[0-9a-fA-F]{6}$/.test(c)))
+      return "Use valid six-digit HEX brand colors.";
   }
   if (step === 1) {
     if (!/^[A-Z]{2}$/.test(draft.country)) return "Select a valid outlet country.";
-    if ((draft.latitude === null) !== (draft.longitude === null)) return "Enter both latitude and longitude, or leave both empty.";
-    if (draft.latitude !== null && (!Number.isFinite(draft.latitude) || draft.latitude < -90 || draft.latitude > 90)) return "Latitude must be between -90 and 90.";
-    if (draft.longitude !== null && (!Number.isFinite(draft.longitude) || draft.longitude < -180 || draft.longitude > 180)) return "Longitude must be between -180 and 180.";
+    if ((draft.latitude === null) !== (draft.longitude === null))
+      return "Enter both latitude and longitude, or leave both empty.";
+    if (
+      draft.latitude !== null &&
+      (!Number.isFinite(draft.latitude) || draft.latitude < -90 || draft.latitude > 90)
+    )
+      return "Latitude must be between -90 and 90.";
+    if (
+      draft.longitude !== null &&
+      (!Number.isFinite(draft.longitude) || draft.longitude < -180 || draft.longitude > 180)
+    )
+      return "Longitude must be between -180 and 180.";
   }
   if (step === 2) {
     if (!draft.fulfillmentModes.length) return "Choose at least one fulfillment mode.";
-    if (!Intl.supportedValuesOf("currency").includes(draft.currency)) return "Choose a supported currency.";
-    try { new Intl.DateTimeFormat("en", { timeZone: draft.timezone }); }
-    catch { return "Choose a valid operating timezone."; }
-    if (!Number.isInteger(draft.pickupLeadMinutes) || draft.pickupLeadMinutes < 0 || draft.pickupLeadMinutes > 240
-      || !Number.isInteger(draft.pickupSlotMinutes) || draft.pickupSlotMinutes < 5 || draft.pickupSlotMinutes > 120
-      || !Number.isInteger(draft.pickupAdvanceDays) || draft.pickupAdvanceDays < 1 || draft.pickupAdvanceDays > 30)
+    if (!Intl.supportedValuesOf("currency").includes(draft.currency))
+      return "Choose a supported currency.";
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: draft.timezone });
+    } catch {
+      return "Choose a valid operating timezone.";
+    }
+    if (
+      !Number.isInteger(draft.pickupLeadMinutes) ||
+      draft.pickupLeadMinutes < 0 ||
+      draft.pickupLeadMinutes > 240 ||
+      !Number.isInteger(draft.pickupSlotMinutes) ||
+      draft.pickupSlotMinutes < 5 ||
+      draft.pickupSlotMinutes > 120 ||
+      !Number.isInteger(draft.pickupAdvanceDays) ||
+      draft.pickupAdvanceDays < 1 ||
+      draft.pickupAdvanceDays > 30
+    )
       return "Check the pickup scheduling limits.";
   }
   if (step === 3) {
-    if (!Number.isInteger(draft.tableCount) || draft.tableCount < 0 || draft.tableCount > 50) return "The number of tables must be between 0 and 50.";
-    if (draft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email)) return "Enter a valid contact email address.";
+    if (!Number.isInteger(draft.tableCount) || draft.tableCount < 0 || draft.tableCount > 50)
+      return "The number of tables must be between 0 and 50.";
+    if (draft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email))
+      return "Enter a valid contact email address.";
     if (draft.website) {
-      try { if (!["http:", "https:"].includes(new URL(draft.website).protocol)) return "Use an HTTP or HTTPS website URL."; }
-      catch { return "Enter a valid website URL."; }
+      try {
+        if (!["http:", "https:"].includes(new URL(draft.website).protocol))
+          return "Use an HTTP or HTTPS website URL.";
+      } catch {
+        return "Enter a valid website URL.";
+      }
     }
   }
   return null;
