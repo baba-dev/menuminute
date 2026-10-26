@@ -7,6 +7,8 @@ import {
   ImagePlus,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
   RefreshCcw,
   ScanLine,
   ShieldCheck,
@@ -46,7 +48,10 @@ type Session = {
   sources: Source[];
   candidate: Candidate | null;
 };
-type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status">;
+type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status"> & {
+  createdAt?: string;
+  updatedAt?: string;
+};
 type Draft = {
   id: string;
   pageIndex: number;
@@ -65,7 +70,7 @@ function statusText(status: string) {
         queued: "Waiting for processing",
         processing: "Interpreting your menu",
         needs_review: "Ready for human review",
-        ready: "Awaiting review",
+        ready: "Review complete",
         applied: "Applied",
         failed: "Processing needs attention",
         cancelled: "Cancelled",
@@ -84,6 +89,7 @@ export function CaptureWizard({
   currency: string;
 }) {
   const [history, setHistory] = useState<SessionSummary[]>([]);
+  const [dragging, setDragging] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [busy, setBusy] = useState(false);
@@ -198,7 +204,7 @@ export function CaptureWizard({
       urls.forEach(URL.revokeObjectURL);
     };
   }, [session?.id, sourceIds, outletId]);
-  async function begin() {
+  async function begin(initialFiles?: File[]) {
     if (busy) return;
     setBusy(true);
     setError("");
@@ -214,8 +220,13 @@ export function CaptureWizard({
       creation.current = null;
       setDrafts([]);
       setConsent(false);
-      await refresh(created.id);
-      setNotice("Private draft created. Your live menu remains unchanged.");
+      const createdSession = await refresh(created.id);
+      if (initialFiles?.length) choose(initialFiles, createdSession);
+      setNotice(
+        initialFiles?.length
+          ? "Photos selected. Review and upload them privately."
+          : "Private draft created. Your live menu remains unchanged."
+      );
       setHistory((prev) => prev.filter((i) => i.id !== created.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start import. Retry safely.");
@@ -223,8 +234,26 @@ export function CaptureWizard({
       setBusy(false);
     }
   }
-  function choose(files: FileList | null) {
-    if (!session || session.status !== "collecting" || !files?.length) return;
+  function choose(files: FileList | File[] | null, target: Session | null = session) {
+    if (!files?.length) return;
+    if (!target) {
+      const chosen = Array.from(files);
+      if (
+        chosen.length > 12 ||
+        chosen.some(
+          (file) => !supported.has(file.type) || file.size === 0 || file.size > MAX_PHOTO
+        ) ||
+        chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024
+      ) {
+        setError(
+          "Choose up to 12 JPEG, PNG or WebP photos, each under 5 MiB and at most 30 MiB combined."
+        );
+        return;
+      }
+      void begin(chosen);
+      return;
+    }
+    if (target.status !== "collecting") return;
     setError("");
     setNotice("");
     if (drafts.some((d) => d.state !== "ready")) {
@@ -236,8 +265,12 @@ export function CaptureWizard({
       setError("Only nonempty JPEG, PNG or WebP files up to 5 MiB each are supported.");
       return;
     }
-    const ready = session.sources.filter((s) => s.status === "ready");
-    const reserved = session.sources
+    if (chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
+      setError("Selected files exceed the 30 MiB import limit.");
+      return;
+    }
+    const ready = target.sources.filter((s) => s.status === "ready");
+    const reserved = target.sources
       .filter((s) => s.status !== "ready")
       .sort((a, b) => a.pageIndex - b.pageIndex);
     if (chosen.length + ready.length + drafts.filter((d) => d.state !== "ready").length > 12) {
@@ -245,7 +278,7 @@ export function CaptureWizard({
       return;
     }
     const next =
-      Math.max(-1, ...session.sources.map((s) => s.pageIndex), ...drafts.map((d) => d.pageIndex)) +
+      Math.max(-1, ...target.sources.map((s) => s.pageIndex), ...drafts.map((d) => d.pageIndex)) +
       1;
     let cursor = 0;
     const items = chosen.map((file) => {
@@ -264,6 +297,27 @@ export function CaptureWizard({
     });
     setDrafts((prev) => [...prev, ...items]);
     setNotice("Use a clear, flat image with all prices visible.");
+  }
+  function movePending(id: string, offset: -1 | 1) {
+    if (busy) return;
+    setDrafts((previous) => {
+      const ordered = [...previous].sort((a, b) => a.pageIndex - b.pageIndex);
+      const index = ordered.findIndex((item) => item.id === id);
+      const other = ordered[index + offset];
+      const current = ordered[index];
+      if (!current || !other || current.state !== "pending" || other.state !== "pending")
+        return previous;
+      const pageIndex = current.pageIndex;
+      return ordered
+        .map((item) =>
+          item.id === current.id
+            ? { ...item, pageIndex: other.pageIndex }
+            : item.id === other.id
+              ? { ...item, pageIndex }
+              : item
+        )
+        .sort((a, b) => a.pageIndex - b.pageIndex);
+    });
   }
   function drop(id: string) {
     setDrafts((prev) =>
@@ -359,6 +413,35 @@ export function CaptureWizard({
     }
   }
   const collecting = session?.status === "collecting";
+  const stage =
+    !session || collecting
+      ? 0
+      : ["queued", "processing", "failed"].includes(session.status)
+        ? 1
+        : 2;
+  function onDrop(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+    setDragging(false);
+    if (!busy) choose(event.dataTransfer.files);
+  }
+  function showHistory() {
+    if (
+      drafts.some(
+        (draft) =>
+          draft.state === "pending" || draft.state === "uploading" || draft.state === "error"
+      ) &&
+      !window.confirm(
+        "Leave these unuploaded selections? Only successfully uploaded photos will be saved."
+      )
+    )
+      return;
+    setSession(null);
+    setDrafts([]);
+    setConsent(false);
+    void json<SessionSummary[]>("/api/menu-imports")
+      .then(setHistory)
+      .catch(() => setError("Could not refresh import history."));
+  }
   const readyCount = session?.sources.filter((s) => s.status === "ready").length ?? 0;
   const totalCount = session?.sources.length ?? 0;
   const minor = currencyExponent(currency) ?? 2;
@@ -368,69 +451,59 @@ export function CaptureWizard({
     );
   }
   return (
-    <div className="mx-auto max-w-5xl space-y-7 pb-16">
+    <div className="scan-table space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href="/dashboard/menu"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-stone-600 hover:text-orange-700"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Menu Studio
+        <Link href="/dashboard/menu" className="scan-back">
+          <ArrowLeft className="size-4" /> Back to Menu Studio
         </Link>
-        <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-800">
-          PRIVATE · REVIEW FIRST
+        <span className="scan-private inline-flex items-center gap-2">
+          <ShieldCheck className="size-4" /> Private · Review first
         </span>
       </div>
-      <header className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-sm sm:p-9">
-        <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-200">
-          <ScanLine className="size-6" />
-        </div>
-        <p className="text-xs font-bold tracking-[.2em] text-orange-700 uppercase">
-          Smart Menu Studio / Capture
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-stone-950 sm:text-4xl">
-          From a paper menu to a beautiful draft.
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600">
-          Photograph your printed menu for {outletName}. Store clear pages privately, then review
-          extracted dishes and prices before making any changes. Your published menu is never
-          overwritten by this wizard.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3 text-xs font-semibold text-stone-600">
-          <span className="inline-flex items-center gap-1">
-            <ShieldCheck className="size-4 text-orange-700" />
-            Private source storage
-          </span>
-          <span>12 pages maximum</span>
-          <span>5 MiB per photo</span>
-          <span>{currency} outlet prices</span>
+      <header className="scan-hero">
+        <div className="scan-hero-copy">
+          <p className="scan-eyebrow">RECIPE ATELIER / THE SCAN TABLE</p>
+          <h1>Your menu. Digitized.</h1>
+          <p className="scan-subtitle">
+            Capture, extract and perfect every dish for {outletName}. Your published menu stays
+            untouched until you explicitly publish from Menu Studio.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold">
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="size-4" /> Private photos
+            </span>
+            <span>Up to 12 pages</span>
+            <span>5 MiB / photo · 30 MiB total</span>
+            <span>{currency}</span>
+          </div>
         </div>
       </header>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <nav aria-label="Import progress" className="scan-step-rail">
         {[
-          {
-            number: "01",
-            title: "Capture",
-            copy: "Camera or gallery. Keep prices sharp and visible.",
-          },
-          {
-            number: "02",
-            title: "Extract",
-            copy: "Optional provider processing, only when licensed and enabled.",
-          },
-          {
-            number: "03",
-            title: "Review",
-            copy: "Uncertain prices stay blank. No automatic publishing.",
-          },
-        ].map((step) => (
-          <div key={step.number} className="rounded-2xl border border-stone-200 bg-white p-5">
-            <span className="text-xs font-black text-orange-600">{step.number}</span>
-            <h2 className="mt-1 font-bold text-stone-900">{step.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600">{step.copy}</p>
+          { title: "Capture", help: "Your pages" },
+          { title: "Extract", help: "AI interpretation" },
+          { title: "Review", help: "Human verified" },
+        ].map((item, index) => (
+          <div
+            key={item.title}
+            className="scan-step"
+            data-state={index === stage ? "active" : index < stage ? "complete" : "upcoming"}
+            aria-current={index === stage ? "step" : undefined}
+          >
+            <span className="scan-step-mark">
+              {index < stage ? (
+                <CheckCircle2 className="size-5" />
+              ) : (
+                String(index + 1).padStart(2, "0")
+              )}
+            </span>
+            <span>
+              <strong>{item.title}</strong>
+              <small>{item.help}</small>
+            </span>
           </div>
         ))}
-      </div>
+      </nav>
       {error && (
         <div
           role="alert"
@@ -449,23 +522,102 @@ export function CaptureWizard({
         </p>
       )}
       {!session ? (
-        <section className="rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
-          <h2 className="text-xl font-bold text-stone-950">Your private import drafts</h2>
-          <p className="mt-2 text-sm text-stone-600">
-            Reopen an interrupted draft, or create a fresh one. Camera files are not stored in your
-            browser between visits.
-          </p>
-          <button
-            type="button"
-            onClick={begin}
-            disabled={busy}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700 disabled:opacity-50"
+        <section className="scan-panel space-y-5">
+          <div
+            className="scan-dropzone"
+            data-dragging={dragging}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!busy) setDragging(true);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false);
+            }}
+            onDrop={onDrop}
           >
-            <ImagePlus className="size-4" />
-            Create private draft
-          </button>
-          {history.length > 0 && (
-            <div className="mt-6 space-y-2">
+            <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
+              <UploadCloud className="size-7" />
+            </div>
+            <h2 className="text-xl font-extrabold">Add your printed menu</h2>
+            <p className="scan-status mx-auto mt-2 max-w-md text-sm">
+              Drop clear menu photos here, use your camera or choose images. A private draft is
+              created only when you begin.
+            </p>
+            <div className="scan-upload-options mt-5">
+              <label className="scan-file-picker">
+                <Camera className="size-4" /> Use camera
+                <input
+                  aria-label="Capture menu photograph"
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  disabled={busy}
+                  onChange={(event) => {
+                    choose(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+              <label className="scan-file-picker scan-file-picker--secondary">
+                <ImagePlus className="size-4" /> Choose photos
+                <input
+                  aria-label="Choose menu photographs"
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  disabled={busy}
+                  onChange={(event) => {
+                    choose(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            <p className="scan-status mt-4 text-xs">
+              JPEG · PNG · WebP · Max 12 photos · PDFs are not supported yet
+            </p>
+            {busy && (
+              <p role="status" className="mt-3 text-sm font-semibold">
+                Creating your private draft…
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-extrabold">Recent imports</h2>
+              <p className="scan-status text-xs">
+                Resume a session securely, without re-uploading completed pages.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void begin()}
+              disabled={busy}
+              className="scan-action scan-action--secondary"
+            >
+              <ImagePlus className="size-4" /> Create private draft
+            </button>
+          </div>
+          {history.length === 0 ? (
+            <div
+              className="flex items-center gap-4 rounded-xl border p-5"
+              style={{ borderColor: "var(--scan-border)" }}
+            >
+              <Image
+                src="/brand/menu-studio/recipe-atelier/first-menu-empty-illustration.webp"
+                alt=""
+                width={86}
+                height={75}
+                className="size-20 object-contain"
+              />
+              <p className="scan-status text-sm">
+                No imports yet. Add your first menu photographs above.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
               {history.map((item) => (
                 <button
                   key={item.id}
@@ -475,17 +627,20 @@ export function CaptureWizard({
                     setDrafts([]);
                     setConsent(false);
                     setError("");
-                    void refresh(item.id).catch(() => setError("Could not reopen this draft."));
+                    void refresh(item.id).catch(() => setError("Could not reopen this import."));
                   }}
-                  className="flex w-full items-center justify-between rounded-xl border border-stone-200 p-4 text-left hover:border-orange-400"
+                  className="scan-history-row flex items-center justify-between gap-3 p-4 text-left"
                 >
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-stone-900">
-                      {statusText(item.status)}
+                  <span>
+                    <span className="block text-sm font-bold">{statusText(item.status)}</span>
+                    <span className="scan-status block text-xs">
+                      {item.updatedAt
+                        ? new Date(item.updatedAt).toLocaleDateString()
+                        : "Private import"}{" "}
+                      · {item.currency}
                     </span>
-                    <span className="block truncate text-xs text-stone-500">{item.id}</span>
                   </span>
-                  <ArrowRight className="size-4 text-orange-600" />
+                  <ArrowRight className="size-4" aria-hidden="true" />
                 </button>
               ))}
             </div>
@@ -493,7 +648,7 @@ export function CaptureWizard({
         </section>
       ) : (
         <>
-          <section className="rounded-3xl border border-stone-200 bg-white p-5 sm:p-7">
+          <section className="scan-panel">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-bold tracking-widest text-orange-700 uppercase">
@@ -520,9 +675,7 @@ export function CaptureWizard({
                 <button
                   type="button"
                   onClick={() => {
-                    setSession(null);
-                    setDrafts([]);
-                    setConsent(false);
+                    showHistory();
                   }}
                   className="rounded-xl border border-stone-200 px-4 py-2 text-sm font-semibold text-stone-700"
                 >
@@ -532,9 +685,19 @@ export function CaptureWizard({
             </div>
             {collecting && (
               <div className="mt-6 space-y-5">
-                <div className="rounded-2xl border border-dashed border-orange-300 bg-orange-50/60 p-5">
-                  <div className="flex flex-wrap gap-3">
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white">
+                <div
+                  className="scan-dropzone"
+                  data-dragging={dragging}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (!busy) setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={onDrop}
+                >
+                  <p className="mb-3 text-base font-extrabold">Add and verify your menu pages</p>
+                  <div className="scan-upload-options">
+                    <label className="scan-file-picker">
                       <Camera className="size-4" />
                       Use camera
                       <input
@@ -550,7 +713,7 @@ export function CaptureWizard({
                         }}
                       />
                     </label>
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-stone-900">
+                    <label className="scan-file-picker scan-file-picker--secondary">
                       <ImagePlus className="size-4" />
                       Choose from gallery
                       <input
@@ -575,10 +738,7 @@ export function CaptureWizard({
                 {drafts.length > 0 && (
                   <div className="space-y-3">
                     {drafts.map((d) => (
-                      <div
-                        key={d.id}
-                        className="flex items-center gap-3 rounded-xl border border-stone-200 p-3"
-                      >
+                      <div key={d.id} className="scan-image-tile flex items-center gap-3 p-3">
                         <Image
                           src={d.preview}
                           width={64}
@@ -599,6 +759,42 @@ export function CaptureWizard({
                             </p>
                           )}
                         </div>
+                        {d.state === "pending" && (
+                          <div className="flex flex-col gap-1">
+                            <button
+                              type="button"
+                              onClick={() => movePending(d.id, -1)}
+                              disabled={
+                                busy ||
+                                !drafts.some(
+                                  (other) =>
+                                    other.state === "pending" && other.pageIndex === d.pageIndex - 1
+                                )
+                              }
+                              aria-label={"Move " + d.file.name + " earlier"}
+                              className="rounded-lg border p-1 disabled:opacity-30"
+                              style={{ borderColor: "var(--scan-border)" }}
+                            >
+                              <ArrowUp className="size-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => movePending(d.id, 1)}
+                              disabled={
+                                busy ||
+                                !drafts.some(
+                                  (other) =>
+                                    other.state === "pending" && other.pageIndex === d.pageIndex + 1
+                                )
+                              }
+                              aria-label={"Move " + d.file.name + " later"}
+                              className="rounded-lg border p-1 disabled:opacity-30"
+                              style={{ borderColor: "var(--scan-border)" }}
+                            >
+                              <ArrowDown className="size-4" />
+                            </button>
+                          </div>
+                        )}
                         {d.state !== "ready" && d.state !== "uploading" && (
                           <button
                             type="button"
@@ -622,7 +818,7 @@ export function CaptureWizard({
                   onClick={() => {
                     void upload();
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-stone-950 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                  className="scan-action disabled:opacity-40"
                 >
                   <UploadCloud className="size-4" />
                   Upload photos privately
@@ -632,9 +828,9 @@ export function CaptureWizard({
             {session.sources.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-sm font-bold text-stone-900">Saved sources</h3>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {session.sources.map((s) => (
-                    <div key={s.id} className="rounded-xl border border-stone-200 p-2">
+                    <div key={s.id} className="scan-image-tile p-2">
                       {previews[s.id] ? (
                         <Image
                           src={previews[s.id]!}
@@ -699,7 +895,7 @@ export function CaptureWizard({
                       onClick={() => {
                         void process();
                       }}
-                      className="mt-4 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                      className="scan-action mt-4 disabled:opacity-40"
                     >
                       Start extraction
                     </button>
@@ -733,7 +929,7 @@ export function CaptureWizard({
             )}
           </section>
           {session.candidate && (
-            <section className="rounded-3xl border border-stone-200 bg-white p-5 sm:p-7">
+            <section className="scan-panel">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-5 text-orange-600" />
                 <h2 className="text-xl font-bold text-stone-900">
@@ -742,11 +938,11 @@ export function CaptureWizard({
               </div>
               <p className="mt-2 text-sm text-stone-600">
                 These are untrusted suggestions. Check every name and price against the photographs.
-                This package does not apply or publish them.
+                You must confirm every entry before creating a private editable draft.
               </p>
               <Link
                 href={"/dashboard/menu/import/" + encodeURIComponent(session.id) + "/review"}
-                className="mt-4 inline-flex rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700"
+                className="scan-action mt-4"
               >
                 Open source-aware review →
               </Link>
