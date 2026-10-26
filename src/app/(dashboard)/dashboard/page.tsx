@@ -389,9 +389,9 @@ export default async function DashboardPage() {
                 <CheckCircle2 size={20} aria-hidden="true" />
                 <div>
                   <dt>
-                    Setup completion{" "}
+                    Menu launch setup{" "}
                     <DashboardTooltip label="Setup completion">
-                      Outlet configured, menu created, public release and active QR code. Each
+                      Outlet configured, menu created, public release and active QR code. This does not measure ordering, staff or payment readiness. Each
                       verified step counts equally.
                     </DashboardTooltip>
                   </dt>
