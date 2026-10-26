@@ -116,8 +116,8 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
                     onChange(
                       "tableCount",
                       ["restaurant", "hotel", "mixed"].includes(type.id)
-                      ? draft.tableCount || 10
-                      : 0
+                        ? draft.tableCount || 10
+                        : 0
                     );
                   }
                 }}
