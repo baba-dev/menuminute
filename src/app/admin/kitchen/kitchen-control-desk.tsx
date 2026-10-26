@@ -107,7 +107,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!outlet || !status || busy) return;
-    const selectedAction = actions.includes(action) ? action : actions[0];
+    const selectedAction = actions.includes(action) ? action : (actions[0] ?? "request");
     setBusy(true);
     setMessage(null);
     try {
@@ -150,7 +150,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
   const ready = status &&
     status.configurationReady && status.orderingEntitled &&
     status.openKitchenOrders === 0 && runningSha === releaseSha;
-  const selectedAction = actions.includes(action) ? action : actions[0];
+  const selectedAction = actions.includes(action) ? action : (actions[0] ?? "request");
   const allowed = Boolean(status) && (
     selectedAction === "activate" ? Boolean(ready && status?.state === "approved") :
     selectedAction === "approve" ? status?.state === "requested" && status.requestedBy !== operatorId :
