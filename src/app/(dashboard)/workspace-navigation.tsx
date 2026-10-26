@@ -53,7 +53,11 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
               <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
               <span>{label}</span>
               <small>
-                {!capabilities || !capabilities[capability!] ? "Not enabled" : "Access required"}
+                {!capabilities
+                  ? "Availability unknown"
+                  : !capabilities[capability!]
+                    ? "Not enabled"
+                    : "Access required"}
               </small>
             </span>
           ) : (
