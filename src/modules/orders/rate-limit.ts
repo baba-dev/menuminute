@@ -9,13 +9,14 @@ const WINDOW_SECONDS = 60;
 
 /** All counters are incremented in one Redis operation; fail closed on Redis failure. */
 const script = `
-local allowed = 1
+-- Reserve most-specific quotas first. An already-throttled client must
+-- not consume shared application, QR or outlet capacity for other diners.
 for i = 1, #KEYS do
   local count = redis.call('INCR', KEYS[i])
   if count == 1 then redis.call('EXPIRE', KEYS[i], ARGV[1]) end
-  if count > tonumber(ARGV[i + 1]) then allowed = 0 end
+  if count > tonumber(ARGV[i + 1]) then return 0 end
 end
-return allowed
+return 1
 `;
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex").slice(0, 32);
@@ -69,12 +70,12 @@ async function reserve(counters: Counter[]) {
 export async function reserveOrderSource(operation: Operation, source: string) {
   return reserve([
     {
-      key: `orders:edge:${operation}:global`,
-      max: operation === "submit" ? 500 : 4000,
-    },
-    {
       key: `orders:edge:${operation}:ip:${hash(source)}`,
       max: operation === "submit" ? 35 : 150,
+    },
+    {
+      key: `orders:edge:${operation}:global`,
+      max: operation === "submit" ? 500 : 4000,
     },
   ]);
 }
@@ -93,12 +94,12 @@ export async function reserveOrderCapability(
   const capability = hash(token);
   const counters: Counter[] = [
     {
-      key: `orders:cap:${operation}:token:${capability}`,
-      max: operation === "submit" ? 180 : 2000,
-    },
-    {
       key: `orders:cap:${operation}:source:${hash(source)}:${capability}`,
       max: operation === "submit" ? 15 : 120,
+    },
+    {
+      key: `orders:cap:${operation}:token:${capability}`,
+      max: operation === "submit" ? 180 : 2000,
     },
   ];
   if (operation === "submit") {

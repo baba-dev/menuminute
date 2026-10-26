@@ -93,4 +93,20 @@ describe("order edge provenance and abuse controls", () => {
       false
     );
   });
+  it("does not burn shared tracking capacity after a verified source is throttled", async () => {
+    const { redisClient } = await import("../src/lib/redis");
+    const redis = await redisClient("cache");
+    const key = "orders:edge:tracking:global";
+    const initial = Number((await redis.get(key)) ?? 0);
+    const source = "2001:db8:feed:" + crypto.randomUUID().replaceAll("-", "").slice(0, 4) + "::1";
+    for (let i = 0; i < 150; i++) {
+      expect(await reserveOrderSource("tracking", source)).toBe(true);
+    }
+    for (let i = 0; i < 25; i++) {
+      expect(await reserveOrderSource("tracking", source)).toBe(false);
+    }
+    expect(Number((await redis.get(key)) ?? 0) - initial).toBe(150);
+    expect(await reserveOrderSource("tracking", "2001:db8::1234")).toBe(true);
+  });
+
 });
