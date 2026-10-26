@@ -59,6 +59,9 @@ export type DashboardNavigation = {
   kitchen: boolean;
   ordersRead: boolean;
   kitchenRead: boolean;
+  kitchenSetup: boolean;
+  kitchenOperational: boolean;
+  kitchenDraining: boolean;
 };
 
 /**
@@ -84,12 +87,19 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
       app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
       app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
       app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead"`);
+    const kitchenResult = await tx.execute<{ data: {
+      canSetup: boolean; canWork: boolean; operational: boolean; draining: boolean;
+    } }>(sql`select app_private.kitchen_navigation(${outletId}) as data`);
+    const kitchenState = kitchenResult.rows[0]?.data;
     const status = result.rows[0];
     return {
       ordering: status?.ordering === true,
       kitchen: status?.kitchen === true,
       ordersRead: status?.ordersRead === true,
       kitchenRead: status?.kitchenRead === true,
+      kitchenSetup: kitchenState?.canSetup === true,
+      kitchenOperational: kitchenState?.operational === true,
+      kitchenDraining: kitchenState?.draining === true,
     };
   });
 }
