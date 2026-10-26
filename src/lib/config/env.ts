@@ -16,6 +16,7 @@ const smtpHostname = z
   .refine(
     (value) =>
       value === "localhost" ||
+      value === "127.0.0.1" ||
       (/^(?=.{1,253}$)(?!.*\.\.)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(
         value
       ) &&
@@ -178,6 +179,17 @@ export const envSchema = z
         if (value === undefined)
           ctx.addIssue({ code: "custom", path: [name], message: `${name} is required for SMTP` });
       }
+      if (
+        e.SMTP_HOST === "127.0.0.1" &&
+        (!e.AUTH_ALLOW_TEST_EMAIL ||
+          new URL(e.APP_URL).hostname !== "localhost" ||
+          new URL(e.DATABASE_URL).pathname !== "/menuminute_test")
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["SMTP_HOST"],
+          message: "Loopback SMTP is restricted to the isolated browser fixture",
+        });
     }
     if (e.EMAIL_PROVIDER === "resend" && (!e.RESEND_API_KEY || !e.EMAIL_FROM))
       ctx.addIssue({

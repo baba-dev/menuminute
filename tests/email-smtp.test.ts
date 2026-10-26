@@ -60,7 +60,7 @@ describe("SMTP transactional transport", () => {
     });
     const port = await listen(server);
     const transport = createSmtpTransport({
-      host: "localhost",
+      host: "127.0.0.1",
       port,
       secure: false,
       user: "food@bababuilds.com",
@@ -82,7 +82,7 @@ describe("SMTP transactional transport", () => {
     });
     const port = await listen(server);
     const transport = createSmtpTransport({
-      host: "localhost",
+      host: "127.0.0.1",
       port,
       secure: false,
       user: "food@bababuilds.com",

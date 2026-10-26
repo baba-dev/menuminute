@@ -137,6 +137,10 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await status.getByRole("button", { name: "Suspend organization" }).click();
   await expect(page.getByRole("button", { name: "Reactivate organization" })).toBeVisible();
   await page.reload();
+  // Suspension falls back to an active workspace. Re-select the suspended
+  // organization explicitly before exercising recovery after a reload.
+  await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await expect(page.getByRole("button", { name: "Reactivate organization" })).toBeVisible();
   const reactivate = page
     .getByRole("button", { name: "Reactivate organization" })
     .locator("xpath=ancestor::form");

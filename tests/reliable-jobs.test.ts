@@ -124,6 +124,43 @@ it("rolls back a crash between projection and receipt, deduplicates retries and 
     await pool.end();
   }
 });
+it("acknowledges validated POS notifications without poisoning the durable queue", async () => {
+  const { outlet } = await fixture();
+  await isolate();
+  const id = crypto.randomUUID();
+  await admin(async (_, pool) => {
+    await pool.query(
+      `insert into outbox_events
+       (id,organization_id,outlet_id,type,schema_version,aggregate_version,payload)
+       values($1,$2,$3,'pos.finance.open_shift',1,1,$4::jsonb)`,
+      [
+        id,
+        outlet.organizationId,
+        outlet.id,
+        JSON.stringify({ outletId: outlet.id, action: "open_shift" }),
+      ]
+    );
+  });
+  const pool = workerPool(url);
+  try {
+    const event = (await claimEvents(pool, 1))[0]!;
+    expect(event.id).toBe(id);
+    expect(await consumeEvent(pool, delivery(event), `${id}-${event.delivery_sequence}`)).toBe(
+      true
+    );
+    expect((await state(id)).status).toBe("completed");
+    expect(
+      (
+        await pool.query(
+          "select 1 from consumer_receipts where event_id=$1 and consumer='pos-event-v1'",
+          [id]
+        )
+      ).rowCount
+    ).toBe(1);
+  } finally {
+    await pool.end();
+  }
+});
 it("recovers enqueue-before-ack crashes and Redis queue loss from durable state", async () => {
   await isolate();
   const { outlet } = await fixture();

@@ -60,6 +60,16 @@ it("accepts only complete secure production SMTP configuration", () => {
   expect(() => parseEnv({ ...smtp, EMAIL_FROM: "not-an-address" })).toThrow("EMAIL_FROM");
   expect(() => parseEnv({ ...smtp, EMAIL_PROVIDER: "test" })).toThrow("EMAIL_PROVIDER");
   expect(() => parseEnv({ ...smtp, SMTP_PASSWORD: "" })).toThrow("SMTP_PASSWORD");
+  expect(() => parseEnv({ ...smtp, SMTP_HOST: "127.0.0.1" })).toThrow("SMTP_HOST");
+  expect(
+    parseEnv({
+      ...smtp,
+      APP_URL: "https://localhost:3443",
+      DATABASE_URL: "postgresql://app:password@127.0.0.1:5432/menuminute_test",
+      SMTP_HOST: "127.0.0.1",
+      AUTH_ALLOW_TEST_EMAIL: "true",
+    }).SMTP_HOST
+  ).toBe("127.0.0.1");
 });
 
 it("fails media configuration at startup and applies the R2 bucket default", () => {

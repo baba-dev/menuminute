@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { isIP } from "node:net";
 import type { Transporter } from "nodemailer";
 import type { EmailTransport, TransactionalEmail } from "../transport";
 import { EmailDeliveryError } from "../transport";
@@ -39,7 +40,7 @@ export function createSmtpTransport(
     greetingTimeout: timeouts.greetingTimeout,
     socketTimeout: timeouts.socketTimeout,
     tls: {
-      servername: config.host,
+      ...(isIP(config.host) ? {} : { servername: config.host }),
       rejectUnauthorized: true,
       minVersion: "TLSv1.2",
     },
