@@ -131,6 +131,107 @@ describe("server-only provider hub", () => {
       ).tools[0].function.name
     ).toBe("orders.summary");
   });
+  it("requires Cloudflare tool calls, maps scoped aliases, and completes a two-round exchange", async () => {
+    const requests: Array<Record<string, unknown>> = [];
+    const fake = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      requests.push(payload);
+      if (requests.length === 1)
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_cf_1",
+                      type: "function",
+                      function: { name: "orders_summary", arguments: "{}" },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" } }
+        );
+      return completion({ content: "There are 3 synthetic orders." });
+    }) as unknown as typeof fetch;
+    const hub = createProviderHub(
+      configured({ AI_NVIDIA_ENABLED: "false", AI_CLOUDFLARE_TOOLS_VERIFIED: "true" }),
+      fake
+    );
+    const first = await hub.infer({ messages: user, capability: "tools", tools: [tool] });
+    expect(first.toolCalls).toEqual([{ id: "call_cf_1", name: "orders.summary", arguments: {} }]);
+    expect(requests[0]).toMatchObject({
+      tool_choice: "required",
+      tools: [{ function: { name: "orders_summary" } }],
+    });
+    const final = await hub.infer({
+      messages: [
+        ...user,
+        { role: "assistant", content: first.content, toolCalls: first.toolCalls },
+        { role: "tool", toolCallId: "call_cf_1", content: '{"count":3}' },
+      ],
+      capability: "text",
+    });
+    expect(final).toMatchObject({ finishReason: "stop", content: "There are 3 synthetic orders." });
+    expect(requests[1]).not.toHaveProperty("tool_choice");
+    expect(requests[1]).not.toHaveProperty("tools");
+    expect(requests[1]).toMatchObject({
+      messages: [
+        { role: "user" },
+        { role: "assistant", tool_calls: [{ function: { name: "orders_summary" } }] },
+        { role: "tool", tool_call_id: "call_cf_1" },
+      ],
+    });
+    expect(fake).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects Cloudflare alias collisions before a call and rejects unapproved returned aliases", async () => {
+    const bad = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "unauthorized",
+                      type: "function",
+                      function: { name: "admin_execute_sql", arguments: "{}" },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" } }
+        )
+    ) as unknown as typeof fetch;
+    const hub = createProviderHub(
+      configured({ AI_NVIDIA_ENABLED: "false", AI_CLOUDFLARE_TOOLS_VERIFIED: "true" }),
+      bad
+    );
+    await expect(
+      hub.infer({
+        messages: user,
+        capability: "tools",
+        tools: [tool, { ...tool, name: "orders_summary" }],
+      })
+    ).rejects.toMatchObject({ code: "invalid_request" });
+    expect(bad).not.toHaveBeenCalled();
+    await expect(
+      hub.infer({ messages: user, capability: "tools", tools: [tool] })
+    ).rejects.toMatchObject({ code: "invalid_response" });
+    expect(bad).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects fabricated or malformed tool outputs and oversized provider responses", async () => {
     const model = configured({ AI_NVIDIA_TOOLS_VERIFIED: "true" });
     const bad = vi.fn(
