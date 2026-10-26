@@ -52,7 +52,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
 
   test("Registration page renders all signup fields", async ({ page }) => {
     await mockTurnstileForBrowserTests(page);
-  await page.goto("/register");
+    await page.goto("/register");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "Your next chapter starts here."
     );
