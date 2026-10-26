@@ -61,7 +61,24 @@ function endpoint(model: ProviderModel) {
   throw new IntelligenceError("not_configured");
 }
 
-function toWireMessage(message: InferenceRequest["messages"][number]) {
+/** Keep database/domain tool names unchanged; only the provider-facing Cloudflare wire
+ * identifier uses an underscore. This is deterministic across both chat rounds. */
+function wireToolName(model: ProviderModel, name: string) {
+  return model.provider === "cloudflare" ? name.replaceAll(".", "_") : name;
+}
+
+function allowedWireTools(model: ProviderModel, input: InferenceRequest) {
+  const mapped = new Map<string, string>();
+  for (const tool of input.tools) {
+    const wire = wireToolName(model, tool.name);
+    // Fail before a network call rather than accepting an ambiguous name.
+    if (mapped.has(wire)) throw new IntelligenceError("invalid_request");
+    mapped.set(wire, tool.name);
+  }
+  return mapped;
+}
+
+function toWireMessage(message: InferenceRequest["messages"][number], model: ProviderModel) {
   if (message.role === "tool")
     return { role: "tool", tool_call_id: message.toolCallId, content: message.content };
   if (message.role === "assistant")
@@ -73,7 +90,7 @@ function toWireMessage(message: InferenceRequest["messages"][number]) {
             tool_calls: message.toolCalls.map((call) => ({
               id: call.id,
               type: "function",
-              function: { name: call.name, arguments: JSON.stringify(call.arguments) },
+              function: { name: wireToolName(model, call.name), arguments: JSON.stringify(call.arguments) },
             })),
           }
         : {}),
@@ -121,7 +138,7 @@ function normalize(raw: unknown, model: ProviderModel, input: InferenceRequest):
   if (!parsed.success) throw new IntelligenceError("invalid_response");
   const choice = parsed.data.choices[0]!;
   const calls: ToolCall[] = [];
-  const permitted = new Set(input.tools.map((tool) => tool.name));
+  const permitted = allowedWireTools(model, input);
   const ids = new Set<string>();
   for (const candidate of choice.message.tool_calls ?? []) {
     if (
@@ -142,7 +159,7 @@ function normalize(raw: unknown, model: ProviderModel, input: InferenceRequest):
       throw new IntelligenceError("invalid_response");
     calls.push({
       id: candidate.id,
-      name: candidate.function.name,
+      name: permitted.get(candidate.function.name)!,
       arguments: args as Record<string, unknown>,
     });
   }
@@ -181,10 +198,12 @@ export async function chatCompletion(
   const onAbort = () => controller.abort();
   options.signal?.addEventListener("abort", onAbort, { once: true });
   try {
+    // Detect Cloudflare wire-name collisions before any paid provider call.
+    allowedWireTools(model, input);
     const body = JSON.stringify({
       model: model.model,
       stream: false,
-      messages: input.messages.map(toWireMessage),
+      messages: input.messages.map((message) => toWireMessage(message, model)),
       max_tokens: input.maxOutputTokens,
       temperature: input.temperature,
       ...(input.capability === "tools"
@@ -192,12 +211,13 @@ export async function chatCompletion(
             tools: input.tools.map((tool) => ({
               type: "function",
               function: {
-                name: tool.name,
+                name: wireToolName(model, tool.name),
                 description: tool.description,
                 parameters: tool.parameters,
               },
             })),
-            tool_choice: "auto",
+            // Ember's first round must return facts from at least one tool.
+            tool_choice: "required",
           }
         : {}),
     });
