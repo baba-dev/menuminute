@@ -35,6 +35,6 @@ export async function GET(req: Request) {
   try {
     return NextResponse.json(await listOrganizations(await requestActor(req)));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

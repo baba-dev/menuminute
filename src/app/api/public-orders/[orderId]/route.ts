@@ -59,6 +59,6 @@ export async function GET(req: Request, context: { params: Promise<{ orderId: st
     const data = await getGuestOrderTracking(token, orderId, trackingToken);
     return NextResponse.json(data, { status: 200, headers: noStore });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: Params) {
       headers: { "cache-control": "private, no-store" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
 export async function POST(req: Request, { params }: Params) {
@@ -31,6 +31,6 @@ export async function POST(req: Request, { params }: Params) {
         : await posAttachOrder(actor, organizationId, outletId, body.input);
     return NextResponse.json(result, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
