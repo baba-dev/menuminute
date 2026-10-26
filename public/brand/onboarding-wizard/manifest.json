@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "MenuMinute Onboarding Wizard Mediawork",
+  "version": "1.0.0",
+  "basePath": "/brand/onboarding-wizard/",
+  "theme": "obsidian-amber",
+  "palette": {
+    "background": "#1c1917",
+    "surface": "#292524",
+    "primary": "#f97316",
+    "primaryLight": "#fed7aa",
+    "accent": "#f59e0b",
+    "text": "#f5f5f4"
+  },
+  "assets": [
+    {
+      "id": "hero-identity",
+      "filename": "wizard-hero-identity.svg",
+      "viewBox": "0 0 400 240",
+      "description": "Storefront glowing with warm amber lighting and modern architectural lines.",
+      "optional": true
+    },
+    {
+      "id": "hero-location",
+      "filename": "wizard-hero-location.svg",
+      "viewBox": "0 0 400 240",
+      "description": "Isometric geospatial map grid with pulsing radar contour and GPS locator pin.",
+      "optional": true
+    },
+    {
+      "id": "hero-operations",
+      "filename": "wizard-hero-operations.svg",
+      "viewBox": "0 0 400 240",
+      "description": "Minimalist service cloche, clock face, and steam circles in warm champagne amber.",
+      "optional": true
+    },
+    {
+      "id": "hero-contact",
+      "filename": "wizard-hero-contact.svg",
+      "viewBox": "0 0 400 240",
+      "description": "Bistro dining setup with QR menu tabletop stand and digital connection ripples.",
+      "optional": true
+    },
+    {
+      "id": "hero-launch",
+      "filename": "wizard-hero-launch.svg",
+      "viewBox": "0 0 400 240",
+      "description": "Celebratory cloche revealing a sparkling glowing QR code with confetti bursts.",
+      "optional": true
+    },
+    {
+      "id": "type-restaurant",
+      "filename": "type-restaurant.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Refined dining cloche with fork and knife emblem.",
+      "optional": true
+    },
+    {
+      "id": "type-cafe",
+      "filename": "type-cafe.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Artisan coffee cup with delicate rising steam curves.",
+      "optional": true
+    },
+    {
+      "id": "type-takeout",
+      "filename": "type-takeout.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Kraft takeout bag with handles and swift clock badge.",
+      "optional": true
+    },
+    {
+      "id": "type-cloud-kitchen",
+      "filename": "type-cloud-kitchen.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Precision culinary skillet above glowing flames.",
+      "optional": true
+    },
+    {
+      "id": "type-hotel",
+      "filename": "type-hotel.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Concierge service bell with elegant art-deco arches.",
+      "optional": true
+    },
+    {
+      "id": "type-mixed",
+      "filename": "type-mixed.svg",
+      "viewBox": "0 0 48 48",
+      "description": "Dynamic multi-quadrant hospitality grid badge.",
+      "optional": true
+    }
+  ]
+}
