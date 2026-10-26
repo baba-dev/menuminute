@@ -32,6 +32,14 @@ import {
 import { DashboardTooltip } from "./dashboard-tooltip";
 import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 import { DashboardServicePulse } from "./dashboard-service-pulse";
+import {
+  ChefStickyNote,
+  MiseEnPlaceEmpty,
+} from "@/components/ui/tactile-elements";
+import { The86Board } from "@/components/dashboard/eight-six-board";
+import { getServicePeriodText, outletHour } from "@/lib/service-period";
+import { withOutlet } from "@/modules/tenancy/service";
+import { ForbiddenError } from "@/lib/errors";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -50,12 +58,15 @@ export default async function DashboardPage() {
   if (!outlet) {
     return (
       <div className="mm-dashboard mm-dashboard-empty">
-        <span className="mm-dashboard-eyebrow">Welcome to MenuMinute</span>
-        <h1>Make something delicious today.</h1>
-        <p>Create your first outlet to build and share its permanent QR menu.</p>
-        <Link href="/onboarding" className="mm-dashboard-button mm-dashboard-button--primary">
-          Set up an outlet <ArrowRight size={17} aria-hidden="true" />
-        </Link>
+        <MiseEnPlaceEmpty
+          title="Aprons tied, knives sharpened."
+          description="Every great restaurant begins with its first outlet. Set up your dining room and kitchen to publish a permanent QR menu."
+          action={
+            <Link href="/onboarding" className="mm-dashboard-button mm-dashboard-button--primary">
+              Set up an outlet <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -184,12 +195,33 @@ export default async function DashboardPage() {
         },
       ];
 
+  const servicePeriod = getServicePeriodText(outletHour(outlet.timezone));
+  const canManageAvailability = publicProjection
+    ? await withOutlet(actor, outlet.id, "menu.write", async () => true).catch((error: unknown) => {
+        if (error instanceof ForbiddenError) return false;
+        throw error;
+      })
+    : false;
+  const availabilityItems = publicProjection?.outlet.versioned
+    ? publicProjection.menus.flatMap((menu) =>
+        menu.document.categories.filter((cat) => !cat.archived).flatMap((cat) =>
+          cat.items.filter((dish) => !dish.archived).map((dish) => ({
+            id: dish.id,
+            menuId: menu.id,
+            name: dish.name,
+            category: cat.name,
+            soldOut: menu.overrides.find((override) => override.dishId === dish.id)?.soldOut ?? dish.soldOut,
+          }))
+        )
+      )
+    : null;
+
   return (
     <div className="mm-dashboard product" data-testid="editorial-dashboard">
       <header className="mm-dashboard-hero">
         <div className="mm-dashboard-hero-copy">
           <span className="mm-dashboard-eyebrow">
-            A little more than a dashboard <span aria-hidden="true">—</span>
+            {servicePeriod.period} · {servicePeriod.greeting}
           </span>
           <h1>
             Make something
@@ -198,9 +230,7 @@ export default async function DashboardPage() {
           </h1>
           <p>
             Welcome back to <strong>{outlet.name}</strong>.<br />
-            {stats.hasPublicMenu
-              ? "Your menu is ready to shine."
-              : "Your next great menu starts here."}
+            <span className="opacity-90">{servicePeriod.subtext}</span>
           </p>
           {outlet.isDemoData && <span className="mm-dashboard-demo">Demo outlet</span>}
           <div className="mm-dashboard-hero-actions">
@@ -225,6 +255,15 @@ export default async function DashboardPage() {
       </header>
 
       <div className="mm-dashboard-body">
+        <ChefStickyNote
+          author="Chef's Service Note"
+          text={
+            stats.hasPublicMenu
+              ? `Your published menu includes ${stats.publishedDishCount} dishes. Keep dish availability up to date so guests see accurate options.`
+              : "Welcome to the pass! Start by adding your signature recipes in Menu Studio, then print permanent QR codes for your dining room tables."
+          }
+        />
+        <The86Board outletId={outlet.id} items={availabilityItems} canManage={canManageAvailability} menuStudioHref="/dashboard/menu" />
         <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
           <div className="mm-dashboard-section-heading">
             <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
