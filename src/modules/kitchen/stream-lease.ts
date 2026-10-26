@@ -72,7 +72,9 @@ export async function acquireKitchenStream(
       if (released) return false;
       return (
         Number(
-          await (await redisClient("cache")).eval(renewScript, {
+          await (
+            await redisClient("cache")
+          ).eval(renewScript, {
             keys,
             arguments: [id, String(LEASE_MS), String(TTL_SECONDS)],
           })

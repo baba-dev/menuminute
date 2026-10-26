@@ -194,7 +194,11 @@ test("Kitchen SSE enforces a distributed session limit and revokes only after ac
       };
       const w = window as unknown as { kitchenTestStreams?: Holder[] };
       const abort = new AbortController();
-      const res = await fetch(uri, { credentials: "same-origin", cache: "no-store", signal: abort.signal });
+      const res = await fetch(uri, {
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: abort.signal,
+      });
       if (!res.ok) {
         abort.abort();
         return res.status;

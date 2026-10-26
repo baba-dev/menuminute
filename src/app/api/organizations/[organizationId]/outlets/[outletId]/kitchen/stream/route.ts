@@ -8,7 +8,11 @@ import { isKitchenStreamRevocation, kitchenStreamActor } from "@/modules/kitchen
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const id = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const id = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/);
 const noStore = { "content-type": "application/json", "cache-control": "private, no-store" };
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
