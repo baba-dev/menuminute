@@ -276,8 +276,9 @@ CREATE OR REPLACE FUNCTION app_private.kitchen_accept_entitlement_check() RETURN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
 DECLARE org text; outlet_state text;
 BEGIN
+ -- Serialize intake with the operator's active->draining transition.
  SELECT state INTO outlet_state FROM kitchen_pilot_outlets
- WHERE outlet_id=NEW.restaurant_id;
+ WHERE outlet_id=NEW.restaurant_id FOR SHARE;
  IF outlet_state='draining' THEN
    RAISE EXCEPTION 'Kitchen draining; new acceptance paused' USING ERRCODE='42501';
  END IF;
