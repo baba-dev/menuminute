@@ -22,7 +22,6 @@ CREATE TABLE kitchen_pilot_outlets (
 );
 CREATE INDEX kitchen_pilot_state_idx ON kitchen_pilot_outlets(state,updated_at);
 ALTER TABLE kitchen_pilot_outlets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE kitchen_pilot_outlets FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON kitchen_pilot_outlets FROM PUBLIC,menuminute_app,menuminute_worker;
 CREATE POLICY kitchen_pilot_admin_read ON kitchen_pilot_outlets
  FOR SELECT TO menuminute_app
