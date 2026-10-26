@@ -76,9 +76,11 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
             and(eq(restaurantTables.restaurantId, outletId), inArray(restaurantTables.id, tableIds))
           )
       : Promise.resolve([]),
-    tx.execute<{ data: string[] }>(
-      sql`select app_private.kitchen_managed_orders(${outletId}) as data`
-    ),
+    ids.length
+      ? tx.execute<{ data: string[] }>(
+          sql`select app_private.kitchen_managed_orders_for_rail(${outletId}, ${JSON.stringify(ids)}::jsonb) as data`
+        )
+      : Promise.resolve({ rows: [{ data: [] as string[] }] }),
     tx.execute<{
       accept: boolean;
       prepare: boolean;

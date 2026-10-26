@@ -6,10 +6,22 @@ test("a revoked public QR response clears previously rendered dishes instead of 
   await page.goto("/m/demo-spice-route-kitchen-v1");
   await expect(page.getByRole("heading", { name: "Paneer Tikka" })).toBeVisible();
 
+  // Server-rendered dishes may be visible before hydration registers the online
+  // listener. Exercise a controlled filter so the following refresh is meaningful.
+  const search = page.getByRole("searchbox", { name: "Search the menu" });
+  await search.fill("no-match-for-hydration-check-827");
+  await expect(page.getByText("0 dishes shown", { exact: true })).toBeVisible();
+  await search.fill("");
+  await expect(page.getByRole("heading", { name: "Paneer Tikka" })).toBeVisible();
+
   await page.route("**/api/public-menu/**", (route) =>
     route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
   );
+  const revokedResponse = page.waitForResponse(
+    (response) => response.url().includes("/api/public-menu/") && response.status() === 404
+  );
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await revokedResponse;
   await expect(
     page.getByText("This menu is no longer available. Please ask the staff.")
   ).toBeVisible();

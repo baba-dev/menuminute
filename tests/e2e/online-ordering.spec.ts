@@ -178,3 +178,105 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("Service Counter keeps verified queue and counters isolated under partial outages", async ({
+  page,
+}, info) => {
+  test.setTimeout(120000);
+  const fixture = await seedOrdering(true);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(fixture.email);
+  await page.getByLabel("Password", { exact: true }).fill(fixture.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+
+  const pulsePath = "**/orders/workspace?view=pulse";
+  const railPath = "**/orders/workspace?view=rail";
+  await page.route(pulsePath, (route) =>
+    route.fulfill({
+      status: 503,
+      headers: { "x-request-id": "test-ref-001" },
+      contentType: "application/json",
+      body: JSON.stringify({ message: "An unexpected error occurred" }),
+    })
+  );
+  await page.goto("/dashboard/orders");
+  await expect(page.getByTestId("service-rail-status")).toContainText("Live queue synced");
+  await expect(page.getByTestId("service-pulse-error")).toBeVisible();
+  await expect(page.getByTestId("service-pulse-error")).toContainText("Reference: test-ref");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
+  await expect(page.getByText("All caught up.")).toBeVisible();
+  const cells = page.getByTestId("service-pulse-grid").locator("button");
+  await expect(cells).toHaveCount(4);
+  await expect(cells.first()).toContainText("—");
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const geometry = await cells.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      return {
+        x: box.x,
+        right: box.right,
+        y: box.y,
+        bottom: box.bottom,
+        border: parseFloat(style.borderLeftWidth),
+      };
+    })
+  );
+  expect(geometry.every((box) => box.border >= 1)).toBe(true);
+  for (let i = 0; i < geometry.length; i += 1) {
+    for (let j = i + 1; j < geometry.length; j += 1) {
+      const a = geometry[i]!;
+      const b = geometry[j]!;
+      expect(a.right <= b.x || b.right <= a.x || a.bottom <= b.y || b.bottom <= a.y).toBe(true);
+    }
+  }
+
+  await page.unroute(pulsePath);
+  await page.route(railPath, (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "An unexpected error occurred" }),
+    })
+  );
+  await page.getByRole("button", { name: "Sync", exact: true }).click();
+  await expect(page.getByTestId("service-rail-error")).toBeVisible();
+  await expect(page.getByTestId("service-pulse-error")).toHaveCount(0);
+  await expect(page.getByTestId("service-rail-status")).toContainText("read-only");
+  await expect(page.getByText("Queue unavailable").first()).toBeVisible();
+  await expect(cells.first()).toContainText("0");
+
+  await page.unroute(railPath);
+  await page.getByRole("button", { name: "Retry queue" }).click();
+  await expect(page.getByTestId("service-rail-error")).toHaveCount(0);
+  await expect(page.getByText("All caught up.")).toBeVisible();
+
+  for (const width of [360, 390, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: info.outputPath("service-counter-light-mobile.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({
+    path: info.outputPath("service-counter-dark-mobile.png"),
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({
+    path: info.outputPath("service-counter-dark-desktop.png"),
+    fullPage: true,
+  });
+  await page.getByRole("tab", { name: "Live orders" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute("aria-selected", "true");
+});

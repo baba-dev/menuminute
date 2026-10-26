@@ -57,6 +57,9 @@ export function ReviewWorkspace({
     [notice, setNotice] = useState("");
   const [preview, setPreview] = useState<Record<string, string>>({});
   const [activeSource, setActiveSource] = useState(initial.sources[0]?.id ?? "");
+  const [zoom, setZoom] = useState(100);
+  const [mobileView, setMobileView] = useState<"source" | "details">("details");
+  const [filter, setFilter] = useState<"all" | "attention" | "verified">("all");
   const newMenu = useRef(crypto.randomUUID());
   const [priceTexts, setPriceTexts] = useState<Record<string, string>>(() => {
     const result: Record<string, string> = {};
@@ -149,6 +152,26 @@ export function ReviewWorkspace({
     ...c.items.flatMap((d) => [d.id, ...d.variants.map((v) => v.id)]),
   ]);
   const confirmedCount = confirmed.filter((x) => ids.includes(x)).length;
+  const outstanding = ids.length - confirmedCount;
+  const visible = (id: string) =>
+    filter === "all" || (filter === "verified" ? confirmed.includes(id) : !confirmed.includes(id));
+  const visibleCategory = (cat: ImportCandidate["categories"][number]) =>
+    visible(cat.id) ||
+    cat.items.some((dish) => visible(dish.id) || dish.variants.some((v) => visible(v.id)));
+  function selectSource(id: string) {
+    setActiveSource(id);
+    setMobileView("source");
+    setZoom(100);
+  }
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
   function change(fn: (previous: MenuDocument) => MenuDocument, id: string) {
     setDoc(fn);
     setConfirmed((prev) => prev.filter((x) => x !== id));
@@ -297,42 +320,56 @@ export function ReviewWorkspace({
   }
   const locked = session.status === "applied";
   return (
-    <div className="mx-auto max-w-7xl space-y-5 pb-20">
+    <div className="scan-table space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/dashboard/menu/import"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-stone-600 hover:text-orange-700"
+          className="scan-back"
+          onClick={(event) => {
+            if (dirty && !window.confirm("Leave before saving your review changes?"))
+              event.preventDefault();
+          }}
         >
-          <ArrowLeft className="size-4" />
-          Capture sessions
+          <ArrowLeft className="size-4" /> The Scan Table
         </Link>
-        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-800">
-          <ShieldCheck className="size-4" />
-          HUMAN VERIFIED · NEVER AUTO-PUBLISHED
-        </div>
+        <span className="scan-private inline-flex items-center gap-2">
+          <ShieldCheck className="size-4" /> Human verified · Never auto-published
+        </span>
       </div>
-      <header className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 sm:p-8">
-        <p className="text-xs font-bold tracking-[.2em] text-orange-700 uppercase">
-          Smart Menu Studio / Review
-        </p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-stone-950">
-          Make every detail yours.
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-700">
-          Compare the original photo with each suggestion. Correct names and prices, tick each
-          verified entry, then create a private editable draft. The original AI evidence is
-          immutable.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-stone-700">
-            {confirmedCount} / {ids.length} confirmed
-          </span>
-          <span className="text-xs font-semibold text-stone-600">
-            Revision {session.revision} · {session.status.replaceAll("_", " ")}
-          </span>
-          {dirty && <span className="text-xs font-bold text-orange-700">Unsaved changes</span>}
+      <header className="scan-hero">
+        <div className="scan-hero-copy">
+          <p className="scan-eyebrow">RECIPE ATELIER / THE REVIEW DESK</p>
+          <h1>Perfect every detail.</h1>
+          <p className="scan-subtitle">
+            Compare the original photo against each extracted dish. Verify names and prices before
+            creating a private editable menu draft.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold">
+            <span>
+              {confirmedCount} / {ids.length} verified
+            </span>
+            <span>{outstanding} to check</span>
+            <span>Revision {session.revision}</span>
+            {dirty && <span role="status">Unsaved changes</span>}
+          </div>
         </div>
       </header>
+      <div className="scan-mobile-toggle" role="group" aria-label="Review workspace view">
+        <button
+          className="scan-action scan-action--secondary flex-1"
+          aria-pressed={mobileView === "source"}
+          onClick={() => setMobileView("source")}
+        >
+          Original photo
+        </button>
+        <button
+          className="scan-action scan-action--secondary flex-1"
+          aria-pressed={mobileView === "details"}
+          onClick={() => setMobileView("details")}
+        >
+          Extracted dishes
+        </button>
+      </div>
       {error && (
         <p role="alert" className="flex gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-800">
           <AlertCircle className="size-4 shrink-0" />
@@ -344,36 +381,61 @@ export function ReviewWorkspace({
           {notice}
         </p>
       )}
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="scan-review-workspace" data-mobile-view={mobileView}>
         <aside
           aria-label="Original source photographs"
-          className="min-w-0 space-y-3 lg:sticky lg:top-6 lg:self-start"
+          className="scan-review-source min-w-0 space-y-3 lg:sticky lg:top-6 lg:self-start"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-stone-900">01 / Original source</h2>
             <ImageIcon className="size-5 text-orange-600" />
           </div>
-          <div className="rounded-2xl border border-stone-200 bg-white p-3">
-            {preview[activeSource] ? (
-              <Image
-                src={preview[activeSource]!}
-                width={800}
-                height={1000}
-                unoptimized
-                alt="Private original menu photograph"
-                className="max-h-[580px] w-full rounded-xl object-contain"
-              />
-            ) : (
-              <div className="flex h-64 items-center justify-center rounded-xl bg-stone-100 text-sm text-stone-500">
-                Private preview unavailable
-              </div>
-            )}
+          <div className="scan-review-panel">
+            <div className="scan-review-toolbar mb-3" role="group" aria-label="Source image zoom">
+              <button
+                type="button"
+                aria-label="Zoom out"
+                disabled={zoom <= 100}
+                onClick={() => setZoom((value) => Math.max(100, value - 25))}
+              >
+                −
+              </button>
+              <span className="scan-status text-xs font-bold">{zoom}%</span>
+              <button
+                type="button"
+                aria-label="Zoom in"
+                disabled={zoom >= 200}
+                onClick={() => setZoom((value) => Math.min(200, value + 25))}
+              >
+                +
+              </button>
+              <button type="button" onClick={() => setZoom(100)}>
+                Fit
+              </button>
+            </div>
+            <div className="scan-source-canvas">
+              {preview[activeSource] ? (
+                <Image
+                  src={preview[activeSource]!}
+                  width={800}
+                  height={1000}
+                  unoptimized
+                  alt="Private original menu photograph"
+                  className="rounded-xl object-contain"
+                  style={{ width: `${zoom}%` }}
+                />
+              ) : (
+                <div className="flex h-64 items-center justify-center rounded-xl bg-stone-100 text-sm text-stone-500">
+                  Private preview unavailable
+                </div>
+              )}
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {session.sources.map((s) => (
                 <button
                   type="button"
                   key={s.id}
-                  onClick={() => setActiveSource(s.id)}
+                  onClick={() => selectSource(s.id)}
                   aria-pressed={activeSource === s.id}
                   className={
                     activeSource === s.id
@@ -390,12 +452,15 @@ export function ReviewWorkspace({
             </p>
           </div>
         </aside>
-        <section className="min-w-0 space-y-4" aria-label="Editable recognized dishes">
+        <section
+          className="scan-review-editor min-w-0 space-y-4"
+          aria-label="Editable recognized dishes"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-stone-900">02 / Verify extraction</h2>
             <Eye className="size-5 text-orange-600" />
           </div>
-          <div className="rounded-2xl border border-stone-200 bg-white p-4">
+          <div className="scan-review-panel">
             <label className="text-xs font-bold text-stone-700">
               Private draft title
               <input
@@ -411,10 +476,29 @@ export function ReviewWorkspace({
               />
             </label>
           </div>
+          <div className="scan-review-toolbar" role="group" aria-label="Review status filters">
+            <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
+              All ({ids.length})
+            </button>
+            <button
+              type="button"
+              aria-pressed={filter === "attention"}
+              onClick={() => setFilter("attention")}
+            >
+              Needs review ({outstanding})
+            </button>
+            <button
+              type="button"
+              aria-pressed={filter === "verified"}
+              onClick={() => setFilter("verified")}
+            >
+              Verified ({confirmedCount})
+            </button>
+          </div>
           {candidate.categories.map((c, ci) => (
             <section
               key={c.id}
-              className="overflow-hidden rounded-2xl border border-stone-200 bg-white"
+              className={`scan-review-panel overflow-hidden ${visibleCategory(c) ? "" : "hidden"}`}
             >
               <div className="space-y-3 border-b border-stone-200 bg-stone-50 p-4">
                 <label className="block text-xs font-bold text-stone-700">
@@ -451,7 +535,7 @@ export function ReviewWorkspace({
                   <button
                     key={i}
                     type="button"
-                    onClick={() => setActiveSource(e.sourceId)}
+                    onClick={() => selectSource(e.sourceId)}
                     className="text-xs font-semibold text-orange-700 underline"
                   >
                     Source page{" "}
@@ -470,7 +554,7 @@ export function ReviewWorkspace({
                     <fieldset
                       key={dish.id}
                       disabled={locked}
-                      className="space-y-3 rounded-xl border border-stone-200 p-4"
+                      className={`space-y-3 rounded-xl border p-4 ${visible(dish.id) || dish.variants.some((v) => visible(v.id)) ? "" : "hidden"}`}
                     >
                       <legend className="px-1 text-sm font-black text-stone-900">
                         Dish {di + 1}
@@ -569,7 +653,7 @@ export function ReviewWorkspace({
                         <button
                           key={i}
                           type="button"
-                          onClick={() => setActiveSource(e.sourceId)}
+                          onClick={() => selectSource(e.sourceId)}
                           className="block text-xs font-semibold text-orange-700 underline"
                         >
                           View source: {e.excerpt ?? "dish"}
@@ -685,10 +769,11 @@ export function ReviewWorkspace({
           ))}
         </section>
       </div>
-      <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white/95 p-4 shadow-xl backdrop-blur">
+      <div className="scan-review-dock">
         <div className="text-xs font-semibold text-stone-600">
           <FileCheck2 className="mr-2 inline size-4 text-orange-600" />
-          {confirmedCount} of {ids.length} checked · Only saves a private draft
+          {confirmedCount} of {ids.length} verified · {outstanding} remaining · Saves only a private
+          draft
         </div>
         <div className="flex flex-wrap gap-2">
           <button
