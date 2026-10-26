@@ -32,6 +32,33 @@ Request: at most 48 messages, 8 defined tools, 8 tool calls, 4,096 output tokens
 5. Keep inference outside critical ordering and POS transaction paths. Degraded AI must leave regular operation functional.
 6. Streaming can be added later as a separate model-capability-tested contract.
 
+## Live Cloudflare tool-call compatibility
+
+A production operator tested the configured Cloudflare model with synthetic prompts and a
+read-only tool schema (26 October 2026). The chat endpoint returned HTTP 200 in both cases:
+`tool_choice: "auto"` returned a final text answer without calling any tool, while
+`tool_choice: "required"` returned a structured `menu_summary` function call.
+This shows **protocol compatibility**, not independent approval of commercial usage,
+privacy, production spend, authorization, or full Ember activation.
+
+Ember's read-only orchestrator **requires** grounded evidence on the first inference
+round, so the provider hub now sets `tool_choice: "required"` when tools capability
+is requested. Its second round remains text-only. The Cloudflare wire adapter
+exposes registered names such as `menu.summary` as `menu_summary` for provider
+compatibility and reverses that mapping before the existing allowlisted, scoped
+domain dispatcher. Cross-namespace collisions and unexpected aliases fail closed,
+before any side effect. NVIDIA's existing wire names are not changed.
+Messages replaying normalized assistant tool calls in the second round receive
+the same wire mapping.
+
+Offline provider tests cover both rounds and rejection cases. They are not a
+substitute for an authenticated real-outlet canary, a live end-to-end model
+exchange using the exact four MenuMinute tools, provider spend controls,
+privacy/retention approval or a separate decision to enable
+`AI_CLOUDFLARE_TOOLS_VERIFIED` and `AI_ASSISTANT_READ_ONLY_ENABLED`.
+Keep `AI_ASSISTANT_ACTIONS_ENABLED=false` initially and preserve the
+existing release/deployment gates.
+
 ## Offline verification
 
 `pnpm exec vitest run tests/intelligence-provider-hub.test.ts`, `pnpm typecheck`, `pnpm lint`, `pnpm build`. Tests inject `fetch`; no credentials or paid API calls are used. Final ARM64 CI and independent review are still required before merge. There is no migration or live activation in PR A. Rollback is reverting these new modules/config flags; existing importer is unaffected.
