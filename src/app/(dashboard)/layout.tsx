@@ -10,6 +10,8 @@ import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { WorkspaceTopbar } from "./workspace-topbar";
+import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
+import { ForbiddenError } from "@/lib/errors";
 import {
   dashboardNavigation,
   dashboardPublicProjection,
@@ -46,20 +48,43 @@ export default async function DashboardLayout({ children }: { children: React.Re
     columns: { isSuperAdmin: true },
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
-  const [capabilities, codes] = restaurant
-    ? await Promise.all([
-        dashboardNavigation(
-          { userId: session.user.id, sessionId: session.session.id },
-          restaurant.organizationId,
-          restaurant.id
-        ),
-        dashboardQrRows(session.user.id, restaurant.id),
-      ])
-    : [undefined, []];
-  const qr = preferredMenuQr(codes);
-  const projection = qr ? await dashboardPublicProjection(qr.destinationToken) : null;
-  const publicHref =
-    projection?.menus.length && qr ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
+  let capabilities: DashboardNavigation | undefined;
+  let publicHref: string | null = null;
+  let previewError = false;
+  if (restaurant) {
+    // Preview and optional paid navigation must not make menu, POS, orders or
+    // settings inaccessible during unrelated dependency failures.
+    const [navigationResult, qrResult] = await Promise.allSettled([
+      dashboardNavigation(
+        { userId: session.user.id, sessionId: session.session.id },
+        restaurant.organizationId,
+        restaurant.id
+      ),
+      dashboardQrRows(session.user.id, restaurant.id),
+    ]);
+    if (navigationResult.status === "fulfilled") {
+      capabilities = navigationResult.value;
+    } else {
+      reportOptionalShellFailure("navigation", navigationResult.reason);
+    }
+    if (qrResult.status === "fulfilled") {
+      const qr = preferredMenuQr(qrResult.value);
+      if (qr) {
+        try {
+          const projection = await dashboardPublicProjection(qr.destinationToken);
+          if (projection?.menus.length) {
+            publicHref = "/m/" + encodeURIComponent(qr.destinationToken);
+          }
+        } catch (error) {
+          previewError = true;
+          reportOptionalShellFailure("preview", error);
+        }
+      }
+    } else {
+      previewError = true;
+      reportOptionalShellFailure("preview", qrResult.reason);
+    }
+  }
   const name = session.user.name || "Restaurant admin";
   const initials = name
     .trim()
@@ -138,7 +163,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
       <main id="workspace-main" className="mm-workspace-main">
-        <WorkspaceTopbar userName={name} publicHref={publicHref} />
+        <WorkspaceTopbar userName={name} publicHref={publicHref} previewError={previewError} />
         {children}
       </main>
       {restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED && (
@@ -151,4 +176,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
       )}
     </div>
   );
+}
+
+function reportOptionalShellFailure(service: "navigation" | "preview", error: unknown) {
+  if (error instanceof ForbiddenError) return;
+  const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+  console.error("[dashboard] Optional workspace lookup unavailable", {
+    service,
+    kind: error instanceof Error ? error.name : "unknown",
+    sqlstate: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined,
+  });
 }
