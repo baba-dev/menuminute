@@ -207,6 +207,12 @@ export function KitchenBoard({
     source.addEventListener("heartbeat", () => {
       if (alive && !revoked.current) setConnection("live");
     });
+    source.addEventListener("unavailable", () => {
+      if (alive && !revoked.current) {
+        setConnection("recovering");
+        setError("Kitchen connection interrupted. Reconnecting and refreshing tickets.");
+      }
+    });
     source.addEventListener("revoked", () => {
       if (alive) {
         revoked.current = true;

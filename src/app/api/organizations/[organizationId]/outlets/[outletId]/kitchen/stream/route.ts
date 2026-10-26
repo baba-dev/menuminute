@@ -1,59 +1,78 @@
-import { requestActor, errorResponse } from "@/lib/request-context";
+import { z } from "zod";
+import { errorResponse } from "@/lib/request-context";
 import { kitchenChanges, kitchenSnapshot } from "@/modules/kitchen/service";
+import { acquireKitchenStream } from "@/modules/kitchen/stream-lease";
+import { isKitchenStreamRevocation, kitchenStreamActor } from "@/modules/kitchen/stream-auth";
+
 export const runtime = "nodejs";
-// Per-instance guard in addition to Cloudflare/Nginx rate limits; never treated as a global distributed quota.
-const activeStreams = new Map<string, number>();
+export const dynamic = "force-dynamic";
+
+const id = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const noStore = { "content-type": "application/json", "cache-control": "private, no-store" };
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
+  let lease: Awaited<ReturnType<typeof acquireKitchenStream>> = null;
   try {
-    const actor = await requestActor(req);
+    const actor = await kitchenStreamActor(req);
     const { organizationId, outletId } = await params;
-    const first = await kitchenSnapshot(actor, organizationId, outletId);
-    const streamKey = actor.userId + ":" + actor.sessionId + ":" + outletId;
-    const active = activeStreams.get(streamKey) ?? 0;
-    if (active >= 2)
+    id.parse(organizationId);
+    id.parse(outletId);
+    // Admission BEFORE the expensive snapshot. Redis is the cross-instance
+    // authority; an unavailable limiter fails closed rather than opening slots.
+    try {
+      lease = await acquireKitchenStream(actor.userId, actor.sessionId, outletId);
+    } catch {
+      return new Response(JSON.stringify({ message: "Kitchen stream temporarily unavailable" }), {
+        status: 503,
+        headers: noStore,
+      });
+    }
+    if (!lease)
       return new Response(JSON.stringify({ message: "Too many concurrent kitchen streams" }), {
         status: 429,
-        headers: { "content-type": "application/json", "cache-control": "no-store" },
+        headers: { ...noStore, "retry-after": "5" },
       });
-    activeStreams.set(streamKey, active + 1);
+    const first = await kitchenSnapshot(actor, organizationId, outletId);
+    const admittedLease = lease;
     const started = Date.now();
-    let released = false;
-    const release = () => {
-      if (released) return;
-      released = true;
-      const count = activeStreams.get(streamKey) ?? 0;
-      if (count <= 1) activeStreams.delete(streamKey);
-      else activeStreams.set(streamKey, count - 1);
-    };
     const encoder = new TextEncoder();
     let cancelled = false;
+    let finished = false;
+    const release = async () => {
+      if (finished) return;
+      finished = true;
+      await admittedLease.release().catch(() => {
+        // Redis TTL is the crash/failure recovery path; never mask stream cleanup.
+      });
+    };
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         let cursor = first.cursor;
-        const send = (event: string, value: unknown, id?: number) => {
-          const msg =
-            (id === undefined ? "" : "id: " + id + "\n") +
+        const send = (event: string, value: unknown, seq?: number) => {
+          const data =
+            (seq === undefined ? "" : "id: " + seq + "\n") +
             "event: " +
             event +
-            "\n" +
-            "data: " +
+            "\ndata: " +
             JSON.stringify(value) +
             "\n\n";
-          controller.enqueue(encoder.encode(msg));
+          controller.enqueue(encoder.encode(data));
         };
         send("snapshot", first, first.cursor);
         void (async () => {
           try {
-            while (!cancelled && !req.signal.aborted && Date.now() - started < 55000) {
-              await new Promise<void>((resolve) => setTimeout(resolve, 3000));
+            while (!cancelled && !req.signal.aborted && Date.now() - started < 55_000) {
+              await wait(3000);
               if (cancelled || req.signal.aborted) break;
-              // Revalidate the session and current outlet/station role at EVERY heartbeat.
-              const fresh = await requestActor(req);
+              // A lost Redis lease is transient unavailability, not a revoked role.
+              if (!(await admittedLease.renew())) throw new Error("Stream lease expired");
+              const fresh = await kitchenStreamActor(req);
               if (fresh.userId !== actor.userId || fresh.sessionId !== actor.sessionId)
-                throw new Error("Session changed");
+                throw new Error("Session identity changed");
               const changes = await kitchenChanges(fresh, organizationId, outletId, cursor);
               if (changes.resync || changes.events.length) {
                 const latest = await kitchenSnapshot(fresh, organizationId, outletId);
@@ -64,35 +83,41 @@ export async function GET(
                 send("heartbeat", { cursor });
               }
             }
-          } catch {
+          } catch (error) {
             if (!cancelled && !req.signal.aborted)
               try {
-                send("revoked", {
-                  message: "Kitchen connection requires a fresh login or permission check",
-                });
-              } catch {}
+                if (isKitchenStreamRevocation(error)) {
+                  send("revoked", { message: "Kitchen access or session has changed" });
+                } else {
+                  send("unavailable", { message: "Kitchen stream interrupted. Reconnecting…" });
+                }
+              } catch {
+                // Browser disconnects can close the stream before the final event.
+              }
           } finally {
-            release();
+            await release();
             try {
               controller.close();
-            } catch {}
+            } catch {
+              // Cancellation may already have closed this stream.
+            }
           }
         })();
       },
       cancel() {
         cancelled = true;
-        release();
+        void release();
       },
     });
     return new Response(body, {
       headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "private, no-store, no-transform",
-        "X-Accel-Buffering": "no",
-        Connection: "keep-alive",
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "private, no-store, no-transform",
+        "x-accel-buffering": "no",
       },
     });
   } catch (e) {
+    if (lease) await lease.release().catch(() => {});
     return errorResponse(e);
   }
 }
