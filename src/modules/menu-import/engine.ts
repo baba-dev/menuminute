@@ -58,9 +58,9 @@ export async function processImport(
       });
   };
   const timer = setInterval(heartbeat, HEARTBEAT_MS);
-  const assertLease = async () => {
+  const assertLease = async (meter: Meter) => {
     if (pending) await pending;
-    if (lost) throw new NvidiaExtractionError("processing_failed", { requests: 0, inputTokens: null, outputTokens: null });
+    if (lost) throw new NvidiaExtractionError("processing_failed", meter);
   };
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };
   let result: { ok: boolean; candidate?: unknown; usage: Meter; error?: string } = {
