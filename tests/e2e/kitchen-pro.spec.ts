@@ -60,6 +60,7 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
+  await expect(page.getByRole("link", { name: "Kitchen Setup" })).toBeVisible();
   await page.goto("/kitchen");
   await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
   await expect(page.getByTestId("chefs-pass")).toBeVisible();
