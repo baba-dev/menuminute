@@ -304,3 +304,16 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 - The final review intentionally shows a decorative QR placeholder, not a nonfunctional scannable code. Real QR links are generated using the server-owned public token and become useful when the menu is published.
 - Light/dark WebP stage artwork is optional. React renders safe inline SVG fallbacks while the commissioned media is being prepared.
 - Missing production QA: deployed HTTP smoke tests, browser screenshots, independent security approval, and final CI checks must be verified before merging.
+
+## Enhancements A–F: Operations-aware first-outlet onboarding (2026-10-27)
+
+- A: Guided goal selection (QR / ordering / full operations), six custom icon paths, responsive welcome media, and optional branding/contact sections. The selected goal is never an entitlement.
+- B: `operating_hours` and `service_hours` are distinct JSONB schedules in the outlet, and remain explicitly unconfigured when NULL. The menu schedule is separate and is never silently inferred from business hours; checkout gates are unchanged.
+- C: A dedicated private manager contact in the outlet row (not the public menu) and explicit location/currency/timezone preferences. POS legal seller details remain an independent protected prerequisite.
+- D: Address-first location help, optional GPS, locale suggestions and table count range 0–50.
+- E: Authenticated, goal-personalized `/dashboard/get-started` with menu import, editing, publish and QR navigation, followed by conditional ordering/kitchen/POS destinations. No automatic publishing or grant.
+- F: PostgreSQL integration and browser retry/resume regression tests, accessibility and theme fallbacks. CI, release safeguards, and independent review still required before merge.
+
+### Artwork directory
+
+See `public/brand/onboarding-wizard/README.md` and its 26-entry manifest; upload individual WebP and SVG binary assets on the feature branch. Verify screenshots and asset loading before release. No image binaries are committed by this text-only feature work.

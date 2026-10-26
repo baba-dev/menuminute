@@ -18,6 +18,8 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { ThemedArtwork } from "@/components/onboarding/themed-artwork";
+import "@/components/onboarding/onboarding-wizard.css";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import {
   dashboardMenuRows,
@@ -55,6 +57,7 @@ export default async function DashboardPage() {
   if (!outlet) {
     return (
       <div className="mm-dashboard mm-dashboard-empty">
+        <ThemedArtwork name="empty-outlet" width={720} height={540} className="wizard-empty-artwork" />
         <MiseEnPlaceEmpty
           title="Aprons tied, knives sharpened."
           description="Every great restaurant begins with its first outlet. Set up your dining room and kitchen to publish a permanent QR menu."

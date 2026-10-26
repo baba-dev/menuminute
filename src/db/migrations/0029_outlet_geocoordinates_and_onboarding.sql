@@ -1,7 +1,13 @@
 -- Migration 0029: Shop Geocoordinates and Super Onboarding Provisioning
 ALTER TABLE restaurants
   ADD COLUMN IF NOT EXISTS latitude numeric(10, 7),
-  ADD COLUMN IF NOT EXISTS longitude numeric(10, 7);
+  ADD COLUMN IF NOT EXISTS longitude numeric(10, 7),
+  ADD COLUMN IF NOT EXISTS operating_hours jsonb,
+  ADD COLUMN IF NOT EXISTS service_hours jsonb,
+  ADD COLUMN IF NOT EXISTS onboarding_goal text NOT NULL DEFAULT 'qr_menu',
+  ADD COLUMN IF NOT EXISTS operations_contact_name text,
+  ADD COLUMN IF NOT EXISTS operations_contact_phone text,
+  ADD COLUMN IF NOT EXISTS operations_contact_email text;
 
 DO $$
 BEGIN
@@ -19,6 +25,18 @@ BEGIN
     ALTER TABLE restaurants
       ADD CONSTRAINT restaurants_longitude_range_chk
       CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0));
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='restaurants_onboarding_goal_check') THEN
+    ALTER TABLE restaurants ADD CONSTRAINT restaurants_onboarding_goal_check
+      CHECK(onboarding_goal IN ('qr_menu','ordering','full_operations'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='restaurants_hours_json_check') THEN
+    ALTER TABLE restaurants ADD CONSTRAINT restaurants_hours_json_check
+      CHECK ((operating_hours IS NULL OR jsonb_typeof(operating_hours)='object')
+         AND (service_hours IS NULL OR jsonb_typeof(service_hours)='object'));
   END IF;
 END $$;
 
@@ -65,7 +83,9 @@ BEGIN
     address_line1, address_line2, city, state, postal_code, country,
     latitude, longitude, phone, email, website,
     primary_color, secondary_color, currency, timezone, outlet_type, fulfillment_modes,
-    pickup_lead_minutes, pickup_slot_minutes, pickup_advance_days
+    pickup_lead_minutes, pickup_slot_minutes, pickup_advance_days,
+    operating_hours, service_hours, onboarding_goal,
+    operations_contact_name, operations_contact_phone, operations_contact_email
   )
   VALUES (
     outlet,
@@ -96,7 +116,13 @@ BEGIN
       CASE WHEN request_input->>'outletType' IN ('cafe','takeout','cloud_kitchen') THEN ARRAY['pickup']::text[] ELSE ARRAY['dine_in']::text[] END),
     COALESCE((request_input->>'pickupLeadMinutes')::integer, 15),
     COALESCE((request_input->>'pickupSlotMinutes')::integer, 15),
-    COALESCE((request_input->>'pickupAdvanceDays')::integer, 7)
+    COALESCE((request_input->>'pickupAdvanceDays')::integer, 7),
+    NULLIF(request_input->'operatingHours','null'::jsonb),
+    NULLIF(request_input->'serviceHours','null'::jsonb),
+    COALESCE(request_input->>'onboardingGoal','qr_menu'),
+    NULLIF(trim(request_input->>'operationsContactName'), ''),
+    NULLIF(trim(request_input->>'operationsContactPhone'), ''),
+    lower(NULLIF(trim(request_input->>'operationsContactEmail'), ''))
   );
 
   INSERT INTO app_private.provisioning_requests(outlet_id, actor_id, input)

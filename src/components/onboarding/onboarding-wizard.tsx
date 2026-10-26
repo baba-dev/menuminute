@@ -96,6 +96,11 @@ function validateStep(step: number, draft: WizardDraft): string | null {
       return "The number of tables must be between 0 and 50.";
     if (draft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email))
       return "Enter a valid contact email address.";
+    if (
+      draft.operationsContactEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.operationsContactEmail)
+    )
+      return "Enter a valid internal operations email address.";
     if (draft.website) {
       try {
         if (!["http:", "https:"].includes(new URL(draft.website).protocol))
@@ -139,7 +144,8 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         if (onSuccess) {
           onSuccess(data.outletId);
         } else {
-          router.replace("/dashboard/menu");
+          try { window.sessionStorage.removeItem("menuminute.first-outlet.step"); } catch { /* Storage may be unavailable. */ }
+          router.replace("/dashboard/get-started");
           router.refresh();
         }
         return;
@@ -155,9 +161,18 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         setPersisted(true);
         setStatusMessage("Restored your saved progress.");
       }
+      let storedStep = Number.NaN;
+      try {
+        const savedStep = window.sessionStorage.getItem("menuminute.first-outlet.step");
+        if (savedStep !== null) storedStep = Number(savedStep);
+      } catch { /* Private browsing or blocked storage. */ }
+      if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep < STEPS.length)
+        setCurrentStep(storedStep);
       setReady(true);
     } catch {
-      setErrorMessage("Unable to restore saved progress. You can still proceed.");
+      setErrorMessage(
+        "Unable to restore saved progress. Reconnect and retry before creating an outlet."
+      );
       setReady(true);
     } finally {
       reconciliation.current = false;
@@ -168,6 +183,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
     void Promise.resolve().then(reconcile);
   }, [reconcile]);
 
+  useEffect(() => {
+    if (ready) {
+      try { window.sessionStorage.setItem("menuminute.first-outlet.step", String(currentStep)); }
+      catch { /* Storage disabled; server draft remains authoritative. */ }
+    }
+  }, [ready, currentStep]);
   // Debounced auto-save function
   const save = useCallback((data: WizardDraft, revision = draftRevision.current) => {
     const operation = queue.current
@@ -258,7 +279,8 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         if (onSuccess) {
           onSuccess(value.outletId);
         } else {
-          router.replace("/dashboard/menu");
+          try { window.sessionStorage.removeItem("menuminute.first-outlet.step"); } catch { /* Storage may be unavailable. */ }
+          router.replace("/dashboard/get-started");
           router.refresh();
         }
       }

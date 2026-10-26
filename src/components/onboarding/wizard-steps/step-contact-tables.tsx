@@ -79,6 +79,55 @@ export function StepContactTables({ draft, onChange }: StepContactTablesProps) {
         />
       </div>
 
+      <details className="wizard-optional-details">
+        <summary>Private operations contact (optional)</summary>
+        <p className="wizard-counter">
+          Used for internal follow-up and setup. Never shown on public menus.
+        </p>
+        <div className="wizard-grid-2">
+          <div className="wizard-field-group">
+            <label className="wizard-label" htmlFor="wz-ops-name">
+              Manager name
+            </label>
+            <input
+              id="wz-ops-name"
+              className="wizard-input"
+              maxLength={120}
+              autoComplete="name"
+              value={draft.operationsContactName}
+              onChange={(e) => onChange("operationsContactName", e.target.value)}
+            />
+          </div>
+          <div className="wizard-field-group">
+            <label className="wizard-label" htmlFor="wz-ops-phone">
+              Manager phone
+            </label>
+            <input
+              id="wz-ops-phone"
+              className="wizard-input"
+              maxLength={40}
+              autoComplete="tel"
+              type="tel"
+              value={draft.operationsContactPhone}
+              onChange={(e) => onChange("operationsContactPhone", e.target.value)}
+            />
+          </div>
+          <div className="wizard-field-group">
+            <label className="wizard-label" htmlFor="wz-ops-email">
+              Manager email
+            </label>
+            <input
+              id="wz-ops-email"
+              className="wizard-input"
+              maxLength={254}
+              autoComplete="email"
+              type="email"
+              value={draft.operationsContactEmail}
+              onChange={(e) => onChange("operationsContactEmail", e.target.value)}
+            />
+          </div>
+        </div>
+      </details>
       {/* Dine-In Tables Provisioning */}
       {isDineIn ? (
         <div className="wizard-geo-panel">
@@ -114,7 +163,7 @@ export function StepContactTables({ draft, onChange }: StepContactTablesProps) {
             <input
               type="range"
               min={0}
-              max={30}
+              max={50}
               value={draft.tableCount}
               onChange={(e) => onChange("tableCount", parseInt(e.target.value, 10))}
               style={{ flex: 1, accentColor: "#f97316" }}

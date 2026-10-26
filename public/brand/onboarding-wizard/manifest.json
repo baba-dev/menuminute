@@ -1,177 +1,166 @@
 {
-  "name": "MenuMinute Onboarding 2.0 Ink & Ember Mediawork",
-  "version": "2.0.0",
+  "name": "Ink & Ember Onboarding Artwork",
+  "version": "3.0.0",
   "basePath": "/brand/onboarding-wizard/",
+  "total": 26,
+  "committedBinaryAssets": true,
   "assets": [
     {
-      "id": "hero-identity-light",
       "filename": "wizard-hero-identity-light.webp",
-      "dimensions": "1200x720",
-      "description": "Restaurant storefront",
-      "variant": "light",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage identity",
       "required": true
     },
     {
-      "id": "hero-identity-dark",
       "filename": "wizard-hero-identity-dark.webp",
-      "dimensions": "1200x720",
-      "description": "Restaurant storefront",
-      "variant": "dark",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage identity",
       "required": true
     },
     {
-      "id": "hero-location-light",
       "filename": "wizard-hero-location-light.webp",
-      "dimensions": "1200x720",
-      "description": "Isometric city map and pinpoint",
-      "variant": "light",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage location",
       "required": true
     },
     {
-      "id": "hero-location-dark",
       "filename": "wizard-hero-location-dark.webp",
-      "dimensions": "1200x720",
-      "description": "Isometric city map and pinpoint",
-      "variant": "dark",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage location",
       "required": true
     },
     {
-      "id": "hero-operations-light",
       "filename": "wizard-hero-operations-light.webp",
-      "dimensions": "1200x720",
-      "description": "Culinary cloche and scheduling clock",
-      "variant": "light",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage operations",
       "required": true
     },
     {
-      "id": "hero-operations-dark",
       "filename": "wizard-hero-operations-dark.webp",
-      "dimensions": "1200x720",
-      "description": "Culinary cloche and scheduling clock",
-      "variant": "dark",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage operations",
       "required": true
     },
     {
-      "id": "hero-contact-light",
       "filename": "wizard-hero-contact-light.webp",
-      "dimensions": "1200x720",
-      "description": "Dining table and QR stand",
-      "variant": "light",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage contact",
       "required": true
     },
     {
-      "id": "hero-contact-dark",
       "filename": "wizard-hero-contact-dark.webp",
-      "dimensions": "1200x720",
-      "description": "Dining table and QR stand",
-      "variant": "dark",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage contact",
       "required": true
     },
     {
-      "id": "hero-launch-light",
       "filename": "wizard-hero-launch-light.webp",
-      "dimensions": "1200x720",
-      "description": "Celebratory restaurant launch",
-      "variant": "light",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage launch",
       "required": true
     },
     {
-      "id": "hero-launch-dark",
       "filename": "wizard-hero-launch-dark.webp",
-      "dimensions": "1200x720",
-      "description": "Celebratory restaurant launch",
-      "variant": "dark",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage launch",
       "required": true
     },
     {
-      "id": "type-restaurant",
-      "filename": "type-restaurant.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "welcome-hero-desktop-light.webp",
+      "dimensions": "1440 × 960",
+      "role": "Responsive onboarding welcome desktop",
       "required": false
     },
     {
-      "id": "type-cafe",
-      "filename": "type-cafe.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "welcome-hero-desktop-dark.webp",
+      "dimensions": "1440 × 960",
+      "role": "Responsive onboarding welcome desktop",
       "required": false
     },
     {
-      "id": "type-takeout",
-      "filename": "type-takeout.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "welcome-hero-mobile-light.webp",
+      "dimensions": "720 × 960",
+      "role": "Responsive onboarding welcome mobile",
       "required": false
     },
     {
-      "id": "type-cloud-kitchen",
-      "filename": "type-cloud-kitchen.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "welcome-hero-mobile-dark.webp",
+      "dimensions": "720 × 960",
+      "role": "Responsive onboarding welcome mobile",
       "required": false
     },
     {
-      "id": "type-hotel",
-      "filename": "type-hotel.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "icons/outlet-type-restaurant.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type restaurant",
       "required": false
     },
     {
-      "id": "type-mixed",
-      "filename": "type-mixed.svg",
-      "viewBox": "0 0 48 48",
+      "filename": "icons/outlet-type-cafe.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type cafe",
       "required": false
     },
     {
-      "id": "welcome-desktop-light",
-      "filename": "onboarding-welcome-desktop-light.webp",
-      "dimensions": "1440x960",
+      "filename": "icons/outlet-type-takeout.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type takeout",
       "required": false
     },
     {
-      "id": "welcome-mobile-light",
-      "filename": "onboarding-welcome-mobile-light.webp",
-      "dimensions": "720x960",
+      "filename": "icons/outlet-type-cloud-kitchen.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type cloud-kitchen",
       "required": false
     },
     {
-      "id": "welcome-desktop-dark",
-      "filename": "onboarding-welcome-desktop-dark.webp",
-      "dimensions": "1440x960",
+      "filename": "icons/outlet-type-hotel.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type hotel",
       "required": false
     },
     {
-      "id": "welcome-mobile-dark",
-      "filename": "onboarding-welcome-mobile-dark.webp",
-      "dimensions": "720x960",
+      "filename": "icons/outlet-type-mixed.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type mixed",
       "required": false
     },
     {
-      "id": "gps-location",
-      "filename": "gps-location.svg",
-      "viewBox": "0 0 400 400",
+      "filename": "gps-locator-light.webp",
+      "dimensions": "800 × 800",
+      "role": "gps-locator",
       "required": false
     },
     {
-      "id": "empty-outlet-light",
+      "filename": "gps-locator-dark.webp",
+      "dimensions": "800 × 800",
+      "role": "gps-locator",
+      "required": false
+    },
+    {
       "filename": "empty-outlet-light.webp",
-      "dimensions": "480x360",
+      "dimensions": "720 × 540",
+      "role": "empty-outlet",
       "required": false
     },
     {
-      "id": "empty-outlet-dark",
       "filename": "empty-outlet-dark.webp",
-      "dimensions": "480x360",
+      "dimensions": "720 × 540",
+      "role": "empty-outlet",
       "required": false
     },
     {
-      "id": "setup-complete-badge",
-      "filename": "setup-complete-badge.svg",
-      "viewBox": "0 0 160 160",
+      "filename": "celebration-overlay-light.webp",
+      "dimensions": "1000 × 600",
+      "role": "celebration-overlay",
       "required": false
     },
     {
-      "id": "completion-celebration",
-      "filename": "completion-celebration.svg",
-      "viewBox": "0 0 800 480",
+      "filename": "celebration-overlay-dark.webp",
+      "dimensions": "1000 × 600",
+      "role": "celebration-overlay",
       "required": false
     }
-  ]
+  ],
+  "assetUploadCommit": "925a545749066abd532a4dfc1853af2128c1b460"
 }

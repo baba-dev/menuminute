@@ -17,6 +17,13 @@ export const createRestaurantSchema = z.object({
     .max(2)
     .optional(),
   menuSchedule: scheduleSchema.nullable().optional(),
+  // Business and service hours are separate from menu visibility.
+  operatingHours: scheduleSchema.nullable().optional(),
+  serviceHours: scheduleSchema.nullable().optional(),
+  onboardingGoal: z.enum(["qr_menu", "ordering", "full_operations"]).optional(),
+  operationsContactName: z.string().trim().max(120).optional().nullable(),
+  operationsContactPhone: z.string().trim().max(40).optional().nullable(),
+  operationsContactEmail: z.union([z.email().max(254), z.literal(""), z.null()]).optional(),
   name: z.string().trim().min(2).max(100),
   description: z.string().max(500).optional().nullable(),
   addressLine1: z.string().max(180).optional().nullable(),

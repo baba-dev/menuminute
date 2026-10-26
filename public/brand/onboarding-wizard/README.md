@@ -1,38 +1,26 @@
-# MenuMinute Onboarding 2.0 — Media Production Handoff
+# Ink & Ember: production artwork handoff for PR #191
 
-Artwork for `/onboarding` and the first-outlet wizard modal follows the existing Ink & Ember design:
-**Light = warm ivory and ink; dark = obsidian and amber.**
+All **26 original images/icons** in `Imagework.zip` have been inventoried. The original **26 binary assets are already committed** on this PR in commit `925a545` (Added mediawork). All 26 are now referenced by the onboarding screens, with inline fallbacks for future missing assets.
 
-## Required stage illustrations — 10 files
+## Upload instructions (already completed on this branch)
+1. Open PR #191 branch `feat/customer-onboarding` in GitHub, not `main`.
+2. Unzip the prepared `MenuMinute-Onboarding-Media-GitHub-Upload.zip`. Keep the paths.
+3. Commit WebP images to `public/brand/onboarding-wizard/`.
+4. Commit all six `outlet-type-*.svg` into `public/brand/onboarding-wizard/icons/`.
+5. Verify the filenames against `manifest.json`, run CI, then review each screen in both light and dark modes.
 
-Create each scene in **1200 × 720 (5:3)**, preferably transparent or carefully blended WebP. If created as SVG instead, use a **400 × 240** viewBox and commit the corresponding SVG files alongside the artwork manifest.
+**Do not upload the zip file as a public static asset.** The repository must contain individual files. The user-facing ZIP is optimized for GitHub uploads (1.2 MB vs. original 11 MB).
 
-| Stage | Light file | Dark file | Art direction |
-|---|---|---|---|
-| Identity | `wizard-hero-identity-light.webp` | `wizard-hero-identity-dark.webp` | Elegant restaurant storefront and warm sign |
-| Location | `wizard-hero-location-light.webp` | `wizard-hero-location-dark.webp` | Isometric map with precise restaurant location |
-| Operations | `wizard-hero-operations-light.webp` | `wizard-hero-operations-dark.webp` | Chef cloche, clock, service schedule |
-| Contact | `wizard-hero-contact-light.webp` | `wizard-hero-contact-dark.webp` | Dining table and QR stand |
-| Launch | `wizard-hero-launch-light.webp` | `wizard-hero-launch-dark.webp` | Celebratory golden cloche and confetti |
+## Full integration map
+- Five wizard step heroes × 2 themes: `wizard-hero-<step>-<light|dark>.webp` (step: identity, location, operations, contact, launch)
+- Welcome hero desktop and mobile × 2 themes: `welcome-hero-<device>-<theme>.webp` — `/onboarding`
+- Six outlet-type vector SVGs: `icons/outlet-type-<type>.svg` — identity selection
+- GPS locator × 2 themes: `gps-locator-<theme>.webp` — location step
+- Empty outlet × 2 themes: `empty-outlet-<theme>.webp` — first-visit empty dashboard
+- Celebration overlay × 2 themes: `celebration-overlay-<theme>.webp` — `/dashboard/get-started`
 
-The loader tries the exact WebP filename first, then the corresponding themed SVG (e.g. `wizard-hero-identity-light.svg`), then its built-in inline vector. Use **either format** for the five stage pairs; WebP is recommended for detailed rendered art. The component reads `document.documentElement.dataset.theme` through CSS selectors, in line with MenuMinute's appearance toggle.
+The CSS theme selector is `html[data-theme="dark"]`, following the app's appearance toggle. The visual fallback never blocks forms or redirects, and your media artwork does not embed guest QR codes, which are generated dynamically.
 
-## Optional supporting artwork — 15 files
+These uploaded files were verified in GitHub's commit listing. No need to upload them again unless updating an illustration.
 
-- `onboarding-welcome-desktop-light.webp` / `-dark.webp`: **1440 × 960**
-- `onboarding-welcome-mobile-light.webp` / `-dark.webp`: **720 × 960**
-- `type-restaurant.svg`, `type-cafe.svg`, `type-takeout.svg`, `type-cloud-kitchen.svg`, `type-hotel.svg`, `type-mixed.svg`: **48 × 48**, `currentColor` tintable icons
-- `gps-location.svg`: **400 × 400**, vector
-- `empty-outlet-light.webp` / `empty-outlet-dark.webp`: **480 × 360**
-- `setup-complete-badge.svg`: **160 × 160**, vector
-- `completion-celebration.svg`: **800 × 480**, vector
-
-The optional assets are a prepared handoff, **not automatically inserted into the current wizard**. They should be integrated where they improve the UI after final media approval.
-
-## Safe production assets
-
-- Center the main subject inside a 70% safe zone. Avoid text, actual QR data, buttons, and field labels.
-- Keep raster exports in sRGB; aim for **under 180 KB per stage asset** where visual quality permits.
-- Avoid sensitive information embedded in graphics. Any SVG must use sanitised, trusted markup.
-- Preserve filenames and transparency. Do not replace onboarding with a standalone dark-only look.
-- Test the final illustrations on mobile (375 px) and desktop (1440 px), light and dark.
+No paid entitlement is activated by these illustrations, by choosing a setup goal, or by completing onboarding.
