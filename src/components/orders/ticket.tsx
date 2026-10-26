@@ -209,7 +209,7 @@ export function Ticket({
           )}
         {order.kitchenManaged && <Link href="/kitchen">Open Kitchen Pro ↗</Link>}
       </div>
-      <div className="ticket-receipt-tear -mx-4 -mb-4 mt-3" aria-hidden="true" />
+      <div className="ticket-receipt-tear -mx-4 mt-3 -mb-4" aria-hidden="true" />
     </article>
   );
 }
@@ -225,7 +225,9 @@ export function RailEmpty({
   if (state !== "ready") {
     return (
       <div className="sc-empty" role="status">
-        <strong>{state === "loading" ? "Listening to service line…" : "Pass queue unavailable"}</strong>
+        <strong>
+          {state === "loading" ? "Listening to service line…" : "Pass queue unavailable"}
+        </strong>
         <p>
           {state === "loading"
             ? "Connecting to the kitchen rail for real-time ticket activity."

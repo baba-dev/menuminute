@@ -49,7 +49,7 @@ export function ChefStickyNote({
       aria-label={author}
     >
       {pinStyle === "tape" && <div className="tape-strip" aria-hidden="true" />}
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+      <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-amber-800 uppercase dark:text-amber-400">
         <ChefHat size={14} aria-hidden="true" />
         <span>{author}</span>
       </div>
@@ -79,22 +79,21 @@ export function MiseEnPlaceEmpty({
 }) {
   return (
     <div
-      className={`my-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-stone-50/60 p-8 text-center dark:border-stone-800 dark:bg-stone-900/30 sm:p-12 ${className}`}
+      className={`my-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-stone-50/60 p-8 text-center sm:p-12 dark:border-stone-800 dark:bg-stone-900/30 ${className}`}
     >
       <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-amber-100/80 text-amber-800 shadow-sm dark:bg-amber-950/60 dark:text-amber-300">
         {icon ?? <UtensilsCrossed size={28} aria-hidden="true" />}
       </div>
-      <h3 className="font-display text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
+      <h3 className="font-display text-xl font-bold tracking-tight text-stone-900 sm:text-2xl dark:text-stone-100">
         {title}
       </h3>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-stone-600 dark:text-stone-400 sm:text-base">
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-stone-600 sm:text-base dark:text-stone-400">
         {description}
       </p>
       {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
-
 /**
  * 4. Tabletop Welcome Banner
  * Gives public QR diners a sense of physical place and atmospheric hospitality.

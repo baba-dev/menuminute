@@ -6,7 +6,6 @@
  * Muted by default to respect quiet environments and browser autoplay policies.
  */
 
-
 const AUDIO_STORAGE_KEY = "mm_sound_of_service_enabled";
 export type AudioScope = "orders" | "kitchen" | "tactile";
 
@@ -15,7 +14,9 @@ let audioCtx: AudioContext | null = null;
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
     }
@@ -33,7 +34,9 @@ export function isAudioEnabled(scope: AudioScope = "tactile"): boolean {
     if (scope === "orders") return localStorage.getItem("menuminute.orders.sound") === "enabled";
     if (scope === "kitchen") return localStorage.getItem("menuminute.kitchen.sound") === "true";
     return localStorage.getItem(AUDIO_STORAGE_KEY) === "true";
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 /**

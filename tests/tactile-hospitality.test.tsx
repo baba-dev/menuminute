@@ -18,22 +18,30 @@ describe("Hospitality production-safe presentation", () => {
     expect(html).toContain("stamp-badge--sold-out");
     expect(html).toContain("86&#x27;d");
     expect(html).toContain('aria-label="Status: 86&#x27;d"');
-    expect(renderToStaticMarkup(<RubberStamp text="SERVED" variant="complete" />)).toContain("stamp-badge--complete");
+    expect(renderToStaticMarkup(<RubberStamp text="SERVED" variant="complete" />)).toContain(
+      "stamp-badge--complete"
+    );
   });
 
   it("renders compact, reusable hospitality elements", () => {
     const note = renderToStaticMarkup(<ChefStickyNote text="Chef-reported message" />);
     expect(note).toContain("Chef-reported message");
     expect(note).toContain("tape-strip");
-    const empty = renderToStaticMarkup(<MiseEnPlaceEmpty title="No menus" description="Publish your first menu" />);
+    const empty = renderToStaticMarkup(
+      <MiseEnPlaceEmpty title="No menus" description="Publish your first menu" />
+    );
     expect(empty).toContain("Publish your first menu");
   });
 
   it("does not invent a table for a pickup counter", () => {
-    const html = renderToStaticMarkup(<TableWelcome outletName="Cafe" pointLabel="Pickup Counter" />);
+    const html = renderToStaticMarkup(
+      <TableWelcome outletName="Cafe" pointLabel="Pickup Counter" />
+    );
     expect(html).toContain("Pickup Counter");
     expect(html).not.toContain("TABLE Pickup Counter");
-    expect(renderToStaticMarkup(<TableWelcome outletName="Cafe" tableNumber="7" />)).toContain("TABLE 7");
+    expect(renderToStaticMarkup(<TableWelcome outletName="Cafe" tableNumber="7" />)).toContain(
+      "TABLE 7"
+    );
   });
 
   it("derives service period from the outlet timezone without asserting occupancy", () => {
@@ -45,7 +53,9 @@ describe("Hospitality production-safe presentation", () => {
     expect(getServicePeriodText(19).period).toBe("Evening");
     expect(getServicePeriodText(23).period).toBe("After hours");
     for (const hour of [8, 13, 16, 19, 23]) {
-      expect(getServicePeriodText(hour).subtext).not.toMatch(/dining room full|all stations working|tickets on the rail/i);
+      expect(getServicePeriodText(hour).subtext).not.toMatch(
+        /dining room full|all stations working|tickets on the rail/i
+      );
     }
   });
 
@@ -63,16 +73,24 @@ describe("Hospitality production-safe presentation", () => {
   });
 
   it("never treats absent published data as an all-clear availability signal", () => {
-    const none = renderToStaticMarkup(<The86Board items={null} outletId="test" canManage={false} />);
+    const none = renderToStaticMarkup(
+      <The86Board items={null} outletId="test" canManage={false} />
+    );
     expect(none).toContain("Publish a versioned menu");
     expect(none).not.toContain("ALL STATIONS CLEAR");
-    const available = renderToStaticMarkup(<The86Board items={[]} outletId="test" canManage={false} />);
+    const available = renderToStaticMarkup(
+      <The86Board items={[]} outletId="test" canManage={false} />
+    );
     expect(available).toContain("No published dishes");
-    const soldOut = renderToStaticMarkup(<The86Board
-      outletId="test"
-      canManage={false}
-      items={[{ id: "d1", menuId: "m1", name: "Chilli Paneer", category: "Starters", soldOut: true }]}
-    />);
+    const soldOut = renderToStaticMarkup(
+      <The86Board
+        outletId="test"
+        canManage={false}
+        items={[
+          { id: "d1", menuId: "m1", name: "Chilli Paneer", category: "Starters", soldOut: true },
+        ]}
+      />
+    );
     expect(soldOut).toContain("Chilli Paneer");
     expect(soldOut).toContain("SOLD OUT");
   });

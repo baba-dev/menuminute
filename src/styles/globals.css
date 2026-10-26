@@ -108,7 +108,6 @@
   --color-secondary-foreground: var(--color-stone-50);
 }
 
-
 /* Explicit light selection must override a dark OS preference. */
 :root[data-theme="light"] {
   --color-background: var(--color-stone-50);
@@ -276,7 +275,13 @@ body {
   position: relative;
   height: 12px;
   width: 100%;
-  background: radial-gradient(circle, transparent, transparent 50%, var(--color-card, #ffffff) 50%, var(--color-card, #ffffff) 100%);
+  background: radial-gradient(
+    circle,
+    transparent,
+    transparent 50%,
+    var(--color-card, #ffffff) 50%,
+    var(--color-card, #ffffff) 100%
+  );
   background-size: 16px 16px;
   background-position: bottom left;
 }
@@ -307,7 +312,9 @@ body {
   color: #f1f5f9;
   border: 4px solid #33271e;
   border-radius: 8px;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.25);
   font-family: var(--font-handwriting), var(--font-sans);
 }
 
@@ -331,7 +338,9 @@ body {
   border: 1px solid currentColor;
   border-radius: 9px;
   box-shadow: 3px 3px 0 var(--color-foreground, #171717);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .btn-ink-press:active:not(:disabled) {
@@ -339,11 +348,24 @@ body {
   box-shadow: 1px 1px 0 var(--color-foreground, #171717);
 }
 
-
 @media (prefers-reduced-motion: reduce) {
-  .stamp-badge, .btn-ink-press { transition: none; }
-  .stamp-badge:hover, .btn-ink-press:active:not(:disabled) { transform: none; }
+  .stamp-badge,
+  .btn-ink-press {
+    transition: none;
+  }
+  .stamp-badge:hover,
+  .btn-ink-press:active:not(:disabled) {
+    transform: none;
+  }
 }
 
-.stamp-badge--complete { color: #047857; border-color: #047857; background: rgba(4,120,87,0.08); }
-:root[data-theme="dark"] .stamp-badge--complete { color: #6ee7b7; border-color: #6ee7b7; background: rgba(110,231,183,0.12); }
+.stamp-badge--complete {
+  color: #047857;
+  border-color: #047857;
+  background: rgba(4, 120, 87, 0.08);
+}
+:root[data-theme="dark"] .stamp-badge--complete {
+  color: #6ee7b7;
+  border-color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.12);
+}
