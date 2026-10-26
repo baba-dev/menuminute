@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 import { admin } from "../helpers";
 
 test("failed outlet setup keeps the retry key for identical input and changes it for edited input", async ({
@@ -6,6 +7,7 @@ test("failed outlet setup keeps the retry key for identical input and changes it
 }) => {
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const email = `phase4-${crypto.randomUUID()}@browser.invalid`;
+  await mockTurnstileForBrowserTests(page);
   await page.goto("/register");
   await page.getByLabel("Your name").fill("Phase Four Owner");
   await page.getByLabel("Email address").fill(email);
