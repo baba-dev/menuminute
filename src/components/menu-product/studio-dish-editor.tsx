@@ -519,7 +519,6 @@ export function StudioDishEditor({
               maxLength={60}
             />
           </label>
-        </div>
           <label className="field">
             <span>
               <input type="checkbox" disabled={!canWrite} checked={nutrition.verified === true}

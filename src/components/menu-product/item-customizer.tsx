@@ -377,31 +377,31 @@ export function ItemCustomizer({
                 )}
               </div>
               <div className="dining-macro-grid">
-                {activeDish.nutrition.calories !== undefined && (
+                {activeDish.nutrition?.calories !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.calories}</span>
                     <span className="dining-macro-lbl">kcal</span>
                   </div>
                 )}
-                {activeDish.nutrition.proteinGrams !== undefined && (
+                {activeDish.nutrition?.proteinGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.proteinGrams}g</span>
                     <span className="dining-macro-lbl">Protein</span>
                   </div>
                 )}
-                {activeDish.nutrition.carbsGrams !== undefined && (
+                {activeDish.nutrition?.carbsGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.carbsGrams}g</span>
                     <span className="dining-macro-lbl">Carbs</span>
                   </div>
                 )}
-                {activeDish.nutrition.fatGrams !== undefined && (
+                {activeDish.nutrition?.fatGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fatGrams}g</span>
                     <span className="dining-macro-lbl">Fat</span>
                   </div>
                 )}
-                {activeDish.nutrition.fiberGrams !== undefined && (
+                {activeDish.nutrition?.fiberGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fiberGrams}g</span>
                     <span className="dining-macro-lbl">Fiber</span>

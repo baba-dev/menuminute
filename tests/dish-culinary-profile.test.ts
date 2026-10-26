@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { isVerifiedFreeFrom, hasVerifiedNutrition, canQuickAddCompanion } from "../src/modules/menu-product/culinary-safety";
 import {
   dishSchema,
   nutritionSchema,
@@ -155,10 +156,11 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(murgh).not.toBeNull();
     expect(murgh?.name).toBe("Butter Chicken");
 
-    // Substring match
-    const dosa = findCulinaryProfile("Crispy Masala Dosa");
-    expect(dosa).not.toBeNull();
-    expect(dosa?.name).toBe("Masala Dosa");
+    // Substrings must never authorize a recipe or allergen claim.
+    expect(findCulinaryProfile("Crispy Masala Dosa")).toBeNull();
+    expect(findCulinaryProfile("Dal")).toBeNull();
+    expect(findCulinaryProfile("Chicken")).toBeNull();
+    const dosa = findCulinaryProfile("Masala Dosa");
     expect(dosa?.safety.allergens).toContain("mustard");
 
     // Unknown dish
@@ -202,24 +204,66 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(searchPool.includes("avocado")).toBe(false);
   });
 
-  it("correctly evaluates nut-free and dairy-free filters", () => {
-    const dishWithNutsAndDairy = {
-      safety: { allergens: ["dairy", "nuts"] },
+  it("requires positive restaurant verification before exposing free-from filters", () => {
+    const unknown = { safety: undefined, variants: [], addOnGroups: [] };
+    expect(isVerifiedFreeFrom(unknown, "nuts")).toBe(false);
+    expect(isVerifiedFreeFrom({ safety: { allergens: [] }, variants: [], addOnGroups: [] }, "dairy")).toBe(false);
+
+    const safe = {
+      safety: {
+        ingredients: ["Potatoes", "Olive oil"],
+        allergens: [] as string[],
+        verified: true,
+        verifiedFreeFrom: ["nuts", "dairy"] as ("nuts" | "dairy")[],
+      },
+      variants: [] as unknown[],
+      addOnGroups: [] as unknown[],
     };
-    const dishVeganGlutenFree = {
-      safety: { allergens: ["mustard"] },
-    };
+    expect(isVerifiedFreeFrom(safe, "nuts")).toBe(true);
+    expect(isVerifiedFreeFrom(safe, "dairy")).toBe(true);
+    expect(isVerifiedFreeFrom({ ...safe, variants: [{}] }, "nuts")).toBe(false);
+    expect(isVerifiedFreeFrom({ ...safe, addOnGroups: [{}] }, "dairy")).toBe(false);
+    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, crossContact: "Shared kitchen" } }, "nuts")).toBe(false);
+    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, allergens: ["peanuts"] } }, "nuts")).toBe(false);
+    expect(isVerifiedFreeFrom({ ...safe, safety: { ...safe.safety, verified: false } }, "nuts")).toBe(false);
+  });
 
-    const isNutFree = (d: { safety?: { allergens?: string[] } }) =>
-      !d.safety?.allergens?.some((a) => a === "nuts" || a === "peanuts");
+  it("rejects contradictory claims in canonical menu contracts", () => {
+    expect(() => safetyProfileSchema.parse({
+      ingredients: ["peanuts"], allergens: ["peanuts"], verified: true,
+      verifiedFreeFrom: ["nuts"],
+    })).toThrow();
+    expect(() => safetyProfileSchema.parse({
+      ingredients: ["rice"], allergens: [], verified: false,
+      verifiedFreeFrom: ["dairy"],
+    })).toThrow();
+    expect(() => safetyProfileSchema.parse({
+      ingredients: ["rice"], allergens: [], verified: true,
+      verifiedFreeFrom: ["dairy"], crossContact: "Shared fryer",
+    })).toThrow();
+    expect(safetyProfileSchema.parse({
+      ingredients: ["rice"], allergens: [], verified: true, verifiedFreeFrom: ["dairy"],
+    }).verifiedFreeFrom).toEqual(["dairy"]);
+  });
 
-    const isDairyFree = (d: { safety?: { allergens?: string[] } }) =>
-      !d.safety?.allergens?.includes("dairy");
+  it("only displays confirmed nutrition and only quick-adds available, simple pairings", () => {
+    expect(hasVerifiedNutrition({ calories: 0, verified: true })).toBe(true);
+    expect(hasVerifiedNutrition({ proteinGrams: 12 })).toBe(false);
+    expect(hasVerifiedNutrition({ verified: true })).toBe(false);
+    const dish = { soldOut: false, open: true, variants: [], addOnGroups: [] };
+    expect(canQuickAddCompanion(dish)).toBe(true);
+    expect(canQuickAddCompanion({ ...dish, soldOut: true })).toBe(false);
+    expect(canQuickAddCompanion({ ...dish, open: false })).toBe(false);
+    expect(canQuickAddCompanion({ ...dish, variants: [{}] })).toBe(false);
+    expect(canQuickAddCompanion({ ...dish, addOnGroups: [{ min: 1 }] })).toBe(false);
+  });
 
-    expect(isNutFree(dishWithNutsAndDairy)).toBe(false);
-    expect(isDairyFree(dishWithNutsAndDairy)).toBe(false);
-
-    expect(isNutFree(dishVeganGlutenFree)).toBe(true);
-    expect(isDairyFree(dishVeganGlutenFree)).toBe(true);
+  it("never accepts template-only suggested pairings as canonical document fields", async () => {
+    const { findCulinaryProfile } = await import("../src/modules/menu-product/dish-intelligence");
+    const profile = findCulinaryProfile("Paneer Butter Masala");
+    expect(profile).toBeTruthy();
+    expect(() => culinaryProfileSchema.parse(profile?.culinary)).toThrow();
+    const { suggestedPairings: _suggestedPairings, ...canonical } = profile!.culinary;
+    expect(culinaryProfileSchema.parse({ ...canonical, pairingDishIds: [] }).pairingDishIds).toEqual([]);
   });
 });
