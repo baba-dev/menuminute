@@ -137,17 +137,21 @@ describe("server-only provider hub", () => {
       if (requests.length === 1)
         return new Response(
           JSON.stringify({
-            choices: [{
-              finish_reason: "tool_calls",
-              message: {
-                content: null,
-                tool_calls: [{
-                  id: "call_cf_1",
-                  type: "function",
-                  function: { name: "orders_summary", arguments: "{}" },
-                }],
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_cf_1",
+                      type: "function",
+                      function: { name: "orders_summary", arguments: "{}" },
+                    },
+                  ],
+                },
               },
-            }],
+            ],
           }),
           { headers: { "content-type": "application/json" } }
         );
@@ -185,23 +189,28 @@ describe("server-only provider hub", () => {
   });
 
   it("rejects Cloudflare alias collisions before a call and rejects unapproved returned aliases", async () => {
-    const bad = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          choices: [{
-            finish_reason: "tool_calls",
-            message: {
-              content: null,
-              tool_calls: [{
-                id: "unauthorized",
-                type: "function",
-                function: { name: "admin_execute_sql", arguments: "{}" },
-              }],
-            },
-          }],
-        }),
-        { headers: { "content-type": "application/json" } }
-      )
+    const bad = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "unauthorized",
+                      type: "function",
+                      function: { name: "admin_execute_sql", arguments: "{}" },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" } }
+        )
     ) as unknown as typeof fetch;
     const hub = createProviderHub(
       configured({ AI_NVIDIA_ENABLED: "false", AI_CLOUDFLARE_TOOLS_VERIFIED: "true" }),
@@ -211,10 +220,7 @@ describe("server-only provider hub", () => {
       hub.infer({
         messages: user,
         capability: "tools",
-        tools: [
-          tool,
-          { ...tool, name: "orders_summary" },
-        ],
+        tools: [tool, { ...tool, name: "orders_summary" }],
       })
     ).rejects.toMatchObject({ code: "invalid_request" });
     expect(bad).not.toHaveBeenCalled();
