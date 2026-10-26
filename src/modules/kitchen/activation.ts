@@ -40,6 +40,7 @@ export type KitchenPilotStatus = {
   enabled: boolean;
   activeStations: number;
   assignedMembers: number;
+  unmannedStations: number;
   publishedDishes: number;
   unroutedDishes: number;
   openKitchenOrders: number;
