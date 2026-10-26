@@ -46,7 +46,8 @@ Never submit real restaurant orders in production as a smoke test.
 
 ## Proposed CI lanes
 
-1. Formatting, lint and dependency/security checks.
+1. Formatting/lint plus a required security lane: dependency review, high-severity package audit,
+   full-history secret scanning and CodeQL. Third-party Actions are pinned to immutable SHAs.
 2. Typecheck and domain unit tests.
 3. PostgreSQL/Redis migration, isolation, concurrency and recovery tests.
 4. Linux ARM64 build and relevant Playwright checks.

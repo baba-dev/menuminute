@@ -7,8 +7,10 @@ import {
   ForbiddenError,
   NotFoundError,
   AppError,
+  RateLimitError,
   serializeError,
 } from "@/lib/errors";
+import { logRequestError, requestId } from "@/lib/observability";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 export async function requestActor(req: Request, mutation = false) {
@@ -34,15 +36,28 @@ export async function requestContext(req: Request, mutation = false) {
   if (!outlet) throw new NotFoundError("Outlet");
   return { actor, restaurant: outlet };
 }
-export function errorResponse(err: unknown) {
+export function errorResponse(err: unknown, req?: Request) {
+  const status =
+    err instanceof ZodError
+      ? 422
+      : err instanceof SyntaxError
+        ? 400
+        : err instanceof AppError
+          ? err.statusCode
+          : 500;
+  if (req) logRequestError(req, err, status);
+  const headers = new Headers();
+  if (req) headers.set("x-request-id", requestId(req));
+  if (err instanceof RateLimitError) headers.set("retry-after", String(err.retryAfterSeconds));
   if (err instanceof ZodError)
     return NextResponse.json(
       { message: "Invalid input", fields: err.flatten().fieldErrors },
-      { status: 422 }
+      { status: 422, headers }
     );
   if (err instanceof SyntaxError)
-    return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid JSON" }, { status: 400, headers });
   return NextResponse.json(serializeError(err, false), {
-    status: err instanceof AppError ? err.statusCode : 500,
+    status,
+    headers,
   });
 }

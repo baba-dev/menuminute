@@ -34,6 +34,11 @@ Readiness may report degraded Redis without failing liveness or restarting healt
 
 ## Metrics and alerts
 
+API proxy responses carry a bounded `X-Request-ID`; unexpected server errors emit one-line JSON with
+that ID, method, path, status and error type, without query strings, headers, bodies or customer data.
+Systemd/journald retention and an approved off-host log/error destination remain operator gates.
+This correlation baseline is not an APM or metrics stack.
+
 Track accepted submission latency/error rate, pending restaurant acknowledgement age, oldest outbox
 age, dispatched-but-incomplete work, failed retries, KDS last sync, pool wait/timeouts, PostgreSQL
 locks/disk/WAL, Redis memory/evictions/persistence errors and worker heartbeat. Correlate request,

@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       }))
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function POST(req: Request) {
@@ -24,6 +24,6 @@ export async function POST(req: Request) {
     const { actor, restaurant } = await requestContext(req, true);
     return NextResponse.json(await qrCommand(actor, restaurant.id, await req.json()));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

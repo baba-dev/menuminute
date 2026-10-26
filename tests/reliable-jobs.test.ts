@@ -245,6 +245,8 @@ it("runs the production worker bundle and drains on SIGTERM with only worker cre
       NODE_ENV: "production",
       WORKER_DATABASE_URL: url,
       REDIS_QUEUE_URL: queueUrl,
+      MEDIA_STORAGE: process.env["MEDIA_STORAGE"],
+      MEDIA_ROOT: process.env["MEDIA_ROOT"],
     },
     stdio: "ignore",
   });

@@ -43,7 +43,7 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     ...runtimeEnv,
     NODE_ENV: "production",
     APP_URL: "https://localhost:3443",
-    AUTH_SECRET: "31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc",
+    AUTH_SECRET: createHash("sha256").update("menuminute isolated browser fixture").digest("hex"),
     PORT: "3100",
     HOSTNAME: "127.0.0.1",
   },

@@ -8,7 +8,7 @@ export async function GET(req: Request, c: C) {
     const { actor } = await requestContext(req);
     return NextResponse.json(await menuDetail(actor, (await c.params).menuId));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function PATCH(req: Request, c: C) {
@@ -18,6 +18,6 @@ export async function PATCH(req: Request, c: C) {
       await commandMenu(actor, restaurant.id, (await c.params).menuId, await boundedJson(req))
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

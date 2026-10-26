@@ -2,13 +2,18 @@
 
 Status: target requirements, not a completed security audit.
 
-## Observed scaffold gaps
+## Implemented baseline and open gates
 
-The current src/lib/auth.ts uses credentials and JWT sessions, not the claimed database adapter.
-The environment schema contains a default development secret. getDefaultOrActiveRestaurant can
-fall back to demo/any active restaurant. These must not become production authorization behavior.
-Restaurant creation currently performs multiple writes around QR generation without one transaction;
-the foundation implementation must make provisioning recoverable and atomic where appropriate.
+The current application uses Better Auth database sessions without cookie-cached authorization,
+an explicit production secret, PostgreSQL tenant context/RLS and member-only outlet selection.
+Provisioning is committed through a scoped database function after QR generation. API responses use
+bounded request correlation IDs, and unexpected failures emit redacted structured events.
+
+Public photo reads recheck active publication and approval on every request, use private ETag
+revalidation, and are rate-limited through cache Redis. Production Nginx must overwrite forwarded
+client identity headers and keep the application listener private. External error aggregation,
+alert delivery, load/capacity evidence, recovery drills and a reviewed retention policy remain open
+launch gates; repository controls are not evidence that those operator gates passed.
 
 ## Trust boundaries
 

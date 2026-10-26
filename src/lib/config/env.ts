@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mediaEnvShape, validateMediaEnv } from "./media-env";
 const pgUrl = z
   .string()
   .url()
@@ -16,14 +17,18 @@ export const envSchema = z
     AUTH_SECRET: z.string().min(32),
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
+    PUBLIC_MEDIA_RATE_LIMIT_MAX: z.coerce.number().int().min(30).max(10_000).default(180),
+    PUBLIC_MEDIA_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(10).max(3600).default(60),
+    ...mediaEnvShape,
+    // The worker only needs storage settings, while web upload reservations require an explicit budget.
+    MEDIA_OUTLET_BUDGET_BYTES: z.coerce
+      .number()
+      .int()
+      .min(5 * 1024 * 1024),
     GEMINI_API_KEY: z.string().optional(),
     NVIDIA_API_KEY: z.string().optional(),
     CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
     CLOUDFLARE_API_TOKEN: z.string().optional(),
-    R2_ACCESS_KEY_ID: z.string().optional(),
-    R2_SECRET_ACCESS_KEY: z.string().optional(),
-    R2_BUCKET_NAME: z.string().default("menuminute-media"),
-    R2_ENDPOINT: z.string().optional(),
     PEXELS_API_KEY: z.string().optional(),
     AI_FEATURES_ENABLED: z
       .enum(["true", "false"])
@@ -35,6 +40,7 @@ export const envSchema = z
       .transform((v) => v === "true"),
   })
   .superRefine((e, ctx) => {
+    validateMediaEnv(e, ctx);
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
       ctx.addIssue({
         code: "custom",

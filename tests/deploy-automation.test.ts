@@ -8,12 +8,15 @@ const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml
 const packageScript = readFileSync(path.resolve("infra/deploy/package-release.sh"), "utf8");
 
 describe("provenance-bound main-only production delivery", () => {
-  it("parallelizes four mandatory CI lanes and fails closed at the final gate", () => {
+  it("gates four native lanes plus security and fails closed at the final gate", () => {
     expect(ci).toContain("Required CI quality gate");
-    expect(ci).toContain("needs: [quality, typecheck, test, build]");
+    expect(ci).toContain("needs: [quality, typecheck, test, build, security]");
     expect(ci).toContain('test "$result" = success');
     expect(ci).not.toContain("needs: [quality, typecheck, test]\n");
     expect(ci).toContain("pnpm install --frozen-lockfile");
+    expect(ci).toContain("pnpm audit --audit-level high");
+    expect(ci).toContain("github/codeql-action/analyze@");
+    expect(ci).toContain("gitleaks/gitleaks-action@");
   });
 
   it("packages the exact pre-seed production compilation once", () => {

@@ -53,6 +53,23 @@ export class ConflictError extends AppError {
   }
 }
 
+export class RateLimitError extends AppError {
+  public readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number) {
+    super("Too many requests", "RATE_LIMITED", 429);
+    this.name = "RateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+export class UnavailableError extends AppError {
+  constructor(message = "Service temporarily unavailable") {
+    super(message, "UNAVAILABLE", 503);
+    this.name = "UnavailableError";
+  }
+}
+
 /**
  * Safe error serialization for API responses.
  * Never exposes stack traces or internal details in production.

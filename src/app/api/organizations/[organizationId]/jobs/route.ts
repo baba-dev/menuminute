@@ -12,6 +12,6 @@ export async function POST(req: Request, context: { params: Promise<{ organizati
     await retryEvent(actor, (await context.params).organizationId, body.eventId);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

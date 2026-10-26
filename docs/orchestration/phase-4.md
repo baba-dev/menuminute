@@ -22,7 +22,7 @@ Current production evidence: [CI 39036913738](https://github.com/baba-dev/menumi
 | Marketing/pricing             | `src/app/page.tsx`, `src/app/pricing/page.tsx`           | A09: remove unfinalized prices/misleading claims                                                                                       |
 | Shared UI                     | `src/styles/globals.css`, `menu-product.css`             | A01: canonical Ink & Ember tokens/primitives                                                                                           |
 
-The older `src/app/(dashboard)/dashboard/menu/menu-manager.tsx` and related `src/modules/menus` are legacy compatibility surfaces. Never delete old tables/service/data based solely on UI cleanup. Public menu already uses a 30-second no-store refresh, an offline/stale label, and suppresses unentitled ordering; keep these. Media privately stores originals, outputs reviewed derivatives, and permits only approved published references. Local media is `/var/lib/menuminute/media`; R2 holds encrypted off-host restic backups, not live media.
+The older `src/app/(dashboard)/dashboard/menu/menu-manager.tsx` and related `src/modules/menus` are legacy compatibility surfaces. Never delete old tables/service/data based solely on UI cleanup. Public menu already uses a 30-second no-store refresh, an offline/stale label, and suppresses unentitled ordering; keep these. Media privately stores originals, outputs reviewed derivatives, and permits only approved published references; private ETag revalidation still checks that authority on every photo request. Local media is `/var/lib/menuminute/media`; R2 holds encrypted off-host restic backups, not live media.
 
 ## Dependencies, issues and proposed exclusive writes
 
@@ -51,10 +51,10 @@ Before changing source, each agent records exact base/head SHA, branch/worktree,
 - New and returning owner onboarding; outlet type, IANA timezone, independent local transaction currency and fulfillment defaults; failed request/retry/reload preserve input and avoid duplicate provisioning.
 - Scoped organization/outlet context; only active released canonical menu and active QR state shown as such; draft-only/empty state truthful; wrong-outlet/tenant/role revocation denied.
 - Editor: category/dish, flat variants/add-ons, sold out/schedules, money precision, photo processing/approval, draft save and explicit publish; concurrent stale revision and failed publish preserve previous public release.
-- Public menu: anonymous mobile/tablet/desktop, search/diet filters, sold-out/no-service, theme and no ordering without entitled implementation; offline label and revocation/no-store retained.
+- Public menu: anonymous mobile/tablet/desktop, search/diet filters, sold-out/no-service, theme and no ordering without entitled implementation; offline label and menu no-store behavior remain, while photo revalidation preserves immediate approval/publication revocation.
 - QR: existing print token remains stable on menu/restaurant/type/plan changes; PNG/SVG/print and explicit revoke/regenerate work without changing unrelated codes.
 - Full Light/Dark/System, WCAG AA, visible keyboard focus, reduced-motion, minimum touch targets and mobile safe areas.
-- Tests: four exact-head Linux ARM64 CI jobs (format/lint, strict TS, real PostgreSQL/Redis, production build/Playwright) and aggregate quality gate; distinct evidence for browser accessibility and operational restore.
+- Tests: four exact-head Linux ARM64 CI jobs (format/lint, strict TS, real PostgreSQL/Redis, production build/Playwright), one pinned x64 security job and aggregate quality gate; distinct evidence for browser accessibility and operational restore.
 
 ## Release and operational gates
 

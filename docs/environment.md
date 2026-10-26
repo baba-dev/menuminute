@@ -14,10 +14,13 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | DATABASE_POOL_MAX                              | Validated per-process pool budget                  |
 | REDIS_QUEUE_URL                                | Dedicated BullMQ non-evicting instance             |
 | REDIS_CACHE_URL                                | Dedicated cache/limits instance                    |
+| PUBLIC_MEDIA_RATE_LIMIT_MAX / _WINDOW_SECONDS  | Anonymous image request budget per client/window   |
 | AUTH_SECRET / APP_URL                          | Explicit Better Auth secret and canonical base URL |
 | TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY      | Public widget key / server-only verification key   |
 | R2_ENDPOINT / R2_BUCKET_NAME                   | Object endpoint and bucket                         |
 | R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY        | Scoped server-only credentials                     |
+| MEDIA_STORAGE / MEDIA_ROOT                     | Validated local or private-R2 live media storage   |
+| MEDIA_OUTLET_BUDGET_BYTES                      | SQL reservation budget per outlet                  |
 | GEMINI_API_KEY / NVIDIA_API_KEY                | Optional selected-provider credentials             |
 | CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN   | Optional Workers AI credentials                    |
 | PEXELS_API_KEY / RESEND_API_KEY                | Optional stock/email provider credentials          |
@@ -30,6 +33,12 @@ operations guide and CI together. Do not expose secrets through NEXT_PUBLIC vari
 Missing required production values must fail startup without printing them. Missing optional AI
 keys disables the feature. Readiness reports dependency status without leaking connection strings.
 Store production secrets outside the repository and application releases with restrictive permissions.
+The web process validates the complete media and upload-budget contract at startup. The worker
+validates its smaller storage-only contract, so it does not require web/database/auth settings.
+Local mode requires an absolute `MEDIA_ROOT`; R2 mode requires a canonical HTTPS account endpoint,
+bucket-scoped credentials and a private bucket. The public-media limiter uses cache Redis and fails
+closed for photos if that dependency is unavailable; the menu document remains available and the UI
+uses its local fallback illustration.
 Do not copy demo passwords, development defaults or CI test secrets into production.
 
 ## Current production credential placement (2026-10-16)

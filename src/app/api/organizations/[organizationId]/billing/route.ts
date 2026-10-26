@@ -7,6 +7,6 @@ export async function GET(req: Request, context: { params: Promise<{ organizatio
       await billingState(await requestActor(req), (await context.params).organizationId)
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

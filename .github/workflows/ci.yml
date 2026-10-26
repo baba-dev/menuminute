@@ -26,12 +26,12 @@ jobs:
     name: Lint & Code Style
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
 
@@ -40,7 +40,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -76,19 +76,19 @@ jobs:
     name: TypeScript Strict Typecheck
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -100,19 +100,19 @@ jobs:
     env:
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -128,19 +128,19 @@ jobs:
     name: Production Build & Browser (ARM64)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -156,7 +156,6 @@ jobs:
           NODE_ENV: production
           APP_URL: https://food.bababuilds.com
           NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
-          AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
       - run: pnpm build:worker
       - run: pnpm exec esbuild scripts/db-migrate.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/db-migrate.mjs
       - run: pnpm db:seed
@@ -165,7 +164,7 @@ jobs:
           ALLOW_DEMO_SEED: "true"
           DEMO_PASSWORD: isolated-browser-password
       - name: Cache Playwright Chromium
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -176,7 +175,7 @@ jobs:
         run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
       - name: Upload main production archive
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: menuminute-release-${{ github.sha }}
           path: |
@@ -186,7 +185,7 @@ jobs:
           compression-level: 0
           retention-days: 7
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: browser-failure-evidence
           path: test-results/
@@ -194,10 +193,44 @@ jobs:
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v
 
+  security:
+    name: Dependency, Secret & Code Scanning
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high
+      - name: Scan repository history for secrets
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+      - name: Audit locked dependencies
+        run: pnpm audit --audit-level high
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - name: Analyze source
+        uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+
   gate:
     name: Required CI quality gate
     if: always()
-    needs: [quality, typecheck, test, build]
+    needs: [quality, typecheck, test, build, security]
     runs-on: ubuntu-24.04
     steps:
       - name: Require all mandatory lanes
@@ -206,9 +239,10 @@ jobs:
           TYPECHECK: ${{ needs.typecheck.result }}
           TEST: ${{ needs.test.result }}
           BUILD: ${{ needs.build.result }}
+          SECURITY: ${{ needs.security.result }}
         run: |
           set -euo pipefail
-          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD"; do
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$SECURITY"; do
             test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
           done
-          echo "All four lanes passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "All five lanes passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

@@ -10,6 +10,7 @@ test("built release readiness is healthy and identifies the exact CI source", as
   expect(body.database).toBe(true);
   expect(body.redis.queue).toBe(true);
   expect(body.redis.cache).toBe(true);
+  expect(body.media).toBe(true);
   if (process.env.GITHUB_SHA) {
     expect(body.release).toBe(process.env.GITHUB_SHA);
   }

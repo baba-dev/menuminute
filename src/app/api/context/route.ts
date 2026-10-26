@@ -21,6 +21,6 @@ export async function POST(req: Request) {
     });
     return res;
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

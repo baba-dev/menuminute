@@ -24,8 +24,10 @@ Base: merged #19, dd39ef4. Work package #10; root is the sole schema/layout/work
   referenced by an active published menu are public. No remote URL downloads, SVG uploads, provider
   calls or automatic publication. Local fallback illustrations remain immediate and deterministic.
 - Menu commands, releases, QR lifecycle, media approval and delivery intent commit with audit/outbox.
-  Public reads are dynamic/no-store, so revocation does not depend on Redis/cache invalidation. The
-  outbox remains a recovery/notification boundary, never the authorization source.
+  Public menu documents remain dynamic/no-store. Photo responses use private browser revalidation:
+  every request rechecks publication and approval, while a matching ETag returns an authorized 304
+  without reading object bytes. Revocation never depends on Redis/cache invalidation. The outbox
+  remains a recovery/notification boundary, never the authorization source.
 - Additive migration and executable rollback preserve released documents, QR tokens, source data,
   receipts and media objects. No destructive cleanup or production deployment is included.
 

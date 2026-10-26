@@ -24,6 +24,6 @@ export async function GET(req: Request, c: { params: Promise<{ qrId: string }> }
       },
     });
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
