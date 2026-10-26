@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     }
     return NextResponse.json({ outletId: outlet.id, ...snapshot }, { headers: privateHeaders });
   } catch (error) {
-    const response = errorResponse(error);
+    const response = errorResponse(error, req);
     response.headers.set("Cache-Control", "private, no-store");
     response.headers.set("Vary", "Cookie");
     return response;

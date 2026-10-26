@@ -10,7 +10,7 @@ export async function GET(req: Request, c: C) {
       { headers: noStore }
     );
   } catch (e) {
-    const r = errorResponse(e);
+    const r = errorResponse(e, req);
     Object.entries(noStore).forEach(([k, v]) => r.headers.set(k, v));
     return r;
   }
@@ -22,7 +22,7 @@ export async function POST(req: Request, c: C) {
       { headers: noStore }
     );
   } catch (e) {
-    const r = errorResponse(e);
+    const r = errorResponse(e, req);
     Object.entries(noStore).forEach(([k, v]) => r.headers.set(k, v));
     return r;
   }

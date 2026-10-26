@@ -11,7 +11,7 @@ export async function GET(req: Request, c: C) {
       { headers: { "content-type": "image/webp", "cache-control": "private, no-store" } }
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function PATCH(req: Request, c: C) {
@@ -25,6 +25,6 @@ export async function PATCH(req: Request, c: C) {
       await mediaCommand(actor, restaurant.id, (await c.params).mediaId, data.action)
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
