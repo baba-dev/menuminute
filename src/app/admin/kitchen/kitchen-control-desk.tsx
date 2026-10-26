@@ -107,6 +107,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!outlet || !status || busy) return;
+    const selectedAction = actions.includes(action) ? action : actions[0];
     setBusy(true);
     setMessage(null);
     try {
@@ -123,13 +124,13 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
         "Password and authenticator code not accepted."
       );
       const result = await onCommand({
-        outletId: outlet.id, action, releaseSha, evidenceUrl,
+        outletId: outlet.id, action: selectedAction, releaseSha, evidenceUrl,
         reason: reason.trim(), key: crypto.randomUUID(),
       });
       if (result.ok) {
         setStatus(result.status);
         setReason("");
-        notice(names[action] + " completed and recorded in the audit ledger.");
+        notice(names[selectedAction] + " completed and recorded in the audit ledger.");
       } else {
         notice(result.message, true);
       }
@@ -149,11 +150,12 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
   const ready = status &&
     status.configurationReady && status.orderingEntitled &&
     status.openKitchenOrders === 0 && runningSha === releaseSha;
+  const selectedAction = actions.includes(action) ? action : actions[0];
   const allowed = Boolean(status) && (
-    action === "activate" ? Boolean(ready && status?.state === "approved") :
-    action === "approve" ? status?.state === "requested" && status.requestedBy !== operatorId :
-    action === "drain" ? status?.state === "active" :
-    action === "finalize" ? status?.state === "draining" && status.openKitchenOrders === 0 :
+    selectedAction === "activate" ? Boolean(ready && status?.state === "approved") :
+    selectedAction === "approve" ? status?.state === "requested" && status.requestedBy !== operatorId :
+    selectedAction === "drain" ? status?.state === "active" :
+    selectedAction === "finalize" ? status?.state === "draining" && status.openKitchenOrders === 0 :
     status?.state !== "active" && status?.state !== "draining"
   );
 
@@ -249,7 +251,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
               <label className="block text-sm font-semibold">
                 Action
                 <select className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-white"
-                  value={actions.includes(action) ? action : actions[0]}
+                  value={selectedAction}
                   onChange={(e) => setAction(e.target.value as Action)}>
                   {actions.map((item) => <option key={item} value={item}>{names[item]}</option>)}
                 </select>
@@ -289,7 +291,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
               <button type="submit" disabled={busy || !allowed || reason.trim().length < 10 ||
                   !password || !/^\d{6}$/.test(totp)}
                 className="w-full rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">
-                {busy ? "Verifying…" : names[actions.includes(action) ? action : actions[0]]}
+                {busy ? "Verifying…" : names[selectedAction]}
               </button>
               {!allowed && <p className="text-xs text-amber-300" role="note">
                 This action is not permitted in the current state. Refresh readiness or obtain independent approval.
