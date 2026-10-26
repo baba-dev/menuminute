@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import { usePathname } from "next/navigation";
 import {
   Building2,
@@ -28,11 +29,7 @@ const links = [
   { href: "/dashboard/settings", label: "Settings", Icon: Settings },
 ] as const;
 
-export function WorkspaceNavigation({
-  capabilities,
-}: {
-  capabilities?: { ordering: boolean; kitchen: boolean };
-}) {
+export function WorkspaceNavigation({ capabilities }: { capabilities?: DashboardNavigation }) {
   const pathname = usePathname();
 
   return (
@@ -42,7 +39,11 @@ export function WorkspaceNavigation({
         {links.map((item) => {
           const { href, label, Icon } = item;
           const capability = "capability" in item ? item.capability : undefined;
-          const unavailable = capability ? capabilities?.[capability] === false : false;
+          const unavailable = capability
+            ? !capabilities ||
+              !capabilities[capability] ||
+              (capability === "ordering" ? !capabilities.ordersRead : !capabilities.kitchenRead)
+            : false;
           const selected =
             href === "/dashboard"
               ? pathname === href
@@ -51,7 +52,13 @@ export function WorkspaceNavigation({
             <span key={href} className="mm-workspace-nav-link is-unavailable" aria-disabled="true">
               <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
               <span>{label}</span>
-              <small>Not enabled</small>
+              <small>
+                {!capabilities
+                  ? "Availability unknown"
+                  : !capabilities[capability!]
+                    ? "Not enabled"
+                    : "Access required"}
+              </small>
             </span>
           ) : (
             <Link

@@ -17,9 +17,11 @@ const labels: Record<string, string> = {
 export function WorkspaceTopbar({
   userName,
   publicHref,
+  previewError = false,
 }: {
   userName: string;
   publicHref: string | null;
+  previewError?: boolean;
 }) {
   const pathname = usePathname();
   const label =
@@ -55,9 +57,13 @@ export function WorkspaceTopbar({
         ) : (
           <span
             className="mm-dashboard-preview mm-dashboard-preview--unavailable"
-            title="Publish your menu to enable public preview"
+            title={
+              previewError
+                ? "Public preview status cannot be checked right now"
+                : "Publish your menu to enable public preview"
+            }
           >
-            Preview unavailable
+            {previewError ? "Preview temporarily unavailable" : "Preview unavailable"}
           </span>
         )}
         <ThemeControl />

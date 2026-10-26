@@ -73,7 +73,7 @@ async function seedPublishedOutlet(publish = true) {
   } finally {
     await pool.end();
   }
-  return { email, password };
+  return { email, password, outletId };
 }
 
 test("private editorial dashboard renders real KPIs, tooltips and responsive artwork", async ({
@@ -149,4 +149,50 @@ test("an outlet with an unpublished draft receives honest next-step guidance", a
   await expect(page.getByText("Not live", { exact: true })).toBeVisible();
   await expect(page.getByText("1 menu has unpublished changes.")).toBeVisible();
   await expect(page.getByRole("link", { name: "View public menu" })).toHaveCount(0);
+});
+
+test("service pulse requires a session and never caches tenant data", async ({ request }) => {
+  const response = await request.get("/api/dashboard/pulse");
+  expect(response.status()).toBe(401);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+});
+
+test("service pulse resolves the authorized outlet, ignoring forged outlet headers", async ({
+  page,
+}) => {
+  const owner = await seedPublishedOutlet();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(owner.email);
+  await page.getByLabel("Password", { exact: true }).fill(owner.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByTestId("editorial-dashboard")).toBeVisible();
+
+  const response = await page.request.get("/api/dashboard/pulse", {
+    headers: { "x-outlet-id": "forged-unrelated-outlet-id" },
+  });
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  expect(response.headers()["vary"]).toContain("Cookie");
+  const json = await response.json();
+  expect(json.outletId).toBe(owner.outletId);
+  expect(json.state).toBe("ready");
+  expect(json.data).toMatchObject({
+    pending: 0,
+    preparing: 0,
+    ready: 0,
+    completedToday: 0,
+  });
+  expect(Date.parse(json.checkedAt)).not.toBeNaN();
+
+  await expect(page.getByText(/Snapshot updated at/)).toBeVisible();
+  await page.getByRole("button", { name: "Refresh service activity" }).click();
+  await expect(page.getByText(/Snapshot updated at/)).toBeVisible();
+
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+  }
 });
