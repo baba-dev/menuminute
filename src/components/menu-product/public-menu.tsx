@@ -24,6 +24,7 @@ import {
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
+import { hasVerifiedNutrition, isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -184,13 +185,7 @@ export function PublicMenu({
 
   const normalizedSearch = search.trim().toLowerCase();
   const matches = (
-    item: {
-      name: string;
-      description: string;
-      dietary: readonly string[];
-      safety?: { ingredients?: readonly string[]; allergens?: readonly string[] };
-      culinary?: { flavorNotes?: readonly string[]; chefNote?: string };
-    },
+    item: CustomizerDish,
     categoryName: string
   ) => {
     if (normalizedSearch) {
@@ -209,12 +204,10 @@ export function PublicMenu({
 
     if (diet === "all") return true;
     if (diet === "nut_free") {
-      const hasNuts = item.safety?.allergens?.some((a) => a === "nuts" || a === "peanuts");
-      return !hasNuts;
+      return isVerifiedFreeFrom(item, "nuts");
     }
     if (diet === "dairy_free") {
-      const hasDairy = item.safety?.allergens?.includes("dairy");
-      return !hasDairy;
+      return isVerifiedFreeFrom(item, "dairy");
     }
     return item.dietary.includes(diet);
   };
@@ -567,12 +560,12 @@ export function PublicMenu({
                                             : "Fiery 🔥🔥🔥"}
                                     </span>
                                   )}
-                                {dish.nutrition?.calories !== undefined && (
+                                {hasVerifiedNutrition(dish.nutrition) && dish.nutrition?.calories !== undefined && (
                                   <span className="dining-calorie-pill">
                                     {dish.nutrition.calories} kcal
                                   </span>
                                 )}
-                                {dish.safety?.allergens && dish.safety.allergens.length > 0 && (
+                                {dish.safety?.verified && dish.safety.allergens.length > 0 && (
                                   <span className="dining-allergen-pill-card">
                                     <ShieldAlert size={12} aria-hidden="true" />
                                     {dish.safety.allergens.length} allergen
@@ -650,12 +643,14 @@ export function PublicMenu({
           const pairingIds = customizingDish.culinary?.pairingDishIds ?? [];
           const allDishes = docs.flatMap((menu) =>
             menu.view.categories.flatMap((cat) =>
-              cat.items.map((it) => ({ item: it as CustomizerDish, catName: cat.name }))
+              cat.items.filter((it) => !it.archived).map((it) => ({ item: it as CustomizerDish, catName: cat.name }))
             )
           );
           const companions = pairingIds
             .map((pId) => allDishes.find((d) => d.item.id === pId))
-            .filter((x): x is { item: CustomizerDish; catName: string } => Boolean(x));
+            .filter((x): x is { item: CustomizerDish; catName: string } =>
+              Boolean(x && x.item.id !== customizingDish.id && !x.item.soldOut && x.item.open !== false)
+            );
 
           return (
             <ItemCustomizer

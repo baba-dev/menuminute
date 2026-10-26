@@ -6,6 +6,7 @@ import type { DiningVisual } from "@/modules/menu-product/public-presentation";
 import { X, Plus, Minus, Leaf, Check, Flame, ShieldAlert, Sparkles, ChefHat } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
+import { canQuickAddCompanion, hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
 
 export type CustomizerDish = {
   id: string;
@@ -21,6 +22,7 @@ export type CustomizerDish = {
     fatGrams?: number;
     fiberGrams?: number;
     servingSize?: string;
+    verified?: boolean;
   };
   culinary?: {
     spiceLevel?: number;
@@ -33,6 +35,8 @@ export type CustomizerDish = {
     ingredients?: readonly string[];
     allergens?: readonly string[];
     crossContact?: string;
+    verified?: boolean;
+    verifiedFreeFrom?: readonly ("nuts" | "dairy")[];
   };
   soldOut?: boolean;
   open?: boolean;
@@ -360,7 +364,7 @@ export function ItemCustomizer({
           )}
 
           {/* Nutritional Values & Macros */}
-          {(activeDish.nutrition?.calories || activeDish.nutrition?.proteinGrams) && (
+          {hasVerifiedNutrition(activeDish.nutrition) && (
             <div className="stack" style={{ gap: "0.5rem" }}>
               <div className="row between">
                 <span className="section-title" style={{ fontSize: "0.85rem" }}>
@@ -408,8 +412,10 @@ export function ItemCustomizer({
           )}
 
           {/* Ingredients & Allergen Transparency */}
-          {((activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0) ||
-            (activeDish.safety?.allergens && activeDish.safety.allergens.length > 0)) && (
+          {activeDish.safety?.verified &&
+            (activeDish.safety.ingredients.length > 0 ||
+              activeDish.safety.allergens.length > 0 ||
+              Boolean(activeDish.safety.crossContact)) && (
             <div className="stack" style={{ gap: "0.6rem" }}>
               <span className="section-title" style={{ fontSize: "0.85rem" }}>
                 Ingredients & Allergens
@@ -435,12 +441,21 @@ export function ItemCustomizer({
                       </span>
                     ))}
                   </div>
-                  {activeDish.safety.crossContact && (
-                    <small className="dining-cross-contact">{activeDish.safety.crossContact}</small>
-                  )}
+                </div>
+              )}
+              {activeDish.safety?.crossContact && (
+                <div className="dining-allergen-alert" role="note">
+                  <ShieldAlert size={16} aria-hidden="true" />
+                  <strong>Cross-contact notice:</strong>{" "}
+                  {activeDish.safety.crossContact}
                 </div>
               )}
             </div>
+          )}
+          {!activeDish.safety?.verified && (
+            <p className="quiet" role="note">
+              Ingredient and allergen details have not been verified by this restaurant. Ask staff before ordering if you have an allergy.
+            </p>
           )}
 
           {/* Chef Recommended Pairings */}
@@ -454,8 +469,8 @@ export function ItemCustomizer({
               </div>
               <div className="dining-pairings-strip">
                 {companionDishes.map((comp) => {
-                  const hasRequiredCustomization =
-                    comp.variants.length > 0 || comp.addOnGroups.some((g) => g.min > 0);
+                  const quickAddEligible = canQuickAddCompanion(comp);
+                  const hasRequiredCustomization = !quickAddEligible;
                   const isQuickAdded = addedCompanions.has(comp.id);
 
                   return (
@@ -463,10 +478,10 @@ export function ItemCustomizer({
                       <span className="dining-pairing-name">{comp.name}</span>
                       <span className="dining-pairing-price">
                         {comp.variants.length > 0 ? "From " : ""}
-                        {formatPrice(comp.priceMinor, currency)}
+                        {formatPrice(comp.variants.length ? Math.min(...comp.variants.filter((v) => v.isAvailable).map((v) => v.priceMinor)) : comp.priceMinor, currency)}
                       </span>
                       <div className="row wrap" style={{ gap: "0.3rem", marginTop: "auto" }}>
-                        {!readOnly && !hasRequiredCustomization && (
+                        {!readOnly && quickAddEligible && (
                           <button
                             type="button"
                             className={`dining-pairing-btn ${isQuickAdded ? "is-added" : ""}`}
