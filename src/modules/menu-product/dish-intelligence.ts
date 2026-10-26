@@ -1,6 +1,12 @@
 import { z } from "zod";
 import rawCatalogue from "@/data/dish-catalogue.json";
-import type { MenuDocument } from "./contracts";
+import rawCulinaryProfiles from "@/data/culinary-profiles.json";
+import type {
+  MenuDocument,
+  DishNutrition,
+  DishCulinaryProfile,
+  DishSafetyProfile,
+} from "./contracts";
 
 // Editorial name suggestions only. Never infer menu prices, dietary claims, approval or ownership.
 const entry = z
@@ -256,4 +262,35 @@ export function rankDishSuggestions(args: {
     )
     .slice(0, limit)
     .map((m) => m.item);
+}
+
+export type AuthenticCulinaryProfile = {
+  name: string;
+  category: string;
+  dietary: ("vegetarian" | "vegan" | "gluten_free")[];
+  aliases: string[];
+  nutrition: DishNutrition;
+  culinary: DishCulinaryProfile & { suggestedPairings: string[] };
+  safety: DishSafetyProfile;
+};
+
+export const culinaryProfiles = rawCulinaryProfiles as AuthenticCulinaryProfile[];
+
+export function findCulinaryProfile(dishName: string): AuthenticCulinaryProfile | null {
+  const norm = normalizeDishText(dishName);
+  if (!norm) return null;
+
+  // 1. Exact match on name
+  const exact = culinaryProfiles.find((p) => normalizeDishText(p.name) === norm);
+  if (exact) return exact;
+
+  // 2. Exact match on aliases
+  const aliasMatch = culinaryProfiles.find((p) =>
+    p.aliases.some((a) => normalizeDishText(a) === norm)
+  );
+  if (aliasMatch) return aliasMatch;
+
+  // Only exact names or explicitly curated aliases may nominate safety-related templates.
+  // Broad substring matching can map generic "dal" to a specific recipe.
+  return null;
 }

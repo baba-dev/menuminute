@@ -11,6 +11,8 @@ import {
   ArrowRight,
   Sparkles,
   Languages,
+  Flame,
+  ShieldAlert,
 } from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
 import {
@@ -22,6 +24,7 @@ import {
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
+import { hasVerifiedNutrition, isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -181,15 +184,30 @@ export function PublicMenu({
   }));
 
   const normalizedSearch = search.trim().toLowerCase();
-  const matches = (
-    item: { name: string; description: string; dietary: readonly string[] },
-    categoryName: string
-  ) =>
-    (!normalizedSearch ||
-      `${item.name} ${item.description} ${categoryName}`
-        .toLowerCase()
-        .includes(normalizedSearch)) &&
-    (diet === "all" || item.dietary.includes(diet));
+  const matches = (item: CustomizerDish, categoryName: string) => {
+    if (normalizedSearch) {
+      const searchPool = [
+        item.name,
+        item.description,
+        categoryName,
+        ...(item.safety?.ingredients ?? []),
+        ...(item.culinary?.flavorNotes ?? []),
+        item.culinary?.chefNote ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      if (!searchPool.includes(normalizedSearch)) return false;
+    }
+
+    if (diet === "all") return true;
+    if (diet === "nut_free") {
+      return isVerifiedFreeFrom(item, "nuts");
+    }
+    if (diet === "dairy_free") {
+      return isVerifiedFreeFrom(item, "dairy");
+    }
+    return item.dietary.includes(diet);
+  };
 
   const shown = docs.reduce(
     (count, menu) =>
@@ -371,6 +389,8 @@ export function PublicMenu({
                 ["vegetarian", "Vegetarian"],
                 ["vegan", "Vegan"],
                 ["gluten_free", "Gluten free"],
+                ["nut_free", "Nut-Free"],
+                ["dairy_free", "Dairy-Free"],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -381,6 +401,9 @@ export function PublicMenu({
                 onClick={() => setDiet(value)}
               >
                 {value === "vegetarian" && <Leaf size={15} aria-hidden="true" />}
+                {(value === "nut_free" || value === "dairy_free") && (
+                  <ShieldAlert size={14} aria-hidden="true" />
+                )}
                 {label}
               </button>
             ))}
@@ -521,6 +544,32 @@ export function PublicMenu({
                                     {value.replaceAll("_", " ")}
                                   </span>
                                 ))}
+                                {dish.culinary?.spiceLevel !== undefined &&
+                                  dish.culinary.spiceLevel > 0 && (
+                                    <span className="dining-spice-pill">
+                                      <Flame size={12} aria-hidden="true" className="ember-text" />
+                                      {dish.culinary.spiceLevel === 1
+                                        ? "Mild"
+                                        : dish.culinary.spiceLevel === 2
+                                          ? "Med 🔥"
+                                          : dish.culinary.spiceLevel === 3
+                                            ? "Hot 🔥🔥"
+                                            : "Fiery 🔥🔥🔥"}
+                                    </span>
+                                  )}
+                                {hasVerifiedNutrition(dish.nutrition) &&
+                                  dish.nutrition?.calories !== undefined && (
+                                    <span className="dining-calorie-pill">
+                                      {dish.nutrition.calories} kcal
+                                    </span>
+                                  )}
+                                {dish.safety?.verified && dish.safety.allergens.length > 0 && (
+                                  <span className="dining-allergen-pill-card">
+                                    <ShieldAlert size={12} aria-hidden="true" />
+                                    {dish.safety.allergens.length} allergen
+                                    {dish.safety.allergens.length === 1 ? "" : "s"}
+                                  </span>
+                                )}
                                 {dish.variants.length + dish.addOnGroups.length > 0 && (
                                   <span>Customizable</span>
                                 )}
@@ -587,22 +636,47 @@ export function PublicMenu({
           <small>Made to be savoured · Powered by MenuMinute</small>
         </footer>
       </div>
-      {customizingDish && (
-        <ItemCustomizer
-          key={customizingDish?.id ?? "empty"}
-          dish={customizingDish}
-          visual={
-            customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null
-          }
-          currency={data.outlet.currency}
-          readOnly={
-            browseOnly || Boolean(customizingDish?.soldOut || customizingDish?.open === false)
-          }
-          isOpen={Boolean(customizingDish)}
-          onClose={() => setCustomizingDish(null)}
-          onAddToCart={handleAddToCart}
-        />
-      )}
+      {customizingDish &&
+        (() => {
+          const pairingIds = customizingDish.culinary?.pairingDishIds ?? [];
+          const allDishes = docs.flatMap((menu) =>
+            menu.view.categories.flatMap((cat) =>
+              cat.items
+                .filter((it) => !it.archived)
+                .map((it) => ({ item: it as CustomizerDish, catName: cat.name }))
+            )
+          );
+          const companions = pairingIds
+            .map((pId) => allDishes.find((d) => d.item.id === pId))
+            .filter((x): x is { item: CustomizerDish; catName: string } =>
+              Boolean(
+                x && x.item.id !== customizingDish.id && !x.item.soldOut && x.item.open !== false
+              )
+            );
+
+          return (
+            <ItemCustomizer
+              key={customizingDish?.id ?? "empty"}
+              dish={customizingDish}
+              visual={
+                customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null
+              }
+              currency={data.outlet.currency}
+              readOnly={
+                browseOnly || Boolean(customizingDish?.soldOut || customizingDish?.open === false)
+              }
+              isOpen={Boolean(customizingDish)}
+              companionDishes={companions.map((c) => c.item)}
+              onSelectCompanion={(comp) => {
+                const matched = companions.find((c) => c.item.id === comp.id);
+                setCustomizingDish(comp);
+                if (matched) setCustomizingCategory(matched.catName);
+              }}
+              onClose={() => setCustomizingDish(null)}
+              onAddToCart={handleAddToCart}
+            />
+          );
+        })()}
       {ordering && token && (
         <CartDrawer
           items={cartItems}

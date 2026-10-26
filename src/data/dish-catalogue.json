@@ -153,9 +153,7 @@
     "id": "MM-CORE-biryani",
     "name": "Biryani",
     "categoryHint": "Indian",
-    "aliases": [
-      "biriyani"
-    ]
+    "aliases": ["biriyani"]
   },
   {
     "id": "MM-IN-052",
@@ -341,10 +339,7 @@
     "id": "MM-CORE-chole-bhature",
     "name": "Chole Bhature",
     "categoryHint": "Indian",
-    "aliases": [
-      "chhole bhature",
-      "chana bhatura"
-    ]
+    "aliases": ["chhole bhature", "chana bhatura"]
   },
   {
     "id": "MM-IN-059",
@@ -398,9 +393,7 @@
     "id": "MM-IN-001",
     "name": "Dal Makhani",
     "categoryHint": "Main Course",
-    "aliases": [
-      "daal makhani"
-    ]
+    "aliases": ["daal makhani"]
   },
   {
     "id": "MM-IN-118",
@@ -496,9 +489,7 @@
     "id": "MM-CORE-french-fries",
     "name": "French Fries",
     "categoryHint": "Western",
-    "aliases": [
-      "chips"
-    ]
+    "aliases": ["chips"]
   },
   {
     "id": "MM-CORE-fried-chicken",
@@ -642,9 +633,7 @@
     "id": "MM-IN-004",
     "name": "Kadai Paneer",
     "categoryHint": "Main Course",
-    "aliases": [
-      "karahi paneer"
-    ]
+    "aliases": ["karahi paneer"]
   },
   {
     "id": "MM-IN-183",
@@ -836,9 +825,7 @@
     "id": "MM-CORE-masala-dosa",
     "name": "Masala Dosa",
     "categoryHint": "Indian",
-    "aliases": [
-      "masala dosai"
-    ]
+    "aliases": ["masala dosai"]
   },
   {
     "id": "MM-IN-135",
@@ -1060,9 +1047,7 @@
     "id": "MM-CORE-pizza-margherita",
     "name": "Pizza Margherita",
     "categoryHint": "Italian",
-    "aliases": [
-      "margherita pizza"
-    ]
+    "aliases": ["margherita pizza"]
   },
   {
     "id": "MM-IN-038",
@@ -1182,9 +1167,7 @@
     "id": "MM-CORE-samosa",
     "name": "Samosa",
     "categoryHint": "Indian",
-    "aliases": [
-      "samosay"
-    ]
+    "aliases": ["samosay"]
   },
   {
     "id": "MM-CORE-sandwich",
@@ -1334,9 +1317,7 @@
     "id": "MM-CORE-vada-pav",
     "name": "Vada Pav",
     "categoryHint": "Indian",
-    "aliases": [
-      "wada pav"
-    ]
+    "aliases": ["wada pav"]
   },
   {
     "id": "MM-IN-172",
