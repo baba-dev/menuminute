@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import { fixture, admin } from "./helpers";
 import { withActor } from "../src/modules/tenancy/service";
-import { kitchenPilotFailureMessage, pilotCommandSchema } from "../src/modules/kitchen/activation";
+import {
+  findKitchenPilotTargets,
+  kitchenPilotFailureMessage,
+  pilotCommandSchema,
+} from "../src/modules/kitchen/activation";
 
 const sha = "a".repeat(40);
 const evidenceUrl = "https://github.com/baba-dev/menuminute/issues/76";
@@ -131,4 +135,31 @@ describe("Kitchen pilot PostgreSQL authorization", () => {
     );
     expect(stillDisabled.rows[0]?.enabled ?? false).toBe(false);
   });
+});
+
+// Search names are free-form, but the query must treat SQL wildcard characters literally.
+it("searches scoped outlet names with literal wildcard characters", async () => {
+  const f = await fixture();
+  const uid = crypto.randomUUID();
+  const session = crypto.randomUUID();
+  const needle = "pilot_%_" + crypto.randomUUID().slice(0, 8);
+  await admin(async (_, pool) => {
+    await pool.query(
+      "update restaurants set name=$1 where id=$2",
+      [needle, f.outlet.id]
+    );
+    await pool.query(
+      "insert into users(id,name,email,email_verified,two_factor_enabled,is_super_admin) values($1,'Reviewer',$2,true,true,true)",
+      [uid, uid + "@pilot.invalid"]
+    );
+    await pool.query(
+      "insert into sessions(id,token,user_id,expires_at) values($1,$2,$3,now()+interval '1 hour')",
+      [session, crypto.randomUUID(), uid]
+    );
+  });
+  const matches = await findKitchenPilotTargets(
+    { id: uid, name: "Reviewer", email: uid + "@pilot.invalid", twoFactorEnabled: true, sessionId: session },
+    needle
+  );
+  expect(matches.some((item) => item.id === f.outlet.id && item.name === needle)).toBe(true);
 });
