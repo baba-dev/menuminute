@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-react";
+import { ChefStickyNote } from "@/components/ui/tactile-elements";
 import { WizardMediaSlot, type WizardStepId } from "./wizard-media-slot";
 import { StepIdentity } from "./wizard-steps/step-identity";
 import { StepLocation } from "./wizard-steps/step-location";
@@ -12,12 +13,12 @@ import { StepLaunch } from "./wizard-steps/step-launch";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import "./onboarding-wizard.css";
 
-const STEPS: { id: WizardStepId; label: string; number: number }[] = [
-  { id: "identity", label: "Identity", number: 1 },
-  { id: "location", label: "Location", number: 2 },
-  { id: "operations", label: "Operations", number: 3 },
-  { id: "contact", label: "Service Points", number: 4 },
-  { id: "launch", label: "Launch", number: 5 },
+const STEPS: { id: WizardStepId; label: string; number: number; subtitle: string }[] = [
+  { id: "identity", label: "Identity", number: 1, subtitle: "Hang the Shingle · Your restaurant identity and branding" },
+  { id: "location", label: "Location", number: 2, subtitle: "The Neighborhood · Your real operating location and local settings" },
+  { id: "operations", label: "Operations", number: 3, subtitle: "Service Style · Choose how guests can order and collect food" },
+  { id: "contact", label: "Service Points", number: 4, subtitle: "Setting the Tables · Configure guest access and service points" },
+  { id: "launch", label: "Launch", number: 5, subtitle: "Opening Night · Review your details before creating the outlet" },
 ];
 
 function validateStep(step: number, draft: WizardDraft): string | null {
@@ -290,6 +291,20 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           step={activeStepMeta.id}
           alt={`Illustration for ${activeStepMeta.label}`}
         />
+
+        <div className="wizard-content" style={{ paddingTop: "0.5rem", paddingBottom: "0.25rem" }}>
+          <p className="font-display text-sm font-semibold text-amber-900 dark:text-amber-200" aria-live="polite" data-testid="wizard-milestone">
+            {activeStepMeta.subtitle}
+          </p>
+        </div>
+        {currentStep === 4 && (
+          <div style={{ padding: "0 2.25rem" }}>
+            <ChefStickyNote
+              author="Opening Night Checklist"
+              text="Review your outlet details before launch. Publishing a menu and activating online ordering are separate steps."
+            />
+          </div>
+        )}
 
         {/* Step Views */}
         {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
