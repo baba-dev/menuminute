@@ -344,3 +344,6 @@ body {
   .stamp-badge, .btn-ink-press { transition: none; }
   .stamp-badge:hover, .btn-ink-press:active:not(:disabled) { transform: none; }
 }
+
+.stamp-badge--complete { color: #047857; border-color: #047857; background: rgba(4,120,87,0.08); }
+:root[data-theme="dark"] .stamp-badge--complete { color: #6ee7b7; border-color: #6ee7b7; background: rgba(110,231,183,0.12); }

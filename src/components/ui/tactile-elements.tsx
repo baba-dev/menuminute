@@ -14,7 +14,7 @@ export function RubberStamp({
   className = "",
 }: {
   text: string;
-  variant?: "sold-out" | "paid" | "confirmed" | "chef-pick";
+  variant?: "sold-out" | "paid" | "complete" | "confirmed" | "chef-pick";
   className?: string;
 }) {
   return (
@@ -102,11 +102,13 @@ export function MiseEnPlaceEmpty({
  */
 export function TableWelcome({
   tableNumber,
+  pointLabel,
   outletName,
   servicePeriod,
   className = "",
 }: {
   tableNumber?: string | null;
+  pointLabel?: string | null;
   outletName: string;
   servicePeriod?: string;
   className?: string;
@@ -116,15 +118,15 @@ export function TableWelcome({
       className={`flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/60 bg-amber-50/60 px-4 py-2.5 text-xs text-stone-700 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-300 ${className}`}
     >
       <div className="flex items-center gap-2">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+        <span className="inline-block h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
         <span className="font-medium text-stone-900 dark:text-stone-100">{outletName}</span>
         {servicePeriod && (
           <span className="text-stone-500 dark:text-stone-400">· {servicePeriod}</span>
         )}
       </div>
-      {tableNumber && (
+      {(tableNumber || pointLabel) && (
         <span className="inline-flex items-center gap-1 rounded bg-stone-200/80 px-2 py-0.5 font-mono text-[11px] font-bold text-stone-800 dark:bg-stone-800 dark:text-stone-200">
-          TABLE {tableNumber}
+          {pointLabel || `TABLE ${tableNumber}`}
         </span>
       )}
     </div>

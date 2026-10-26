@@ -13,6 +13,8 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { RubberStamp, ChefStickyNote } from "@/components/ui/tactile-elements";
+import { getGuestOrderNote, getOrderStampVariant } from "@/lib/hospitality-order-status";
 
 export type TrackingData = {
   order: {
@@ -265,10 +267,8 @@ export function OrderTracker({
               <span className="eyebrow">{outlet.name}</span>
               <h1 style={{ fontSize: "1.8rem", margin: 0 }}>Order #{order.orderNumber}</h1>
             </div>
-            <div className="stack" style={{ alignItems: "flex-end", gap: "0.2rem" }}>
-              <span className="badge" style={{ textTransform: "uppercase", fontWeight: 750 }}>
-                {order.status}
-              </span>
+            <div className="stack" style={{ alignItems: "flex-end", gap: "0.4rem" }}>
+              <RubberStamp text={order.status.toUpperCase()} variant={getOrderStampVariant(order.status)} />
               <small className="quiet">
                 {new Date(order.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -277,6 +277,8 @@ export function OrderTracker({
               </small>
             </div>
           </div>
+
+          <ChefStickyNote author="Order update" text={getGuestOrderNote(order.status, order.fulfillmentMode, order.point)} />
 
           {/* Essential Invariant Message */}
           {order.status === "pending" && (
@@ -445,6 +447,7 @@ export function OrderTracker({
                 : "Please pay directly with your server or at the cashier."}
             </small>
           </div>
+          <div className="ticket-receipt-tear -mx-4 -mb-4 mt-4" aria-hidden="true" />
         </div>
 
         {/* Order More CTA */}
