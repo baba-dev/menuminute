@@ -1,6 +1,6 @@
 import { sql, eq } from "drizzle-orm";
 import { z } from "zod";
-import { withOutlet, type Actor } from "@/modules/tenancy/service";
+import { withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { restaurants } from "@/db/schema";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 const id = z
@@ -96,7 +96,7 @@ export async function kitchenSnapshot(
   id.parse(organizationId);
   id.parse(outletId);
   try {
-    return await withOutlet(actor, outletId, "orders.read", async (tx) => {
+    return await withOutletRead(actor, outletId, "orders.read", async (tx) => {
       await ensureOrganization(tx, outletId, organizationId);
       const r = await tx.execute<{ data: KitchenSnapshot }>(
         sql`select app_private.kitchen_snapshot(${outletId}) as data`
@@ -117,7 +117,7 @@ export async function kitchenChanges(
   id.parse(outletId);
   z.number().int().nonnegative().safe().parse(cursor);
   try {
-    return await withOutlet(actor, outletId, "orders.read", async (tx) => {
+    return await withOutletRead(actor, outletId, "orders.read", async (tx) => {
       await ensureOrganization(tx, outletId, organizationId);
       const r = await tx.execute<{ data: KitchenChanges }>(
         sql`select app_private.kitchen_changes(${outletId},${cursor}::bigint,100) as data`

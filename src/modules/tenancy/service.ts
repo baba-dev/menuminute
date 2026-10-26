@@ -38,3 +38,24 @@ export async function withOutlet<T>(
     return work(tx);
   });
 }
+
+/**
+ * Read-only kitchen polling uses live RLS/role verification without holding
+ * a FOR SHARE organization row lock for each 3-second SSE heartbeat.
+ * Do not use for writes: mutations must retain withOutlets's lock_outlet.
+ */
+export async function withOutletRead<T>(
+  actor: Actor,
+  outletId: string,
+  permission: Permission,
+  work: (tx: Transaction) => Promise<T>
+): Promise<T> {
+  return withActor(actor, async (tx) => {
+    await tx.execute(sql`select set_config('app.outlet_id',${outletId},true)`);
+    const allowed = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.can_outlet(${outletId},${permission}) as allowed`
+    );
+    if (!allowed.rows[0]?.allowed) throw new ForbiddenError();
+    return work(tx);
+  });
+}

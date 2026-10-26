@@ -171,3 +171,94 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
     await db.end();
   }
 });
+
+test("Kitchen SSE enforces a distributed session limit and revokes only after access is removed", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  const url = `/api/organizations/${f.org}/outlets/${f.outlet}/kitchen/stream`;
+
+  // Use browser Fetch to hold open real authenticated SSE connections; an
+  // ordinary APIRequestContext GET would wait for the entire 55-second body.
+  const openStream = (path: string) =>
+    page.evaluate(async (uri) => {
+      type Holder = {
+        abort: AbortController;
+        reader: ReadableStreamDefaultReader<Uint8Array>;
+      };
+      const w = window as unknown as { kitchenTestStreams?: Holder[] };
+      const abort = new AbortController();
+      const res = await fetch(uri, {
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: abort.signal,
+      });
+      if (!res.ok) {
+        abort.abort();
+        return res.status;
+      }
+      const reader = res.body!.getReader();
+      const initial = await reader.read();
+      if (initial.done || !new TextDecoder().decode(initial.value).includes("event: snapshot")) {
+        abort.abort();
+        throw new Error("The kitchen stream did not send an initial snapshot");
+      }
+      (w.kitchenTestStreams ??= []).push({ abort, reader });
+      return res.status;
+    }, path);
+
+  try {
+    expect(await openStream(url)).toBe(200);
+    expect(await openStream(url)).toBe(200);
+    expect(await openStream(url)).toBe(429);
+
+    // Revoking the outlet is reflected at the next poll, not mislabeled as a
+    // temporary outage. The stream must never keep exposing prior ticket data.
+    const db = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+    try {
+      await db.query("update organizations set is_active=false where id=$1", [f.org]);
+    } finally {
+      await db.end();
+    }
+    const revoked = await page.evaluate(async () => {
+      const w = window as unknown as {
+        kitchenTestStreams?: Array<{
+          abort: AbortController;
+          reader: ReadableStreamDefaultReader<Uint8Array>;
+        }>;
+      };
+      const stream = w.kitchenTestStreams?.[0];
+      if (!stream) return false;
+      let payload = "";
+      const abortOnDeadline = setTimeout(() => stream.abort.abort(), 12000);
+      try {
+        while (!stream.abort.signal.aborted) {
+          const next = await stream.reader.read();
+          if (next.done) return false;
+          payload += new TextDecoder().decode(next.value);
+          if (payload.includes("event: revoked")) return true;
+          if (payload.includes("event: unavailable")) return false;
+        }
+        return false;
+      } catch {
+        return false;
+      } finally {
+        clearTimeout(abortOnDeadline);
+      }
+    });
+    expect(revoked).toBe(true);
+  } finally {
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        kitchenTestStreams?: Array<{ abort: AbortController }>;
+      };
+      for (const stream of w.kitchenTestStreams ?? []) stream.abort.abort();
+    });
+  }
+});

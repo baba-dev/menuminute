@@ -316,6 +316,20 @@ export async function startWorker(
   };
   const timer = setInterval(tick, 1000);
   tick();
+  // Fixed policy: prune kitchen event/receipt history on startup and once per
+  // six hours. Never block the durable outbox dispatcher on maintenance work.
+  let maintenance: Promise<unknown> | undefined;
+  const prune = () => {
+    if (stopping || maintenance) return;
+    maintenance = pool
+      .query("select app_private.kitchen_prune_events()")
+      .catch(() => console.error("Kitchen retention maintenance unavailable"))
+      .finally(() => {
+        maintenance = undefined;
+      });
+  };
+  const maintenanceTimer = setInterval(prune, 6 * 60 * 60 * 1000);
+  prune();
   return {
     pool,
     worker,
@@ -323,7 +337,8 @@ export async function startWorker(
     async close() {
       stopping = true;
       clearInterval(timer);
-      await pending;
+      clearInterval(maintenanceTimer);
+      await Promise.all([pending, maintenance]);
       await worker.close();
       await producer.close();
       await pool.end();
