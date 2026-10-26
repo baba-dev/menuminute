@@ -11,6 +11,6 @@ export async function POST(
     const data = await kitchenWorkCommand(actor, organizationId, outletId, await req.json());
     return NextResponse.json(data, { headers: { "cache-control": "no-store" } });
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

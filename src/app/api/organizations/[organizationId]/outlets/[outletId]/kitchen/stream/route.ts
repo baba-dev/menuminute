@@ -123,6 +123,6 @@ export async function GET(
     });
   } catch (e) {
     if (lease) await lease.release().catch(() => {});
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
