@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 import { admin } from "../helpers";
 test("private pages require login and private menu APIs do not fall back to demo", async ({
   page,
@@ -17,6 +18,7 @@ test("private pages require login and private menu APIs do not fall back to demo
 test("signup, atomic outlet setup, private mutation and session recovery", async ({ page }) => {
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const email = `owner-${crypto.randomUUID()}@browser.invalid`;
+  await mockTurnstileForBrowserTests(page);
   await page.goto("/register");
   await page.getByLabel("Your name").fill("Foundation Owner");
   await page.getByLabel("Email address").fill(email);

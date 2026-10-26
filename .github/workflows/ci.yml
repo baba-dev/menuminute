@@ -169,6 +169,8 @@ jobs:
           NODE_ENV: production
           APP_URL: https://food.bababuilds.com
           NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
+          # Public widget key is compiled into the immutable ARM64 release; never inject the secret here.
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
           EMAIL_PROVIDER: smtp
           EMAIL_FROM: food@bababuilds.com
