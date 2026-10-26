@@ -255,15 +255,15 @@ export function RailEmpty({
         {filtered
           ? "No matching tickets"
           : lane === "incoming"
-            ? "All tickets accepted and fired."
+            ? "No tickets awaiting acceptance."
             : lane === "ready"
-              ? "All plates dispatched to tables."
-              : "The line is quiet. Standing by."}
+              ? "No orders ready for handoff."
+              : "No tickets in this view."}
       </strong>
       <p>
         {filtered
           ? "Try adjusting your filter to view all stations."
-          : "Fresh orders from dining room QR codes drop right here on the rail."}
+          : "New matching tickets will appear here when the queue updates."}
       </p>
     </div>
   );

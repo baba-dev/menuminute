@@ -327,8 +327,8 @@ export function OrderTracker({
                 <strong>Order Ready!</strong>
                 <p>
                   {order.fulfillmentMode === "pickup"
-                    ? "Please collect your order at the counter."
-                    : "Your dishes are being brought to your table."}
+                    ? "Your order is ready for pickup. Check the restaurant’s collection instructions."
+                    : "Your order is ready for serving. Please wait for the restaurant team."}
                 </p>
               </div>
             </div>
@@ -348,10 +348,20 @@ export function OrderTracker({
             <div className="tracker-status-box rejected">
               <AlertCircle size={20} />
               <div>
-                <strong>Order {order.status === "rejected" ? "Declined" : "Cancelled"}</strong>
+                <strong>
+                  {order.status === "rejected"
+                    ? "Order Declined"
+                    : order.status === "expired"
+                      ? "Acceptance Expired"
+                      : "Order Cancelled"}
+                </strong>
                 <p>
                   {order.rejectionReason ||
-                    "The restaurant was unable to accept this order at this time. Please speak to staff."}
+                    (order.status === "expired"
+                      ? "The restaurant did not accept this request before its deadline."
+                      : order.status === "cancelled"
+                        ? "This order was cancelled. Please contact staff if you need assistance."
+                        : "The restaurant was unable to accept your request. Please contact staff.")}
                 </p>
               </div>
             </div>
