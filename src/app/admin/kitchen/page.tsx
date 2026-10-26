@@ -5,6 +5,7 @@ import {
   kitchenPilotCommand,
   kitchenPilotFailureMessage,
   kitchenPilotStatus,
+  kitchenRunningReleaseSha,
   type PilotCommand,
 } from "@/modules/kitchen/activation";
 import { KitchenControlDesk } from "./kitchen-control-desk";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 
 export default async function KitchenControlDeskPage() {
   const admin = await verifySuperAdmin();
+  const runningSha = await kitchenRunningReleaseSha();
   async function searchOutlets(term: string) {
     "use server";
     const actor = await verifySuperAdmin();
@@ -46,7 +48,7 @@ export default async function KitchenControlDeskPage() {
   return (
     <KitchenControlDesk
       operatorId={admin.id}
-      runningSha={process.env.NEXT_PUBLIC_RELEASE_SHA ?? ""}
+      runningSha={runningSha}
       onSearch={searchOutlets}
       onStatus={readStatus}
       onCommand={changePilot}
