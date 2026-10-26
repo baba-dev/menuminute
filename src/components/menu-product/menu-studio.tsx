@@ -62,9 +62,14 @@ export function MenuStudio({
   const [detail, setDetail] = useState(initialDetail);
   const [doc, setDoc] = useState<MenuDocument | null>(initialDetail?.document ?? null);
   const companionCandidates = useMemo(
-    () => doc?.categories.filter((category) => !category.archived)
-      .flatMap((category) => category.items.filter((dish) => !dish.archived)
-        .map((dish) => ({ id: dish.id, name: dish.name }))) ?? [],
+    () =>
+      doc?.categories
+        .filter((category) => !category.archived)
+        .flatMap((category) =>
+          category.items
+            .filter((dish) => !dish.archived)
+            .map((dish) => ({ id: dish.id, name: dish.name }))
+        ) ?? [],
     [doc]
   );
   const [dirty, setDirty] = useState(false);

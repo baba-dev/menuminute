@@ -87,15 +87,19 @@ export function StudioDishEditor({
   const safety: NonNullable<Dish["safety"]> = dish.safety ?? { ingredients: [], allergens: [] };
   const pairingOptions = companionDishes
     .filter((candidate) => candidate.id !== dish.id)
-    .filter((candidate) =>
-      !pairingSearch.trim() ||
-      normalizeDishText(candidate.name).includes(normalizeDishText(pairingSearch)) ||
-      culinary.pairingDishIds.includes(candidate.id)
+    .filter(
+      (candidate) =>
+        !pairingSearch.trim() ||
+        normalizeDishText(candidate.name).includes(normalizeDishText(pairingSearch)) ||
+        culinary.pairingDishIds.includes(candidate.id)
     )
     .slice(0, 12);
   const canVerifyFreeFrom =
-    safety.verified === true && safety.ingredients.length > 0 &&
-    !safety.crossContact?.trim() && dish.variants.length === 0 && dish.addOnGroups.length === 0;
+    safety.verified === true &&
+    safety.ingredients.length > 0 &&
+    !safety.crossContact?.trim() &&
+    dish.variants.length === 0 &&
+    dish.addOnGroups.length === 0;
 
   const updateCulinary = (patch: Partial<typeof culinary>) => {
     onUpdate({
@@ -259,7 +263,8 @@ export function StudioDishEditor({
             <Sparkles size={16} className="ember-text" />
             <span style={{ fontSize: "0.9rem" }}>
               Authentic profile available for <strong>{suggestedProfile.name}</strong> (
-              {suggestedProfile.category}) — unverified reference values; review your actual recipe before publishing.
+              {suggestedProfile.category}) — unverified reference values; review your actual recipe
+              before publishing.
             </span>
           </div>
           <button
@@ -275,10 +280,14 @@ export function StudioDishEditor({
                   chefNote: suggestedProfile.culinary.chefNote,
                   servingTemp: suggestedProfile.culinary.servingTemp,
                   pairingDishIds: suggestedProfile.culinary.suggestedPairings
-                    .map((name) => companionDishes.find((item) =>
-                      normalizeDishText(item.name) === normalizeDishText(name) &&
-                      item.id !== dish.id
-                    )?.id)
+                    .map(
+                      (name) =>
+                        companionDishes.find(
+                          (item) =>
+                            normalizeDishText(item.name) === normalizeDishText(name) &&
+                            item.id !== dish.id
+                        )?.id
+                    )
                     .filter((value): value is string => Boolean(value))
                     .slice(0, 4),
                 },
@@ -363,7 +372,9 @@ export function StudioDishEditor({
               />
               <button
                 type="button"
-                disabled={!canWrite || !customFlavorInput.trim() || culinary.flavorNotes.length >= 6}
+                disabled={
+                  !canWrite || !customFlavorInput.trim() || culinary.flavorNotes.length >= 6
+                }
                 onClick={() => {
                   if (!customFlavorInput.trim()) return;
                   if (!culinary.flavorNotes.includes(customFlavorInput.trim())) {
@@ -521,9 +532,15 @@ export function StudioDishEditor({
           </label>
           <label className="field">
             <span>
-              <input type="checkbox" disabled={!canWrite} checked={nutrition.verified === true}
-                onChange={(event) => onUpdate({ nutrition: { ...nutrition, verified: event.target.checked } })} />
-              {" "}I checked these nutrition numbers against this restaurant's actual portion and recipe
+              <input
+                type="checkbox"
+                disabled={!canWrite}
+                checked={nutrition.verified === true}
+                onChange={(event) =>
+                  onUpdate({ nutrition: { ...nutrition, verified: event.target.checked } })
+                }
+              />{" "}
+              I checked these nutrition numbers against this restaurant's actual portion and recipe
             </span>
             <small className="quiet">Unverified estimates never appear in the guest menu.</small>
           </label>
@@ -599,32 +616,48 @@ export function StudioDishEditor({
           </label>
           <label className="field">
             <span>
-              <input type="checkbox" disabled={!canWrite}
+              <input
+                type="checkbox"
+                disabled={!canWrite}
                 checked={safety.verified === true}
-                onChange={(event) => onUpdate({
-                  safety: { ...safety, verified: event.target.checked, verifiedFreeFrom: [] },
-                })}
-              />
-              {" "}I verified the ingredients, allergen declaration and kitchen cross-contact for this exact dish
+                onChange={(event) =>
+                  onUpdate({
+                    safety: { ...safety, verified: event.target.checked, verifiedFreeFrom: [] },
+                  })
+                }
+              />{" "}
+              I verified the ingredients, allergen declaration and kitchen cross-contact for this
+              exact dish
             </span>
             <small className="quiet">A recipe suggestion is not a safety verification.</small>
           </label>
           <fieldset className="field" disabled={!canWrite || !canVerifyFreeFrom}>
             <legend>Optional verified free-from declarations</legend>
-            <p className="quiet">Only confirm after checking every ingredient and shared surface. Dishes with variants or add-ons require option-level safety data and cannot claim free-from.</p>
+            <p className="quiet">
+              Only confirm after checking every ingredient and shared surface. Dishes with variants
+              or add-ons require option-level safety data and cannot claim free-from.
+            </p>
             {(["nuts", "dairy"] as const).map((claim) => {
-              const declared = safety.allergens.includes(claim) ||
+              const declared =
+                safety.allergens.includes(claim) ||
                 (claim === "nuts" && safety.allergens.includes("peanuts"));
               const checked = safety.verifiedFreeFrom?.includes(claim) ?? false;
               return (
                 <label key={claim} className="row" style={{ gap: "0.4rem" }}>
-                  <input type="checkbox" disabled={declared} checked={checked}
-                    onChange={(event) => onUpdate({ safety: {
-                      ...safety,
-                      verifiedFreeFrom: event.target.checked
-                        ? [...(safety.verifiedFreeFrom ?? []), claim]
-                        : (safety.verifiedFreeFrom ?? []).filter((value) => value !== claim),
-                    } })}
+                  <input
+                    type="checkbox"
+                    disabled={declared}
+                    checked={checked}
+                    onChange={(event) =>
+                      onUpdate({
+                        safety: {
+                          ...safety,
+                          verifiedFreeFrom: event.target.checked
+                            ? [...(safety.verifiedFreeFrom ?? []), claim]
+                            : (safety.verifiedFreeFrom ?? []).filter((value) => value !== claim),
+                        },
+                      })
+                    }
                   />
                   Confirmed {claim === "nuts" ? "nut-free" : "dairy-free"}
                 </label>
@@ -648,9 +681,14 @@ export function StudioDishEditor({
               Recommend companion dishes (e.g. bread, rice, beverage, or dessert) for diners to
               order together.
             </span>
-            <input type="search" aria-label="Search companion dishes" disabled={!canWrite}
-              placeholder="Find a dish to recommend…" value={pairingSearch}
-              onChange={(event) => setPairingSearch(event.target.value)} />
+            <input
+              type="search"
+              aria-label="Search companion dishes"
+              disabled={!canWrite}
+              placeholder="Find a dish to recommend…"
+              value={pairingSearch}
+              onChange={(event) => setPairingSearch(event.target.value)}
+            />
             <div className="row wrap" style={{ gap: "0.4rem" }}>
               {pairingOptions.map((companion) => {
                 const isSelected = culinary.pairingDishIds.includes(companion.id);

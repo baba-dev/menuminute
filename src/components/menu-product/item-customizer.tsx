@@ -416,45 +416,48 @@ export function ItemCustomizer({
             (activeDish.safety.ingredients.length > 0 ||
               activeDish.safety.allergens.length > 0 ||
               Boolean(activeDish.safety.crossContact)) && (
-            <div className="stack" style={{ gap: "0.6rem" }}>
-              <span className="section-title" style={{ fontSize: "0.85rem" }}>
-                Ingredients & Allergens
-              </span>
+              <div className="stack" style={{ gap: "0.6rem" }}>
+                <span className="section-title" style={{ fontSize: "0.85rem" }}>
+                  Ingredients & Allergens
+                </span>
 
-              {activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0 && (
-                <p className="quiet" style={{ fontSize: "0.88rem", margin: 0, lineHeight: "1.4" }}>
-                  <strong style={{ color: "var(--dc-ink)" }}>Ingredients:</strong>{" "}
-                  {activeDish.safety.ingredients.join(", ")}.
-                </p>
-              )}
+                {activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0 && (
+                  <p
+                    className="quiet"
+                    style={{ fontSize: "0.88rem", margin: 0, lineHeight: "1.4" }}
+                  >
+                    <strong style={{ color: "var(--dc-ink)" }}>Ingredients:</strong>{" "}
+                    {activeDish.safety.ingredients.join(", ")}.
+                  </p>
+                )}
 
-              {activeDish.safety?.allergens && activeDish.safety.allergens.length > 0 && (
-                <div className="dining-allergen-alert">
-                  <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
-                    <ShieldAlert size={16} className="dining-alert-icon" />
-                    <strong>Contains Allergens:</strong>
+                {activeDish.safety?.allergens && activeDish.safety.allergens.length > 0 && (
+                  <div className="dining-allergen-alert">
+                    <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
+                      <ShieldAlert size={16} className="dining-alert-icon" />
+                      <strong>Contains Allergens:</strong>
+                    </div>
+                    <div className="row wrap" style={{ gap: "0.35rem", marginTop: "0.4rem" }}>
+                      {activeDish.safety.allergens.map((a) => (
+                        <span key={a} className="dining-allergen-pill">
+                          {ALLERGEN_LABELS[a] ?? a}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="row wrap" style={{ gap: "0.35rem", marginTop: "0.4rem" }}>
-                    {activeDish.safety.allergens.map((a) => (
-                      <span key={a} className="dining-allergen-pill">
-                        {ALLERGEN_LABELS[a] ?? a}
-                      </span>
-                    ))}
+                )}
+                {activeDish.safety?.crossContact && (
+                  <div className="dining-allergen-alert" role="note">
+                    <ShieldAlert size={16} aria-hidden="true" />
+                    <strong>Cross-contact notice:</strong> {activeDish.safety.crossContact}
                   </div>
-                </div>
-              )}
-              {activeDish.safety?.crossContact && (
-                <div className="dining-allergen-alert" role="note">
-                  <ShieldAlert size={16} aria-hidden="true" />
-                  <strong>Cross-contact notice:</strong>{" "}
-                  {activeDish.safety.crossContact}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
           {!activeDish.safety?.verified && (
             <p className="quiet" role="note">
-              Ingredient and allergen details have not been verified by this restaurant. Ask staff before ordering if you have an allergy.
+              Ingredient and allergen details have not been verified by this restaurant. Ask staff
+              before ordering if you have an allergy.
             </p>
           )}
 
@@ -478,7 +481,16 @@ export function ItemCustomizer({
                       <span className="dining-pairing-name">{comp.name}</span>
                       <span className="dining-pairing-price">
                         {comp.variants.length > 0 ? "From " : ""}
-                        {formatPrice(comp.variants.length ? Math.min(...comp.variants.filter((v) => v.isAvailable).map((v) => v.priceMinor)) : comp.priceMinor, currency)}
+                        {formatPrice(
+                          comp.variants.length
+                            ? Math.min(
+                                ...comp.variants
+                                  .filter((v) => v.isAvailable)
+                                  .map((v) => v.priceMinor)
+                              )
+                            : comp.priceMinor,
+                          currency
+                        )}
                       </span>
                       <div className="row wrap" style={{ gap: "0.3rem", marginTop: "auto" }}>
                         {!readOnly && quickAddEligible && (

@@ -184,10 +184,7 @@ export function PublicMenu({
   }));
 
   const normalizedSearch = search.trim().toLowerCase();
-  const matches = (
-    item: CustomizerDish,
-    categoryName: string
-  ) => {
+  const matches = (item: CustomizerDish, categoryName: string) => {
     if (normalizedSearch) {
       const searchPool = [
         item.name,
@@ -560,11 +557,12 @@ export function PublicMenu({
                                             : "Fiery 🔥🔥🔥"}
                                     </span>
                                   )}
-                                {hasVerifiedNutrition(dish.nutrition) && dish.nutrition?.calories !== undefined && (
-                                  <span className="dining-calorie-pill">
-                                    {dish.nutrition.calories} kcal
-                                  </span>
-                                )}
+                                {hasVerifiedNutrition(dish.nutrition) &&
+                                  dish.nutrition?.calories !== undefined && (
+                                    <span className="dining-calorie-pill">
+                                      {dish.nutrition.calories} kcal
+                                    </span>
+                                  )}
                                 {dish.safety?.verified && dish.safety.allergens.length > 0 && (
                                   <span className="dining-allergen-pill-card">
                                     <ShieldAlert size={12} aria-hidden="true" />
@@ -643,13 +641,17 @@ export function PublicMenu({
           const pairingIds = customizingDish.culinary?.pairingDishIds ?? [];
           const allDishes = docs.flatMap((menu) =>
             menu.view.categories.flatMap((cat) =>
-              cat.items.filter((it) => !it.archived).map((it) => ({ item: it as CustomizerDish, catName: cat.name }))
+              cat.items
+                .filter((it) => !it.archived)
+                .map((it) => ({ item: it as CustomizerDish, catName: cat.name }))
             )
           );
           const companions = pairingIds
             .map((pId) => allDishes.find((d) => d.item.id === pId))
             .filter((x): x is { item: CustomizerDish; catName: string } =>
-              Boolean(x && x.item.id !== customizingDish.id && !x.item.soldOut && x.item.open !== false)
+              Boolean(
+                x && x.item.id !== customizingDish.id && !x.item.soldOut && x.item.open !== false
+              )
             );
 
           return (
