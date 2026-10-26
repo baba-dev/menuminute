@@ -108,9 +108,17 @@ BEGIN
  FROM orders o JOIN kitchen_work w ON w.order_id=o.id AND w.outlet_id=p_outlet
  WHERE o.restaurant_id=p_outlet AND o.status IN ('accepted','preparing');
  SELECT COALESCE(enabled,false) INTO enabled_flag FROM kitchen_outlet_settings WHERE outlet_id=p_outlet;
- SELECT app_private.entitlement_allowed(org,'ordering.new'),
-        app_private.entitlement_allowed(org,'kitchen.new')
- INTO ord_enabled,kit_enabled;
+ -- Superadmin status is cross-tenant: entitlement_allowed() also requires
+ -- organization membership, which a platform reviewer must not need.
+ SELECT EXISTS (
+   SELECT 1 FROM entitlement_grants g WHERE g.organization_id=org
+     AND g.capability='ordering.new' AND g.revoked_at IS NULL
+     AND g.starts_at<=clock_timestamp() AND g.ends_at>clock_timestamp()
+ ), EXISTS (
+   SELECT 1 FROM entitlement_grants g WHERE g.organization_id=org
+     AND g.capability='kitchen.new' AND g.revoked_at IS NULL
+     AND g.starts_at<=clock_timestamp() AND g.ends_at>clock_timestamp()
+ ) INTO ord_enabled,kit_enabled;
  result:=jsonb_build_object(
    'outletId',p_outlet,'organizationId',org,
    'state',coalesce(pilot.state,'setup'),'revision',coalesce(pilot.revision,0),
@@ -296,6 +304,12 @@ BEGIN
  RETURN NEW;
 END $fn$;
 REVOKE ALL ON FUNCTION app_private.kitchen_accept_entitlement_check() FROM PUBLIC;
+-- Critical: the trigger must actually be installed, before the existing AFTER
+-- UPDATE fan-out. Without it, draining and expiry guards are dead code.
+CREATE TRIGGER kitchen_accept_entitlement_guard
+ BEFORE UPDATE OF status ON orders
+ FOR EACH ROW WHEN (NEW.status='accepted' AND OLD.status IS DISTINCT FROM NEW.status)
+ EXECUTE FUNCTION app_private.kitchen_accept_entitlement_check();
 
 -- Reconcile setup navigation independently from the commercial entitlement.
 -- The caller must already hold a scoped outlet role; disabled pilots cannot be
