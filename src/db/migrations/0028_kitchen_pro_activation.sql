@@ -52,7 +52,7 @@ CREATE TRIGGER kitchen_protect_disable BEFORE UPDATE OF enabled ON kitchen_outle
 -- a mutable draft, with assigned menus included. Only current superadmins can
 -- read this projection. No customer data/PII leaves this function.
 CREATE FUNCTION app_private.kitchen_pilot_status(p_outlet text) RETURNS jsonb
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
 DECLARE result jsonb; st integer; assigned integer; dishes integer; missing integer;
         incomplete integer; ord_enabled boolean; kit_enabled boolean; enabled_flag boolean;
         pilot kitchen_pilot_outlets%ROWTYPE; org text;
