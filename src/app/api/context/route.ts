@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     else res.cookies.delete("menuminute.outlet");
     return res;
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 
@@ -94,6 +94,6 @@ export async function GET() {
       }
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

@@ -53,3 +53,27 @@ Live originals and derivatives use `MEDIA_STORAGE=local` and
 `MEDIA_ROOT=/var/lib/menuminute/media`, **not** an application R2 media bucket. R2 restic settings
 are private root-only at `/etc/menuminute/backup/`. The current paths, installed Node/runtime
 and evidence status are described in [production runbook](production-runbook.md).
+
+## Media storage and abuse-limit configuration (replacement for #184)
+
+Local mode (current production) requires MEDIA_STORAGE=local and an absolute,
+pre-provisioned MEDIA_ROOT shared only by the web and worker service identities.
+MEDIA_OUTLET_BUDGET_BYTES defaults to 104857600 (100 MiB) for backward compatibility.
+Empty R2 credentials and endpoint settings are ignored in local mode; selecting
+MEDIA_STORAGE=r2 instead requires all endpoint, bucket, access and secret fields.
+The worker validates storage-only settings. The web validates storage and
+outlet-upload budget together with its existing authentication, SMTP, ordering
+and optional AI/POS settings.
+
+PUBLIC_MEDIA_RATE_LIMIT_MAX defaults to 180 requests per signed client per
+60-second window and PUBLIC_MEDIA_RATE_LIMIT_GLOBAL_MAX defaults to 12000
+requests across clients for the same window. Both use cache Redis, with
+atomic reservations. Do not put secrets in NEXT_PUBLIC_ variables.
+
+**Production prerequisite:** /api/public-media/ must receive the same authenticated
+Nginx edge attestation already used by public orders. Add the isolated location
+from infra/nginx/menuminute.conf.example to the reviewed Food vhost; ensure
+trusted Cloudflare real_ip ranges are active, the app only listens on loopback,
+and the root-only edge secret agrees with ORDER_EDGE_SHARED_SECRET in web.env.
+Without a valid signed client identity, image delivery deliberately fails closed
+with 503. Do not roll out this release before confirming live image requests.

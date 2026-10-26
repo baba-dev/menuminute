@@ -7,6 +7,7 @@ import {
   mediaCommand,
   publicMedia,
   privateMedia,
+  publicMediaResponse,
 } from "../src/modules/media/product-service";
 import { commandMenu } from "../src/modules/menu-product/service";
 import { menuDocumentSchema } from "../src/modules/menu-product/contracts";
@@ -94,8 +95,15 @@ it("processes private originals, requires approval + publication, strips metadat
     action: "publish",
     data: {},
   });
-  expect((await publicMedia(asset.id)).byteLength).toBeGreaterThan(0);
+  const response = await publicMediaResponse(asset.id);
+  expect(response.notModified).toBe(false);
+  if (response.notModified) throw new Error("Expected media bytes");
+  expect(response.bytes.byteLength).toBeGreaterThan(0);
+  expect((await publicMediaResponse(asset.id, false, response.etag)).notModified).toBe(true);
   await mediaCommand(f.actor, f.outlet.id, asset.id, "unapprove");
+  await expect(publicMediaResponse(asset.id, false, response.etag)).rejects.toMatchObject({
+    statusCode: 404,
+  });
   await expect(publicMedia(asset.id)).rejects.toMatchObject({ statusCode: 404 });
 });
 it("rejects malformed/SVG content and revoked delegated authority without publishing bytes", async () => {

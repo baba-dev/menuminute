@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const updated = await updateMenuItem(actor, itemId, restaurant.id, parsed.data);
     return NextResponse.json(updated);
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }
 
@@ -38,6 +38,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     await deleteMenuItem(actor, itemId, restaurant.id);
     return NextResponse.json({ success: true });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

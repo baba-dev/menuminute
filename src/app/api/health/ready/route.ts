@@ -1,5 +1,6 @@
 import { getPool, verifyRuntimeRole } from "@/db";
 import { redisHealth } from "@/lib/redis";
+import { mediaStorageHealth } from "@/modules/media/storage";
 export const dynamic = "force-dynamic";
 export async function GET() {
   let database = false;
@@ -10,13 +11,14 @@ export async function GET() {
   } catch {
     /* Safe public dependency state only. */
   }
-  const redis = await redisHealth();
-  const ready = database && redis.queue && redis.cache;
+  const [redis, media] = await Promise.all([redisHealth(), mediaStorageHealth()]);
+  const ready = database && redis.queue && redis.cache && media;
   return Response.json(
     {
       status: ready ? "ready" : "unavailable",
       database,
       redis,
+      media,
       release: process.env.NEXT_PUBLIC_RELEASE_SHA ?? null,
     },
     { status: ready ? 200 : 503, headers: { "Cache-Control": "no-store" } }

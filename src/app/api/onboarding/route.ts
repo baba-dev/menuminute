@@ -9,20 +9,20 @@ export async function GET() {
     if (!session) throw new UnauthorizedError();
     return NextResponse.json(await onboardingState({ userId: session.user.id }));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function PATCH(req: Request) {
   try {
     return NextResponse.json(await saveOnboarding(await requestActor(req, true), await req.json()));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function POST(req: Request) {
   try {
     return NextResponse.json(await provisionOnboarding(await requestActor(req, true)));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

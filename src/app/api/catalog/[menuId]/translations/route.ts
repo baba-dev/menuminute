@@ -12,7 +12,7 @@ export async function GET(req: Request, context: Context) {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
 
@@ -29,6 +29,6 @@ export async function PUT(req: Request, context: Context) {
       { headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" } }
     );
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mediaEnvShape, validateMediaEnv } from "./media-env";
 const pgUrl = z
   .string()
   .url()
@@ -41,14 +42,14 @@ export const envSchema = z
     AUTH_ALLOW_TEST_EMAIL: strictBoolean.default(false),
     REDIS_QUEUE_URL: redisUrl,
     REDIS_CACHE_URL: redisUrl,
+    PUBLIC_MEDIA_RATE_LIMIT_MAX: z.coerce.number().int().min(30).max(10_000).default(180),
+    PUBLIC_MEDIA_RATE_LIMIT_GLOBAL_MAX: z.coerce.number().int().min(1000).max(1_000_000).default(12000),
+    PUBLIC_MEDIA_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(10).max(3600).default(60),
+    ...mediaEnvShape,
     GEMINI_API_KEY: z.string().optional(),
     NVIDIA_API_KEY: z.string().optional(),
     CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
     CLOUDFLARE_API_TOKEN: z.string().optional(),
-    R2_ACCESS_KEY_ID: z.string().optional(),
-    R2_SECRET_ACCESS_KEY: z.string().optional(),
-    R2_BUCKET_NAME: z.string().default("menuminute-media"),
-    R2_ENDPOINT: z.string().optional(),
     PEXELS_API_KEY: z.string().optional(),
     AI_FEATURES_ENABLED: strictBoolean.default(false),
     IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
@@ -76,6 +77,7 @@ export const envSchema = z
       .optional(),
   })
   .superRefine((e, ctx) => {
+    validateMediaEnv(e, ctx);
     if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
       ctx.addIssue({
         code: "custom",

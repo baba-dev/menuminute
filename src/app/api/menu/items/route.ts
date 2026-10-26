@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(allItems);
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }
 
@@ -50,6 +50,6 @@ export async function POST(req: NextRequest) {
     const item = await createMenuItem(actor, restaurant.id, parsed.data);
     return NextResponse.json(item, { status: 201 });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

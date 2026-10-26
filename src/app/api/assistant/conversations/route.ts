@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       headers: { "cache-control": "private, no-store" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
 export async function POST(req: Request) {
@@ -38,6 +38,6 @@ export async function POST(req: Request) {
       headers: { "cache-control": "private, no-store" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

@@ -17,6 +17,6 @@ export async function GET(req: Request, c: Context) {
       { headers: { "cache-control": "private, no-store" } }
     );
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

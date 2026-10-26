@@ -62,3 +62,20 @@ role composition/delegation, outlet-type changes, dine-in versus pickup, modifie
 large quantities and overflow, independent subscription/local currencies, zero/three-decimal totals,
 closing/acceptance races, overnight/24-hour cutoffs and printed QR continuity/revocation. Use the
 25-owner / 50-restaurant / 1,000-orders-hour planning envelope with measured burst and SSE traffic.
+
+## Replacement media hardening regression matrix
+
+- Local mode accepts blank optional R2 fields; R2 mode rejects incomplete or
+  non-canonical settings at startup. The 100 MiB upload budget default persists.
+- Signed Nginx edge identity rejects spoofed forwarding headers, malformed
+  addresses and incorrect attestation. The browser fixture injects synthetic
+  trusted headers; the real host must provide them before rollout.
+- Redis tests cover the atomic client and global request quotas and 429;
+  missing Redis and bad edge proof return 503. Confirm a busy 20/50/100-photo
+  menu with shared-client and separate-client browser sessions.
+- Each 304 still runs publication and approval checks; 200 rechecks after
+  object retrieval. Revocation-before-304 must give 404.
+- R2 readiness uses a signed 2-second bucket HEAD; CI mocks it without external
+  requests. Operator acceptance must verify real credentials and permissions.
+- Verify no request IDs, request headers, query parameters, media IDs or
+  customer content leak into unexpected-error JSON logs.

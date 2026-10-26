@@ -8,17 +8,21 @@ const publisher = readFileSync(path.resolve(".github/workflows/publish-arm64.yml
 const packageScript = readFileSync(path.resolve("infra/deploy/package-release.sh"), "utf8");
 
 describe("provenance-bound main-only production delivery", () => {
-  it("parallelizes five mandatory CI lanes and fails closed at the final gate", () => {
+  it("parallelizes six mandatory CI lanes and fails closed at the final gate", () => {
     expect(ci).toContain("Required CI quality gate");
-    expect(ci).toContain("needs: [quality, typecheck, test, build, ember_browser]");
+    expect(ci).toContain("needs: [quality, typecheck, test, build, ember_browser, security]");
     expect(ci).toContain('test "$result" = success');
     expect(ci).toContain("Ember Enabled Browser (ARM64)");
+    expect(ci).toContain("Dependency, Secret & Code Scanning");
+    expect(ci).toContain("pnpm audit --audit-level high");
+    expect(ci).toContain("github/codeql-action/analyze@");
+    expect(ci).toContain("gitleaks/gitleaks-action@");
     expect(ci).not.toContain("needs: [quality, typecheck, test]\n");
     expect(ci).toContain("pnpm install --frozen-lockfile");
   });
 
   it("keeps optional cache/evidence failures separate from mandatory archive upload", () => {
-    expect(ci.match(/uses: actions\/cache@v4/g)).toHaveLength(5);
+    expect(ci.match(/uses: actions\/cache@[0-9a-f]{40}/g)).toHaveLength(5);
     expect(ci.match(/continue-on-error: true/g)).toHaveLength(7);
     expect(ci).toContain("name: Cache Playwright Chromium\n        continue-on-error: true");
     expect(ci).toContain("name: browser-failure-evidence");

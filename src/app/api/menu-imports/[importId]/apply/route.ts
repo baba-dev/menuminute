@@ -13,6 +13,6 @@ export async function POST(req: Request, c: C) {
       }
     );
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

@@ -57,7 +57,7 @@ jobs:
           echo "PUBLISH_CREATED_AT=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq '.created_at')" >> "$GITHUB_ENV"
 
       - name: Download exact successfully tested CI artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: menuminute-release-${{ env.RELEASE_SHA }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -104,7 +104,7 @@ jobs:
           echo "Published [$tag](https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag) from [CI run $SOURCE_CI_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$SOURCE_CI_RUN_ID) with digest \`$digest\`." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload authenticated publication handoff
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: published-source-${{ github.run_id }}
           path: published-source.json
