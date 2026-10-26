@@ -549,7 +549,8 @@ export function StudioDishEditor({
                   onUpdate({ nutrition: { ...nutrition, verified: event.target.checked } })
                 }
               />{" "}
-              I checked these nutrition numbers against this restaurant&apos;s actual portion and recipe
+              I checked these nutrition numbers against this restaurant&apos;s actual portion and
+              recipe
             </span>
             <small className="quiet">Unverified estimates never appear in the guest menu.</small>
           </label>
