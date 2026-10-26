@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UnauthorizedError } from "@/lib/errors";
 import { errorResponse } from "@/lib/request-context";
 import { kitchenChanges, kitchenSnapshot } from "@/modules/kitchen/service";
 import { acquireKitchenStream } from "@/modules/kitchen/stream-lease";
@@ -72,7 +73,7 @@ export async function GET(
               if (!(await admittedLease.renew())) throw new Error("Stream lease expired");
               const fresh = await kitchenStreamActor(req);
               if (fresh.userId !== actor.userId || fresh.sessionId !== actor.sessionId)
-                throw new Error("Session identity changed");
+                throw new UnauthorizedError("Session identity changed");
               const changes = await kitchenChanges(fresh, organizationId, outletId, cursor);
               if (changes.resync || changes.events.length) {
                 const latest = await kitchenSnapshot(fresh, organizationId, outletId);
