@@ -34,9 +34,7 @@ export function WizardMediaSlot({ step, alt = "", className = "" }: WizardMediaS
             height={720}
             unoptimized
             className={`wizard-media-custom wizard-media-custom--${mode}`}
-            onError={() =>
-              setFailed((previous) => ({ ...previous, [`${file}-${format}`]: true }))
-            }
+            onError={() => setFailed((previous) => ({ ...previous, [`${file}-${format}`]: true }))}
           />
         );
       })}
