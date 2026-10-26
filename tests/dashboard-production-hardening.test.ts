@@ -18,7 +18,9 @@ describe("dashboard production service-pulse contract", () => {
   });
 
   it("treats revoked role access as restricted without leaking or retrying another outlet", async () => {
-    const reader = vi.fn(async () => { throw new ForbiddenError(); });
+    const reader = vi.fn(async () => {
+      throw new ForbiddenError();
+    });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     try {
       const result = await dashboardPulseSnapshot(actor, "org-a", "outlet-a", reader);
@@ -70,15 +72,52 @@ describe("dashboard production service-pulse contract", () => {
 describe("deterministic canonical QR selection", () => {
   it("is independent of database row order and never falls back to inactive/order links", () => {
     const qr = [
-      { id: "z", destinationToken: "z-token", isActive: true, purpose: "menu", tableId: null, createdAt: new Date("2026-02-02") },
-      { id: "c", destinationToken: "table-token", isActive: true, purpose: "menu", tableId: "table-1", createdAt: new Date("2025-01-01") },
-      { id: "a", destinationToken: "a-token", isActive: true, purpose: "menu", tableId: null, createdAt: new Date("2025-02-02") },
-      { id: "0", destinationToken: "revoked", isActive: false, purpose: "menu", tableId: null, createdAt: new Date("2024-01-01") },
-      { id: "1", destinationToken: "order", isActive: true, purpose: "order", tableId: null, createdAt: new Date("2023-01-01") },
+      {
+        id: "z",
+        destinationToken: "z-token",
+        isActive: true,
+        purpose: "menu",
+        tableId: null,
+        createdAt: new Date("2026-02-02"),
+      },
+      {
+        id: "c",
+        destinationToken: "table-token",
+        isActive: true,
+        purpose: "menu",
+        tableId: "table-1",
+        createdAt: new Date("2025-01-01"),
+      },
+      {
+        id: "a",
+        destinationToken: "a-token",
+        isActive: true,
+        purpose: "menu",
+        tableId: null,
+        createdAt: new Date("2025-02-02"),
+      },
+      {
+        id: "0",
+        destinationToken: "revoked",
+        isActive: false,
+        purpose: "menu",
+        tableId: null,
+        createdAt: new Date("2024-01-01"),
+      },
+      {
+        id: "1",
+        destinationToken: "order",
+        isActive: true,
+        purpose: "order",
+        tableId: null,
+        createdAt: new Date("2023-01-01"),
+      },
     ];
     expect(preferredMenuQr(qr)?.destinationToken).toBe("a-token");
     expect(preferredMenuQr([...qr].reverse())?.destinationToken).toBe("a-token");
-    expect(preferredMenuQr(qr.filter((code) => code.tableId !== null))?.destinationToken).toBe("table-token");
+    expect(preferredMenuQr(qr.filter((code) => code.tableId !== null))?.destinationToken).toBe(
+      "table-token"
+    );
     expect(preferredMenuQr(qr.filter((code) => !code.isActive))).toBeNull();
   });
 });

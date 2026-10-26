@@ -157,7 +157,9 @@ test("service pulse requires a session and never caches tenant data", async ({ r
   expect(response.headers()["cache-control"]).toContain("no-store");
 });
 
-test("service pulse resolves the authorized outlet, ignoring forged outlet headers", async ({ page }) => {
+test("service pulse resolves the authorized outlet, ignoring forged outlet headers", async ({
+  page,
+}) => {
   const owner = await seedPublishedOutlet();
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   await page.goto("/login");
@@ -189,6 +191,8 @@ test("service pulse resolves the authorized outlet, ignoring forged outlet heade
 
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
   }
 });

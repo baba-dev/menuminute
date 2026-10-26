@@ -11,39 +11,43 @@ import type { MenuQr, MenuRow } from "@/modules/menu-product/dashboard-summary";
  * React cache deduplicates matching reads in the layout and page per request,
  * never between authenticated users or requests.
  */
-export const dashboardMenuRows = cache(async (userId: string, outletId: string): Promise<MenuRow[]> => {
-  return withOutlet({ userId }, outletId, "menu.read", (tx) =>
-    tx
-      .select({
-        archived: menus.archived,
-        revision: menus.revision,
-        publishedRevision: menus.publishedRevision,
-      })
-      .from(menus)
-      .leftJoin(
-        menuAssignments,
-        and(eq(menuAssignments.menuId, menus.id), eq(menuAssignments.outletId, outletId))
-      )
-      .where(or(eq(menus.outletId, outletId), eq(menuAssignments.outletId, outletId)))
-  );
-});
+export const dashboardMenuRows = cache(
+  async (userId: string, outletId: string): Promise<MenuRow[]> => {
+    return withOutlet({ userId }, outletId, "menu.read", (tx) =>
+      tx
+        .select({
+          archived: menus.archived,
+          revision: menus.revision,
+          publishedRevision: menus.publishedRevision,
+        })
+        .from(menus)
+        .leftJoin(
+          menuAssignments,
+          and(eq(menuAssignments.menuId, menus.id), eq(menuAssignments.outletId, outletId))
+        )
+        .where(or(eq(menus.outletId, outletId), eq(menuAssignments.outletId, outletId)))
+    );
+  }
+);
 
-export const dashboardQrRows = cache(async (userId: string, outletId: string): Promise<MenuQr[]> => {
-  return withOutlet({ userId }, outletId, "menu.read", (tx) =>
-    tx
-      .select({
-        id: qrCodes.id,
-        destinationToken: qrCodes.destinationToken,
-        purpose: qrCodes.purpose,
-        isActive: qrCodes.isActive,
-        tableId: qrCodes.tableId,
-        createdAt: qrCodes.createdAt,
-      })
-      .from(qrCodes)
-      .where(eq(qrCodes.restaurantId, outletId))
-      .orderBy(asc(qrCodes.createdAt), asc(qrCodes.id))
-  );
-});
+export const dashboardQrRows = cache(
+  async (userId: string, outletId: string): Promise<MenuQr[]> => {
+    return withOutlet({ userId }, outletId, "menu.read", (tx) =>
+      tx
+        .select({
+          id: qrCodes.id,
+          destinationToken: qrCodes.destinationToken,
+          purpose: qrCodes.purpose,
+          isActive: qrCodes.isActive,
+          tableId: qrCodes.tableId,
+          createdAt: qrCodes.createdAt,
+        })
+        .from(qrCodes)
+        .where(eq(qrCodes.restaurantId, outletId))
+        .orderBy(asc(qrCodes.createdAt), asc(qrCodes.id))
+    );
+  }
+);
 
 export const dashboardPublicProjection = cache(async (destinationToken: string) => {
   // Retain the established versioned/legacy public projection semantics.

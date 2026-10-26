@@ -18,7 +18,9 @@ export function preferredMenuQr(codes: readonly MenuQr[]) {
     .sort((a, b) => {
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return aTime - bTime || (a.id ?? a.destinationToken).localeCompare(b.id ?? b.destinationToken);
+      return (
+        aTime - bTime || (a.id ?? a.destinationToken).localeCompare(b.id ?? b.destinationToken)
+      );
     });
   return active.find((code) => code.tableId === null) ?? active[0] ?? null;
 }

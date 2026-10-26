@@ -28,10 +28,7 @@ export async function GET(req: Request) {
         latencyMs: Date.now() - started,
       });
     }
-    return NextResponse.json(
-      { outletId: outlet.id, ...snapshot },
-      { headers: privateHeaders }
-    );
+    return NextResponse.json({ outletId: outlet.id, ...snapshot }, { headers: privateHeaders });
   } catch (error) {
     const response = errorResponse(error);
     response.headers.set("Cache-Control", "private, no-store");
