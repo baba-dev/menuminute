@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { mediaEnv } from "@/lib/config/media-env";
 const hash = (v: Buffer | string) => createHash("sha256").update(v).digest("hex");
 const hmac = (key: Buffer | string, value: string) =>
   createHmac("sha256", key).update(value).digest();
@@ -9,17 +10,11 @@ function keyPath(key: string) {
     throw new Error("Invalid storage key");
   return key;
 }
-function root() {
-  const value = process.env["MEDIA_ROOT"];
-  if (!value || !path.isAbsolute(value)) throw new Error("Explicit absolute media root required");
-  return value;
-}
-async function r2(method: "GET" | "PUT", key: string, body?: Buffer) {
-  const endpoint = process.env["R2_ENDPOINT"],
-    bucket = process.env["R2_BUCKET_NAME"],
-    access = process.env["R2_ACCESS_KEY_ID"],
-    secret = process.env["R2_SECRET_ACCESS_KEY"];
-  if (!endpoint || !bucket || !access || !secret) throw new Error("R2 configuration incomplete");
+async function r2(method: "GET" | "PUT" | "HEAD", key = "", body?: Buffer, timeout = 15000) {
+  const endpoint = mediaEnv.R2_ENDPOINT!,
+    bucket = mediaEnv.R2_BUCKET_NAME,
+    access = mediaEnv.R2_ACCESS_KEY_ID!,
+    secret = mediaEnv.R2_SECRET_ACCESS_KEY!;
   const url = new URL(endpoint);
   if (
     url.protocol !== "https:" ||
@@ -30,7 +25,8 @@ async function r2(method: "GET" | "PUT", key: string, body?: Buffer) {
     url.pathname !== "/"
   )
     throw new Error("R2 endpoint must be a canonical account HTTPS endpoint");
-  url.pathname = `/${encodeURIComponent(bucket)}/${keyPath(key).split("/").map(encodeURIComponent).join("/")}`;
+  const objectPath = key ? `/${keyPath(key).split("/").map(encodeURIComponent).join("/")}` : "";
+  url.pathname = `/${encodeURIComponent(bucket)}${objectPath}`;
   const now = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
   const day = now.slice(0, 8);
   const digest = hash(body ?? "");
@@ -58,11 +54,11 @@ async function r2(method: "GET" | "PUT", key: string, body?: Buffer) {
         : {}),
     },
     body: body ? new Uint8Array(body) : undefined,
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(timeout),
     redirect: "error",
   });
   if (!response.ok) throw new Error("Object storage unavailable");
-  if (method === "PUT") return Buffer.alloc(0);
+  if (method !== "GET") return Buffer.alloc(0);
   const reader = response.body?.getReader();
   if (!reader) throw new Error("Missing object");
   let size = 0;
@@ -82,11 +78,11 @@ async function r2(method: "GET" | "PUT", key: string, body?: Buffer) {
 }
 export async function putObject(key: string, body: Buffer) {
   keyPath(key);
-  if (process.env["MEDIA_STORAGE"] === "r2") {
+  if (mediaEnv.MEDIA_STORAGE === "r2") {
     await r2("PUT", key, body);
     return;
   }
-  const file = path.join(root(), key);
+  const file = path.join(mediaEnv.MEDIA_ROOT!, key);
   // MEDIA_ROOT must be pre-created with the shared setgid group; systemd sets UMask=0007.
   // New nested directories inherit that group and remain private to web + worker.
   await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o2770 });
@@ -100,9 +96,24 @@ export async function putObject(key: string, body: Buffer) {
 }
 export async function getObject(key: string) {
   keyPath(key);
-  if (process.env["MEDIA_STORAGE"] === "r2") return r2("GET", key);
-  const file = path.join(root(), key);
+  if (mediaEnv.MEDIA_STORAGE === "r2") return r2("GET", key);
+  const file = path.join(mediaEnv.MEDIA_ROOT!, key);
   const info = await fs.stat(file);
   if (info.size > 5242880) throw new Error("Stored object exceeds limit");
   return fs.readFile(file);
+}
+
+export async function mediaStorageHealth() {
+  try {
+    if (mediaEnv.MEDIA_STORAGE === "r2") {
+      await r2("HEAD", "", undefined, 2000);
+      return true;
+    }
+    const info = await fs.stat(mediaEnv.MEDIA_ROOT!);
+    if (!info.isDirectory()) return false;
+    await fs.access(mediaEnv.MEDIA_ROOT!, fs.constants.R_OK | fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
