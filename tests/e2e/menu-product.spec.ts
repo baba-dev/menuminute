@@ -619,3 +619,29 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
     expect(response.headers()["content-type"], name).toContain("image/webp");
   }
 });
+
+test("unverified culinary information never creates safe-from claims in mobile dining", async ({
+  page,
+}, info) => {
+  const owner = await seed(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/m/${owner.token}`);
+  await expect(page.getByRole("heading", { name: "Signature thali" })).toBeVisible();
+
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Nut-Free" }).click();
+  await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "Dairy-Free" }).click();
+  await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
+
+  await page.getByRole("group", { name: "Dietary filter" }).getByRole("button", { name: "All dishes" }).click();
+  await page.getByRole("button", { name: "View Signature thali details" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/allergen details have not been verified/i)).toBeVisible();
+  await expect(dialog.getByText("Contains Allergens:")).toHaveCount(0);
+  await page.screenshot({ path: info.outputPath("culinary-unverified-mobile.png"), fullPage: true });
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
