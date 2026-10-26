@@ -2,7 +2,7 @@
 
 ## Scope
 
-Dish culinary profiles offer *editable reference suggestions*, never factual assertions about an individual restaurant. MenuMinute must not infer ingredients, dietary categories, cross-contact practices, or calorie counts from a dish name. This policy applies to imported, legacy, versioned, public and preview menus.
+Dish culinary profiles offer _editable reference suggestions_, never factual assertions about an individual restaurant. MenuMinute must not infer ingredients, dietary categories, cross-contact practices, or calorie counts from a dish name. This policy applies to imported, legacy, versioned, public and preview menus.
 
 ## Canonical contracts
 
@@ -19,7 +19,7 @@ Dish culinary profiles offer *editable reference suggestions*, never factual ass
 
 1. Inspect the actual recipe, portion sizes, ingredients, supplier labels and kitchen cross-contact.
 2. Optionally start from a curated example, then edit the recipe to match actual preparation.
-3. Confirm the nutrition information *only after* checking serving size and recipe.
+3. Confirm the nutrition information _only after_ checking serving size and recipe.
 4. Confirm allergens only after inspecting ingredients and shared equipment. If unsafe or unknown, do not assert a free-from status.
 5. Select compatible, published and available companion dishes; verify their options and prices independently.
 6. Save and preview. Publish through the existing revisioned release path and exercise mobile/desktop public dining.

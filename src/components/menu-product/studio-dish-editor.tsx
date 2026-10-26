@@ -531,7 +531,7 @@ export function StudioDishEditor({
           <label className="field">
             Serving Size Description
             <input
-                disabled={!canWrite}
+              disabled={!canWrite}
               type="text"
               placeholder="e.g. Serves 1-2 · approx. 350g"
               value={nutrition.servingSize ?? ""}
@@ -618,7 +618,7 @@ export function StudioDishEditor({
           <label className="field">
             Kitchen Cross-Contact Disclaimer
             <input
-                disabled={!canWrite}
+              disabled={!canWrite}
               type="text"
               placeholder="e.g. Cooked in a kitchen that also processes wheat and peanuts."
               value={safety.crossContact ?? ""}
@@ -658,7 +658,7 @@ export function StudioDishEditor({
               return (
                 <label key={claim} className="row" style={{ gap: "0.4rem" }}>
                   <input
-                disabled={!canWrite}
+                    disabled={!canWrite}
                     type="checkbox"
                     disabled={declared}
                     checked={checked}
@@ -696,7 +696,7 @@ export function StudioDishEditor({
               order together.
             </span>
             <input
-                disabled={!canWrite}
+              disabled={!canWrite}
               type="search"
               aria-label="Search companion dishes"
               disabled={!canWrite}
