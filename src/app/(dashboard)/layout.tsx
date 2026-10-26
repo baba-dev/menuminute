@@ -10,14 +10,11 @@ import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { WorkspaceTopbar } from "./workspace-topbar";
-import { getRestaurantQrCodes } from "@/modules/restaurants/service";
+import { dashboardNavigation, dashboardPublicProjection, dashboardQrRows } from "@/modules/menu-product/dashboard-data";
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
-import { publicProduct } from "@/modules/menu-product/service";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { needsMfaEnrollment } from "@/lib/privileged-access";
-import { billingState } from "@/modules/billing/service";
-import { ForbiddenError } from "@/lib/errors";
 import {
   getDefaultOrActiveRestaurant,
   getRestaurantsByUserId,
@@ -45,23 +42,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     columns: { isSuperAdmin: true },
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
-  let capabilities: { ordering: boolean; kitchen: boolean } | undefined;
-  if (restaurant) {
-    try {
-      const state = await billingState(
-        { userId: session.user.id, sessionId: session.session.id },
-        restaurant.organizationId
-      );
-      capabilities = { ordering: state.ordering, kitchen: state.kitchen };
-    } catch (error) {
-      if (!(error instanceof ForbiddenError)) throw error;
-    }
-  }
-  const codes = restaurant
-    ? await getRestaurantQrCodes({ userId: session.user.id }, restaurant.id)
-    : [];
+  const [capabilities, codes] = restaurant
+    ? await Promise.all([
+        dashboardNavigation(
+          { userId: session.user.id, sessionId: session.session.id },
+          restaurant.organizationId,
+          restaurant.id
+        ),
+        dashboardQrRows(session.user.id, restaurant.id),
+      ])
+    : [undefined, []];
   const qr = preferredMenuQr(codes);
-  const projection = qr ? await publicProduct(qr.destinationToken) : null;
+  const projection = qr ? await dashboardPublicProjection(qr.destinationToken) : null;
   const publicHref =
     projection?.menus.length && qr ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
   const name = session.user.name || "Restaurant admin";

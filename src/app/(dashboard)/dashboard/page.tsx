@@ -17,15 +17,16 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { getDefaultOrActiveRestaurant, getRestaurantQrCodes } from "@/modules/restaurants/service";
-import { listMenus, publicProduct } from "@/modules/menu-product/service";
+import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { dashboardMenuRows, dashboardPublicProjection, dashboardQrRows } from "@/modules/menu-product/dashboard-data";
 import {
   dashboardSetup,
   dashboardSummary,
   preferredMenuQr,
 } from "@/modules/menu-product/dashboard-summary";
 import { DashboardTooltip } from "./dashboard-tooltip";
-import { optionalDashboardServicePulse } from "@/modules/menu-product/dashboard-optional-pulse";
+import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
+import { DashboardServicePulse } from "./dashboard-service-pulse";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -57,11 +58,11 @@ export default async function DashboardPage() {
   // Only canonical, outlet-scoped rows and the immutable guest-facing projection
   // contribute to these values. Unsaved editor state is deliberately excluded.
   const [menus, codes] = await Promise.all([
-    listMenus(actor, outlet.id),
-    getRestaurantQrCodes(actor, outlet.id),
+    dashboardMenuRows(actor.userId, outlet.id),
+    dashboardQrRows(actor.userId, outlet.id),
   ]);
   const primaryQr = preferredMenuQr(codes);
-  const publicProjection = primaryQr ? await publicProduct(primaryQr.destinationToken) : null;
+  const publicProjection = primaryQr ? await dashboardPublicProjection(primaryQr.destinationToken) : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
   const hasSavedMenu = menus.some((menu) => !menu.archived);
   const setup = dashboardSetup({
@@ -72,7 +73,7 @@ export default async function DashboardPage() {
   });
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
-  const operations = await optionalDashboardServicePulse(actor, outlet.organizationId, outlet.id);
+  const operations = await dashboardPulseSnapshot(actor, outlet.organizationId, outlet.id);
   const publicHref =
     stats.hasPublicMenu && primaryQr
       ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
@@ -307,33 +308,11 @@ export default async function DashboardPage() {
             </Link>
           </section>
 
-          {operations && (
-            <section className="mm-dashboard-operations" aria-labelledby="mm-operations-title">
-              <div>
-                <span className="mm-dashboard-eyebrow">LIVE SERVICE</span>
-                <h2 id="mm-operations-title">What needs attention now</h2>
-                <p>Current outlet counts from the authoritative order ledger.</p>
-              </div>
-              <div className="mm-dashboard-operations-grid">
-                <Link href="/dashboard/orders">
-                  <strong>{operations.pending}</strong>
-                  <span>Awaiting acceptance</span>
-                </Link>
-                <Link href="/dashboard/orders">
-                  <strong>{operations.preparing}</strong>
-                  <span>In preparation</span>
-                </Link>
-                <Link href="/dashboard/orders">
-                  <strong>{operations.ready}</strong>
-                  <span>Ready for handoff</span>
-                </Link>
-                <Link href="/dashboard/orders">
-                  <strong>{operations.completedToday}</strong>
-                  <span>Completed today</span>
-                </Link>
-              </div>
-            </section>
-          )}
+          <DashboardServicePulse
+            key={outlet.id}
+            outletId={outlet.id}
+            initial={operations}
+          />
 
           <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
             <div className="mm-dashboard-health-head">

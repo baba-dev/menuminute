@@ -5,13 +5,21 @@ export type MenuQr = {
   purpose: string;
   tableId: string | null;
   destinationToken: string;
+  id?: string;
+  createdAt?: Date | string;
 };
 export type ReleasedProjection = {
   menus: { document: { categories: { archived?: boolean; items: { archived?: boolean }[] }[] } }[];
 };
 
 export function preferredMenuQr(codes: readonly MenuQr[]) {
-  const active = codes.filter((code) => code.isActive && code.purpose === "menu");
+  const active = codes
+    .filter((code) => code.isActive && code.purpose === "menu")
+    .sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aTime - bTime || (a.id ?? a.destinationToken).localeCompare(b.id ?? b.destinationToken);
+    });
   return active.find((code) => code.tableId === null) ?? active[0] ?? null;
 }
 
