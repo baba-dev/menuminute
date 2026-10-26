@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
-import { X, Plus, Minus, Leaf, Check } from "lucide-react";
+import { X, Plus, Minus, Leaf, Check, Flame, ShieldAlert, Sparkles, ChefHat } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
 
@@ -14,6 +14,26 @@ export type CustomizerDish = {
   priceMinor: number;
   mediaId: string | null;
   dietary: readonly string[];
+  nutrition?: {
+    calories?: number;
+    proteinGrams?: number;
+    carbsGrams?: number;
+    fatGrams?: number;
+    fiberGrams?: number;
+    servingSize?: string;
+  };
+  culinary?: {
+    spiceLevel?: number;
+    flavorNotes?: readonly string[];
+    chefNote?: string;
+    servingTemp?: "hot" | "chilled" | "ambient";
+    pairingDishIds?: readonly string[];
+  };
+  safety?: {
+    ingredients?: readonly string[];
+    allergens?: readonly string[];
+    crossContact?: string;
+  };
   soldOut?: boolean;
   open?: boolean;
   variants: readonly { id: string; name: string; priceMinor: number; isAvailable: boolean }[];
@@ -45,12 +65,36 @@ export type CartItem = {
   itemNotes: string;
 };
 
+const ALLERGEN_LABELS: Record<string, string> = {
+  dairy: "Dairy",
+  gluten: "Gluten / Wheat",
+  nuts: "Tree Nuts",
+  peanuts: "Peanuts",
+  eggs: "Eggs",
+  soy: "Soy",
+  fish: "Fish",
+  shellfish: "Crustaceans / Shellfish",
+  sesame: "Sesame",
+  mustard: "Mustard",
+  sulfites: "Sulfites",
+};
+
+const SPICE_DESCRIPTIONS: Record<number, string> = {
+  0: "No Heat",
+  1: "Mild Heat 🔥",
+  2: "Medium Heat 🔥🔥",
+  3: "Hot 🔥🔥🔥",
+  4: "Extra Fiery 🔥🔥🔥🔥",
+};
+
 export function ItemCustomizer({
   dish,
   currency,
   visual,
   readOnly = false,
   isOpen,
+  companionDishes = [],
+  onSelectCompanion,
   onClose,
   onAddToCart,
 }: {
@@ -59,6 +103,8 @@ export function ItemCustomizer({
   visual?: DiningVisual | null;
   readOnly?: boolean;
   isOpen: boolean;
+  companionDishes?: CustomizerDish[];
+  onSelectCompanion?: (companion: CustomizerDish) => void;
   onClose: () => void;
   onAddToCart: (item: CartItem) => void;
 }) {
@@ -72,6 +118,7 @@ export function ItemCustomizer({
   const [quantity, setQuantity] = useState(1);
   const [itemNotes, setItemNotes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [addedCompanions, setAddedCompanions] = useState<Set<string>>(() => new Set());
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
@@ -258,13 +305,207 @@ export function ItemCustomizer({
             </p>
           )}
 
-          {activeDish.dietary.length > 0 && (
-            <div className="row" style={{ gap: "0.4rem" }}>
-              {activeDish.dietary.map((d) => (
-                <span key={d} className="badge">
-                  <Leaf size={12} style={{ display: "inline" }} /> {d.replaceAll("_", " ")}
+          <div className="row wrap" style={{ gap: "0.4rem" }}>
+            {activeDish.dietary.map((d) => (
+              <span key={d} className="badge dining-dietary-badge">
+                <Leaf size={12} style={{ display: "inline" }} /> {d.replaceAll("_", " ")}
+              </span>
+            ))}
+            {activeDish.culinary?.spiceLevel !== undefined &&
+              activeDish.culinary.spiceLevel > 0 && (
+                <span className="badge dining-spice-badge">
+                  <Flame size={12} style={{ display: "inline" }} />{" "}
+                  {SPICE_DESCRIPTIONS[activeDish.culinary.spiceLevel] ??
+                    `${activeDish.culinary.spiceLevel} Heat`}
                 </span>
-              ))}
+              )}
+            {activeDish.culinary?.servingTemp && (
+              <span className="badge dining-temp-badge">
+                Served {activeDish.culinary.servingTemp}
+              </span>
+            )}
+          </div>
+
+          {/* Chef Tasting Note / Heritage Story */}
+          {activeDish.culinary?.chefNote && (
+            <div className="dining-chef-note stack">
+              <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
+                <ChefHat size={16} className="ember-text" />
+                <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>
+                  Chef&apos;s Tasting Note
+                </span>
+              </div>
+              <p
+                style={{ margin: 0, fontStyle: "italic", fontSize: "0.92rem", lineHeight: "1.45" }}
+              >
+                &ldquo;{activeDish.culinary.chefNote}&rdquo;
+              </p>
+            </div>
+          )}
+
+          {/* Flavor Profile Tags */}
+          {activeDish.culinary?.flavorNotes && activeDish.culinary.flavorNotes.length > 0 && (
+            <div className="stack" style={{ gap: "0.4rem" }}>
+              <span className="section-title" style={{ fontSize: "0.85rem" }}>
+                Flavor & Sensation
+              </span>
+              <div className="row wrap" style={{ gap: "0.35rem" }}>
+                {activeDish.culinary.flavorNotes.map((note) => (
+                  <span key={note} className="dining-flavor-tag">
+                    {note}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Nutritional Values & Macros */}
+          {(activeDish.nutrition?.calories || activeDish.nutrition?.proteinGrams) && (
+            <div className="stack" style={{ gap: "0.5rem" }}>
+              <div className="row between">
+                <span className="section-title" style={{ fontSize: "0.85rem" }}>
+                  Nutritional Profile
+                </span>
+                {activeDish.nutrition?.servingSize && (
+                  <span className="quiet" style={{ fontSize: "0.8rem" }}>
+                    {activeDish.nutrition.servingSize}
+                  </span>
+                )}
+              </div>
+              <div className="dining-macro-grid">
+                {activeDish.nutrition.calories !== undefined && (
+                  <div className="dining-macro-card">
+                    <span className="dining-macro-val">{activeDish.nutrition.calories}</span>
+                    <span className="dining-macro-lbl">kcal</span>
+                  </div>
+                )}
+                {activeDish.nutrition.proteinGrams !== undefined && (
+                  <div className="dining-macro-card">
+                    <span className="dining-macro-val">{activeDish.nutrition.proteinGrams}g</span>
+                    <span className="dining-macro-lbl">Protein</span>
+                  </div>
+                )}
+                {activeDish.nutrition.carbsGrams !== undefined && (
+                  <div className="dining-macro-card">
+                    <span className="dining-macro-val">{activeDish.nutrition.carbsGrams}g</span>
+                    <span className="dining-macro-lbl">Carbs</span>
+                  </div>
+                )}
+                {activeDish.nutrition.fatGrams !== undefined && (
+                  <div className="dining-macro-card">
+                    <span className="dining-macro-val">{activeDish.nutrition.fatGrams}g</span>
+                    <span className="dining-macro-lbl">Fat</span>
+                  </div>
+                )}
+                {activeDish.nutrition.fiberGrams !== undefined && (
+                  <div className="dining-macro-card">
+                    <span className="dining-macro-val">{activeDish.nutrition.fiberGrams}g</span>
+                    <span className="dining-macro-lbl">Fiber</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Ingredients & Allergen Transparency */}
+          {((activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0) ||
+            (activeDish.safety?.allergens && activeDish.safety.allergens.length > 0)) && (
+            <div className="stack" style={{ gap: "0.6rem" }}>
+              <span className="section-title" style={{ fontSize: "0.85rem" }}>
+                Ingredients & Allergens
+              </span>
+
+              {activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0 && (
+                <p className="quiet" style={{ fontSize: "0.88rem", margin: 0, lineHeight: "1.4" }}>
+                  <strong style={{ color: "var(--dc-ink)" }}>Ingredients:</strong>{" "}
+                  {activeDish.safety.ingredients.join(", ")}.
+                </p>
+              )}
+
+              {activeDish.safety?.allergens && activeDish.safety.allergens.length > 0 && (
+                <div className="dining-allergen-alert">
+                  <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
+                    <ShieldAlert size={16} className="dining-alert-icon" />
+                    <strong>Contains Allergens:</strong>
+                  </div>
+                  <div className="row wrap" style={{ gap: "0.35rem", marginTop: "0.4rem" }}>
+                    {activeDish.safety.allergens.map((a) => (
+                      <span key={a} className="dining-allergen-pill">
+                        {ALLERGEN_LABELS[a] ?? a}
+                      </span>
+                    ))}
+                  </div>
+                  {activeDish.safety.crossContact && (
+                    <small className="dining-cross-contact">{activeDish.safety.crossContact}</small>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Chef Recommended Pairings */}
+          {companionDishes && companionDishes.length > 0 && (
+            <div className="stack" style={{ gap: "0.5rem" }}>
+              <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
+                <Sparkles size={15} className="ember-text" />
+                <span className="section-title" style={{ fontSize: "0.85rem" }}>
+                  Chef Recommended Pairings
+                </span>
+              </div>
+              <div className="dining-pairings-strip">
+                {companionDishes.map((comp) => {
+                  const hasRequiredCustomization =
+                    comp.variants.length > 0 || comp.addOnGroups.some((g) => g.min > 0);
+                  const isQuickAdded = addedCompanions.has(comp.id);
+
+                  return (
+                    <div key={comp.id} className="dining-pairing-card">
+                      <span className="dining-pairing-name">{comp.name}</span>
+                      <span className="dining-pairing-price">
+                        {comp.variants.length > 0 ? "From " : ""}
+                        {formatPrice(comp.priceMinor, currency)}
+                      </span>
+                      <div className="row wrap" style={{ gap: "0.3rem", marginTop: "auto" }}>
+                        {!readOnly && !hasRequiredCustomization && (
+                          <button
+                            type="button"
+                            className={`dining-pairing-btn ${isQuickAdded ? "is-added" : ""}`}
+                            disabled={isQuickAdded}
+                            onClick={() => {
+                              onAddToCart({
+                                dishId: comp.id,
+                                dishName: comp.name,
+                                variantId: null,
+                                variantName: null,
+                                selectedAddOns: [],
+                                unitPriceMinor: comp.priceMinor,
+                                quantity: 1,
+                                itemNotes: "",
+                              });
+                              setAddedCompanions((prev) => new Set(prev).add(comp.id));
+                            }}
+                          >
+                            {isQuickAdded ? (
+                              <>
+                                <Check size={12} style={{ display: "inline" }} /> Added
+                              </>
+                            ) : (
+                              "+ Quick Add"
+                            )}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="dining-pairing-btn is-secondary"
+                          onClick={() => onSelectCompanion?.(comp)}
+                        >
+                          {hasRequiredCustomization ? "Customize →" : "View"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

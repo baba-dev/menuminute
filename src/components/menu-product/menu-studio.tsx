@@ -887,6 +887,11 @@ export function MenuStudio({
                                     canWrite={detail.canWrite}
                                     currency={doc.currency}
                                     media={media}
+                                    companionDishes={doc.categories.flatMap((cat) =>
+                                      cat.items
+                                        .filter((i) => i.id !== dish.id)
+                                        .map((i) => ({ id: i.id, name: i.name }))
+                                    )}
                                     onUpdate={(patch) => updateDish(ci, di, patch)}
                                     onMove={(delta) => moveDish(ci, di, delta)}
                                   />

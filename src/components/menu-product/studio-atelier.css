@@ -1204,3 +1204,101 @@
   margin-top: 0.15rem;
   width: 1.1rem;
 }
+
+/* Top-Tier Culinary Studio Enhancements */
+.atelier-culinary-suggest-banner {
+  background: var(--atelier-soft, #fbf5ed);
+  border: 1px dashed var(--ember, #a83500);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+:root[data-theme="dark"] .atelier-culinary-suggest-banner {
+  background: var(--atelier-soft, #2d2621);
+  border-color: var(--ember, #ffb52c);
+}
+.atelier-btn-suggest {
+  background: var(--ember, #a83500);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+:root[data-theme="dark"] .atelier-btn-suggest {
+  background: var(--ember, #ffb52c);
+  color: #211600;
+}
+.atelier-btn-suggest:hover {
+  opacity: 0.9;
+}
+.atelier-culinary-details {
+  border: 1px solid var(--atelier-line, #e7dcd0);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: var(--paper, #fff);
+  margin-top: 0.5rem;
+}
+:root[data-theme="dark"] .atelier-culinary-details {
+  border-color: var(--atelier-line, #504137);
+  background: var(--panel, #2c2c2c);
+}
+.atelier-culinary-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  user-select: none;
+}
+.atelier-culinary-details[open] > summary {
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--atelier-line, #e7dcd0);
+  padding-bottom: 0.4rem;
+}
+:root[data-theme="dark"] .atelier-culinary-details[open] > summary {
+  border-bottom-color: var(--atelier-line, #504137);
+}
+.atelier-pill-btn {
+  background: var(--atelier-soft, #fbf5ed);
+  color: var(--ink, #171717);
+  border: 1px solid var(--atelier-line, #e7dcd0);
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+:root[data-theme="dark"] .atelier-pill-btn {
+  background: var(--atelier-soft, #2d2621);
+  color: var(--ink, #fff);
+  border-color: var(--atelier-line, #504137);
+}
+.atelier-pill-btn:hover {
+  border-color: var(--ember, #a83500);
+}
+.atelier-pill-btn.active {
+  background: var(--ember, #a83500);
+  color: #fff;
+  border-color: var(--ember, #a83500);
+  font-weight: 700;
+}
+:root[data-theme="dark"] .atelier-pill-btn.active {
+  background: var(--ember, #ffb52c);
+  color: #211600;
+  border-color: var(--ember, #ffb52c);
+}
+.atelier-pill-btn.allergen-active {
+  background: #b42318;
+  color: #fff;
+  border-color: #b42318;
+}
+:root[data-theme="dark"] .atelier-pill-btn.allergen-active {
+  background: #ffb4ab;
+  color: #690005;
+  border-color: #ffb4ab;
+}

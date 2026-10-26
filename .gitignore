@@ -22,7 +22,8 @@ dist/
 secrets/
 
 # ─── Database ────────────────────────────────────────────────────────────────
-data/
+/data/
+!src/data/
 *.sqlite
 *.sqlite3
 *.db

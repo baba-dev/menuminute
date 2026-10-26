@@ -1,13 +1,52 @@
 "use client";
-import { ArrowUp, ArrowDown } from "lucide-react";
-import type { MenuDocument } from "@/modules/menu-product/contracts";
+import { useState } from "react";
+import {
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
+  Flame,
+  ShieldAlert,
+  HeartPulse,
+  Utensils,
+  Check,
+} from "lucide-react";
+import type { MenuDocument, Allergen } from "@/modules/menu-product/contracts";
 import { Field, Money } from "./studio-fields";
 import { ScheduleEditor } from "./schedule-editor";
 import { artworkForDish, artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import { findCulinaryProfile } from "@/modules/menu-product/dish-intelligence";
 
 type Dish = MenuDocument["categories"][number]["items"][number];
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
 const id = () => crypto.randomUUID();
+
+const ALLERGEN_OPTIONS: { id: Allergen; label: string }[] = [
+  { id: "dairy", label: "Dairy" },
+  { id: "gluten", label: "Gluten / Wheat" },
+  { id: "nuts", label: "Tree Nuts" },
+  { id: "peanuts", label: "Peanuts" },
+  { id: "eggs", label: "Eggs" },
+  { id: "soy", label: "Soy" },
+  { id: "fish", label: "Fish" },
+  { id: "shellfish", label: "Shellfish" },
+  { id: "sesame", label: "Sesame" },
+  { id: "mustard", label: "Mustard" },
+  { id: "sulfites", label: "Sulfites" },
+];
+
+const FLAVOR_TAG_PRESETS = [
+  "Rich & Creamy",
+  "Smoky",
+  "Tangy",
+  "Mildly Sweet",
+  "Crispy",
+  "Zesty",
+  "Aromatic",
+  "Hearty",
+  "Savory",
+  "Cooling",
+];
+
 /** Advanced dish controls retain the canonical schema and pricing precision. */
 export function StudioDishEditor({
   dish,
@@ -16,6 +55,7 @@ export function StudioDishEditor({
   dishCount,
   currency,
   media,
+  companionDishes = [],
   onUpdate,
   onMove,
 }: {
@@ -26,9 +66,56 @@ export function StudioDishEditor({
   canWrite: boolean;
   currency: string;
   media: Media[];
+  companionDishes?: { id: string; name: string }[];
   onUpdate: (patch: Partial<Dish>) => void;
   onMove: (delta: number) => void;
 }) {
+  const [customFlavorInput, setCustomFlavorInput] = useState("");
+  const suggestedProfile = findCulinaryProfile(dish.name);
+
+  const culinary = dish.culinary ?? {
+    spiceLevel: 0,
+    flavorNotes: [],
+    chefNote: "",
+    servingTemp: "hot" as const,
+    pairingDishIds: [],
+  };
+
+  const nutrition = dish.nutrition ?? {};
+  const safety = dish.safety ?? { ingredients: [], allergens: [], crossContact: "" };
+
+  const updateCulinary = (patch: Partial<typeof culinary>) => {
+    onUpdate({
+      culinary: {
+        spiceLevel: culinary.spiceLevel,
+        flavorNotes: culinary.flavorNotes,
+        chefNote: culinary.chefNote,
+        servingTemp: culinary.servingTemp,
+        pairingDishIds: culinary.pairingDishIds,
+        ...patch,
+      },
+    });
+  };
+
+  const updateNutrition = (patch: Partial<typeof nutrition>) => {
+    onUpdate({
+      nutrition: {
+        ...nutrition,
+        ...patch,
+      },
+    });
+  };
+
+  const updateSafety = (patch: Partial<typeof safety>) => {
+    onUpdate({
+      safety: {
+        ingredients: safety.ingredients,
+        allergens: safety.allergens,
+        crossContact: safety.crossContact,
+        ...patch,
+      },
+    });
+  };
   return (
     <div className="atelier-dish-row dish-editor stack">
       {/* Private authenticated media must use its existing scoped API route. */}
@@ -163,6 +250,373 @@ export function StudioDishEditor({
             ))}
         </select>
       </label>
+
+      {suggestedProfile && (
+        <div className="atelier-culinary-suggest-banner row between wrap">
+          <div className="row" style={{ gap: "0.5rem" }}>
+            <Sparkles size={16} className="ember-text" />
+            <span style={{ fontSize: "0.9rem" }}>
+              Authentic profile available for <strong>{suggestedProfile.name}</strong> (
+              {suggestedProfile.category})
+            </span>
+          </div>
+          <button
+            type="button"
+            className="atelier-btn-suggest"
+            onClick={() => {
+              onUpdate({
+                nutrition: suggestedProfile.nutrition,
+                culinary: {
+                  ...suggestedProfile.culinary,
+                  pairingDishIds: dish.culinary?.pairingDishIds ?? [],
+                },
+                safety: suggestedProfile.safety,
+                dietary: dish.dietary.length > 0 ? dish.dietary : suggestedProfile.dietary,
+              });
+            }}
+          >
+            ⚡ Auto-Fill Taste, Macros & Allergens
+          </button>
+        </div>
+      )}
+
+      <details className="atelier-culinary-details">
+        <summary>
+          <Flame
+            size={16}
+            style={{ display: "inline", verticalAlign: "middle", marginRight: "0.4rem" }}
+          />
+          Taste & Heat Profile
+        </summary>
+        <div className="stack" style={{ gap: "1rem", paddingTop: "0.5rem" }}>
+          <div className="field">
+            <span className="label">Spice Level (Heat)</span>
+            <div className="row wrap" style={{ gap: "0.5rem", marginTop: "0.3rem" }}>
+              {[
+                { level: 0, label: "0 · No Heat" },
+                { level: 1, label: "1 · Mild 🔥" },
+                { level: 2, label: "2 · Medium 🔥🔥" },
+                { level: 3, label: "3 · Hot 🔥🔥🔥" },
+                { level: 4, label: "4 · Extra Fiery 🔥🔥🔥🔥" },
+              ].map(({ level, label }) => (
+                <button
+                  key={level}
+                  type="button"
+                  className={`atelier-pill-btn ${culinary.spiceLevel === level ? "active" : ""}`}
+                  onClick={() => updateCulinary({ spiceLevel: level })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field">
+            <span className="label">Flavor Notes</span>
+            <div className="row wrap" style={{ gap: "0.4rem", marginTop: "0.3rem" }}>
+              {FLAVOR_TAG_PRESETS.map((tag) => {
+                const isSelected = culinary.flavorNotes.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`atelier-pill-btn ${isSelected ? "active" : ""}`}
+                    onClick={() => {
+                      updateCulinary({
+                        flavorNotes: isSelected
+                          ? culinary.flavorNotes.filter((t) => t !== tag)
+                          : [...culinary.flavorNotes, tag].slice(0, 6),
+                      });
+                    }}
+                  >
+                    {isSelected && (
+                      <Check size={12} style={{ display: "inline", marginRight: "0.2rem" }} />
+                    )}
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="row" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
+              <input
+                type="text"
+                placeholder="Add custom flavor note..."
+                value={customFlavorInput}
+                onChange={(e) => setCustomFlavorInput(e.target.value)}
+                maxLength={30}
+                style={{ maxWidth: "240px" }}
+              />
+              <button
+                type="button"
+                disabled={!customFlavorInput.trim() || culinary.flavorNotes.length >= 6}
+                onClick={() => {
+                  if (!customFlavorInput.trim()) return;
+                  if (!culinary.flavorNotes.includes(customFlavorInput.trim())) {
+                    updateCulinary({
+                      flavorNotes: [...culinary.flavorNotes, customFlavorInput.trim()].slice(0, 6),
+                    });
+                  }
+                  setCustomFlavorInput("");
+                }}
+              >
+                Add Tag
+              </button>
+            </div>
+          </div>
+
+          <label className="field">
+            Chef&apos;s Tasting Note / Heritage Story
+            <textarea
+              value={culinary.chefNote ?? ""}
+              onChange={(e) => updateCulinary({ chefNote: e.target.value })}
+              placeholder="e.g. 16-hour slow simmered over charcoal with hand-churned white butter..."
+              maxLength={300}
+              rows={2}
+            />
+          </label>
+
+          <label className="field">
+            Serving Temperature
+            <select
+              value={culinary.servingTemp ?? "hot"}
+              onChange={(e) =>
+                updateCulinary({ servingTemp: e.target.value as "hot" | "chilled" | "ambient" })
+              }
+              style={{ maxWidth: "200px" }}
+            >
+              <option value="hot">Served Hot</option>
+              <option value="chilled">Served Chilled / Cold</option>
+              <option value="ambient">Room Temperature</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <details className="atelier-culinary-details">
+        <summary>
+          <HeartPulse
+            size={16}
+            style={{ display: "inline", verticalAlign: "middle", marginRight: "0.4rem" }}
+          />
+          Nutritional Values & Serving
+        </summary>
+        <div className="stack" style={{ gap: "1rem", paddingTop: "0.5rem" }}>
+          <div
+            className="columns"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+              gap: "0.75rem",
+            }}
+          >
+            <label className="field">
+              Calories (kcal)
+              <input
+                type="number"
+                min={0}
+                max={10000}
+                placeholder="e.g. 480"
+                value={nutrition.calories ?? ""}
+                onChange={(e) =>
+                  updateNutrition({
+                    calories:
+                      e.target.value === "" ? undefined : Math.max(0, parseInt(e.target.value, 10)),
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              Protein (g)
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                step={0.5}
+                placeholder="e.g. 24"
+                value={nutrition.proteinGrams ?? ""}
+                onChange={(e) =>
+                  updateNutrition({
+                    proteinGrams:
+                      e.target.value === "" ? undefined : Math.max(0, parseFloat(e.target.value)),
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              Carbs (g)
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                step={0.5}
+                placeholder="e.g. 38"
+                value={nutrition.carbsGrams ?? ""}
+                onChange={(e) =>
+                  updateNutrition({
+                    carbsGrams:
+                      e.target.value === "" ? undefined : Math.max(0, parseFloat(e.target.value)),
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              Total Fat (g)
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                step={0.5}
+                placeholder="e.g. 18"
+                value={nutrition.fatGrams ?? ""}
+                onChange={(e) =>
+                  updateNutrition({
+                    fatGrams:
+                      e.target.value === "" ? undefined : Math.max(0, parseFloat(e.target.value)),
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              Dietary Fiber (g)
+              <input
+                type="number"
+                min={0}
+                max={500}
+                step={0.5}
+                placeholder="e.g. 6"
+                value={nutrition.fiberGrams ?? ""}
+                onChange={(e) =>
+                  updateNutrition({
+                    fiberGrams:
+                      e.target.value === "" ? undefined : Math.max(0, parseFloat(e.target.value)),
+                  })
+                }
+              />
+            </label>
+          </div>
+          <label className="field">
+            Serving Size Description
+            <input
+              type="text"
+              placeholder="e.g. Serves 1-2 · approx. 350g"
+              value={nutrition.servingSize ?? ""}
+              onChange={(e) => updateNutrition({ servingSize: e.target.value || undefined })}
+              maxLength={60}
+            />
+          </label>
+        </div>
+      </details>
+
+      <details className="atelier-culinary-details">
+        <summary>
+          <ShieldAlert
+            size={16}
+            style={{ display: "inline", verticalAlign: "middle", marginRight: "0.4rem" }}
+          />
+          Ingredients & Allergen Safety
+        </summary>
+        <div className="stack" style={{ gap: "1rem", paddingTop: "0.5rem" }}>
+          <label className="field">
+            Key Ingredients (comma-separated)
+            <textarea
+              placeholder="e.g. Cottage cheese, Roma tomatoes, Butter, Cashew nut paste, Ginger, Fenugreek"
+              value={safety.ingredients.join(", ")}
+              onChange={(e) =>
+                updateSafety({
+                  ingredients: e.target.value
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                    .slice(0, 30),
+                })
+              }
+              rows={2}
+            />
+          </label>
+
+          <div className="field">
+            <span className="label">Allergen Declarations (select all that apply)</span>
+            <div className="row wrap" style={{ gap: "0.4rem", marginTop: "0.3rem" }}>
+              {ALLERGEN_OPTIONS.map(({ id: aId, label }) => {
+                const contains = safety.allergens.includes(aId);
+                return (
+                  <button
+                    key={aId}
+                    type="button"
+                    className={`atelier-pill-btn ${contains ? "active allergen-active" : ""}`}
+                    onClick={() => {
+                      updateSafety({
+                        allergens: contains
+                          ? safety.allergens.filter((x) => x !== aId)
+                          : [...safety.allergens, aId],
+                      });
+                    }}
+                  >
+                    {contains && (
+                      <Check size={12} style={{ display: "inline", marginRight: "0.2rem" }} />
+                    )}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <label className="field">
+            Kitchen Cross-Contact Disclaimer
+            <input
+              type="text"
+              placeholder="e.g. Cooked in a kitchen that also processes wheat and peanuts."
+              value={safety.crossContact ?? ""}
+              onChange={(e) => updateSafety({ crossContact: e.target.value || undefined })}
+              maxLength={250}
+            />
+          </label>
+        </div>
+      </details>
+
+      {companionDishes.length > 0 && (
+        <details className="atelier-culinary-details">
+          <summary>
+            <Utensils
+              size={16}
+              style={{ display: "inline", verticalAlign: "middle", marginRight: "0.4rem" }}
+            />
+            Chef Recommended Pairings ({culinary.pairingDishIds.length}/4 selected)
+          </summary>
+          <div className="stack" style={{ gap: "0.5rem", paddingTop: "0.5rem" }}>
+            <span className="quiet" style={{ fontSize: "0.85rem" }}>
+              Recommend companion dishes (e.g. bread, rice, beverage, or dessert) for diners to
+              order together.
+            </span>
+            <div className="row wrap" style={{ gap: "0.4rem" }}>
+              {companionDishes.map((companion) => {
+                const isSelected = culinary.pairingDishIds.includes(companion.id);
+                return (
+                  <button
+                    key={companion.id}
+                    type="button"
+                    className={`atelier-pill-btn ${isSelected ? "active" : ""}`}
+                    onClick={() => {
+                      updateCulinary({
+                        pairingDishIds: isSelected
+                          ? culinary.pairingDishIds.filter((pId) => pId !== companion.id)
+                          : [...culinary.pairingDishIds, companion.id].slice(0, 4),
+                      });
+                    }}
+                  >
+                    {isSelected && (
+                      <Check size={12} style={{ display: "inline", marginRight: "0.2rem" }} />
+                    )}
+                    {companion.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </details>
+      )}
+
       <details>
         <summary>Variants & add-ons</summary>
         <div className="stack">

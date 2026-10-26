@@ -45,6 +45,53 @@ const group = z
   })
   .strict()
   .refine((g) => g.min <= g.max && g.max <= g.options.length, "Invalid selection rule");
+export const allergenEnum = z.enum([
+  "dairy",
+  "gluten",
+  "nuts",
+  "peanuts",
+  "eggs",
+  "soy",
+  "fish",
+  "shellfish",
+  "sesame",
+  "mustard",
+  "sulfites",
+]);
+export type Allergen = z.infer<typeof allergenEnum>;
+
+export const nutritionSchema = z
+  .object({
+    calories: z.number().int().min(0).max(10000).optional(),
+    proteinGrams: z.number().min(0).max(1000).optional(),
+    carbsGrams: z.number().min(0).max(1000).optional(),
+    fatGrams: z.number().min(0).max(1000).optional(),
+    fiberGrams: z.number().min(0).max(500).optional(),
+    servingSize: z.string().trim().max(60).optional(),
+  })
+  .strict();
+export type DishNutrition = z.infer<typeof nutritionSchema>;
+
+export const culinaryProfileSchema = z
+  .object({
+    spiceLevel: z.number().int().min(0).max(4).default(0),
+    flavorNotes: z.array(z.string().trim().min(1).max(30)).max(6).default([]),
+    chefNote: z.string().trim().max(300).optional(),
+    servingTemp: z.enum(["hot", "chilled", "ambient"]).optional(),
+    pairingDishIds: z.array(entityId).max(4).default([]),
+  })
+  .strict();
+export type DishCulinaryProfile = z.infer<typeof culinaryProfileSchema>;
+
+export const safetyProfileSchema = z
+  .object({
+    ingredients: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
+    allergens: z.array(allergenEnum).max(11).default([]),
+    crossContact: z.string().trim().max(250).optional(),
+  })
+  .strict();
+export type DishSafetyProfile = z.infer<typeof safetyProfileSchema>;
+
 export const dishSchema = z
   .object({
     id: entityId,
@@ -64,6 +111,9 @@ export const dishSchema = z
       .array(z.enum(["vegetarian", "vegan", "gluten_free"]))
       .max(3)
       .default([]),
+    nutrition: nutritionSchema.optional(),
+    culinary: culinaryProfileSchema.optional(),
+    safety: safetyProfileSchema.optional(),
     variants: z.array(option).max(100).default([]),
     addOnGroups: z.array(group).max(30).default([]),
     schedule: scheduleSchema.nullable().default(null),
