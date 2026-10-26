@@ -53,7 +53,7 @@ CREATE TRIGGER kitchen_protect_disable BEFORE UPDATE OF enabled ON kitchen_outle
 -- read this projection. No customer data/PII leaves this function.
 CREATE FUNCTION app_private.kitchen_pilot_status(p_outlet text) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
-DECLARE result jsonb; st integer; assigned integer; dishes integer; missing integer;
+DECLARE result jsonb; st integer; assigned integer; unmanned integer; dishes integer; missing integer;
         incomplete integer; ord_enabled boolean; kit_enabled boolean; enabled_flag boolean;
         pilot kitchen_pilot_outlets%ROWTYPE; org text;
 BEGIN
@@ -70,7 +70,19 @@ BEGIN
  FROM kitchen_station_members sm
  JOIN kitchen_stations s ON s.id=sm.station_id AND s.outlet_id=p_outlet AND s.active
  JOIN organization_members m ON m.id=sm.member_id AND m.is_active AND m.organization_id=org
+ JOIN outlet_grants g ON g.member_id=m.id AND g.organization_id=org
+   AND g.outlet_id=p_outlet AND g.roles && ARRAY['manager','kitchen']::text[]
  WHERE sm.outlet_id=p_outlet;
+ SELECT count(*)::integer INTO unmanned FROM kitchen_stations s
+ WHERE s.outlet_id=p_outlet AND s.active
+ AND EXISTS (SELECT 1 FROM kitchen_routes kr WHERE kr.station_id=s.id AND kr.outlet_id=p_outlet)
+ AND NOT EXISTS (
+   SELECT 1 FROM kitchen_station_members sm
+   JOIN organization_members m ON m.id=sm.member_id AND m.organization_id=org AND m.is_active
+   JOIN outlet_grants g ON g.organization_id=org AND g.member_id=m.id
+     AND g.outlet_id=p_outlet AND g.roles && ARRAY['manager','kitchen']::text[]
+   WHERE sm.station_id=s.id AND sm.outlet_id=p_outlet
+ );
  WITH published AS (
    SELECT DISTINCT m.id,rel.document
    FROM menus m JOIN menu_releases rel ON rel.menu_id=m.id AND rel.revision=m.published_revision
@@ -106,12 +118,12 @@ BEGIN
    'requestedBy',pilot.requested_by,'approvedBy',pilot.approved_by,
    'approvedAt',pilot.approved_at,'expiresAt',pilot.expires_at,
    'enabled',coalesce(enabled_flag,false),
-   'activeStations',st,'assignedMembers',assigned,
+   'activeStations',st,'assignedMembers',assigned,'unmannedStations',unmanned,
    'publishedDishes',dishes,'unroutedDishes',missing,
    'openKitchenOrders',incomplete,
    'orderingEntitled',coalesce(ord_enabled,false),
    'kitchenEntitled',coalesce(kit_enabled,false),
-   'configurationReady',(st>0 AND assigned>0 AND dishes>0 AND missing=0)
+   'configurationReady',(st>0 AND assigned>0 AND unmanned=0 AND dishes>0 AND missing=0)
  );
  RETURN result;
 END $fn$;
