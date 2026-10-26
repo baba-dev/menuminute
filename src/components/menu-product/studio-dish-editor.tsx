@@ -14,7 +14,7 @@ import type { MenuDocument, Allergen } from "@/modules/menu-product/contracts";
 import { Field, Money } from "./studio-fields";
 import { ScheduleEditor } from "./schedule-editor";
 import { artworkForDish, artworkById, dishImageSrc } from "@/modules/menu-product/dish-artwork";
-import { findCulinaryProfile } from "@/modules/menu-product/dish-intelligence";
+import { findCulinaryProfile, normalizeDishText } from "@/modules/menu-product/dish-intelligence";
 
 type Dish = MenuDocument["categories"][number]["items"][number];
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
@@ -55,6 +55,7 @@ export function StudioDishEditor({
   dishCount,
   currency,
   media,
+  canWrite,
   companionDishes = [],
   onUpdate,
   onMove,
@@ -71,6 +72,7 @@ export function StudioDishEditor({
   onMove: (delta: number) => void;
 }) {
   const [customFlavorInput, setCustomFlavorInput] = useState("");
+  const [pairingSearch, setPairingSearch] = useState("");
   const suggestedProfile = findCulinaryProfile(dish.name);
 
   const culinary = dish.culinary ?? {
@@ -81,8 +83,19 @@ export function StudioDishEditor({
     pairingDishIds: [],
   };
 
-  const nutrition = dish.nutrition ?? {};
-  const safety = dish.safety ?? { ingredients: [], allergens: [], crossContact: "" };
+  const nutrition: NonNullable<Dish["nutrition"]> = dish.nutrition ?? {};
+  const safety: NonNullable<Dish["safety"]> = dish.safety ?? { ingredients: [], allergens: [] };
+  const pairingOptions = companionDishes
+    .filter((candidate) => candidate.id !== dish.id)
+    .filter((candidate) =>
+      !pairingSearch.trim() ||
+      normalizeDishText(candidate.name).includes(normalizeDishText(pairingSearch)) ||
+      culinary.pairingDishIds.includes(candidate.id)
+    )
+    .slice(0, 12);
+  const canVerifyFreeFrom =
+    safety.verified === true && safety.ingredients.length > 0 &&
+    !safety.crossContact?.trim() && dish.variants.length === 0 && dish.addOnGroups.length === 0;
 
   const updateCulinary = (patch: Partial<typeof culinary>) => {
     onUpdate({
@@ -98,23 +111,12 @@ export function StudioDishEditor({
   };
 
   const updateNutrition = (patch: Partial<typeof nutrition>) => {
-    onUpdate({
-      nutrition: {
-        ...nutrition,
-        ...patch,
-      },
-    });
+    onUpdate({ nutrition: { ...nutrition, ...patch, verified: false } });
   };
 
   const updateSafety = (patch: Partial<typeof safety>) => {
-    onUpdate({
-      safety: {
-        ingredients: safety.ingredients,
-        allergens: safety.allergens,
-        crossContact: safety.crossContact,
-        ...patch,
-      },
-    });
+    // Any ingredient/allergen/cross-contact edit invalidates previous confirmations.
+    onUpdate({ safety: { ...safety, ...patch, verified: false, verifiedFreeFrom: [] } });
   };
   return (
     <div className="atelier-dish-row dish-editor stack">
@@ -257,25 +259,34 @@ export function StudioDishEditor({
             <Sparkles size={16} className="ember-text" />
             <span style={{ fontSize: "0.9rem" }}>
               Authentic profile available for <strong>{suggestedProfile.name}</strong> (
-              {suggestedProfile.category})
+              {suggestedProfile.category}) — unverified reference values; review your actual recipe before publishing.
             </span>
           </div>
           <button
             type="button"
             className="atelier-btn-suggest"
+            disabled={!canWrite}
             onClick={() => {
               onUpdate({
-                nutrition: suggestedProfile.nutrition,
+                nutrition: { ...suggestedProfile.nutrition, verified: false },
                 culinary: {
-                  ...suggestedProfile.culinary,
-                  pairingDishIds: dish.culinary?.pairingDishIds ?? [],
+                  spiceLevel: suggestedProfile.culinary.spiceLevel,
+                  flavorNotes: suggestedProfile.culinary.flavorNotes,
+                  chefNote: suggestedProfile.culinary.chefNote,
+                  servingTemp: suggestedProfile.culinary.servingTemp,
+                  pairingDishIds: suggestedProfile.culinary.suggestedPairings
+                    .map((name) => companionDishes.find((item) =>
+                      normalizeDishText(item.name) === normalizeDishText(name) &&
+                      item.id !== dish.id
+                    )?.id)
+                    .filter((value): value is string => Boolean(value))
+                    .slice(0, 4),
                 },
-                safety: suggestedProfile.safety,
-                dietary: dish.dietary.length > 0 ? dish.dietary : suggestedProfile.dietary,
+                safety: { ...suggestedProfile.safety, verified: false, verifiedFreeFrom: [] },
               });
             }}
           >
-            ⚡ Auto-Fill Taste, Macros & Allergens
+            Use editable recipe suggestion
           </button>
         </div>
       )}
@@ -303,6 +314,8 @@ export function StudioDishEditor({
                   key={level}
                   type="button"
                   className={`atelier-pill-btn ${culinary.spiceLevel === level ? "active" : ""}`}
+                  aria-pressed={culinary.spiceLevel === level}
+                  disabled={!canWrite}
                   onClick={() => updateCulinary({ spiceLevel: level })}
                 >
                   {label}
@@ -321,6 +334,8 @@ export function StudioDishEditor({
                     key={tag}
                     type="button"
                     className={`atelier-pill-btn ${isSelected ? "active" : ""}`}
+                    aria-pressed={isSelected}
+                    disabled={!canWrite}
                     onClick={() => {
                       updateCulinary({
                         flavorNotes: isSelected
@@ -348,7 +363,7 @@ export function StudioDishEditor({
               />
               <button
                 type="button"
-                disabled={!customFlavorInput.trim() || culinary.flavorNotes.length >= 6}
+                disabled={!canWrite || !customFlavorInput.trim() || culinary.flavorNotes.length >= 6}
                 onClick={() => {
                   if (!customFlavorInput.trim()) return;
                   if (!culinary.flavorNotes.includes(customFlavorInput.trim())) {
@@ -505,6 +520,15 @@ export function StudioDishEditor({
             />
           </label>
         </div>
+          <label className="field">
+            <span>
+              <input type="checkbox" disabled={!canWrite} checked={nutrition.verified === true}
+                onChange={(event) => onUpdate({ nutrition: { ...nutrition, verified: event.target.checked } })} />
+              {" "}I checked these nutrition numbers against this restaurant's actual portion and recipe
+            </span>
+            <small className="quiet">Unverified estimates never appear in the guest menu.</small>
+          </label>
+        </div>
       </details>
 
       <details className="atelier-culinary-details">
@@ -544,6 +568,8 @@ export function StudioDishEditor({
                     key={aId}
                     type="button"
                     className={`atelier-pill-btn ${contains ? "active allergen-active" : ""}`}
+                    aria-pressed={contains}
+                    disabled={!canWrite}
                     onClick={() => {
                       updateSafety({
                         allergens: contains
@@ -572,6 +598,40 @@ export function StudioDishEditor({
               maxLength={250}
             />
           </label>
+          <label className="field">
+            <span>
+              <input type="checkbox" disabled={!canWrite}
+                checked={safety.verified === true}
+                onChange={(event) => onUpdate({
+                  safety: { ...safety, verified: event.target.checked, verifiedFreeFrom: [] },
+                })}
+              />
+              {" "}I verified the ingredients, allergen declaration and kitchen cross-contact for this exact dish
+            </span>
+            <small className="quiet">A recipe suggestion is not a safety verification.</small>
+          </label>
+          <fieldset className="field" disabled={!canWrite || !canVerifyFreeFrom}>
+            <legend>Optional verified free-from declarations</legend>
+            <p className="quiet">Only confirm after checking every ingredient and shared surface. Dishes with variants or add-ons require option-level safety data and cannot claim free-from.</p>
+            {(["nuts", "dairy"] as const).map((claim) => {
+              const declared = safety.allergens.includes(claim) ||
+                (claim === "nuts" && safety.allergens.includes("peanuts"));
+              const checked = safety.verifiedFreeFrom?.includes(claim) ?? false;
+              return (
+                <label key={claim} className="row" style={{ gap: "0.4rem" }}>
+                  <input type="checkbox" disabled={declared} checked={checked}
+                    onChange={(event) => onUpdate({ safety: {
+                      ...safety,
+                      verifiedFreeFrom: event.target.checked
+                        ? [...(safety.verifiedFreeFrom ?? []), claim]
+                        : (safety.verifiedFreeFrom ?? []).filter((value) => value !== claim),
+                    } })}
+                  />
+                  Confirmed {claim === "nuts" ? "nut-free" : "dairy-free"}
+                </label>
+              );
+            })}
+          </fieldset>
         </div>
       </details>
 
@@ -589,14 +649,19 @@ export function StudioDishEditor({
               Recommend companion dishes (e.g. bread, rice, beverage, or dessert) for diners to
               order together.
             </span>
+            <input type="search" aria-label="Search companion dishes" disabled={!canWrite}
+              placeholder="Find a dish to recommend…" value={pairingSearch}
+              onChange={(event) => setPairingSearch(event.target.value)} />
             <div className="row wrap" style={{ gap: "0.4rem" }}>
-              {companionDishes.map((companion) => {
+              {pairingOptions.map((companion) => {
                 const isSelected = culinary.pairingDishIds.includes(companion.id);
                 return (
                   <button
                     key={companion.id}
                     type="button"
                     className={`atelier-pill-btn ${isSelected ? "active" : ""}`}
+                    aria-pressed={isSelected}
+                    disabled={!canWrite}
                     onClick={() => {
                       updateCulinary({
                         pairingDishIds: isSelected

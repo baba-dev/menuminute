@@ -1,7 +1,7 @@
 import type { DishSafetyProfile, DishNutrition } from "./contracts";
 
 type SafetyDish = {
-  safety?: Pick<DishSafetyProfile, "allergens" | "ingredients" | "crossContact" | "verified" | "verifiedFreeFrom">;
+  safety?: Partial<Pick<DishSafetyProfile, "allergens" | "ingredients" | "crossContact" | "verified" | "verifiedFreeFrom">>;
   variants?: readonly unknown[];
   addOnGroups?: readonly unknown[];
 };

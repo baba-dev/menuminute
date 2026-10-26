@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
@@ -61,6 +61,12 @@ export function MenuStudio({
   const [list, setList] = useState(initialList);
   const [detail, setDetail] = useState(initialDetail);
   const [doc, setDoc] = useState<MenuDocument | null>(initialDetail?.document ?? null);
+  const companionCandidates = useMemo(
+    () => doc?.categories.filter((category) => !category.archived)
+      .flatMap((category) => category.items.filter((dish) => !dish.archived)
+        .map((dish) => ({ id: dish.id, name: dish.name }))) ?? [],
+    [doc]
+  );
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -887,11 +893,7 @@ export function MenuStudio({
                                     canWrite={detail.canWrite}
                                     currency={doc.currency}
                                     media={media}
-                                    companionDishes={doc.categories.flatMap((cat) =>
-                                      cat.items
-                                        .filter((i) => i.id !== dish.id)
-                                        .map((i) => ({ id: i.id, name: i.name }))
-                                    )}
+                                    companionDishes={companionCandidates}
                                     onUpdate={(patch) => updateDish(ci, di, patch)}
                                     onMove={(delta) => moveDish(ci, di, delta)}
                                   />
