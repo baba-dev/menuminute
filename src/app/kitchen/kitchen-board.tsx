@@ -111,12 +111,12 @@ function Ticket({
         </button>
       )}
       {work.status === "complete" && (
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-200 dark:border-stone-800">
+        <div className="flex items-center justify-between gap-2 border-t border-stone-200 pt-2 dark:border-stone-800">
           <span className="text-xs text-stone-500">Awaiting expeditor release</span>
           <RubberStamp text="STATION COMPLETE" variant="paid" />
         </div>
       )}
-      <div className="ticket-receipt-tear -mx-4 -mb-4 mt-3" aria-hidden="true" />
+      <div className="ticket-receipt-tear -mx-4 mt-3 -mb-4" aria-hidden="true" />
     </article>
   );
 }

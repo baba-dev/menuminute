@@ -443,14 +443,17 @@ export function PublicMenu({
         </nav>
         {featured.length > 0 && !search && diet === "all" && (
           <section className="dining-featured no-print" aria-labelledby="dining-featured-title">
-            <div className="rounded-2xl p-4 sm:p-6 shadow-sm border border-amber-900/10 dark:border-white/10 dark:bg-stone-900/80 bg-amber-50/50">
+            <div className="rounded-2xl border border-amber-900/10 bg-amber-50/50 p-4 shadow-sm sm:p-6 dark:border-white/10 dark:bg-stone-900/80">
               <div className="dining-heading-row mb-4">
                 <div>
                   <span className="dining-kicker flex items-center gap-1.5">
                     <Sparkles size={14} aria-hidden="true" />
                     FEATURED BY THE RESTAURANT
                   </span>
-                  <h2 id="dining-featured-title" className="font-display text-2xl sm:text-3xl font-bold">
+                  <h2
+                    id="dining-featured-title"
+                    className="font-display text-2xl font-bold sm:text-3xl"
+                  >
                     Restaurant Favourites
                   </h2>
                   <p className="font-handwriting mt-1 text-sm text-stone-600 dark:text-stone-300">
@@ -466,10 +469,17 @@ export function PublicMenu({
                     <div>
                       <div className="flex w-full items-center justify-between gap-1">
                         <span className="dining-kicker">{categoryName}</span>
-                        <RubberStamp text="FEATURED" variant="chef-pick" className="text-[10px] py-0.5" />
+                        <RubberStamp
+                          text="FEATURED"
+                          variant="chef-pick"
+                          className="py-0.5 text-[10px]"
+                        />
                       </div>
                       <h3>{dish.name}</h3>
-                      <p className="font-handwriting text-xs text-amber-800 dark:text-amber-300" style={{ margin: "2px 0 6px" }}>
+                      <p
+                        className="font-handwriting text-xs text-amber-800 dark:text-amber-300"
+                        style={{ margin: "2px 0 6px" }}
+                      >
                         Selected by the restaurant
                       </p>
                       <span className="dining-price">

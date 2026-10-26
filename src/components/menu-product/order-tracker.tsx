@@ -268,7 +268,10 @@ export function OrderTracker({
               <h1 style={{ fontSize: "1.8rem", margin: 0 }}>Order #{order.orderNumber}</h1>
             </div>
             <div className="stack" style={{ alignItems: "flex-end", gap: "0.4rem" }}>
-              <RubberStamp text={order.status.toUpperCase()} variant={getOrderStampVariant(order.status)} />
+              <RubberStamp
+                text={order.status.toUpperCase()}
+                variant={getOrderStampVariant(order.status)}
+              />
               <small className="quiet">
                 {new Date(order.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -278,7 +281,10 @@ export function OrderTracker({
             </div>
           </div>
 
-          <ChefStickyNote author="Order update" text={getGuestOrderNote(order.status, order.fulfillmentMode, order.point)} />
+          <ChefStickyNote
+            author="Order update"
+            text={getGuestOrderNote(order.status, order.fulfillmentMode, order.point)}
+          />
 
           {/* Essential Invariant Message */}
           {order.status === "pending" && (
@@ -447,7 +453,7 @@ export function OrderTracker({
                 : "Please pay directly with your server or at the cashier."}
             </small>
           </div>
-          <div className="ticket-receipt-tear -mx-4 -mb-4 mt-4" aria-hidden="true" />
+          <div className="ticket-receipt-tear -mx-4 mt-4 -mb-4" aria-hidden="true" />
         </div>
 
         {/* Order More CTA */}

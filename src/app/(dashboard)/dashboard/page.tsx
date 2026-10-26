@@ -32,10 +32,7 @@ import {
 import { DashboardTooltip } from "./dashboard-tooltip";
 import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 import { DashboardServicePulse } from "./dashboard-service-pulse";
-import {
-  ChefStickyNote,
-  MiseEnPlaceEmpty,
-} from "@/components/ui/tactile-elements";
+import { ChefStickyNote, MiseEnPlaceEmpty } from "@/components/ui/tactile-elements";
 import { The86Board } from "@/components/dashboard/eight-six-board";
 import { getServicePeriodText, outletHour } from "@/lib/service-period";
 import { withOutlet } from "@/modules/tenancy/service";
@@ -204,15 +201,21 @@ export default async function DashboardPage() {
     : false;
   const availabilityItems = publicProjection?.outlet.versioned
     ? publicProjection.menus.flatMap((menu) =>
-        menu.document.categories.filter((cat) => !cat.archived).flatMap((cat) =>
-          cat.items.filter((dish) => !dish.archived).map((dish) => ({
-            id: dish.id,
-            menuId: menu.id,
-            name: dish.name,
-            category: cat.name,
-            soldOut: menu.overrides.find((override) => override.dishId === dish.id)?.soldOut ?? dish.soldOut,
-          }))
-        )
+        menu.document.categories
+          .filter((cat) => !cat.archived)
+          .flatMap((cat) =>
+            cat.items
+              .filter((dish) => !dish.archived)
+              .map((dish) => ({
+                id: dish.id,
+                menuId: menu.id,
+                name: dish.name,
+                category: cat.name,
+                soldOut:
+                  menu.overrides.find((override) => override.dishId === dish.id)?.soldOut ??
+                  dish.soldOut,
+              }))
+          )
       )
     : null;
 
@@ -263,7 +266,12 @@ export default async function DashboardPage() {
               : "Welcome to the pass! Start by adding your signature recipes in Menu Studio, then print permanent QR codes for your dining room tables."
           }
         />
-        <The86Board outletId={outlet.id} items={availabilityItems} canManage={canManageAvailability} menuStudioHref="/dashboard/menu" />
+        <The86Board
+          outletId={outlet.id}
+          items={availabilityItems}
+          canManage={canManageAvailability}
+          menuStudioHref="/dashboard/menu"
+        />
         <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
           <div className="mm-dashboard-section-heading">
             <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">

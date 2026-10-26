@@ -3,7 +3,18 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
-import { X, Plus, Minus, Leaf, Check, Clock3, Flame, ShieldAlert, Sparkles, ChefHat } from "lucide-react";
+import {
+  X,
+  Plus,
+  Minus,
+  Leaf,
+  Check,
+  Clock3,
+  Flame,
+  ShieldAlert,
+  Sparkles,
+  ChefHat,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
 import { canQuickAddCompanion, hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
@@ -310,10 +321,16 @@ export function ItemCustomizer({
           {activeDish.culinary?.chefNote && (
             <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3.5 dark:border-amber-900/50 dark:bg-amber-950/20">
               <div className="flex items-center gap-2">
-                <Clock3 size={14} aria-hidden="true" className="text-amber-800 dark:text-amber-300" />
+                <Clock3
+                  size={14}
+                  aria-hidden="true"
+                  className="text-amber-800 dark:text-amber-300"
+                />
                 <RubberStamp text="CHEF'S NOTE" variant="chef-pick" />
               </div>
-              <p className="font-handwriting mt-2 text-base leading-relaxed text-amber-950 dark:text-amber-200">{activeDish.culinary.chefNote}</p>
+              <p className="font-handwriting mt-2 text-base leading-relaxed text-amber-950 dark:text-amber-200">
+                {activeDish.culinary.chefNote}
+              </p>
             </div>
           )}
 
