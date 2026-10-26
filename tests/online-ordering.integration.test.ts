@@ -288,4 +288,42 @@ describe("Service Counter outlet-scoped read models", () => {
       serviceOrderActivity(f.actor, f.outlet.organizationId, f.outlet.id, "not-an-order")
     ).rejects.toMatchObject({ statusCode: 404 });
   });
+  it("identifies kitchen-managed tickets beyond the legacy 100-ticket lookup cap", async () => {
+    const f = await publishedOutlet();
+    const { listServiceRail, servicePulse } = await import("../src/modules/orders/workspace");
+    const stationId = "station-" + crypto.randomUUID();
+    await admin(async (_, pool) => {
+      await pool.query(
+        "insert into kitchen_stations(id,outlet_id,name) values($1,$2,'Bulk kitchen')",
+        [stationId, f.outlet.id]
+      );
+      await pool.query(
+        `insert into orders(id,restaurant_id,order_number,status,created_at)
+         select 'bulk-' || $1 || '-' || n::text,$1,1000+n,'accepted',
+           now() - interval '2 hours' + n * interval '1 second'
+         from generate_series(1,105) n`,
+        [f.outlet.id]
+      );
+      await pool.query(
+        `insert into order_items(id,order_id,restaurant_id,dish_id,item_name,unit_price_paise,total_paise)
+         select 'item-' || id,id,restaurant_id,'plate','Bulk kitchen item',0,0
+         from orders where restaurant_id=$1 and id like 'bulk-' || $1 || '-%'`,
+        [f.outlet.id]
+      );
+      await pool.query(
+        `insert into kitchen_work(id,outlet_id,order_id,order_item_id,station_id,rule_version)
+         select 'work-' || o.id,o.restaurant_id,o.id,i.id,$2,1
+         from orders o join order_items i on i.order_id=o.id
+         where o.restaurant_id=$1 and o.id like 'bulk-' || $1 || '-%'`,
+        [f.outlet.id, stationId]
+      );
+    });
+
+    const rail = await listServiceRail(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(rail.overflow).toBe(false);
+    expect(rail.orders).toHaveLength(105);
+    expect(rail.orders.every((order) => order.kitchenManaged)).toBe(true);
+    expect(rail.orders.every((order) => order.canAccept)).toBe(true);
+    expect((await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id)).preparing).toBe(105);
+  });
 });

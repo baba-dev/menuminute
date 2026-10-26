@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertTriangle,
@@ -18,7 +17,6 @@ import {
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { playOrderChime } from "@/lib/sound";
-import { ThemeControl } from "@/components/menu-product/theme-control";
 import { ServicePulseRail, Ticket, RailEmpty } from "@/components/orders/ticket";
 import type {
   Activity,
@@ -46,25 +44,73 @@ const declineReasons = [
   "Restaurant is closing for service",
   "Other kitchen reason",
 ];
-const emptyPulse: ServicePulse = {
-  pending: 0,
-  preparing: 0,
-  ready: 0,
-  active: 0,
-  completedToday: 0,
-};
+class WorkspaceResponseError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+  }
+}
+
+function isAccessFailure(error: unknown): boolean {
+  return error instanceof WorkspaceResponseError && [401, 403].includes(error.status);
+}
+
+function readError(cause: unknown, fallback: string): string {
+  return cause instanceof Error ? cause.message : fallback;
+}
+
+function validatedRail(value: { orders: MerchantOrder[]; overflow: boolean }) {
+  if (
+    !value ||
+    !Array.isArray(value.orders) ||
+    typeof value.overflow !== "boolean" ||
+    value.orders.some((order) => !order || !Array.isArray(order.items))
+  ) {
+    throw new Error("The live queue returned an invalid response. Synchronize again.");
+  }
+  return value;
+}
+
+function validatedPulse(value: ServicePulse) {
+  const keys: (keyof ServicePulse)[] = [
+    "pending",
+    "preparing",
+    "ready",
+    "active",
+    "completedToday",
+  ];
+  if (!value || keys.some((key) => !Number.isSafeInteger(value[key]) || value[key] < 0)) {
+    throw new Error("Service counters returned an invalid response. Synchronize again.");
+  }
+  return value;
+}
 
 async function responseData<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
-      (payload && typeof payload.message === "string" ? payload.message : null) ||
-        (response.status === 403
-          ? "Your session no longer has access to this outlet."
+  if (!response.ok) {
+    const message =
+      response.status === 401
+        ? "Session expired. Sign in again to manage orders."
+        : response.status === 403
+          ? "You no longer have access to this outlet."
           : response.status === 409
-            ? "This order changed on another device. Please synchronize."
-            : "The request could not be completed.")
+            ? "This order changed on another device. Synchronize before acting."
+            : response.status >= 500
+              ? "Service temporarily unavailable."
+              : payload && typeof payload.message === "string"
+                ? payload.message
+                : "The request could not be completed.";
+    const reference = response.headers.get("x-request-id");
+    throw new WorkspaceResponseError(
+      message + (reference ? " Reference: " + reference.slice(0, 8) : ""),
+      response.status
     );
+  }
+  if (!payload || typeof payload !== "object") {
+    throw new Error("The service returned an invalid response. Synchronize again.");
+  }
   return payload as T;
 }
 
@@ -109,15 +155,21 @@ export function LiveOrdersBoard({
   const [declining, setDeclining] = useState<MerchantOrder | null>(null);
   const [declineReason, setDeclineReason] = useState(declineReasons[0]);
   const [paying, setPaying] = useState<MerchantOrder | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
   const busyRef = useRef(new Set<string>());
   const [error, setError] = useState<string | null>(null);
+  const [railError, setRailError] = useState<string | null>(null);
+  const [pulseError, setPulseError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [activityError, setActivityError] = useState(false);
   const [isRefreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [lastPulseSync, setLastPulseSync] = useState<string | null>(null);
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
   const [sound, setSound] = useState(false);
   const soundRef = useRef(false);
   const previousPending = useRef<Set<string> | null>(null);
   const refreshController = useRef<AbortController | null>(null);
+  const refreshInFlight = useRef(false);
   const [now, setNow] = useState(0);
   const [compact, setCompact] = useState(false);
 
@@ -126,9 +178,11 @@ export function LiveOrdersBoard({
       () => setSound(window.localStorage.getItem("menuminute.orders.sound") === "enabled"),
       0
     );
+    const tick = window.setTimeout(() => setNow(Date.now()), 0);
     const id = window.setInterval(() => setNow(Date.now()), 30000);
     return () => {
       window.clearTimeout(restore);
+      window.clearTimeout(tick);
       window.clearInterval(id);
     };
   }, []);
@@ -140,54 +194,95 @@ export function LiveOrdersBoard({
     return () => window.clearTimeout(id);
   }, [query]);
 
-  const refresh = useCallback(async () => {
-    refreshController.current?.abort();
-    const controller = new AbortController();
-    refreshController.current = controller;
-    setRefreshing(true);
-    try {
-      const [railResponse, pulseResponse] = await Promise.all([
-        fetch(base + "/workspace?view=rail", { cache: "no-store", signal: controller.signal }),
-        fetch(base + "/workspace?view=pulse", { cache: "no-store", signal: controller.signal }),
-      ]);
-      const [live, counts] = await Promise.all([
-        responseData<{ orders: MerchantOrder[]; overflow: boolean }>(railResponse),
-        responseData<ServicePulse>(pulseResponse),
-      ]);
-      if (controller.signal.aborted) return;
-      const pending = new Set(
-        live.orders.filter((order) => order.status === "pending").map((order) => order.id)
-      );
-      if (
-        soundRef.current &&
-        previousPending.current &&
-        [...pending].some((id) => !previousPending.current?.has(id))
-      ) {
-        try {
-          playOrderChime();
-        } catch {
-          /* browser audio may be blocked */
+  const refresh = useCallback(
+    async (force = false) => {
+      if (refreshInFlight.current && !force) return;
+      refreshController.current?.abort();
+      const controller = new AbortController();
+      refreshController.current = controller;
+      refreshInFlight.current = true;
+      setRefreshing(true);
+      try {
+        const [railResult, pulseResult] = await Promise.allSettled([
+          fetch(base + "/workspace?view=rail", {
+            cache: "no-store",
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
+          })
+            .then(responseData<{ orders: MerchantOrder[]; overflow: boolean }>)
+            .then(validatedRail),
+          fetch(base + "/workspace?view=pulse", {
+            cache: "no-store",
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
+          })
+            .then(responseData<ServicePulse>)
+            .then(validatedPulse),
+        ]);
+        if (controller.signal.aborted) return;
+        if (
+          (railResult.status === "rejected" && isAccessFailure(railResult.reason)) ||
+          (pulseResult.status === "rejected" && isAccessFailure(pulseResult.reason))
+        ) {
+          setOrders([]);
+          setPulse(null);
+          setOverflow(false);
+          setHistory(null);
+          setSelected(null);
+          setActivity(null);
+          setLastSync(null);
+          setLastPulseSync(null);
+          previousPending.current = null;
+          setRailError(
+            "Access to this outlet changed. Sign in again or select an authorized outlet."
+          );
+          setPulseError(null);
+          return;
+        }
+        if (railResult.status === "fulfilled") {
+          const live = railResult.value;
+          const pending = new Set(
+            live.orders.filter((order) => order.status === "pending").map((order) => order.id)
+          );
+          if (
+            soundRef.current &&
+            previousPending.current &&
+            [...pending].some((id) => !previousPending.current?.has(id))
+          ) {
+            try {
+              playOrderChime();
+            } catch {
+              /* browser audio may be blocked */
+            }
+          }
+          previousPending.current = pending;
+          setOrders(live.orders);
+          setOverflow(live.overflow);
+          setLastSync(new Date().toISOString());
+          setRailError(null);
+        } else {
+          setRailError(readError(railResult.reason, "Live orders could not synchronize."));
+        }
+        if (pulseResult.status === "fulfilled") {
+          setPulse(pulseResult.value);
+          setLastPulseSync(new Date().toISOString());
+          setPulseError(null);
+        } else {
+          setPulseError(readError(pulseResult.reason, "Service counters are unavailable."));
+        }
+      } finally {
+        if (refreshController.current === controller) {
+          refreshInFlight.current = false;
+          setRefreshing(false);
         }
       }
-      previousPending.current = pending;
-      setOrders(live.orders);
-      setPulse(counts);
-      setOverflow(live.overflow);
-      setLastSync(new Date().toISOString());
-      setError(null);
-    } catch (cause) {
-      if (!controller.signal.aborted)
-        setError(cause instanceof Error ? cause.message : "Could not synchronize orders.");
-    } finally {
-      if (refreshController.current === controller) setRefreshing(false);
-    }
-  }, [base]);
+    },
+    [base]
+  );
 
   useEffect(() => {
     const start = window.setTimeout(() => void refresh(), 0);
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
-    }, 5000);
+    }, 8000);
     const onReturn = () => {
       if (document.visibilityState === "visible") void refresh();
     };
@@ -195,6 +290,7 @@ export function LiveOrdersBoard({
     document.addEventListener("visibilitychange", onReturn);
     return () => {
       refreshController.current?.abort();
+      refreshInFlight.current = false;
       window.clearTimeout(start);
       window.clearInterval(interval);
       window.removeEventListener("online", onReturn);
@@ -217,6 +313,8 @@ export function LiveOrdersBoard({
     if (to) params.set("to", to);
     const load = async () => {
       setHistoryBusy(true);
+      setHistory(null);
+      setHistoryError(null);
       try {
         const result = await responseData<HistoryResult>(
           await fetch(base + "/workspace?" + params.toString(), {
@@ -226,11 +324,22 @@ export function LiveOrdersBoard({
         );
         if (!controller.signal.aborted) {
           setHistory(result);
-          setError(null);
+          setHistoryError(null);
         }
       } catch (cause) {
-        if (!controller.signal.aborted)
-          setError(cause instanceof Error ? cause.message : "Could not load order history.");
+        if (!controller.signal.aborted) {
+          setHistoryError(readError(cause, "Could not load order history."));
+          if (isAccessFailure(cause)) {
+            setOrders([]);
+            setPulse(null);
+            setSelected(null);
+            setLastSync(null);
+            setLastPulseSync(null);
+            setRailError(
+              "Access to this outlet changed. Sign in again or select an authorized outlet."
+            );
+          }
+        }
       } finally {
         if (!controller.signal.aborted) setHistoryBusy(false);
       }
@@ -253,10 +362,24 @@ export function LiveOrdersBoard({
         );
         if (!controller.signal.aborted) {
           setActivity(result.events);
+          setActivityError(false);
           setActivityTruncated(result.truncated);
         }
-      } catch {
-        if (!controller.signal.aborted) setActivity([]);
+      } catch (cause) {
+        if (!controller.signal.aborted) {
+          setActivity([]);
+          setActivityError(true);
+          if (isAccessFailure(cause)) {
+            setSelected(null);
+            setOrders([]);
+            setPulse(null);
+            setLastSync(null);
+            setLastPulseSync(null);
+            setRailError(
+              "Access to this outlet changed. Sign in again or select an authorized outlet."
+            );
+          }
+        }
       }
     };
     void load();
@@ -270,12 +393,14 @@ export function LiveOrdersBoard({
       selected);
   const show = (lane: string) => {
     if (lane === "today") {
-      const date = new Intl.DateTimeFormat("en-CA", {
+      const dateParts = new Intl.DateTimeFormat("en-GB", {
         timeZone: timezone,
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).format(new Date());
+      }).formatToParts(new Date());
+      const part = (type: string) => dateParts.find((item) => item.type === type)?.value ?? "";
+      const date = part("year") + "-" + part("month") + "-" + part("day");
       setHistoryStatus("completed");
       setFrom(date);
       setTo(date);
@@ -286,13 +411,20 @@ export function LiveOrdersBoard({
       setTab("active");
       setRail(lane === "incoming" || lane === "preparing" || lane === "ready" ? lane : "all");
     }
-    document.getElementById("service-rail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("service-rail")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   async function mutate(order: MerchantOrder, target: string, reason?: string, isPayment = false) {
     if (busyRef.current.has(order.id)) return;
+    if (railError) {
+      setError("The live queue must synchronize before order actions can resume.");
+      return;
+    }
     busyRef.current.add(order.id);
-    setBusyId(order.id);
+    setBusyIds((previous) => new Set([...previous, order.id]));
     setError(null);
     try {
       const result = await fetch(
@@ -312,7 +444,7 @@ export function LiveOrdersBoard({
         }
       );
       if (result.status === 409) {
-        await refresh();
+        await refresh(true);
         setError(
           "The ticket changed or its acceptance window expired. The authoritative queue was reloaded."
         );
@@ -322,38 +454,29 @@ export function LiveOrdersBoard({
       setDeclining(null);
       setPaying(null);
       setHistoryRevision((value) => value + 1);
-      await refresh();
+      await refresh(true);
     } catch (cause) {
-      await refresh();
+      await refresh(true);
       setError(
         (cause instanceof Error ? cause.message : "The outcome is uncertain.") +
           " If connectivity was lost, synchronize before attempting the action again."
       );
     } finally {
       busyRef.current.delete(order.id);
-      setBusyId(null);
+      setBusyIds((previous) => {
+        const next = new Set(previous);
+        next.delete(order.id);
+        return next;
+      });
     }
   }
 
   const visible = filterRail(orders, query, mode);
-  const statusCounts = pulse ?? emptyPulse;
+  const statusCounts = pulse;
   const isFiltered = Boolean(query || mode !== "all");
   return (
-    <div className="product service-counter" data-testid="service-counter">
+    <div className="service-counter" data-testid="service-counter">
       <header className="sc-hero">
-        <div className="sc-topbar">
-          <nav aria-label="Breadcrumb" className="sc-breadcrumb">
-            <Link href="/dashboard">Workspace</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Orders</span>
-          </nav>
-          <div className="sc-top-actions">
-            <ThemeControl />
-            <Link href="/account" className="sc-account">
-              Account ↗
-            </Link>
-          </div>
-        </div>
         <div className="sc-hero-copy">
           <span className="sc-eyebrow">SERVICE DESK / LIVE ORDERS</span>
           <h1>The Service Counter.</h1>
@@ -375,8 +498,12 @@ export function LiveOrdersBoard({
           MENUMINUTE · SERVICE COUNTER
         </span>
       </header>
-      <main className="sc-body">
-        <ServicePulseRail pulse={pulse} show={show} />
+      <div className="sc-body">
+        <ServicePulseRail
+          pulse={pulse}
+          state={pulseError ? "stale" : lastPulseSync ? "ready" : "initial"}
+          show={show}
+        />
         <section id="service-rail" className="sc-operations" aria-labelledby="sc-title">
           <div className="sc-section-top">
             <div>
@@ -393,21 +520,38 @@ export function LiveOrdersBoard({
             </button>
           </div>
           <div className="sc-toolbar">
-            <div className="sc-tabs" role="tablist" aria-label="Orders view">
+            <div
+              className="sc-tabs"
+              role="tablist"
+              aria-label="Orders view"
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                event.preventDefault();
+                const next = tab === "active" ? "history" : "active";
+                setTab(next);
+                document
+                  .getElementById(next === "active" ? "sc-active-tab" : "sc-history-tab")
+                  ?.focus();
+              }}
+            >
               <button
                 id="sc-active-tab"
                 type="button"
                 role="tab"
                 aria-selected={tab === "active"}
+                tabIndex={tab === "active" ? 0 : -1}
+                aria-controls="sc-active-panel"
                 onClick={() => setTab("active")}
               >
-                Live orders <span>{statusCounts.active}</span>
+                Live orders <span>{statusCounts?.active ?? "—"}</span>
               </button>
               <button
                 id="sc-history-tab"
                 type="button"
                 role="tab"
                 aria-selected={tab === "history"}
+                tabIndex={tab === "history" ? 0 : -1}
+                aria-controls="sc-history-panel"
                 onClick={() => setTab("history")}
               >
                 History
@@ -467,7 +611,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 className="sc-tool-button"
-                onClick={() => void refresh()}
+                onClick={() => void refresh(true)}
                 disabled={isRefreshing}
               >
                 <RefreshCw size={17} className={isRefreshing ? "sc-spin" : ""} />
@@ -475,25 +619,53 @@ export function LiveOrdersBoard({
               </button>
             </div>
           </div>
-          <div className="sc-sync" role="status" aria-live="polite">
-            <span className={error ? "sc-dot sc-dot-error" : "sc-dot"} />
-            {lastSync
-              ? "Last successful sync " +
-                new Date(lastSync).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: timezone,
-                }) +
-                (isRefreshing ? " · Syncing…" : "")
-              : "Waiting for first synchronization"}
-            {error && <span> · Connection may be stale</span>}
+          <div
+            className="sc-sync"
+            data-testid="service-rail-status"
+            role="status"
+            aria-live="polite"
+          >
+            <span className={railError ? "sc-dot sc-dot-error" : "sc-dot"} />
+            {railError
+              ? lastSync
+                ? "Connection lost · Last verified tickets are shown read-only"
+                : "Live queue unavailable · No verified tickets loaded"
+              : lastSync
+                ? "Live queue synced " +
+                  new Date(lastSync).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: timezone,
+                  }) +
+                  (isRefreshing ? " · Syncing…" : "")
+                : "Connecting to the live queue…"}
           </div>
+          {railError && (
+            <div className="sc-alert" role="alert" data-testid="service-rail-error">
+              <AlertTriangle size={18} aria-hidden="true" />
+              <span>{railError} Order actions are paused until synchronization succeeds.</span>
+              <button type="button" onClick={() => void refresh(true)}>
+                Retry queue
+              </button>
+            </div>
+          )}
+          {pulseError && (
+            <div className="sc-alert" role="alert" data-testid="service-pulse-error">
+              <AlertTriangle size={18} aria-hidden="true" />
+              <span>
+                {pulseError} Counters may be outdated; ticket synchronization is independent.
+              </span>
+              <button type="button" onClick={() => void refresh(true)}>
+                Retry counters
+              </button>
+            </div>
+          )}
           {error && (
             <div className="sc-alert" role="alert">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={18} aria-hidden="true" />
               <span>{error}</span>
-              <button type="button" onClick={() => void refresh()}>
-                Try again
+              <button type="button" onClick={() => void refresh(true)}>
+                Synchronize
               </button>
             </div>
           )}
@@ -508,11 +680,12 @@ export function LiveOrdersBoard({
             <div
               role="tabpanel"
               aria-labelledby="sc-active-tab"
+              id="sc-active-panel"
               className={compact ? "sc-rail sc-rail-compact" : "sc-rail"}
             >
               <div className="sc-mobile-lanes" role="group" aria-label="Choose service lane">
                 <button type="button" aria-pressed={rail === "all"} onClick={() => setRail("all")}>
-                  All <span>{statusCounts.active}</span>
+                  All <span>{statusCounts?.active ?? "—"}</span>
                 </button>
                 {lanes.map((lane) => (
                   <button
@@ -522,7 +695,9 @@ export function LiveOrdersBoard({
                     onClick={() => setRail(lane.id)}
                   >
                     {lane.title}{" "}
-                    <span>{statusCounts[lane.id === "incoming" ? "pending" : lane.id]}</span>
+                    <span>
+                      {statusCounts?.[lane.id === "incoming" ? "pending" : lane.id] ?? "—"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -550,7 +725,7 @@ export function LiveOrdersBoard({
                           </div>
                         </div>
                         <span className="sc-column-count">
-                          {statusCounts[id === "incoming" ? "pending" : id]}
+                          {statusCounts?.[id === "incoming" ? "pending" : id] ?? "—"}
                         </span>
                       </div>
                       <div className="sc-column-tickets">
@@ -559,13 +734,14 @@ export function LiveOrdersBoard({
                             <Ticket
                               key={order.id}
                               order={order}
-                              now={now || Date.now()}
+                              now={now}
                               timezone={timezone}
                               open={(item) => {
                                 setActivity(null);
                                 setSelected(item);
                               }}
-                              busy={busyId === order.id}
+                              busy={busyIds.has(order.id)}
+                              readOnly={Boolean(railError)}
                               perform={(ticket, status) => void mutate(ticket, status)}
                               decline={(ticket) => {
                                 setDeclineReason(declineReasons[0]);
@@ -575,7 +751,11 @@ export function LiveOrdersBoard({
                             />
                           ))
                         ) : (
-                          <RailEmpty lane={id} filtered={isFiltered} />
+                          <RailEmpty
+                            lane={id}
+                            filtered={isFiltered}
+                            state={railError ? "unavailable" : lastSync ? "ready" : "loading"}
+                          />
                         )}
                       </div>
                     </section>
@@ -584,7 +764,12 @@ export function LiveOrdersBoard({
               </div>
             </div>
           ) : (
-            <section role="tabpanel" aria-labelledby="sc-history-tab" className="sc-history">
+            <section
+              id="sc-history-panel"
+              role="tabpanel"
+              aria-labelledby="sc-history-tab"
+              className="sc-history"
+            >
               <div className="sc-history-filters">
                 <label>
                   Status
@@ -654,6 +839,15 @@ export function LiveOrdersBoard({
                   />
                 </label>
               </div>
+              {historyError && (
+                <div className="sc-alert" role="alert">
+                  <AlertTriangle size={18} aria-hidden="true" />
+                  <span>{historyError}</span>
+                  <button type="button" onClick={() => setHistoryRevision((value) => value + 1)}>
+                    Retry history
+                  </button>
+                </div>
+              )}
               <p className="sc-history-count" role="status">
                 {historyBusy
                   ? "Loading history…"
@@ -693,7 +887,8 @@ export function LiveOrdersBoard({
                   ))}
                 </div>
               ) : (
-                !historyBusy && (
+                !historyBusy &&
+                !historyError && (
                   <div className="sc-history-empty">
                     <strong>No matching concluded orders.</strong>
                     <p>Try a different filter or date range.</p>
@@ -720,7 +915,7 @@ export function LiveOrdersBoard({
             </section>
           )}
         </section>
-      </main>
+      </div>
       <Dialog.Root
         open={Boolean(currentSelected)}
         onOpenChange={(open) => {
@@ -805,6 +1000,8 @@ export function LiveOrdersBoard({
                       Payment <b>{currentSelected.paymentStatus}</b>
                     </p>
                     {currentSelected.canManagePayment &&
+                      !railError &&
+                      ["ready", "served", "collected"].includes(currentSelected.status) &&
                       currentSelected.paymentStatus === "unpaid" && (
                         <button
                           type="button"
@@ -833,7 +1030,11 @@ export function LiveOrdersBoard({
                         ))}
                       </ol>
                     ) : (
-                      <p>Recorded timeline unavailable. The order status above is authoritative.</p>
+                      <p>
+                        {activityError
+                          ? "Unable to load recorded events. Reopen the ticket to retry."
+                          : "No recorded events. The order status above is authoritative."}
+                      </p>
                     )}
                     {activityTruncated && <p>Showing the latest 60 recorded events.</p>}
                     {currentSelected.rejectionReason && (
@@ -882,7 +1083,9 @@ export function LiveOrdersBoard({
               <Dialog.Close className="sc-secondary">Keep order</Dialog.Close>
               <button
                 type="button"
-                disabled={!declining || busyId === declining.id || !declineReason}
+                disabled={
+                  !declining || busyIds.has(declining.id) || !declineReason || Boolean(railError)
+                }
                 className="sc-danger"
                 onClick={() => {
                   if (declining) void mutate(declining, "rejected", declineReason);
@@ -918,7 +1121,7 @@ export function LiveOrdersBoard({
               <button
                 type="button"
                 className="sc-primary"
-                disabled={!paying || busyId === paying.id}
+                disabled={!paying || busyIds.has(paying.id) || Boolean(railError)}
                 onClick={() => {
                   if (paying) void mutate(paying, "", undefined, true);
                 }}
