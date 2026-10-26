@@ -83,8 +83,11 @@ export async function kitchenRunningReleaseSha(): Promise<string> {
       readFile("/var/www/menuminute/current/RELEASE-SHA", "utf8"),
     ]);
     const candidate = marker.trim();
-    if (sha.safeParse(candidate).success &&
-      web.endsWith("/" + candidate) && worker.endsWith("/" + candidate)) {
+    if (
+      sha.safeParse(candidate).success &&
+      web.endsWith("/" + candidate) &&
+      worker.endsWith("/" + candidate)
+    ) {
       return candidate;
     }
   } catch {

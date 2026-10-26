@@ -184,7 +184,7 @@ BEGIN
    VALUES(p_outlet,org,'requested',actor,NULL,sha,evidence,reason,NULL,NULL)
    ON CONFLICT(outlet_id) DO UPDATE SET
      state='requested',requested_by=actor,approved_by=NULL,
-     release_sha=sha,evidence_url=evidence,reason=reason,
+     release_sha=sha,evidence_url=evidence,reason=EXCLUDED.reason,
      approved_at=NULL,expires_at=NULL,revision=kitchen_pilot_outlets.revision+1,
      updated_at=clock_timestamp();
  ELSIF p_action='approve' THEN
