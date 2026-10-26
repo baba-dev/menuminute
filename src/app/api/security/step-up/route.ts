@@ -42,6 +42,6 @@ export async function POST(req: Request) {
       );
     return NextResponse.json({ confirmed: true }, { headers: { "cache-control": "no-store" } });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

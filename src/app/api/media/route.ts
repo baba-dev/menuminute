@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const { actor, restaurant } = await requestContext(req);
     return NextResponse.json(await mediaList(actor, restaurant.id));
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function POST(req: Request) {
@@ -30,6 +30,6 @@ export async function POST(req: Request) {
       { status: 202 }
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

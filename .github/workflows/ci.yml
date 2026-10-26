@@ -29,12 +29,12 @@ jobs:
     name: Lint & Code Style
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: Cache pnpm store
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -86,12 +86,12 @@ jobs:
     name: TypeScript Strict Typecheck
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
@@ -99,7 +99,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -111,12 +111,12 @@ jobs:
     env:
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
@@ -124,7 +124,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -140,12 +140,12 @@ jobs:
     name: Production Build & Browser (ARM64)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - name: Resolve pnpm store path
@@ -153,7 +153,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
       - name: Cache pnpm store
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -169,6 +169,8 @@ jobs:
           NODE_ENV: production
           APP_URL: https://food.bababuilds.com
           NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
+          # Public widget key is compiled into the immutable ARM64 release; never inject the secret here.
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           AUTH_SECRET: 31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc
           EMAIL_PROVIDER: smtp
           EMAIL_FROM: food@bababuilds.com
@@ -188,7 +190,7 @@ jobs:
           DEMO_PASSWORD: isolated-browser-password
       - name: Cache Playwright Chromium
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -199,7 +201,7 @@ jobs:
         run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
       - name: Upload main production archive
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: menuminute-release-${{ github.sha }}
           path: |
@@ -210,7 +212,7 @@ jobs:
           retention-days: 7
       - if: failure()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: browser-failure-evidence
           path: test-results/
@@ -233,12 +235,12 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: "00000000000000000000000000000000"
       CLOUDFLARE_API_TOKEN: "synthetic-browser-test-never-used"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
       - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
       - run: pnpm install --frozen-lockfile
@@ -268,7 +270,7 @@ jobs:
         run: pnpm exec playwright test tests/e2e/ember.spec.ts
       - if: failure()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ember-browser-failure-evidence
           path: test-results/
@@ -276,10 +278,46 @@ jobs:
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v
 
+  security:
+    name: Dependency, Secret & Code Scanning
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+      - name: Audit frozen dependencies
+        run: pnpm audit --audit-level high
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - name: Analyze repository
+        uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+
   gate:
     name: Required CI quality gate
     if: always()
-    needs: [quality, typecheck, test, build, ember_browser]
+    needs: [quality, typecheck, test, build, ember_browser, security]
     runs-on: ubuntu-24.04
     steps:
       - name: Require all mandatory lanes
@@ -289,9 +327,10 @@ jobs:
           TEST: ${{ needs.test.result }}
           BUILD: ${{ needs.build.result }}
           EMBER_BROWSER: ${{ needs.ember_browser.result }}
+          SECURITY: ${{ needs.security.result }}
         run: |
           set -euo pipefail
-          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$EMBER_BROWSER"; do
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$EMBER_BROWSER" "$SECURITY"; do
             test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
           done
-          echo "All five lanes (including isolated Ember browser) passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "All six lanes (including isolated Ember browser and security) passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

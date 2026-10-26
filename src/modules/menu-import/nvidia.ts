@@ -106,7 +106,14 @@ function parsedPrice(value: string | null, uncertain: boolean, currency: string,
   };
 }
 export async function extractNvidiaCandidate(
-  input: { importId: string; currency: string; sources: Source[]; model: string; apiKey: string },
+  input: {
+    importId: string;
+    currency: string;
+    sources: Source[];
+    model: string;
+    apiKey: string;
+    guard?: (usage: Meter) => Promise<void>;
+  },
   request: typeof fetch = fetch
 ): Promise<{ candidate: ImportCandidate; usage: Meter }> {
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };
@@ -119,6 +126,7 @@ export async function extractNvidiaCandidate(
     throw new NvidiaExtractionError("source_unavailable", usage);
   const categories: ImportCandidate["categories"] = [];
   for (const source of [...input.sources].sort((a, b) => a.pageIndex - b.pageIndex)) {
+    await input.guard?.(usage);
     if (!source.bytes.length || source.bytes.length > 5242880)
       throw new NvidiaExtractionError("source_unavailable", usage);
     let image: Buffer;
@@ -134,6 +142,7 @@ export async function extractNvidiaCandidate(
     let accepted = false;
     let metered = false;
     try {
+      await input.guard?.(usage);
       usage.requests++;
       const response = await request(NVIDIA_CHAT_URL, {
         method: "POST",

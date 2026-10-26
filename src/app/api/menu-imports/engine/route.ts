@@ -13,6 +13,6 @@ export async function GET(req: Request) {
       }
     );
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

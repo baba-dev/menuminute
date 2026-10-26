@@ -76,6 +76,6 @@ export async function POST(req: Request) {
       { status: result.isDuplicate ? 200 : 201, headers: noStore }
     );
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

@@ -23,6 +23,6 @@ export async function POST(
       headers: { "cache-control": "no-store" },
     });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

@@ -10,6 +10,6 @@ export async function GET(req: Request) {
     );
     return NextResponse.json(result.rows, { headers: { "cache-control": "private, no-store" } });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

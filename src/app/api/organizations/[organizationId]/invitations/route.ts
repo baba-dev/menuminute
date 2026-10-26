@@ -9,7 +9,7 @@ export async function GET(req: Request, context: C) {
       await listInvitations(await requestActor(req), (await context.params).organizationId)
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function POST(req: Request, context: C) {
@@ -23,7 +23,7 @@ export async function POST(req: Request, context: C) {
       { status: 201 }
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function DELETE(req: Request, context: C) {
@@ -36,6 +36,6 @@ export async function DELETE(req: Request, context: C) {
     await revokeInvitation(actor, (await context.params).organizationId, body.id);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

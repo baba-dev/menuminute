@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 // Local test-only TLS proxy exercises the built standalone server, including Secure cookies.
 import https from "node:https";
 import http from "node:http";
-import { mkdtemp, readFile, cp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, cp, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn, execFileSync } from "node:child_process";
@@ -29,6 +29,11 @@ execFileSync(
   ],
   { stdio: "ignore" }
 );
+// The standalone readiness route requires the same explicitly provisioned media root as production.
+// Only this isolated browser fixture may create its ephemeral test root.
+if (process.env.MEDIA_STORAGE === "local" && process.env.MEDIA_ROOT) {
+  await mkdir(process.env.MEDIA_ROOT, { recursive: true, mode: 0o770 });
+}
 await cp("public", ".next/standalone/public", { recursive: true });
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true });
 const tlsKey = await readFile(path.join(dir, "key.pem"));

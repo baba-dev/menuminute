@@ -16,6 +16,6 @@ export async function GET(req: Request, c: C) {
       },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

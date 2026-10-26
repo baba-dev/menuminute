@@ -10,12 +10,16 @@ export default defineConfig({
     env: {
       APP_URL: "http://localhost:3000",
       AUTH_SECRET: "isolated-test-key-with-at-least-32-characters",
-      AUTH_ALLOW_TEST_EMAIL: "true",
       DATABASE_URL:
         process.env["DATABASE_URL"] ??
         "postgresql://menuminute_app:local-test@127.0.0.1:5432/menuminute_test",
       REDIS_QUEUE_URL: process.env["REDIS_QUEUE_URL"] ?? "redis://127.0.0.1:6379",
       REDIS_CACHE_URL: process.env["REDIS_CACHE_URL"] ?? "redis://127.0.0.1:6380",
+      ORDER_EDGE_SHARED_SECRET:
+        process.env["ORDER_EDGE_SHARED_SECRET"] ?? "isolated-ci-signed-edge-secret-32-bytes",
+      MEDIA_STORAGE: process.env["MEDIA_STORAGE"] ?? "local",
+      MEDIA_ROOT: process.env["MEDIA_ROOT"] ?? "/tmp/menuminute-test-media",
+      MEDIA_OUTLET_BUDGET_BYTES: process.env["MEDIA_OUTLET_BUDGET_BYTES"] ?? "104857600",
     },
     testTimeout: 15000,
     fileParallelism: false,

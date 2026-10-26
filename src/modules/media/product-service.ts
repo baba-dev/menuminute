@@ -6,6 +6,8 @@ import { getPool } from "@/db";
 import { domainError } from "@/modules/organizations/service";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { putObject, getObject } from "./storage";
+import { env } from "@/lib/config/env";
+import { createHash } from "node:crypto";
 export async function mediaCommand(
   actor: Actor,
   outletId: string,
@@ -36,9 +38,7 @@ export async function uploadDishPhoto(
   if (!bytes.length || bytes.length > 5242880)
     throw new ValidationError("Choose an image up to 5 MiB");
   z.string().trim().min(5).max(500).parse(rights);
-  const budget = Number(process.env["MEDIA_OUTLET_BUDGET_BYTES"] ?? 104857600);
-  if (!Number.isSafeInteger(budget) || budget < 5242880)
-    throw new Error("Invalid media storage budget");
+  const budget = env.MEDIA_OUTLET_BUDGET_BYTES;
   const id = crypto.randomUUID();
   const reserved = await mediaCommand(actor, outletId, id, "reserve", {
     sizeBytes: bytes.length,
@@ -70,17 +70,39 @@ export async function privateMedia(actor: Actor, outletId: string, id: string) {
   if (!current || current.status !== "ready") throw new NotFoundError("Processed photo");
   return bytes;
 }
-export async function publicMedia(id: string, thumbnail = false) {
-  const read = async () =>
+function publicMediaReader(id: string) {
+  return async () =>
     (
       await getPool().query<{ data: { key: string; thumbnail: string } | null }>(
         "select app_private.public_dish_media($1) as data",
         [id]
       )
     ).rows[0]?.data;
+}
+
+export async function publicMediaResponse(
+  id: string,
+  thumbnail = false,
+  ifNoneMatch: string | null = null
+) {
+  const read = publicMediaReader(id);
   const a = await read();
   if (!a) throw new NotFoundError("Photo");
-  const bytes = await getObject(thumbnail ? a.thumbnail : a.key);
-  if (!(await read())) throw new NotFoundError("Photo");
-  return bytes;
+  const key = thumbnail ? a.thumbnail : a.key;
+  const etag = `"${createHash("sha256").update(key).digest("base64url")}"`;
+  const validators = ifNoneMatch?.split(",").map((value) => value.trim().replace(/^W\//, ""));
+  if (validators?.includes(etag) || validators?.includes("*")) {
+    return { etag, notModified: true as const };
+  }
+  const bytes = await getObject(key);
+  const current = await read();
+  if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
+    throw new NotFoundError("Photo");
+  return { bytes, etag, notModified: false as const };
+}
+
+export async function publicMedia(id: string, thumbnail = false) {
+  const result = await publicMediaResponse(id, thumbnail);
+  if (result.notModified) throw new Error("Unexpected conditional media response");
+  return result.bytes;
 }

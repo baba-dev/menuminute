@@ -37,7 +37,7 @@ export async function GET(
     return NextResponse.json(data, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     recordOrdersReadFailure(viewName, requestId, error);
-    const response = errorResponse(error);
+    const response = errorResponse(error, req);
     response.headers.set("cache-control", "private, no-store");
     response.headers.set("x-request-id", requestId);
     return response;

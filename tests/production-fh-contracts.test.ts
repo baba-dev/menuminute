@@ -23,6 +23,8 @@ const providerEnv = parseEnv({
   REDIS_CACHE_URL: "redis://localhost:6380",
   EMAIL_PROVIDER: "test",
   AUTH_ALLOW_TEST_EMAIL: "true",
+  MEDIA_STORAGE: "local",
+  MEDIA_ROOT: "/tmp/menuminute-test-media",
   POS_STRIPE_ENABLED: "true",
   POS_STRIPE_SECRET_KEY: "sk_test_isolated",
   POS_STRIPE_WEBHOOK_SECRET: "whsec_isolated",

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { scheduleSchema } from "@/modules/menu-product/contracts";
 import { readWorkspacePreference } from "@/modules/organizations/workspace-preferences";
 import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
@@ -32,13 +33,16 @@ export const createRestaurantSchema = z.object({
   outletType: z.enum(["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"]),
 });
 export type CreateRestaurantInput = z.input<typeof createRestaurantSchema>;
-export async function getRestaurantsByUserId(userId: string) {
+export const getRestaurantsByUserId = cache(async function getRestaurantsByUserId(userId: string) {
   return withActor({ userId }, (tx) =>
     tx.select().from(restaurants).where(eq(restaurants.isActive, true)).orderBy(asc(restaurants.id))
   );
-}
+});
 /** Member-only selection: absent memberships return undefined, never a public demo. */
-export async function getDefaultOrActiveRestaurant(userId?: string, activeOutletId?: string) {
+export const getDefaultOrActiveRestaurant = cache(async function getDefaultOrActiveRestaurant(
+  userId?: string,
+  activeOutletId?: string
+) {
   if (!userId) return undefined;
   const outlets = await getRestaurantsByUserId(userId);
   const preference = await readWorkspacePreference(userId);
@@ -54,7 +58,7 @@ export async function getDefaultOrActiveRestaurant(userId?: string, activeOutlet
     (!preference ? outlets.find((o) => o.id === activeOutletId) : undefined) ??
     outlets[0]
   );
-}
+});
 export async function getRestaurantById(actor: Actor, id: string) {
   return withOutlet(
     actor,
