@@ -4,14 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 
-const validNames = [
-  "welcome-hero-desktop",
-  "welcome-hero-mobile",
-  "gps-locator",
-  "empty-outlet",
-  "celebration-overlay",
-] as const;
-export type SupplementaryArtwork = (typeof validNames)[number];
+export type SupplementaryArtwork =
+  | "welcome-hero-desktop"
+  | "welcome-hero-mobile"
+  | "gps-locator"
+  | "empty-outlet"
+  | "celebration-overlay";
 
 /** Optional in-repository artwork. Never displays a broken image when assets are not yet uploaded. */
 export function ThemedArtwork({

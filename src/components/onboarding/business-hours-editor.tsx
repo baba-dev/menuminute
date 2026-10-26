@@ -44,7 +44,7 @@ export function BusinessHoursEditor({
       </div>
       {value === null ? (
         <div className="wizard-hours-empty">
-          <p>Not configured. We'll never assume the restaurant is open 24 hours.</p>
+          <p>Not configured. We will never assume the restaurant is open 24 hours.</p>
           <button
             className="wizard-back-btn"
             type="button"
