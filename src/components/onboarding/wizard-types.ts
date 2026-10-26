@@ -29,6 +29,13 @@ export interface WizardDraft {
   pickupAdvanceDays: number;
   tableCount: number;
   menuSchedule: Schedule | null;
+  // First-time goal configures a checklist, not a subscription entitlement.
+  onboardingGoal: "qr_menu" | "ordering" | "full_operations";
+  operatingHours: Schedule | null;
+  serviceHours: Schedule | null;
+  operationsContactName: string;
+  operationsContactPhone: string;
+  operationsContactEmail: string;
 }
 
 export const initialWizardDraft: WizardDraft = {
@@ -56,4 +63,10 @@ export const initialWizardDraft: WizardDraft = {
   pickupAdvanceDays: 7,
   tableCount: 10,
   menuSchedule: null,
+  onboardingGoal: "qr_menu",
+  operatingHours: null,
+  serviceHours: null,
+  operationsContactName: "",
+  operationsContactPhone: "",
+  operationsContactEmail: "",
 };

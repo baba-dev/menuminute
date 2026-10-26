@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPin, Navigation, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react";
 import { localeOptions, currencyFor } from "@/modules/onboarding/locales";
 import type { WizardDraft } from "../wizard-types";
+import { ThemedArtwork } from "../themed-artwork";
 
 interface StepLocationProps {
   draft: WizardDraft;
@@ -92,6 +93,11 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
         </p>
       </div>
 
+      <div className="wizard-gps-artwork"><ThemedArtwork name="gps-locator" width={800} height={800}/>
+        <div><strong>Address first, GPS optional</strong>
+          <p className="wizard-desc">Owners can enter their postal address even when browser GPS is unavailable. Coordinates are never mandatory for a QR menu.</p>
+        </div>
+      </div>
       {/* Geolocation Card */}
       <div className="wizard-geo-panel">
         <div className="wizard-geo-head">
@@ -198,6 +204,9 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
         )}
       </div>
 
+      <div className="wizard-field-group">
+        <p className="wizard-counter">No exact coordinates? Use the address below. You can verify your restaurant pin later.</p>
+      </div>
       {/* Street Address */}
       <div className="wizard-field-group">
         <label className="wizard-label" htmlFor="wz-addr1">
@@ -283,7 +292,9 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
             const country = e.target.value;
             onChange("country", country);
             if (currencyFor[country]) onChange("currency", currencyFor[country]);
-            if (timezoneSuggestions[country]) onChange("timezone", timezoneSuggestions[country]);
+            // Do not silently replace a timezone the operator already selected.
+            if (draft.timezone === "Asia/Kolkata" && timezoneSuggestions[country])
+              onChange("timezone", timezoneSuggestions[country]);
           }}
         >
           {regions.map((r) => (

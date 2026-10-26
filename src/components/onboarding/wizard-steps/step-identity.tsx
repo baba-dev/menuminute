@@ -1,6 +1,7 @@
 "use client";
 
-import { Utensils, Coffee, ShoppingBag, Flame, Hotel, Sparkles, Check } from "lucide-react";
+import { Utensils, Coffee, ShoppingBag, Flame, Hotel, Sparkles, Check, QrCode, ShoppingCart, ClipboardList } from "lucide-react";
+import Image from "next/image";
 import type { WizardDraft } from "../wizard-types";
 
 interface StepIdentityProps {
@@ -73,6 +74,25 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
         </p>
       </div>
 
+      {/* A setup goal personalizes the next steps, never grants entitlements. */}
+      <div className="wizard-field-group">
+        <label className="wizard-label">What would you like to start with?</label>
+        <div className="wizard-goal-grid" role="radiogroup" aria-label="Initial setup goal">
+          {([
+            {id:"qr_menu",label:"Free QR Menu",Icon:QrCode,desc:"Build and publish a digital menu."},
+            {id:"ordering",label:"Online Ordering",Icon:ShoppingCart,desc:"Prepare menus and pickup operations."},
+            {id:"full_operations",label:"Restaurant Operations",Icon:ClipboardList,desc:"Work toward ordering, kitchen and POS."},
+          ] as const).map(option=>(
+            <button className={`wizard-goal-choice ${draft.onboardingGoal===option.id?"wizard-goal-choice--selected":""}`}
+              type="button" role="radio" aria-checked={draft.onboardingGoal===option.id}
+              key={option.id} onClick={()=>onChange("onboardingGoal",option.id)}>
+              <option.Icon size={19} aria-hidden="true" />
+              <strong>{option.label}</strong><span>{option.desc}</span>
+            </button>
+          ))}
+        </div>
+        <p className="wizard-counter">Your selection personalizes the setup checklist. Paid services require separate activation.</p>
+      </div>
       {/* Outlet Name */}
       <div className="wizard-field-group">
         <label className="wizard-label" htmlFor="wz-name">
@@ -123,7 +143,10 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
                 }}
               >
                 <div className="wizard-type-icon">
-                  <Icon size={18} />
+                  <Icon size={18} className="wizard-type-fallback" />
+                  <Image src={`/brand/onboarding-wizard/icons/outlet-type-${type.id.replaceAll("_","-")}.svg`}
+                    alt="" width={35} height={35} unoptimized className="wizard-type-image"
+                    onError={event=>{event.currentTarget.style.display="none";}} />
                 </div>
                 <div>
                   <div className="wizard-type-name">{type.name}</div>
@@ -151,6 +174,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
         />
       </div>
 
+      <p className="wizard-counter">You can change the description and branding after creating your workspace.</p>
       {/* Brand Color Appearance */}
       <div className="wizard-field-group">
         <label className="wizard-label">
