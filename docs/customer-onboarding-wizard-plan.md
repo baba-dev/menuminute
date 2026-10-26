@@ -305,7 +305,6 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 - Light/dark WebP stage artwork is optional. React renders safe inline SVG fallbacks while the commissioned media is being prepared.
 - Missing production QA: deployed HTTP smoke tests, browser screenshots, independent security approval, and final CI checks must be verified before merging.
 
-
 ## Enhancements A–F: Operations-aware first-outlet onboarding (2026-10-27)
 
 - A: Guided goal selection (QR / ordering / full operations), six custom icon paths, responsive welcome media, and optional branding/contact sections. The selected goal is never an entitlement.
@@ -316,4 +315,5 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 - F: PostgreSQL integration and browser retry/resume regression tests, accessibility and theme fallbacks. CI, release safeguards, and independent review still required before merge.
 
 ### Artwork directory
+
 See `public/brand/onboarding-wizard/README.md` and its 26-entry manifest; upload individual WebP and SVG binary assets on the feature branch. Verify screenshots and asset loading before release. No image binaries are committed by this text-only feature work.

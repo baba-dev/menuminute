@@ -52,7 +52,12 @@ export default async function DashboardPage() {
   if (!outlet) {
     return (
       <div className="mm-dashboard mm-dashboard-empty">
-        <ThemedArtwork name="empty-outlet" width={720} height={540} className="wizard-empty-artwork" />
+        <ThemedArtwork
+          name="empty-outlet"
+          width={720}
+          height={540}
+          className="wizard-empty-artwork"
+        />
         <span className="mm-dashboard-eyebrow">Welcome to MenuMinute</span>
         <h1>Make something delicious today.</h1>
         <p>Create your first outlet to build and share its permanent QR menu.</p>

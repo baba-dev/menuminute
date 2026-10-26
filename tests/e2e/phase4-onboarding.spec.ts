@@ -2,51 +2,62 @@ import { expect, test } from "@playwright/test";
 import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 import { admin } from "../helpers";
 
-test("first-outlet wizard resumes a saved draft, recovers from failure and opens guided setup",async({page})=>{
- await page.context().setExtraHTTPHeaders({"x-browser-test-client":crypto.randomUUID()});
- const email=`onboarding-${crypto.randomUUID()}@browser.invalid`;
- await mockTurnstileForBrowserTests(page);
- await page.goto("/register");
- await page.getByLabel("Your name").fill("First Outlet Owner");
- await page.getByLabel("Email address").fill(email);
- await page.getByLabel("Password",{exact:true}).fill("onboarding-secure-password-123");
- await page.getByLabel("Confirm password").fill("onboarding-secure-password-123");
- await page.getByRole("checkbox",{name:/I agree to the/}).check();
- await page.getByRole("button",{name:"Create free account"}).click();
- await expect(page).toHaveURL(/\/verify-email/);
- await admin(async(_,pool)=>pool.query("update users set email_verified=true where email=$1",[email]));
- await page.goto("/login");
- await page.getByLabel("Email address").fill(email);
- await page.getByLabel("Password",{exact:true}).fill("onboarding-secure-password-123");
- await page.getByRole("button",{name:"Sign in",exact:true}).click();
- await expect(page).toHaveURL(/\/onboarding/);
- await page.goto("/onboarding");
- await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
- await page.getByLabel(/Outlet Public Name/).fill("Kitchen for Guided Setup");
- await page.getByRole("radio",{name:/Online Ordering/}).click();
- await page.getByRole("button",{name:"Continue"}).click();
- await expect(page.getByRole("heading",{name:"Where is your outlet located?"})).toBeVisible();
- await page.getByRole("button",{name:"Continue"}).click();
- await expect(page.getByRole("heading",{name:"How will your restaurant operate?"})).toBeVisible();
- await page.getByRole("button",{name:"Continue"}).click();
- await page.getByRole("button",{name:"Continue"}).click();
- await expect(page.getByRole("heading",{name:"Review your outlet details."})).toBeVisible();
- let requests=0;
- await page.route("**/api/onboarding",async route=>{
-   if(route.request().method()!=="POST")return route.continue();
-   requests++;
-   if(requests===1)return route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({message:"Temporary provisioning error"})});
-   return route.continue();
- });
- await page.getByRole("button",{name:"Confirm & Create Outlet"}).click();
- await expect(page.getByRole("alert")).toContainText("Temporary provisioning error");
- await page.reload();
- await expect(page.getByRole("heading",{name:"Review your outlet details."})).toBeVisible();
- await page.getByRole("button",{name:"Confirm & Create Outlet"}).click();
- await expect(page).toHaveURL(/\/dashboard\/get-started/);
- await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();
- await expect(page.getByRole("link",{name:/Import your existing menu/})).toBeVisible();
- expect(requests).toBe(2);
- const progress=await (await page.request.get("/api/onboarding")).json();
- expect(progress.status).toBe("completed");
+test("first-outlet wizard resumes a saved draft, recovers from failure and opens guided setup", async ({
+  page,
+}) => {
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  const email = `onboarding-${crypto.randomUUID()}@browser.invalid`;
+  await mockTurnstileForBrowserTests(page);
+  await page.goto("/register");
+  await page.getByLabel("Your name").fill("First Outlet Owner");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill("onboarding-secure-password-123");
+  await page.getByLabel("Confirm password").fill("onboarding-secure-password-123");
+  await page.getByRole("checkbox", { name: /I agree to the/ }).check();
+  await page.getByRole("button", { name: "Create free account" }).click();
+  await expect(page).toHaveURL(/\/verify-email/);
+  await admin(async (_, pool) =>
+    pool.query("update users set email_verified=true where email=$1", [email])
+  );
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill("onboarding-secure-password-123");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/onboarding/);
+  await page.goto("/onboarding");
+  await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
+  await page.getByLabel(/Outlet Public Name/).fill("Kitchen for Guided Setup");
+  await page.getByRole("radio", { name: /Online Ordering/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("heading", { name: "Where is your outlet located?" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    page.getByRole("heading", { name: "How will your restaurant operate?" })
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
+  let requests = 0;
+  await page.route("**/api/onboarding", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    requests++;
+    if (requests === 1)
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Temporary provisioning error" }),
+      });
+    return route.continue();
+  });
+  await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
+  await expect(page.getByRole("alert")).toContainText("Temporary provisioning error");
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/get-started/);
+  await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Import your existing menu/ })).toBeVisible();
+  expect(requests).toBe(2);
+  const progress = await (await page.request.get("/api/onboarding")).json();
+  expect(progress.status).toBe("completed");
 });

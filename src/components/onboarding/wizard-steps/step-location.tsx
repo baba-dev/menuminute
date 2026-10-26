@@ -93,9 +93,14 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
         </p>
       </div>
 
-      <div className="wizard-gps-artwork"><ThemedArtwork name="gps-locator" width={800} height={800}/>
-        <div><strong>Address first, GPS optional</strong>
-          <p className="wizard-desc">Owners can enter their postal address even when browser GPS is unavailable. Coordinates are never mandatory for a QR menu.</p>
+      <div className="wizard-gps-artwork">
+        <ThemedArtwork name="gps-locator" width={800} height={800} />
+        <div>
+          <strong>Address first, GPS optional</strong>
+          <p className="wizard-desc">
+            Owners can enter their postal address even when browser GPS is unavailable. Coordinates
+            are never mandatory for a QR menu.
+          </p>
         </div>
       </div>
       {/* Geolocation Card */}
@@ -205,7 +210,9 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
       </div>
 
       <div className="wizard-field-group">
-        <p className="wizard-counter">No exact coordinates? Use the address below. You can verify your restaurant pin later.</p>
+        <p className="wizard-counter">
+          No exact coordinates? Use the address below. You can verify your restaurant pin later.
+        </p>
       </div>
       {/* Street Address */}
       <div className="wizard-field-group">

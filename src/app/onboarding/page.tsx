@@ -16,8 +16,18 @@ export default async function OnboardingPage() {
     >
       <SessionContinuity />
       <div className="wizard-welcome-media" aria-hidden="true">
-        <ThemedArtwork name="welcome-hero-desktop" width={1440} height={960} className="wizard-welcome-desktop" />
-        <ThemedArtwork name="welcome-hero-mobile" width={720} height={960} className="wizard-welcome-mobile" />
+        <ThemedArtwork
+          name="welcome-hero-desktop"
+          width={1440}
+          height={960}
+          className="wizard-welcome-desktop"
+        />
+        <ThemedArtwork
+          name="welcome-hero-mobile"
+          width={720}
+          height={960}
+          className="wizard-welcome-mobile"
+        />
       </div>
       <OnboardingForm />
     </AuthShell>

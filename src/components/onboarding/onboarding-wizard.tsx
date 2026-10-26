@@ -70,7 +70,10 @@ function validateStep(step: number, draft: WizardDraft): string | null {
       return "The number of tables must be between 0 and 50.";
     if (draft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email))
       return "Enter a valid contact email address.";
-    if (draft.operationsContactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.operationsContactEmail))
+    if (
+      draft.operationsContactEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.operationsContactEmail)
+    )
       return "Enter a valid internal operations email address.";
     if (draft.website) {
       try {
@@ -137,7 +140,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         setCurrentStep(storedStep);
       setReady(true);
     } catch {
-      setErrorMessage("Unable to restore saved progress. Reconnect and retry before creating an outlet.");
+      setErrorMessage(
+        "Unable to restore saved progress. Reconnect and retry before creating an outlet."
+      );
       setReady(true);
     } finally {
       reconciliation.current = false;
