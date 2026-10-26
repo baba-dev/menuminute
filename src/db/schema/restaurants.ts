@@ -3,6 +3,7 @@ import {
   boolean,
   timestamp,
   integer,
+  numeric,
   pgTable,
   text,
   uniqueIndex,
@@ -45,6 +46,9 @@ export const restaurants = pgTable(
     state: text("state"),
     postalCode: text("postal_code"),
     country: text("country").default("IN"),
+    // Geocoordinates
+    latitude: numeric("latitude", { precision: 10, scale: 7 }),
+    longitude: numeric("longitude", { precision: 10, scale: 7 }),
     // Branding
     primaryColor: text("primary_color").default("#f97316"), // warm orange
     secondaryColor: text("secondary_color").default("#1c1917"),

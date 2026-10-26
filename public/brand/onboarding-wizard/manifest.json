@@ -1,0 +1,177 @@
+{
+  "name": "MenuMinute Onboarding 2.0 Ink & Ember Mediawork",
+  "version": "2.0.0",
+  "basePath": "/brand/onboarding-wizard/",
+  "assets": [
+    {
+      "id": "hero-identity-light",
+      "filename": "wizard-hero-identity-light.webp",
+      "dimensions": "1200x720",
+      "description": "Restaurant storefront",
+      "variant": "light",
+      "required": true
+    },
+    {
+      "id": "hero-identity-dark",
+      "filename": "wizard-hero-identity-dark.webp",
+      "dimensions": "1200x720",
+      "description": "Restaurant storefront",
+      "variant": "dark",
+      "required": true
+    },
+    {
+      "id": "hero-location-light",
+      "filename": "wizard-hero-location-light.webp",
+      "dimensions": "1200x720",
+      "description": "Isometric city map and pinpoint",
+      "variant": "light",
+      "required": true
+    },
+    {
+      "id": "hero-location-dark",
+      "filename": "wizard-hero-location-dark.webp",
+      "dimensions": "1200x720",
+      "description": "Isometric city map and pinpoint",
+      "variant": "dark",
+      "required": true
+    },
+    {
+      "id": "hero-operations-light",
+      "filename": "wizard-hero-operations-light.webp",
+      "dimensions": "1200x720",
+      "description": "Culinary cloche and scheduling clock",
+      "variant": "light",
+      "required": true
+    },
+    {
+      "id": "hero-operations-dark",
+      "filename": "wizard-hero-operations-dark.webp",
+      "dimensions": "1200x720",
+      "description": "Culinary cloche and scheduling clock",
+      "variant": "dark",
+      "required": true
+    },
+    {
+      "id": "hero-contact-light",
+      "filename": "wizard-hero-contact-light.webp",
+      "dimensions": "1200x720",
+      "description": "Dining table and QR stand",
+      "variant": "light",
+      "required": true
+    },
+    {
+      "id": "hero-contact-dark",
+      "filename": "wizard-hero-contact-dark.webp",
+      "dimensions": "1200x720",
+      "description": "Dining table and QR stand",
+      "variant": "dark",
+      "required": true
+    },
+    {
+      "id": "hero-launch-light",
+      "filename": "wizard-hero-launch-light.webp",
+      "dimensions": "1200x720",
+      "description": "Celebratory restaurant launch",
+      "variant": "light",
+      "required": true
+    },
+    {
+      "id": "hero-launch-dark",
+      "filename": "wizard-hero-launch-dark.webp",
+      "dimensions": "1200x720",
+      "description": "Celebratory restaurant launch",
+      "variant": "dark",
+      "required": true
+    },
+    {
+      "id": "type-restaurant",
+      "filename": "type-restaurant.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "type-cafe",
+      "filename": "type-cafe.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "type-takeout",
+      "filename": "type-takeout.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "type-cloud-kitchen",
+      "filename": "type-cloud-kitchen.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "type-hotel",
+      "filename": "type-hotel.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "type-mixed",
+      "filename": "type-mixed.svg",
+      "viewBox": "0 0 48 48",
+      "required": false
+    },
+    {
+      "id": "welcome-desktop-light",
+      "filename": "onboarding-welcome-desktop-light.webp",
+      "dimensions": "1440x960",
+      "required": false
+    },
+    {
+      "id": "welcome-mobile-light",
+      "filename": "onboarding-welcome-mobile-light.webp",
+      "dimensions": "720x960",
+      "required": false
+    },
+    {
+      "id": "welcome-desktop-dark",
+      "filename": "onboarding-welcome-desktop-dark.webp",
+      "dimensions": "1440x960",
+      "required": false
+    },
+    {
+      "id": "welcome-mobile-dark",
+      "filename": "onboarding-welcome-mobile-dark.webp",
+      "dimensions": "720x960",
+      "required": false
+    },
+    {
+      "id": "gps-location",
+      "filename": "gps-location.svg",
+      "viewBox": "0 0 400 400",
+      "required": false
+    },
+    {
+      "id": "empty-outlet-light",
+      "filename": "empty-outlet-light.webp",
+      "dimensions": "480x360",
+      "required": false
+    },
+    {
+      "id": "empty-outlet-dark",
+      "filename": "empty-outlet-dark.webp",
+      "dimensions": "480x360",
+      "required": false
+    },
+    {
+      "id": "setup-complete-badge",
+      "filename": "setup-complete-badge.svg",
+      "viewBox": "0 0 160 160",
+      "required": false
+    },
+    {
+      "id": "completion-celebration",
+      "filename": "completion-celebration.svg",
+      "viewBox": "0 0 800 480",
+      "required": false
+    }
+  ]
+}

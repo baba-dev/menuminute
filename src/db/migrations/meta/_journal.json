@@ -204,6 +204,13 @@
       "when": 1793010000000,
       "tag": "0028_kitchen_pro_activation",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793010000001,
+      "tag": "0029_outlet_geocoordinates_and_onboarding",
+      "breakpoints": true
     }
   ]
 }

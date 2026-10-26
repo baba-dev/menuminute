@@ -21,6 +21,7 @@ import {
   Wallet,
   Mail,
   Clock3,
+  Navigation,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 type Outlet = {
@@ -55,6 +56,14 @@ const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
   city: fields.city?.trim() || null,
   state: fields.state?.trim() || null,
   postalCode: fields.postalCode?.trim() || null,
+  latitude:
+    fields.latitude !== null && fields.latitude !== undefined && Number.isFinite(Number(fields.latitude))
+      ? Number(fields.latitude)
+      : null,
+  longitude:
+    fields.longitude !== null && fields.longitude !== undefined && Number.isFinite(Number(fields.longitude))
+      ? Number(fields.longitude)
+      : null,
 });
 const safeColor = (v: string | null | undefined, fallback: string) =>
   /^#[0-9a-fA-F]{6}$/.test(v || "") ? v! : fallback;
@@ -344,6 +353,68 @@ export function OutletAtelier({
                   {input("city", "City", { max: 100 })}
                   {input("state", "State / region", { max: 100 })}
                   {input("postalCode", "Postal code", { max: 24 })}
+                </div>
+                <div className="os-fields-two">
+                  <label className="os-field">
+                    <span
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span>Latitude (-90 to +90)</span>
+                      <button
+                        type="button"
+                        className="os-chip"
+                        style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem", cursor: "pointer" }}
+                        disabled={!canManage || busy}
+                        onClick={() => {
+                          if (typeof navigator !== "undefined" && navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition((pos) => {
+                              change("latitude", Number(pos.coords.latitude.toFixed(7)));
+                              change("longitude", Number(pos.coords.longitude.toFixed(7)));
+                              setNotice(`Detected GPS: ±${Math.round(pos.coords.accuracy)}m. Confirm the pin matches your outlet, not just your device.`);
+                            }, () => { setError("Location permission denied or unavailable. Enter the outlet coordinates manually."); }, { timeout: 10000 });
+                          }
+                        }}
+                      >
+                        <Navigation size={12} style={{ display: "inline", marginRight: "4px" }} />{" "}
+                        Detect GPS
+                      </button>
+                    </span>
+                    <input
+                      name="latitude"
+                      type="number"
+                      step="any"
+                      value={draft.latitude ?? ""}
+                      placeholder="e.g. 19.0760000"
+                      disabled={!canManage || busy}
+                      onChange={(e) =>
+                        change(
+                          "latitude",
+                          e.target.value === "" ? null : parseFloat(e.target.value)
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="os-field">
+                    <span>Longitude (-180 to +180)</span>
+                    <input
+                      name="longitude"
+                      type="number"
+                      step="any"
+                      value={draft.longitude ?? ""}
+                      placeholder="e.g. 72.8777000"
+                      disabled={!canManage || busy}
+                      onChange={(e) =>
+                        change(
+                          "longitude",
+                          e.target.value === "" ? null : parseFloat(e.target.value)
+                        )
+                      }
+                    />
+                  </label>
                 </div>
                 <p className="os-fine">
                   <Mail size={15} /> Contact details are public-facing outlet information, not your

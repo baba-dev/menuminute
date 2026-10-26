@@ -166,3 +166,78 @@ it("bounds outstanding invitations and refuses an eleventh pending invitation", 
   const invitations = await listInvitations(actor, outlet.organizationId);
   expect(invitations.filter((i) => i.status === "pending")).toHaveLength(10);
 });
+
+it("provisions outlet with physical address, GPS coordinates, brand colors, and auto-generates tables", async () => {
+  const actor = await verified();
+  const superOnboardingDetails = {
+    name: "Amber Coastal Bistro",
+    outletType: "restaurant" as const,
+    description: "Artisan seafood and woodfired specialties",
+    addressLine1: "12 Marine Drive",
+    addressLine2: "Suite 4B",
+    city: "Mumbai",
+    state: "Maharashtra",
+    postalCode: "400020",
+    country: "IN",
+    latitude: 18.922,
+    longitude: 72.8347,
+    phone: "+91 98765 43210",
+    email: "contact@amberbistro.test",
+    website: "https://amberbistro.test",
+    primaryColor: "#f97316",
+    secondaryColor: "#1c1917",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    fulfillmentModes: ["dine_in" as const, "pickup" as const],
+    pickupLeadMinutes: 20,
+    pickupSlotMinutes: 15,
+    pickupAdvanceDays: 5,
+    tableCount: 6,
+    menuSchedule: null,
+  };
+
+  const saved = await saveOnboarding(actor, superOnboardingDetails);
+  expect((await onboardingState(actor)).draft).toEqual(superOnboardingDetails);
+
+  const outlet = await createRestaurant(actor.userId, superOnboardingDetails, saved.key);
+  expect(outlet.id).toBeTruthy();
+
+  await admin(async (_, pool) => {
+    const res = await pool.query<{
+      latitude: string;
+      longitude: string;
+      address_line1: string;
+      primary_color: string;
+      table_count: number;
+    }>(
+      `select r.latitude, r.longitude, r.address_line1, r.primary_color,
+              (select count(*)::int from restaurant_tables t where t.restaurant_id = r.id) as table_count
+       from restaurants r where r.id = $1`,
+      [outlet.id]
+    );
+
+    expect(res.rows[0]).toMatchObject({
+      address_line1: "12 Marine Drive",
+      primary_color: "#f97316",
+      table_count: 6,
+    });
+    expect(parseFloat(res.rows[0]!.latitude)).toBeCloseTo(18.922, 3);
+    expect(parseFloat(res.rows[0]!.longitude)).toBeCloseTo(72.8347, 3);
+  });
+});
+
+
+it("does not provision dining tables for a pickup-only outlet", async () => {
+  const actor = await verified();
+  const input = {
+    name: "Pickup Only Kitchen", outletType: "cloud_kitchen" as const,
+    country: "IN", currency: "INR", timezone: "Asia/Kolkata",
+    fulfillmentModes: ["pickup" as const], tableCount: 10,
+  };
+  const saved = await saveOnboarding(actor, input);
+  const outlet = await createRestaurant(actor.userId, input, saved.key);
+  const rows = await admin(async (_, pool) => pool.query<{ count: number }>(
+    "select count(*)::int as count from restaurant_tables where restaurant_id = $1", [outlet.id]
+  ));
+  expect(rows.rows[0]?.count).toBe(0);
+});
