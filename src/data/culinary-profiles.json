@@ -2,8 +2,15 @@
   {
     "name": "Paneer Butter Masala",
     "category": "Main Course",
-    "dietary": ["vegetarian"],
-    "aliases": ["butter paneer", "paneer makhani", "paneer butter", "paneer makhni"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "butter paneer",
+      "paneer makhani",
+      "paneer butter",
+      "paneer makhni"
+    ],
     "nutrition": {
       "calories": 480,
       "proteinGrams": 18,
@@ -14,10 +21,19 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Rich & Creamy", "Mildly Sweet", "Velvety", "Aromatic"],
+      "flavorNotes": [
+        "Rich & Creamy",
+        "Mildly Sweet",
+        "Velvety",
+        "Aromatic"
+      ],
       "chefNote": "Fresh cottage cheese simmered in velvety Roma tomato and cashew gravy, finished with hand-churned butter and fenugreek leaves.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Butter Garlic Naan", "Jeera Rice", "Sweet Lassi"]
+      "suggestedPairings": [
+        "Butter Garlic Naan",
+        "Jeera Rice",
+        "Sweet Lassi"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -30,15 +46,21 @@
         "Kashmiri Chili",
         "Fenugreek Leaves"
       ],
-      "allergens": ["dairy", "nuts"],
-      "crossContact": "Prepared in a kitchen handling wheat and sesame."
+      "allergens": [
+        "dairy",
+        "nuts"
+      ]
     }
   },
   {
     "name": "Butter Chicken",
     "category": "Main Course",
     "dietary": [],
-    "aliases": ["murgh makhani", "murg makhani", "butter murgh"],
+    "aliases": [
+      "murgh makhani",
+      "murg makhani",
+      "butter murgh"
+    ],
     "nutrition": {
       "calories": 540,
       "proteinGrams": 38,
@@ -49,10 +71,19 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Smoky", "Rich & Creamy", "Tangy", "Savory"],
+      "flavorNotes": [
+        "Smoky",
+        "Rich & Creamy",
+        "Tangy",
+        "Savory"
+      ],
       "chefNote": "Tender boneless chicken charred in the tandoor, folded into slow-cooked butter tomato sauce with aromatic spices.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Butter Garlic Naan", "Jeera Rice", "Mango Lassi"]
+      "suggestedPairings": [
+        "Butter Garlic Naan",
+        "Jeera Rice",
+        "Mango Lassi"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -65,15 +96,23 @@
         "Kashmiri Red Chili",
         "Garam Masala"
       ],
-      "allergens": ["dairy", "nuts"],
-      "crossContact": "Cooked in a kitchen that also processes gluten and mustard."
+      "allergens": [
+        "dairy",
+        "nuts"
+      ]
     }
   },
   {
     "name": "Dal Makhani",
     "category": "Main Course",
-    "dietary": ["vegetarian"],
-    "aliases": ["maa ki dal", "dal makhni", "black lentil dal"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "maa ki dal",
+      "dal makhni",
+      "black lentil dal"
+    ],
     "nutrition": {
       "calories": 390,
       "proteinGrams": 16,
@@ -84,10 +123,19 @@
     },
     "culinary": {
       "spiceLevel": 1,
-      "flavorNotes": ["Earthy", "Creamy", "Smoky", "Hearty"],
+      "flavorNotes": [
+        "Earthy",
+        "Creamy",
+        "Smoky",
+        "Hearty"
+      ],
       "chefNote": "Whole black urad lentils and kidney beans slow-simmered for 16 hours over charcoal with butter, cream, and ginger.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Tandoori Roti", "Jeera Rice", "Lachha Paratha"]
+      "suggestedPairings": [
+        "Tandoori Roti",
+        "Jeera Rice",
+        "Lachha Paratha"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -100,15 +148,22 @@
         "Garlic",
         "Cumin"
       ],
-      "allergens": ["dairy"],
-      "crossContact": "Prepared in a kitchen handling tree nuts and wheat."
+      "allergens": [
+        "dairy"
+      ]
     }
   },
   {
     "name": "Dal Tadka",
     "category": "Main Course",
-    "dietary": ["vegetarian", "vegan"],
-    "aliases": ["yellow dal", "dal fry", "arhar dal"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "yellow dal",
+      "dal fry",
+      "arhar dal"
+    ],
     "nutrition": {
       "calories": 260,
       "proteinGrams": 13,
@@ -119,10 +174,18 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Garlicky", "Earthy", "Zesty", "Warm"],
+      "flavorNotes": [
+        "Garlicky",
+        "Earthy",
+        "Zesty",
+        "Warm"
+      ],
       "chefNote": "Yellow pigeon pea lentils tempered in smoking ghee or mustard oil with cumin, whole red chilies, garlic, and fresh coriander.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Steamed Basmati Rice", "Tandoori Roti"]
+      "suggestedPairings": [
+        "Steamed Basmati Rice",
+        "Tandoori Roti"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -135,15 +198,20 @@
         "Turmeric",
         "Fresh Coriander"
       ],
-      "allergens": ["mustard"],
-      "crossContact": "Cooked on shared surfaces handling dairy and nuts."
+      "allergens": [
+        "mustard"
+      ]
     }
   },
   {
     "name": "Hyderabadi Chicken Biryani",
     "category": "Biryani & Rice",
     "dietary": [],
-    "aliases": ["chicken biryani", "dum biryani", "hyderabadi biryani"],
+    "aliases": [
+      "chicken biryani",
+      "dum biryani",
+      "hyderabadi biryani"
+    ],
     "nutrition": {
       "calories": 680,
       "proteinGrams": 42,
@@ -154,10 +222,19 @@
     },
     "culinary": {
       "spiceLevel": 3,
-      "flavorNotes": ["Aromatic", "Spicy", "Layered", "Saffron-Infused"],
+      "flavorNotes": [
+        "Aromatic",
+        "Spicy",
+        "Layered",
+        "Saffron-Infused"
+      ],
       "chefNote": "Long-grain aged basmati rice and marinated chicken sealed in a clay pot and cooked on dum with saffron, fried onions, and mint.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Cucumber Raita", "Mirchi Ka Salan", "Sweet Lassi"]
+      "suggestedPairings": [
+        "Cucumber Raita",
+        "Mirchi Ka Salan",
+        "Sweet Lassi"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -171,15 +248,22 @@
         "Cinnamon",
         "Ghee"
       ],
-      "allergens": ["dairy"],
-      "crossContact": "Kitchen processes tree nuts, eggs, and wheat."
+      "allergens": [
+        "dairy"
+      ]
     }
   },
   {
     "name": "Vegetable Dum Biryani",
     "category": "Biryani & Rice",
-    "dietary": ["vegetarian"],
-    "aliases": ["veg biryani", "subz biryani", "vegetable biryani"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "veg biryani",
+      "subz biryani",
+      "vegetable biryani"
+    ],
     "nutrition": {
       "calories": 510,
       "proteinGrams": 14,
@@ -190,10 +274,18 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Fragrant", "Herbaceous", "Savory", "Mildly Spicy"],
+      "flavorNotes": [
+        "Fragrant",
+        "Herbaceous",
+        "Savory",
+        "Mildly Spicy"
+      ],
       "chefNote": "Garden-fresh vegetables and paneer layers infused with rose water, kewra, and fragrant spices, slow-cooked under dough seal.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Boondi Raita", "Mango Lassi"]
+      "suggestedPairings": [
+        "Boondi Raita",
+        "Mango Lassi"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -208,15 +300,22 @@
         "Mint",
         "Ghee"
       ],
-      "allergens": ["dairy"],
-      "crossContact": "Kitchen handles nuts and wheat."
+      "allergens": [
+        "dairy"
+      ]
     }
   },
   {
     "name": "Paneer Tikka",
     "category": "Starters",
-    "dietary": ["vegetarian", "gluten_free"],
-    "aliases": ["tandoori paneer", "paneer tikka starter"],
+    "dietary": [
+      "vegetarian",
+      "gluten_free"
+    ],
+    "aliases": [
+      "tandoori paneer",
+      "paneer tikka starter"
+    ],
     "nutrition": {
       "calories": 360,
       "proteinGrams": 22,
@@ -227,10 +326,19 @@
     },
     "culinary": {
       "spiceLevel": 3,
-      "flavorNotes": ["Smoky", "Tangy", "Charred", "Spicy"],
+      "flavorNotes": [
+        "Smoky",
+        "Tangy",
+        "Charred",
+        "Spicy"
+      ],
       "chefNote": "Thick cubes of artisan paneer, bell peppers, and red onions marinated in hung curd, ajwain, and mustard oil, charred in tandoor.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Mint Chutney", "Masala Lemonade", "Butter Garlic Naan"]
+      "suggestedPairings": [
+        "Mint Chutney",
+        "Masala Lemonade",
+        "Butter Garlic Naan"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -243,15 +351,23 @@
         "Degi Mirch",
         "Chaat Masala"
       ],
-      "allergens": ["dairy", "mustard"],
-      "crossContact": "Prepared in tandoor that also cooks wheat breads."
+      "allergens": [
+        "dairy",
+        "mustard"
+      ]
     }
   },
   {
     "name": "Tandoori Chicken",
     "category": "Starters",
-    "dietary": ["gluten_free"],
-    "aliases": ["tandoori murgh", "half tandoori", "full tandoori"],
+    "dietary": [
+      "gluten_free"
+    ],
+    "aliases": [
+      "tandoori murgh",
+      "half tandoori",
+      "full tandoori"
+    ],
     "nutrition": {
       "calories": 420,
       "proteinGrams": 46,
@@ -262,10 +378,19 @@
     },
     "culinary": {
       "spiceLevel": 3,
-      "flavorNotes": ["Intensely Smoky", "Fiery", "Juicy", "Crisp Skin"],
+      "flavorNotes": [
+        "Intensely Smoky",
+        "Fiery",
+        "Juicy",
+        "Crisp Skin"
+      ],
       "chefNote": "Bone-in chicken marinated twice in ginger-garlic paste, yogurt, and aromatic tandoori masala, flame-roasted in charcoal oven.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Lachha Onions", "Mint Chutney", "Tandoori Roti"]
+      "suggestedPairings": [
+        "Lachha Onions",
+        "Mint Chutney",
+        "Tandoori Roti"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -278,15 +403,23 @@
         "Ginger",
         "Garlic"
       ],
-      "allergens": ["dairy", "mustard"],
-      "crossContact": "Cooked in shared tandoor oven."
+      "allergens": [
+        "dairy",
+        "mustard"
+      ]
     }
   },
   {
     "name": "Butter Garlic Naan",
     "category": "Breads",
-    "dietary": ["vegetarian"],
-    "aliases": ["garlic naan", "butter naan", "lasooni naan"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "garlic naan",
+      "butter naan",
+      "lasooni naan"
+    ],
     "nutrition": {
       "calories": 290,
       "proteinGrams": 8,
@@ -297,10 +430,19 @@
     },
     "culinary": {
       "spiceLevel": 0,
-      "flavorNotes": ["Garlicky", "Buttery", "Crispy-Chewy", "Charred"],
+      "flavorNotes": [
+        "Garlicky",
+        "Buttery",
+        "Crispy-Chewy",
+        "Charred"
+      ],
       "chefNote": "Hand-stretched leavened dough slapped onto hot clay tandoor walls, brushed generously with minced garlic and melted butter.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Paneer Butter Masala", "Dal Makhani", "Butter Chicken"]
+      "suggestedPairings": [
+        "Paneer Butter Masala",
+        "Dal Makhani",
+        "Butter Chicken"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -313,15 +455,22 @@
         "Salt",
         "Sugar"
       ],
-      "allergens": ["gluten", "dairy"],
-      "crossContact": "Contains gluten and dairy; made on dedicated bread tandoor."
+      "allergens": [
+        "gluten",
+        "dairy"
+      ]
     }
   },
   {
     "name": "Tandoori Roti",
     "category": "Breads",
-    "dietary": ["vegetarian", "vegan"],
-    "aliases": ["plain roti", "butter roti"],
+    "dietary": [
+      "vegetarian",
+      "vegan"
+    ],
+    "aliases": [
+      "plain roti"
+    ],
     "nutrition": {
       "calories": 140,
       "proteinGrams": 5,
@@ -332,22 +481,43 @@
     },
     "culinary": {
       "spiceLevel": 0,
-      "flavorNotes": ["Nutty", "Toasted", "Warm", "Chewy"],
+      "flavorNotes": [
+        "Nutty",
+        "Toasted",
+        "Warm",
+        "Chewy"
+      ],
       "chefNote": "100% stoneground whole wheat flatbread, baked on the intense heat of clay walls until blistered and tender.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Dal Tadka", "Dal Makhani", "Kadai Paneer"]
+      "suggestedPairings": [
+        "Dal Tadka",
+        "Dal Makhani",
+        "Kadai Paneer"
+      ]
     },
     "safety": {
-      "ingredients": ["Stoneground Whole Wheat Flour (Atta)", "Water", "Pinch of Salt"],
-      "allergens": ["gluten"],
-      "crossContact": "Shared kitchen handling dairy and nuts."
+      "ingredients": [
+        "Stoneground Whole Wheat Flour (Atta)",
+        "Water",
+        "Pinch of Salt"
+      ],
+      "allergens": [
+        "gluten"
+      ]
     }
   },
   {
     "name": "Masala Dosa",
     "category": "South Indian",
-    "dietary": ["vegetarian", "gluten_free", "vegan"],
-    "aliases": ["mysore masala dosa", "paper masala dosa", "dosa"],
+    "dietary": [
+      "vegetarian",
+      "vegan"
+    ],
+    "aliases": [
+      "mysore masala dosa",
+      "paper masala dosa",
+      "dosa"
+    ],
     "nutrition": {
       "calories": 370,
       "proteinGrams": 9,
@@ -358,10 +528,19 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Crispy", "Tangy Batter", "Comforting", "Mustard-Spiced"],
+      "flavorNotes": [
+        "Crispy",
+        "Tangy Batter",
+        "Comforting",
+        "Mustard-Spiced"
+      ],
       "chefNote": "Naturally fermented rice and lentil crepe crisped golden on a hot cast iron griddle, filled with spiced mashed potato bhaji.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Coconut Chutney", "Piping Hot Sambar", "Filter Coffee"]
+      "suggestedPairings": [
+        "Coconut Chutney",
+        "Piping Hot Sambar",
+        "Filter Coffee"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -374,15 +553,22 @@
         "Turmeric",
         "Sesame / Coconut Oil"
       ],
-      "allergens": ["mustard", "sesame"],
-      "crossContact": "Cooked on a dedicated dosa tava; safe from gluten."
+      "allergens": [
+        "mustard",
+        "sesame"
+      ]
     }
   },
   {
     "name": "Chole Bhature",
     "category": "Street Food & Snacks",
-    "dietary": ["vegetarian"],
-    "aliases": ["chana bhatura", "amritsari chole bhature"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "chana bhatura",
+      "amritsari chole bhature"
+    ],
     "nutrition": {
       "calories": 620,
       "proteinGrams": 19,
@@ -393,10 +579,18 @@
     },
     "culinary": {
       "spiceLevel": 3,
-      "flavorNotes": ["Tangy-Sour", "Puffed-Crisp", "Robust", "Pungent"],
+      "flavorNotes": [
+        "Tangy-Sour",
+        "Puffed-Crisp",
+        "Robust",
+        "Pungent"
+      ],
       "chefNote": "Fluffy, deep-fried leavened sourdough bread served with slow-stewed dark chickpeas spiced with dry pomegranate and anardana.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Pickled Green Chilies", "Sweet Lassi"]
+      "suggestedPairings": [
+        "Pickled Green Chilies",
+        "Sweet Lassi"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -409,15 +603,24 @@
         "Tea Leaves (for dark color)",
         "Ginger"
       ],
-      "allergens": ["gluten", "dairy"],
-      "crossContact": "Fried in oil shared with other wheat snacks."
+      "allergens": [
+        "gluten",
+        "dairy"
+      ]
     }
   },
   {
     "name": "Samosa",
     "category": "Snacks & Starters",
-    "dietary": ["vegetarian", "vegan"],
-    "aliases": ["punjabi samosa", "aloo samosa", "crispy samosa"],
+    "dietary": [
+      "vegetarian",
+      "vegan"
+    ],
+    "aliases": [
+      "punjabi samosa",
+      "aloo samosa",
+      "crispy samosa"
+    ],
     "nutrition": {
       "calories": 260,
       "proteinGrams": 5,
@@ -428,10 +631,19 @@
     },
     "culinary": {
       "spiceLevel": 2,
-      "flavorNotes": ["Flaky-Crisp", "Spicy", "Savory", "Herbal"],
+      "flavorNotes": [
+        "Flaky-Crisp",
+        "Spicy",
+        "Savory",
+        "Herbal"
+      ],
       "chefNote": "Golden triangular pastry hand-folded and fried to a crisp, stuffed with cumin-tempered diced potatoes, green peas, and cashews.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Tamarind Chutney", "Mint Chutney", "Masala Chai"]
+      "suggestedPairings": [
+        "Tamarind Chutney",
+        "Mint Chutney",
+        "Masala Chai"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -444,15 +656,22 @@
         "Cashew Bits",
         "Vegetable Oil"
       ],
-      "allergens": ["gluten", "nuts"],
-      "crossContact": "Fried in shared oil; contains wheat gluten and nuts."
+      "allergens": [
+        "gluten",
+        "nuts"
+      ]
     }
   },
   {
     "name": "Margherita Pizza",
     "category": "Continental & Italian",
-    "dietary": ["vegetarian"],
-    "aliases": ["pizza margherita", "classic margherita"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "pizza margherita",
+      "classic margherita"
+    ],
     "nutrition": {
       "calories": 780,
       "proteinGrams": 34,
@@ -463,10 +682,18 @@
     },
     "culinary": {
       "spiceLevel": 0,
-      "flavorNotes": ["Cheesy", "Herbaceous", "Crisp-Crust", "Tangy Tomato"],
+      "flavorNotes": [
+        "Cheesy",
+        "Herbaceous",
+        "Crisp-Crust",
+        "Tangy Tomato"
+      ],
       "chefNote": "48-hour fermented dough hand-stretched and fired at 400°C, topped with San Marzano style crushed tomato, fresh mozzarella, and sweet basil.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Garlic Herb Bread", "Cold Coffee"]
+      "suggestedPairings": [
+        "Garlic Herb Bread",
+        "Cold Coffee"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -478,15 +705,22 @@
         "Sea Salt",
         "Yeast"
       ],
-      "allergens": ["gluten", "dairy"],
-      "crossContact": "Contains gluten and dairy; kitchen handles nuts."
+      "allergens": [
+        "gluten",
+        "dairy"
+      ]
     }
   },
   {
     "name": "Gulab Jamun",
     "category": "Desserts",
-    "dietary": ["vegetarian"],
-    "aliases": ["hot gulab jamun", "jamun dessert"],
+    "dietary": [
+      "vegetarian"
+    ],
+    "aliases": [
+      "hot gulab jamun",
+      "jamun dessert"
+    ],
     "nutrition": {
       "calories": 310,
       "proteinGrams": 5,
@@ -497,10 +731,18 @@
     },
     "culinary": {
       "spiceLevel": 0,
-      "flavorNotes": ["Intensely Sweet", "Cardamom-Scented", "Melt-in-Mouth", "Floral"],
+      "flavorNotes": [
+        "Intensely Sweet",
+        "Cardamom-Scented",
+        "Melt-in-Mouth",
+        "Floral"
+      ],
       "chefNote": "Milk solid khoya dumplings gently fried in pure ghee, then steeped in saffron and rose-infused warm sugar syrup.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Vanilla Bean Ice Cream", "Masala Chai"]
+      "suggestedPairings": [
+        "Vanilla Bean Ice Cream",
+        "Masala Chai"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -513,15 +755,24 @@
         "Pure Ghee",
         "Pistachio Garnish"
       ],
-      "allergens": ["dairy", "gluten", "nuts"],
-      "crossContact": "Contains dairy, gluten, and tree nuts."
+      "allergens": [
+        "dairy",
+        "gluten",
+        "nuts"
+      ]
     }
   },
   {
     "name": "Mango Lassi",
     "category": "Beverages",
-    "dietary": ["vegetarian", "gluten_free"],
-    "aliases": ["sweet mango lassi", "chilled mango lassi"],
+    "dietary": [
+      "vegetarian",
+      "gluten_free"
+    ],
+    "aliases": [
+      "sweet mango lassi",
+      "chilled mango lassi"
+    ],
     "nutrition": {
       "calories": 240,
       "proteinGrams": 8,
@@ -532,10 +783,19 @@
     },
     "culinary": {
       "spiceLevel": 0,
-      "flavorNotes": ["Cooling", "Sweet & Fruity", "Creamy", "Refreshing"],
+      "flavorNotes": [
+        "Cooling",
+        "Sweet & Fruity",
+        "Creamy",
+        "Refreshing"
+      ],
       "chefNote": "Velvety Alphonso mango pulp blended with fresh whole milk yogurt, crushed cardamom, and a splash of milk.",
       "servingTemp": "chilled",
-      "suggestedPairings": ["Hyderabadi Chicken Biryani", "Tandoori Chicken", "Paneer Tikka"]
+      "suggestedPairings": [
+        "Hyderabadi Chicken Biryani",
+        "Tandoori Chicken",
+        "Paneer Tikka"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -545,15 +805,24 @@
         "Cane Sugar",
         "Green Cardamom Powder"
       ],
-      "allergens": ["dairy"],
-      "crossContact": "Naturally gluten-free; processed in a facility with nuts."
+      "allergens": [
+        "dairy"
+      ]
     }
   },
   {
     "name": "Masala Chai",
     "category": "Beverages",
-    "dietary": ["vegetarian", "gluten_free"],
-    "aliases": ["cutting chai", "spiced tea", "adrak chai", "ginger cardamom chai"],
+    "dietary": [
+      "vegetarian",
+      "gluten_free"
+    ],
+    "aliases": [
+      "cutting chai",
+      "spiced tea",
+      "adrak chai",
+      "ginger cardamom chai"
+    ],
     "nutrition": {
       "calories": 110,
       "proteinGrams": 4,
@@ -564,10 +833,19 @@
     },
     "culinary": {
       "spiceLevel": 1,
-      "flavorNotes": ["Warming", "Spicy-Sweet", "Gingery", "Comforting"],
+      "flavorNotes": [
+        "Warming",
+        "Spicy-Sweet",
+        "Gingery",
+        "Comforting"
+      ],
       "chefNote": "Assam black tea leaves brewed with crushed fresh ginger, green cardamom pods, cloves, whole milk, and raw sugar.",
       "servingTemp": "hot",
-      "suggestedPairings": ["Samosa", "Aloo Tikki", "Gulab Jamun"]
+      "suggestedPairings": [
+        "Samosa",
+        "Aloo Tikki",
+        "Gulab Jamun"
+      ]
     },
     "safety": {
       "ingredients": [
@@ -578,8 +856,9 @@
         "Cloves",
         "Sugar"
       ],
-      "allergens": ["dairy"],
-      "crossContact": "Contains dairy."
+      "allergens": [
+        "dairy"
+      ]
     }
   }
 ]

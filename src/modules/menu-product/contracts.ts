@@ -68,6 +68,7 @@ export const nutritionSchema = z
     fatGrams: z.number().min(0).max(1000).optional(),
     fiberGrams: z.number().min(0).max(500).optional(),
     servingSize: z.string().trim().max(60).optional(),
+    verified: z.boolean().optional(),
   })
   .strict();
 export type DishNutrition = z.infer<typeof nutritionSchema>;
@@ -88,8 +89,29 @@ export const safetyProfileSchema = z
     ingredients: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
     allergens: z.array(allergenEnum).max(11).default([]),
     crossContact: z.string().trim().max(250).optional(),
+    verified: z.boolean().optional(),
+    verifiedFreeFrom: z.array(z.enum(["nuts", "dairy"])).max(2).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((profile, ctx) => {
+    const freeFrom = profile.verifiedFreeFrom ?? [];
+    if (freeFrom.length !== new Set(freeFrom).size)
+      ctx.addIssue({ code: "custom", message: "Duplicate free-from claim" });
+    if (!freeFrom.length) return;
+    if (!profile.verified || profile.ingredients.length === 0 || profile.crossContact?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["verifiedFreeFrom"],
+        message: "Free-from claims require verified ingredients and no cross-contact warning",
+      });
+    }
+    if (
+      (freeFrom.includes("nuts") && profile.allergens.some((a) => a === "nuts" || a === "peanuts")) ||
+      (freeFrom.includes("dairy") && profile.allergens.includes("dairy"))
+    ) {
+      ctx.addIssue({ code: "custom", path: ["verifiedFreeFrom"], message: "Free-from claim conflicts with declared allergens" });
+    }
+  });
 export type DishSafetyProfile = z.infer<typeof safetyProfileSchema>;
 
 export const dishSchema = z

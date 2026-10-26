@@ -290,15 +290,7 @@ export function findCulinaryProfile(dishName: string): AuthenticCulinaryProfile 
   );
   if (aliasMatch) return aliasMatch;
 
-  // 3. Substring match
-  const partial = culinaryProfiles.find((p) => {
-    const pNorm = normalizeDishText(p.name);
-    if (norm.includes(pNorm) || pNorm.includes(norm)) return true;
-    return p.aliases.some((a) => {
-      const aNorm = normalizeDishText(a);
-      return norm.includes(aNorm) || aNorm.includes(norm);
-    });
-  });
-
-  return partial ?? null;
+  // Only exact names or explicitly curated aliases may nominate safety-related templates.
+  // Broad substring matching can map generic "dal" to a specific recipe.
+  return null;
 }

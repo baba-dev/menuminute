@@ -10,7 +10,6 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
 import { artworkById } from "./dish-artwork";
-import { findCulinaryProfile } from "./dish-intelligence";
 import {
   applyMenuTranslation,
   menuLocaleSchema,
@@ -204,25 +203,18 @@ export async function defaultDocument(actor: Actor, outletId: string): Promise<M
       id: category.id,
       name: category.name,
       description: category.description ?? "",
-      items: items.map((i) => {
-        const profile = findCulinaryProfile(i.name);
-        return {
-          id: i.id,
-          name: i.name,
-          description: i.description ?? profile?.culinary.chefNote ?? "",
-          priceMinor: i.pricePaise,
-          soldOut: !i.isAvailable,
-          dietary: [
-            ...(i.isVeg ? ["vegetarian"] : []),
-            ...(i.isVegan ? ["vegan"] : []),
-            ...(i.isGlutenFree ? ["gluten_free"] : []),
-            ...(!i.isVeg && !i.isVegan && !i.isGlutenFree && profile ? profile.dietary : []),
-          ],
-          nutrition: profile?.nutrition,
-          culinary: profile ? { ...profile.culinary, pairingDishIds: [] } : undefined,
-          safety: profile?.safety,
-        };
-      }),
+      items: items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        description: i.description ?? "",
+        priceMinor: i.pricePaise,
+        soldOut: !i.isAvailable,
+        dietary: [
+          ...(i.isVeg ? ["vegetarian"] : []),
+          ...(i.isVegan ? ["vegan"] : []),
+          ...(i.isGlutenFree ? ["gluten_free"] : []),
+        ],
+      })),
     })),
   });
 }
@@ -363,25 +355,18 @@ export async function publicProduct(
             id: category.id,
             name: category.name,
             description: category.description ?? "",
-            items: items.map((i) => {
-              const profile = findCulinaryProfile(i.name);
-              return {
-                id: i.id,
-                name: i.name,
-                description: i.description ?? profile?.culinary.chefNote ?? "",
-                priceMinor: i.pricePaise,
-                soldOut: !i.isAvailable,
-                dietary: [
-                  ...(i.isVeg ? ["vegetarian"] : []),
-                  ...(i.isVegan ? ["vegan"] : []),
-                  ...(i.isGlutenFree ? ["gluten_free"] : []),
-                  ...(!i.isVeg && !i.isVegan && !i.isGlutenFree && profile ? profile.dietary : []),
-                ],
-                nutrition: profile?.nutrition,
-                culinary: profile ? { ...profile.culinary, pairingDishIds: [] } : undefined,
-                safety: profile?.safety,
-              };
-            }),
+            items: items.map((i) => ({
+              id: i.id,
+              name: i.name,
+              description: i.description ?? "",
+              priceMinor: i.pricePaise,
+              soldOut: !i.isAvailable,
+              dietary: [
+                ...(i.isVeg ? ["vegetarian"] : []),
+                ...(i.isVegan ? ["vegan"] : []),
+                ...(i.isGlutenFree ? ["gluten_free"] : []),
+              ],
+            })),
           })),
         }),
       },
