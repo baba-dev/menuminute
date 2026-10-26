@@ -26,6 +26,8 @@ import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import type { CustomizerDish, CartItem } from "./item-customizer";
+import { TableWelcome, RubberStamp } from "@/components/ui/tactile-elements";
+import { playWoodenTap } from "@/lib/sound-effects";
 const ItemCustomizer = dynamic(
   () => import("./item-customizer").then((mod) => mod.ItemCustomizer),
   { ssr: false }
@@ -231,6 +233,7 @@ export function PublicMenu({
     .slice(0, 3);
 
   const handleAddToCart = (item: CartItem) => {
+    playWoodenTap();
     setCartItems((prev) => [...prev, item]);
   };
 
@@ -275,6 +278,11 @@ export function PublicMenu({
       className="product dining-canvas"
       style={{ paddingBottom: cartItems.length > 0 ? "6rem" : "2rem" }}
     >
+      <TableWelcome
+        tableNumber={data.point}
+        outletName={data.outlet.name}
+        servicePeriod={docs[0]?.view.open ? "Current Service" : undefined}
+      />
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>
@@ -412,36 +420,50 @@ export function PublicMenu({
         </nav>
         {featured.length > 0 && !search && diet === "all" && (
           <section className="dining-featured no-print" aria-labelledby="dining-featured-title">
-            <div className="dining-heading-row">
-              <div>
-                <span className="dining-kicker">
-                  <Sparkles size={14} aria-hidden="true" /> HANDPICKED BY THE RESTAURANT
-                </span>
-                <h2 id="dining-featured-title">From our favourites</h2>
+            <div className="rounded-2xl p-4 sm:p-6 shadow-sm border border-amber-900/10 dark:border-white/10 dark:bg-stone-900/80 bg-amber-50/50">
+              <div className="dining-heading-row mb-4">
+                <div>
+                  <span className="dining-kicker flex items-center gap-1.5">
+                    <Sparkles size={14} aria-hidden="true" />
+                    DAILY KITCHEN PASS SPECIALS
+                  </span>
+                  <h2 id="dining-featured-title" className="font-display text-2xl sm:text-3xl font-bold">
+                    From the Chef&apos;s Board
+                  </h2>
+                  <p className="font-handwriting mt-1 text-sm text-stone-600 dark:text-stone-300">
+                    Handpicked daily specials crafted in limited batches using fresh seasonal ingredients.
+                  </p>
+                </div>
+                <RubberStamp text="CHEF'S SPECIAL" variant="chef-pick" />
               </div>
-              <span className="dining-caption">A little inspiration for your order.</span>
-            </div>
-            <div className="dining-featured-grid">
-              {featured.map(({ menuId, categoryName, dish, currency }) => (
-                <article key={menuId + ":" + dish.id} className="dining-feature-card">
-                  <DiningImage visual={dishVisual(dish, categoryName, preview)} />
-                  <div>
-                    <span className="dining-kicker">{categoryName}</span>
-                    <h3>{dish.name}</h3>
-                    <span className="dining-price">
-                      {dish.variants.length ? "From " : ""}
-                      {formatPrice(startingPriceMinor(dish), currency)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => openDish(dish, categoryName)}
-                      aria-label={"View " + dish.name + " details"}
-                    >
-                      Discover dish <ArrowUpRight size={16} aria-hidden="true" />
-                    </button>
-                  </div>
-                </article>
-              ))}
+              <div className="dining-featured-grid">
+                {featured.map(({ menuId, categoryName, dish, currency }) => (
+                  <article key={menuId + ":" + dish.id} className="dining-feature-card">
+                    <DiningImage visual={dishVisual(dish, categoryName, preview)} />
+                    <div>
+                      <div className="flex w-full items-center justify-between gap-1">
+                        <span className="dining-kicker">{categoryName}</span>
+                        <RubberStamp text="FAVORITE" variant="chef-pick" className="text-[10px] py-0.5" />
+                      </div>
+                      <h3>{dish.name}</h3>
+                      <p className="font-handwriting text-xs text-amber-800 dark:text-amber-300" style={{ margin: "2px 0 6px" }}>
+                        ★ Chef&apos;s pick · Prepared fresh for tonight
+                      </p>
+                      <span className="dining-price">
+                        {dish.variants.length ? "From " : ""}
+                        {formatPrice(startingPriceMinor(dish), currency)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openDish(dish, categoryName)}
+                        aria-label={"View " + dish.name + " details"}
+                      >
+                        Discover dish <ArrowUpRight size={16} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -503,7 +525,13 @@ export function PublicMenu({
                               aria-label={"View " + dish.name + " details"}
                             >
                               <DiningImage visual={image} />
-                              {dish.soldOut && <span className="dining-sold">Sold Out</span>}
+                              {dish.soldOut && (
+                                <RubberStamp
+                                  text="86'd"
+                                  variant="sold-out"
+                                  className="dining-sold !border-solid shadow-sm"
+                                />
+                              )}
                             </button>
                             <div className="dining-dish-content">
                               <div className="dining-dish-title">

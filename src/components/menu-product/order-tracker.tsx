@@ -13,6 +13,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { RubberStamp, ChefStickyNote } from "@/components/ui/tactile-elements";
 
 export type TrackingData = {
   order: {
@@ -265,10 +266,23 @@ export function OrderTracker({
               <span className="eyebrow">{outlet.name}</span>
               <h1 style={{ fontSize: "1.8rem", margin: 0 }}>Order #{order.orderNumber}</h1>
             </div>
-            <div className="stack" style={{ alignItems: "flex-end", gap: "0.2rem" }}>
-              <span className="badge" style={{ textTransform: "uppercase", fontWeight: 750 }}>
-                {order.status}
-              </span>
+            <div className="stack" style={{ alignItems: "flex-end", gap: "0.4rem" }}>
+              <RubberStamp
+                text={order.status.toUpperCase()}
+                variant={
+                  order.status === "accepted" || order.status === "preparing"
+                    ? "confirmed"
+                    : order.status === "ready" ||
+                        order.status === "delivered" ||
+                        order.status === "collected"
+                      ? "paid"
+                      : order.status === "cancelled" ||
+                          order.status === "rejected" ||
+                          order.status === "expired"
+                        ? "sold-out"
+                        : "chef-pick"
+                }
+              />
               <small className="quiet">
                 {new Date(order.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -277,6 +291,23 @@ export function OrderTracker({
               </small>
             </div>
           </div>
+
+          <ChefStickyNote
+            author="From the Pass"
+            text={
+              order.status === "pending"
+                ? "Your ticket has landed on the pass rail. Waiting for the chef to call 'Heard!' and fire your dishes."
+                : order.status === "accepted"
+                  ? "Heard! The chef accepted your order and added it to the active prep line."
+                  : order.status === "preparing"
+                    ? "Sizzling on the line! Pans are hot and fresh ingredients are being plated."
+                    : order.status === "ready"
+                      ? order.fulfillmentMode === "pickup"
+                        ? "Your food is boxed hot and waiting at the pickup counter!"
+                        : `Plates are up! The team is bringing your food to Table ${order.point ?? ""} now.`
+                      : "Hope every bite was delicious. Thank you for dining with us today!"
+            }
+          />
 
           {/* Essential Invariant Message */}
           {order.status === "pending" && (
@@ -445,6 +476,7 @@ export function OrderTracker({
                 : "Please pay directly with your server or at the cashier."}
             </small>
           </div>
+          <div className="ticket-receipt-tear -mx-4 -mb-4 mt-4" aria-hidden="true" />
         </div>
 
         {/* Order More CTA */}

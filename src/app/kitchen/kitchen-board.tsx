@@ -21,6 +21,8 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { playOrderChime } from "@/lib/sound";
+import { playWoodenTap } from "@/lib/sound-effects";
+import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
 import { ThemeControl } from "@/components/menu-product/theme-control";
@@ -93,8 +95,11 @@ function Ticket({
         <button
           type="button"
           disabled={busy}
-          onClick={() => onAction(work, work.status === "queued" ? "start" : "complete")}
-          className="kk-ticket-action"
+          onClick={() => {
+            playWoodenTap();
+            onAction(work, work.status === "queued" ? "start" : "complete");
+          }}
+          className="kk-ticket-action btn-ink-press"
         >
           {busy ? (
             <LoaderCircle className="animate-spin" size={17} />
@@ -107,10 +112,12 @@ function Ticket({
         </button>
       )}
       {work.status === "complete" && (
-        <p className="kk-ticket-done">
-          <CheckCheck size={17} /> Completed · Awaiting expeditor
-        </p>
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-200 dark:border-stone-800">
+          <span className="text-xs text-stone-500">Awaiting expeditor release</span>
+          <RubberStamp text="STATION COMPLETE" variant="paid" />
+        </div>
       )}
+      <div className="ticket-receipt-tear -mx-4 -mb-4 mt-3" aria-hidden="true" />
     </article>
   );
 }

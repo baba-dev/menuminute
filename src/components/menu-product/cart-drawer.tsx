@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem, CustomizerDish } from "./item-customizer";
+import { playTicketTear } from "@/lib/sound-effects";
 import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 import {
@@ -255,6 +256,7 @@ export function CartDrawer({
 
       clearPendingGuestOrder(token);
       setPendingRecovery(null);
+      playTicketTear();
       onClearCart();
       setIsOpen(false);
       onOrderSubmitted({
@@ -663,10 +665,10 @@ export function CartDrawer({
                 onClick={handleSubmitOrder}
               >
                 {isSubmitting
-                  ? "Checking your order..."
+                  ? "Firing ticket to kitchen..."
                   : pendingRecovery
-                    ? "Check previous submission"
-                    : `Submit order · ${formatPrice(subtotalMinor, currency)}`}
+                    ? "Check previous ticket submission"
+                    : `Fire order to kitchen · ${formatPrice(subtotalMinor, currency)}`}
               </button>
             </div>
           </div>
