@@ -43,10 +43,11 @@ export async function processImport(
   const heartbeat = () => {
     if (lost || pending) return;
     pending = pool
-      .query<{ alive: boolean }>(
-        "select app_private.import_engine_heartbeat($1,$2,$3) as alive",
-        [eventId, organizationId, work.executionToken]
-      )
+      .query<{ alive: boolean }>("select app_private.import_engine_heartbeat($1,$2,$3) as alive", [
+        eventId,
+        organizationId,
+        work.executionToken,
+      ])
       .then((r) => {
         if (r.rows[0]?.alive !== true) lost = true;
       })
@@ -60,7 +61,7 @@ export async function processImport(
   const timer = setInterval(heartbeat, HEARTBEAT_MS);
   const assertLease = async (meter: Meter) => {
     if (pending) await pending;
-    if (lost) throw new NvidiaExtractionError("processing_failed", meter);
+    if (lost) throw new NvidiaExtractionError("provider_unavailable", meter);
   };
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };
   let result: { ok: boolean; candidate?: unknown; usage: Meter; error?: string } = {

@@ -106,7 +106,14 @@ function parsedPrice(value: string | null, uncertain: boolean, currency: string,
   };
 }
 export async function extractNvidiaCandidate(
-  input: { importId: string; currency: string; sources: Source[]; model: string; apiKey: string; guard?: (usage: Meter) => Promise<void> },
+  input: {
+    importId: string;
+    currency: string;
+    sources: Source[];
+    model: string;
+    apiKey: string;
+    guard?: (usage: Meter) => Promise<void>;
+  },
   request: typeof fetch = fetch
 ): Promise<{ candidate: ImportCandidate; usage: Meter }> {
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };

@@ -319,7 +319,9 @@ export async function startWorker(
   worker.on("error", () => console.error("Queue worker connection error"));
   worker.on("failed", () => console.error("Queue delivery failed; durable state retained"));
   importWorker.on("error", () => console.error("AI import queue connection error"));
-  importWorker.on("failed", () => console.error("AI import delivery failed; durable state retained"));
+  importWorker.on("failed", () =>
+    console.error("AI import delivery failed; durable state retained")
+  );
   producer.on("error", () => console.error("Queue producer connection error"));
   importProducer.on("error", () => console.error("AI import producer connection error"));
   let stopping = false;
