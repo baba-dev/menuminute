@@ -190,14 +190,18 @@ export async function consumeEvent(
       "order.created",
       "order.status_changed",
       "order.payment_changed",
+      "order.financials_changed",
       "kitchen.changed",
     ].includes(event.type);
+    const isPosEvent = /^pos\.(?:finance|provider)\./.test(event.type);
     const receiptConsumer =
       event.type === "kitchen.changed"
         ? "kitchen-event-v1"
-        : isOrderEvent
-          ? "order-event-v1"
-          : consumerName;
+        : isPosEvent
+          ? "pos-event-v1"
+          : isOrderEvent
+            ? "order-event-v1"
+            : consumerName;
     if (
       (
         await client.query("select 1 from consumer_receipts where event_id=$1 and consumer=$2", [
@@ -244,6 +248,21 @@ export async function consumeEvent(
       }
       // The durable record is the notification source; the live board reconciles
       // against PostgreSQL. Never acknowledge a forged queue body instead of the row.
+    } else if (isPosEvent) {
+      const payload = z
+        .object({ outletId: z.string().min(1).max(128) })
+        .passthrough()
+        .safeParse(event.payload);
+      if (
+        !payload.success ||
+        event.aggregate_version !== 1 ||
+        payload.data.outletId !== event.outlet_id
+      ) {
+        permanent = true;
+        throw new Error("Invalid POS event");
+      }
+      // POS rows and documents are already committed atomically. The receipt is
+      // the durable notification acknowledgement; consumers reconcile from SQL.
     } else {
       if (event.type !== "organization.changed") {
         permanent = true;

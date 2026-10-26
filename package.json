@@ -97,7 +97,7 @@
     "@types/smtp-server": "3.5.13",
     "@vitejs/plugin-react": "^4.5.2",
     "@vitest/coverage-v8": "^4.1.12",
-    "better-sqlite3": "12.11.1",
+    "better-sqlite3": "13.0.3",
     "drizzle-kit": "^0.31.1",
     "esbuild": "0.28.2",
     "eslint": "^9",

@@ -25,7 +25,7 @@ execFileSync(
     "-subj",
     "/CN=localhost",
     "-addext",
-    "subjectAltName=DNS:localhost",
+    "subjectAltName=DNS:localhost,IP:127.0.0.1",
   ],
   { stdio: "ignore" }
 );
@@ -58,7 +58,8 @@ const smtpServer = new SMTPServer({
 });
 await new Promise((resolve, reject) => {
   smtpServer.once("error", reject);
-  smtpServer.listen(2465, "127.0.0.1", () => {
+  // Bind dual-stack so the application can resolve localhost to either family.
+  smtpServer.listen(2465, "::", () => {
     smtpServer.off("error", reject);
     resolve();
   });
@@ -76,10 +77,10 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     ...runtimeEnv,
     NODE_ENV: "production",
     APP_URL: "https://localhost:3443",
-    AUTH_SECRET: "31724fb63d1f828e2c6ac702d77a13be9a1f7d41f592804bc",
+    AUTH_SECRET: createHash("sha256").update("menuminute isolated browser fixture").digest("hex"),
     EMAIL_PROVIDER: "smtp",
     EMAIL_FROM: "food@bababuilds.com",
-    SMTP_HOST: "localhost",
+    SMTP_HOST: "127.0.0.1",
     SMTP_PORT: "2465",
     SMTP_SECURE: "true",
     SMTP_USER: "browser-ci",
