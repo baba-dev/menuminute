@@ -283,3 +283,42 @@ BEGIN
  RETURN NEW;
 END $fn$;
 REVOKE ALL ON FUNCTION app_private.kitchen_accept_entitlement_check() FROM PUBLIC;
+
+-- Reconcile setup navigation independently from the commercial entitlement.
+-- The caller must already hold a scoped outlet role; disabled pilots cannot be
+-- used to claim permission to prepare work.
+CREATE FUNCTION app_private.kitchen_navigation(p_outlet text) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+DECLARE setup_allowed boolean; worker_allowed boolean; enabled_flag boolean;
+        grant_active boolean; open_work boolean; org text; pilot_state text;
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet OR
+   NOT (app_private.can_outlet(p_outlet,'menu.read')
+    OR app_private.can_outlet(p_outlet,'orders.read')
+    OR app_private.can_outlet(p_outlet,'outlet.manage')) THEN
+   RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501';
+ END IF;
+ setup_allowed:=app_private.can_outlet(p_outlet,'outlet.manage');
+ worker_allowed:=app_private.kitchen_access(p_outlet)
+    AND app_private.can_outlet(p_outlet,'orders.prepare');
+ SELECT organization_id INTO org FROM restaurants WHERE id=p_outlet;
+ SELECT COALESCE(enabled,false) INTO enabled_flag
+   FROM kitchen_outlet_settings WHERE outlet_id=p_outlet;
+ SELECT state INTO pilot_state FROM kitchen_pilot_outlets WHERE outlet_id=p_outlet;
+ grant_active:=app_private.entitlement_allowed(org,'kitchen.new');
+ SELECT EXISTS(
+   SELECT 1 FROM kitchen_work w JOIN orders o ON o.id=w.order_id
+    WHERE w.outlet_id=p_outlet AND o.status IN ('accepted','preparing')
+ ) INTO open_work;
+ RETURN jsonb_build_object(
+   'canSetup',setup_allowed,
+   'canWork',worker_allowed,
+   'operational',COALESCE(enabled_flag,false) AND worker_allowed AND
+     (COALESCE(grant_active,false) OR open_work),
+   'draining',COALESCE(enabled_flag,false) AND
+     (pilot_state='draining' OR NOT COALESCE(grant_active,false) AND open_work),
+   'active',COALESCE(enabled_flag,false)
+ );
+END $fn$;
+REVOKE ALL ON FUNCTION app_private.kitchen_navigation(text) FROM PUBLIC,menuminute_worker;
+GRANT EXECUTE ON FUNCTION app_private.kitchen_navigation(text) TO menuminute_app;
