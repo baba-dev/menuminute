@@ -23,7 +23,7 @@
 - Normal `entitlement.grant(kitchen.new)` and Kitchen Pro plan publication remain prohibited by the original SQL control plane. Pilot activation can create a _maximum seven-day_ scoped organization entitlement, only after separate superadmin approval of **one specified outlet**.
 - Pilot requestor and approver are **different** superadmin user IDs with verified email, enrolled MFA and live Better Auth sessions. Each new mutation needs a distinct five-minute single-use password + TOTP proof.
 - Approval is **SHA- and evidence-specific**, expires after 24 hours, and is unusable for another outlet. Request/approve evidence URLs are links into the repository's issues or PRs, not automatically verified security certifications.
-- The application verifies the deployed full `NEXT_PUBLIC_RELEASE_SHA` before activation; missing or mismatched identity fails closed.
+- The application verifies the immutable `/var/www/menuminute/current/RELEASE-SHA` marker against **both** realpath-resolved web and worker release symlinks before activation; missing or mismatched identity fails closed.
 - Pilot readiness uses the actual _published menu release_, including assigned cross-outlet menus, active routes, active stations, current scoped staff membership, and active ordering entitlement. A newly published/unrouted dish is blocked by the existing atomic acceptance routing checks.
 - `active → draining` retains `enabled=true` until the terminal order state is reached. New order acceptance returns a definitive forbidden response during drain rather than bypassing the Kitchen. `draining → disabled` requires **no accepted/preparing kitchen-managed orders**.
 - Existing orders, item snapshots, payment states, historical financial documents, work-event cursors and receipts are never deleted. Outbox/Redis events remain non-authoritative.
@@ -32,7 +32,7 @@
 
 ## Operator checklist — before requesting a pilot
 
-1. Verify the exact `main` SHA/CI artifact and hash, applied migration journal through 0028, web + worker symlinks on that exact SHA, `/api/health/ready.release`, and pinned runtime/config. Do **not** paste secrets or customer data into issues.
+1. Verify the exact `main` SHA/CI artifact and hash, applied migration journal through 0028, web + worker symlinks on that exact SHA, `/api/health/ready`, the immutable `RELEASE-SHA` marker, and pinned runtime/config. Do **not** paste secrets or customer data into issues.
 2. Obtain a distinct qualified security/reliability/UX reviewer for the final diff. Link the review in #76, with all blocking threads resolved.
 3. Verify a fresh **off-host SQL + private-media backup** and consistent **isolated restore** (never into live). Test QR/media validity and reconciliation.
 4. Record representative guest → merchant → stations → expeditor → Ready flows, ordering retry/expiry and cross-tenant/role denial.
