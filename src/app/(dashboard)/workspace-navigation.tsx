@@ -39,11 +39,17 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
         {links.map((item) => {
           const { href, label, Icon } = item;
           const capability = "capability" in item ? item.capability : undefined;
-          const unavailable = capability
-            ? !capabilities ||
-              !capabilities[capability] ||
-              (capability === "ordering" ? !capabilities.ordersRead : !capabilities.kitchenRead)
-            : false;
+          const kitchenSetup = capability === "kitchen" && capabilities?.kitchenSetup === true;
+          const kitchenUsable =
+            capability === "kitchen" && (capabilities?.kitchenOperational === true || kitchenSetup);
+          const unavailable =
+            capability === "kitchen"
+              ? !kitchenUsable
+              : capability === "ordering"
+                ? !capabilities?.ordering || !capabilities.ordersRead
+                : false;
+          const visibleLabel =
+            kitchenSetup && !capabilities?.kitchenOperational ? "Kitchen Setup" : label;
           const selected =
             href === "/dashboard"
               ? pathname === href
@@ -51,11 +57,15 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
           return unavailable ? (
             <span key={href} className="mm-workspace-nav-link is-unavailable" aria-disabled="true">
               <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
-              <span>{label}</span>
+              <span>{visibleLabel}</span>
               <small>
                 {!capabilities
                   ? "Availability unknown"
-                  : !capabilities[capability!]
+                  : (
+                        capability === "kitchen"
+                          ? !capabilities.kitchenOperational
+                          : !capabilities[capability!]
+                      )
                     ? "Not enabled"
                     : "Access required"}
               </small>
@@ -68,7 +78,7 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
               aria-current={selected ? "page" : undefined}
             >
               <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
-              <span>{label}</span>
+              <span>{visibleLabel}</span>
             </Link>
           );
         })}

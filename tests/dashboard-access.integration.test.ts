@@ -71,12 +71,18 @@ describe("dashboard authorization and lightweight projections", () => {
       kitchen: true,
       ordersRead: true,
       kitchenRead: true,
+      kitchenSetup: true,
+      kitchenOperational: false,
+      kitchenDraining: false,
     });
     expect(await dashboardNavigation(editor.actor, org, outletId)).toEqual({
       ordering: true,
       kitchen: true,
       ordersRead: false,
       kitchenRead: false,
+      kitchenSetup: false,
+      kitchenOperational: false,
+      kitchenDraining: false,
     });
     await admin(async (db) => {
       await db
