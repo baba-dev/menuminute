@@ -108,5 +108,4 @@ describe("order edge provenance and abuse controls", () => {
     expect(Number((await redis.get(key)) ?? 0) - initial).toBe(150);
     expect(await reserveOrderSource("tracking", "2001:db8::1234")).toBe(true);
   });
-
 });
