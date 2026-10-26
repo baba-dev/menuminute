@@ -40,15 +40,16 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
           const { href, label, Icon } = item;
           const capability = "capability" in item ? item.capability : undefined;
           const kitchenSetup = capability === "kitchen" && capabilities?.kitchenSetup === true;
-          const kitchenUsable = capability === "kitchen" &&
-            (capabilities?.kitchenOperational === true || kitchenSetup);
-          const unavailable = capability === "kitchen"
-            ? !kitchenUsable
-            : capability === "ordering"
-              ? !capabilities?.ordering || !capabilities.ordersRead
-              : false;
-          const visibleLabel = kitchenSetup && !capabilities?.kitchenOperational
-            ? "Kitchen Setup" : label;
+          const kitchenUsable =
+            capability === "kitchen" && (capabilities?.kitchenOperational === true || kitchenSetup);
+          const unavailable =
+            capability === "kitchen"
+              ? !kitchenUsable
+              : capability === "ordering"
+                ? !capabilities?.ordering || !capabilities.ordersRead
+                : false;
+          const visibleLabel =
+            kitchenSetup && !capabilities?.kitchenOperational ? "Kitchen Setup" : label;
           const selected =
             href === "/dashboard"
               ? pathname === href
@@ -60,7 +61,11 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
               <small>
                 {!capabilities
                   ? "Availability unknown"
-                  : (capability === "kitchen" ? !capabilities.kitchenOperational : !capabilities[capability!])
+                  : (
+                        capability === "kitchen"
+                          ? !capabilities.kitchenOperational
+                          : !capabilities[capability!]
+                      )
                     ? "Not enabled"
                     : "Access required"}
               </small>

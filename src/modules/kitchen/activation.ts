@@ -3,7 +3,11 @@ import { z } from "zod";
 import { withActor } from "@/modules/tenancy/service";
 import { type AdminActor } from "@/lib/admin-guard";
 
-const id = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const id = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/);
 const sha = z.string().regex(/^[a-f0-9]{40}$/);
 export const pilotCommandSchema = z
   .object({
@@ -18,11 +22,21 @@ export const pilotCommandSchema = z
   .superRefine((value, ctx) => {
     if (["request", "approve", "activate"].includes(value.action)) {
       if (!sha.safeParse(value.releaseSha).success)
-        ctx.addIssue({ code: "custom", path: ["releaseSha"], message: "Exact 40-character release SHA required" });
+        ctx.addIssue({
+          code: "custom",
+          path: ["releaseSha"],
+          message: "Exact 40-character release SHA required",
+        });
     }
-    if (["request", "approve"].includes(value.action) &&
-      !/^https:\/\/github\.com\/baba-dev\/menuminute\/(issues|pull)\/[0-9]+/.test(value.evidenceUrl))
-      ctx.addIssue({ code: "custom", path: ["evidenceUrl"], message: "Link to the reviewed GitHub evidence" });
+    if (
+      ["request", "approve"].includes(value.action) &&
+      !/^https:\/\/github\.com\/baba-dev\/menuminute\/(issues|pull)\/[0-9]+/.test(value.evidenceUrl)
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["evidenceUrl"],
+        message: "Link to the reviewed GitHub evidence",
+      });
   });
 export type PilotCommand = z.input<typeof pilotCommandSchema>;
 
@@ -94,8 +108,7 @@ export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand
   const parsed = pilotCommandSchema.parse(input);
   if (parsed.action === "activate") {
     const deployedSha = process.env.NEXT_PUBLIC_RELEASE_SHA;
-    if (!deployedSha || !sha.safeParse(deployedSha).success ||
-        deployedSha !== parsed.releaseSha) {
+    if (!deployedSha || !sha.safeParse(deployedSha).success || deployedSha !== parsed.releaseSha) {
       throw new Error("The deployed release SHA does not match the reviewed candidate");
     }
   }
@@ -116,7 +129,8 @@ export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand
 }
 
 export function kitchenPilotFailureMessage(error: unknown) {
-  if (error instanceof z.ZodError) return "Check the outlet, audit reason, release SHA and evidence URL.";
+  if (error instanceof z.ZodError)
+    return "Check the outlet, audit reason, release SHA and evidence URL.";
   if (error instanceof Error && error.message.includes("deployed release SHA"))
     return "This server is not running the approved release SHA; activation denied.";
   let cause: unknown = error;

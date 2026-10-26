@@ -6,25 +6,25 @@
 
 ## Implementation contract
 
-| Phase | Shipped design/contract | Acceptance evidence |
-| --- | --- | --- |
-| A | Setup → requested → approved → active → draining → disabled; no client-authored boolean enable | SQL state/authorization integration |
-| B | Forward-only 0028; independent session-bound two-operator approval, audit, SHA and tenant separation | Migration checksum + isolated PostgreSQL |
-| C | Pilot service with Zod commands, SQL authority and bounded seven-day entitlement | Non-admin/step-up/replay tests |
-| D | Admin → Kitchen Control Desk, search, readiness, evidence and in-modal MFA | Desktop/mobile keyboard/focus tests |
-| E | Drain stops new acceptance but keeps enabled flag until outstanding work finishes; disable guard | Live order/recovery tests |
-| F | Manager Kitchen Setup before paid grant; active work access remains scoped | Role/tenant/sidebar E2E |
-| G | Integration/browser/load/failure matrix | #76 independent signed results |
-| H | SHA/checksum/ERP/restore/operator rollout and evidence handoff | #77 operator approval and test-outlet record |
+| Phase | Shipped design/contract                                                                              | Acceptance evidence                          |
+| ----- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| A     | Setup → requested → approved → active → draining → disabled; no client-authored boolean enable       | SQL state/authorization integration          |
+| B     | Forward-only 0028; independent session-bound two-operator approval, audit, SHA and tenant separation | Migration checksum + isolated PostgreSQL     |
+| C     | Pilot service with Zod commands, SQL authority and bounded seven-day entitlement                     | Non-admin/step-up/replay tests               |
+| D     | Admin → Kitchen Control Desk, search, readiness, evidence and in-modal MFA                           | Desktop/mobile keyboard/focus tests          |
+| E     | Drain stops new acceptance but keeps enabled flag until outstanding work finishes; disable guard     | Live order/recovery tests                    |
+| F     | Manager Kitchen Setup before paid grant; active work access remains scoped                           | Role/tenant/sidebar E2E                      |
+| G     | Integration/browser/load/failure matrix                                                              | #76 independent signed results               |
+| H     | SHA/checksum/ERP/restore/operator rollout and evidence handoff                                       | #77 operator approval and test-outlet record |
 
 ## Invariants
 
 - `kitchen_outlet_settings.enabled` defaults **false**; schema installation and source merge do not activate any outlet.
-- Normal `entitlement.grant(kitchen.new)` and Kitchen Pro plan publication remain prohibited by the original SQL control plane. Pilot activation can create a *maximum seven-day* scoped organization entitlement, only after separate superadmin approval of **one specified outlet**.
+- Normal `entitlement.grant(kitchen.new)` and Kitchen Pro plan publication remain prohibited by the original SQL control plane. Pilot activation can create a _maximum seven-day_ scoped organization entitlement, only after separate superadmin approval of **one specified outlet**.
 - Pilot requestor and approver are **different** superadmin user IDs with verified email, enrolled MFA and live Better Auth sessions. Each new mutation needs a distinct five-minute single-use password + TOTP proof.
 - Approval is **SHA- and evidence-specific**, expires after 24 hours, and is unusable for another outlet. Request/approve evidence URLs are links into the repository's issues or PRs, not automatically verified security certifications.
 - The application verifies the deployed full `NEXT_PUBLIC_RELEASE_SHA` before activation; missing or mismatched identity fails closed.
-- Pilot readiness uses the actual *published menu release*, including assigned cross-outlet menus, active routes, active stations, current scoped staff membership, and active ordering entitlement. A newly published/unrouted dish is blocked by the existing atomic acceptance routing checks.
+- Pilot readiness uses the actual _published menu release_, including assigned cross-outlet menus, active routes, active stations, current scoped staff membership, and active ordering entitlement. A newly published/unrouted dish is blocked by the existing atomic acceptance routing checks.
 - `active → draining` retains `enabled=true` until the terminal order state is reached. New order acceptance returns a definitive forbidden response during drain rather than bypassing the Kitchen. `draining → disabled` requires **no accepted/preparing kitchen-managed orders**.
 - Existing orders, item snapshots, payment states, historical financial documents, work-event cursors and receipts are never deleted. Outbox/Redis events remain non-authoritative.
 - No application/web/worker role receives arbitrary UPDATE rights on Kitchen pilot state or kitchen tables.
@@ -53,7 +53,7 @@
 ### Safe disable / incident response
 
 - **Do not** flip SQL flags by hand, delete events, or allow merchant Ready to bypass expeditor.
-- Use **Stop new intake / drain** from Control Desk. Existing work remains enabled and completable; *new pending order acceptance is paused*. Coordinate with the merchant and temporarily pause online ordering intake if necessary.
+- Use **Stop new intake / drain** from Control Desk. Existing work remains enabled and completable; _new pending order acceptance is paused_. Coordinate with the merchant and temporarily pause online ordering intake if necessary.
 - Finish or explicitly cancel all previously accepted kitchen-managed orders through canonical workflows. Then choose **Finish drain / disable**. This turns off Kitchen work intake without removing historical tickets or entitlements.
 - Re-enabling a disabled pilot requires a new request and an independent approval. An expired entitlement already blocks new Kitchen acceptance; permitted existing station work remains completable.
 - On lost API response, refresh the audit/status before retrying. Idempotency prevents same-key different-payload replay; a new privileged action needs a new MFA confirmation.
