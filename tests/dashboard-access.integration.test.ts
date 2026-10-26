@@ -4,7 +4,11 @@ import { nanoid } from "nanoid";
 import { fixture, admin } from "./helpers";
 import { applyEntitlement } from "@/modules/billing/operator";
 import { organizationMembers, outletGrants } from "@/db/schema";
-import { dashboardMenuRows, dashboardNavigation, dashboardQrRows } from "@/modules/menu-product/dashboard-data";
+import {
+  dashboardMenuRows,
+  dashboardNavigation,
+  dashboardQrRows,
+} from "@/modules/menu-product/dashboard-data";
 
 describe("dashboard authorization and lightweight projections", () => {
   it("keeps projection fields minimal and rejects cross-tenant reads", async () => {
@@ -75,7 +79,9 @@ describe("dashboard authorization and lightweight projections", () => {
       kitchenRead: false,
     });
     await admin(async (db) => {
-      await db.update(outletGrants).set({ roles: ["menu_editor", "kitchen"] })
+      await db
+        .update(outletGrants)
+        .set({ roles: ["menu_editor", "kitchen"] })
         .where(eq(outletGrants.memberId, memberId));
     });
     expect(await dashboardNavigation(editor.actor, org, outletId)).toMatchObject({
@@ -83,7 +89,9 @@ describe("dashboard authorization and lightweight projections", () => {
       kitchenRead: true,
     });
     await admin(async (db) => {
-      await db.update(organizationMembers).set({ isActive: false })
+      await db
+        .update(organizationMembers)
+        .set({ isActive: false })
         .where(eq(organizationMembers.id, memberId));
     });
     await expect(dashboardNavigation(editor.actor, org, outletId)).rejects.toMatchObject({
