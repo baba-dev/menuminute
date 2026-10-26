@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <title>Restaurant</title>
+  <!-- A classic plated cloche communicates full-service dining. -->
+  <path d="M9 35h30" />
+  <path d="M14 30a10 10 0 0 1 20 0H14Z" fill="currentColor" fill-opacity=".10" />
+  <path d="M24 16v4" />
+  <path d="M21.5 15.5a2.5 2.5 0 0 1 5 0" />
+  <path d="M12 30h24" />
+  <path d="M17 39h14" />
+  <path d="M12 12v6m-3-6v5a3 3 0 0 0 6 0v-5m-3 6v7" stroke-width="1.9" />
+  <path d="M37 12c-4 3-4 8 0 11v7" stroke-width="1.9" />
+</svg>
