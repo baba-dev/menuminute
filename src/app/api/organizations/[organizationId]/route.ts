@@ -8,7 +8,7 @@ export async function GET(req: Request, context: Context) {
       await organizationDetail(await requestActor(req), (await context.params).organizationId)
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }
 export async function PATCH(req: Request, context: Context) {
@@ -21,6 +21,6 @@ export async function PATCH(req: Request, context: Context) {
       )
     );
   } catch (e) {
-    return errorResponse(e);
+    return errorResponse(e, req);
   }
 }

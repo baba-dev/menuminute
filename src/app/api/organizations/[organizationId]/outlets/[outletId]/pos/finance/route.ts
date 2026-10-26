@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: Params) {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }
 export async function POST(req: Request, { params }: Params) {
@@ -27,6 +27,6 @@ export async function POST(req: Request, { params }: Params) {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

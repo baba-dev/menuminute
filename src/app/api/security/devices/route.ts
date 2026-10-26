@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       { headers: responseHeaders }
     );
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }
 export async function POST(req: Request) {
@@ -57,6 +57,6 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ revoked }, { headers: responseHeaders });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

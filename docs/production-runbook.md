@@ -146,3 +146,28 @@ per-release operator marker with root-owned automatic backup and checksummed SQL
 only after an independently reviewed one-time helper installation. The last operator evidence
 above remains authoritative until live verification; do not infer helper v6, a working backup
 pipeline, ordering migration 0006 or public Food Orbit activation from repository changes.
+
+## Replacement #184 release preflight — media security
+
+The source PR alone does **not** activate production. Before publishing or
+enabling this release: preserve the current Ember browser, SMTP, Turnstile,
+POS, orders and financial contracts; validate a complete six-lane quality gate
+(quality, typecheck, PostgreSQL/Redis, ARM64 browser/build, Ember browser,
+security); verify no database migration changes; ensure media root and
+permissions exist for both Unix service accounts; verify ERP remains healthy.
+
+**Critical proxy dependency:** Install the dedicated `/api/public-media/`
+location in the reviewed Food HTTPS server using the same root-only order-edge
+secret include and trusted Cloudflare real-IP configuration. Validate
+`nginx -t` before a graceful reload, and verify that images from a published
+QR menu return 200, then 304 for an unchanged ETag, and 404 after unapproval.
+A missing/forged edge credential intentionally returns a retryable 503.
+Test multiple clients behind shared networks to tune per-IP and global quotas.
+
+For local media readiness, ensure MEDIA_ROOT is readable and writable by the
+web service and by the media worker. For R2 (only if explicitly enabled),
+verify endpoint, bucket scope, signed HEAD permission and the two-second
+readiness latency with the actual production credentials before cutover.
+A failed R2 permission check marks the web instance unready by design.
+Check `/api/health/ready` media=true and database/Redis booleans without
+printing secret environment files or replacing the ERP Nginx vhost.

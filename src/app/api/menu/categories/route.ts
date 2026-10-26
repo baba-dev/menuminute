@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const categories = await getCategoriesByRestaurant(actor, restaurant.id);
     return NextResponse.json(categories);
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }
 
@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
     const category = await createCategory(actor, restaurant.id, parsed.data);
     return NextResponse.json(category, { status: 201 });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 }

@@ -9,6 +9,6 @@ export async function POST(req: Request, { params }: Params) {
     const result = await posConfigure(actor, organizationId, outletId, await req.json());
     return NextResponse.json(result, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

@@ -15,6 +15,6 @@ export async function POST(
     const result = await recordOutletOrderPayment(actor, outletId, orderId, organizationId, body);
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, req);
   }
 }

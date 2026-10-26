@@ -11,6 +11,8 @@ const base = {
   EMAIL_PROVIDER: "test",
   REDIS_QUEUE_URL: "redis://127.0.0.1:6379",
   REDIS_CACHE_URL: "redis://127.0.0.1:6380",
+  MEDIA_STORAGE: "local",
+  MEDIA_ROOT: "/tmp/menuminute-test-media",
 };
 const configured = (extra: Record<string, string> = {}) =>
   parseEnv({
