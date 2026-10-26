@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -79,7 +80,6 @@ export default async function DashboardPage() {
   });
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
-  const operations = await dashboardPulseSnapshot(actor, outlet.organizationId, outlet.id);
   const publicHref =
     stats.hasPublicMenu && primaryQr
       ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
@@ -314,7 +314,21 @@ export default async function DashboardPage() {
             </Link>
           </section>
 
-          <DashboardServicePulse key={outlet.id} outletId={outlet.id} initial={operations} />
+          <Suspense
+            fallback={
+              <section className="mm-dashboard-operations" role="status">
+                <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
+                <h2>What needs attention now</h2>
+                <p>Checking this outlet’s latest order activity…</p>
+              </section>
+            }
+          >
+            <ServicePulseSection
+              userId={actor.userId}
+              outletId={outlet.id}
+              organizationId={outlet.organizationId}
+            />
+          </Suspense>
 
           <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
             <div className="mm-dashboard-health-head">
@@ -424,4 +438,17 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
+}
+
+async function ServicePulseSection({
+  userId,
+  outletId,
+  organizationId,
+}: {
+  userId: string;
+  outletId: string;
+  organizationId: string;
+}) {
+  const snapshot = await dashboardPulseSnapshot({ userId }, organizationId, outletId);
+  return <DashboardServicePulse key={outletId} outletId={outletId} initial={snapshot} />;
 }
