@@ -110,7 +110,7 @@ export async function findKitchenPilotTargets(actor: AdminActor, query: string) 
       SELECT r.id, r.name, r.organization_id AS "organizationId",
         o.name AS "organizationName"
       FROM restaurants r JOIN organizations o ON o.id=r.organization_id
-      WHERE (r.name ILIKE ${pattern} ESCAPE '\' OR o.name ILIKE ${pattern} ESCAPE '\')
+      WHERE (r.name ILIKE ${pattern} ESCAPE '\\' OR o.name ILIKE ${pattern} ESCAPE '\\')
       ORDER BY o.name,r.name,r.id LIMIT 25
     `);
     return result.rows;
