@@ -36,6 +36,8 @@ export const outletProfileFieldsSchema = z
     pickupLeadMinutes: z.number().int().min(0).max(240),
     pickupSlotMinutes: z.number().int().min(5).max(120),
     pickupAdvanceDays: z.number().int().min(1).max(30),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
   })
   .strict();
 export const outletProfileCommandSchema = z
@@ -61,6 +63,8 @@ export function editableOutletProfile(row: typeof restaurants.$inferSelect): Out
     pickupLeadMinutes: row.pickupLeadMinutes,
     pickupSlotMinutes: row.pickupSlotMinutes,
     pickupAdvanceDays: row.pickupAdvanceDays,
+    latitude: row.latitude !== null && row.latitude !== undefined ? Number(row.latitude) : null,
+    longitude: row.longitude !== null && row.longitude !== undefined ? Number(row.longitude) : null,
   };
 }
 export async function canManageOutletProfile(actor: Actor, outletId: string) {

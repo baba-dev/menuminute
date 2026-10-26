@@ -166,3 +166,136 @@ it("bounds outstanding invitations and refuses an eleventh pending invitation", 
   const invitations = await listInvitations(actor, outlet.organizationId);
   expect(invitations.filter((i) => i.status === "pending")).toHaveLength(10);
 });
+
+it("provisions outlet with physical address, GPS coordinates, brand colors, and auto-generates tables", async () => {
+  const actor = await verified();
+  const superOnboardingDetails = {
+    name: "Amber Coastal Bistro",
+    outletType: "restaurant" as const,
+    description: "Artisan seafood and woodfired specialties",
+    addressLine1: "12 Marine Drive",
+    addressLine2: "Suite 4B",
+    city: "Mumbai",
+    state: "Maharashtra",
+    postalCode: "400020",
+    country: "IN",
+    latitude: 18.922,
+    longitude: 72.8347,
+    phone: "+91 98765 43210",
+    email: "contact@amberbistro.test",
+    website: "https://amberbistro.test",
+    primaryColor: "#f97316",
+    secondaryColor: "#1c1917",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    fulfillmentModes: ["dine_in" as const, "pickup" as const],
+    pickupLeadMinutes: 20,
+    pickupSlotMinutes: 15,
+    pickupAdvanceDays: 5,
+    tableCount: 6,
+    menuSchedule: null,
+  };
+
+  const saved = await saveOnboarding(actor, superOnboardingDetails);
+  expect((await onboardingState(actor)).draft).toEqual(superOnboardingDetails);
+
+  const outlet = await createRestaurant(actor.userId, superOnboardingDetails, saved.key);
+  expect(outlet.id).toBeTruthy();
+
+  await admin(async (_, pool) => {
+    const res = await pool.query<{
+      latitude: string;
+      longitude: string;
+      address_line1: string;
+      primary_color: string;
+      table_count: number;
+    }>(
+      `select r.latitude, r.longitude, r.address_line1, r.primary_color,
+              (select count(*)::int from restaurant_tables t where t.restaurant_id = r.id) as table_count
+       from restaurants r where r.id = $1`,
+      [outlet.id]
+    );
+
+    expect(res.rows[0]).toMatchObject({
+      address_line1: "12 Marine Drive",
+      primary_color: "#f97316",
+      table_count: 6,
+    });
+    expect(parseFloat(res.rows[0]!.latitude)).toBeCloseTo(18.922, 3);
+    expect(parseFloat(res.rows[0]!.longitude)).toBeCloseTo(72.8347, 3);
+  });
+});
+
+it("does not provision dining tables for a pickup-only outlet", async () => {
+  const actor = await verified();
+  const input = {
+    name: "Pickup Only Kitchen",
+    outletType: "cloud_kitchen" as const,
+    country: "IN",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    fulfillmentModes: ["pickup" as const],
+    tableCount: 10,
+  };
+  const saved = await saveOnboarding(actor, input);
+  const outlet = await createRestaurant(actor.userId, input, saved.key);
+  const rows = await admin(async (_, pool) =>
+    pool.query<{ count: number }>(
+      "select count(*)::int as count from restaurant_tables where restaurant_id = $1",
+      [outlet.id]
+    )
+  );
+  expect(rows.rows[0]?.count).toBe(0);
+});
+
+it("stores independent operating and service schedules and does not publish private contact", async () => {
+  const actor = await verified();
+  const hours = {
+    weekly: [{ day: 1, start: "09:00", end: "21:00", allDay: false }],
+    exceptions: [],
+  };
+  const service = {
+    weekly: [{ day: 1, start: "10:00", end: "20:00", allDay: false }],
+    exceptions: [],
+  };
+  const input = {
+    name: "Schedule Safety Cafe",
+    country: "OM",
+    currency: "OMR",
+    timezone: "Asia/Muscat",
+    outletType: "cafe" as const,
+    fulfillmentModes: ["pickup" as const],
+    onboardingGoal: "full_operations" as const,
+    operatingHours: hours,
+    serviceHours: service,
+    operationsContactName: "Back Office Manager",
+    operationsContactPhone: "+968 9123 4567",
+    operationsContactEmail: "manager@private.test",
+    menuSchedule: null,
+  };
+  const saved = await saveOnboarding(actor, input);
+  const outlet = await createRestaurant(actor.userId, input, saved.key);
+  const row = await admin(async (_, pool) =>
+    pool.query<{
+      operating_hours: typeof hours;
+      service_hours: typeof service;
+      onboarding_goal: string;
+      operations_contact_email: string;
+      menu_doc: { schedule: unknown };
+    }>(
+      `select r.operating_hours,r.service_hours,r.onboarding_goal,r.operations_contact_email,
+     (select m.document from menus m where m.outlet_id=r.id limit 1) as menu_doc
+    from restaurants r where r.id=$1`,
+      [outlet.id]
+    )
+  );
+  expect(row.rows[0]?.operating_hours).toEqual(hours);
+  expect(row.rows[0]?.service_hours).toEqual(service);
+  expect(row.rows[0]?.onboarding_goal).toBe("full_operations");
+  expect(row.rows[0]?.operations_contact_email).toBe("manager@private.test");
+  expect(row.rows[0]?.menu_doc?.schedule).toBeNull();
+  const projection = await admin(async (_, pool) =>
+    pool.query("select app_private.public_menu($1) as result", [outlet.publicId])
+  );
+  expect(JSON.stringify(projection.rows)).not.toContain("manager@private.test");
+});

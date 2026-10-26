@@ -1,0 +1,166 @@
+{
+  "name": "Ink & Ember Onboarding Artwork",
+  "version": "3.0.0",
+  "basePath": "/brand/onboarding-wizard/",
+  "total": 26,
+  "committedBinaryAssets": true,
+  "assets": [
+    {
+      "filename": "wizard-hero-identity-light.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage identity",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-identity-dark.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage identity",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-location-light.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage location",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-location-dark.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage location",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-operations-light.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage operations",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-operations-dark.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage operations",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-contact-light.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage contact",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-contact-dark.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage contact",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-launch-light.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage launch",
+      "required": true
+    },
+    {
+      "filename": "wizard-hero-launch-dark.webp",
+      "dimensions": "1200 × 720",
+      "role": "Wizard stage launch",
+      "required": true
+    },
+    {
+      "filename": "welcome-hero-desktop-light.webp",
+      "dimensions": "1440 × 960",
+      "role": "Responsive onboarding welcome desktop",
+      "required": false
+    },
+    {
+      "filename": "welcome-hero-desktop-dark.webp",
+      "dimensions": "1440 × 960",
+      "role": "Responsive onboarding welcome desktop",
+      "required": false
+    },
+    {
+      "filename": "welcome-hero-mobile-light.webp",
+      "dimensions": "720 × 960",
+      "role": "Responsive onboarding welcome mobile",
+      "required": false
+    },
+    {
+      "filename": "welcome-hero-mobile-dark.webp",
+      "dimensions": "720 × 960",
+      "role": "Responsive onboarding welcome mobile",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-restaurant.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type restaurant",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-cafe.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type cafe",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-takeout.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type takeout",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-cloud-kitchen.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type cloud-kitchen",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-hotel.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type hotel",
+      "required": false
+    },
+    {
+      "filename": "icons/outlet-type-mixed.svg",
+      "dimensions": "48 × 48",
+      "role": "Outlet type mixed",
+      "required": false
+    },
+    {
+      "filename": "gps-locator-light.webp",
+      "dimensions": "800 × 800",
+      "role": "gps-locator",
+      "required": false
+    },
+    {
+      "filename": "gps-locator-dark.webp",
+      "dimensions": "800 × 800",
+      "role": "gps-locator",
+      "required": false
+    },
+    {
+      "filename": "empty-outlet-light.webp",
+      "dimensions": "720 × 540",
+      "role": "empty-outlet",
+      "required": false
+    },
+    {
+      "filename": "empty-outlet-dark.webp",
+      "dimensions": "720 × 540",
+      "role": "empty-outlet",
+      "required": false
+    },
+    {
+      "filename": "celebration-overlay-light.webp",
+      "dimensions": "1000 × 600",
+      "role": "celebration-overlay",
+      "required": false
+    },
+    {
+      "filename": "celebration-overlay-dark.webp",
+      "dimensions": "1000 × 600",
+      "role": "celebration-overlay",
+      "required": false
+    }
+  ],
+  "assetUploadCommit": "925a545749066abd532a4dfc1853af2128c1b460"
+}

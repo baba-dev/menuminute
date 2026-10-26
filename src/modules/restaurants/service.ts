@@ -17,10 +17,46 @@ export const createRestaurantSchema = z.object({
     .max(2)
     .optional(),
   menuSchedule: scheduleSchema.nullable().optional(),
+  // Business and service hours are separate from menu visibility.
+  operatingHours: scheduleSchema.nullable().optional(),
+  serviceHours: scheduleSchema.nullable().optional(),
+  onboardingGoal: z.enum(["qr_menu", "ordering", "full_operations"]).optional(),
+  operationsContactName: z.string().trim().max(120).optional().nullable(),
+  operationsContactPhone: z.string().trim().max(40).optional().nullable(),
+  operationsContactEmail: z.union([z.email().max(254), z.literal(""), z.null()]).optional(),
   name: z.string().trim().min(2).max(100),
-  description: z.string().max(500).optional(),
-  city: z.string().max(100).optional(),
+  description: z.string().max(500).optional().nullable(),
+  addressLine1: z.string().max(180).optional().nullable(),
+  addressLine2: z.string().max(180).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state: z.string().max(100).optional().nullable(),
+  postalCode: z.string().max(24).optional().nullable(),
   country: z.string().regex(/^[A-Z]{2}$/),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  phone: z.string().max(40).optional().nullable(),
+  email: z.union([z.string().email().max(254), z.literal(""), z.null()]).optional(),
+  website: z
+    .union([
+      z
+        .string()
+        .url()
+        .max(512)
+        .refine((value) => /^https?:\/\//i.test(value), "Use HTTP(S)"),
+      z.literal(""),
+      z.null(),
+    ])
+    .optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
   currency: z.string().refine((v) => currencyExponent(v) !== null, "Unsupported currency"),
   timezone: z.string().refine((v) => {
     try {
@@ -31,6 +67,10 @@ export const createRestaurantSchema = z.object({
     }
   }, "Invalid IANA timezone"),
   outletType: z.enum(["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"]),
+  pickupLeadMinutes: z.number().int().min(0).max(240).optional(),
+  pickupSlotMinutes: z.number().int().min(5).max(120).optional(),
+  pickupAdvanceDays: z.number().int().min(1).max(30).optional(),
+  tableCount: z.number().int().min(0).max(50).optional().nullable(),
 });
 export type CreateRestaurantInput = z.input<typeof createRestaurantSchema>;
 export const getRestaurantsByUserId = cache(async function getRestaurantsByUserId(userId: string) {

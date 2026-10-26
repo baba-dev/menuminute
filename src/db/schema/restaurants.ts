@@ -3,6 +3,8 @@ import {
   boolean,
   timestamp,
   integer,
+  numeric,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
@@ -45,6 +47,16 @@ export const restaurants = pgTable(
     state: text("state"),
     postalCode: text("postal_code"),
     country: text("country").default("IN"),
+    // Geocoordinates
+    latitude: numeric("latitude", { precision: 10, scale: 7 }),
+    longitude: numeric("longitude", { precision: 10, scale: 7 }),
+    // Dedicated operating schedules are not menu visibility schedules.
+    operatingHours: jsonb("operating_hours"),
+    serviceHours: jsonb("service_hours"),
+    onboardingGoal: text("onboarding_goal").notNull().default("qr_menu"),
+    operationsContactName: text("operations_contact_name"),
+    operationsContactPhone: text("operations_contact_phone"),
+    operationsContactEmail: text("operations_contact_email"),
     // Branding
     primaryColor: text("primary_color").default("#f97316"), // warm orange
     secondaryColor: text("secondary_color").default("#1c1917"),

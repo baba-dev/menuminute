@@ -37,12 +37,20 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/onboarding/);
   await page.goto("/onboarding");
-  await expect(page.getByLabel("Outlet name")).toBeVisible();
-  await page.getByLabel("Outlet name").fill("Browser Kitchen");
-  await page.getByLabel("Outlet type").selectOption("cloud_kitchen");
-  await page.getByLabel("Currency", { exact: true }).selectOption("OMR");
-  await page.getByRole("button", { name: "Create organization and outlet" }).click();
-  await expect(page).toHaveURL(/\/dashboard\/menu/);
+  // The first-outlet wizard replaced the legacy single-step form. Exercise every
+  // stage before continuing the existing private mutation/session recovery check.
+  await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
+  await page.getByLabel(/Outlet Public Name/).fill("Browser Kitchen");
+  await page.getByRole("radio", { name: /Cloud \/ Ghost Kitchen/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel(/Country/).selectOption("OM");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByLabel(/Menu pricing currency/)).toHaveValue("OMR");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/get-started/);
+  await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   const created = await page.request.post("/api/menu/categories", {
     headers: { origin: "https://localhost:3443" },

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <title>Takeout</title>
+  <!-- Takeaway paper carrier and a compact food carton. -->
+  <path d="M12 18h24l2.5 22h-29z" fill="currentColor" fill-opacity=".08" />
+  <path d="M19 20v-4a5 5 0 0 1 10 0v4" />
+  <path d="M17 29h14l-1 7H18z" fill="currentColor" fill-opacity=".13" stroke-width="1.9" />
+  <path d="M16 29h16" stroke-width="1.9" />
+  <path d="M20 25.5c1.5-2 6.5-2 8 0" stroke-width="1.9" />
+  <path d="M21 33h6" stroke-width="1.7" />
+</svg>

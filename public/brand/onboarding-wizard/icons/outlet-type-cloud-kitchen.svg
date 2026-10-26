@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <title>Cloud kitchen</title>
+  <!-- Cloud and steaming cooking pot in a unified silhouette. -->
+  <path d="M12 22a6 6 0 0 1 1-11.5A9 9 0 0 1 29 9a6.5 6.5 0 1 1 7 12.5" />
+  <path d="M18 17c-2 2 2 3 0 5m7-5c-2 2 2 3 0 5" stroke-width="1.8" />
+  <path d="M11 26h26v8a6 6 0 0 1-6 6H17a6 6 0 0 1-6-6z" fill="currentColor" fill-opacity=".10" />
+  <path d="M9 26h30" />
+  <path d="M17 40h14" />
+  <path d="M13 30h-2.5a3 3 0 0 0 0 6h1m24-6h2.5a3 3 0 0 1 0 6h-1" stroke-width="1.9" />
+</svg>
