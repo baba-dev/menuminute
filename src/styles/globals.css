@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────────
    MenuMinute Design System
@@ -6,9 +8,11 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 @theme {
-  /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  /* Typography — Hospitality Craft Trinity */
+  --font-sans: var(--font-dm), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
+  --font-handwriting: var(--font-kalam), "Kalam", cursive;
+  --font-mono: "JetBrains Mono", "Courier New", ui-monospace, monospace;
 
   /* Brand Colors — warm orange food palette */
   --color-brand-50: oklch(0.97 0.02 50);
@@ -104,6 +108,23 @@
   --color-secondary-foreground: var(--color-stone-50);
 }
 
+
+/* Explicit light selection must override a dark OS preference. */
+:root[data-theme="light"] {
+  --color-background: var(--color-stone-50);
+  --color-foreground: var(--color-stone-900);
+  --color-muted: var(--color-stone-100);
+  --color-muted-foreground: var(--color-stone-500);
+  --color-border: var(--color-stone-200);
+  --color-input: var(--color-stone-200);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: var(--color-stone-900);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: var(--color-stone-900);
+  --color-secondary: var(--color-stone-100);
+  --color-secondary-foreground: var(--color-stone-900);
+}
+
 /* ─── Base Styles ──────────────────────────────────────────────────────────── */
 
 * {
@@ -153,4 +174,173 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-stone-400);
+}
+
+/* ─── Hospitality Tactile & Physical Craft Tokens ────────────────────────── */
+
+.font-handwriting,
+.font-chef {
+  font-family: var(--font-handwriting);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Rubber Ink Stamps (Tilted, distressed border, stamped ink look) */
+.stamp-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  font-family: var(--font-display), var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  border: 2px dashed currentColor;
+  transform: rotate(-2deg);
+  user-select: none;
+  line-height: 1.1;
+  box-shadow: 0 0 0 1px inset rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s ease-out;
+}
+
+.stamp-badge:hover {
+  transform: rotate(0deg) scale(1.04);
+}
+
+.stamp-badge--sold-out {
+  color: #dc2626;
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+:root[data-theme="dark"] .stamp-badge--sold-out {
+  color: #f87171;
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.stamp-badge--paid {
+  color: #059669;
+  border-color: #059669;
+  background: rgba(5, 150, 105, 0.08);
+  transform: rotate(1.5deg);
+}
+
+:root[data-theme="dark"] .stamp-badge--paid {
+  color: #34d399;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.stamp-badge--confirmed {
+  color: #d97706;
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.08);
+  transform: rotate(-1.5deg);
+}
+
+:root[data-theme="dark"] .stamp-badge--confirmed {
+  color: #fbbf24;
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.stamp-badge--chef-pick {
+  color: #ea580c;
+  border-color: #ea580c;
+  background: rgba(234, 88, 12, 0.08);
+  transform: rotate(1deg);
+}
+
+:root[data-theme="dark"] .stamp-badge--chef-pick {
+  color: #fb923c;
+  border-color: #fb923c;
+  background: rgba(251, 146, 60, 0.12);
+}
+
+/* Perforated Receipt Paper Tear (Jagged bottom edge for tickets and billfolds) */
+.ticket-receipt-card {
+  position: relative;
+  background: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-bottom: none;
+  filter: drop-shadow(0 4px 6px -1px rgb(0 0 0 / 0.06));
+}
+
+.ticket-receipt-tear {
+  position: relative;
+  height: 12px;
+  width: 100%;
+  background: radial-gradient(circle, transparent, transparent 50%, var(--color-card, #ffffff) 50%, var(--color-card, #ffffff) 100%);
+  background-size: 16px 16px;
+  background-position: bottom left;
+}
+
+/* Washi/Masking Tape Effect for Sticky Notes */
+.tape-strip {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 70px;
+  height: 18px;
+  background: rgba(245, 230, 190, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-left: 2px dashed rgba(0, 0, 0, 0.1);
+  border-right: 2px dashed rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 2;
+}
+
+:root[data-theme="dark"] .tape-strip {
+  background: rgba(140, 120, 90, 0.65);
+}
+
+/* Bistro Slate Chalkboard & Butcher Paper */
+.chalkboard-surface {
+  background: #1a1e21;
+  color: #f1f5f9;
+  border: 4px solid #33271e;
+  border-radius: 8px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-handwriting), var(--font-sans);
+}
+
+.butcher-paper-surface {
+  background: #faf5ed;
+  color: #291c13;
+  border: 1px solid #dfd1bd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(50, 35, 20, 0.06);
+}
+
+:root[data-theme="dark"] .butcher-paper-surface {
+  background: #251e18;
+  color: #f3e9db;
+  border-color: #48392d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Tactile Ink Press Action Button */
+.btn-ink-press {
+  border: 1px solid currentColor;
+  border-radius: 9px;
+  box-shadow: 3px 3px 0 var(--color-foreground, #171717);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-ink-press:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-foreground, #171717);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-badge, .btn-ink-press { transition: none; }
+  .stamp-badge:hover, .btn-ink-press:active:not(:disabled) { transform: none; }
 }
