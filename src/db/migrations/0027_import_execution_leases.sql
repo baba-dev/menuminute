@@ -55,7 +55,7 @@ BEGIN
     lease_token=NULL,lease_until=NULL,last_error=NULL WHERE id=e.id;
   RETURN jsonb_build_object('done',true);
  END IF;
- IF i.status<>'queued' OR FOUND OR p_model !~ '^[A-Za-z0-9._/-]{1,100}$' THEN
+ IF i.status<>'queued' OR u.event_id IS NOT NULL OR p_model !~ '^[A-Za-z0-9._/-]{1,100}$' THEN
   RAISE EXCEPTION 'Invalid import state' USING ERRCODE='42501';
  END IF;
  SELECT jsonb_agg(jsonb_build_object('id',s.id,'pageIndex',s.page_index,
