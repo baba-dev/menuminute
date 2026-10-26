@@ -103,6 +103,24 @@ const server = https.createServer(
     cert: tlsCertificate,
   },
   (req, res) => {
+    const forwardedIp = /^[a-f0-9-]{36}$/.test(String(req.headers["x-browser-test-client"] ?? ""))
+      ? "198.18." +
+        Number.parseInt(
+          createHash("sha256")
+            .update(String(req.headers["x-browser-test-client"]))
+            .digest("hex")
+            .slice(0, 2),
+          16
+        ) +
+        "." +
+        Number.parseInt(
+          createHash("sha256")
+            .update(String(req.headers["x-browser-test-client"]))
+            .digest("hex")
+            .slice(2, 4),
+          16
+        )
+      : "127.0.0.1";
     const forwarded = http.request(
       {
         hostname: "127.0.0.1",
@@ -112,26 +130,10 @@ const server = https.createServer(
         headers: {
           ...req.headers,
           "x-forwarded-proto": "https",
-          "x-forwarded-for": /^[a-f0-9-]{36}$/.test(
-            String(req.headers["x-browser-test-client"] ?? "")
-          )
-            ? "198.18." +
-              Number.parseInt(
-                createHash("sha256")
-                  .update(String(req.headers["x-browser-test-client"]))
-                  .digest("hex")
-                  .slice(0, 2),
-                16
-              ) +
-              "." +
-              Number.parseInt(
-                createHash("sha256")
-                  .update(String(req.headers["x-browser-test-client"]))
-                  .digest("hex")
-                  .slice(2, 4),
-                16
-              )
-            : "127.0.0.1",
+          "x-forwarded-for": forwardedIp,
+          // Test TLS proxy overwrites both internal attestations, as production Nginx must.
+          "x-menuminute-client-ip": forwardedIp,
+          "x-menuminute-edge-key": process.env.ORDER_EDGE_SHARED_SECRET,
         },
       },
       (response) => {

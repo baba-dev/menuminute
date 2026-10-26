@@ -12,6 +12,7 @@ concurrency:
 env:
   APP_URL: http://localhost:3000
   AUTH_SECRET: isolated-ci-key-with-at-least-thirty-two-characters
+  ORDER_EDGE_SHARED_SECRET: ci-only-order-proxy-attestation-never-use-on-live-server
   DATABASE_URL: postgresql://menuminute_app:isolated-ci-app-password@127.0.0.1:5432/menuminute_test
   MIGRATION_DATABASE_URL: postgresql://foundation_owner:isolated-ci-owner-password@127.0.0.1:5432/menuminute_test
   WORKER_DATABASE_URL: postgresql://menuminute_worker:isolated-ci-worker-password@127.0.0.1:5432/menuminute_test
