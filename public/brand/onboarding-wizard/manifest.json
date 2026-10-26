@@ -1,10 +1,9 @@
 {
   "name": "Ink & Ember Onboarding Artwork",
   "version": "3.0.0",
-  "source": "User-provided Imagework.zip",
   "basePath": "/brand/onboarding-wizard/",
   "total": 26,
-  "committedBinaryAssets": false,
+  "committedBinaryAssets": true,
   "assets": [
     {
       "filename": "wizard-hero-identity-light.webp",
@@ -162,5 +161,6 @@
       "role": "celebration-overlay",
       "required": false
     }
-  ]
+  ],
+  "assetUploadCommit": "925a545749066abd532a4dfc1853af2128c1b460"
 }
