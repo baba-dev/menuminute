@@ -18,7 +18,11 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
-import { dashboardMenuRows, dashboardPublicProjection, dashboardQrRows } from "@/modules/menu-product/dashboard-data";
+import {
+  dashboardMenuRows,
+  dashboardPublicProjection,
+  dashboardQrRows,
+} from "@/modules/menu-product/dashboard-data";
 import {
   dashboardSetup,
   dashboardSummary,
@@ -62,7 +66,9 @@ export default async function DashboardPage() {
     dashboardQrRows(actor.userId, outlet.id),
   ]);
   const primaryQr = preferredMenuQr(codes);
-  const publicProjection = primaryQr ? await dashboardPublicProjection(primaryQr.destinationToken) : null;
+  const publicProjection = primaryQr
+    ? await dashboardPublicProjection(primaryQr.destinationToken)
+    : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
   const hasSavedMenu = menus.some((menu) => !menu.archived);
   const setup = dashboardSetup({
@@ -308,11 +314,7 @@ export default async function DashboardPage() {
             </Link>
           </section>
 
-          <DashboardServicePulse
-            key={outlet.id}
-            outletId={outlet.id}
-            initial={operations}
-          />
+          <DashboardServicePulse key={outlet.id} outletId={outlet.id} initial={operations} />
 
           <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
             <div className="mm-dashboard-health-head">
@@ -391,8 +393,9 @@ export default async function DashboardPage() {
                   <dt>
                     Menu launch setup{" "}
                     <DashboardTooltip label="Setup completion">
-                      Outlet configured, menu created, public release and active QR code. This does not measure ordering, staff or payment readiness. Each
-                      verified step counts equally.
+                      Outlet configured, menu created, public release and active QR code. This does
+                      not measure ordering, staff or payment readiness. Each verified step counts
+                      equally.
                     </DashboardTooltip>
                   </dt>
                   <dd>

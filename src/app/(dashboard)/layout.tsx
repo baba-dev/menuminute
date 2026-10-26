@@ -10,7 +10,11 @@ import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { WorkspaceTopbar } from "./workspace-topbar";
-import { dashboardNavigation, dashboardPublicProjection, dashboardQrRows } from "@/modules/menu-product/dashboard-data";
+import {
+  dashboardNavigation,
+  dashboardPublicProjection,
+  dashboardQrRows,
+} from "@/modules/menu-product/dashboard-data";
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";

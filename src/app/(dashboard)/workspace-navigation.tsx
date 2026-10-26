@@ -29,11 +29,7 @@ const links = [
   { href: "/dashboard/settings", label: "Settings", Icon: Settings },
 ] as const;
 
-export function WorkspaceNavigation({
-  capabilities,
-}: {
-  capabilities?: DashboardNavigation;
-}) {
+export function WorkspaceNavigation({ capabilities }: { capabilities?: DashboardNavigation }) {
   const pathname = usePathname();
 
   return (
@@ -57,9 +53,7 @@ export function WorkspaceNavigation({
               <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
               <span>{label}</span>
               <small>
-                {!capabilities || !capabilities[capability!]
-                  ? "Not enabled"
-                  : "Access required"}
+                {!capabilities || !capabilities[capability!] ? "Not enabled" : "Access required"}
               </small>
             </span>
           ) : (

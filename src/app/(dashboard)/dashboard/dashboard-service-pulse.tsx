@@ -10,7 +10,9 @@ const REQUEST_TIMEOUT_MS = 8_000;
 
 function timeLabel(timestamp: string) {
   const time = new Date(timestamp);
-  return Number.isNaN(time.getTime()) ? "time unavailable" : time.toISOString().slice(11, 16) + " UTC";
+  return Number.isNaN(time.getTime())
+    ? "time unavailable"
+    : time.toISOString().slice(11, 16) + " UTC";
 }
 
 export function DashboardServicePulse({
@@ -41,27 +43,41 @@ export function DashboardServicePulse({
       });
       if (!response.ok) throw new Error("Service activity could not be refreshed");
       const body: unknown = await response.json();
-      if (!body || typeof body !== "object" || !("outletId" in body) ||
-          body.outletId !== outletId || !("state" in body) ||
-          !("checkedAt" in body) || typeof body.checkedAt !== "string" ||
-          (body.state !== "ready" && body.state !== "restricted" && body.state !== "unavailable")) {
+      if (
+        !body ||
+        typeof body !== "object" ||
+        !("outletId" in body) ||
+        body.outletId !== outletId ||
+        !("state" in body) ||
+        !("checkedAt" in body) ||
+        typeof body.checkedAt !== "string" ||
+        (body.state !== "ready" && body.state !== "restricted" && body.state !== "unavailable")
+      ) {
         throw new Error("Invalid service activity response");
       }
-      const responseBody = body as { state: DashboardPulseSnapshot["state"]; data?: unknown; checkedAt: string };
+      const responseBody = body as {
+        state: DashboardPulseSnapshot["state"];
+        data?: unknown;
+        checkedAt: string;
+      };
       if (responseBody.state === "ready") {
         const data = responseBody.data;
-        if (!data || typeof data !== "object" ||
-            !["pending", "preparing", "ready", "active", "completedToday"].every(
-              (key) => typeof (data as Record<string, unknown>)[key] === "number"
-            )) {
+        if (
+          !data ||
+          typeof data !== "object" ||
+          !["pending", "preparing", "ready", "active", "completedToday"].every(
+            (key) => typeof (data as Record<string, unknown>)[key] === "number"
+          )
+        ) {
           throw new Error("Invalid service activity counters");
         }
       }
       setSnapshot({
         state: responseBody.state,
-        data: responseBody.state === "ready"
-          ? responseBody.data as Extract<DashboardPulseSnapshot, { state: "ready" }>["data"]
-          : null,
+        data:
+          responseBody.state === "ready"
+            ? (responseBody.data as Extract<DashboardPulseSnapshot, { state: "ready" }>["data"])
+            : null,
         checkedAt: responseBody.checkedAt,
       } as DashboardPulseSnapshot);
     } catch {
@@ -77,7 +93,9 @@ export function DashboardServicePulse({
   }, [outletId]);
 
   useEffect(() => {
-    const onResume = () => { if (document.visibilityState === "visible") void refresh(); };
+    const onResume = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
     const timer = window.setInterval(onResume, REFRESH_MS);
     window.addEventListener("focus", onResume);
     window.addEventListener("online", onResume);
@@ -100,8 +118,13 @@ export function DashboardServicePulse({
           <p>Current outlet counts from the authoritative order ledger.</p>
         </div>
         {snapshot.state !== "restricted" && (
-          <button type="button" className="mm-dashboard-operations-refresh" disabled={refreshing}
-            aria-label="Refresh service activity" onClick={() => void refresh()}>
+          <button
+            type="button"
+            className="mm-dashboard-operations-refresh"
+            disabled={refreshing}
+            aria-label="Refresh service activity"
+            onClick={() => void refresh()}
+          >
             <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         )}
@@ -109,15 +132,18 @@ export function DashboardServicePulse({
       {snapshot.state === "ready" ? (
         <>
           <p className="mm-dashboard-operations-freshness" role="status">
-            Snapshot updated at {timeLabel(snapshot.checkedAt)} · Refreshes every 30 seconds while this tab is active
+            Snapshot updated at {timeLabel(snapshot.checkedAt)} · Refreshes every 30 seconds while
+            this tab is active
           </p>
           <div className="mm-dashboard-operations-grid">
-            {([
-              ["pending", "Awaiting acceptance"],
-              ["preparing", "In preparation"],
-              ["ready", "Ready for handoff"],
-              ["completedToday", "Completed today"],
-            ] as const).map(([field, label]) => (
+            {(
+              [
+                ["pending", "Awaiting acceptance"],
+                ["preparing", "In preparation"],
+                ["ready", "Ready for handoff"],
+                ["completedToday", "Completed today"],
+              ] as const
+            ).map(([field, label]) => (
               <Link key={field} href="/dashboard/orders">
                 <strong>{snapshot.data[field].toLocaleString("en")}</strong>
                 <span>{label}</span>
@@ -127,10 +153,16 @@ export function DashboardServicePulse({
         </>
       ) : (
         <div className="mm-dashboard-operations-notice" role="status">
-          <strong>{snapshot.state === "restricted" ? "Order activity access required" : "Order activity temporarily unavailable"}</strong>
-          <p>{snapshot.state === "restricted"
-            ? "Your role does not include order visibility for this outlet. Ask an outlet administrator for access."
-            : "Menu publishing and QR codes are unaffected. Use Refresh to retry service activity."}</p>
+          <strong>
+            {snapshot.state === "restricted"
+              ? "Order activity access required"
+              : "Order activity temporarily unavailable"}
+          </strong>
+          <p>
+            {snapshot.state === "restricted"
+              ? "Your role does not include order visibility for this outlet. Ask an outlet administrator for access."
+              : "Menu publishing and QR codes are unaffected. Use Refresh to retry service activity."}
+          </p>
         </div>
       )}
     </section>
