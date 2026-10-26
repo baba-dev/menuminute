@@ -1,6 +1,8 @@
 import { it, expect, afterAll } from "vitest";
 import { redisClient, redisHealth, closeRedis } from "../src/lib/redis";
 import { parseEnv } from "../src/lib/config/env";
+import { parseMediaEnv } from "../src/lib/config/media-env";
+import { consumePublicMediaLimit } from "../src/lib/public-rate-limit";
 afterAll(closeRedis);
 it("keeps queue/cache policies and data physically separate", async () => {
   const queue = await redisClient("queue"),
@@ -58,4 +60,57 @@ it("accepts only complete secure production SMTP configuration", () => {
   expect(() => parseEnv({ ...smtp, EMAIL_FROM: "not-an-address" })).toThrow("EMAIL_FROM");
   expect(() => parseEnv({ ...smtp, EMAIL_PROVIDER: "test" })).toThrow("EMAIL_PROVIDER");
   expect(() => parseEnv({ ...smtp, SMTP_PASSWORD: "" })).toThrow("SMTP_PASSWORD");
+});
+
+it("fails media configuration at startup and applies the R2 bucket default", () => {
+  expect(() =>
+    parseMediaEnv({
+      MEDIA_STORAGE: "local",
+      MEDIA_ROOT: "relative/media",
+      MEDIA_OUTLET_BUDGET_BYTES: "104857600",
+    })
+  ).toThrow("MEDIA_ROOT");
+  expect(() =>
+    parseMediaEnv({
+      MEDIA_STORAGE: "r2",
+      MEDIA_OUTLET_BUDGET_BYTES: "104857600",
+    })
+  ).toThrow("R2_ENDPOINT");
+  expect(
+    parseMediaEnv({
+      MEDIA_STORAGE: "r2",
+      MEDIA_OUTLET_BUDGET_BYTES: "104857600",
+      R2_ENDPOINT: "https://isolated-account.r2.cloudflarestorage.com/",
+      R2_ACCESS_KEY_ID: "access",
+      R2_SECRET_ACCESS_KEY: "secret",
+    }).R2_BUCKET_NAME
+  ).toBe("menuminute-media");
+});
+
+it("bounds anonymous public media work with the cache Redis instance", async () => {
+  const identity = `test-${crypto.randomUUID()}`;
+  let decision = await consumePublicMediaLimit(identity);
+  expect(decision.allowed).toBe(true);
+  for (let count = 1; count <= decision.limit; count++) {
+    decision = await consumePublicMediaLimit(identity);
+  }
+  expect(decision.allowed).toBe(false);
+  expect(decision.remaining).toBe(0);
+  expect(decision.retryAfterSeconds).toBeGreaterThan(0);
+});
+
+it("accepts blank optional R2 settings in local mode but rejects partial R2 setup", () => {
+  expect(parseMediaEnv({
+    MEDIA_STORAGE: "local",
+    MEDIA_ROOT: "/tmp/menuminute-media",
+    R2_ENDPOINT: "",
+    R2_ACCESS_KEY_ID: "",
+    R2_SECRET_ACCESS_KEY: "",
+  }).MEDIA_STORAGE).toBe("local");
+  expect(() => parseMediaEnv({
+    MEDIA_STORAGE: "r2",
+    R2_ENDPOINT: "",
+    R2_ACCESS_KEY_ID: "",
+    R2_SECRET_ACCESS_KEY: "",
+  })).toThrow("R2_ENDPOINT");
 });

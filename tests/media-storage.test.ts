@@ -11,7 +11,7 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
   vi.stubEnv("R2_ACCESS_KEY_ID", "isolated-test-access");
   vi.stubEnv("R2_SECRET_ACCESS_KEY", "isolated-test-signing-secret");
   vi.resetModules();
-  const { putObject, getObject } = await import("../src/modules/media/storage");
+  const { putObject, getObject, mediaStorageHealth } = await import("../src/modules/media/storage");
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: URL, options: RequestInit) => {
@@ -22,7 +22,10 @@ it("signs bounded canonical R2 requests and rejects alternate endpoints without 
   try {
     await putObject("org-test/asset-test/original", Buffer.from([1, 2, 3]));
     expect(await getObject("org-test/asset-test/original")).toEqual(Buffer.from([1, 2, 3]));
-    expect(calls).toHaveLength(2);
+    expect(await mediaStorageHealth()).toBe(true);
+    expect(calls).toHaveLength(3);
+    expect(calls[2]!.options.method).toBe("HEAD");
+    expect(calls[2]!.url).toBe("https://isolated-account.r2.cloudflarestorage.com/private-test-bucket");
     expect(calls[0]!.url).toBe(
       "https://isolated-account.r2.cloudflarestorage.com/private-test-bucket/org-test/asset-test/original"
     );
