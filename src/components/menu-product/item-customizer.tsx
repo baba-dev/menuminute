@@ -413,8 +413,8 @@ export function ItemCustomizer({
 
           {/* Ingredients & Allergen Transparency */}
           {activeDish.safety?.verified &&
-            (activeDish.safety.ingredients.length > 0 ||
-              activeDish.safety.allergens.length > 0 ||
+            (Boolean(activeDish.safety.ingredients?.length) ||
+              Boolean(activeDish.safety.allergens?.length) ||
               Boolean(activeDish.safety.crossContact)) && (
               <div className="stack" style={{ gap: "0.6rem" }}>
                 <span className="section-title" style={{ fontSize: "0.85rem" }}>
