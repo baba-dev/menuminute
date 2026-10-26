@@ -10,6 +10,7 @@ import {
   Users,
   Building2,
   CreditCard,
+  ChefHat,
   Lock,
   ArrowLeft,
   LogOut,
@@ -100,6 +101,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <CreditCard className="h-4 w-4 text-emerald-400" />
             <span>Payments & Grants</span>
+          </Link>
+
+          <Link
+            href="/admin/kitchen"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-stone-300 transition hover:bg-stone-800 hover:text-white"
+          >
+            <ChefHat className="h-4 w-4 text-amber-400" />
+            <span>Kitchen Control Desk</span>
           </Link>
 
           <Link
