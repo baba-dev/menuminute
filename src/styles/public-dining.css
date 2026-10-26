@@ -1081,3 +1081,26 @@
 .dining-section {
   scroll-margin-top: 9rem;
 }
+
+/* Pairings remain keyboard-accessible without forcing horizontal page scrolling. */
+.dining-pairings-strip {
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+}
+.dining-pairing-card {
+  scroll-snap-align: start;
+}
+.dining-pairing-btn:focus-visible {
+  outline: 3px solid var(--dc-ember);
+  outline-offset: 2px;
+}
+@media (max-width: 420px) {
+  .dining-pairing-card {
+    flex-basis: min(170px, 64vw);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dining-pairing-btn {
+    transition: none;
+  }
+}

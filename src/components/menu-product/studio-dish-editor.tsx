@@ -363,6 +363,7 @@ export function StudioDishEditor({
             </div>
             <div className="row" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
               <input
+                disabled={!canWrite}
                 type="text"
                 placeholder="Add custom flavor note..."
                 value={customFlavorInput}
@@ -393,6 +394,7 @@ export function StudioDishEditor({
           <label className="field">
             Chef&apos;s Tasting Note / Heritage Story
             <textarea
+              disabled={!canWrite}
               value={culinary.chefNote ?? ""}
               onChange={(e) => updateCulinary({ chefNote: e.target.value })}
               placeholder="e.g. 16-hour slow simmered over charcoal with hand-churned white butter..."
@@ -404,6 +406,7 @@ export function StudioDishEditor({
           <label className="field">
             Serving Temperature
             <select
+              disabled={!canWrite}
               value={culinary.servingTemp ?? "hot"}
               onChange={(e) =>
                 updateCulinary({ servingTemp: e.target.value as "hot" | "chilled" | "ambient" })
@@ -438,6 +441,7 @@ export function StudioDishEditor({
             <label className="field">
               Calories (kcal)
               <input
+                disabled={!canWrite}
                 type="number"
                 min={0}
                 max={10000}
@@ -454,6 +458,7 @@ export function StudioDishEditor({
             <label className="field">
               Protein (g)
               <input
+                disabled={!canWrite}
                 type="number"
                 min={0}
                 max={1000}
@@ -471,6 +476,7 @@ export function StudioDishEditor({
             <label className="field">
               Carbs (g)
               <input
+                disabled={!canWrite}
                 type="number"
                 min={0}
                 max={1000}
@@ -488,6 +494,7 @@ export function StudioDishEditor({
             <label className="field">
               Total Fat (g)
               <input
+                disabled={!canWrite}
                 type="number"
                 min={0}
                 max={1000}
@@ -505,6 +512,7 @@ export function StudioDishEditor({
             <label className="field">
               Dietary Fiber (g)
               <input
+                disabled={!canWrite}
                 type="number"
                 min={0}
                 max={500}
@@ -523,6 +531,7 @@ export function StudioDishEditor({
           <label className="field">
             Serving Size Description
             <input
+                disabled={!canWrite}
               type="text"
               placeholder="e.g. Serves 1-2 · approx. 350g"
               value={nutrition.servingSize ?? ""}
@@ -533,6 +542,7 @@ export function StudioDishEditor({
           <label className="field">
             <span>
               <input
+                disabled={!canWrite}
                 type="checkbox"
                 disabled={!canWrite}
                 checked={nutrition.verified === true}
@@ -559,6 +569,7 @@ export function StudioDishEditor({
           <label className="field">
             Key Ingredients (comma-separated)
             <textarea
+              disabled={!canWrite}
               placeholder="e.g. Cottage cheese, Roma tomatoes, Butter, Cashew nut paste, Ginger, Fenugreek"
               value={safety.ingredients.join(", ")}
               onChange={(e) =>
@@ -607,6 +618,7 @@ export function StudioDishEditor({
           <label className="field">
             Kitchen Cross-Contact Disclaimer
             <input
+                disabled={!canWrite}
               type="text"
               placeholder="e.g. Cooked in a kitchen that also processes wheat and peanuts."
               value={safety.crossContact ?? ""}
@@ -617,6 +629,7 @@ export function StudioDishEditor({
           <label className="field">
             <span>
               <input
+                disabled={!canWrite}
                 type="checkbox"
                 disabled={!canWrite}
                 checked={safety.verified === true}
@@ -645,6 +658,7 @@ export function StudioDishEditor({
               return (
                 <label key={claim} className="row" style={{ gap: "0.4rem" }}>
                   <input
+                disabled={!canWrite}
                     type="checkbox"
                     disabled={declared}
                     checked={checked}
@@ -682,6 +696,7 @@ export function StudioDishEditor({
               order together.
             </span>
             <input
+                disabled={!canWrite}
               type="search"
               aria-label="Search companion dishes"
               disabled={!canWrite}

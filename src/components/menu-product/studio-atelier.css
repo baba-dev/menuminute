@@ -1302,3 +1302,31 @@
   color: #690005;
   border-color: #ffb4ab;
 }
+
+/* Keyboard and small-screen usability for culinary editing */
+.atelier-pill-btn:focus-visible,
+.atelier-btn-suggest:focus-visible,
+.atelier-culinary-details > summary:focus-visible {
+  outline: 3px solid var(--ember, #a83500);
+  outline-offset: 3px;
+}
+.atelier-pill-btn:disabled,
+.atelier-btn-suggest:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@media (max-width: 700px) {
+  .atelier-culinary-suggest-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .atelier-culinary-details {
+    min-width: 0;
+    padding: 0.75rem;
+  }
+  .atelier-culinary-details textarea,
+  .atelier-culinary-details input[type="text"],
+  .atelier-culinary-details input[type="search"] {
+    max-width: 100%;
+  }
+}
