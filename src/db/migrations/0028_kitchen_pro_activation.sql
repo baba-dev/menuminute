@@ -225,6 +225,26 @@ BEGIN
     WHERE organization_id=org AND capability='kitchen.new' AND revoked_at IS NULL
       AND starts_at<=clock_timestamp() AND ends_at>clock_timestamp()
     ORDER BY ends_at DESC LIMIT 1;
+   -- An existing grant is not a loophole to turn a 7-day pilot into an
+   -- indefinite organization-wide Kitchen entitlement. Reject any longer
+   -- active grant, or a future overlapping reservation.
+   IF grant_id IS NOT NULL AND EXISTS (
+     SELECT 1 FROM entitlement_grants e WHERE e.id=grant_id
+       AND e.ends_at>clock_timestamp()+interval '7 days'
+   ) THEN
+     RAISE EXCEPTION 'Existing Kitchen entitlement exceeds maximum pilot window'
+       USING ERRCODE='42501';
+   END IF;
+   IF grant_id IS NULL AND EXISTS (
+     SELECT 1 FROM entitlement_grants e
+     WHERE e.organization_id=org AND e.capability='kitchen.new'
+       AND e.revoked_at IS NULL
+       AND e.starts_at<clock_timestamp()+interval '7 days'
+       AND e.ends_at>clock_timestamp()
+   ) THEN
+     RAISE EXCEPTION 'Overlapping Kitchen entitlement requires review'
+       USING ERRCODE='23505';
+   END IF;
    IF grant_id IS NULL THEN
      grant_id:=gen_random_uuid()::text;
      INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,
