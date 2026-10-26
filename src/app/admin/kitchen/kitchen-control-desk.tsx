@@ -223,6 +223,7 @@ export function KitchenControlDesk({ operatorId, runningSha, onSearch, onStatus,
             <ul className="mt-4">
               <ReadinessLine label="Active stations" passed={status.activeStations > 0} note={String(status.activeStations)} />
               <ReadinessLine label="Assigned staff" passed={status.assignedMembers > 0} note={String(status.assignedMembers)} />
+              <ReadinessLine label="Unstaffed routed stations" passed={status.unmannedStations === 0} note={String(status.unmannedStations)} />
               <ReadinessLine label="Published dishes" passed={status.publishedDishes > 0} note={String(status.publishedDishes)} />
               <ReadinessLine label="Routes missing" passed={status.unroutedDishes === 0} note={String(status.unroutedDishes)} />
               <ReadinessLine label="Online ordering entitlement" passed={status.orderingEntitled} note={status.orderingEntitled ? "Active" : "Missing"} />
