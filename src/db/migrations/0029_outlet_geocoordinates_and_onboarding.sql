@@ -26,9 +26,9 @@ BEGIN
       ADD CONSTRAINT restaurants_longitude_range_chk
       CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0));
   END IF;
-END $;
+END $$;
 
-DO $ BEGIN
+DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='restaurants_onboarding_goal_check') THEN
     ALTER TABLE restaurants ADD CONSTRAINT restaurants_onboarding_goal_check
       CHECK(onboarding_goal IN ('qr_menu','ordering','full_operations'));
@@ -38,7 +38,7 @@ DO $ BEGIN
       CHECK ((operating_hours IS NULL OR jsonb_typeof(operating_hours)='object')
          AND (service_hours IS NULL OR jsonb_typeof(service_hours)='object'));
   END IF;
-END $;
+END $$;
 
 -- Update app_private.provision_organization to persist physical address, geocoordinates,
 -- contact, branding, and optional initial Dine-In table seats.
