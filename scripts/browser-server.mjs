@@ -34,6 +34,12 @@ execFileSync(
 if (process.env.MEDIA_STORAGE === "local" && process.env.MEDIA_ROOT) {
   await mkdir(process.env.MEDIA_ROOT, { recursive: true, mode: 0o770 });
 }
+// Media readiness is strict: prepare the isolated fixture store before starting the web process.
+const fixtureMediaRoot = process.env.MEDIA_ROOT;
+if (!fixtureMediaRoot || !path.isAbsolute(fixtureMediaRoot)) {
+  throw new Error("Browser test requires an absolute MEDIA_ROOT");
+}
+await mkdir(fixtureMediaRoot, { recursive: true });
 await cp("public", ".next/standalone/public", { recursive: true });
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true });
 const tlsKey = await readFile(path.join(dir, "key.pem"));
