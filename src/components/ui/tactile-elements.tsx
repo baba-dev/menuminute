@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useSyncExternalStore } from "react";
-import { Bell, BellOff, ChefHat, Sparkles, UtensilsCrossed } from "lucide-react";
-import { isAudioEnabled, setAudioEnabled, playKitchenBell } from "@/lib/sound-effects";
+import React from "react";
+import { ChefHat, Sparkles, UtensilsCrossed } from "lucide-react";
 
 /**
  * 1. Rubber Ink Stamp
@@ -130,59 +129,6 @@ export function TableWelcome({
         </span>
       )}
     </div>
-  );
-}
-
-const subscribeAudio = (onStoreChange: () => void) => {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener("storage", onStoreChange);
-  return () => window.removeEventListener("storage", onStoreChange);
-};
-
-/**
- * 5. Kitchen Bell Audio Toggle
- * Tasteful brass bell chime switch for the kitchen pass and service counter.
- */
-export function KitchenBellToggle({ className = "" }: { className?: string }) {
-  const enabled = useSyncExternalStore(
-    subscribeAudio,
-    () => isAudioEnabled(),
-    () => false
-  );
-
-  const handleToggle = () => {
-    const next = !enabled;
-    setAudioEnabled(next);
-    if (next) {
-      // Play friendly single test chime on enable
-      setTimeout(() => playKitchenBell(), 50);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
-        enabled
-          ? "border-amber-400 bg-amber-100/80 text-amber-900 shadow-sm dark:border-amber-700 dark:bg-amber-950/70 dark:text-amber-200"
-          : "border-stone-300 bg-stone-100/70 text-stone-600 hover:bg-stone-200/60 dark:border-stone-700 dark:bg-stone-800/60 dark:text-stone-400"
-      } ${className}`}
-      aria-label={enabled ? "Kitchen bell sound is on (click to mute)" : "Kitchen bell sound is muted (click to enable chime)"}
-      title={enabled ? "Kitchen bell chime active" : "Muted — click to enable counter bell chime"}
-    >
-      {enabled ? (
-        <>
-          <Bell size={13} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
-          <span>Bell On</span>
-        </>
-      ) : (
-        <>
-          <BellOff size={13} aria-hidden="true" />
-          <span>Bell Muted</span>
-        </>
-      )}
-    </button>
   );
 }
 

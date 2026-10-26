@@ -6,10 +6,9 @@
  * Muted by default to respect quiet environments and browser autoplay policies.
  */
 
-import { playOrderChime } from "./sound";
-export { playOrderChime };
 
 const AUDIO_STORAGE_KEY = "mm_sound_of_service_enabled";
+export type AudioScope = "orders" | "kitchen" | "tactile";
 
 let audioCtx: AudioContext | null = null;
 
@@ -27,34 +26,22 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
-export function isAudioEnabled(): boolean {
+/** Keep the existing service and kitchen opt-in settings authoritative. */
+export function isAudioEnabled(scope: AudioScope = "tactile"): boolean {
   if (typeof window === "undefined") return false;
   try {
+    if (scope === "orders") return localStorage.getItem("menuminute.orders.sound") === "enabled";
+    if (scope === "kitchen") return localStorage.getItem("menuminute.kitchen.sound") === "true";
     return localStorage.getItem(AUDIO_STORAGE_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-export function setAudioEnabled(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(AUDIO_STORAGE_KEY, enabled ? "true" : "false");
-    window.dispatchEvent(new Event("storage"));
-    if (enabled) {
-      getAudioContext();
-    }
-  } catch {
-    // Ignore storage errors
-  }
+  } catch { return false; }
 }
 
 /**
  * Authentic Brass Kitchen Bell Chime ("Ding!")
  * Dual harmonic sine waves with exponential decay mimicking a physical service counter bell.
  */
-export function playKitchenBell(): void {
-  if (!isAudioEnabled()) return;
+export function playKitchenBell(scope: "orders" | "kitchen" = "orders"): void {
+  if (!isAudioEnabled(scope)) return;
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -139,8 +126,8 @@ export function playTicketTear(): void {
 /**
  * Soft wooden block tap for tactile button press feedback
  */
-export function playWoodenTap(): void {
-  if (!isAudioEnabled()) return;
+export function playWoodenTap(scope: AudioScope = "tactile"): void {
+  if (!isAudioEnabled(scope)) return;
   const ctx = getAudioContext();
   if (!ctx) return;
 

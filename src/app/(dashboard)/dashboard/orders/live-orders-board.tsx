@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { playOrderChime } from "@/lib/sound";
+import { playKitchenBell } from "@/lib/sound-effects";
 import { ServicePulseRail, Ticket, RailEmpty } from "@/components/orders/ticket";
 import type {
   Activity,
@@ -248,7 +248,7 @@ export function LiveOrdersBoard({
             [...pending].some((id) => !previousPending.current?.has(id))
           ) {
             try {
-              playOrderChime();
+              playKitchenBell("orders");
             } catch {
               /* browser audio may be blocked */
             }
@@ -598,7 +598,7 @@ export function LiveOrdersBoard({
                   );
                   if (next) {
                     try {
-                      playOrderChime();
+                      playKitchenBell("orders");
                     } catch {
                       /* audio permission */
                     }
