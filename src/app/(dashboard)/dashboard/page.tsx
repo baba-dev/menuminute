@@ -376,6 +376,7 @@ export default async function DashboardPage() {
               userId={actor.userId}
               outletId={outlet.id}
               organizationId={outlet.organizationId}
+              timezone={outlet.timezone}
             />
           </Suspense>
 
@@ -487,7 +488,7 @@ export default async function DashboardPage() {
         <section className="mm-dashboard-operations-bottom" aria-label="Restaurant operations">
           <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
           {floorTables !== null && (
-            <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />
+            <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} timezone={outlet.timezone} />
           )}
         </section>
       </div>
@@ -499,11 +500,13 @@ async function ServicePulseSection({
   userId,
   outletId,
   organizationId,
+  timezone,
 }: {
   userId: string;
   outletId: string;
   organizationId: string;
+  timezone: string;
 }) {
   const snapshot = await dashboardPulseSnapshot({ userId }, organizationId, outletId);
-  return <DashboardServicePulse key={outletId} outletId={outletId} initial={snapshot} />;
+  return <DashboardServicePulse key={outletId} outletId={outletId} timezone={timezone} initial={snapshot} />;
 }
