@@ -138,17 +138,7 @@ export function DashboardServicePulse({
               alt="" width={130} height={91} />
           </div>
         </div>
-        {snapshot.state !== "restricted" && (
-          <button
-            type="button"
-            className="mm-dashboard-operations-refresh"
-            disabled={refreshing}
-            aria-label="Refresh service activity"
-            onClick={() => void refresh()}
-          >
-            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
-          </button>
-        )}
+
       </div>
       {snapshot.state === "ready" ? (
         <>
@@ -171,9 +161,6 @@ export function DashboardServicePulse({
               </Link>
             ))}
           </div>
-          <div className="mm-dashboard-service-footer">
-            <Link href="/dashboard/orders">View all orders &rarr;</Link>
-          </div>
         </>
       ) : (
         <div className="mm-dashboard-operations-notice" role="status">
@@ -189,6 +176,16 @@ export function DashboardServicePulse({
           </p>
         </div>
       )}
+      <div className="mm-dashboard-service-footer">
+        <Link href="/dashboard/orders">View all orders &rarr;</Link>
+        {snapshot.state !== "restricted" && (
+          <button type="button" className="mm-dashboard-operations-refresh"
+            disabled={refreshing} aria-label="Refresh service activity"
+            onClick={() => void refresh()}>
+            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        )}
+      </div>
     </section>
   );
 }
