@@ -560,7 +560,7 @@ export function PublicMenu({
                               <DiningImage visual={image} />
                               {dish.soldOut && (
                                 <RubberStamp
-                                  text="86'd"
+                                  text="Sold Out"
                                   variant="sold-out"
                                   className="dining-sold !border-solid shadow-sm"
                                 />
