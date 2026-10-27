@@ -1079,7 +1079,10 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
         <Field label="Country code" name="country" defaultValue={outlet?.country ?? "IN"} />
         <Field label="Currency" name="currency" defaultValue={outlet?.currency ?? "INR"} />
       </div>
-      <OrganizationTimezoneField initial={outlet?.timezone ?? "Asia/Kolkata"} existing={Boolean(outlet)} />
+      <OrganizationTimezoneField
+        initial={outlet?.timezone ?? "Asia/Kolkata"}
+        existing={Boolean(outlet)}
+      />
       <label className="oh-field">
         Outlet type
         <select
