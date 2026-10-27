@@ -1720,7 +1720,7 @@
 }
 .atelier-gallery-dish-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 205px), 1fr));
   align-items: stretch;
   gap: 13px;
 }
@@ -1896,4 +1896,16 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* The hero library entry is a button, so it must outrank shared .product button defaults. */
+.product.studio-atelier .atelier-hero-links button.atelier-hero-secondary {
+  border-color: rgb(62 40 28 / 20%);
+  background: rgb(255 253 246 / 80%);
+  color: #42291b;
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-hero-links button.atelier-hero-secondary {
+  border-color: #826347;
+  background: #4b3122;
+  color: #ffebd5;
 }
