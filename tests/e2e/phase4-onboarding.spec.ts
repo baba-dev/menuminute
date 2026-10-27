@@ -58,7 +58,12 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   );
   await page.reload();
   await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
+  // Consent is intentionally not persisted after a reload or a failed attempt.
+  const recoveredLaunch = page.getByRole("button", { name: "Confirm & Create Outlet" });
+  await expect(recoveredLaunch).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
+  await expect(recoveredLaunch).toBeEnabled();
+  await recoveredLaunch.click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
   await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Import your existing menu/ })).toBeVisible();

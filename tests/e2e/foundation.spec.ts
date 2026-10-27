@@ -48,7 +48,12 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await expect(page.getByLabel(/Menu pricing currency/)).toHaveValue("OMR");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
+  // The timezone must be explicitly confirmed before the first outlet can be created.
+  const launch = page.getByRole("button", { name: "Confirm & Create Outlet" });
+  await expect(launch).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
+  await expect(launch).toBeEnabled();
+  await launch.click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
