@@ -13,12 +13,17 @@ function timeLabel(timestamp: string, timezone: string) {
   const time = new Date(timestamp);
   if (Number.isNaN(time.getTime())) return "time unavailable";
   try {
-    return new Intl.DateTimeFormat("en", {
-      timeZone: timezone,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }).format(time) + " (" + timezone + ")";
+    return (
+      new Intl.DateTimeFormat("en", {
+        timeZone: timezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(time) +
+      " (" +
+      timezone +
+      ")"
+    );
   } catch {
     return time.toISOString().slice(11, 16) + " UTC";
   }
@@ -130,21 +135,28 @@ export function DashboardServicePulse({
             <p>What needs attention now · From your live order ledger.</p>
           </div>
           <div className="mm-dashboard-service-art-wrap" aria-hidden="true">
-            <Image className="mm-dashboard-service-art mm-dashboard-service-art--light"
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--light"
               src="/brand/dashboard/editorial/service-dispatch-light.svg"
-              alt="" width={130} height={91} />
-            <Image className="mm-dashboard-service-art mm-dashboard-service-art--dark"
+              alt=""
+              width={130}
+              height={91}
+            />
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--dark"
               src="/brand/dashboard/editorial/service-dispatch-dark.svg"
-              alt="" width={130} height={91} />
+              alt=""
+              width={130}
+              height={91}
+            />
           </div>
         </div>
-
       </div>
       {snapshot.state === "ready" ? (
         <>
           <p className="mm-dashboard-operations-freshness" role="status">
-            Snapshot updated at {timeLabel(snapshot.checkedAt, timezone)} · Refreshes every 30 seconds while
-            this tab is active
+            Snapshot updated at {timeLabel(snapshot.checkedAt, timezone)} · Refreshes every 30
+            seconds while this tab is active
           </p>
           <div className="mm-dashboard-operations-grid">
             {(
@@ -179,9 +191,13 @@ export function DashboardServicePulse({
       <div className="mm-dashboard-service-footer">
         <Link href="/dashboard/orders">View all orders &rarr;</Link>
         {snapshot.state !== "restricted" && (
-          <button type="button" className="mm-dashboard-operations-refresh"
-            disabled={refreshing} aria-label="Refresh service activity"
-            onClick={() => void refresh()}>
+          <button
+            type="button"
+            className="mm-dashboard-operations-refresh"
+            disabled={refreshing}
+            aria-label="Refresh service activity"
+            onClick={() => void refresh()}
+          >
             <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         )}
