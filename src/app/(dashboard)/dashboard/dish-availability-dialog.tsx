@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, ChefHat, LoaderCircle, Search, UtensilsCrossed, X } from "lucide-react";
+import { resolveCurrentStock, type AvailabilityMenuDetail } from "./availability-contract";
 
 export type AvailabilityDish = {
   id: string;
@@ -18,33 +19,6 @@ export type AvailabilityDish = {
   /** A menu schedule or modifier can prevent ordering independently of stock status. */
   hasOtherRestrictions: boolean;
 };
-
-type MenuDetail = {
-  revision: number;
-  canWrite?: boolean;
-  publishedDocument?: {
-    categories?: Array<{
-      items?: Array<{ id: string; soldOut?: boolean }>;
-    }>;
-  } | null;
-  overrides?: Array<{
-    outletId: string;
-    dishId: string;
-    priceMinor: number | null;
-    soldOut: boolean | null;
-  }>;
-};
-
-export function resolveCurrentStock(detail: MenuDetail, dish: AvailabilityDish, outletId: string) {
-  const base = detail.publishedDocument?.categories
-    ?.flatMap((category) => category.items ?? [])
-    .find((item) => item.id === dish.id);
-  if (!base) throw new Error("This dish is no longer in the published menu. Refresh and retry.");
-  const override = detail.overrides?.find(
-    (row) => row.outletId === outletId && row.dishId === dish.id
-  );
-  return { soldOut: override?.soldOut ?? Boolean(base.soldOut), priceMinor: override?.priceMinor ?? null };
-}
 
 /** Changes availability in the published menu without saving or publishing private draft edits. */
 export function DishAvailabilityDialog({
@@ -107,7 +81,7 @@ export function DishAvailabilityDialog({
       const path = "/api/catalog/" + encodeURIComponent(dish.menuId);
       const read = await fetch(path, { cache: "no-store", credentials: "same-origin" });
       if (!read.ok) throw new Error("Could not check the latest dish status. Refresh and retry.");
-      const detail = (await read.json()) as MenuDetail;
+      const detail = (await read.json()) as AvailabilityMenuDetail;
       if (detail.canWrite !== true) throw new Error("Your account cannot change this menu.");
       if (!Number.isInteger(detail.revision)) throw new Error("Menu revision unavailable.");
       const current = resolveCurrentStock(detail, dish, outletId);
