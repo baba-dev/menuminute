@@ -1,7 +1,7 @@
 import { themeScript } from "@/components/menu-product/theme-script";
 import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans, Kalam } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
@@ -10,9 +10,15 @@ import "@/styles/public-dining.css";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-display",
+  variable: "--font-bricolage",
 });
 const bodyFont = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm" });
+const handwritingFont = Kalam({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  display: "swap",
+  variable: "--font-kalam",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -65,7 +71,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased`}>
+      <body
+        className={`${displayFont.variable} ${bodyFont.variable} ${handwritingFont.variable} font-sans antialiased`}
+      >
         <ThemeSync />
         {children}
         <Toaster richColors position="top-right" />

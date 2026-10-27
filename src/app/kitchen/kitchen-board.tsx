@@ -20,7 +20,8 @@ import {
   ArrowRight,
   ClipboardList,
 } from "lucide-react";
-import { playOrderChime } from "@/lib/sound";
+import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
+import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
 import { ThemeControl } from "@/components/menu-product/theme-control";
@@ -93,8 +94,11 @@ function Ticket({
         <button
           type="button"
           disabled={busy}
-          onClick={() => onAction(work, work.status === "queued" ? "start" : "complete")}
-          className="kk-ticket-action"
+          onClick={() => {
+            playWoodenTap("kitchen");
+            onAction(work, work.status === "queued" ? "start" : "complete");
+          }}
+          className="kk-ticket-action btn-ink-press"
         >
           {busy ? (
             <LoaderCircle className="animate-spin" size={17} />
@@ -107,10 +111,12 @@ function Ticket({
         </button>
       )}
       {work.status === "complete" && (
-        <p className="kk-ticket-done">
-          <CheckCheck size={17} /> Completed · Awaiting expeditor
-        </p>
+        <div className="flex items-center justify-between gap-2 border-t border-stone-200 pt-2 dark:border-stone-800">
+          <span className="text-xs text-stone-500">Completed · Awaiting expeditor</span>
+          <RubberStamp text="STATION COMPLETE" variant="complete" />
+        </div>
       )}
+      <div className="ticket-receipt-tear -mx-4 mt-3 -mb-4" aria-hidden="true" />
     </article>
   );
 }
@@ -157,7 +163,7 @@ export function KitchenBoard({
     setConnection("live");
     if (soundRef.current && newcomers.length) {
       try {
-        playOrderChime();
+        playKitchenBell("kitchen");
       } catch {
         /* Browser audio may require a gesture. */
       }
@@ -366,7 +372,7 @@ export function KitchenBoard({
                 soundRef.current = enabled;
                 if (enabled) {
                   try {
-                    playOrderChime();
+                    playKitchenBell("kitchen");
                   } catch {}
                 }
                 setSound(enabled);

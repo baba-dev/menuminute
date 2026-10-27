@@ -3,10 +3,23 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
-import { X, Plus, Minus, Leaf, Check, Flame, ShieldAlert, Sparkles, ChefHat } from "lucide-react";
+import {
+  X,
+  Plus,
+  Minus,
+  Leaf,
+  Check,
+  Clock3,
+  Flame,
+  ShieldAlert,
+  Sparkles,
+  ChefHat,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
 import { canQuickAddCompanion, hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
+import { playWoodenTap } from "@/lib/sound-effects";
+import { RubberStamp } from "@/components/ui/tactile-elements";
 
 export type CustomizerDish = {
   id: string;
@@ -194,6 +207,7 @@ export function ItemCustomizer({
   if (!isOpen || !activeDish) return null;
 
   const handleToggleAddOn = (groupId: string, optionId: string, max: number) => {
+    playWoodenTap();
     setSelectedOptions((prev) => {
       const current = prev[groupId] || [];
       const exists = current.includes(optionId);
@@ -213,6 +227,7 @@ export function ItemCustomizer({
 
   const handleSubmit = () => {
     if (readOnly || activeDish.soldOut || activeDish.open === false) return;
+    playWoodenTap();
     if (activeDish.variants.length > 0 && (!currentVariant || !currentVariant.isAvailable)) {
       setValidationError("Choose an available option.");
       return;
@@ -303,6 +318,22 @@ export function ItemCustomizer({
         </div>
 
         <div className="customizer-body stack">
+          {activeDish.culinary?.chefNote && (
+            <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3.5 dark:border-amber-900/50 dark:bg-amber-950/20">
+              <div className="flex items-center gap-2">
+                <Clock3
+                  size={14}
+                  aria-hidden="true"
+                  className="text-amber-800 dark:text-amber-300"
+                />
+                <RubberStamp text="CHEF'S NOTE" variant="chef-pick" />
+              </div>
+              <p className="font-handwriting mt-2 text-base leading-relaxed text-amber-950 dark:text-amber-200">
+                {activeDish.culinary.chefNote}
+              </p>
+            </div>
+          )}
+
           {activeDish.description && (
             <p className="quiet" style={{ fontSize: "0.95rem" }}>
               {activeDish.description}
@@ -564,6 +595,7 @@ export function ItemCustomizer({
                           checked={isSelected}
                           disabled={!v.isAvailable || readOnly}
                           onChange={() => {
+                            playWoodenTap();
                             setSelectedVariantId(v.id);
                             setValidationError(null);
                           }}
@@ -673,7 +705,10 @@ export function ItemCustomizer({
                 <button
                   type="button"
                   className="action icon-btn"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  onClick={() => {
+                    playWoodenTap();
+                    setQuantity((q) => Math.max(1, q - 1));
+                  }}
                   disabled={quantity <= 1}
                   aria-label="Decrease quantity"
                 >
@@ -685,7 +720,10 @@ export function ItemCustomizer({
                 <button
                   type="button"
                   className="action icon-btn"
-                  onClick={() => setQuantity((q) => Math.min(MAX_ITEM_QUANTITY, q + 1))}
+                  onClick={() => {
+                    playWoodenTap();
+                    setQuantity((q) => Math.min(MAX_ITEM_QUANTITY, q + 1));
+                  }}
                   aria-label="Increase quantity"
                 >
                   <Plus size={16} />

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { ThemeControl } from "@/components/menu-product/theme-control";
-import { CheckCircle, QrCode } from "lucide-react";
+import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
+import "@/components/marketing/brand/brand-nav-logo.css";
+import { CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -75,11 +77,8 @@ export default function PricingPage() {
       <nav className="sticky top-0 z-50 border-b border-stone-200 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="bg-brand-600 flex h-8 w-8 items-center justify-center rounded-lg">
-                <QrCode className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-stone-900">MenuMinute</span>
+            <Link href="/" className="flex items-center gap-2" aria-label="MenuMinute home">
+              <BrandNavLogo />
             </Link>
             <div className="flex items-center gap-3 sm:gap-4">
               <ThemeControl />

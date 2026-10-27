@@ -206,7 +206,7 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await expect(page.getByTestId("service-pulse-error")).toBeVisible();
   await expect(page.getByTestId("service-pulse-error")).toContainText("Reference: test-ref");
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
-  await expect(page.getByText("All caught up.")).toBeVisible();
+  await expect(page.getByText("No tickets awaiting acceptance.")).toBeVisible();
   const cells = page.getByTestId("service-pulse-grid").locator("button");
   await expect(cells).toHaveCount(4);
   await expect(cells.first()).toContainText("—");
@@ -252,7 +252,7 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await page.unroute(railPath);
   await page.getByRole("button", { name: "Retry queue" }).click();
   await expect(page.getByTestId("service-rail-error")).toHaveCount(0);
-  await expect(page.getByText("All caught up.")).toBeVisible();
+  await expect(page.getByText("No tickets awaiting acceptance.")).toBeVisible();
 
   for (const width of [360, 390, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });

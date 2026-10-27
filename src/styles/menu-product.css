@@ -568,6 +568,9 @@ body.font-sans {
 .mm-chef-note {
   background: var(--mm-soft-surface);
   border-left: 4px solid var(--mm-focus);
+  font-family: var(--font-handwriting), var(--font-dm), sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.45;
 }
 .mm-service-card :where(h2, h3),
 .mm-ink-ticket :where(h2, h3) {

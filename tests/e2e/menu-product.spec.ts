@@ -275,7 +275,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   expect(download.status()).toBe(200);
   expect(download.headers()["content-type"]).toBe("image/png");
   await guest.goto(`/m/${q.destinationToken}`);
-  await expect(guest.getByText("Table 4", { exact: true })).toBeVisible();
+  await expect(guest.getByRole("banner").getByText("Table 4", { exact: true })).toBeVisible();
   await patioCard.getByText("Manage QR identity").click();
   await patioCard.getByRole("button", { name: "Revoke QR", exact: true }).click();
   const revokeDialog = page.getByRole("dialog", { name: "Revoke this printed QR?" });

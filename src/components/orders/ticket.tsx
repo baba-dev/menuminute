@@ -12,6 +12,8 @@ import {
 import { formatPrice } from "@/lib/utils";
 import type { MerchantOrder, ServicePulse } from "./types";
 import { actionFor, statusLabels } from "@/modules/orders/presentation";
+import { RubberStamp } from "@/components/ui/tactile-elements";
+import { getOrderStampVariant } from "@/lib/hospitality-order-status";
 
 export function ServicePulseRail({
   pulse,
@@ -55,7 +57,9 @@ export function ServicePulseRail({
   return (
     <section className="sc-pulse" aria-label="Today's service pulse">
       <div className="sc-section-top">
-        <h2>Today&apos;s service pulse</h2>
+        <div className="flex items-center gap-3">
+          <h2>Today&apos;s service pulse</h2>
+        </div>
         <span>
           {state === "stale"
             ? "Counters unavailable · Last verified values"
@@ -117,9 +121,10 @@ export function Ticket({
           <span className="sc-eyebrow">ORDER TICKET</span>
           <h3>#{order.orderNumber}</h3>
         </div>
-        <span className={"sc-status sc-status-" + order.status}>
-          {statusLabels[order.status] ?? order.status}
-        </span>
+        <RubberStamp
+          text={statusLabels[order.status] ?? order.status}
+          variant={getOrderStampVariant(order.status)}
+        />
       </div>
       <div className="sc-ticket-meta">
         <span>
@@ -204,6 +209,7 @@ export function Ticket({
           )}
         {order.kitchenManaged && <Link href="/kitchen">Open Kitchen Pro ↗</Link>}
       </div>
+      <div className="ticket-receipt-tear -mx-4 mt-3 -mb-4" aria-hidden="true" />
     </article>
   );
 }
@@ -219,10 +225,12 @@ export function RailEmpty({
   if (state !== "ready") {
     return (
       <div className="sc-empty" role="status">
-        <strong>{state === "loading" ? "Connecting to service…" : "Queue unavailable"}</strong>
+        <strong>
+          {state === "loading" ? "Listening to service line…" : "Pass queue unavailable"}
+        </strong>
         <p>
           {state === "loading"
-            ? "Waiting for the first verified ticket sync."
+            ? "Connecting to the kitchen rail for real-time ticket activity."
             : "Tickets cannot be confirmed empty until service reconnects."}
         </p>
       </div>
@@ -247,15 +255,15 @@ export function RailEmpty({
         {filtered
           ? "No matching tickets"
           : lane === "incoming"
-            ? "All caught up."
+            ? "No tickets awaiting acceptance."
             : lane === "ready"
-              ? "No handoffs waiting."
-              : "Nothing cooking right now."}
+              ? "No orders ready for handoff."
+              : "No tickets in this view."}
       </strong>
       <p>
         {filtered
-          ? "Try removing a filter."
-          : "New tickets will appear here after synchronization."}
+          ? "Try adjusting your filter to view all stations."
+          : "New matching tickets will appear here when the queue updates."}
       </p>
     </div>
   );
