@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { admin, fixture } from "./helpers";
 import { servicePulse } from "../src/modules/orders/workspace";
 import { availableOutletTimezones } from "../src/modules/timezones/service";
-import { getPool } from "../src/db";
 
 describe("restaurant timezone PostgreSQL safeguards", () => {
   it("offers only mutually supported zones and rejects unsupported SQL updates", async () => {
@@ -42,8 +41,10 @@ describe("restaurant timezone PostgreSQL safeguards", () => {
     });
     const pulse = await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id);
     expect(pulse.completedToday).toBe(1);
-    const original = await getPool().query<{ business_date: string }>(
-      "select business_date::text from orders where id=$1", [orderId]
+    const original = await admin(async (_, pool) =>
+      pool.query<{ business_date: string }>(
+        "select business_date::text from orders where id=$1", [orderId]
+      )
     );
     expect(original.rows[0]?.business_date).not.toBe(
       new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())

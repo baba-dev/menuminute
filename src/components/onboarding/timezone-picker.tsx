@@ -15,6 +15,7 @@ export function OutletTimezonePicker({
   name?: string;
 }) {
   const searchId = useId();
+  const selectId = useId();
   const [options, setOptions] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [failure, setFailure] = useState("");
@@ -42,13 +43,13 @@ export function OutletTimezonePicker({
         if (available.includes(canonical) && canonical !== value) onChange(canonical);
         setFailure("");
       } catch {
-        if (!controller.signal.aborted) setFailure("Cannot verify operating timezones. Retry before saving.");
+        if (!controller.signal.aborted) setFailure("Cannot verify operating timezones. Reload before saving.");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     })();
     return () => controller.abort();
-    // Load only on mount. The registry does not change with the selected zone.
+    // Load once per mounted editor. The registry does not change with the selected zone.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -64,22 +65,22 @@ export function OutletTimezonePicker({
 
   return (
     <div className="wizard-field-group">
-      <label className="wizard-label" htmlFor={id}>Operating timezone *</label>
+      <label className="wizard-label" htmlFor={selectId}>Operating timezone *</label>
       <label className="wizard-label" htmlFor={searchId}>Search by city or region</label>
       <input id={searchId} type="search" className="wizard-select" value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder="Search city or region" autoComplete="off" />
-      <select id={id} name={name} className="wizard-select" value={supported ? canonical : ""}
+      <select id={selectId} name={name} className="wizard-select oh-control" value={supported ? canonical : ""}
         onChange={(event) => onChange(event.target.value)}
         disabled={loading || Boolean(failure)}
         required aria-invalid={!loading && !supported}
-        aria-describedby={id + "-help"}>
+        aria-describedby={selectId + "-help"}>
         <option value="" disabled>{loading ? "Verifying timezones…" : "Choose a supported timezone"}</option>
         {filtered.map((timezone) => (
           <option key={timezone} value={timezone}>{timezone.replaceAll("_", " ")}</option>
         ))}
       </select>
-      <p id={id + "-help"} className="wizard-counter" role="status">
+      <p id={selectId + "-help"} className="wizard-counter" role="status">
         {failure || (!loading && !supported
           ? "Your saved timezone needs confirmation. Choose an available city or region."
           : now && supported ? "Restaurant local time: " + outletLocalClock(canonical, now)

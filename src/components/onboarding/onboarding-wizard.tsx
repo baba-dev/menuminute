@@ -158,6 +158,8 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       }
 
       if (data.draft && Object.keys(data.draft).length > 0) {
+        // Restored drafts must not be overwritten by a country suggestion.
+        if (typeof data.draft.timezone === "string") timezoneTouched.current = true;
         setDraft((prev) => ({
           ...initialWizardDraft,
           ...data.draft,

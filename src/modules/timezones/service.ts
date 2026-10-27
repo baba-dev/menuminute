@@ -1,4 +1,3 @@
-import "server-only";
 import { sql } from "drizzle-orm";
 import type { Transaction } from "@/db";
 import { getPool } from "@/db";
