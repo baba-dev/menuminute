@@ -309,6 +309,18 @@ describe("server-only provider hub", () => {
     });
     expect(fake).toHaveBeenCalledTimes(2);
   });
+  it("retains only safe HTTP status metadata on a provider 400 response", async () => {
+    const badRequest = vi.fn(async () =>
+      new Response("upstream rejection details must not be persisted", { status: 400 })
+    ) as unknown as typeof fetch;
+    const hub = createProviderHub(configured(), badRequest);
+    await expect(hub.infer({ messages: user })).rejects.toMatchObject({
+      code: "provider_error",
+      httpStatus: 400,
+    });
+    expect(badRequest).toHaveBeenCalledTimes(1);
+  });
+
   it("validates prompt size, tools and pre-aborted signals before any network call", async () => {
     const fake = vi.fn() as unknown as typeof fetch;
     const hub = createProviderHub(configured(), fake);
