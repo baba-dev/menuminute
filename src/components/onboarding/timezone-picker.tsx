@@ -34,8 +34,13 @@ export function OutletTimezonePicker({
         });
         if (!response.ok) throw new Error("Unable to verify available timezones");
         const body: unknown = await response.json();
-        if (!body || typeof body !== "object" || !("options" in body) || !Array.isArray(body.options)
-          || !body.options.every((entry: unknown) => typeof entry === "string")) {
+        if (
+          !body ||
+          typeof body !== "object" ||
+          !("options" in body) ||
+          !Array.isArray(body.options) ||
+          !body.options.every((entry: unknown) => typeof entry === "string")
+        ) {
           throw new Error("Invalid timezone registry response");
         }
         const available = body.options as string[];
@@ -43,7 +48,8 @@ export function OutletTimezonePicker({
         if (available.includes(canonical) && canonical !== value) onChange(canonical);
         setFailure("");
       } catch {
-        if (!controller.signal.aborted) setFailure("Cannot verify operating timezones. Reload before saving.");
+        if (!controller.signal.aborted)
+          setFailure("Cannot verify operating timezones. Reload before saving.");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -65,26 +71,48 @@ export function OutletTimezonePicker({
 
   return (
     <div className="wizard-field-group">
-      <label className="wizard-label" htmlFor={selectId}>Operating timezone *</label>
-      <label className="wizard-label" htmlFor={searchId}>Search by city or region</label>
-      <input id={searchId} type="search" className="wizard-select" value={search}
+      <label className="wizard-label" htmlFor={selectId}>
+        Operating timezone *
+      </label>
+      <label className="wizard-label" htmlFor={searchId}>
+        Search by city or region
+      </label>
+      <input
+        id={searchId}
+        type="search"
+        className="wizard-select"
+        value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search city or region" autoComplete="off" />
-      <select id={selectId} name={name} className="wizard-select oh-control" value={supported ? canonical : ""}
+        placeholder="Search city or region"
+        autoComplete="off"
+      />
+      <select
+        id={selectId}
+        name={name}
+        className="wizard-select oh-control"
+        value={supported ? canonical : ""}
         onChange={(event) => onChange(event.target.value)}
         disabled={loading || Boolean(failure)}
-        required aria-invalid={!loading && !supported}
-        aria-describedby={selectId + "-help"}>
-        <option value="" disabled>{loading ? "Verifying timezones…" : "Choose a supported timezone"}</option>
+        required
+        aria-invalid={!loading && !supported}
+        aria-describedby={selectId + "-help"}
+      >
+        <option value="" disabled>
+          {loading ? "Verifying timezones…" : "Choose a supported timezone"}
+        </option>
         {filtered.map((timezone) => (
-          <option key={timezone} value={timezone}>{timezone.replaceAll("_", " ")}</option>
+          <option key={timezone} value={timezone}>
+            {timezone.replaceAll("_", " ")}
+          </option>
         ))}
       </select>
       <p id={selectId + "-help"} className="wizard-counter" role="status">
-        {failure || (!loading && !supported
-          ? "Your saved timezone needs confirmation. Choose an available city or region."
-          : now && supported ? "Restaurant local time: " + outletLocalClock(canonical, now)
-          : "Time is verified against the operating database.")}
+        {failure ||
+          (!loading && !supported
+            ? "Your saved timezone needs confirmation. Choose an available city or region."
+            : now && supported
+              ? "Restaurant local time: " + outletLocalClock(canonical, now)
+              : "Time is verified against the operating database.")}
       </p>
     </div>
   );

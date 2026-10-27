@@ -298,8 +298,7 @@ export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLoca
             onChange("country", country);
             if (currencyFor[country]) onChange("currency", currencyFor[country]);
             // Do not silently replace a timezone the operator already selected.
-            if (timezoneSuggestions[country])
-              onTimezoneSuggestion(timezoneSuggestions[country]);
+            if (timezoneSuggestions[country]) onTimezoneSuggestion(timezoneSuggestions[country]);
           }}
         >
           {regions.map((r) => (

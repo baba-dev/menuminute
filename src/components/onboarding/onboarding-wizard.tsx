@@ -377,16 +377,23 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
         {/* Step Views */}
         {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
-        {currentStep === 1 && <StepLocation draft={draft} onChange={updateDraft}
-          onTimezoneSuggestion={(timezone) => {
-            if (!timezoneTouched.current) {
-              draftRevision.current += 1;
-              setDraft((prev) => ({ ...prev, timezone }));
-            }
-          }} />}
+        {currentStep === 1 && (
+          <StepLocation
+            draft={draft}
+            onChange={updateDraft}
+            onTimezoneSuggestion={(timezone) => {
+              if (!timezoneTouched.current) {
+                draftRevision.current += 1;
+                setDraft((prev) => ({ ...prev, timezone }));
+              }
+            }}
+          />
+        )}
         {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
         {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
-        {currentStep === 4 && <StepLaunch key={draft.timezone} draft={draft} busy={busy} onLaunch={handleLaunch} />}
+        {currentStep === 4 && (
+          <StepLaunch key={draft.timezone} draft={draft} busy={busy} onLaunch={handleLaunch} />
+        )}
 
         {/* Error and Status Banner */}
         {errorMessage && (

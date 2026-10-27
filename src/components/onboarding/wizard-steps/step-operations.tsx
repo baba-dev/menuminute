@@ -95,7 +95,11 @@ export function StepOperations({
             Independent of MenuMinute subscription billing currency.
           </span>
         </div>
-        <OutletTimezonePicker id="wz-timezone" value={draft.timezone} onChange={(timezone) => onChange("timezone", timezone)} />
+        <OutletTimezonePicker
+          id="wz-timezone"
+          value={draft.timezone}
+          onChange={(timezone) => onChange("timezone", timezone)}
+        />
       </div>
       <BusinessHoursEditor
         value={draft.operatingHours}

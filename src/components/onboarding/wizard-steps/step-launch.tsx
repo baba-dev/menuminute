@@ -111,12 +111,22 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
       </div>
       <div className="wizard-content">
         <label className="wizard-label">
-          <input type="checkbox" checked={confirmedTimezone}
-            onChange={(event) => setConfirmedTimezone(event.target.checked)} />{" "}
+          <input
+            type="checkbox"
+            checked={confirmedTimezone}
+            onChange={(event) => setConfirmedTimezone(event.target.checked)}
+          />{" "}
           I confirm the operating timezone ({draft.timezone}) matches my restaurant location.
         </label>
-        {localNow && <p className="wizard-counter">Restaurant local time: {outletLocalClock(draft.timezone, localNow)}</p>}
-        <p className="wizard-counter">This setting controls schedules and daily order reporting. It can be changed later without rewriting historical orders.</p>
+        {localNow && (
+          <p className="wizard-counter">
+            Restaurant local time: {outletLocalClock(draft.timezone, localNow)}
+          </p>
+        )}
+        <p className="wizard-counter">
+          This setting controls schedules and daily order reporting. It can be changed later without
+          rewriting historical orders.
+        </p>
       </div>
       {celebrating && (
         <p role="status">

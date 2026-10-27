@@ -1121,18 +1121,25 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
   );
 }
 
-
 function OrganizationTimezoneField({ initial }: { initial: string }) {
   const [timezone, setTimezone] = useState(initial);
   const changed = canonicalOutletTimezone(timezone) !== canonicalOutletTimezone(initial);
   return (
     <div className="oh-field">
-      <OutletTimezonePicker id="org-outlet-timezone" name="timezone" value={timezone} onChange={setTimezone} />
-      <small>Changing this setting affects future order and service-day calculations, not historical business dates.</small>
+      <OutletTimezonePicker
+        id="org-outlet-timezone"
+        name="timezone"
+        value={timezone}
+        onChange={setTimezone}
+      />
+      <small>
+        Changing this setting affects future order and service-day calculations, not historical
+        business dates.
+      </small>
       {changed && (
         <label className="oh-field">
-          <input name="confirmTimezoneChange" type="checkbox" required />
-          I understand future service schedules and reporting use the new timezone; historical orders stay unchanged.
+          <input name="confirmTimezoneChange" type="checkbox" required />I understand future service
+          schedules and reporting use the new timezone; historical orders stay unchanged.
         </label>
       )}
     </div>

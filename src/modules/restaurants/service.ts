@@ -60,9 +60,11 @@ export const createRestaurantSchema = z.object({
     .optional()
     .nullable(),
   currency: z.string().refine((v) => currencyExponent(v) !== null, "Unsupported currency"),
-  timezone: z.string().trim().transform(canonicalOutletTimezone).refine(
-    isRuntimeTimezone, "Unsupported IANA restaurant timezone"
-  ),
+  timezone: z
+    .string()
+    .trim()
+    .transform(canonicalOutletTimezone)
+    .refine(isRuntimeTimezone, "Unsupported IANA restaurant timezone"),
   outletType: z.enum(["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"]),
   pickupLeadMinutes: z.number().int().min(0).max(240).optional(),
   pickupSlotMinutes: z.number().int().min(5).max(120).optional(),

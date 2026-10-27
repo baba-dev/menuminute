@@ -6,7 +6,10 @@ export async function GET(request: Request) {
   try {
     await requestActor(request);
     const options = await availableOutletTimezones();
-    return NextResponse.json({ options }, { headers: { "cache-control": "private, no-store", vary: "Cookie" } });
+    return NextResponse.json(
+      { options },
+      { headers: { "cache-control": "private, no-store", vary: "Cookie" } }
+    );
   } catch (error) {
     return errorResponse(error, request);
   }

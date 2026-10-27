@@ -17,7 +17,8 @@ describe("restaurant timezone PostgreSQL safeguards", () => {
         pool.query("update restaurants set timezone=$1 where id=$2", ["Mars/Olympus", f.outlet.id])
       ).rejects.toMatchObject({ code: "22023" });
       const row = await pool.query<{ timezone: string }>(
-        "select timezone from restaurants where id=$1", [f.outlet.id]
+        "select timezone from restaurants where id=$1",
+        [f.outlet.id]
       );
       expect(row.rows[0]?.timezone).toBe("Asia/Kolkata");
     });
@@ -42,12 +43,17 @@ describe("restaurant timezone PostgreSQL safeguards", () => {
     const pulse = await servicePulse(f.actor, f.outlet.organizationId, f.outlet.id);
     expect(pulse.completedToday).toBe(1);
     const original = await admin(async (_, pool) =>
-      pool.query<{ business_date: string }>(
-        "select business_date::text from orders where id=$1", [orderId]
-      )
+      pool.query<{ business_date: string }>("select business_date::text from orders where id=$1", [
+        orderId,
+      ])
     );
     expect(original.rows[0]?.business_date).not.toBe(
-      new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date())
     );
   });
 });
