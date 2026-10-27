@@ -42,9 +42,10 @@ describe("merchant dashboard published-source summary", () => {
       { archived: false, revision: 6, publishedRevision: 2, hasUnpublishedChanges: false },
     ];
     expect(dashboardSummary(rows, codes, { menus: [] }).draftCount).toBe(0);
-    expect(dashboardSummary(
-      [{ ...rows[0]!, hasUnpublishedChanges: true }], codes, { menus: [] }
-    ).draftCount).toBe(1);
+    expect(
+      dashboardSummary([{ ...rows[0]!, hasUnpublishedChanges: true }], codes, { menus: [] })
+        .draftCount
+    ).toBe(1);
   });
 
   it("counts only nonarchived content of immutable public releases", () => {
