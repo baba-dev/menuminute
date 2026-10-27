@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,22 +34,17 @@ export function DishAvailabilityDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [dishes, setDishes] = useState(items);
+  const [confirmedChanges, setConfirmedChanges] = useState<Record<string, boolean>>({});
+  const dishes = useMemo(() => items?.map((dish) => ({
+    ...dish,
+    soldOut: confirmedChanges[dish.menuId + ":" + dish.id] ?? dish.soldOut,
+  })) ?? null, [items, confirmedChanges]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "available" | "sold-out">("all");
   const [menu, setMenu] = useState("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-
-  useEffect(() => setDishes(items), [items]);
-  useEffect(() => {
-    setQuery("");
-    setFilter("all");
-    setMenu("all");
-    setError("");
-    setNotice("");
-  }, [outletId]);
 
   const menus = useMemo(() => {
     const unique = new Map((dishes ?? []).map((dish) => [dish.menuId, dish.menuName]));
@@ -123,12 +118,7 @@ export function DishAvailabilityDialog({
             : "Availability could not be saved. Your menu was not changed."
         );
       }
-      setDishes(
-        (previous) =>
-          previous?.map((item) =>
-            item.menuId === dish.menuId && item.id === dish.id ? { ...item, soldOut } : item
-          ) ?? null
-      );
+      setConfirmedChanges((previous) => ({ ...previous, [key]: soldOut }));
       setNotice(dish.name + (soldOut ? " marked sold out." : " restored as available."));
       router.refresh();
     } catch (cause) {
@@ -145,6 +135,10 @@ export function DishAvailabilityDialog({
         if (!next && busy) return;
         setOpen(next);
         if (next) {
+          setConfirmedChanges({});
+          setQuery("");
+          setFilter("all");
+          setMenu("all");
           setError("");
           setNotice("");
           router.refresh();
