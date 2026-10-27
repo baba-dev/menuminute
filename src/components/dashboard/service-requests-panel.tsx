@@ -106,9 +106,9 @@ export function ServiceRequestsPanel({
         <div className="mm-ops-empty">
           <div className="mm-ops-art-wrap" aria-hidden="true">
             <Image className="mm-ops-art mm-ops-art--light"
-              src="/brand/dashboard/editorial/guest-requests-empty-light.svg" alt="" width={155} height={116} />
+              src="/brand/dashboard/editorial/service-dispatch-light.svg" alt="" width={155} height={116} />
             <Image className="mm-ops-art mm-ops-art--dark"
-              src="/brand/dashboard/editorial/guest-requests-empty-dark.svg" alt="" width={155} height={116} />
+              src="/brand/dashboard/editorial/service-dispatch-dark.svg" alt="" width={155} height={116} />
           </div>
           <p>No outstanding guest requests. New requests appear here for acknowledgement and resolution.</p>
         </div>
