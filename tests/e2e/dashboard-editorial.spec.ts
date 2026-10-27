@@ -106,12 +106,20 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
   await expect(dialog.getByRole("button", { name: /Restore Citrus salad/ })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Dish Availability" }).click();
-  await expect(page.getByRole("dialog", { name: "Dish Availability" })
-    .getByRole("button", { name: /Restore Citrus salad/ })).toBeVisible();
-  await page.getByRole("dialog", { name: "Dish Availability" })
-    .getByRole("button", { name: /Restore Citrus salad/ }).click();
-  await expect(page.getByRole("dialog", { name: "Dish Availability" })
-    .getByRole("button", { name: /Mark sold out Citrus salad/ })).toBeVisible();
+  await expect(
+    page
+      .getByRole("dialog", { name: "Dish Availability" })
+      .getByRole("button", { name: /Restore Citrus salad/ })
+  ).toBeVisible();
+  await page
+    .getByRole("dialog", { name: "Dish Availability" })
+    .getByRole("button", { name: /Restore Citrus salad/ })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", { name: "Dish Availability" })
+      .getByRole("button", { name: /Mark sold out Citrus salad/ })
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "About Published menus" }).click();
   await expect(page.getByRole("dialog", { name: "About Published menus" })).toContainText(
