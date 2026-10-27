@@ -51,3 +51,10 @@ Orders without a recorded completion event do not become fabricated completions.
 - Verify the dashboard pulse, Service Counter, POS, and historic-order snapshots
   with an actual authorized outlet; a nonexistent outlet returns no rows.
 - Never relax RLS or substitute UTC to conceal an unsupported saved zone.
+
+### Database-write contract
+
+Migration-owned stored timezone writes are constrained to identifiers from
+`pg_timezone_names` (or `UTC`) containing a region delimiter and passing
+an actual `AT TIME ZONE` conversion. Administrative SQL must not silently
+introduce abbreviations like `PST` or browser-supported aliases.

@@ -24,6 +24,23 @@ describe("restaurant timezone PostgreSQL safeguards", () => {
     });
   });
 
+  it("calculates local-day UTC boundaries correctly through DST changes", async () => {
+    await admin(async (_, pool) => {
+      const result = await pool.query<{ fall_seconds: number; spring_seconds: number }>(
+        `select
+          extract(epoch from
+            ('2026-11-02'::timestamp at time zone 'America/New_York') -
+            ('2026-11-01'::timestamp at time zone 'America/New_York')
+          )::int as fall_seconds,
+          extract(epoch from
+            ('2026-03-09'::timestamp at time zone 'America/New_York') -
+            ('2026-03-08'::timestamp at time zone 'America/New_York')
+          )::int as spring_seconds`
+      );
+      expect(result.rows[0]).toMatchObject({ fall_seconds: 90000, spring_seconds: 82800 });
+    });
+  });
+
   it("counts terminal transitions today even when the order was created on an earlier business date", async () => {
     const f = await fixture();
     const orderId = "ord-" + crypto.randomUUID();

@@ -30,6 +30,10 @@ RETURNS trigger LANGUAGE plpgsql
 SET search_path = pg_catalog, public, pg_temp AS $$
 BEGIN
   IF NEW.timezone IS NULL OR length(NEW.timezone) > 100
+    OR (NEW.timezone <> 'UTC' AND position('/' in NEW.timezone) = 0)
+    OR NOT EXISTS (
+      SELECT 1 FROM pg_catalog.pg_timezone_names WHERE name = NEW.timezone
+    )
     OR NEW.timezone IN ('Asia/Calcutta', 'Europe/Kiev', 'US/Eastern', 'US/Pacific')
   THEN
     RAISE EXCEPTION 'Unsupported or legacy outlet timezone' USING ERRCODE = '22023';
