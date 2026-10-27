@@ -183,11 +183,35 @@ describe("server-only provider hub", () => {
     expect(requests[1]).toMatchObject({
       messages: [
         { role: "user" },
-        { role: "assistant", tool_calls: [{ function: { name: "orders_summary" } }] },
+        { role: "assistant", content: "", tool_calls: [{ function: { name: "orders_summary" } }] },
         { role: "tool", tool_call_id: "call_cf_1" },
       ],
     });
     expect(fake).toHaveBeenCalledTimes(2);
+  });
+
+  it("retains NVIDIA null content for a tool-call replay while normalizing Cloudflare only", async () => {
+    const payloads: Array<Record<string, unknown>> = [];
+    const fake = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      payloads.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return completion();
+    }) as unknown as typeof fetch;
+    const hub = createProviderHub(configured(), fake);
+    await hub.infer({
+      provider: "nvidia",
+      messages: [
+        ...user,
+        {
+          role: "assistant",
+          content: null,
+          toolCalls: [{ id: "call_1", name: "orders.summary", arguments: {} }],
+        },
+        { role: "tool", toolCallId: "call_1", content: '{"count":2}' },
+      ],
+    });
+    const messages = payloads[0]?.messages as Array<Record<string, unknown>>;
+    expect(messages[1]?.content).toBeNull();
+    expect(messages[1]?.tool_calls).toBeDefined();
   });
 
   it("rejects Cloudflare alias collisions before a call and rejects unapproved returned aliases", async () => {
@@ -285,6 +309,18 @@ describe("server-only provider hub", () => {
     });
     expect(fake).toHaveBeenCalledTimes(2);
   });
+  it("retains only safe HTTP status metadata on a provider 400 response", async () => {
+    const badRequest = vi.fn(
+      async () => new Response("upstream rejection details must not be persisted", { status: 400 })
+    ) as unknown as typeof fetch;
+    const hub = createProviderHub(configured(), badRequest);
+    await expect(hub.infer({ messages: user })).rejects.toMatchObject({
+      code: "provider_error",
+      httpStatus: 400,
+    });
+    expect(badRequest).toHaveBeenCalledTimes(1);
+  });
+
   it("validates prompt size, tools and pre-aborted signals before any network call", async () => {
     const fake = vi.fn() as unknown as typeof fetch;
     const hub = createProviderHub(configured(), fake);

@@ -57,7 +57,22 @@ const jsonHeaders = { "content-type": "application/json" } as const;
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, { ...init, cache: "no-store", credentials: "same-origin" });
   const body: unknown = await response.json();
-  if (!response.ok) {
+  // The turns API intentionally returns HTTP 503 for a terminal, durably
+  // recorded failed inference. Treat that response as a turn result rather
+  // than as an uncertain network error. Other non-2xx responses still throw.
+  const recordedFailure =
+    response.status === 503 &&
+    path.startsWith("/api/assistant/conversations/") &&
+    path.endsWith("/turns") &&
+    typeof body === "object" &&
+    body !== null &&
+    "status" in body &&
+    body.status === "failed" &&
+    "turnId" in body &&
+    typeof body.turnId === "string" &&
+    "errorCode" in body &&
+    typeof body.errorCode === "string";
+  if (!response.ok && !recordedFailure) {
     const message =
       typeof body === "object" &&
       body !== null &&

@@ -185,6 +185,32 @@ test("explicit action acknowledgement, authoritative persistence and reload reco
   );
   await expect(page.getByRole("button", { name: "Confirm change" })).toHaveCount(0);
 });
+test("a recorded failed inference is not presented as an uncertain network outcome", async ({
+  page,
+}) => {
+  const f = await seed();
+  await signIn(page, f);
+  await page.route("**/api/assistant/conversations/*/turns", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        turnId: crypto.randomUUID(),
+        status: "failed",
+        errorCode: "provider_error",
+      }),
+    })
+  );
+  await page.getByRole("button", { name: "Open Ember assistant" }).click();
+  const dialog = page.getByRole("dialog", { name: /Ember/ });
+  await dialog.getByPlaceholder("Ask about this outlet…").fill("How is my queue?");
+  await dialog.getByRole("button", { name: "Send message" }).click();
+  await expect(
+    dialog.getByText("Ember could not verify the answer. No business change occurred.")
+  ).toBeVisible();
+  await expect(dialog.getByText(/request may have been recorded/)).toHaveCount(0);
+});
+
 test("switching outlets resets the assistant and keeps history scoped", async ({ page }) => {
   const f = await seed();
   await signIn(page, f);

@@ -32,6 +32,18 @@ const systemPrompt = [
 ].join(" ");
 type Evidence = { tool: string; source: string; capturedAt: string; data: unknown };
 type Infer = ProviderHub["infer"];
+
+/** Inspect only bounded SQLSTATE codes; never log SQL parameters or raw provider payloads. */
+function safeSqlstate(error: unknown): string | undefined {
+  let current: unknown = error;
+  for (let depth = 0; depth < 4; depth++) {
+    if (!current || typeof current !== "object") return undefined;
+    const code = "code" in current ? current.code : undefined;
+    if (typeof code === "string" && /^[A-Z0-9]{5}$/.test(code)) return code;
+    current = "cause" in current ? current.cause : undefined;
+  }
+  return undefined;
+}
 export type AssistantRun = {
   turnId: string;
   status: "completed" | "failed";
@@ -59,10 +71,13 @@ export async function runReadOnlyTurn(
   enabled = env.AI_ASSISTANT_READ_ONLY_ENABLED
 ): Promise<AssistantRun> {
   if (!enabled) throw new IntelligenceError("disabled");
+  let stage = "scope";
   try {
     await assertAssistantScope(scope);
+    stage = "authorize_tools";
     const definitions = await authorizedToolDefinitions(scope);
     if (!definitions.length) throw new ValidationError("No authorized read-only tools");
+    stage = "select_provider";
     const model = preferred(hub);
     const provider = model.provider as ProviderId;
     const messages: InferenceMessage[] = [
@@ -71,9 +86,11 @@ export async function runReadOnlyTurn(
     ];
     const invoke = async (round: 1 | 2, capability: "tools" | "text") => {
       // The DB has a hard UNIQUE(turn_id, round) constraint; replays never resend.
+      stage = "reserve_round_" + round;
       const attemptId = await reserveAttempt(scope, turn, round, provider, model.model);
       let result: InferenceResult;
       try {
+        stage = "provider_round_" + round;
         result = await (hub.infer as Infer)({
           provider,
           capability,
@@ -83,13 +100,17 @@ export async function runReadOnlyTurn(
           maxOutputTokens: round === 1 ? 600 : 1024,
         });
       } catch (error) {
+        stage = "settle_failed_round_" + round;
         await settleAttempt(scope, attemptId, null);
+        stage = "provider_round_" + round;
         throw error;
       }
+      stage = "settle_round_" + round;
       await settleAttempt(scope, attemptId, result);
       return result;
     };
     const first = await invoke(1, "tools");
+    stage = "validate_round_1";
     if (
       first.finishReason !== "tool_calls" ||
       first.toolCalls.length < 1 ||
@@ -105,6 +126,7 @@ export async function runReadOnlyTurn(
       seen.add(call.name);
       // Each domain service revalidates current membership, permissions and outlet scope.
       await assertAssistantScope(scope);
+      stage = "execute_read_tool";
       const result = await execute(context, call.name, call.arguments);
       const item: Evidence = { tool: call.name, ...result, capturedAt: new Date().toISOString() };
       const serialized = JSON.stringify(item);
@@ -113,8 +135,10 @@ export async function runReadOnlyTurn(
       messages.push({ role: "tool", toolCallId: call.id, content: serialized });
     }
     const final = await invoke(2, "text");
+    stage = "validate_round_2";
     if (final.finishReason !== "stop" || !final.content?.trim() || final.toolCalls.length)
       throw new ValidationError("Assistant final response incomplete");
+    stage = "persist_answer";
     await finishTurn(scope, turn.id, final.content, evidence);
     return { turnId: turn.id, status: "completed", answer: final.content, evidence };
   } catch (error) {
@@ -124,6 +148,13 @@ export async function runReadOnlyTurn(
         : error instanceof ValidationError
           ? "invalid_response"
           : "processing_failed";
+    console.error("[ember] Read-only turn failed", {
+      stage,
+      code,
+      kind: error instanceof Error ? error.name : "unknown",
+      providerStatus: error instanceof IntelligenceError ? error.httpStatus : undefined,
+      sqlstate: safeSqlstate(error),
+    });
     // A revoked actor may lose the ability to settle their own stored turn. That
     // intentionally fails closed, leaving a non-retryable processing receipt.
     try {
