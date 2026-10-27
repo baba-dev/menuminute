@@ -361,7 +361,8 @@ export function StudioMenuGallery({
                 </>
               ) : (
                 <p className="atelier-gallery-error" role="alert">
-                  This menu&apos;s saved document could not be read. Reopen it in Studio to investigate.
+                  This menu&apos;s saved document could not be read. Reopen it in Studio to
+                  investigate.
                 </p>
               )}
             </>
