@@ -39,6 +39,9 @@ import { The86Board } from "@/components/dashboard/eight-six-board";
 import { getServicePeriodText, outletHour } from "@/lib/service-period";
 import { withOutlet } from "@/modules/tenancy/service";
 import { ForbiddenError } from "@/lib/errors";
+import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
+import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
+import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -201,6 +204,9 @@ export default async function DashboardPage() {
       ];
 
   const servicePeriod = getServicePeriodText(outletHour(outlet.timezone));
+  const floorTables = await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(
+    () => null
+  );
   const canManageAvailability = publicProjection
     ? await withOutlet(actor, outlet.id, "menu.write", async () => true).catch((error: unknown) => {
         if (error instanceof ForbiddenError) return false;
@@ -280,6 +286,10 @@ export default async function DashboardPage() {
           canManage={canManageAvailability}
           menuStudioHref="/dashboard/menu"
         />
+        <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
+        {floorTables !== null && (
+          <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />
+        )}
         <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
           <div className="mm-dashboard-section-heading">
             <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
