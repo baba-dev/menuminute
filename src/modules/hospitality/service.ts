@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { getPool } from "@/db";
-import { withActor, withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
+import { withActor, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { NotFoundError } from "@/lib/errors";
 
 export const serviceSignalSchema = z.object({

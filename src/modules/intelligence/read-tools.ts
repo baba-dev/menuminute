@@ -4,10 +4,12 @@ import { servicePulse, listServiceHistory, historyQuerySchema } from "@/modules/
 import { kitchenSnapshot } from "@/modules/kitchen/service";
 import { kitchenPulse } from "@/modules/kitchen/presentation";
 import { getRestaurantById } from "@/modules/restaurants/service";
+import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
+import { posWorkspace } from "@/modules/pos/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { NotFoundError } from "@/lib/errors";
-import { withActor, type Actor } from "@/modules/tenancy/service";
+import { withActor, withOutletRead, type Actor } from "@/modules/tenancy/service";
 
 /** Tool descriptions are authored server-side. No SQL, URLs or write tools exist here. */
 export type ToolContext = { actor: Actor; organizationId: string; outletId: string };
@@ -137,6 +139,39 @@ export const readTools = [
       };
     },
   },
+  {
+    name:"tables.pulse",
+    description:"Summarize orders-derived active tickets and unpaid balances across dining tables for the selected outlet. This is not a physical occupancy count.",
+    parameters:{type:"object",properties:{},additionalProperties:false},
+    schema:empty,
+    run:async(context:ToolContext)=>{
+      const rows=await getOutletFloorMatrix(context.actor,context.organizationId,context.outletId);
+      return {source:"hospitality.floorMatrix",data:{
+        totalTables:rows.length,
+        tablesWithActiveOrders:rows.filter(x=>x.activeOrders>0).length,
+        tablesWithUnpaidOrders:rows.filter(x=>x.unpaidOrders>0).length,
+        truncated:rows.length===200,
+      }};
+    },
+  },
+  {
+    name:"finance.pulse",
+    description:"Read the draft POS register's recent order snapshots for the authorized outlet. These are not verified revenue, tender breakdowns or cash drawer balances.",
+    parameters:{type:"object",properties:{},additionalProperties:false},
+    schema:empty,
+    run:async(context:ToolContext)=>{
+      await withOutletRead(context.actor,context.outletId,"billing.manage",async()=>true);
+      const workspace=await posWorkspace(context.actor,context.organizationId,context.outletId);
+      return {source:"pos.draftRegister",data:{
+        enabled:workspace.context.enabled,
+        currency:workspace.context.currency,
+        recentDrafts:workspace.recent.length,
+        eligibleUnattachedTickets:workspace.attachable.length,
+        revenueVerified:false,
+        totalsOmitted:"Draft sale snapshots are not payments or settled revenue",
+      }};
+    },
+  },
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
 export function toolDefinitions() {
@@ -146,15 +181,18 @@ export function toolDefinitions() {
 export async function authorizedToolDefinitions(context: ToolContext) {
   const access = await withActor(context.actor, async (tx) => {
     await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
-    const response = await tx.execute<{ menu: boolean; orders: boolean }>(
+    const response = await tx.execute<{ menu: boolean; orders: boolean; billing: boolean }>(
       sql`select app_private.can_outlet(${context.outletId},'menu.read') as menu,
-        app_private.can_outlet(${context.outletId},'orders.read') as orders`
+        app_private.can_outlet(${context.outletId},'orders.read') as orders,
+        app_private.can_outlet(${context.outletId},'billing.manage') as billing`
     );
     return response.rows[0];
   });
-  return toolDefinitions().filter((definition) =>
-    definition.name === "menu.summary" ? access?.menu === true : access?.orders === true
-  );
+  return toolDefinitions().filter((definition) => {
+    if (definition.name === "menu.summary") return access?.menu === true;
+    if (definition.name === "finance.pulse") return access?.billing === true;
+    return access?.orders === true;
+  });
 }
 export async function executeReadTool(context: ToolContext, name: string, untrusted: unknown) {
   // Deliberately dispatch individually so TypeScript and Zod validate each handler.
@@ -170,6 +208,12 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "menu.summary":
       empty.parse(untrusted);
       return readTools[3].run(context);
+    case "tables.pulse":
+      empty.parse(untrusted);
+      return readTools[4].run(context);
+    case "finance.pulse":
+      empty.parse(untrusted);
+      return readTools[5].run(context);
     default:
       throw new Error("Unknown read-only tool");
   }

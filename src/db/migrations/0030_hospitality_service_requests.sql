@@ -1,4 +1,7 @@
--- Hospitality operations. Forward-only, after 0029. Retain every existing onboarding
+-- Hospitality operations. Forward-only, after 0029.
+CREATE INDEX IF NOT EXISTS orders_outlet_table_activity
+ ON orders(restaurant_id,table_id,created_at DESC)
+ WHERE table_id IS NOT NULL; Retain every existing onboarding
 -- and Kitchen Pro function; mutations remain SECURITY DEFINER and narrowly scoped.
 CREATE TABLE guest_service_requests (
  id text PRIMARY KEY,
