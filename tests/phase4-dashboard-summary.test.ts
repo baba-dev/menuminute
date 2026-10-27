@@ -37,6 +37,16 @@ describe("merchant dashboard published-source summary", () => {
     });
   });
 
+  it("does not treat stock-only overrides as unpublished menu edits", () => {
+    const rows = [
+      { archived: false, revision: 6, publishedRevision: 2, hasUnpublishedChanges: false },
+    ];
+    expect(dashboardSummary(rows, codes, { menus: [] }).draftCount).toBe(0);
+    expect(dashboardSummary(
+      [{ ...rows[0]!, hasUnpublishedChanges: true }], codes, { menus: [] }
+    ).draftCount).toBe(1);
+  });
+
   it("counts only nonarchived content of immutable public releases", () => {
     const summary = dashboardSummary(
       [
