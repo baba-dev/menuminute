@@ -198,11 +198,14 @@ export function DishAvailabilityDialog({
           <div className="mm-availability-scroll">
             {!dishes?.length ? (
               <div className="mm-availability-empty">
-                <picture>
-                  <source media="(prefers-color-scheme: dark)" srcSet="/brand/dashboard/editorial/dish-availability-empty-dark.svg" />
-                  <img src="/brand/dashboard/editorial/dish-availability-empty-light.svg" alt=""
-                    width={240} height={180} onError={(event) => { event.currentTarget.style.display = "none"; }} />
-                </picture>
+                <span className="mm-availability-empty-art" aria-hidden="true">
+                  <Image className="mm-availability-empty-art--light"
+                    src="/brand/dashboard/editorial/dish-availability-empty-light.svg" alt=""
+                    width={240} height={180} />
+                  <Image className="mm-availability-empty-art--dark"
+                    src="/brand/dashboard/editorial/dish-availability-empty-dark.svg" alt=""
+                    width={240} height={180} />
+                </span>
                 <ChefHat size={26} aria-hidden="true" />
                 <h3>No published dishes yet</h3>
                 <p>Publish your first menu to manage what guests can order.</p>
