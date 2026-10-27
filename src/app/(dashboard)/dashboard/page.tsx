@@ -312,6 +312,11 @@ export default async function DashboardPage() {
                 <span className="mm-dashboard-eyebrow">Your next move</span>
                 <h2 id="mm-priorities-title">Today’s priorities</h2>
                 <p>A few quick actions to keep {outlet.name} fresh, accurate and guest-ready.</p>
+                <p className="mm-dashboard-chef-note">
+                  Chef’s note · {stats.hasPublicMenu
+                    ? stats.publishedDishCount + " published dishes. Check availability before service."
+                    : "Your first guest-facing menu is waiting to be published."}
+                </p>
               </div>
               <Image
                 src={artwork + "priorities-illustration.webp"}
@@ -487,9 +492,7 @@ export default async function DashboardPage() {
         </div>
         <section className="mm-dashboard-operations-bottom" aria-label="Restaurant operations">
           <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
-          {floorTables !== null && (
-            <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} timezone={outlet.timezone} />
-          )}
+          <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} timezone={outlet.timezone} />
         </section>
       </div>
     </div>
