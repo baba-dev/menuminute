@@ -80,13 +80,13 @@ export function StudioMenuGallery({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
-  const [activeId, setActiveId] = useState(currentMenuId);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(48);
   const [pending, setPending] = useState(false);
   const library = useMemo(() => libraryMenus(menus), [menus]);
-  const selected = library.find((menu) => menu.id === activeId) ?? library[0];
+  const selected = library.find((menu) => menu.id === (activeId ?? currentMenuId)) ?? library[0];
   const displayed = library.filter((menu) =>
     menu.title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
   );
@@ -100,14 +100,6 @@ export function StudioMenuGallery({
     category === "all" ? dishes : dishes.filter((item) => item.categoryId === category);
 
   useEffect(() => {
-    if (!open) return;
-    setActiveId(currentMenuId || library[0]?.id || "");
-    setCategory("all");
-    setVisibleCount(48);
-    setSearch("");
-  }, [open, currentMenuId, library]);
-
-  useEffect(() => {
     const node = dialog.current;
     if (!node) return;
     if (open && !node.open) {
@@ -119,11 +111,19 @@ export function StudioMenuGallery({
     }
   }, [open]);
 
+  function closeLibrary() {
+    setActiveId(null);
+    setCategory("all");
+    setVisibleCount(48);
+    setSearch("");
+    onClose();
+  }
+
   async function perform(task: () => Promise<boolean>) {
     if (busy || pending) return;
     setPending(true);
     try {
-      if (await task()) onClose();
+      if (await task()) closeLibrary();
     } finally {
       setPending(false);
     }
@@ -145,7 +145,7 @@ export function StudioMenuGallery({
         if (inactive) event.preventDefault();
       }}
       onClose={() => {
-        onClose();
+        closeLibrary();
         returnFocus.current?.focus();
       }}
     >
@@ -171,7 +171,7 @@ export function StudioMenuGallery({
             className="atelier-gallery-close"
             aria-label="Close your menus"
             disabled={inactive}
-            onClick={onClose}
+            onClick={closeLibrary}
           >
             <X size={20} aria-hidden="true" />
           </button>
@@ -361,7 +361,7 @@ export function StudioMenuGallery({
                 </>
               ) : (
                 <p className="atelier-gallery-error" role="alert">
-                  This menu's saved document could not be read. Reopen it in Studio to investigate.
+                  This menu&apos;s saved document could not be read. Reopen it in Studio to investigate.
                 </p>
               )}
             </>
@@ -370,7 +370,7 @@ export function StudioMenuGallery({
               <BookOpen size={34} aria-hidden="true" />
               <strong>Your menu library is empty.</strong>
               <p className="atelier-supporting-text">
-                Create a menu to start building your restaurant's catalogue.
+                Create a menu to start building your restaurant&apos;s catalogue.
               </p>
             </div>
           )}
