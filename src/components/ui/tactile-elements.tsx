@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChefHat, Sparkles, UtensilsCrossed } from "lucide-react";
+import { ChefHat, Sparkles, UtensilsCrossed, X } from "lucide-react";
 
 /**
  * 1. Rubber Ink Stamp
@@ -22,7 +22,7 @@ export function RubberStamp({
       aria-label={`Status: ${text}`}
     >
       {variant === "chef-pick" && <Sparkles size={11} aria-hidden="true" />}
-      {variant === "sold-out" && <span aria-hidden="true">✕</span>}
+      {variant === "sold-out" && <X size={11} aria-hidden="true" />}
       {text}
     </span>
   );
