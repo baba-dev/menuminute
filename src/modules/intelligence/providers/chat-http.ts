@@ -84,7 +84,10 @@ function toWireMessage(message: InferenceRequest["messages"][number], model: Pro
   if (message.role === "assistant")
     return {
       role: "assistant",
-      content: message.content,
+      // Several Cloudflare Workers AI model schemas reject null assistant content
+      // on the follow-up request, even when tool_calls are present. Preserve the
+      // OpenAI-compatible null value for NVIDIA; Cloudflare receives an empty string.
+      content: model.provider === "cloudflare" && message.content === null ? "" : message.content,
       ...(message.toolCalls.length
         ? {
             tool_calls: message.toolCalls.map((call) => ({
@@ -101,11 +104,11 @@ function toWireMessage(message: InferenceRequest["messages"][number], model: Pro
   return { role: message.role, content: message.content };
 }
 function translateStatus(status: number): IntelligenceError {
-  if (status === 401 || status === 403) return new IntelligenceError("authentication");
-  if (status === 402) return new IntelligenceError("quota_exhausted");
-  if (status === 429) return new IntelligenceError("rate_limited");
-  if (status >= 500) return new IntelligenceError("provider_unavailable");
-  return new IntelligenceError("provider_error");
+  if (status === 401 || status === 403) return new IntelligenceError("authentication", status);
+  if (status === 402) return new IntelligenceError("quota_exhausted", status);
+  if (status === 429) return new IntelligenceError("rate_limited", status);
+  if (status >= 500) return new IntelligenceError("provider_unavailable", status);
+  return new IntelligenceError("provider_error", status);
 }
 async function boundedJson(response: Response): Promise<unknown> {
   if (!response.body) throw new IntelligenceError("invalid_response");
