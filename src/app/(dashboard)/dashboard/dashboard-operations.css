@@ -480,3 +480,16 @@
   .mm-dashboard-ops-panel .mm-ops-head .mm-ops-art-wrap { max-width: 77px; }
   .mm-dashboard-ops-panel .mm-ops-head .mm-ops-art { width: 77px; }
 }
+
+.mm-availability-empty-art { display: block; max-width: 100%; }
+.mm-availability-empty-art--dark { display: none !important; }
+:root[data-theme="dark"] .mm-availability-empty-art--light { display: none !important; }
+:root[data-theme="dark"] .mm-availability-empty-art--dark { display: block !important; }
+.mm-dashboard-service-heading { flex: 1 1 auto; }
+.mm-dashboard-operations .mm-dashboard-service-footer { align-items: center; }
+.mm-dashboard-operations .mm-dashboard-service-footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
