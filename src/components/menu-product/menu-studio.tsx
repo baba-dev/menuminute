@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowUp, ArrowDown, X } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, X } from "lucide-react";
 import { artworkById } from "@/modules/menu-product/dish-artwork";
 import { covers, type CoverPreset } from "@/modules/menu-product/public-presentation";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
