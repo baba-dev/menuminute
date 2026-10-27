@@ -205,7 +205,9 @@ test("a recorded failed inference is not presented as an uncertain network outco
   const dialog = page.getByRole("dialog", { name: /Ember/ });
   await dialog.getByPlaceholder("Ask about this outlet…").fill("How is my queue?");
   await dialog.getByRole("button", { name: "Send message" }).click();
-  await expect(dialog.getByText("Ember could not verify the answer. No business change occurred.")).toBeVisible();
+  await expect(
+    dialog.getByText("Ember could not verify the answer. No business change occurred.")
+  ).toBeVisible();
   await expect(dialog.getByText(/request may have been recorded/)).toHaveCount(0);
 });
 
