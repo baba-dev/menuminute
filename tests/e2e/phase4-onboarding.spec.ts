@@ -34,6 +34,8 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await expect(
     page.getByRole("heading", { name: "How will your restaurant operate?" })
   ).toBeVisible();
+  await expect(page.getByLabel("Operating timezone *")).toHaveValue("Asia/Kolkata");
+  await expect(page.getByText(/Restaurant local time:/)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
@@ -49,6 +51,7 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
       });
     return route.continue();
   });
+  await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
   await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
   await expect(page.locator('.wizard-error-banner[role="alert"]')).toContainText(
     "Temporary provisioning error"
