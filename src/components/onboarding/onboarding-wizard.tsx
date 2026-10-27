@@ -11,6 +11,7 @@ import { StepOperations } from "./wizard-steps/step-operations";
 import { StepContactTables } from "./wizard-steps/step-contact-tables";
 import { StepLaunch } from "./wizard-steps/step-launch";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
+import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
 import "./onboarding-wizard.css";
 
 const STEPS: { id: WizardStepId; label: string; number: number; subtitle: string }[] = [
@@ -74,7 +75,7 @@ function validateStep(step: number, draft: WizardDraft): string | null {
     if (!Intl.supportedValuesOf("currency").includes(draft.currency))
       return "Choose a supported currency.";
     try {
-      new Intl.DateTimeFormat("en", { timeZone: draft.timezone });
+      new Intl.DateTimeFormat("en", { timeZone: canonicalOutletTimezone(draft.timezone) });
     } catch {
       return "Choose a valid operating timezone.";
     }
@@ -129,6 +130,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const draftRevision = useRef(0);
+  const timezoneTouched = useRef(false);
   const reconciliation = useRef(false);
 
   // Reconcile and restore server-owned draft
@@ -234,6 +236,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
     draftRevision.current += 1;
     setPersisted(false);
     setErrorMessage("");
+    if (key === "timezone") timezoneTouched.current = true;
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -372,7 +375,13 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
         {/* Step Views */}
         {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
-        {currentStep === 1 && <StepLocation draft={draft} onChange={updateDraft} />}
+        {currentStep === 1 && <StepLocation draft={draft} onChange={updateDraft}
+          onTimezoneSuggestion={(timezone) => {
+            if (!timezoneTouched.current) {
+              draftRevision.current += 1;
+              setDraft((prev) => ({ ...prev, timezone }));
+            }
+          }} />}
         {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
         {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
         {currentStep === 4 && <StepLaunch draft={draft} busy={busy} onLaunch={handleLaunch} />}
