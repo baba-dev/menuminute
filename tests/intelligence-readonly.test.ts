@@ -126,6 +126,8 @@ describe("Ember scoped persistence and read-only execution", () => {
       "orders.history",
       "kitchen.pulse",
       "menu.summary",
+      "tables.pulse",
+      "finance.pulse",
     ]);
     const convo = await createConversation(scope, uuid());
     const start = await beginTurn(scope, convo.id, {
@@ -204,12 +206,14 @@ describe("Ember scoped persistence and read-only execution", () => {
       ]);
     });
   });
-  it("exposes only four read tools and rejects oversized request bodies", async () => {
+  it("exposes only the approved read tools and rejects oversized request bodies", async () => {
     expect(toolDefinitions().map((t) => t.name)).toEqual([
       "orders.pulse",
       "orders.history",
       "kitchen.pulse",
       "menu.summary",
+      "tables.pulse",
+      "finance.pulse",
     ]);
     expect(toolDefinitions().every((t) => !/(write|delete|sql|fetch|refund)/.test(t.name))).toBe(
       true
