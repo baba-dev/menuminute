@@ -13,6 +13,7 @@ import {
   domainProjections,
 } from "@/db/schema";
 import { withActor, type Actor } from "@/modules/tenancy/service";
+import { verifyOutletTimezone } from "@/modules/timezones/service";
 import { createRestaurantSchema } from "@/modules/restaurants/service";
 import { AppError, ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
 const id = z.string().min(1).max(128);
@@ -111,6 +112,12 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
   id.parse(organizationId);
   try {
     return await withActor(actor, async (tx) => {
+      if (
+        (input.command.action === "outlet.create" || input.command.action === "outlet.update") &&
+        input.command.data.timezone
+      ) {
+        await verifyOutletTimezone(tx, input.command.data.timezone);
+      }
       const r = await tx.execute<{ result: Record<string, string | number> }>(
         sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(input.command.data)}::jsonb,${input.key},${input.expectedVersion}) as result`
       );

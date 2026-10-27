@@ -30,15 +30,15 @@ export async function availableOutletTimezones(): Promise<string[]> {
 
 export async function verifyOutletTimezone(tx: Transaction, timezone: string): Promise<string> {
   const canonical = canonicalOutletTimezone(timezone);
-  if (!isRuntimeTimezone(canonical)) {
-    throw new ValidationError("Select a supported restaurant timezone.");
+  if (!isRuntimeTimezone(canonical) || !(await availableOutletTimezones()).includes(canonical)) {
+    throw new ValidationError("Select a timezone supported by this restaurant server.");
   }
   try {
     // This tests actual conversion, not just the browser's or ICU's list.
     await tx.execute(sql`select (clock_timestamp() at time zone ${canonical}) as outlet_local_time`);
-  } catch (cause) {
+  } catch {
     // Never allow driver SQL or parameters to escape into a validation response.
-    if (cause) throw new ValidationError("This timezone is not supported by the database. Select another city/region.");
+    throw new ValidationError("This timezone is not supported by the database. Select another city/region.");
   }
   return canonical;
 }

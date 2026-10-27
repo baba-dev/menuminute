@@ -10,6 +10,8 @@ import { getPool } from "@/db";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { generateMenuQrCode } from "@/modules/qr/service";
 import { currencyExponent } from "@/lib/money";
+import { canonicalOutletTimezone, isRuntimeTimezone } from "@/lib/outlet-timezones";
+import { verifyOutletTimezone } from "@/modules/timezones/service";
 export const createRestaurantSchema = z.object({
   fulfillmentModes: z
     .array(z.enum(["dine_in", "pickup"]))
@@ -58,14 +60,9 @@ export const createRestaurantSchema = z.object({
     .optional()
     .nullable(),
   currency: z.string().refine((v) => currencyExponent(v) !== null, "Unsupported currency"),
-  timezone: z.string().refine((v) => {
-    try {
-      new Intl.DateTimeFormat("en", { timeZone: v });
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Invalid IANA timezone"),
+  timezone: z.string().trim().transform(canonicalOutletTimezone).refine(
+    isRuntimeTimezone, "Unsupported IANA restaurant timezone"
+  ),
   outletType: z.enum(["restaurant", "cafe", "takeout", "cloud_kitchen", "hotel", "mixed"]),
   pickupLeadMinutes: z.number().int().min(0).max(240).optional(),
   pickupSlotMinutes: z.number().int().min(5).max(120).optional(),
@@ -122,6 +119,7 @@ export async function createRestaurant(
     .slice(0, 32);
   const qr = await generateMenuQrCode(publicId);
   await withActor({ userId: ownerId }, async (tx) => {
+    await verifyOutletTimezone(tx, input.timezone);
     await tx.execute(
       sql`select app_private.provision_organization(${id},${publicId},${JSON.stringify({ ...input, svgData: qr.svgData })}::jsonb)`
     );
