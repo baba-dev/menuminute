@@ -107,7 +107,7 @@ export type FailureCode =
   | "timeout"
   | "cancelled";
 export class IntelligenceError extends Error {
-  constructor(readonly code: FailureCode) {
+  constructor(readonly code: FailureCode, readonly httpStatus?: number) {
     super(code);
     this.name = "IntelligenceError";
   }
