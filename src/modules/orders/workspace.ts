@@ -170,20 +170,20 @@ export async function servicePulse(actor: Actor, organizationId: string, outletI
       count(*) filter (where o.status in ('accepted','preparing'))::int as preparing,
       count(*) filter (where o.status = 'ready')::int as ready,
       count(*) filter (where o.status in ('pending','accepted','preparing','ready'))::int as active,
-      count(*) filter (where o.status in ('served','collected')
-        and completed.completed_at >=
-          ((now() at time zone r.timezone)::date::timestamp at time zone r.timezone)
-        and completed.completed_at <
-          (((now() at time zone r.timezone)::date + 1)::timestamp at time zone r.timezone)
-      )::int as "completedToday"
+      (select count(distinct e.order_id)::int
+        from order_status_events e
+        join orders terminal on terminal.id = e.order_id
+          and terminal.restaurant_id = r.id
+        where e.restaurant_id = r.id
+          and e.to_status in ('served','collected')
+          and terminal.status in ('served','collected')
+          and e.created_at >=
+            ((now() at time zone r.timezone)::date::timestamp at time zone r.timezone)
+          and e.created_at <
+            (((now() at time zone r.timezone)::date + 1)::timestamp at time zone r.timezone)
+      ) as "completedToday"
       from restaurants r
       left join orders o on o.restaurant_id = r.id
-      left join lateral (
-        select min(e.created_at) as completed_at
-        from order_status_events e
-        where e.restaurant_id = r.id and e.order_id = o.id
-          and e.to_status in ('served','collected')
-      ) completed on true
       where r.id = ${outletId} group by r.id`);
     return result.rows[0] ?? { pending: 0, preparing: 0, ready: 0, active: 0, completedToday: 0 };
   });

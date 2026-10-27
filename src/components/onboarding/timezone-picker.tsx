@@ -45,7 +45,6 @@ export function OutletTimezonePicker({
         }
         const available = body.options as string[];
         setOptions(available);
-        if (available.includes(canonical) && canonical !== value) onChange(canonical);
         setFailure("");
       } catch {
         if (!controller.signal.aborted)
@@ -55,9 +54,11 @@ export function OutletTimezonePicker({
       }
     })();
     return () => controller.abort();
-    // Load once per mounted editor. The registry does not change with the selected zone.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    // Normalize legacy drafts using the latest selection, never the mount-time value.
+    if (canonical !== value && options.includes(canonical)) onChange(canonical);
+  }, [canonical, value, options, onChange]);
   useEffect(() => {
     const update = () => setNow(new Date());
     update();
