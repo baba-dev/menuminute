@@ -6,6 +6,8 @@ import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { KitchenBoard } from "./kitchen-board";
+import { KitchenAvailabilityPanel } from "./kitchen-availability-panel";
+import { kitchenAvailableDishes } from "@/modules/hospitality/service";
 import { ForbiddenError } from "@/lib/errors";
 import { env } from "@/lib/config/env";
 import { assertAssistantScope } from "@/modules/intelligence/store";
@@ -60,6 +62,7 @@ export default async function KitchenPage() {
     for (const [id, name] of seen) if (!ambiguous.has(id)) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
+  const availability = await kitchenAvailableDishes(actor,outlet.organizationId,outlet.id).catch(() => []);
   let showEmber = false;
   if (env.AI_ASSISTANT_READ_ONLY_ENABLED) {
     try {
@@ -75,6 +78,7 @@ export default async function KitchenPage() {
   }
   return (
     <>
+      <KitchenAvailabilityPanel dishes={availability} organizationId={outlet.organizationId} outletId={outlet.id} />
       <KitchenBoard
         organizationId={outlet.organizationId}
         outletId={outlet.id}
