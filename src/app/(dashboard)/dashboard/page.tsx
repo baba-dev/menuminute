@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ChefHat,
   FilePenLine,
-  ExternalLink,
   Globe2,
   Layers3,
   Plus,
@@ -34,8 +33,10 @@ import {
 import { DashboardTooltip } from "./dashboard-tooltip";
 import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 import { DashboardServicePulse } from "./dashboard-service-pulse";
-import { ChefStickyNote, MiseEnPlaceEmpty } from "@/components/ui/tactile-elements";
-import { The86Board } from "@/components/dashboard/eight-six-board";
+import { MiseEnPlaceEmpty } from "@/components/ui/tactile-elements";
+import { DishAvailabilityDialog } from "./dish-availability-dialog";
+import { dishImageSrc } from "@/modules/menu-product/dish-artwork";
+import "./dashboard-operations.css";
 import { getServicePeriodText, outletHour } from "@/lib/service-period";
 import { withOutlet } from "@/modules/tenancy/service";
 import { ForbiddenError } from "@/lib/errors";
@@ -99,10 +100,6 @@ export default async function DashboardPage() {
   });
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
-  const publicHref =
-    stats.hasPublicMenu && primaryQr
-      ? "/m/" + encodeURIComponent(primaryQr.destinationToken)
-      : null;
   const kpis = [
     {
       label: "Published menus",
@@ -225,9 +222,17 @@ export default async function DashboardPage() {
                 menuId: menu.id,
                 name: dish.name,
                 category: cat.name,
+                menuName: menu.document.name,
+                imageSrc: dishImageSrc(dish),
                 soldOut:
                   menu.overrides.find((override) => override.dishId === dish.id)?.soldOut ??
                   dish.soldOut,
+                hasOtherRestrictions:
+                  Boolean(dish.schedule) ||
+                  (dish.variants.length > 0 && dish.variants.every((v) => !v.isAvailable)) ||
+                  dish.addOnGroups.some((group) =>
+                    group.options.filter((option) => option.isAvailable).length < group.min
+                  ),
               }))
           )
       )
@@ -257,39 +262,18 @@ export default async function DashboardPage() {
             >
               Open Menu Studio <ArrowRight size={17} aria-hidden="true" />
             </Link>
-            {publicHref && (
-              <Link
-                href={publicHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mm-dashboard-button mm-dashboard-button--secondary"
-              >
-                View public menu <ExternalLink size={15} aria-hidden="true" />
-              </Link>
-            )}
+            <DishAvailabilityDialog
+              key={outlet.id}
+              outletId={outlet.id}
+              outletName={outlet.name}
+              items={availabilityItems}
+              canManage={canManageAvailability}
+            />
           </div>
         </div>
       </header>
 
       <div className="mm-dashboard-body">
-        <ChefStickyNote
-          author="Chef's Service Note"
-          text={
-            stats.hasPublicMenu
-              ? `Your published menu includes ${stats.publishedDishCount} dishes. Keep dish availability up to date so guests see accurate options.`
-              : "Welcome to the pass! Start by adding your signature recipes in Menu Studio, then print permanent QR codes for your dining room tables."
-          }
-        />
-        <The86Board
-          outletId={outlet.id}
-          items={availabilityItems}
-          canManage={canManageAvailability}
-          menuStudioHref="/dashboard/menu"
-        />
-        <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
-        {floorTables !== null && (
-          <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />
-        )}
         <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
           <div className="mm-dashboard-section-heading">
             <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
@@ -500,6 +484,12 @@ export default async function DashboardPage() {
             </div>
           </section>
         </div>
+        <section className="mm-dashboard-operations-bottom" aria-label="Restaurant operations">
+          <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
+          {floorTables !== null && (
+            <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />
+          )}
+        </section>
       </div>
     </div>
   );
