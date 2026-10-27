@@ -18,12 +18,21 @@ function menu(name: string, id: string, options?: { archived?: boolean; publishe
         id: "mains",
         name: "Main Dish",
         items: [
-          { id: id + "-dish", name: "Paneer Tikka", description: "Spiced paneer", priceMinor: 3100 },
+          {
+            id: id + "-dish",
+            name: "Paneer Tikka",
+            description: "Spiced paneer",
+            priceMinor: 3100,
+          },
           { id: id + "-removed", name: "Hidden dish", priceMinor: 4000, archived: true },
         ],
       },
-      { id: "removed-category", name: "Archived section", archived: true,
-        items: [{ id: "old-dish", name: "Do not show", priceMinor: 100 }] },
+      {
+        id: "removed-category",
+        name: "Archived section",
+        archived: true,
+        items: [{ id: "old-dish", name: "Do not show", priceMinor: 100 }],
+      },
     ],
   });
   return {
@@ -76,7 +85,10 @@ describe("Menu Library gallery and selector", () => {
   });
 
   it("keeps recoverable menus out of the active selector unless selected", () => {
-    const entries = [menu("Our menu", "active"), menu("Deleted menu", "archived", { archived: true })];
+    const entries = [
+      menu("Our menu", "active"),
+      menu("Deleted menu", "archived", { archived: true }),
+    ];
     const active = renderToStaticMarkup(
       <StudioMenuSelector
         menus={entries}

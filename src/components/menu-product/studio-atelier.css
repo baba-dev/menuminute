@@ -62,7 +62,7 @@
   position: relative;
   max-width: 600px;
 }
- .product.studio-atelier .atelier-hero h1 {
+.product.studio-atelier .atelier-hero h1 {
   margin: 11px 0 0;
   color: inherit;
   font:
@@ -95,7 +95,7 @@
   flex-wrap: wrap;
   margin-top: 20px;
 }
- .atelier-hero-links :is(a, button) {
+.atelier-hero-links :is(a, button) {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -140,7 +140,7 @@
 :root[data-theme="dark"] .atelier-hero-credit {
   color: #f0c7a8;
 }
- .atelier-body {
+.atelier-body {
   container-type: inline-size;
   width: min(100%, 1590px);
   margin-inline: auto;
@@ -681,7 +681,7 @@
 .product.studio-atelier .atelier-preview-blank p {
   font-size: 12px;
 }
- .product.studio-atelier dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) {
+.product.studio-atelier dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) {
   max-width: min(490px, calc(100vw - 24px));
   background: var(--paper);
   border: 1px solid var(--atelier-line);
@@ -1377,7 +1377,12 @@
   inset: 0;
   content: "";
   pointer-events: none;
-  background: linear-gradient(90deg, rgb(255 249 241 / 98%) 0%, rgb(255 249 241 / 88%) 45%, rgb(255 249 241 / 20%) 100%);
+  background: linear-gradient(
+    90deg,
+    rgb(255 249 241 / 98%) 0%,
+    rgb(255 249 241 / 88%) 45%,
+    rgb(255 249 241 / 20%) 100%
+  );
 }
 .product.studio-atelier .atelier-preview-cover > * {
   position: relative;
@@ -1397,7 +1402,12 @@
   color: #fff2df;
 }
 :root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover::before {
-  background: linear-gradient(90deg, rgb(24 17 13 / 97%) 0%, rgb(31 21 15 / 91%) 48%, rgb(31 21 15 / 34%) 100%);
+  background: linear-gradient(
+    90deg,
+    rgb(24 17 13 / 97%) 0%,
+    rgb(31 21 15 / 91%) 48%,
+    rgb(31 21 15 / 34%) 100%
+  );
 }
 :root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover h2 {
   color: #fff2df;
@@ -1484,7 +1494,9 @@
 }
 .product.studio-atelier .atelier-gallery-header h2 {
   margin: 4px 0 6px;
-  font: 800 clamp(26px, 3vw, 36px)/1.12 var(--font-display), sans-serif;
+  font:
+    800 clamp(26px, 3vw, 36px)/1.12 var(--font-display),
+    sans-serif;
   letter-spacing: -0.035em;
 }
 .atelier-gallery-heading-actions {
@@ -1622,7 +1634,9 @@
 }
 .product.studio-atelier .atelier-gallery-heading-copy h3 {
   margin: 4px 0 6px;
-  font: 800 clamp(22px, 3vw, 32px)/1.15 var(--font-display), sans-serif;
+  font:
+    800 clamp(22px, 3vw, 32px)/1.15 var(--font-display),
+    sans-serif;
   overflow-wrap: anywhere;
 }
 .atelier-gallery-actions {
@@ -1737,7 +1751,7 @@
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .07em;
+  letter-spacing: 0.07em;
 }
 .product.studio-atelier .atelier-gallery-dish h4 {
   margin: 0;

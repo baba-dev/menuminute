@@ -96,9 +96,8 @@ export function StudioMenuGallery({
       .filter((dish) => !dish.archived)
       .map((dish) => ({ categoryId: section.id, category: section.name, dish }))
   );
-  const filteredDishes = category === "all"
-    ? dishes
-    : dishes.filter((item) => item.categoryId === category);
+  const filteredDishes =
+    category === "all" ? dishes : dishes.filter((item) => item.categoryId === category);
 
   useEffect(() => {
     if (!open) return;
@@ -112,9 +111,8 @@ export function StudioMenuGallery({
     const node = dialog.current;
     if (!node) return;
     if (open && !node.open) {
-      returnFocus.current = document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      returnFocus.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       node.showModal();
     } else if (!open && node.open) {
       node.close();
@@ -180,7 +178,11 @@ export function StudioMenuGallery({
         </div>
       </header>
 
-      {error && <p className="atelier-gallery-error" role="alert">{error}</p>}
+      {error && (
+        <p className="atelier-gallery-error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="atelier-gallery-layout">
         <nav className="atelier-gallery-rail" aria-label="Menus in this outlet">
           <label className="atelier-gallery-search">
@@ -212,7 +214,9 @@ export function StudioMenuGallery({
                 <ChevronRight size={15} aria-hidden="true" />
               </button>
             ))}
-            {!displayed.length && <p className="atelier-supporting-text">No menus match your search.</p>}
+            {!displayed.length && (
+              <p className="atelier-supporting-text">No menus match your search.</p>
+            )}
           </div>
         </nav>
 
@@ -224,31 +228,53 @@ export function StudioMenuGallery({
                   <span className="atelier-eyebrow">SELECTED MENU</span>
                   <h3>{selected.title}</h3>
                   <p className="atelier-supporting-text">
-                    {menuLibraryStatus(selected)} · {sections.length} sections · {dishes.length} dishes
+                    {menuLibraryStatus(selected)} · {sections.length} sections · {dishes.length}{" "}
+                    dishes
                     {selected.id === currentMenuId ? " · Open in Studio" : ""}
                   </p>
                 </div>
                 <details className="atelier-gallery-actions">
                   <summary>Menu actions</summary>
                   <div className="atelier-gallery-actions-list">
-                    <button type="button" disabled={inactive || selected.archived} onClick={() => void perform(() => onOpenMenu(selected.id))}>
+                    <button
+                      type="button"
+                      disabled={inactive || selected.archived}
+                      onClick={() => void perform(() => onOpenMenu(selected.id))}
+                    >
                       <BookOpen size={16} aria-hidden="true" /> Open in Studio
                     </button>
-                    <button type="button" disabled={inactive || selected.archived} onClick={() => void perform(() => onPreviewMenu(selected.id))}>
+                    <button
+                      type="button"
+                      disabled={inactive || selected.archived}
+                      onClick={() => void perform(() => onPreviewMenu(selected.id))}
+                    >
                       <Eye size={16} aria-hidden="true" /> Preview draft
                     </button>
                     {selected.archived ? (
-                      <button type="button" disabled={inactive} onClick={() => void perform(() => onManage(selected.id, "restore"))}>
+                      <button
+                        type="button"
+                        disabled={inactive}
+                        onClick={() => void perform(() => onManage(selected.id, "restore"))}
+                      >
                         <ArchiveRestore size={16} aria-hidden="true" /> Restore menu
                       </button>
                     ) : (
                       <>
                         {Boolean(selected.publishedRevision) && (
-                          <button type="button" disabled={inactive} onClick={() => void perform(() => onManage(selected.id, "unpublish"))}>
+                          <button
+                            type="button"
+                            disabled={inactive}
+                            onClick={() => void perform(() => onManage(selected.id, "unpublish"))}
+                          >
                             <EyeOff size={16} aria-hidden="true" /> Unpublish menu
                           </button>
                         )}
-                        <button type="button" className="atelier-gallery-danger" disabled={inactive} onClick={() => void perform(() => onManage(selected.id, "archive"))}>
+                        <button
+                          type="button"
+                          className="atelier-gallery-danger"
+                          disabled={inactive}
+                          onClick={() => void perform(() => onManage(selected.id, "archive"))}
+                        >
                           <Trash2 size={16} aria-hidden="true" /> Delete menu
                         </button>
                       </>
@@ -259,13 +285,25 @@ export function StudioMenuGallery({
               {selected.parsed ? (
                 <>
                   <div className="atelier-gallery-categories" aria-label="Dish categories">
-                    <button type="button" aria-pressed={category === "all"} onClick={() => { setCategory("all"); setVisibleCount(48); }}>All dishes</button>
+                    <button
+                      type="button"
+                      aria-pressed={category === "all"}
+                      onClick={() => {
+                        setCategory("all");
+                        setVisibleCount(48);
+                      }}
+                    >
+                      All dishes
+                    </button>
                     {sections.map((section) => (
                       <button
                         key={section.id}
                         type="button"
                         aria-pressed={category === section.id}
-                        onClick={() => { setCategory(section.id); setVisibleCount(48); }}
+                        onClick={() => {
+                          setCategory(section.id);
+                          setVisibleCount(48);
+                        }}
                       >
                         {section.name}
                       </button>
@@ -274,23 +312,39 @@ export function StudioMenuGallery({
                   {filteredDishes.length ? (
                     <>
                       <div className="atelier-gallery-dish-grid">
-                        {filteredDishes.slice(0, visibleCount).map(({ category: categoryName, dish }) => (
-                          <article key={dish.id} className="atelier-gallery-dish">
-                            <DiningImage visual={dishVisual(dish, categoryName, true)} className="atelier-gallery-dish-image" />
-                            <div className="atelier-gallery-dish-body">
-                              <span className="atelier-gallery-dish-section">{categoryName}</span>
-                              <h4>{dish.name}</h4>
-                              {dish.description && <p className="atelier-supporting-text">{dish.description}</p>}
-                              <div className="atelier-gallery-dish-bottom">
-                                <strong>{dish.variants.length ? "From " : ""}{formatPrice(startingPriceMinor(dish), currency)}</strong>
-                                {dish.soldOut && <span className="atelier-gallery-sold-out">Sold out</span>}
+                        {filteredDishes
+                          .slice(0, visibleCount)
+                          .map(({ category: categoryName, dish }) => (
+                            <article key={dish.id} className="atelier-gallery-dish">
+                              <DiningImage
+                                visual={dishVisual(dish, categoryName, true)}
+                                className="atelier-gallery-dish-image"
+                              />
+                              <div className="atelier-gallery-dish-body">
+                                <span className="atelier-gallery-dish-section">{categoryName}</span>
+                                <h4>{dish.name}</h4>
+                                {dish.description && (
+                                  <p className="atelier-supporting-text">{dish.description}</p>
+                                )}
+                                <div className="atelier-gallery-dish-bottom">
+                                  <strong>
+                                    {dish.variants.length ? "From " : ""}
+                                    {formatPrice(startingPriceMinor(dish), currency)}
+                                  </strong>
+                                  {dish.soldOut && (
+                                    <span className="atelier-gallery-sold-out">Sold out</span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </article>
-                        ))}
+                            </article>
+                          ))}
                       </div>
                       {visibleCount < filteredDishes.length && (
-                        <button type="button" className="atelier-gallery-more" onClick={() => setVisibleCount((count) => count + 48)}>
+                        <button
+                          type="button"
+                          className="atelier-gallery-more"
+                          onClick={() => setVisibleCount((count) => count + 48)}
+                        >
                           Show more dishes ({filteredDishes.length - visibleCount} remaining)
                         </button>
                       )}
@@ -299,7 +353,9 @@ export function StudioMenuGallery({
                     <div className="atelier-gallery-empty">
                       <ChefHat size={32} aria-hidden="true" />
                       <strong>No dishes yet</strong>
-                      <p className="atelier-supporting-text">Open this menu in Studio to add your first dish.</p>
+                      <p className="atelier-supporting-text">
+                        Open this menu in Studio to add your first dish.
+                      </p>
                     </div>
                   )}
                 </>
@@ -313,7 +369,9 @@ export function StudioMenuGallery({
             <div className="atelier-gallery-empty">
               <BookOpen size={34} aria-hidden="true" />
               <strong>Your menu library is empty.</strong>
-              <p className="atelier-supporting-text">Create a menu to start building your restaurant's catalogue.</p>
+              <p className="atelier-supporting-text">
+                Create a menu to start building your restaurant's catalogue.
+              </p>
             </div>
           )}
         </section>

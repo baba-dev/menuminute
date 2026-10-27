@@ -740,14 +740,20 @@ test("Menu Library stays responsive and preserves publication and accessible dia
     await expect(library.getByText("Signature thali")).toBeVisible();
     await expect(library.getByText("Seasonal special")).toBeVisible();
     await expect(library.getByText("Sold out")).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
     await page.keyboard.press("Escape");
     await expect(library).toBeHidden();
   }
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "dark";
+  });
   const cover = page.locator(".atelier-preview-cover");
   await expect(cover).toBeVisible();
-  expect(await cover.evaluate((el) => getComputedStyle(el, "::before").backgroundImage)).toContain("linear-gradient");
+  expect(await cover.evaluate((el) => getComputedStyle(el, "::before").backgroundImage)).toContain(
+    "linear-gradient"
+  );
   await page.screenshot({ path: info.outputPath("menu-studio-dark-library.png"), fullPage: false });
 });

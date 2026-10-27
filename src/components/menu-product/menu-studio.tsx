@@ -6,7 +6,11 @@ import { Plus, ArrowUp, ArrowDown, X } from "lucide-react";
 import { artworkById } from "@/modules/menu-product/dish-artwork";
 import { covers, type CoverPreset } from "@/modules/menu-product/public-presentation";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
-import { StudioMenuGallery, type MenuLibraryAction, type MenuLibraryEntry } from "./studio-menu-gallery";
+import {
+  StudioMenuGallery,
+  type MenuLibraryAction,
+  type MenuLibraryEntry,
+} from "./studio-menu-gallery";
 import { StudioMenuSelector } from "./studio-menu-selector";
 import {
   findDishDuplicate,
@@ -165,15 +169,19 @@ export function MenuStudio({
     if (selected.current !== menuId) return;
     setDetail(next);
     setDoc(next.document);
-    setList((current) => current.map((menu) => menu.id === menuId
-      ? {
-          ...menu,
-          document: next.document,
-          archived: next.archived,
-          revision: next.revision,
-          publishedRevision: next.publishedRevision,
-        }
-      : menu));
+    setList((current) =>
+      current.map((menu) =>
+        menu.id === menuId
+          ? {
+              ...menu,
+              document: next.document,
+              archived: next.archived,
+              revision: next.revision,
+              publishedRevision: next.publishedRevision,
+            }
+          : menu
+      )
+    );
     setDishSearch("");
     setCategoryFilter("all");
     setComposerCategory("");
@@ -196,7 +204,8 @@ export function MenuStudio({
     if (
       (dirty || composerPending) &&
       !window.confirm("Discard unsaved menu changes and selected dishes?")
-    ) return false;
+    )
+      return false;
     running.current = true;
     setBusy(true);
     setError("");
@@ -218,7 +227,8 @@ export function MenuStudio({
     if (
       (dirty || composerPending) &&
       !window.confirm("Discard unsaved menu changes and selected dishes to create another menu?")
-    ) return false;
+    )
+      return false;
     running.current = true;
     setBusy(true);
     setError("");
@@ -245,19 +255,19 @@ export function MenuStudio({
   }
 
   async function previewMenu(menuId: string): Promise<boolean> {
-    if (!await switchMenu(menuId)) return false;
+    if (!(await switchMenu(menuId))) return false;
     setPreviewDevice("desktop");
     setPreview(true);
     return true;
   }
 
   async function manageMenu(menuId: string, action: MenuLibraryAction): Promise<boolean> {
-    if (!await switchMenu(menuId)) return false;
+    if (!(await switchMenu(menuId))) return false;
     // Permissions and expected revision are retrieved for the selected target,
     // not borrowed from a stale render's previously selected menu.
     let target: Detail;
     try {
-      target = await json(path(menuId)) as Detail;
+      target = (await json(path(menuId))) as Detail;
       if (!target.canWrite) throw new Error("You do not have permission to manage this menu.");
       if (action === "restore") {
         if (!target.archived) throw new Error("This menu is already active.");
@@ -563,7 +573,9 @@ export function MenuStudio({
               menus={list}
               selectedId={detail?.id ?? ""}
               disabled={busy}
-              onSelect={(menuId) => { void switchMenu(menuId); }}
+              onSelect={(menuId) => {
+                void switchMenu(menuId);
+              }}
             />
           }
         />

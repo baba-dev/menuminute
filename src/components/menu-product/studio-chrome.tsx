@@ -141,20 +141,22 @@ export function StudioOverview({
     <section className="atelier-metrics" aria-label="Menu Studio overview">
       <div className="atelier-metrics-heading">
         <h2 className="atelier-eyebrow">THIS MENU AT A GLANCE</h2>
-        {selector ?? <span>
-          {outletName} ·{" "}
-          {archived
-            ? "Archived"
-            : dirty
-              ? "Unsaved draft changes"
-              : publishedRevision
-                ? (revision ?? 0) > publishedRevision
-                  ? "Live + draft changes"
-                  : "Live"
-                : everPublished
-                  ? "Unpublished"
-                  : "Private draft"}
-        </span>}
+        {selector ?? (
+          <span>
+            {outletName} ·{" "}
+            {archived
+              ? "Archived"
+              : dirty
+                ? "Unsaved draft changes"
+                : publishedRevision
+                  ? (revision ?? 0) > publishedRevision
+                    ? "Live + draft changes"
+                    : "Live"
+                  : everPublished
+                    ? "Unpublished"
+                    : "Private draft"}
+          </span>
+        )}
       </div>
       <div className="atelier-metrics-grid">
         {metrics.map(({ label, count, note, Icon }, index) => (

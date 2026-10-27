@@ -221,7 +221,9 @@ export function SmartDishComposer({
         <div>
           <span className="eyebrow">SMART COMPOSER</span>
           <h2>Add dishes to your menu</h2>
-          <p className="atelier-supporting-text">Find a dish or create your own. Nothing is published automatically.</p>
+          <p className="atelier-supporting-text">
+            Find a dish or create your own. Nothing is published automatically.
+          </p>
         </div>
         <span className="badge">{selection.length} selected</span>
       </div>
