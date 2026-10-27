@@ -97,6 +97,8 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
   await expect(page.getByText("Guest-visible releases")).toBeVisible();
   await expect(page.getByText("Published and visible")).toBeVisible();
   await expect(page.getByRole("link", { name: "Public menu" })).toBeVisible();
+  const publicHref = await page.getByRole("link", { name: "Public menu" }).getAttribute("href");
+  expect(publicHref).toBeTruthy();
   await page.getByRole("button", { name: "Dish Availability" }).click();
   const dialog = page.getByRole("dialog", { name: "Dish Availability" });
   await expect(dialog).toBeVisible();
@@ -110,8 +112,6 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
       .filter({ hasText: "Menus to publish" })
       .locator(".mm-dashboard-kpi-value")
   ).toHaveText("0");
-  const publicHref = await page.getByRole("link", { name: "Public menu" }).getAttribute("href");
-  expect(publicHref).toBeTruthy();
   const guestPage = await page.context().newPage();
   await guestPage.goto(publicHref!);
   await expect(guestPage.getByText(/Sold Out/i).first()).toBeVisible();
