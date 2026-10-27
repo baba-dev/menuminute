@@ -19,8 +19,12 @@ export function ServiceRequestsPanel({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const url = "/api/organizations/" + encodeURIComponent(organizationId) +
-    "/outlets/" + encodeURIComponent(outletId) + "/service-requests";
+  const url =
+    "/api/organizations/" +
+    encodeURIComponent(organizationId) +
+    "/outlets/" +
+    encodeURIComponent(outletId) +
+    "/service-requests";
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -72,7 +76,9 @@ export function ServiceRequestsPanel({
     if (Number.isNaN(date.getTime())) return "Time unavailable";
     try {
       return new Intl.DateTimeFormat(undefined, {
-        timeZone: timezone, hour: "numeric", minute: "2-digit",
+        timeZone: timezone,
+        hour: "numeric",
+        minute: "2-digit",
       }).format(date);
     } catch {
       return date.toISOString().slice(11, 16) + " UTC";
@@ -85,18 +91,26 @@ export function ServiceRequestsPanel({
         <div>
           <span className="mm-dashboard-eyebrow">GUEST SERVICE</span>
           <h2 id="service-bells-title">At your service</h2>
-          <p>Staff calls, water refills and bill requests · Checked approximately every 12 seconds.</p>
+          <p>
+            Staff calls, water refills and bill requests · Checked approximately every 12 seconds.
+          </p>
         </div>
         <BellRing size={34} aria-hidden="true" className="mm-ops-bell" />
       </div>
       <div className="mm-ops-actions">
-        <button type="button" disabled={refreshing}
-          onClick={() => void refresh()}>
-          <RefreshCw size={15} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh requests"}
+        <button type="button" disabled={refreshing} onClick={() => void refresh()}>
+          <RefreshCw size={15} aria-hidden="true" />{" "}
+          {refreshing ? "Refreshing…" : "Refresh requests"}
         </button>
-        <Link href="/dashboard/orders">Open Orders <ArrowRight size={14} aria-hidden="true" /></Link>
+        <Link href="/dashboard/orders">
+          Open Orders <ArrowRight size={14} aria-hidden="true" />
+        </Link>
       </div>
-      {error && <p role="alert" className="mm-ops-error">{error}</p>}
+      {error && (
+        <p role="alert" className="mm-ops-error">
+          {error}
+        </p>
+      )}
       {items === null ? (
         <div className="mm-ops-empty" role="status">
           <BellRing size={26} aria-hidden="true" />
@@ -105,25 +119,55 @@ export function ServiceRequestsPanel({
       ) : items.length === 0 ? (
         <div className="mm-ops-empty">
           <div className="mm-ops-art-wrap" aria-hidden="true">
-            <Image className="mm-ops-art mm-ops-art--light"
-              src="/brand/dashboard/editorial/service-dispatch-light.svg" alt="" width={155} height={116} />
-            <Image className="mm-ops-art mm-ops-art--dark"
-              src="/brand/dashboard/editorial/service-dispatch-dark.svg" alt="" width={155} height={116} />
+            <Image
+              className="mm-ops-art mm-ops-art--light"
+              src="/brand/dashboard/editorial/service-dispatch-light.svg"
+              alt=""
+              width={155}
+              height={116}
+            />
+            <Image
+              className="mm-ops-art mm-ops-art--dark"
+              src="/brand/dashboard/editorial/service-dispatch-dark.svg"
+              alt=""
+              width={155}
+              height={116}
+            />
           </div>
-          <p>No outstanding guest requests. New requests appear here for acknowledgement and resolution.</p>
+          <p>
+            No outstanding guest requests. New requests appear here for acknowledgement and
+            resolution.
+          </p>
         </div>
       ) : (
         <ul className="mm-ops-items">
           {items.map((item) => (
             <li key={item.id} className="mm-ops-item">
-              <strong>Table {item.tableNumber} · Order #{item.orderNumber}</strong>
-              <p>{item.signal === "call_server" ? "Call server" :
-                item.signal === "water_refill" ? "Water refill" : "Bill request"}</p>
-              <span>{item.status} · {localTime(item.requestedAt)}</span>
-              <button type="button" disabled={busy !== ""}
-                onClick={() => void change(item, item.status === "requested" ? "acknowledge" : "resolve")}>
-                {busy === item.id ? "Saving…" :
-                  item.status === "requested" ? "Acknowledge" : "Mark resolved"}
+              <strong>
+                Table {item.tableNumber} · Order #{item.orderNumber}
+              </strong>
+              <p>
+                {item.signal === "call_server"
+                  ? "Call server"
+                  : item.signal === "water_refill"
+                    ? "Water refill"
+                    : "Bill request"}
+              </p>
+              <span>
+                {item.status} · {localTime(item.requestedAt)}
+              </span>
+              <button
+                type="button"
+                disabled={busy !== ""}
+                onClick={() =>
+                  void change(item, item.status === "requested" ? "acknowledge" : "resolve")
+                }
+              >
+                {busy === item.id
+                  ? "Saving…"
+                  : item.status === "requested"
+                    ? "Acknowledge"
+                    : "Mark resolved"}
               </button>
             </li>
           ))}
