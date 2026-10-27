@@ -16,11 +16,11 @@ import {
  */
 let known: { values: string[]; until: number } | undefined;
 
-export async function availableOutletTimezones(): Promise<string[]> {
+export async function availableOutletTimezones(tx?: Transaction): Promise<string[]> {
   if (known && known.until > Date.now()) return known.values;
-  const result = await getPool().query<{ name: string }>(
-    "select name from pg_catalog.pg_timezone_names"
-  );
+  const result = tx
+    ? await tx.execute<{ name: string }>(sql`select name from pg_catalog.pg_timezone_names`)
+    : await getPool().query<{ name: string }>("select name from pg_catalog.pg_timezone_names");
   const supportedByPostgres = new Set(result.rows.map((row) => row.name));
   const values = canonicalTimezoneOptions().filter((name) => supportedByPostgres.has(name));
   if (values.length === 0) throw new Error("PostgreSQL timezone catalog unavailable");
@@ -30,7 +30,7 @@ export async function availableOutletTimezones(): Promise<string[]> {
 
 export async function verifyOutletTimezone(tx: Transaction, timezone: string): Promise<string> {
   const canonical = canonicalOutletTimezone(timezone);
-  if (!isRuntimeTimezone(canonical) || !(await availableOutletTimezones()).includes(canonical)) {
+  if (!isRuntimeTimezone(canonical) || !(await availableOutletTimezones(tx)).includes(canonical)) {
     throw new ValidationError("Select a timezone supported by this restaurant server.");
   }
   try {
