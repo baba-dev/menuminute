@@ -458,3 +458,25 @@
   .mm-availability-dish { transition: none; }
   .mm-availability-dish:hover:not(:disabled) { transform: none; }
 }
+
+/* Explicit app-theme artwork selection; do not rely on OS color-scheme. */
+.mm-ops-art-wrap, .mm-dashboard-service-art-wrap { flex: none; display: block; }
+.mm-ops-art-wrap .mm-ops-art { display: block; width: 110px; max-width: 100%; height: auto; }
+.mm-ops-empty .mm-ops-art-wrap .mm-ops-art { width: 155px; }
+.mm-dashboard-service-art--dark, .mm-ops-art--dark { display: none !important; }
+:root[data-theme="dark"] .mm-dashboard-service-art--light,
+:root[data-theme="dark"] .mm-ops-art--light { display: none !important; }
+:root[data-theme="dark"] .mm-dashboard-service-art--dark { display: block !important; }
+:root[data-theme="dark"] .mm-ops-art-wrap .mm-ops-art--dark { display: block !important; }
+.mm-dashboard-ops-panel .mm-ops-actions a { display: inline-flex; min-height: 44px; align-items: center; gap: 5px; }
+.mm-dashboard-ops-panel .mm-ops-actions button { display: inline-flex; align-items: center; gap: 6px; }
+.mm-dashboard-ops-panel .mm-ops-error { color: #b23d32; font-weight: 750; }
+.mm-dashboard-ops-panel .mm-ops-bell { flex: none; color: #c36d2a; }
+.mm-dashboard-ops-panel .mm-ops-disclaimer { margin-top: 14px; font-size: 10px; }
+.mm-dashboard-ops-panel .mm-ops-items { margin-top: 16px; }
+@media (max-width: 400px) {
+  .mm-dashboard-service-art-wrap { max-width: 75px; }
+  .mm-dashboard-service-art { width: 75px; }
+  .mm-dashboard-ops-panel .mm-ops-head .mm-ops-art-wrap { max-width: 77px; }
+  .mm-dashboard-ops-panel .mm-ops-head .mm-ops-art { width: 77px; }
+}
