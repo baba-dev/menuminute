@@ -62,7 +62,9 @@ export default async function KitchenPage() {
     for (const [id, name] of seen) if (!ambiguous.has(id)) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
-  const availability = await kitchenAvailableDishes(actor,outlet.organizationId,outlet.id).catch(() => []);
+  const availability = await kitchenAvailableDishes(actor, outlet.organizationId, outlet.id).catch(
+    () => []
+  );
   let showEmber = false;
   if (env.AI_ASSISTANT_READ_ONLY_ENABLED) {
     try {
@@ -78,7 +80,11 @@ export default async function KitchenPage() {
   }
   return (
     <>
-      <KitchenAvailabilityPanel dishes={availability} organizationId={outlet.organizationId} outletId={outlet.id} />
+      <KitchenAvailabilityPanel
+        dishes={availability}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+      />
       <KitchenBoard
         organizationId={outlet.organizationId}
         outletId={outlet.id}

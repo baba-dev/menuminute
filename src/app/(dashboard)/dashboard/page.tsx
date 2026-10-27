@@ -204,8 +204,9 @@ export default async function DashboardPage() {
       ];
 
   const servicePeriod = getServicePeriodText(outletHour(outlet.timezone));
-  const floorTables = await getOutletFloorMatrix(actor,outlet.organizationId,outlet.id)
-    .catch(() => null);
+  const floorTables = await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(
+    () => null
+  );
   const canManageAvailability = publicProjection
     ? await withOutlet(actor, outlet.id, "menu.write", async () => true).catch((error: unknown) => {
         if (error instanceof ForbiddenError) return false;
@@ -286,7 +287,9 @@ export default async function DashboardPage() {
           menuStudioHref="/dashboard/menu"
         />
         <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
-        {floorTables !== null && <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />}
+        {floorTables !== null && (
+          <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} />
+        )}
         <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
           <div className="mm-dashboard-section-heading">
             <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">

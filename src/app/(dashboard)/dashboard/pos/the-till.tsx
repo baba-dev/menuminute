@@ -84,12 +84,12 @@ export function TheTill({
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
-  const [incomingOrderId,setIncomingOrderId]=useState("");
-  useEffect(()=>{
-    const id=new URLSearchParams(window.location.search).get("attachOrder")??"";
-    setIncomingOrderId(/^[A-Za-z0-9_-]{1,128}$/.test(id)?id:"");
-  },[outletId]);
-  const incomingOrder=workspace.attachable.find(o=>o.orderId===incomingOrderId);
+  const [incomingOrderId, setIncomingOrderId] = useState("");
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("attachOrder") ?? "";
+    setIncomingOrderId(/^[A-Za-z0-9_-]{1,128}$/.test(id) ? id : "");
+  }, [outletId]);
+  const incomingOrder = workspace.attachable.find((o) => o.orderId === incomingOrderId);
   const seller = workspace.context.seller;
   const [legalName, setLegalName] = useState(seller?.legalName ?? initial.context.outletName);
   const [address, setAddress] = useState(seller?.registeredAddress ?? "");
@@ -342,19 +342,35 @@ export function TheTill({
       </header>
       <div className="pos-body">
         <PosNavigation active="till" />
-        {incomingOrderId&&<div role="status" className="mb-4 rounded-xl border border-amber-500/50 p-4">
-           {incomingOrder?<div className="flex flex-wrap items-center justify-between gap-3">
-             <div>
-               <strong>Incoming order #{incomingOrder.orderNumber}</strong>
-               <p className="text-xs">Eligible to attach to the draft POS · {money(incomingOrder.subtotalMinor,incomingOrder.currency)} pre-tax.
-                 Attachment does not collect or record payment.</p>
-             </div>
-             <button disabled={busy} type="button" onClick={()=>void attach(incomingOrder)}
-               className="min-h-11 rounded-lg border border-amber-500 px-4 py-2 text-sm font-semibold">
-               {busy?"Linking…":"Attach order to draft sale"}
-             </button>
-           </div>:<p className="text-sm">This order is not eligible for POS attachment in the selected outlet. It may already be attached, paid, or unavailable.</p>}
-         </div>}
+        {incomingOrderId && (
+          <div role="status" className="mb-4 rounded-xl border border-amber-500/50 p-4">
+            {incomingOrder ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <strong>Incoming order #{incomingOrder.orderNumber}</strong>
+                  <p className="text-xs">
+                    Eligible to attach to the draft POS ·{" "}
+                    {money(incomingOrder.subtotalMinor, incomingOrder.currency)} pre-tax. Attachment
+                    does not collect or record payment.
+                  </p>
+                </div>
+                <button
+                  disabled={busy}
+                  type="button"
+                  onClick={() => void attach(incomingOrder)}
+                  className="min-h-11 rounded-lg border border-amber-500 px-4 py-2 text-sm font-semibold"
+                >
+                  {busy ? "Linking…" : "Attach order to draft sale"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm">
+                This order is not eligible for POS attachment in the selected outlet. It may already
+                be attached, paid, or unavailable.
+              </p>
+            )}
+          </div>
+        )}
         <section className="till-status" aria-label="Financial status">
           <span>OUTLET · {workspace.context.outletName}</span>
           <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
