@@ -9,6 +9,7 @@ import { ThemedArtwork } from "../themed-artwork";
 interface StepLocationProps {
   draft: WizardDraft;
   onChange: <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => void;
+  onTimezoneSuggestion: (timezone: string) => void;
 }
 
 const regions = localeOptions();
@@ -17,10 +18,7 @@ const timezoneSuggestions: Record<string, string> = {
   IN: "Asia/Kolkata",
   OM: "Asia/Muscat",
   AE: "Asia/Dubai",
-  US: "America/New_York",
   GB: "Europe/London",
-  CA: "America/Toronto",
-  AU: "Australia/Sydney",
   SG: "Asia/Singapore",
   SA: "Asia/Riyadh",
   QA: "Asia/Qatar",
@@ -28,7 +26,7 @@ const timezoneSuggestions: Record<string, string> = {
   NZ: "Pacific/Auckland",
 };
 
-export function StepLocation({ draft, onChange }: StepLocationProps) {
+export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLocationProps) {
   const [geoLocating, setGeoLocating] = useState(false);
   const [geoNotice, setGeoNotice] = useState<string | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -300,8 +298,7 @@ export function StepLocation({ draft, onChange }: StepLocationProps) {
             onChange("country", country);
             if (currencyFor[country]) onChange("currency", currencyFor[country]);
             // Do not silently replace a timezone the operator already selected.
-            if (draft.timezone === "Asia/Kolkata" && timezoneSuggestions[country])
-              onChange("timezone", timezoneSuggestions[country]);
+            if (timezoneSuggestions[country]) onTimezoneSuggestion(timezoneSuggestions[country]);
           }}
         >
           {regions.map((r) => (

@@ -101,7 +101,7 @@ test("organization and outlet management, scoped roles, billing and suspension r
     .locator("xpath=ancestor::form");
   await create.getByLabel("Outlet name").fill("Scoped Pickup");
   await create.getByLabel("Currency", { exact: true }).fill("OMR");
-  await create.getByLabel("Timezone").fill("Asia/Muscat");
+  await create.getByLabel("Timezone").selectOption("Asia/Muscat");
   await create.getByLabel("Outlet type").selectOption("cafe");
   await create.getByLabel("Dine-in").uncheck();
   await create.getByLabel("Pickup", { exact: true }).check();

@@ -66,4 +66,28 @@ describe("optional dashboard order counters", () => {
       report.mockRestore();
     }
   });
+  it("emits a nested SQLSTATE while redacting the underlying query and parameters", async () => {
+    const { dashboardPulseSnapshot } =
+      await import("@/modules/menu-product/dashboard-optional-pulse");
+    const error = Object.assign(new Error("driver wrapper"), {
+      cause: Object.assign(new Error("secret SELECT query"), { code: "22023" }),
+    });
+    const query = vi.fn(async () => {
+      throw error;
+    });
+    const report = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await expect(dashboardPulseSnapshot(actor, org, outlet, query)).resolves.toMatchObject({
+        state: "unavailable",
+        data: null,
+      });
+      expect(report).toHaveBeenCalledWith("[dashboard] Service pulse query failed", {
+        kind: "Error",
+        sqlstate: "22023",
+      });
+      expect(JSON.stringify(report.mock.calls)).not.toContain("secret SELECT");
+    } finally {
+      report.mockRestore();
+    }
+  });
 });

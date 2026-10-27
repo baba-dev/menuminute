@@ -1,11 +1,10 @@
 "use client";
 import { UtensilsCrossed, Package, Clock, CalendarDays, HelpCircle } from "lucide-react";
-import { timezoneOptions } from "@/modules/onboarding/locales";
+import { OutletTimezonePicker } from "../timezone-picker";
 import { BusinessHoursEditor } from "../business-hours-editor";
 import type { WizardDraft } from "../wizard-types";
 
 const currencies = Intl.supportedValuesOf("currency");
-const timezones = timezoneOptions();
 export function StepOperations({
   draft,
   onChange,
@@ -96,23 +95,11 @@ export function StepOperations({
             Independent of MenuMinute subscription billing currency.
           </span>
         </div>
-        <div className="wizard-field-group">
-          <label className="wizard-label" htmlFor="wz-timezone">
-            Operating timezone *
-          </label>
-          <select
-            className="wizard-select"
-            id="wz-timezone"
-            value={draft.timezone}
-            onChange={(e) => onChange("timezone", e.target.value)}
-          >
-            {timezones.map((t) => (
-              <option key={t} value={t}>
-                {t.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
-        </div>
+        <OutletTimezonePicker
+          id="wz-timezone"
+          value={draft.timezone}
+          onChange={(timezone) => onChange("timezone", timezone)}
+        />
       </div>
       <BusinessHoursEditor
         value={draft.operatingHours}

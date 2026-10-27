@@ -1,4 +1,5 @@
 import { ForbiddenError } from "@/lib/errors";
+import { ordersSqlState } from "@/modules/orders/diagnostics";
 import { servicePulse } from "@/modules/orders/workspace";
 import type { Actor } from "@/modules/tenancy/service";
 
@@ -22,10 +23,9 @@ export async function optionalDashboardServicePulse(
     if (!(error instanceof ForbiddenError)) {
       // Do not serialize raw PostgreSQL errors: they can contain SQL or params.
       // SQLSTATE plus error kind is sufficient to correlate a server incident.
-      const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
       console.error("[dashboard] Optional service pulse unavailable", {
         kind: error instanceof Error ? error.name : "unknown",
-        sqlstate: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined,
+        sqlstate: ordersSqlState(error) ?? undefined,
       });
     }
     return null;
@@ -49,10 +49,9 @@ export async function dashboardPulseSnapshot(
     return { state: "ready", data, checkedAt };
   } catch (error) {
     if (error instanceof ForbiddenError) return { state: "restricted", data: null, checkedAt };
-    const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
     console.error("[dashboard] Service pulse query failed", {
       kind: error instanceof Error ? error.name : "unknown",
-      sqlstate: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined,
+      sqlstate: ordersSqlState(error) ?? undefined,
     });
     return { state: "unavailable", data: null, checkedAt };
   }

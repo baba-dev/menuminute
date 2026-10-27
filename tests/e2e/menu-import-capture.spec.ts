@@ -113,7 +113,8 @@ test("scan table allows selecting photos before creating a private session", asy
   await page.getByRole("button", { name: "Upload photos privately" }).click();
   await expect(page.getByText("Page 1 · ready")).toBeVisible();
   await page.getByRole("button", { name: "All drafts" }).click();
-  await expect(page.getByRole("button", { name: /Collect photographs/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recent imports" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create private draft" })).toBeVisible();
 });
 
 test("reviewer corrects an unreadable price and applies only a private draft", async ({ page }) => {

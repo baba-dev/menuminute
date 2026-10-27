@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Sparkles, MapPin, QrCode, UtensilsCrossed, Package } from "lucide-react";
 import type { WizardDraft } from "../wizard-types";
+import { outletLocalClock } from "@/lib/outlet-timezones";
+import { useEffect } from "react";
 
 interface StepLaunchProps {
   draft: WizardDraft;
@@ -12,6 +14,16 @@ interface StepLaunchProps {
 
 export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
   const [celebrating, setCelebrating] = useState(false);
+  const [confirmedTimezone, setConfirmedTimezone] = useState(false);
+  const [localNow, setLocalNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const first = window.setTimeout(() => setLocalNow(new Date()), 0);
+    const timer = window.setInterval(() => setLocalNow(new Date()), 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+  }, []);
   const hasCoords = draft.latitude !== null && draft.longitude !== null;
   const handleLaunchClick = async () => {
     setCelebrating(true);
@@ -100,6 +112,25 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
           </span>
         </div>
       </div>
+      <div className="wizard-content">
+        <label className="wizard-label">
+          <input
+            type="checkbox"
+            checked={confirmedTimezone}
+            onChange={(event) => setConfirmedTimezone(event.target.checked)}
+          />{" "}
+          I confirm the operating timezone ({draft.timezone}) matches my restaurant location.
+        </label>
+        {localNow && (
+          <p className="wizard-counter">
+            Restaurant local time: {outletLocalClock(draft.timezone, localNow)}
+          </p>
+        )}
+        <p className="wizard-counter">
+          This setting controls schedules and daily order reporting. It can be changed later without
+          rewriting historical orders.
+        </p>
+      </div>
       {celebrating && (
         <p role="status">
           <Sparkles size={16} aria-hidden="true" style={{ display: "inline", marginRight: 6 }} />
@@ -110,7 +141,7 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
         <button
           type="button"
           className="wizard-primary-btn wizard-launch-btn"
-          disabled={busy || celebrating || draft.name.trim().length < 2}
+          disabled={busy || celebrating || !confirmedTimezone || draft.name.trim().length < 2}
           onClick={handleLaunchClick}
         >
           <Sparkles size={16} aria-hidden="true" />

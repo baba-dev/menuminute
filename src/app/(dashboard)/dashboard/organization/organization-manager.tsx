@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
+import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
 import { InvitationManager } from "@/components/auth/invitation-manager";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -1077,7 +1079,10 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
         <Field label="Country code" name="country" defaultValue={outlet?.country ?? "IN"} />
         <Field label="Currency" name="currency" defaultValue={outlet?.currency ?? "INR"} />
       </div>
-      <Field label="Timezone" name="timezone" defaultValue={outlet?.timezone ?? "Asia/Kolkata"} />
+      <OrganizationTimezoneField
+        initial={outlet?.timezone ?? "Asia/Kolkata"}
+        existing={Boolean(outlet)}
+      />
       <label className="oh-field">
         Outlet type
         <select
@@ -1116,5 +1121,30 @@ function OutletFields({ outlet }: { outlet?: Detail["outlets"][number] }) {
         ))}
       </div>
     </>
+  );
+}
+
+function OrganizationTimezoneField({ initial, existing }: { initial: string; existing: boolean }) {
+  const [timezone, setTimezone] = useState(initial);
+  const changed = canonicalOutletTimezone(timezone) !== canonicalOutletTimezone(initial);
+  return (
+    <div className="oh-field">
+      <OutletTimezonePicker
+        id="org-outlet-timezone"
+        name="timezone"
+        value={timezone}
+        onChange={setTimezone}
+      />
+      <small>
+        Changing this setting affects future order and service-day calculations, not historical
+        business dates.
+      </small>
+      {existing && changed && (
+        <label className="oh-field">
+          <input name="confirmTimezoneChange" type="checkbox" required />I understand future service
+          schedules and reporting use the new timezone; historical orders stay unchanged.
+        </label>
+      )}
+    </div>
   );
 }
