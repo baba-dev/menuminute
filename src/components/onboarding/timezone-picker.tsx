@@ -107,7 +107,7 @@ export function OutletTimezonePicker({
           </option>
         ))}
       </select>
-      <p id={selectId + "-help"} className="wizard-counter" role="status">
+      <p id={selectId + "-help"} className="wizard-counter" aria-live="polite">
         {failure ||
           (!loading && !supported
             ? "Your saved timezone needs confirmation. Choose an available city or region."

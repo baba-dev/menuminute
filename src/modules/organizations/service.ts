@@ -112,14 +112,17 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
   id.parse(organizationId);
   try {
     return await withActor(actor, async (tx) => {
+      // Pass the validated canonical identifier to the SQL command, not the
+      // original legacy alias (e.g. Asia/Calcutta) supplied by an API client.
+      const commandData: Record<string, unknown> = { ...input.command.data };
       if (
         (input.command.action === "outlet.create" || input.command.action === "outlet.update") &&
         input.command.data.timezone
       ) {
-        await verifyOutletTimezone(tx, input.command.data.timezone);
+        commandData.timezone = await verifyOutletTimezone(tx, input.command.data.timezone);
       }
       const r = await tx.execute<{ result: Record<string, string | number> }>(
-        sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(input.command.data)}::jsonb,${input.key},${input.expectedVersion}) as result`
+        sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(commandData)}::jsonb,${input.key},${input.expectedVersion}) as result`
       );
       return r.rows[0]!.result;
     });
