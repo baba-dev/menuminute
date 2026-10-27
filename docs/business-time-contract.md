@@ -21,7 +21,7 @@ named timezone. Do not derive operations from the browsing user's device clock.
 Onboarding and Organization writes normalize a small list of proven aliases.
 The server publishes timezone options from the intersection of JavaScript ICU
 and PostgreSQL's catalog, and confirms actual SQL conversion before a write.
-Migration 0030 installs a trigger guarding future direct SQL writes, including
+Migration 0031 installs a trigger guarding future direct SQL writes, including
 `SECURITY DEFINER` provisioning paths. It repairs only the known equivalent
 `Asia/Calcutta` alias and stops deployment on remaining unsupported stored
 zones rather than guessing.
