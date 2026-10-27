@@ -35,10 +35,14 @@ export function DishAvailabilityDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmedChanges, setConfirmedChanges] = useState<Record<string, boolean>>({});
-  const dishes = useMemo(() => items?.map((dish) => ({
-    ...dish,
-    soldOut: confirmedChanges[dish.menuId + ":" + dish.id] ?? dish.soldOut,
-  })) ?? null, [items, confirmedChanges]);
+  const dishes = useMemo(
+    () =>
+      items?.map((dish) => ({
+        ...dish,
+        soldOut: confirmedChanges[dish.menuId + ":" + dish.id] ?? dish.soldOut,
+      })) ?? null,
+    [items, confirmedChanges]
+  );
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "available" | "sold-out">("all");
   const [menu, setMenu] = useState("all");
