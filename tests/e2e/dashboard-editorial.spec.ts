@@ -104,6 +104,16 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
   await expect(dialog.getByText("Signature dishes")).toBeVisible();
   await dialog.getByRole("button", { name: /Mark sold out Citrus salad/ }).click();
   await expect(dialog.getByRole("button", { name: /Restore Citrus salad/ })).toBeVisible();
+  await expect(
+    page.locator(".mm-dashboard-kpi").filter({ hasText: "Menus to publish" })
+      .locator(".mm-dashboard-kpi-value")
+  ).toHaveText("0");
+  const publicHref = await page.getByRole("link", { name: "Public menu" }).getAttribute("href");
+  expect(publicHref).toBeTruthy();
+  const guestPage = await page.context().newPage();
+  await guestPage.goto(publicHref!);
+  await expect(guestPage.getByText(/Sold Out/i).first()).toBeVisible();
+  await guestPage.close();
   await page.reload();
   await page.getByRole("button", { name: "Dish Availability" }).click();
   await expect(
