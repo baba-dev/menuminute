@@ -384,7 +384,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           }} />}
         {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
         {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
-        {currentStep === 4 && <StepLaunch draft={draft} busy={busy} onLaunch={handleLaunch} />}
+        {currentStep === 4 && <StepLaunch key={draft.timezone} draft={draft} busy={busy} onLaunch={handleLaunch} />}
 
         {/* Error and Status Banner */}
         {errorMessage && (
