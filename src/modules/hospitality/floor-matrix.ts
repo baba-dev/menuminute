@@ -6,18 +6,28 @@ import { withOutletRead, type Actor } from "@/modules/tenancy/service";
  * orders remain visible without an arbitrary 24-hour cutoff.
  */
 export type FloorTable = {
- id:string;tableNumber:string;label:string|null;capacity:number|null;
- activeOrders:number;unpaidOrders:number;dueMinor:string;
- latestOrderId:string|null;latestOrderNumber:number|null;
- latestStatus:string|null;latestCreatedAt:string|null;
+  id: string;
+  tableNumber: string;
+  label: string | null;
+  capacity: number | null;
+  activeOrders: number;
+  unpaidOrders: number;
+  dueMinor: string;
+  latestOrderId: string | null;
+  latestOrderNumber: number | null;
+  latestStatus: string | null;
+  latestCreatedAt: string | null;
 };
-export async function getOutletFloorMatrix(actor:Actor,organizationId:string,outletId:string):Promise<FloorTable[]>{
- return withOutletRead(actor,outletId,"orders.read",async tx=>{
-  const org=await tx.execute<{matched:boolean}>(sql
-    `select exists(select 1 from restaurants
+export async function getOutletFloorMatrix(
+  actor: Actor,
+  organizationId: string,
+  outletId: string
+): Promise<FloorTable[]> {
+  return withOutletRead(actor, outletId, "orders.read", async (tx) => {
+    const org = await tx.execute<{ matched: boolean }>(sql`select exists(select 1 from restaurants
      where id=${outletId} and organization_id=${organizationId} and is_active) as matched`);
-  if(!org.rows[0]?.matched) throw new Error("Outlet scope mismatch");
-  const data=await tx.execute<FloorTable>(sql`
+    if (!org.rows[0]?.matched) throw new Error("Outlet scope mismatch");
+    const data = await tx.execute<FloorTable>(sql`
    WITH service_orders AS (
       SELECT o.* FROM orders o
       WHERE o.restaurant_id=${outletId} AND o.table_id IS NOT NULL
@@ -47,6 +57,6 @@ export async function getOutletFloorMatrix(actor:Actor,organizationId:string,out
    WHERE t.restaurant_id=${outletId} AND t.is_active=true
    ORDER BY t.table_number LIMIT 200
   `);
-  return data.rows;
- });
+    return data.rows;
+  });
 }

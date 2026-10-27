@@ -91,13 +91,17 @@ export function OrderTracker({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [callingService,setCallingService]=useState(false);
-  const [serviceError,setServiceError]=useState("");
-  const [serviceRequests,setServiceRequests]=useState<Array<{
-    requestId:string;signal:string;status:string;requestedAt:string
-  }>>([]);
-  const [serviceNotice,setServiceNotice]=useState("");
-
+  const [callingService, setCallingService] = useState(false);
+  const [serviceError, setServiceError] = useState("");
+  const [serviceRequests, setServiceRequests] = useState<
+    Array<{
+      requestId: string;
+      signal: string;
+      status: string;
+      requestedAt: string;
+    }>
+  >([]);
+  const [serviceNotice, setServiceNotice] = useState("");
 
   useEffect(() => {
     if (!trackingToken) return;
@@ -149,42 +153,52 @@ export function OrderTracker({
     };
   }, [capability, fetchTracking]);
 
-  const serviceUrl=`/api/public-orders/${encodeURIComponent(orderId)}/service-call`;
-  const refreshServices=useCallback(async()=>{
-    if(!capability)return;
-    try{
-      const res=await fetch(serviceUrl+`?token=${encodeURIComponent(token)}`,{
-        headers:{"x-tracking-token":capability},cache:"no-store"
+  const serviceUrl = `/api/public-orders/${encodeURIComponent(orderId)}/service-call`;
+  const refreshServices = useCallback(async () => {
+    if (!capability) return;
+    try {
+      const res = await fetch(serviceUrl + `?token=${encodeURIComponent(token)}`, {
+        headers: { "x-tracking-token": capability },
+        cache: "no-store",
       });
-      if(!res.ok)throw Error("Service request status currently unavailable");
+      if (!res.ok) throw Error("Service request status currently unavailable");
       setServiceRequests(await res.json());
       setServiceError("");
-    }catch(e){setServiceError(e instanceof Error?e.message:"Request status unavailable")}
-  },[capability,serviceUrl,token]);
-  useEffect(()=>{
-    if(!capability||data?.order.fulfillmentMode!=="dine_in")return;
+    } catch (e) {
+      setServiceError(e instanceof Error ? e.message : "Request status unavailable");
+    }
+  }, [capability, serviceUrl, token]);
+  useEffect(() => {
+    if (!capability || data?.order.fulfillmentMode !== "dine_in") return;
     void refreshServices();
-    const id=window.setInterval(()=>void refreshServices(),12000);
-    return()=>window.clearInterval(id);
-  },[capability,data?.order.fulfillmentMode,refreshServices]);
-  async function callService(signal:"call_server"|"water_refill"|"bill_request"){
-    if(!capability||callingService)return;
-    setCallingService(true);setServiceNotice("");
-    try{
-      const res=await fetch(serviceUrl,{method:"POST",
-        headers:{"content-type":"application/json"},
-        body:JSON.stringify({token,trackingToken:capability,signal})
+    const id = window.setInterval(() => void refreshServices(), 12000);
+    return () => window.clearInterval(id);
+  }, [capability, data?.order.fulfillmentMode, refreshServices]);
+  async function callService(signal: "call_server" | "water_refill" | "bill_request") {
+    if (!capability || callingService) return;
+    setCallingService(true);
+    setServiceNotice("");
+    try {
+      const res = await fetch(serviceUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token, trackingToken: capability, signal }),
       });
-      if(!res.ok)throw Error("Could not save request. Please ask staff directly.");
-      const response=await res.json() as {status:string;debounced:boolean};
-      setServiceNotice(response.debounced?
-        "An identical recent request is already recorded. Please check its status below.":
-        "Request saved. Waiting for a staff member to acknowledge it.");
+      if (!res.ok) throw Error("Could not save request. Please ask staff directly.");
+      const response = (await res.json()) as { status: string; debounced: boolean };
+      setServiceNotice(
+        response.debounced
+          ? "An identical recent request is already recorded. Please check its status below."
+          : "Request saved. Waiting for a staff member to acknowledge it."
+      );
       await refreshServices();
-    }catch(e){setServiceNotice(e instanceof Error?e.message:"Request was not recorded.")}
-    finally{setCallingService(false)}
+    } catch (e) {
+      setServiceNotice(e instanceof Error ? e.message : "Request was not recorded.");
+    } finally {
+      setCallingService(false);
+    }
   }
-  
+
   if (capability && isLoading && !data) {
     return (
       <div
@@ -439,33 +453,67 @@ export function OrderTracker({
         )}
 
         {/* Service calls are durable requests, not instant-delivery promises. */}
-        {order.fulfillmentMode==="dine_in" &&
-          !["rejected","cancelled","expired","collected"].includes(order.status) &&
-          <section className="panel stack" aria-labelledby="guest-bell-heading" style={{gap:"0.7rem"}}>
-            <h2 id="guest-bell-heading" className="section-title">Table service</h2>
-            <p className="quiet" style={{margin:0,fontSize:"0.85rem"}}>
-              Request assistance at your table. Staff must acknowledge your request;
-              use in-person help if urgent.
-            </p>
-            <div className="row" style={{gap:"0.5rem",flexWrap:"wrap"}}>
-              {([
-                {id:"call_server",label:"Call server",Icon:BellRing},
-                {id:"water_refill",label:"Request water",Icon:Droplets},
-                {id:"bill_request",label:"Request bill",Icon:ReceiptText},
-              ] as const).map(({id,label,Icon})=>
-                <button type="button" key={id} disabled={callingService} onClick={()=>void callService(id)}
-                  className="action secondary" style={{minHeight:44,flex:"1 1 110px",padding:"0.7rem"}}>
-                  <Icon size={17} aria-hidden="true" />{callingService?"Saving…":label}
-                </button>)}
-            </div>
-            {serviceNotice&&<p role="status" className="quiet" style={{fontSize:"0.85rem"}}>{serviceNotice}</p>}
-            {serviceError&&<p role="status" className="quiet" style={{fontSize:"0.8rem"}}>{serviceError}</p>}
-            {serviceRequests.length>0&&<ul className="stack" style={{gap:"0.3rem"}}>
-              {serviceRequests.slice(0,3).map(req=><li key={req.requestId} className="quiet" style={{fontSize:"0.8rem"}}>
-                {req.signal==="call_server"?"Staff assistance":req.signal==="water_refill"?"Water refill":"Bill request"} · {req.status}
-              </li>)}
-            </ul>}
-          </section>}
+        {order.fulfillmentMode === "dine_in" &&
+          !["rejected", "cancelled", "expired", "collected"].includes(order.status) && (
+            <section
+              className="panel stack"
+              aria-labelledby="guest-bell-heading"
+              style={{ gap: "0.7rem" }}
+            >
+              <h2 id="guest-bell-heading" className="section-title">
+                Table service
+              </h2>
+              <p className="quiet" style={{ margin: 0, fontSize: "0.85rem" }}>
+                Request assistance at your table. Staff must acknowledge your request; use in-person
+                help if urgent.
+              </p>
+              <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+                {(
+                  [
+                    { id: "call_server", label: "Call server", Icon: BellRing },
+                    { id: "water_refill", label: "Request water", Icon: Droplets },
+                    { id: "bill_request", label: "Request bill", Icon: ReceiptText },
+                  ] as const
+                ).map(({ id, label, Icon }) => (
+                  <button
+                    type="button"
+                    key={id}
+                    disabled={callingService}
+                    onClick={() => void callService(id)}
+                    className="action secondary"
+                    style={{ minHeight: 44, flex: "1 1 110px", padding: "0.7rem" }}
+                  >
+                    <Icon size={17} aria-hidden="true" />
+                    {callingService ? "Saving…" : label}
+                  </button>
+                ))}
+              </div>
+              {serviceNotice && (
+                <p role="status" className="quiet" style={{ fontSize: "0.85rem" }}>
+                  {serviceNotice}
+                </p>
+              )}
+              {serviceError && (
+                <p role="status" className="quiet" style={{ fontSize: "0.8rem" }}>
+                  {serviceError}
+                </p>
+              )}
+              {serviceRequests.length > 0 && (
+                <ul className="stack" style={{ gap: "0.3rem" }}>
+                  {serviceRequests.slice(0, 3).map((req) => (
+                    <li key={req.requestId} className="quiet" style={{ fontSize: "0.8rem" }}>
+                      {req.signal === "call_server"
+                        ? "Staff assistance"
+                        : req.signal === "water_refill"
+                          ? "Water refill"
+                          : "Bill request"}{" "}
+                      · {req.status}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
         {/* Itemized Order Summary */}
         <div className="panel stack" style={{ gap: "0.75rem" }}>
           <div className="row between" style={{ alignItems: "center" }}>

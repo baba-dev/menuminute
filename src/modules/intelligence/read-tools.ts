@@ -140,36 +140,48 @@ export const readTools = [
     },
   },
   {
-    name:"tables.pulse",
-    description:"Summarize orders-derived active tickets and unpaid balances across dining tables for the selected outlet. This is not a physical occupancy count.",
-    parameters:{type:"object",properties:{},additionalProperties:false},
-    schema:empty,
-    run:async(context:ToolContext)=>{
-      const rows=await getOutletFloorMatrix(context.actor,context.organizationId,context.outletId);
-      return {source:"hospitality.floorMatrix",data:{
-        totalTables:rows.length,
-        tablesWithActiveOrders:rows.filter(x=>x.activeOrders>0).length,
-        tablesWithUnpaidOrders:rows.filter(x=>x.unpaidOrders>0).length,
-        truncated:rows.length===200,
-      }};
+    name: "tables.pulse",
+    description:
+      "Summarize orders-derived active tickets and unpaid balances across dining tables for the selected outlet. This is not a physical occupancy count.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => {
+      const rows = await getOutletFloorMatrix(
+        context.actor,
+        context.organizationId,
+        context.outletId
+      );
+      return {
+        source: "hospitality.floorMatrix",
+        data: {
+          totalTables: rows.length,
+          tablesWithActiveOrders: rows.filter((x) => x.activeOrders > 0).length,
+          tablesWithUnpaidOrders: rows.filter((x) => x.unpaidOrders > 0).length,
+          truncated: rows.length === 200,
+        },
+      };
     },
   },
   {
-    name:"finance.pulse",
-    description:"Read the draft POS register's recent order snapshots for the authorized outlet. These are not verified revenue, tender breakdowns or cash drawer balances.",
-    parameters:{type:"object",properties:{},additionalProperties:false},
-    schema:empty,
-    run:async(context:ToolContext)=>{
-      await withOutletRead(context.actor,context.outletId,"billing.manage",async()=>true);
-      const workspace=await posWorkspace(context.actor,context.organizationId,context.outletId);
-      return {source:"pos.draftRegister",data:{
-        enabled:workspace.context.enabled,
-        currency:workspace.context.currency,
-        recentDrafts:workspace.recent.length,
-        eligibleUnattachedTickets:workspace.attachable.length,
-        revenueVerified:false,
-        totalsOmitted:"Draft sale snapshots are not payments or settled revenue",
-      }};
+    name: "finance.pulse",
+    description:
+      "Read the draft POS register's recent order snapshots for the authorized outlet. These are not verified revenue, tender breakdowns or cash drawer balances.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => {
+      await withOutletRead(context.actor, context.outletId, "billing.manage", async () => true);
+      const workspace = await posWorkspace(context.actor, context.organizationId, context.outletId);
+      return {
+        source: "pos.draftRegister",
+        data: {
+          enabled: workspace.context.enabled,
+          currency: workspace.context.currency,
+          recentDrafts: workspace.recent.length,
+          eligibleUnattachedTickets: workspace.attachable.length,
+          revenueVerified: false,
+          totalsOmitted: "Draft sale snapshots are not payments or settled revenue",
+        },
+      };
     },
   },
 ] as const;
