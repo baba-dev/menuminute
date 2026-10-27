@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -11,7 +12,6 @@ import {
   Eye,
   FilePenLine,
   ImagePlus,
-  QrCode,
   Save,
   Send,
 } from "lucide-react";
@@ -36,8 +36,10 @@ export type StudioMenu = { id: string; document: unknown; archived: boolean };
 
 export function StudioHero({
   outlet,
+  onOpenLibrary,
 }: {
   outlet: { name: string; currency: string; outletType: string };
+  onOpenLibrary: () => void;
 }) {
   return (
     <header className="atelier-hero">
@@ -57,9 +59,9 @@ export function StudioHero({
           <Link href="/dashboard/menu/import" className="atelier-hero-primary">
             <ImagePlus size={18} aria-hidden="true" /> Import from photos
           </Link>
-          <Link href="/dashboard/qr-codes" className="atelier-hero-secondary">
-            <QrCode size={17} aria-hidden="true" /> Permanent QR
-          </Link>
+          <button type="button" className="atelier-hero-secondary" onClick={onOpenLibrary}>
+            <BookOpen size={17} aria-hidden="true" /> Your menus
+          </button>
         </div>
       </div>
       <span className="atelier-hero-credit" aria-hidden="true">
@@ -85,6 +87,7 @@ export function StudioOverview({
   archived,
   everPublished,
   outletName,
+  selector,
 }: {
   doc: MenuDocument | null;
   imports: StudioImport[];
@@ -94,6 +97,7 @@ export function StudioOverview({
   archived: boolean;
   everPublished: boolean;
   outletName: string;
+  selector?: ReactNode;
 }) {
   const sections = doc?.categories.filter((c) => !c.archived) ?? [];
   const metrics = [
@@ -105,7 +109,7 @@ export function StudioOverview({
       Icon: ChefHat,
     },
     {
-      label: "Source imports",
+      label: "Outlet imports",
       count: imports.filter((i) => ["needs_review", "ready"].includes(i.status)).length,
       note: "Awaiting human review",
       Icon: ClipboardList,
@@ -137,7 +141,7 @@ export function StudioOverview({
     <section className="atelier-metrics" aria-label="Menu Studio overview">
       <div className="atelier-metrics-heading">
         <h2 className="atelier-eyebrow">THIS MENU AT A GLANCE</h2>
-        <span>
+        {selector ?? <span>
           {outletName} ·{" "}
           {archived
             ? "Archived"
@@ -150,7 +154,7 @@ export function StudioOverview({
                 : everPublished
                   ? "Unpublished"
                   : "Private draft"}
-        </span>
+        </span>}
       </div>
       <div className="atelier-metrics-grid">
         {metrics.map(({ label, count, note, Icon }, index) => (
@@ -322,14 +326,7 @@ export function StudioPreview({
       <div className="atelier-preview-window">
         <div
           className="atelier-preview-cover"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg,rgba(255,250,243,.95),rgba(255,250,243,.66)),url(" +
-              coverFor(doc) +
-              ")",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          style={{ backgroundImage: "url(" + coverFor(doc) + ")" }}
         >
           <span>YOUR DIGITAL STOREFRONT</span>
           <h2>{doc.name || "Your menu"}</h2>
@@ -338,7 +335,7 @@ export function StudioPreview({
             {currency} · {timezone}
           </small>
         </div>
-        <p className="atelier-preview-disclaimer">
+        <p className="atelier-preview-disclaimer atelier-supporting-text">
           Draft outline only. Guests see your last explicitly published release. Use Preview draft
           to inspect the complete projected menu.
         </p>
