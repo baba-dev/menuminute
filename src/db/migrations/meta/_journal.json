@@ -211,6 +211,13 @@
       "when": 1793010000001,
       "tag": "0029_outlet_geocoordinates_and_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793100000000,
+      "tag": "0030_outlet_timezone_guard",
+      "breakpoints": true
     }
   ]
 }
