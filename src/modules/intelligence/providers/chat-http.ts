@@ -104,11 +104,11 @@ function toWireMessage(message: InferenceRequest["messages"][number], model: Pro
   return { role: message.role, content: message.content };
 }
 function translateStatus(status: number): IntelligenceError {
-  if (status === 401 || status === 403) return new IntelligenceError("authentication");
-  if (status === 402) return new IntelligenceError("quota_exhausted");
-  if (status === 429) return new IntelligenceError("rate_limited");
-  if (status >= 500) return new IntelligenceError("provider_unavailable");
-  return new IntelligenceError("provider_error");
+  if (status === 401 || status === 403) return new IntelligenceError("authentication", status);
+  if (status === 402) return new IntelligenceError("quota_exhausted", status);
+  if (status === 429) return new IntelligenceError("rate_limited", status);
+  if (status >= 500) return new IntelligenceError("provider_unavailable", status);
+  return new IntelligenceError("provider_error", status);
 }
 async function boundedJson(response: Response): Promise<unknown> {
   if (!response.body) throw new IntelligenceError("invalid_response");
