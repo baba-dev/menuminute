@@ -146,7 +146,7 @@ export function StudioMenuGallery({
       }}
       onClose={() => {
         closeLibrary();
-        returnFocus.current?.focus();
+        if (!document.querySelector("dialog[open]")) returnFocus.current?.focus();
       }}
     >
       <header className="atelier-gallery-header">
