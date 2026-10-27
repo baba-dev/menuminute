@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -51,6 +51,10 @@ async function json<T>(response: Response): Promise<T> {
   return result as T;
 }
 
+function subscribeUrl(notify: () => void) {
+  window.addEventListener("popstate", notify);
+  return () => window.removeEventListener("popstate", notify);
+}
 export function TheTill({
   organizationId,
   outletId,
@@ -84,11 +88,14 @@ export function TheTill({
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
-  const [incomingOrderId, setIncomingOrderId] = useState("");
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("attachOrder") ?? "";
-    setIncomingOrderId(/^[A-Za-z0-9_-]{1,128}$/.test(id) ? id : "");
-  }, [outletId]);
+  const incomingOrderId = useSyncExternalStore(
+    subscribeUrl,
+    () => {
+      const id = new URLSearchParams(window.location.search).get("attachOrder") ?? "";
+      return /^[A-Za-z0-9_-]{1,128}$/.test(id) ? id : "";
+    },
+    () => ""
+  );
   const incomingOrder = workspace.attachable.find((o) => o.orderId === incomingOrderId);
   const seller = workspace.context.seller;
   const [legalName, setLegalName] = useState(seller?.legalName ?? initial.context.outletName);

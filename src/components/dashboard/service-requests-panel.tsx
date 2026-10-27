@@ -25,7 +25,7 @@ export function ServiceRequestsPanel({
     }
   }, [url]);
   useEffect(() => {
-    void refresh();
+    void Promise.resolve().then(refresh);
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 12000);

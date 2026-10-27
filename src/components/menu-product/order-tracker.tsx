@@ -170,7 +170,7 @@ export function OrderTracker({
   }, [capability, serviceUrl, token]);
   useEffect(() => {
     if (!capability || data?.order.fulfillmentMode !== "dine_in") return;
-    void refreshServices();
+    void Promise.resolve().then(refreshServices);
     const id = window.setInterval(() => void refreshServices(), 12000);
     return () => window.clearInterval(id);
   }, [capability, data?.order.fulfillmentMode, refreshServices]);
