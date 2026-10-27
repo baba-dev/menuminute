@@ -42,6 +42,7 @@ Confirm actual SVG responses (200 + `image/svg+xml`) in both themes after upload
 ## Verification / release gates
 
 Run on the final branch SHA after owner artwork upload:
+
 ```sh
 pnpm install --frozen-lockfile
 pnpm format:check
