@@ -28,8 +28,9 @@ export function TableFloorMatrix({
     (t) => filter === "all" || (filter === "active" ? t.activeOrders > 0 : t.unpaidOrders > 0)
   );
   const fmt = (minor: string) => {
-    const dec = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
-      .maximumFractionDigits ?? 2;
+    const dec =
+      new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
+        .maximumFractionDigits ?? 2;
     return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(
       Number(minor) / 10 ** dec
     );
@@ -41,26 +42,47 @@ export function TableFloorMatrix({
         <div>
           <span className="mm-dashboard-eyebrow">DINING ROOM</span>
           <h2 id="floor-matrix-title">Your dining floor</h2>
-          <p>Outstanding table orders and unpaid balances. Updated approximately every 20 seconds.</p>
+          <p>
+            Outstanding table orders and unpaid balances. Updated approximately every 20 seconds.
+          </p>
         </div>
         <div className="mm-ops-art-wrap" aria-hidden="true">
-          <Image className="mm-ops-art mm-ops-art--light"
-            src="/brand/dashboard/editorial/dining-room-empty-light.svg" alt="" width={110} height={83} />
-          <Image className="mm-ops-art mm-ops-art--dark"
-            src="/brand/dashboard/editorial/dining-room-empty-dark.svg" alt="" width={110} height={83} />
+          <Image
+            className="mm-ops-art mm-ops-art--light"
+            src="/brand/dashboard/editorial/dining-room-empty-light.svg"
+            alt=""
+            width={110}
+            height={83}
+          />
+          <Image
+            className="mm-ops-art mm-ops-art--dark"
+            src="/brand/dashboard/editorial/dining-room-empty-dark.svg"
+            alt=""
+            width={110}
+            height={83}
+          />
         </div>
       </div>
       <div className="mm-ops-actions">
-        <button type="button" onClick={() => startRefresh(() => router.refresh())}
-          disabled={refreshing} aria-label="Refresh dining floor">
+        <button
+          type="button"
+          onClick={() => startRefresh(() => router.refresh())}
+          disabled={refreshing}
+          aria-label="Refresh dining floor"
+        >
           <RefreshCw size={15} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh floor"}
         </button>
-        <Link href="/dashboard/qr-codes">Manage service points <ArrowRight size={14} aria-hidden="true" /></Link>
+        <Link href="/dashboard/qr-codes">
+          Manage service points <ArrowRight size={14} aria-hidden="true" />
+        </Link>
       </div>
       {tables === null ? (
         <div className="mm-ops-empty" role="status">
           <Table2 size={26} aria-hidden="true" />
-          <p>Floor data unavailable or order access is restricted. No table availability claim is being made.</p>
+          <p>
+            Floor data unavailable or order access is restricted. No table availability claim is
+            being made.
+          </p>
         </div>
       ) : tables.length === 0 ? (
         <div className="mm-ops-empty">
@@ -69,27 +91,56 @@ export function TableFloorMatrix({
         </div>
       ) : (
         <>
-          <div className="mm-ops-actions" role="group" aria-label="Filter dining room order activity">
+          <div
+            className="mm-ops-actions"
+            role="group"
+            aria-label="Filter dining room order activity"
+          >
             {(["all", "active", "unpaid"] as const).map((key) => {
-              const count = key === "all" ? tables.length :
-                tables.filter((row) => key === "active" ? row.activeOrders > 0 : row.unpaidOrders > 0).length;
-              return <button key={key} type="button" aria-pressed={filter === key}
-                onClick={() => setFilter(key)}>
-                {key === "all" ? "All tables" : key === "active" ? "Active orders" : "Unpaid tabs"} ({count})
-              </button>;
+              const count =
+                key === "all"
+                  ? tables.length
+                  : tables.filter((row) =>
+                      key === "active" ? row.activeOrders > 0 : row.unpaidOrders > 0
+                    ).length;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={filter === key}
+                  onClick={() => setFilter(key)}
+                >
+                  {key === "all"
+                    ? "All tables"
+                    : key === "active"
+                      ? "Active orders"
+                      : "Unpaid tabs"}{" "}
+                  ({count})
+                </button>
+              );
             })}
           </div>
           <ul className="mm-ops-items">
             {rows.map((table) => (
               <li className="mm-ops-item" key={table.id}>
                 <strong>Table {table.tableNumber}</strong>
-                <span>{table.unpaidOrders > 0 ? "Unpaid" : table.activeOrders > 0 ? "Order active" : "No open tickets"}</span>
+                <span>
+                  {table.unpaidOrders > 0
+                    ? "Unpaid"
+                    : table.activeOrders > 0
+                      ? "Order active"
+                      : "No open tickets"}
+                </span>
                 {table.label && <p>{table.label}</p>}
-                <p>{table.activeOrders} active orders · {table.unpaidOrders} unpaid</p>
+                <p>
+                  {table.activeOrders} active orders · {table.unpaidOrders} unpaid
+                </p>
                 {table.unpaidOrders > 0 && <strong>Due: {fmt(table.dueMinor)}</strong>}
                 {table.latestOrderId && (
                   <div className="mm-ops-actions">
-                    <Link href={"/dashboard/pos?attachOrder=" + encodeURIComponent(table.latestOrderId)}>
+                    <Link
+                      href={"/dashboard/pos?attachOrder=" + encodeURIComponent(table.latestOrderId)}
+                    >
                       View in Till
                     </Link>
                     <Link href="/dashboard/orders">Orders Rail</Link>
