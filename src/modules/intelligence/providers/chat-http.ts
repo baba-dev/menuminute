@@ -84,7 +84,10 @@ function toWireMessage(message: InferenceRequest["messages"][number], model: Pro
   if (message.role === "assistant")
     return {
       role: "assistant",
-      content: message.content,
+      // Several Cloudflare Workers AI model schemas reject null assistant content
+      // on the follow-up request, even when tool_calls are present. Preserve the
+      // OpenAI-compatible null value for NVIDIA; Cloudflare receives an empty string.
+      content: model.provider === "cloudflare" && message.content === null ? "" : message.content,
       ...(message.toolCalls.length
         ? {
             tool_calls: message.toolCalls.map((call) => ({
