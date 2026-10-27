@@ -17,9 +17,12 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
   const [confirmedTimezone, setConfirmedTimezone] = useState(false);
   const [localNow, setLocalNow] = useState<Date | null>(null);
   useEffect(() => {
-    setLocalNow(new Date());
+    const first = window.setTimeout(() => setLocalNow(new Date()), 0);
     const timer = window.setInterval(() => setLocalNow(new Date()), 60_000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
   }, []);
   const hasCoords = draft.latitude !== null && draft.longitude !== null;
   const handleLaunchClick = async () => {

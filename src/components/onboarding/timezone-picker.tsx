@@ -71,7 +71,7 @@ export function OutletTimezonePicker({
   }, [options, search, canonical]);
 
   return (
-    <div className="wizard-field-group">
+    <div className="wizard-field-group" data-timezone-field={id}>
       <label className="wizard-label" htmlFor={selectId}>
         Operating timezone *
       </label>
