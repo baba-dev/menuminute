@@ -30,6 +30,7 @@ export type MenuLibraryAction = "archive" | "unpublish" | "restore";
 
 type LibraryMenu = MenuLibraryEntry & { parsed: MenuDocument | null; title: string };
 type DishWithCategory = {
+  categoryId: string;
   category: string;
   dish: MenuDocument["categories"][number]["items"][number];
 };
@@ -93,11 +94,11 @@ export function StudioMenuGallery({
   const dishes = sections.flatMap((section): DishWithCategory[] =>
     section.items
       .filter((dish) => !dish.archived)
-      .map((dish) => ({ category: section.name, dish }))
+      .map((dish) => ({ categoryId: section.id, category: section.name, dish }))
   );
   const filteredDishes = category === "all"
     ? dishes
-    : dishes.filter((item) => item.category === category);
+    : dishes.filter((item) => item.categoryId === category);
 
   useEffect(() => {
     if (!open) return;
@@ -263,8 +264,8 @@ export function StudioMenuGallery({
                       <button
                         key={section.id}
                         type="button"
-                        aria-pressed={category === section.name}
-                        onClick={() => { setCategory(section.name); setVisibleCount(48); }}
+                        aria-pressed={category === section.id}
+                        onClick={() => { setCategory(section.id); setVisibleCount(48); }}
                       >
                         {section.name}
                       </button>
@@ -281,7 +282,7 @@ export function StudioMenuGallery({
                               <h4>{dish.name}</h4>
                               {dish.description && <p className="atelier-supporting-text">{dish.description}</p>}
                               <div className="atelier-gallery-dish-bottom">
-                                <strong>{dish.variants.length ? "From " : ""}{formatPrice(startingPriceMinor(dish), selected.parsed.currency || currency)}</strong>
+                                <strong>{dish.variants.length ? "From " : ""}{formatPrice(startingPriceMinor(dish), currency)}</strong>
                                 {dish.soldOut && <span className="atelier-gallery-sold-out">Sold out</span>}
                               </div>
                             </div>
