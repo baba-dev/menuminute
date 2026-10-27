@@ -46,3 +46,9 @@ REVOKE ALL ON FUNCTION app_private.enforce_restaurant_timezone() FROM PUBLIC;
 CREATE TRIGGER restaurants_valid_timezone
   BEFORE INSERT OR UPDATE OF timezone ON public.restaurants
   FOR EACH ROW EXECUTE FUNCTION app_private.enforce_restaurant_timezone();
+
+-- Completion snapshots filter by outlet and event timestamp; keep this index
+-- bounded to actual terminal handoff transitions.
+CREATE INDEX IF NOT EXISTS order_status_events_completed_by_outlet_idx
+  ON public.order_status_events (restaurant_id, created_at, order_id)
+  WHERE to_status IN ('served', 'collected');
