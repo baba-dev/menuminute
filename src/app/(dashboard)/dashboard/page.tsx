@@ -230,8 +230,9 @@ export default async function DashboardPage() {
                 hasOtherRestrictions:
                   Boolean(dish.schedule) ||
                   (dish.variants.length > 0 && dish.variants.every((v) => !v.isAvailable)) ||
-                  dish.addOnGroups.some((group) =>
-                    group.options.filter((option) => option.isAvailable).length < group.min
+                  dish.addOnGroups.some(
+                    (group) =>
+                      group.options.filter((option) => option.isAvailable).length < group.min
                   ),
               }))
           )
@@ -313,8 +314,10 @@ export default async function DashboardPage() {
                 <h2 id="mm-priorities-title">Today’s priorities</h2>
                 <p>A few quick actions to keep {outlet.name} fresh, accurate and guest-ready.</p>
                 <p className="mm-dashboard-chef-note">
-                  Chef’s note · {stats.hasPublicMenu
-                    ? stats.publishedDishCount + " published dishes. Check availability before service."
+                  Chef’s note ·{" "}
+                  {stats.hasPublicMenu
+                    ? stats.publishedDishCount +
+                      " published dishes. Check availability before service."
                     : "Your first guest-facing menu is waiting to be published."}
                 </p>
               </div>
@@ -492,7 +495,11 @@ export default async function DashboardPage() {
         </div>
         <section className="mm-dashboard-operations-bottom" aria-label="Restaurant operations">
           <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
-          <ServiceRequestsPanel organizationId={outlet.organizationId} outletId={outlet.id} timezone={outlet.timezone} />
+          <ServiceRequestsPanel
+            organizationId={outlet.organizationId}
+            outletId={outlet.id}
+            timezone={outlet.timezone}
+          />
         </section>
       </div>
     </div>
@@ -511,5 +518,12 @@ async function ServicePulseSection({
   timezone: string;
 }) {
   const snapshot = await dashboardPulseSnapshot({ userId }, organizationId, outletId);
-  return <DashboardServicePulse key={outletId} outletId={outletId} timezone={timezone} initial={snapshot} />;
+  return (
+    <DashboardServicePulse
+      key={outletId}
+      outletId={outletId}
+      timezone={timezone}
+      initial={snapshot}
+    />
+  );
 }
