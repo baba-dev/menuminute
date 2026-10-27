@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -1003,6 +1004,11 @@ export function LiveOrdersBoard({
                       !railError &&
                       ["ready", "served", "collected"].includes(currentSelected.status) &&
                       currentSelected.paymentStatus === "unpaid" && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link href={`/dashboard/pos?attachOrder=${encodeURIComponent(currentSelected.id)}`}
+                            className="sc-secondary">
+                            Open in The Till (draft attachment)
+                          </Link>
                         <button
                           type="button"
                           className="sc-secondary"
@@ -1010,6 +1016,7 @@ export function LiveOrdersBoard({
                         >
                           Record cash payment
                         </button>
+                        </div>
                       )}
                   </div>
                   <div className="sc-detail-block">
