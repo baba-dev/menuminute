@@ -132,7 +132,10 @@ function emit(level: LogLevel, message: string, meta?: Record<string, unknown>, 
     if (process.env.NODE_ENV === "test") {
       if (level === "error" || level === "fatal") console.error(line);
       else if (level === "warn") console.warn(line);
-      else console.log(line);
+      else {
+        // eslint-disable-next-line no-console
+        console.log(line);
+      }
       return;
     }
     const stream = level === "error" || level === "fatal" ? process.stderr : process.stdout;

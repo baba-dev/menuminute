@@ -39,7 +39,7 @@ export function LogExplorer() {
   },[level,service,range,search,pageCursor]);
   useEffect(()=>{
     const controller = new AbortController();
-    void refresh(controller.signal);
+    void Promise.resolve().then(() => refresh(controller.signal));
     if (!live) return ()=>controller.abort();
     const interval = setInterval(()=>{
       if (document.visibilityState === "visible") void refresh(controller.signal);
