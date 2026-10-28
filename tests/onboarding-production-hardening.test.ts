@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { admin } from "./helpers";
 import { createRestaurant, createRestaurantSchema } from "../src/modules/restaurants/service";
 import { outletSetupReadiness } from "../src/modules/onboarding/readiness";
+import { currencyFor } from "../src/modules/onboarding/locales";
 import {
   onboardingState,
   saveOnboarding,
@@ -78,4 +79,10 @@ it("clears private draft data after durable provisioning and does not create a s
     ])
   );
   expect(row.rows[0]?.draft).toEqual({});
+});
+
+it("defaults to EUR for all euro-area members including Bulgaria", () => {
+  for (const country of ["BG", "CY", "EE", "HR", "LU", "SI"]) {
+    expect(currencyFor[country]).toBe("EUR");
+  }
 });
