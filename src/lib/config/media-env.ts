@@ -44,6 +44,13 @@ export function validateMediaEnv(value: MediaEnvInput, ctx: z.RefinementCtx) {
       message: "X-Accel-Redirect requires local media storage",
     });
   }
+  if (value.MEDIA_X_ACCEL_REDIRECT_ENABLED && value.MEDIA_ROOT !== "/var/lib/menuminute/media") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["MEDIA_ROOT"],
+      message: "Enabled Nginx offload requires the reviewed local media root",
+    });
+  }
   if (value.MEDIA_STORAGE === "local") {
     if (!value.MEDIA_ROOT || !path.isAbsolute(value.MEDIA_ROOT)) {
       ctx.addIssue({
