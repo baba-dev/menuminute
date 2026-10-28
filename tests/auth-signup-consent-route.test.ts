@@ -1,12 +1,13 @@
 import { expect, it } from "vitest";
+import { NextRequest } from "next/server";
 import { POST } from "../src/app/api/auth/[...all]/route";
 import { TERMS_VERSION } from "../src/content/legal";
 import { admin } from "./helpers";
 
-it("accepts an actual consented signup request and generates a server-owned acceptance timestamp", async () => {
+it("accepts signup via production NextRequest and stamps server-owned consent timestamp", async () => {
   const email = `signup-consent-${crypto.randomUUID()}@route.invalid`;
   const response = await POST(
-    new Request("http://localhost:3000/api/auth/sign-up/email", {
+    new NextRequest("http://localhost:3000/api/auth/sign-up/email", {
       method: "POST",
       headers: { origin: "http://localhost:3000", "content-type": "application/json" },
       body: JSON.stringify({
@@ -32,7 +33,7 @@ it("accepts an actual consented signup request and generates a server-owned acce
 
 it("rejects signup consent omissions before the authentication handler", async () => {
   const response = await POST(
-    new Request("http://localhost:3000/api/auth/sign-up/email", {
+    new NextRequest("http://localhost:3000/api/auth/sign-up/email", {
       method: "POST",
       headers: { origin: "http://localhost:3000", "content-type": "application/json" },
       body: JSON.stringify({ name: "Consent missing", termsVersion: TERMS_VERSION }),

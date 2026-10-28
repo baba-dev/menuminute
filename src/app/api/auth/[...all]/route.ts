@@ -56,7 +56,12 @@ export async function POST(request: Request) {
     // Forward only fields that the authentication schema actually accepts.
     const accountFields = { ...input };
     delete accountFields.acceptTerms;
-    const normalized = new Request(request, {
+    // NextRequest has additional internal state: passing it to the Request
+    // constructor can invoke a cross-realm clone and throw a private-field
+    // brand error in the production standalone build. Construct from the URL
+    // and explicit immutable metadata instead of passing the NextRequest.
+    const normalized = new Request(request.url, {
+      method: "POST",
       headers,
       body: JSON.stringify({
         ...accountFields,
