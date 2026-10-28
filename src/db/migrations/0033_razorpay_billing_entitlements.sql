@@ -58,7 +58,8 @@ CREATE TABLE app_private.razorpay_subscriptions (
   current_end timestamptz,
   created_by text NOT NULL REFERENCES users(id),
   created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
-  updated_at timestamptz NOT NULL DEFAULT clock_timestamp()
+  updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  cancel_requested_at timestamptz
 );
 CREATE INDEX razorpay_subscriptions_org_idx ON app_private.razorpay_subscriptions(organization_id,created_at DESC);
 REVOKE ALL ON app_private.razorpay_subscriptions FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
@@ -112,13 +113,32 @@ BEGIN
   END IF;
   RETURN COALESCE((
     SELECT jsonb_agg(jsonb_build_object('subscriptionId',subscription_id,'product',product_key,
-      'status',status,'currentPeriodEnd',current_end,'createdAt',created_at)
+      'status',status,'currentPeriodEnd',current_end,'createdAt',created_at,
+      'cancelRequestedAt',cancel_requested_at)
       ORDER BY created_at DESC)
     FROM app_private.razorpay_subscriptions WHERE organization_id=p_org
   ),'[]'::jsonb);
 END $$;
 REVOKE ALL ON FUNCTION app_private.razorpay_subscription_state(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.razorpay_subscription_state(text) TO menuminute_app;
+
+-- Owner-only local acknowledgement, permitted only AFTER provider cancellation succeeds.
+-- It never changes an entitlement or pretends that a payment was reversed.
+CREATE FUNCTION app_private.mark_razorpay_cancel_requested(p_org text,p_subscription text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $
+BEGIN
+  IF NOT app_private.org_admin(p_org,true,false) THEN
+    RAISE EXCEPTION 'Owner authorization required' USING ERRCODE='42501';
+  END IF;
+  UPDATE app_private.razorpay_subscriptions SET cancel_requested_at=clock_timestamp(),
+    updated_at=clock_timestamp()
+    WHERE subscription_id=p_subscription AND organization_id=p_org
+      AND status IN ('active','authenticated','pending','created');
+  IF NOT FOUND THEN RAISE EXCEPTION 'Subscription not cancellable' USING ERRCODE='22023'; END IF;
+END $;
+REVOKE ALL ON FUNCTION app_private.mark_razorpay_cancel_requested(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.mark_razorpay_cancel_requested(text,text) TO menuminute_app;
 
 -- Only the dedicated webhook database identity can execute this primitive.
 -- Verify provider signatures before connecting to menuminute_billing. No
