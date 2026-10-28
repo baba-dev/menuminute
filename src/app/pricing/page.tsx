@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
 import { CheckCircle, Sparkles, Terminal } from "lucide-react";
+import { inrMonthlyPrice } from "@/modules/billing/catalog";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -33,7 +34,7 @@ const plans = [
   },
   {
     name: "Live Table Ordering",
-    price: "₹119",
+    price: inrMonthlyPrice("ordering"),
     period: "/ month",
     altPrice: "INR billing · international pricing coming later",
     description:
@@ -54,7 +55,7 @@ const plans = [
   },
   {
     name: "Kitchen Pro KDS",
-    price: "₹299",
+    price: inrMonthlyPrice("kitchen_pro"),
     period: "/ month",
     altPrice: "Available after Kitchen Pro release approval",
     description:
