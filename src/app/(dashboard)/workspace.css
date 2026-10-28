@@ -1209,6 +1209,19 @@
   .mm-dashboard-topbar {
     min-height: 62px;
     padding: 8px 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mm-dashboard-top-actions {
+    max-width: 100%;
+    margin-left: auto;
+  }
+
+  .mm-dashboard-preview {
+    max-width: min(60vw, 220px);
+    text-align: center;
+    overflow-wrap: anywhere;
   }
 
   .mm-dashboard-breadcrumb {
@@ -1307,7 +1320,6 @@
   }
 
   .mm-dashboard-topbar {
-    flex-wrap: wrap;
     gap: 5px;
   }
 

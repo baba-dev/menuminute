@@ -22,6 +22,16 @@ export function MarketingSubpageNav() {
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // A drawer opened on a phone must not reappear after desktop resizing.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMobileOpen(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
+
   useEffect(() => {
     if (!mobileOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -112,7 +122,7 @@ export function MarketingSubpageNav() {
                       key={link.href}
                       href={link.href}
                       aria-current={pathname === link.href ? "page" : undefined}
-                      className={`block rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                      className={`flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                         pathname === link.href
                           ? "bg-muted text-brand-800 dark:text-brand-200"
                           : "text-foreground hover:bg-muted"
