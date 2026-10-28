@@ -54,7 +54,7 @@ describe("QR Studio 4.0 production contracts", () => {
         expect(html).toContain("data-font=\"playfair\"");
         expect(html).toContain("data-palette=\"" + theme.id + "\"");
         expect(html.indexOf("data-real-qr-matrix")).toBeLessThan(html.indexOf("MenuMinute"));
-        expect(html).toContain("stable-destination");
+        expect(html).toContain("live-code");
       }
     }
   });

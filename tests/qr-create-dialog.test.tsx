@@ -28,7 +28,7 @@ describe("Connection Atelier", () => {
   it("uses a two-step review before issuing a creation command", () => {
     const { onCreate } = dialog();
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Create QR code/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Review QR/i })).toBeTruthy();
     fireEvent.change(screen.getByRole("textbox", { name: /QR label/i }), { target: { value: "Counter Menu" } });
     fireEvent.click(screen.getByRole("button", { name: /Review QR/i }));
     expect(onCreate).not.toHaveBeenCalled();
