@@ -68,9 +68,14 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(page.getByRole("region", { name: "Visible kitchen workload" })).toBeVisible();
   await expect(page.getByText("Kitchen setup mode.", { exact: false })).toBeVisible();
   await expect(page.getByText("Kitchen Dashboard Coming in Phase D")).toHaveCount(0);
-  await page.getByRole("button", { name: "Station setup" }).click();
-  await page.getByLabel("Station name").fill("Grill");
-  await page.getByRole("button", { name: "Create station" }).click();
+  // First-time kitchen configuration now opens automatically in a private modal.
+  const setup = page.getByRole("dialog", { name: "Build your kitchen, beautifully." });
+  await expect(setup).toBeVisible();
+  await setup.getByLabel("Station name").fill("Grill");
+  await setup.getByRole("button", { name: "Add station" }).click();
+  await expect(setup.getByText("Grill", { exact: true })).toBeVisible();
+  await setup.getByRole("button", { name: "Close kitchen setup" }).click();
+  await expect(setup).toHaveCount(0);
   await expect(
     page
       .getByRole("navigation", { name: "Kitchen stations" })
@@ -145,6 +150,9 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/kitchen#expeditor");
+  // The guided setup may open for a newly selected, not-yet-configured outlet.
+  const intro = page.getByRole("dialog", { name: "Build your kitchen, beautifully." });
+  if (await intro.isVisible()) await intro.getByRole("button", { name: "Close kitchen setup" }).click();
   const expo = page.getByRole("region", { name: "Expeditor" });
   await expect(expo.getByText("#1042")).toBeVisible();
   await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
