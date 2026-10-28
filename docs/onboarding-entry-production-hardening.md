@@ -24,7 +24,7 @@ Shared 249-country ISO alpha-2 validation, 72 common currency recommendations wi
 
 ## Release checks
 
-- Apply forward-only migration `0032_optional_mfa_for_new_organizations.sql`. It changes the **default for new organizations only**; no existing MFA policy or enrolled factor is erased.
+- Apply forward-only migration `0033_optional_mfa_for_new_organizations.sql`. It changes the **default for new organizations only**; no existing MFA policy or enrolled factor is erased.
 - Verify production registration with genuine Turnstile site and secret keys together; browser mocks are not proof of production challenge delivery.
 - Verify full signup-email-click-login flow including a new invited teammate; the delivered confirmation URL must preserve its safe intended destination.
 - Run PostgreSQL integration tests for provisioning, timezone, invitations, MFA, and the new readiness tests.
