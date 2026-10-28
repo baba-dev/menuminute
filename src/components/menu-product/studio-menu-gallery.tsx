@@ -112,10 +112,10 @@ export function StudioMenuGallery({
   }, [open]);
 
   function closeLibrary() {
-    setActiveId(null);
-    setCategory("all");
-    setVisibleCount(48);
-    setSearch("");
+    if (dialog.current?.open) {
+      dialog.current.close();
+      return;
+    }
     onClose();
   }
 
