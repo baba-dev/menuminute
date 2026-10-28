@@ -67,6 +67,10 @@ export const importCandidateSchema = z
     importId,
     currency: z.string().regex(/^[A-Z]{3}$/),
     categories: z.array(candidateCategory).max(100),
+    sourceWarnings: z.array(z.object({
+      sourceId: importId,
+      reason: z.literal("invalid_provider_response"),
+    }).strict()).max(sourceLimit).optional(),
   })
   .strict()
   .superRefine((doc, ctx) => {
@@ -78,6 +82,9 @@ export const importCandidateSchema = z
     ];
     if (new Set(ids).size !== ids.length)
       ctx.addIssue({ code: "custom", message: "Candidate IDs must be unique" });
+    const warned = doc.sourceWarnings?.map((w) => w.sourceId) ?? [];
+    if (new Set(warned).size !== warned.length)
+      ctx.addIssue({ code: "custom", message: "Duplicate source warning" });
     if (new TextEncoder().encode(JSON.stringify(doc)).byteLength > 500000)
       ctx.addIssue({ code: "custom", message: "Candidate exceeds the size limit" });
   });
