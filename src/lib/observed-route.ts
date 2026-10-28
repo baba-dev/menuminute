@@ -26,7 +26,9 @@ export function observedRoute<T extends (request: never, ...args: never[]) => un
     const traceId = requestId(request);
     return runWithTrace(
       createTraceContext({
-        traceId, method: request.method, path: endpointFamily(request),
+        traceId,
+        method: request.method,
+        path: endpointFamily(request),
         metadata: { observedRequest: true },
       }),
       async () => {
@@ -38,7 +40,9 @@ export function observedRoute<T extends (request: never, ...args: never[]) => un
           if (status >= 500) {
             logger.warn("HTTP request returned server error", {
               event: "http.request.failed",
-              route: endpointFamily(request), method: request.method, status,
+              route: endpointFamily(request),
+              method: request.method,
+              status,
               durationMs: Math.round(duration),
             });
           }
@@ -47,7 +51,8 @@ export function observedRoute<T extends (request: never, ...args: never[]) => un
           telemetry.recordRequest(500, performance.now() - started);
           logger.error("Unhandled API request exception", error, {
             event: "http.request.exception",
-            route: endpointFamily(request), method: request.method,
+            route: endpointFamily(request),
+            method: request.method,
           });
           throw error;
         }

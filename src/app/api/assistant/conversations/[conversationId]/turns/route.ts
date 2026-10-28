@@ -7,7 +7,10 @@ import { createProviderHub } from "@/modules/intelligence";
 import { beginTurn, conversationInput, turnInput } from "@/modules/intelligence/store";
 import { runReadOnlyTurn } from "@/modules/intelligence/orchestrator";
 const schema = conversationInput.omit({ key: true }).extend(turnInput.shape).strict();
-async function observed_POST(req: Request, context: { params: Promise<{ conversationId: string }> }) {
+async function observed_POST(
+  req: Request,
+  context: { params: Promise<{ conversationId: string }> }
+) {
   try {
     const actor = await requestActor(req, true);
     if (!env.AI_ASSISTANT_READ_ONLY_ENABLED)

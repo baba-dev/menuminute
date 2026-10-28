@@ -2,7 +2,9 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { TelemetryRegistry } from "../src/lib/telemetry";
 describe("validated process telemetry", () => {
   let t: TelemetryRegistry;
-  beforeEach(() => { t = new TelemetryRegistry(4); });
+  beforeEach(() => {
+    t = new TelemetryRegistry(4);
+  });
   it("distinguishes lifespan totals and bounded latency sample window", () => {
     for (let i = 1; i <= 12; i++) t.recordRequest(200, i * 10);
     const s = t.getSnapshot();
@@ -19,7 +21,10 @@ describe("validated process telemetry", () => {
     expect(t.getSnapshot().invalidSamples).toBe(3);
   });
   it("classifies cache failures separately", () => {
-    t.recordCacheMiss(); t.recordCacheError(); t.recordCacheCorrupt(); t.recordCacheFallback();
+    t.recordCacheMiss();
+    t.recordCacheError();
+    t.recordCacheCorrupt();
+    t.recordCacheFallback();
     const s = t.getSnapshot();
     expect(s.cacheHitRatio).toBe("0.0%");
     expect(s.cacheErrors).toBe(1);

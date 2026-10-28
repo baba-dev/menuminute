@@ -8,7 +8,10 @@ import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { createRazorpaySubscription, verifyBillingWriterReady } from "@/modules/billing/razorpay";
 import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
-async function observed_POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
+async function observed_POST(
+  req: Request,
+  context: { params: Promise<{ organizationId: string }> }
+) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId } = await context.params;

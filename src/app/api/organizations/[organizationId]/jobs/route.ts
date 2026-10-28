@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { retryEvent } from "@/modules/organizations/service";
-async function observed_POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
+async function observed_POST(
+  req: Request,
+  context: { params: Promise<{ organizationId: string }> }
+) {
   try {
     const actor = await requestActor(req, true);
     const body = z

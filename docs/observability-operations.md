@@ -28,7 +28,7 @@ until the collector is explicitly installed.
 **Important:** log collection is opt-in. Do not install the unit automatically
 from a GitHub build; the host operator must authorize journal privileges.
 The collector is intentionally read-only with respect to source journal entries.
-It *does* write a sanitized local index. Preserve system-level journald disk limits
+It _does_ write a sanitized local index. Preserve system-level journald disk limits
 separately; 256 MiB is the maximum for this application index, not host journal.
 Inspect host journal retention and disk budget independently.
 

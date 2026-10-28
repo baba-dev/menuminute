@@ -2,7 +2,10 @@ import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { conversationInput, conversationHistory } from "@/modules/intelligence/store";
-async function observed_GET(req: Request, context: { params: Promise<{ conversationId: string }> }) {
+async function observed_GET(
+  req: Request,
+  context: { params: Promise<{ conversationId: string }> }
+) {
   try {
     const actor = await requestActor(req);
     const input = conversationInput

@@ -30,5 +30,7 @@ it("records unhandled exceptions without leaking their details", async () => {
     await expect(observed(new Request("https://menu.invalid/api/failure"))).rejects.toThrow();
     expect(telemetry.getSnapshot().statusCodes["5xx"]).toBe(1);
     expect(JSON.stringify(log.mock.calls)).not.toContain("do-not-log-secret");
-  } finally { log.mockRestore(); }
+  } finally {
+    log.mockRestore();
+  }
 });

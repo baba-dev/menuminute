@@ -6,7 +6,17 @@ import {
   retryOutboxEvent,
 } from "@/modules/admin/system.service";
 import { SystemConsole } from "./system-console";
-import { Database, Activity, Layers, CheckCircle2, XCircle, GitBranch, Gauge, Zap, Server } from "lucide-react";
+import {
+  Database,
+  Activity,
+  Layers,
+  CheckCircle2,
+  XCircle,
+  GitBranch,
+  Gauge,
+  Zap,
+  Server,
+} from "lucide-react";
 import { revalidatePath } from "next/cache";
 
 export default async function AdminSystemPage() {
@@ -65,11 +75,15 @@ export default async function AdminSystemPage() {
           <div className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-stone-400">p50 Latency</span>
-              <span className="font-mono font-bold text-stone-200">{health.telemetry.p50Ms} ms</span>
+              <span className="font-mono font-bold text-stone-200">
+                {health.telemetry.p50Ms} ms
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">p95 Latency</span>
-              <span className="font-mono font-bold text-amber-300">{health.telemetry.p95Ms} ms</span>
+              <span className="font-mono font-bold text-amber-300">
+                {health.telemetry.p95Ms} ms
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">p99 Latency</span>
@@ -89,7 +103,9 @@ export default async function AdminSystemPage() {
           <div className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Hit Ratio</span>
-              <span className="font-mono font-bold text-emerald-400">{health.telemetry.cacheHitRatio}</span>
+              <span className="font-mono font-bold text-emerald-400">
+                {health.telemetry.cacheHitRatio}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Hits / Misses</span>
@@ -115,7 +131,9 @@ export default async function AdminSystemPage() {
           <div className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Recorded Requests (process)</span>
-              <span className="font-mono font-bold text-stone-200">{health.telemetry.requestsTotal}</span>
+              <span className="font-mono font-bold text-stone-200">
+                {health.telemetry.requestsTotal}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Status 2xx / 4xx / 5xx</span>
@@ -143,15 +161,21 @@ export default async function AdminSystemPage() {
           <div className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Heap Used</span>
-              <span className="font-mono font-bold text-stone-200">{health.telemetry.memoryUsage.heapUsedMb} MB</span>
+              <span className="font-mono font-bold text-stone-200">
+                {health.telemetry.memoryUsage.heapUsedMb} MB
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Process RSS</span>
-              <span className="font-mono font-bold text-stone-200">{health.telemetry.memoryUsage.rssMb} MB</span>
+              <span className="font-mono font-bold text-stone-200">
+                {health.telemetry.memoryUsage.rssMb} MB
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-400">Process Uptime</span>
-              <span className="font-mono text-stone-300">{Math.floor(health.telemetry.uptimeSeconds / 60)} min</span>
+              <span className="font-mono text-stone-300">
+                {Math.floor(health.telemetry.uptimeSeconds / 60)} min
+              </span>
             </div>
           </div>
         </div>
@@ -160,12 +184,31 @@ export default async function AdminSystemPage() {
       {/* Read-only, process-local diagnostic signals. */}
       <div className="rounded-2xl border border-stone-800 bg-stone-900 p-4 text-xs text-stone-400">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span>Process telemetry · sampled last {health.telemetry.latencyWindowSeconds / 60} minutes · {health.telemetry.latencySamples} latency samples</span>
+          <span>
+            Process telemetry · sampled last {health.telemetry.latencyWindowSeconds / 60} minutes ·{" "}
+            {health.telemetry.latencySamples} latency samples
+          </span>
           <span>Updated {new Date(health.telemetry.capturedAt).toLocaleString()}</span>
         </div>
-        <p className="mt-2">Total requests count only instrumented handlers plus legacy error paths and resets on restart. These counters are not host-wide.</p>
-        {health.logger.dropped > 0 && <p role="alert" className="mt-2 text-amber-300">Logging backpressure: {health.logger.dropped} lower-priority events dropped since process start.</p>}
-        {health.alerts.map((alert) => <p key={alert.id} role="alert" className="mt-2 rounded-lg border border-amber-800 bg-amber-950/30 p-3 text-amber-200"><strong>{alert.title}</strong> — {alert.explanation}</p>)}
+        <p className="mt-2">
+          Total requests count only instrumented handlers plus legacy error paths and resets on
+          restart. These counters are not host-wide.
+        </p>
+        {health.logger.dropped > 0 && (
+          <p role="alert" className="mt-2 text-amber-300">
+            Logging backpressure: {health.logger.dropped} lower-priority events dropped since
+            process start.
+          </p>
+        )}
+        {health.alerts.map((alert) => (
+          <p
+            key={alert.id}
+            role="alert"
+            className="mt-2 rounded-lg border border-amber-800 bg-amber-950/30 p-3 text-amber-200"
+          >
+            <strong>{alert.title}</strong> — {alert.explanation}
+          </p>
+        ))}
       </div>
       {/* Connectivity & Workload Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

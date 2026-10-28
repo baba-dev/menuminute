@@ -1,11 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { logger, redactSensitiveData, redactLogString, setLogLevel, getLogLevel } from "../src/lib/logger";
+import {
+  logger,
+  redactSensitiveData,
+  redactLogString,
+  setLogLevel,
+  getLogLevel,
+} from "../src/lib/logger";
 import { createTraceContext, runWithTrace } from "../src/lib/tracing";
 
 describe("Structured safe logging", () => {
   let previous = getLogLevel();
-  beforeEach(() => { previous = getLogLevel(); setLogLevel("debug"); });
-  afterEach(() => { setLogLevel(previous); vi.restoreAllMocks(); });
+  beforeEach(() => {
+    previous = getLogLevel();
+    setLogLevel("debug");
+  });
+  afterEach(() => {
+    setLogLevel(previous);
+    vi.restoreAllMocks();
+  });
   it("emits parseable NDJSON with nested metadata", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     logger.info("order updated", { orderId: "ord_123" });
@@ -42,9 +54,16 @@ describe("Structured safe logging", () => {
   });
   it("ignores getters, circular links, and unsafe toJSON", () => {
     const item: Record<string, unknown> = { safe: "value" };
-    Object.defineProperty(item, "sideEffect", { enumerable: true, get() { throw Error("called getter"); } });
+    Object.defineProperty(item, "sideEffect", {
+      enumerable: true,
+      get() {
+        throw Error("called getter");
+      },
+    });
     item.self = item;
-    item.toJSON = () => { throw Error("called toJSON"); };
+    item.toJSON = () => {
+      throw Error("called toJSON");
+    };
     const safe = redactSensitiveData(item) as Record<string, unknown>;
     expect(safe.sideEffect).toBe("[ACCESSOR]");
     expect(safe.self).toBe("[CIRCULAR]");
@@ -52,13 +71,14 @@ describe("Structured safe logging", () => {
   });
   it("propagates trusted async context", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runWithTrace(createTraceContext({traceId:"trusted-trace"}), () => logger.info("ok"));
+    runWithTrace(createTraceContext({ traceId: "trusted-trace" }), () => logger.info("ok"));
     expect(JSON.parse(String(spy.mock.calls[0]?.[0])).traceId).toBe("trusted-trace");
   });
   it("filters low priority levels without output", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     setLogLevel("warn");
-    logger.debug("no"); logger.info("no");
+    logger.debug("no");
+    logger.info("no");
     expect(spy).not.toHaveBeenCalled();
   });
   it("redacts URLs containing query strings", () => {

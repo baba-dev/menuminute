@@ -11,12 +11,18 @@ export interface TraceContext {
   metadata?: Record<string, unknown>;
 }
 export const traceStorage = new AsyncLocalStorage<TraceContext>();
-export function getTraceContext(): TraceContext | undefined { return traceStorage.getStore(); }
+export function getTraceContext(): TraceContext | undefined {
+  return traceStorage.getStore();
+}
 export function createTraceContext(init?: Partial<TraceContext>): TraceContext {
   return {
     traceId: init?.traceId ?? crypto.randomUUID(),
-    spanId: init?.spanId, organizationId: init?.organizationId, outletId: init?.outletId,
-    actorId: init?.actorId, method: init?.method, path: init?.path,
+    spanId: init?.spanId,
+    organizationId: init?.organizationId,
+    outletId: init?.outletId,
+    actorId: init?.actorId,
+    method: init?.method,
+    path: init?.path,
     startedAt: init?.startedAt ?? Date.now(),
     metadata: init?.metadata ? { ...init.metadata } : undefined,
   };

@@ -19,8 +19,10 @@ export function logRequestError(request: Request, error: unknown, status: number
   if (trace?.metadata?.["observedRequest"] !== true) {
     const startHeader = request.headers.get("x-request-start");
     const candidate = startHeader ? Number(startHeader) : NaN;
-    const duration = Number.isFinite(candidate) && candidate > 0 &&
-      candidate <= Date.now() ? Date.now() - candidate : 0;
+    const duration =
+      Number.isFinite(candidate) && candidate > 0 && candidate <= Date.now()
+        ? Date.now() - candidate
+        : 0;
     telemetry.recordRequest(status, duration);
   }
   // Preserve existing conservative error event format: no messages, URLs or stack traces.
@@ -28,11 +30,20 @@ export function logRequestError(request: Request, error: unknown, status: number
     let path = "/unknown";
     try {
       path = "/" + new URL(request.url).pathname.split("/").filter(Boolean).slice(0, 2).join("/");
-    } catch { /* No user URL content in fallback. */ }
-    console.error(JSON.stringify({
-      timestamp: new Date().toISOString(), level: "error", event: "http.request.failed",
-      requestId: requestId(request), method: request.method, path, status,
-      errorType: error instanceof Error ? error.name : "UnknownError",
-    }));
+    } catch {
+      /* No user URL content in fallback. */
+    }
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        event: "http.request.failed",
+        requestId: requestId(request),
+        method: request.method,
+        path,
+        status,
+        errorType: error instanceof Error ? error.name : "UnknownError",
+      })
+    );
   }
 }
