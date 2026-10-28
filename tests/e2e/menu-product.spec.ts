@@ -432,6 +432,48 @@ test("PR C bulk composer deduplicates pasted dishes and matches Hindi input with
   expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
 });
 
+test("Menu Board remains usable at 320px and hydrates private editorial descriptions", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+
+  await page.setViewportSize({ width: 320, height: 690 });
+  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Add a dish" });
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel("Dish name", { exact: true }).fill("Paneer Tikka");
+  await sheet.locator(".menu-board-suggestions button").filter({ hasText: "Paneer Tikka" }).click();
+  await expect(sheet.getByLabel(/Public description/)).toHaveValue(/paneer cubes/i);
+  await expect(sheet.getByText(/unverified suggestions/)).toBeVisible();
+  await sheet.getByLabel(/Price \(/).fill("2.500");
+
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    const sheetWidth = await sheet.evaluate((element) => element.getBoundingClientRect().width);
+    expect(sheetWidth).toBeLessThanOrEqual(width + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  }
+  await sheet.getByRole("button", { name: "Add to draft" }).click();
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Paneer Tikka" })).toBeVisible();
+  expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
+
+  await page.setViewportSize({ width: 320, height: 690 });
+  await page.getByRole("button", { name: "Edit Paneer Tikka" }).click();
+  const editor = page.getByRole("dialog", { name: "Edit Paneer Tikka" });
+  await expect(editor).toBeVisible();
+  expect(await editor.evaluate((element) => element.getBoundingClientRect().width)).toBeLessThanOrEqual(321);
+  await editor.getByRole("button", { name: "Done editing" }).click();
+  await expect(editor).toBeHidden();
+});
+
 test("Recipe Atelier uses the approved media, meaningful draft metrics and adaptive editor", async ({
   page,
   request,
