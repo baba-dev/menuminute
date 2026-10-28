@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { withActor } from "@/modules/tenancy/service";
@@ -7,7 +8,7 @@ import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { createRazorpaySubscription, verifyBillingWriterReady } from "@/modules/billing/razorpay";
 import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
-export async function POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
+async function observed_POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId } = await context.params;
@@ -95,3 +96,5 @@ export async function POST(req: Request, context: { params: Promise<{ organizati
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -6,7 +7,7 @@ import { env } from "@/lib/config/env";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { requestRazorpayCancellation } from "@/modules/billing/razorpay";
 
-export async function POST(
+async function observed_POST(
   req: Request,
   context: { params: Promise<{ organizationId: string; subscriptionId: string }> }
 ) {
@@ -47,3 +48,5 @@ export async function POST(
     return errorResponse(error, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

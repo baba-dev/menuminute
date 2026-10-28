@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { inviteMember, listInvitations, revokeInvitation } from "@/modules/onboarding/service";
 import { z } from "zod";
 type C = { params: Promise<{ organizationId: string }> };
-export async function GET(req: Request, context: C) {
+async function observed_GET(req: Request, context: C) {
   try {
     return NextResponse.json(
       await listInvitations(await requestActor(req), (await context.params).organizationId)
@@ -12,7 +13,7 @@ export async function GET(req: Request, context: C) {
     return errorResponse(e, req);
   }
 }
-export async function POST(req: Request, context: C) {
+async function observed_POST(req: Request, context: C) {
   try {
     return NextResponse.json(
       await inviteMember(
@@ -26,7 +27,7 @@ export async function POST(req: Request, context: C) {
     return errorResponse(e, req);
   }
 }
-export async function DELETE(req: Request, context: C) {
+async function observed_DELETE(req: Request, context: C) {
   try {
     const actor = await requestActor(req, true);
     const body = z
@@ -39,3 +40,7 @@ export async function DELETE(req: Request, context: C) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);
+export const DELETE = observedRoute(observed_DELETE);

@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { auth } from "@/lib/auth";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { saveOnboarding, onboardingState, provisionOnboarding } from "@/modules/onboarding/service";
 import { NextResponse } from "next/server";
 import { UnauthorizedError } from "@/lib/errors";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const session = await auth();
     if (!session) throw new UnauthorizedError();
@@ -13,17 +14,21 @@ export async function GET(req: Request) {
     return errorResponse(e, req);
   }
 }
-export async function PATCH(req: Request) {
+async function observed_PATCH(req: Request) {
   try {
     return NextResponse.json(await saveOnboarding(await requestActor(req, true), await req.json()));
   } catch (e) {
     return errorResponse(e, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     return NextResponse.json(await provisionOnboarding(await requestActor(req, true)));
   } catch (e) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const PATCH = observedRoute(observed_PATCH);
+export const POST = observedRoute(observed_POST);
