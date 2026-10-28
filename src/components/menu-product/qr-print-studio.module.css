@@ -526,3 +526,52 @@
     transform: none;
   }
 }
+
+
+/* QR Studio 4.0: tactile gallery controls with live printed-paper samples. */
+.paletteField legend small { font-size: 11px; color: var(--muted); font-weight: 500; }
+.themeGallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.themeCard { position: relative; display: grid; gap: 4px; min-width: 0; text-align: left; color: var(--ink); background: var(--paper); border: 1px solid var(--qr-line); border-radius: 13px; padding: 8px; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.themeCard:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgb(47 30 15 / 12%); }
+.themeCard[aria-pressed="true"] { border: 2px solid var(--ember); padding: 7px; }
+.themeCard:focus-visible, .fontCard:focus-visible, .inkButton:focus-visible, .resetDesign:focus-visible { outline: 3px solid var(--ember); outline-offset: 2px; }
+.themeSample { background: var(--theme-paper); color: var(--theme-accent); border: 1px solid color-mix(in srgb, var(--theme-accent), transparent 40%); min-height: 115px; border-radius: 7px; display: grid; place-items: center; align-content: space-evenly; gap: 3px; overflow: hidden; padding: 8px; }
+.themeSample svg { background: #fff; color: #171717; width: 48px; height: 48px; padding: 5px; border: 4px solid #fff; }
+.themeSample > span { font-size: 7px; letter-spacing: .12em; text-align: center; font-weight: 850; }
+.themeSample[data-theme-preview="ink"] { box-shadow: inset 0 0 0 3px #b58b54; }
+.themeSample[data-theme-preview="botanical"] { border-radius: 20% 3px 20% 3px; }
+.themeSample[data-theme-preview="citrus"] { border: 3px dashed #f66b14; }
+.themeSample[data-theme-preview="ruby"] { border: 4px double #80183a; font-family: Georgia, serif; }
+.themeSample[data-theme-preview="coastal"] { border: 3px dashed #096d96; }
+.themeSample[data-theme-preview="neon"] { border: 3px solid #21d5e5; box-shadow: inset 0 0 0 2px #f64da5; }
+.themeSample[data-theme-preview="patisserie"] { border-radius: 14px; border: 2px dotted #b695dd; }
+.themeSample[data-theme-preview="mono"] { border: 4px solid #111; border-radius: 0; }
+.themeName { font-size: 12px; font-weight: 850; line-height: 1.3; padding-top: 3px; }
+.themeCard > small { font-size: 10px; line-height: 1.4; color: var(--muted); }
+.themeCheck { position: absolute; top: 13px; right: 13px; color: var(--ember); background: var(--paper); border-radius: 50%; }
+.fontGallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.fontCard { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px; border: 1px solid var(--qr-line); border-radius: 12px; background: var(--paper); color: var(--ink); text-align: left; }
+.fontCard[aria-pressed="true"] { border: 2px solid var(--ember); padding: 10px; background: var(--qr-soft); }
+.fontSample { display: grid; place-items: center; font-size: 26px; min-width: 48px; height: 47px; border-radius: 8px; background: var(--qr-soft); color: var(--ink); }
+.fontCard[data-font-preview="dm"] .fontSample { font-family: var(--font-dm), sans-serif; }
+.fontCard[data-font-preview="playfair"] .fontSample { font-family: var(--font-print-playfair), serif; }
+.fontCard[data-font-preview="bricolage"] .fontSample { font-family: var(--font-bricolage), sans-serif; }
+.fontCard[data-font-preview="bebas"] .fontSample { font-family: var(--font-print-bebas), sans-serif; }
+.fontCard[data-font-preview="kalam"] .fontSample { font-family: var(--font-kalam), cursive; }
+.fontCard > span:nth-child(2) { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.fontCard strong { font-size: 11px; line-height: 1.3; }
+.fontCard small { font-size: 10px; color: var(--muted); }
+.fontCard svg { flex: none; color: var(--ember); }
+.inkSwatches { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }
+.inkButton { display: grid; place-items: center; min-width: 0; aspect-ratio: 1; border: 3px solid var(--paper); border-radius: 50%; background: var(--ink-swatch); color: white; box-shadow: 0 0 0 1px var(--qr-line); }
+.inkButton[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ember); }
+.inkCustom { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.inkCustom label { display: flex; align-items: center; justify-content: space-between; gap: 9px; font-size: 11px; font-weight: 750; }
+.inkCustom input[type="color"] { width: 42px; height: 39px; padding: 3px; background: var(--paper); border: 1px solid var(--qr-line); border-radius: 8px; cursor: pointer; }
+.inkCustom input[type="text"] { width: min(100%, 110px); height: 39px; padding: 6px 10px; background: var(--paper); border: 1px solid var(--qr-line); border-radius: 8px; color: var(--ink); font: inherit; }
+.inkNotice { color: var(--ember); font-size: 11px; font-weight: 750; margin: 10px 0 3px; }
+.inkHint { color: var(--muted); font-size: 11px; line-height: 1.6; margin: 0; }
+.resetDesign { justify-self: start; color: var(--ember); border: 1px solid var(--qr-line); background: var(--qr-soft); border-radius: 100px; padding: 10px 14px; font-size: 12px; font-weight: 800; }
+@media screen and (min-width: 1101px) { .previewPane { position: sticky; top: 16px; } }
+@media (max-width: 480px) { .themeGallery { gap: 7px; } .themeSample { min-height: 92px; } .fontGallery { grid-template-columns: 1fr; } .inkSwatches { gap: 4px; } }
+@media (prefers-reduced-motion: reduce) { .themeCard { transition: none; } .themeCard:hover { transform: none; } }
