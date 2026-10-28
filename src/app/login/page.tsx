@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     let destination = next;
     if (!destination) {
       const outlets = await getRestaurantsByUserId(session.user.id);
-      destination = outlets.length ? "/dashboard" : "/onboarding";
+      destination = outlets.length ? "/dashboard" : "/start";
     }
     if (params.switch === "1")
       return <SwitchAccount email={session.user.email} next={destination} />;

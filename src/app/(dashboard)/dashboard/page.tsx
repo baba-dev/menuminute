@@ -71,7 +71,7 @@ export default async function DashboardPage() {
           title="Aprons tied, knives sharpened."
           description="Every great restaurant begins with its first outlet. Set up your dining room and kitchen to publish a permanent QR menu."
           action={
-            <Link href="/onboarding" className="mm-dashboard-button mm-dashboard-button--primary">
+            <Link href="/start" className="mm-dashboard-button mm-dashboard-button--primary">
               Set up an outlet <ArrowRight size={17} aria-hidden="true" />
             </Link>
           }
