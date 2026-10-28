@@ -14,9 +14,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
 
   test("Pricing page displays all 3 product tiers correctly", async ({ page }) => {
     await page.goto("/pricing");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Simple, honest pricing."
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Simple, honest pricing.");
     await expect(page.getByRole("heading", { name: "Free Forever" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Live Table Ordering" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Kitchen Pro KDS" })).toBeVisible();
