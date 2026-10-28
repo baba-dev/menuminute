@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
-import { listMenus } from "@/modules/menu-product/service";
-import { menuDocumentSchema } from "@/modules/menu-product/contracts";
+import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { KitchenBoard } from "./kitchen-board";
 import { KitchenAvailabilityPanel } from "./kitchen-availability-panel";
 import { kitchenAvailableDishes } from "@/modules/hospitality/service";
@@ -46,20 +45,24 @@ export default async function KitchenPage() {
   const canManage = await kitchenCanManage(actor, outlet.id);
   const dishList: Array<{ id: string; name: string }> = [];
   if (canManage) {
-    const menus = await listMenus(actor, outlet.id);
+    const menus = (await listMenus(actor, outlet.id)).filter(
+      (menu) => menu.publishedRevision !== null && !menu.archived
+    );
+    // Read immutable published releases, not mutable drafts: pilot readiness and
+    // routing must agree on precisely which dishes guests can order.
+    const releases = await Promise.all(menus.map((menu) => menuDetail(actor, menu.id)));
     const seen = new Map<string, string>();
-    const ambiguous = new Set<string>();
-    for (const menu of menus.filter((m) => m.publishedRevision !== null && !m.archived)) {
-      const parsed = menuDocumentSchema.safeParse(menu.document);
-      if (!parsed.success) continue;
-      for (const cat of parsed.data.categories)
+    for (const menu of releases) {
+      if (!menu.publishedDocument) continue;
+      for (const cat of menu.publishedDocument.categories)
         for (const item of cat.items) {
-          if (item.archived) continue;
-          if (seen.has(item.id) && seen.get(item.id) !== item.name) ambiguous.add(item.id);
-          else seen.set(item.id, item.name);
+          if (cat.archived || item.archived) continue;
+          // The kitchen route authority is the stable dish ID. A conflicting
+          // display name in another assigned menu must not hide a routeable dish.
+          if (!seen.has(item.id)) seen.set(item.id, item.name);
         }
     }
-    for (const [id, name] of seen) if (!ambiguous.has(id)) dishList.push({ id, name });
+    for (const [id, name] of seen) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
   const availability = await kitchenAvailableDishes(actor, outlet.organizationId, outlet.id).catch(
