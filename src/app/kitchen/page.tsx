@@ -52,17 +52,17 @@ export default async function KitchenPage() {
     // routing must agree on precisely which dishes guests can order.
     const releases = await Promise.all(menus.map((menu) => menuDetail(actor, menu.id)));
     const seen = new Map<string, string>();
-    const ambiguous = new Set<string>();
     for (const menu of releases) {
       if (!menu.publishedDocument) continue;
       for (const cat of menu.publishedDocument.categories)
         for (const item of cat.items) {
           if (cat.archived || item.archived) continue;
-          if (seen.has(item.id) && seen.get(item.id) !== item.name) ambiguous.add(item.id);
-          else seen.set(item.id, item.name);
+          // The kitchen route authority is the stable dish ID. A conflicting
+          // display name in another assigned menu must not hide a routeable dish.
+          if (!seen.has(item.id)) seen.set(item.id, item.name);
         }
     }
-    for (const [id, name] of seen) if (!ambiguous.has(id)) dishList.push({ id, name });
+    for (const [id, name] of seen) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
   const availability = await kitchenAvailableDishes(actor, outlet.organizationId, outlet.id).catch(
