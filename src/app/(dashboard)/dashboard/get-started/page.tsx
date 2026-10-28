@@ -94,6 +94,9 @@ export default async function GetStartedPage() {
         <Link href="/dashboard/menu" className="wizard-primary-btn">
           Open Menu Studio <ArrowRight size={16} aria-hidden="true" />
         </Link>
+        <Link href="/dashboard/menu/import" className="wizard-back-btn">
+          Import your existing menu
+        </Link>
         <Link href="/dashboard" className="wizard-back-btn">
           Go to dashboard
         </Link>

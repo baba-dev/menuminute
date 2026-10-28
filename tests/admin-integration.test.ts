@@ -47,7 +47,9 @@ beforeAll(async () => {
     "insert into sessions(id,token,user_id,expires_at) values($1,$2,$3,now()+interval '1 hour'),($4,$5,$6,now()+interval '1 hour')",
     [rootSession, crypto.randomUUID(), rootId, memberSession, crypto.randomUUID(), memberId]
   );
-  await owner.query("insert into organizations(id,name) values($1,'Isolated platform tenant')", [
+  // This test exercises a deliberate platform-admin MFA policy transition.
+  // New customer organizations default to optional MFA, so opt in explicitly.
+  await owner.query("insert into organizations(id,name,mfa_required) values($1,'Isolated platform tenant',true)", [
     orgId,
   ]);
 }, 30000);

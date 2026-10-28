@@ -46,7 +46,7 @@ const OUTLET_TYPES = [
   {
     id: "cloud_kitchen" as const,
     name: "Cloud / Ghost Kitchen",
-    desc: "Delivery & pickup focused commercial kitchen with no dining room.",
+    desc: "Pickup-focused kitchen without a dining room. Delivery integrations are not yet available.",
     icon: Flame,
     defaultFulfillment: ["pickup" as const],
   },
