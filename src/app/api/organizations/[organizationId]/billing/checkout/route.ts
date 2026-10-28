@@ -7,15 +7,13 @@ import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { createRazorpaySubscription, verifyBillingWriterReady } from "@/modules/billing/razorpay";
 import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
-export async function POST(
-  req: Request,
-  context: { params: Promise<{ organizationId: string }> }
-) {
+export async function POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId } = await context.params;
 
-    if (!env.RAZORPAY_ENABLED) throw new ValidationError("Subscriptions are not enabled on this deployment.");
+    if (!env.RAZORPAY_ENABLED)
+      throw new ValidationError("Subscriptions are not enabled on this deployment.");
     if (env.COMMUNITY_EDITION) {
       throw new ValidationError(
         "Self-hosted Community Edition has all features unlocked without subscriptions."
@@ -40,18 +38,22 @@ export async function POST(
     });
 
     const body: unknown = await req.json();
-    const plan = body !== null && typeof body === "object" && "plan" in body ? body.plan : undefined;
+    const plan =
+      body !== null && typeof body === "object" && "plan" in body ? body.plan : undefined;
     if (plan !== "ordering" && plan !== "kitchen_pro") {
       throw new ValidationError("Invalid plan. Choose 'ordering' or 'kitchen_pro'");
     }
 
     if (plan === "kitchen_pro" && !env.RAZORPAY_KITCHEN_ENABLED)
       throw new ValidationError("Kitchen Pro paid activation is not approved yet.");
-    const planId = plan === "kitchen_pro" ? env.RAZORPAY_PLAN_KITCHEN_ID : env.RAZORPAY_PLAN_ORDERING_ID;
+    const planId =
+      plan === "kitchen_pro" ? env.RAZORPAY_PLAN_KITCHEN_ID : env.RAZORPAY_PLAN_ORDERING_ID;
     if (!planId) throw new ValidationError("Provider plan is not configured.");
 
-    if ((plan === "ordering" && current.grants?.ordering) ||
-        (plan === "kitchen_pro" && current.grants?.kitchen))
+    if (
+      (plan === "ordering" && current.grants?.ordering) ||
+      (plan === "kitchen_pro" && current.grants?.kitchen)
+    )
       throw new ValidationError("This organization already has an active entitlement.");
 
     // Fail before calling Razorpay if entitlement reconciliation cannot complete.
@@ -60,9 +62,7 @@ export async function POST(
     const reservation = await withActor(actor, async (tx) => {
       const row = await tx.execute<{
         reservation: { state: string; subscriptionId?: string; requestKey?: string };
-      }>(
-        sql`SELECT app_private.begin_razorpay_checkout(${organizationId},${plan}) AS reservation`
-      );
+      }>(sql`SELECT app_private.begin_razorpay_checkout(${organizationId},${plan}) AS reservation`);
       return row.rows[0]?.reservation;
     });
     if (!reservation || reservation.state === "in_progress")
@@ -70,9 +70,10 @@ export async function POST(
     if (reservation.state !== "reserved" && reservation.state !== "ready")
       throw new ValidationError("Unable to reserve checkout");
 
-    const sub = reservation.state === "ready" && reservation.subscriptionId
-      ? { id: reservation.subscriptionId }
-      : await createRazorpaySubscription({ planId, organizationId });
+    const sub =
+      reservation.state === "ready" && reservation.subscriptionId
+        ? { id: reservation.subscriptionId }
+        : await createRazorpaySubscription({ planId, organizationId });
 
     if (reservation.state === "reserved") {
       if (!reservation.requestKey) throw new ValidationError("Checkout reservation was lost");
