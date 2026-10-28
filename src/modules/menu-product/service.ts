@@ -329,10 +329,7 @@ export type PublicProduct = {
   }[];
 };
 export const publicProduct = cache(
-  async (
-    token: string,
-    requestedLocale?: string | null
-  ): Promise<PublicProduct | null> => {
+  async (token: string, requestedLocale?: string | null): Promise<PublicProduct | null> => {
     if (!z.string().min(1).max(128).safeParse(token).success) return null;
     const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
     const locale = parsedLocale?.success ? parsedLocale.data : null;
@@ -351,100 +348,104 @@ export const publicProduct = cache(
     }
 
     const r = await getPool().query<{
-    data: PublicProduct | null;
-    fingerprint: string | null;
-    ordering_enabled: boolean;
-    pickup_settings: {
-      leadMinutes: number;
-      slotMinutes: number;
-      advanceDays: number;
-    } | null;
-    locales: string[] | null;
-    translations: Array<{
-      menuId: string;
-      sourceRevision: number;
-      document: unknown;
-    }> | null;
-  }>(
-    `with p as (select app_private.free_menu_public($1) as data)
+      data: PublicProduct | null;
+      fingerprint: string | null;
+      ordering_enabled: boolean;
+      pickup_settings: {
+        leadMinutes: number;
+        slotMinutes: number;
+        advanceDays: number;
+      } | null;
+      locales: string[] | null;
+      translations: Array<{
+        menuId: string;
+        sourceRevision: number;
+        document: unknown;
+      }> | null;
+    }>(
+      `with p as (select app_private.free_menu_public($1) as data)
      select data, md5((data->'menus')::text) as fingerprint,
        app_private.public_ordering_enabled($1) as ordering_enabled,
        app_private.public_pickup_settings($1) as pickup_settings,
        app_private.public_menu_locales($1) as locales,
        app_private.public_menu_translations($1,$2) as translations
      from p`,
-    [token, locale]
-  );
-  const data = r.rows[0]?.data;
-  if (data) {
-    data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
-    data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
-    data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
-    data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
-    data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
-    data.availableLocales = r.rows[0]?.locales ?? [];
-    data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
-  }
-  if (!data) return null;
-  if (!data.outlet.versioned) {
-    const legacy = await getPublicMenu(token);
-    if (!legacy) return null;
-    data.menus = [
-      {
-        id: "legacy",
-        revision: 0,
-        brand: null,
-        overrides: [],
-        document: menuDocumentSchema.parse({
-          name: "Menu",
-          currency: data.outlet.currency,
-          categories: legacy.menu.map(({ category, items }) => ({
-            id: category.id,
-            name: category.name,
-            description: category.description ?? "",
-            items: items.map((i) => ({
-              id: i.id,
-              name: i.name,
-              description: i.description ?? "",
-              priceMinor: i.pricePaise,
-              soldOut: !i.isAvailable,
-              dietary: [
-                ...(i.isVeg ? ["vegetarian"] : []),
-                ...(i.isVegan ? ["vegan"] : []),
-                ...(i.isGlutenFree ? ["gluten_free"] : []),
-              ],
-            })),
-          })),
-        }),
-      },
-    ];
-  } else
-    data.menus = data.menus.map((m) => ({ ...m, document: menuDocumentSchema.parse(m.document) }));
-  if (data.locale) {
-    const translations = new Map(
-      (r.rows[0]?.translations ?? []).map((translation) => [translation.menuId, translation])
+      [token, locale]
     );
-    data.menus = data.menus.map((menu) => {
-      const translation = translations.get(menu.id);
-      if (!translation || translation.sourceRevision !== menu.revision) return menu;
-      const parsed = menuTranslationDocumentSchema.safeParse(translation.document);
-      return parsed.success
-        ? { ...menu, document: applyMenuTranslation(menu.document, parsed.data) }
-        : menu;
-    });
+    const data = r.rows[0]?.data;
+    if (data) {
+      data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
+      data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
+      data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
+      data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
+      data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
+      data.availableLocales = r.rows[0]?.locales ?? [];
+      data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
+    }
+    if (!data) return null;
+    if (!data.outlet.versioned) {
+      const legacy = await getPublicMenu(token);
+      if (!legacy) return null;
+      data.menus = [
+        {
+          id: "legacy",
+          revision: 0,
+          brand: null,
+          overrides: [],
+          document: menuDocumentSchema.parse({
+            name: "Menu",
+            currency: data.outlet.currency,
+            categories: legacy.menu.map(({ category, items }) => ({
+              id: category.id,
+              name: category.name,
+              description: category.description ?? "",
+              items: items.map((i) => ({
+                id: i.id,
+                name: i.name,
+                description: i.description ?? "",
+                priceMinor: i.pricePaise,
+                soldOut: !i.isAvailable,
+                dietary: [
+                  ...(i.isVeg ? ["vegetarian"] : []),
+                  ...(i.isVegan ? ["vegan"] : []),
+                  ...(i.isGlutenFree ? ["gluten_free"] : []),
+                ],
+              })),
+            })),
+          }),
+        },
+      ];
+    } else
+      data.menus = data.menus.map((m) => ({
+        ...m,
+        document: menuDocumentSchema.parse(m.document),
+      }));
+    if (data.locale) {
+      const translations = new Map(
+        (r.rows[0]?.translations ?? []).map((translation) => [translation.menuId, translation])
+      );
+      data.menus = data.menus.map((menu) => {
+        const translation = translations.get(menu.id);
+        if (!translation || translation.sourceRevision !== menu.revision) return menu;
+        const parsed = menuTranslationDocumentSchema.safeParse(translation.document);
+        return parsed.success
+          ? { ...menu, document: applyMenuTranslation(menu.document, parsed.data) }
+          : menu;
+      });
+    }
+    // Public payload contains display data only; opaque identities remain internal to API/DOM as needed.
+    data.menus = data.menus.map((m) => ({
+      ...m,
+      document: {
+        ...m.document,
+        categories: m.document.categories
+          .filter((c) => !c.archived)
+          .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
+      },
+    }));
+    if (data) {
+      await setCachedPublicProduct(token, locale, data, cached.fence);
+    }
+    return data;
   }
-  // Public payload contains display data only; opaque identities remain internal to API/DOM as needed.
-  data.menus = data.menus.map((m) => ({
-    ...m,
-    document: {
-      ...m.document,
-      categories: m.document.categories
-        .filter((c) => !c.archived)
-        .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
-    },
-  }));
-  if (data) {
-    await setCachedPublicProduct(token, locale, data, cached.fence);
-  }
-  return data;
-});
+);

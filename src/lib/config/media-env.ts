@@ -15,7 +15,10 @@ export const mediaEnvShape = {
   MEDIA_STORAGE: z.enum(["local", "r2"]),
   MEDIA_ROOT: z.string().optional(),
   // Disabled until the host's Nginx internal alias has been validated and reloaded.
-  MEDIA_X_ACCEL_REDIRECT_ENABLED: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+  MEDIA_X_ACCEL_REDIRECT_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   MEDIA_OUTLET_BUDGET_BYTES: z.coerce
     .number()
     .int()

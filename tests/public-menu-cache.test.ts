@@ -69,7 +69,10 @@ it("invalidates all assigned outlets while retaining independent locale keys", a
   const tb = crypto.randomUUID();
   const da = menu(a);
   const db = menu(b);
-  for (const [token, data] of [[ta, da], [tb, db]] as const) {
+  for (const [token, data] of [
+    [ta, da],
+    [tb, db],
+  ] as const) {
     await setCachedPublicProduct(token, null, data, null);
     const read = await getCachedPublicProduct(token, null);
     await setCachedPublicProduct(token, null, data, read.fence);

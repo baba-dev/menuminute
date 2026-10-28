@@ -56,11 +56,7 @@ export async function getCachedPublicProduct(
     const redis = await redisClient("cache");
     const response = (await redis.eval(readScript, {
       keys: [tokenOutletKey(token), revokedTokenKey(token)],
-      arguments: [
-        "cache:outlet-version:",
-        `cache:public-menu:${token}:`,
-        locale ?? "default",
-      ],
+      arguments: ["cache:outlet-version:", `cache:public-menu:${token}:`, locale ?? "default"],
     })) as Array<string | null>;
     const [outletId, version, payload] = response;
     if (!outletId || !version) return { data: null, fence: null };

@@ -103,7 +103,10 @@ export async function saveOutletProfile(
         .where(and(eq(restaurants.id, outletId), eq(restaurants.organizationId, orgId)))
         .limit(1);
       if (!latest) throw new NotFoundError("Outlet");
-      const res = { profileVersion: result.rows[0]!.version, fields: editableOutletProfile(latest) };
+      const res = {
+        profileVersion: result.rows[0]!.version,
+        fields: editableOutletProfile(latest),
+      };
       return res;
     });
     // Never perform Redis I/O inside an open database transaction.

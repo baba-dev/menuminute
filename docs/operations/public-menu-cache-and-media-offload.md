@@ -5,25 +5,25 @@ SQL security-definer functions remain the authority for public content.
 
 ## Consistency contract
 
-* Redis caches a **display projection**, never an ordering authorization.
-* A QR cache hit still executes the small PostgreSQL
+- Redis caches a **display projection**, never an ordering authorization.
+- A QR cache hit still executes the small PostgreSQL
   `app_private.public_menu_cache_token_active(token,outlet_id)` gate. This
   fails closed for revoked QRs, inactive outlets/organizations and unpublished
   menus, even when a Redis invalidation fails.
-* Invalidation increments non-expiring per-outlet generations **after commit**.
+- Invalidation increments non-expiring per-outlet generations **after commit**.
   Shared menus invalidate all assignments captured before and after mutation.
-* Cold token mapping is learned on the first request; the first database result
+- Cold token mapping is learned on the first request; the first database result
   is intentionally **not** cached because its generation was not known before
   the query. Lua enforces atomic checks before all cache writes.
-* QR revocation tombstones the old token (and removes its association).
-* Redis is a performance dependency, not a data-loss dependency. On outage,
+- QR revocation tombstones the old token (and removes its association).
+- Redis is a performance dependency, not a data-loss dependency. On outage,
   reads fall back to PostgreSQL. If a mutation commits while invalidation fails,
   a previously cached **price or availability projection** may persist for up to
   180 seconds; log alerts must surface this. Actual checkout totals, stock,
   permissions, and QR status must still be verified against PostgreSQL.
   Do not advertise unconditional sub-millisecond reads or instant freshness
   through a Redis outage.
-* Scheduled dish/restaurant visibility is projected using refreshed `now`,
+- Scheduled dish/restaurant visibility is projected using refreshed `now`,
   so a cached document does not freeze the client clock.
 
 ## Release sequencing
@@ -82,12 +82,12 @@ headroom, PostgreSQL max_connections and an ERP coexistence check permit it.
 
 ## Failure and rollback signals
 
-* Alert on `[public-menu-cache] operation failed`. Investigate separately
+- Alert on `[public-menu-cache] operation failed`. Investigate separately
   from Redis queue health; never silence invalidation failures.
-* Roll back the application release through the established symlink mechanism;
+- Roll back the application release through the established symlink mechanism;
   the additive SQL gate is harmless if left installed. Do not drop it in a
   rollback.
-* If stale content is suspected, flush ONLY the dedicated menu cache namespace
+- If stale content is suspected, flush ONLY the dedicated menu cache namespace
   in the independent cache Redis, preserving rate-limits and other namespaces.
   First identify which keys are owned by the public menu cache and use bounded
   SCAN-based cleanup; do not run Redis FLUSHALL on shared infrastructure.
