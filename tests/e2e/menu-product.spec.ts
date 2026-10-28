@@ -645,6 +645,19 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
     "display",
     "grid"
   );
+  // Regression: global .product button styles must not flatten theme tiles or hide ink swatches.
+  const classicTheme = atelier.getByRole("button", { name: "Classic Ember" });
+  const classicSample = classicTheme.locator('[data-theme-preview="ember"]');
+  await expect(classicTheme).toHaveCSS("display", "grid");
+  await expect(classicSample).toHaveCSS("width", /px$/);
+  const navySwatch = atelier.getByRole("button", { name: "Use Midnight Navy QR ink" });
+  await expect(navySwatch).toHaveCSS("display", "grid");
+  await expect(navySwatch).toHaveCSS("border-radius", "50%");
+  await expect(navySwatch).toHaveCSS("background-color", "rgb(21, 42, 66)");
+  await expect(atelier.getByRole("button", { name: "Use Playfair Display font" })).toHaveCSS(
+    "display",
+    "flex"
+  );
   const printedSheet = printPreview.locator("article[data-format]");
   await expect(printedSheet).toHaveCSS("display", "flex");
   await expect(printedSheet).toHaveCSS("background-color", "rgb(255, 249, 237)");
@@ -686,6 +699,24 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
+    const galleryLayout = await classicTheme.evaluate((card) => {
+      const sample = card.querySelector('[data-theme-preview="ember"]');
+      const title = card.querySelector("span:nth-of-type(2)");
+      if (!sample || !title) return null;
+      const box = card.getBoundingClientRect();
+      const preview = sample.getBoundingClientRect();
+      const label = title.getBoundingClientRect();
+      return {
+        withinCard: preview.left >= box.left && preview.right <= box.right,
+        fullWidth: preview.width >= box.width - 26,
+        noOverlap: preview.bottom <= label.top + 1,
+      };
+    });
+    expect(galleryLayout, "Theme cards must stack sample above text at " + width + "px").toEqual({
+      withinCard: true,
+      fullWidth: true,
+      noOverlap: true,
+    });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true
     );
