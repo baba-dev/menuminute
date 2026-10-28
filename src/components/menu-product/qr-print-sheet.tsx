@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { QR } from "./qr-studio-types";
 import { qrDestination } from "./qr-studio-types";
 import { PRINT_FORMATS } from "./qr-print-contract";
+import { getPrintTheme } from "./qr-print-themes";
 import type { PrintDesign, PrintFormat } from "./qr-print-contract";
 import styles from "./qr-print.module.css";
 
@@ -29,6 +30,7 @@ export function QrPrintSheet({
   if (!qr.isActive) return null;
   const url = qrDestination(origin, qr.destinationToken);
   const spec = PRINT_FORMATS[format];
+  const theme = getPrintTheme(design.palette);
   return (
     <div
       className={styles.printCanvas}
@@ -39,6 +41,7 @@ export function QrPrintSheet({
         className={styles.sheet}
         data-format={format}
         data-palette={design.palette}
+        data-font={design.font}
         style={
           {
             "--sheet-width": spec.widthMm + "mm",
@@ -48,15 +51,11 @@ export function QrPrintSheet({
         }
       >
         <span className={styles.ornament} aria-hidden="true">
-          {format === "stand"
-            ? "✦     ✳     ✦"
-            : format === "insert"
-              ? "✳   THE DAILY TABLE   ✳"
-              : "✦"}
+          {theme.ornament}
         </span>
         <div className={styles.identity}>
           <span className={styles.kicker}>
-            {format === "sticker" ? "YOUR MENU IS HERE" : "WELCOME TO OUR TABLE"}
+            {format === "sticker" ? "YOUR MENU IS HERE" : theme.heading}
           </span>
           <h3>{restaurant}</h3>
           {qr.tableId && <p className={styles.point}>{qr.pointLabel ?? "Your table"}</p>}
@@ -67,7 +66,12 @@ export function QrPrintSheet({
           <img
             data-real-qr-matrix
             className={styles.matrix}
-            src={`/api/qr/${encodeURIComponent(qr.id)}/download?format=svg&inline=1`}
+            src={
+              "/api/qr/" +
+              encodeURIComponent(qr.id) +
+              "/download?format=svg&inline=1&ink=" +
+              encodeURIComponent(design.ink)
+            }
             width={300}
             height={300}
             alt={`Real QR opening ${restaurant}'s menu`}
@@ -81,14 +85,10 @@ export function QrPrintSheet({
         </div>
         {design.showUrl && <p className={styles.fallbackUrl}>{url}</p>}
         <div className={styles.footer}>
-          {design.showBrand ? (
-            <span className={styles.brand}>
-              <Image src="/brand/qr/centre-mark-circle.svg" alt="" width={19} height={19} />{" "}
-              MenuMinute · by BabaBuilds
-            </span>
-          ) : (
-            <span className={styles.brand}>PRINT ONCE. KEEP SERVING.</span>
-          )}
+          <span className={styles.brand}>
+            <Image src="/brand/qr/centre-mark-circle.svg" alt="" width={19} height={19} />{" "}
+            MenuMinute · by BabaBuilds
+          </span>
         </div>
       </article>
       <span className={styles.previewCaption} aria-hidden="true">

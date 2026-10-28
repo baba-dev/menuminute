@@ -52,18 +52,18 @@ export function WorkspaceTopbar({
             rel="noopener noreferrer"
             className="mm-dashboard-preview"
           >
-            Preview <ExternalLink size={14} aria-hidden="true" />
+            Public menu <ExternalLink size={14} aria-hidden="true" />
           </Link>
         ) : (
           <span
             className="mm-dashboard-preview mm-dashboard-preview--unavailable"
             title={
               previewError
-                ? "Public preview status cannot be checked right now"
-                : "Publish your menu to enable public preview"
+                ? "Public menu status cannot be checked right now"
+                : "Publish your menu to enable the public menu"
             }
           >
-            {previewError ? "Preview temporarily unavailable" : "Preview unavailable"}
+            {previewError ? "Public menu temporarily unavailable" : "Public menu unavailable"}
           </span>
         )}
         <ThemeControl />

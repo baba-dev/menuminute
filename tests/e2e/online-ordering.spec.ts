@@ -120,6 +120,17 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     .getByRole("button", { name: /Add to Order/ })
     .click();
   await page.getByRole("button", { name: "View order cart" }).click();
+  const receipt = page.locator(".ticket-receipt-card");
+  await expect(receipt).toBeVisible();
+  await expect(receipt).toContainText("Estimated item subtotal");
+  await expect(receipt).toContainText("The restaurant validates prices");
+  await expect(receipt.getByText("Subtotal", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".ticket-receipt-tear")).toHaveAttribute("aria-hidden", "true");
+  const [receiptPaper, drawerPaper] = await Promise.all([
+    receipt.evaluate((node) => getComputedStyle(node).backgroundColor),
+    page.locator(".dining-cart").evaluate((node) => getComputedStyle(node).backgroundColor),
+  ]);
+  expect(receiptPaper).toBe(drawerPaper);
   await expect(page.getByText("Table 4", { exact: false }).first()).toBeVisible();
   await page.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);

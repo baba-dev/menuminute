@@ -20,6 +20,7 @@ export type QuickDish = {
   key: string;
   name: string;
   categoryId: string;
+  description?: string;
   priceText: string;
   free: boolean;
   mediaId: string | null;
@@ -221,7 +222,9 @@ export function SmartDishComposer({
         <div>
           <span className="eyebrow">SMART COMPOSER</span>
           <h2>Add dishes to your menu</h2>
-          <p>Find a familiar dish or create your own. Nothing is published automatically.</p>
+          <p className="atelier-supporting-text">
+            Find a dish or create your own. Nothing is published automatically.
+          </p>
         </div>
         <span className="badge">{selection.length} selected</span>
       </div>
@@ -459,8 +462,8 @@ export function SmartDishComposer({
             </div>
           )}
           {clean.length < 2 && (
-            <p className="quiet">
-              Type at least two characters. Use ↑ ↓ and Enter to choose a suggestion.
+            <p className="quiet atelier-supporting-text">
+              Type two characters to search. Use ↑ ↓ and Enter to select.
             </p>
           )}
         </div>
@@ -479,8 +482,8 @@ export function SmartDishComposer({
             </button>
           </div>
           {!selection.length ? (
-            <p className="quiet">
-              Select dishes to build a batch. Your existing menu is unchanged.
+            <p className="quiet atelier-supporting-text">
+              Select dishes to create a batch. Your existing menu stays unchanged.
             </p>
           ) : (
             <>

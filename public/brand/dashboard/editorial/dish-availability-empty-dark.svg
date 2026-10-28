@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360" role="img" aria-labelledby="title desc">
+<title id="title">Dish availability empty state — dark mode</title>
+<desc id="desc">An airy illustration of an empty cream porcelain dinner plate in front of three unfilled recipe cards, with cutlery, olive branches and small golden accents. No food or availability claims are depicted.</desc>
+<defs>
+  <radialGradient id="glow"><stop stop-color="#765039" stop-opacity=".78"/><stop offset="1" stop-color="#765039" stop-opacity="0"/></radialGradient>
+  <linearGradient id="cardPaper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#E9C8A4"/><stop offset=".57" stop-color="#D6A981"/><stop offset="1" stop-color="#BC875F"/></linearGradient>
+  <linearGradient id="plateSurface" x1=".08" y1="0" x2=".8" y2="1"><stop stop-color="#FFEDCB"/><stop offset=".52" stop-color="#E7C7A0"/><stop offset="1" stop-color="#B9875E"/></linearGradient>
+  <linearGradient id="plateRim" x1=".1" y1="0" x2=".7" y2="1"><stop stop-color="#FFE5A4"/><stop offset=".35" stop-color="#DDA85D"/><stop offset=".82" stop-color="#A86732"/><stop offset="1" stop-color="#704329"/></linearGradient>
+  <linearGradient id="cutlery" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#F3D2A0"/><stop offset=".45" stop-color="#B78353"/><stop offset="1" stop-color="#6C452B"/></linearGradient>
+  <filter id="paperShadow" x="-35%" y="-30%" width="170%" height="175%"><feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-color="#140F0C" flood-opacity=".28"/></filter>
+  <filter id="plateShadow" x="-30%" y="-50%" width="160%" height="205%"><feDropShadow dx="0" dy="8" stdDeviation="5.5" flood-color="#140F0C" flood-opacity=".34"/></filter>
+  <filter id="floorBlur" x="-50%" y="-80%" width="200%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<!-- No opaque rectangle: ready for both dashboard surfaces. -->
+<ellipse cx="248" cy="180" rx="193" ry="154" fill="url(#glow)" opacity=".5"/>
+<path d="M105 148 C117 93 161 65 213 54 C267 28 345 54 375 107 C421 156 398 237 350 275 C306 315 205 322 145 273 C104 238 86 194 105 148Z" fill="#765038" opacity=".12"/>
+<!-- Printmaking flecks, a partial halo and tasteful plus sparkles -->
+<path d="M122 111 Q210 40 321 76" fill="none" stroke="#E9AE72" stroke-width="2.1" stroke-dasharray="2 12" stroke-linecap="round" opacity=".3"/>
+<path d="M72 140 v15 M64.5 147.5 h15 M417 99 v17 M408.5 107.5 h17" stroke="#DE9656" stroke-width="2.7" stroke-linecap="round" opacity=".75"/>
+<circle cx="104" cy="84" r="3" fill="#E9AE72" opacity=".57"/><circle cx="400" cy="213" r="3.4" fill="#E9AE72" opacity=".54"/>
+<path d="M376 141 q12 -9 23 -1 M89 239 q-11 -8 -20 -2" fill="none" stroke="#E9AE72" stroke-width="2.2" opacity=".45" stroke-linecap="round"/>
+<!-- Empty menu / recipe cards: identity placeholders, not real menu data -->
+<g transform="translate(123 70) rotate(-13 50.0 66.0)" opacity=".83" filter="url(#paperShadow)">
+        <rect x="0" y="0" width="100" height="132" rx="11" fill="url(#cardPaper)" stroke="#9F6C49" stroke-width="2.2"/>
+        <path d="M7 17 L7 10 Q7 7 10 7 L88 7" fill="none" stroke="#FFE5BA" stroke-width="2.5" opacity=".7" stroke-linecap="round"/>
+        <circle cx="50.0" cy="43" r="22" fill="#EDD1AE" stroke="#9F6C49" stroke-width="1.8" stroke-dasharray="2.8 5.5"/>
+        <circle cx="50.0" cy="43" r="13" fill="none" stroke="#B6825F" stroke-width="2.5" opacity=".68"/>
+        <path d="M45.0 43 h10 M50.0 38 v10" stroke="#B6825F" stroke-width="2.2" stroke-linecap="round" opacity=".62"/>
+        <path d="M19 83 H81 M19 98 H70 M19 113 H60" fill="none" stroke="#B98B6C" stroke-width="5.4" stroke-linecap="round" opacity=".7"/>
+      </g>
+<g transform="translate(269 67) rotate(11 50.0 66.0)" opacity=".83" filter="url(#paperShadow)">
+        <rect x="0" y="0" width="100" height="132" rx="11" fill="url(#cardPaper)" stroke="#9F6C49" stroke-width="2.2"/>
+        <path d="M7 17 L7 10 Q7 7 10 7 L88 7" fill="none" stroke="#FFE5BA" stroke-width="2.5" opacity=".7" stroke-linecap="round"/>
+        <circle cx="50.0" cy="43" r="22" fill="#EDD1AE" stroke="#9F6C49" stroke-width="1.8" stroke-dasharray="2.8 5.5"/>
+        <circle cx="50.0" cy="43" r="13" fill="none" stroke="#B6825F" stroke-width="2.5" opacity=".68"/>
+        <path d="M45.0 43 h10 M50.0 38 v10" stroke="#B6825F" stroke-width="2.2" stroke-linecap="round" opacity=".62"/>
+        <path d="M19 83 H81 M19 98 H70 M19 113 H60" fill="none" stroke="#B98B6C" stroke-width="5.4" stroke-linecap="round" opacity=".7"/>
+      </g>
+<g transform="translate(188 50) rotate(0 52.0 69.5)" opacity=".95" filter="url(#paperShadow)">
+        <rect x="0" y="0" width="104" height="139" rx="11" fill="url(#cardPaper)" stroke="#9F6C49" stroke-width="2.2"/>
+        <path d="M7 17 L7 10 Q7 7 10 7 L92 7" fill="none" stroke="#FFE5BA" stroke-width="2.5" opacity=".7" stroke-linecap="round"/>
+        <circle cx="52.0" cy="43" r="22" fill="#EDD1AE" stroke="#9F6C49" stroke-width="1.8" stroke-dasharray="2.8 5.5"/>
+        <circle cx="52.0" cy="43" r="13" fill="none" stroke="#B6825F" stroke-width="2.5" opacity=".68"/>
+        <path d="M47.0 43 h10 M52.0 38 v10" stroke="#B6825F" stroke-width="2.2" stroke-linecap="round" opacity=".62"/>
+        <path d="M19 83 H85 M19 98 H74 M19 113 H64" fill="none" stroke="#B98B6C" stroke-width="5.4" stroke-linecap="round" opacity=".7"/>
+      </g>
+<!-- Resting flatware flanks the empty plate -->
+<g transform="translate(99 225) rotate(-22)">
+ <path d="M-4 8 L-4 70 Q-4 78 0 78 Q4 78 4 70 L4 8" fill="url(#cutlery)" stroke="#6C452B" stroke-width="1.8"/>
+ <path d="M-14 -23 L-14 -4 Q-13 13 0 16 Q13 13 14 -4 L14 -23 M-7 -23 L-7 7 M0 -23 L0 7 M7 -23 L7 7" fill="none" stroke="#B78353" stroke-width="4" stroke-linecap="round"/>
+ <path d="M-1 20 L-1 66" stroke="#F3D2A0" stroke-width="1.8" opacity=".8"/>
+</g>
+<g transform="translate(384 228) rotate(23)">
+ <path d="M-3 2 L-4 71 Q-3 79 1 78 Q5 78 5 71 L4 2" fill="url(#cutlery)" stroke="#6C452B" stroke-width="2"/>
+ <ellipse cx="0" cy="-18" rx="13" ry="26" fill="url(#cutlery)" stroke="#6C452B" stroke-width="2"/>
+ <ellipse cx="-3" cy="-22" rx="6.3" ry="15.5" fill="#F3D2A0" opacity=".38"/>
+ <path d="M1 19 L1 67" fill="none" stroke="#F3D2A0" stroke-width="1.7" opacity=".62"/>
+</g>
+<!-- Plate grounding and porcelain layers -->
+<ellipse cx="241" cy="287" rx="158" ry="17" fill="#140F0C" opacity=".22" filter="url(#floorBlur)"/>
+<g filter="url(#plateShadow)">
+ <path d="M94 224 C94 250 144 291 240 294 C332 295 386 255 388 224 L377 222 Q248 264 102 222Z" fill="url(#plateRim)" stroke="#69422C" stroke-width="3.2"/>
+ <ellipse cx="241" cy="223" rx="147" ry="64" fill="url(#plateSurface)" stroke="#69422C" stroke-width="3.7"/>
+ <ellipse cx="241" cy="219" rx="132" ry="55" fill="none" stroke="#FFF3D9" stroke-width="4" opacity=".8"/>
+ <ellipse cx="242" cy="220" rx="111" ry="43.5" fill="#F6DFC0" stroke="#CDA77E" stroke-width="3.2"/>
+ <ellipse cx="242" cy="220" rx="103" ry="36.2" fill="none" stroke="#FFF3D9" stroke-width="2.3" opacity=".75"/>
+ <path d="M137 190 Q160 167 216 165" fill="none" stroke="#FFF3D9" stroke-width="4.5" stroke-linecap="round" opacity=".72"/>
+ <path d="M134 244 Q240 298 353 244" fill="none" stroke="#FFE5A4" stroke-width="2.6" stroke-linecap="round" opacity=".6"/>
+</g>
+<!-- Very subtle open-space emblem on the empty center: only a delicate contour, no food -->
+<g opacity=".62" fill="none" stroke="#CDA77E" stroke-width="2.3" stroke-linecap="round">
+ <circle cx="241" cy="222" r="16" stroke-dasharray="2 6" opacity=".65"/>
+ <path d="M233 222 h16 M241 214 v16" stroke="#E9AE72" stroke-width="2.8"/>
+</g>
+<!-- Gentle olive framing, composed away from the central empty plate -->
+<g transform="translate(109 316) scale(0.65 0.65)" opacity=".94">
+      <path d="M0 0 C12 -22 17 -40 33 -56 C49 -70 63 -88 63 -116" fill="none" stroke="#B78D62" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M13 -30 Q-10 -49 -13 -63 M30 -56 Q13 -79 14 -91 M44 -76 Q67 -78 83 -98" fill="none" stroke="#B78D62" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="-11" cy="-59" rx="10" ry="20" transform="rotate(-37 -11 -59)" fill="#81985E"/>
+      <ellipse cx="12" cy="-88" rx="9" ry="19" transform="rotate(-25 12 -88)" fill="#CED1A0"/>
+      <ellipse cx="37" cy="-76" rx="9" ry="20" transform="rotate(43 37 -76)" fill="#A6B881"/>
+      <ellipse cx="63" cy="-114" rx="9" ry="19" transform="rotate(21 63 -114)" fill="#CED1A0"/>
+      <ellipse cx="75" cy="-94" rx="10" ry="22" transform="rotate(51 75 -94)" fill="#81985E"/>
+      <ellipse cx="7" cy="-30" rx="9" ry="19" transform="rotate(-46 7 -30)" fill="#A6B881"/>
+      <path d="M-14 -65 L-3 -52 M55 -112 L60 -99" stroke="#E3E3BB" stroke-width="1.35" opacity=".37"/>
+    </g>
+<g transform="translate(393 304) scale(-0.6 0.6)" opacity=".94">
+      <path d="M0 0 C12 -22 17 -40 33 -56 C49 -70 63 -88 63 -116" fill="none" stroke="#B78D62" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M13 -30 Q-10 -49 -13 -63 M30 -56 Q13 -79 14 -91 M44 -76 Q67 -78 83 -98" fill="none" stroke="#B78D62" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="-11" cy="-59" rx="10" ry="20" transform="rotate(-37 -11 -59)" fill="#81985E"/>
+      <ellipse cx="12" cy="-88" rx="9" ry="19" transform="rotate(-25 12 -88)" fill="#CED1A0"/>
+      <ellipse cx="37" cy="-76" rx="9" ry="20" transform="rotate(43 37 -76)" fill="#A6B881"/>
+      <ellipse cx="63" cy="-114" rx="9" ry="19" transform="rotate(21 63 -114)" fill="#CED1A0"/>
+      <ellipse cx="75" cy="-94" rx="10" ry="22" transform="rotate(51 75 -94)" fill="#81985E"/>
+      <ellipse cx="7" cy="-30" rx="9" ry="19" transform="rotate(-46 7 -30)" fill="#A6B881"/>
+      <path d="M-14 -65 L-3 -52 M55 -112 L60 -99" stroke="#E3E3BB" stroke-width="1.35" opacity=".37"/>
+    </g>
+<path d="M145 307 Q238 326 334 308" fill="none" stroke="#69422C" stroke-width="1.4" opacity=".14"/>
+<circle cx="125" cy="279" r="2.6" fill="#E9AE72" opacity=".65"/>
+<circle cx="372" cy="292" r="2.1" fill="#E9AE72" opacity=".62"/>
+</svg>

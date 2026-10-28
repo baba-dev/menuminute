@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420" role="img" aria-labelledby="title desc">
+<title id="title">Restaurant service dispatch illustration — dark theme</title>
+<desc id="desc">A small collection of clipped kitchen order tickets hangs above a polished brass service bell, framed by olive sprigs in MenuMinute's Ink and Ember editorial palette.</desc>
+<defs>
+ <linearGradient id="sheet" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#FFE8C8"/><stop offset="1" stop-color="#E8C5A0"/></linearGradient>
+ <linearGradient id="sheetAlt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#EAC59C"/><stop offset="1" stop-color="#E8C5A0"/></linearGradient>
+ <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFE2A0"/><stop offset="0.24" stop-color="#D8A354"/><stop offset="0.78" stop-color="#A9632D"/><stop offset="1" stop-color="#75471D"/></linearGradient>
+ <linearGradient id="bell" x1="0" y1="0" x2="0.92" y2="0.75"><stop stop-color="#75471D"/><stop offset="0.17" stop-color="#A9632D"/><stop offset="0.37" stop-color="#FFE2A0"/><stop offset="0.58" stop-color="#D8A354"/><stop offset="0.81" stop-color="#A9632D"/><stop offset="1" stop-color="#75471D"/></linearGradient>
+ <linearGradient id="foot" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFE2A0"/><stop offset="0.40" stop-color="#D8A354"/><stop offset="0.85" stop-color="#A9632D"/><stop offset="1" stop-color="#75471D"/></linearGradient>
+ <linearGradient id="clip" x1="0" y1="0" x2="0.2" y2="1"><stop stop-color="#FFE2A0"/><stop offset="0.55" stop-color="#D8A354"/><stop offset="1" stop-color="#A9632D"/></linearGradient>
+ <radialGradient id="softGlow"><stop stop-color="#755037" stop-opacity="0.74"/><stop offset="1" stop-color="#755037" stop-opacity="0"/></radialGradient>
+ <filter id="blur" x="-60%" y="-80%" width="220%" height="260%"><feGaussianBlur stdDeviation="10"/></filter>
+ <filter id="drop" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#080D10" flood-opacity="0.3"/></filter>
+ <filter id="softDrop" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#080D10" flood-opacity="0.22"/></filter>
+</defs>
+<!-- Transparent artboard, watercolor-like haloes deliberately set behind the content -->
+<ellipse cx="338" cy="221" rx="229" ry="176" fill="url(#softGlow)" opacity="0.54"/>
+<path d="M168 212 C139 157 190 88 246 84 C320 28 439 65 479 114 C540 161 533 271 467 327 C411 380 318 387 238 342 C181 333 139 275 168 212Z" fill="#755037" opacity="0.13"/>
+<path d="M196 102 C234 63 329 55 408 79" fill="none" stroke="#F0AA65" opacity=".28" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 13"/>
+<!-- Floating line flourishes -->
+<path d="M120 140 l0 -11 M114.5 134.5 l11 0" stroke="#F3AE68" stroke-width="2.4" opacity=".75" stroke-linecap="round"/>
+<path d="M514 128 l0 -17 M505.5 119.5 l17 0" stroke="#F3AE68" stroke-width="2.5" opacity=".85" stroke-linecap="round"/>
+<circle cx="132" cy="186" r="3" fill="#EBA064" opacity=".7"/><circle cx="522" cy="189" r="2.4" fill="#EBA064" opacity=".7"/>
+<!-- Olive branch on left -->
+<g stroke="#98713E" stroke-linecap="round" fill="none" stroke-width="3.6" opacity=".95">
+ <path d="M144 352 C159 313 184 269 225 236"/><path d="M168 311 C155 285 145 273 129 267"/><path d="M181 289 C177 261 181 248 183 236"/><path d="M203 258 C211 234 227 221 240 216"/>
+</g>
+<g opacity=".98">
+ <ellipse cx="148" cy="298" rx="11" ry="26" transform="rotate(-55 148 298)" fill="#AFB780"/><path d="M128 287 Q148 295 163 309" fill="none" stroke="#CCD1A0" opacity=".5"/>
+ <ellipse cx="128" cy="263" rx="10" ry="24" transform="rotate(-53 128 263)" fill="#73875D"/>
+ <ellipse cx="174" cy="256" rx="10" ry="24" transform="rotate(20 174 256)" fill="#CCD1A0"/>
+ <ellipse cx="200" cy="274" rx="11" ry="25" transform="rotate(51 200 274)" fill="#73875D"/>
+ <ellipse cx="211" cy="239" rx="10" ry="22" transform="rotate(52 211 239)" fill="#AFB780"/>
+ <ellipse cx="157" cy="330" rx="10" ry="21" transform="rotate(-54 157 330)" fill="#73875D"/>
+ <ellipse cx="189" cy="306" rx="9" ry="22" transform="rotate(42 189 306)" fill="#AFB780"/>
+</g>
+<!-- Olive branch on far right -->
+<g stroke="#98713E" stroke-width="3.2" stroke-linecap="round" fill="none"><path d="M488 332 C519 293 530 249 525 203"/><path d="M511 294 Q542 284 556 265"/><path d="M524 244 Q502 227 496 205"/></g>
+<g>
+ <ellipse cx="519" cy="207" rx="10" ry="22" transform="rotate(-22 519 207)" fill="#AFB780"/>
+ <ellipse cx="497" cy="226" rx="10" ry="24" transform="rotate(-48 497 226)" fill="#73875D"/>
+ <ellipse cx="541" cy="243" rx="11" ry="25" transform="rotate(26 541 243)" fill="#CCD1A0"/>
+ <ellipse cx="551" cy="267" rx="10" ry="22" transform="rotate(49 551 267)" fill="#73875D"/>
+ <ellipse cx="503" cy="285" rx="9" ry="24" transform="rotate(-40 503 285)" fill="#AFB780"/>
+</g>
+<!-- A brushed brass pass rail -->
+<g filter="url(#softDrop)"><rect x="172" y="86" width="303" height="19" rx="8" fill="url(#rail)"/><rect x="179" y="89" width="290" height="3" rx="1.5" fill="#FFE2A0" opacity=".7"/><circle cx="189" cy="96" r="2.5" fill="#75471D"/><circle cx="458" cy="96" r="2.5" fill="#75471D"/></g>
+<!-- First ticket -->
+<g transform="rotate(-10 242 186)" filter="url(#softDrop)">
+ <path d="M195 102 H290 V260 l-9 -5 -9 5 -9 -5 -9 5 -9 -5 -9 5 -9 -5 -9 5 -9 -5 -5 4 V102Z" fill="url(#sheetAlt)" stroke="#A77754" stroke-width="1.5"/>
+ <path d="M210 127 h42" stroke="#F4D8B7" stroke-width="7" stroke-linecap="round" opacity=".78"/>
+ <path d="M210 144 h64 M210 156 h52" stroke="#C88E61" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+ <path d="M211 179 h63 M211 191 h56 M211 205 h65 M211 217 h39" stroke="#C4A28A" stroke-width="3.4" stroke-linecap="round" opacity=".6"/>
+ <circle cx="272" cy="236" r="9" fill="#EBA064" opacity=".7"/>
+ <path d="m268 236 3 3 5 -6" stroke="#FFE8C8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</g>
+<!-- Third ticket, narrower, behind front -->
+<g transform="rotate(10 420 172)" filter="url(#softDrop)">
+ <path d="M383 104 H462 V230 l-8 -5 -9 5 -8 -5 -9 5 -8 -5 -9 5 -9 -5 -9 5 V104Z" fill="url(#sheetAlt)" stroke="#A77754" stroke-width="1.5"/>
+ <path d="M396 127 h43" stroke="#F4D8B7" stroke-width="5.5" opacity=".75" stroke-linecap="round"/><path d="M397 144 h48 M397 155 h37 M397 177 h48 M397 189 h44 M397 202 h31" stroke="#C4A28A" stroke-width="3.3" stroke-linecap="round" opacity=".65"/>
+</g>
+<!-- Center hero ticket -->
+<g transform="rotate(3 337 188)" filter="url(#drop)">
+ <path d="M285 104 H384 V268 l-9 -5 -9 5 -9 -5 -9 5 -9 -5 -9 5 -9 -5 -9 5 -8 -5 -7 4 V104Z" fill="url(#sheet)" stroke="#A77754" stroke-width="1.7"/>
+ <path d="M300 129 h44" stroke="#F4D8B7" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+ <path d="M300 146 h66 M300 157 h55" stroke="#C88E61" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+ <path d="M301 181 h65 M301 195 h44 M301 209 h64 M301 222 h41" stroke="#C4A28A" stroke-width="3.5" stroke-linecap="round" opacity=".73"/>
+ <circle cx="358" cy="240" r="12" fill="#F58A4A" opacity=".87"/>
+ <path d="m352 239 5 5 9 -11" stroke="#FFE8C8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</g>
+<!-- Brass clips attach slips to rail, sitting foremost -->
+<g fill="url(#clip)" stroke="#75471D" stroke-width="1.4" filter="url(#softDrop)">
+ <rect x="233" y="78" width="17" height="30" rx="5" transform="rotate(-4 241 93)"/>
+ <rect x="331" y="78" width="18" height="33" rx="5"/>
+ <rect x="414" y="78" width="17" height="31" rx="5" transform="rotate(3 422 93)"/>
+</g>
+<g stroke="#FFE2A0" opacity=".72" stroke-width="2.1" stroke-linecap="round"><path d="M239 84 v15"/><path d="M337 84 v18"/><path d="M420 84 v17"/></g>
+<!-- Bell cast shadow and saucer -->
+<ellipse cx="415" cy="358" rx="132" ry="23" fill="#080D10" opacity=".25" filter="url(#blur)"/>
+<path d="M304 333 C320 357 350 369 412 371 C471 371 506 356 519 337 C496 332 326 327 304 333Z" fill="#75471D" opacity=".6"/>
+<ellipse cx="411" cy="341" rx="119" ry="21" fill="url(#foot)" stroke="#75471D" stroke-width="3"/>
+<ellipse cx="412" cy="337" rx="109" ry="14" fill="#FFE2A0" opacity=".48"/>
+<!-- Bell dome; broad visible silhouette -->
+<path d="M316 332 C324 288 360 262 408 259 C454 257 489 284 504 332 C479 347 349 350 316 332Z" fill="url(#bell)" stroke="#75471D" stroke-width="3"/>
+<path d="M331 320 C340 287 368 274 385 272" stroke="#FFE2A0" opacity=".75" stroke-width="9" fill="none" stroke-linecap="round"/>
+<path d="M474 309 C482 321 485 326 486 329" stroke="#75471D" opacity=".5" stroke-width="9" fill="none" stroke-linecap="round"/>
+<path d="M319 333 Q412 347 503 333" fill="none" stroke="#FFE2A0" stroke-width="5" opacity=".78" stroke-linecap="round"/>
+<!-- Button & neck -->
+<rect x="405" y="247" width="15" height="16" rx="6" fill="url(#rail)" stroke="#75471D" stroke-width="2"/>
+<ellipse cx="412" cy="247" rx="21" ry="10" fill="url(#rail)" stroke="#75471D" stroke-width="2"/>
+<ellipse cx="407" cy="244" rx="10" ry="3" fill="#FFE2A0" opacity=".77"/>
+<!-- Foreground leaf + olive accents -->
+<path d="M270 354 C253 351 235 346 224 331" stroke="#98713E" fill="none" stroke-width="2.7" stroke-linecap="round"/>
+<ellipse cx="251" cy="348" rx="10" ry="19" transform="rotate(-48 251 348)" fill="#CCD1A0"/><ellipse cx="233" cy="333" rx="8" ry="18" transform="rotate(-46 233 333)" fill="#73875D"/>
+<!-- Few flecks keep the editorial print feeling -->
+<path d="M150 116 q11 -8 20 -2" stroke="#F3AE68" stroke-width="2" opacity=".4" fill="none" stroke-linecap="round"/>
+<circle cx="536" cy="316" r="3" fill="#F58A4A" opacity=".48"/><circle cx="272" cy="79" r="2.2" fill="#F58A4A" opacity=".45"/>
+</svg>

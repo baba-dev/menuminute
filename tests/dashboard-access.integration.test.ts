@@ -20,7 +20,13 @@ describe("dashboard authorization and lightweight projections", () => {
     expect(qrs[0]).not.toHaveProperty("svgData");
     const menus = await dashboardMenuRows(owner.actor.userId, owner.outlet.id);
     for (const menu of menus) {
-      expect(Object.keys(menu).sort()).toEqual(["archived", "publishedRevision", "revision"]);
+      expect(Object.keys(menu).sort()).toEqual([
+        "archived",
+        "hasUnpublishedChanges",
+        "publishedRevision",
+        "revision",
+      ]);
+      expect(typeof menu.hasUnpublishedChanges).toBe("boolean");
     }
     await expect(dashboardQrRows(outsider.actor.userId, owner.outlet.id)).rejects.toMatchObject({
       statusCode: 403,

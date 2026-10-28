@@ -7,6 +7,7 @@
   max-width: 1700px;
   margin: auto;
 }
+:root[data-theme="dark"] .till-page,
 .dark .till-page {
   --till-ink: #f6eddf;
   --till-ember: #f5a24a;
@@ -204,6 +205,7 @@
   background: var(--till-ink);
   color: #fff;
 }
+:root[data-theme="dark"] .till-categories button.active,
 .dark .till-categories button.active {
   color: #1c1712;
 }
@@ -419,6 +421,7 @@
   padding: 25px;
   box-shadow: 0 24px 80px #0004;
 }
+:root[data-theme="dark"] .till-modal,
 .dark .till-modal {
   background: #252017;
   color: #f8efde;

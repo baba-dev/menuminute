@@ -31,7 +31,8 @@
         "Fenugreek Leaves"
       ],
       "allergens": ["dairy", "nuts"]
-    }
+    },
+    "publicDescription": "Paneer pieces simmered in a creamy, mildly spiced tomato gravy with butter and aromatic herbs."
   },
   {
     "name": "Butter Chicken",
@@ -65,7 +66,8 @@
         "Garam Masala"
       ],
       "allergens": ["dairy", "nuts"]
-    }
+    },
+    "publicDescription": "Tender chicken in a rich tomato-and-butter gravy with warming spices."
   },
   {
     "name": "Dal Makhani",
@@ -99,7 +101,8 @@
         "Cumin"
       ],
       "allergens": ["dairy"]
-    }
+    },
+    "publicDescription": "Slow-simmered black lentils and kidney beans finished with cream and aromatic spices."
   },
   {
     "name": "Dal Tadka",
@@ -133,7 +136,8 @@
         "Fresh Coriander"
       ],
       "allergens": ["mustard"]
-    }
+    },
+    "publicDescription": "Comforting yellow lentils finished with a sizzling garlic-and-spice tempering."
   },
   {
     "name": "Hyderabadi Chicken Biryani",
@@ -168,7 +172,8 @@
         "Ghee"
       ],
       "allergens": ["dairy"]
-    }
+    },
+    "publicDescription": "Fragrant basmati rice layered with marinated chicken and aromatic biryani spices."
   },
   {
     "name": "Vegetable Dum Biryani",
@@ -204,7 +209,8 @@
         "Ghee"
       ],
       "allergens": ["dairy"]
-    }
+    },
+    "publicDescription": "Fragrant basmati rice layered with vegetables, herbs and biryani spices."
   },
   {
     "name": "Paneer Tikka",
@@ -238,7 +244,8 @@
         "Chaat Masala"
       ],
       "allergens": ["dairy", "mustard"]
-    }
+    },
+    "publicDescription": "Marinated paneer cubes roasted with peppers and onions until lightly charred."
   },
   {
     "name": "Tandoori Chicken",
@@ -272,7 +279,8 @@
         "Garlic"
       ],
       "allergens": ["dairy", "mustard"]
-    }
+    },
+    "publicDescription": "Chicken marinated in spiced yogurt and roasted until smoky and tender."
   },
   {
     "name": "Butter Garlic Naan",
@@ -306,7 +314,8 @@
         "Sugar"
       ],
       "allergens": ["gluten", "dairy"]
-    }
+    },
+    "publicDescription": "Soft leavened flatbread brushed with butter and garlic."
   },
   {
     "name": "Tandoori Roti",
@@ -331,7 +340,8 @@
     "safety": {
       "ingredients": ["Stoneground Whole Wheat Flour (Atta)", "Water", "Pinch of Salt"],
       "allergens": ["gluten"]
-    }
+    },
+    "publicDescription": "Rustic whole-wheat flatbread traditionally baked in a tandoor."
   },
   {
     "name": "Masala Dosa",
@@ -365,7 +375,8 @@
         "Sesame / Coconut Oil"
       ],
       "allergens": ["mustard", "sesame"]
-    }
+    },
+    "publicDescription": "Crisp fermented rice-and-lentil crepe filled with spiced potatoes."
   },
   {
     "name": "Chole Bhature",
@@ -399,7 +410,8 @@
         "Ginger"
       ],
       "allergens": ["gluten", "dairy"]
-    }
+    },
+    "publicDescription": "Spiced chickpea curry with fluffy deep-fried bread."
   },
   {
     "name": "Samosa",
@@ -433,7 +445,8 @@
         "Vegetable Oil"
       ],
       "allergens": ["gluten", "nuts"]
-    }
+    },
+    "publicDescription": "Golden, crisp pastry filled with a savory spiced mixture."
   },
   {
     "name": "Margherita Pizza",
@@ -466,7 +479,8 @@
         "Yeast"
       ],
       "allergens": ["gluten", "dairy"]
-    }
+    },
+    "publicDescription": "Classic thin-crust pizza with tomato sauce, mozzarella and basil."
   },
   {
     "name": "Gulab Jamun",
@@ -500,7 +514,8 @@
         "Pistachio Garnish"
       ],
       "allergens": ["dairy", "gluten", "nuts"]
-    }
+    },
+    "publicDescription": "Soft milk-solid dumplings soaked in a fragrant sugar syrup."
   },
   {
     "name": "Mango Lassi",
@@ -531,7 +546,8 @@
         "Green Cardamom Powder"
       ],
       "allergens": ["dairy"]
-    }
+    },
+    "publicDescription": "Chilled yogurt drink blended with sweet mango."
   },
   {
     "name": "Masala Chai",
@@ -563,6 +579,7 @@
         "Sugar"
       ],
       "allergens": ["dairy"]
-    }
+    },
+    "publicDescription": "Warm milk tea brewed with ginger, cardamom and fragrant spices."
   }
 ]

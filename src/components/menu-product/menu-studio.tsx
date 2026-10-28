@@ -1,20 +1,28 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
+import { X } from "lucide-react";
 import { artworkById } from "@/modules/menu-product/dish-artwork";
 import { covers, type CoverPreset } from "@/modules/menu-product/public-presentation";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
+import { StudioAddDish } from "./studio-add-dish";
+import { StudioMenuBoard } from "./studio-menu-board";
+import {
+  StudioMenuGallery,
+  type MenuLibraryAction,
+  type MenuLibraryEntry,
+} from "./studio-menu-gallery";
+import { StudioMenuSelector } from "./studio-menu-selector";
 import {
   findDishDuplicate,
+  findPublicDishDescription,
   normalizeDishText,
   type OrganizationDish,
 } from "@/modules/menu-product/dish-intelligence";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
+import { draftCulinaryDefaults } from "@/modules/menu-product/draft-culinary";
 import { displayToMinor } from "@/lib/money";
 import { Field } from "./studio-fields";
-import { StudioDishEditor } from "./studio-dish-editor";
 import { StudioMediaTab, StudioAssignmentsTab } from "./studio-resources";
 import {
   StudioHero,
@@ -50,7 +58,7 @@ export function MenuStudio({
     fulfillmentModes: string[];
     publicId: string;
   };
-  initialList: { id: string; document: unknown; archived: boolean }[];
+  initialList: MenuLibraryEntry[];
   initialDetail: Detail | null;
   initialMedia: Media[];
   outletChoices: { id: string; name: string; currency: string }[];
@@ -61,31 +69,20 @@ export function MenuStudio({
   const [list, setList] = useState(initialList);
   const [detail, setDetail] = useState(initialDetail);
   const [doc, setDoc] = useState<MenuDocument | null>(initialDetail?.document ?? null);
-  const companionCandidates = useMemo(
-    () =>
-      doc?.categories
-        .filter((category) => !category.archived)
-        .flatMap((category) =>
-          category.items
-            .filter((dish) => !dish.archived)
-            .map((dish) => ({ id: dish.id, name: dish.name }))
-        ) ?? [],
-    [doc]
-  );
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("dishes");
-  const [dishSearch, setDishSearch] = useState("");
-  const [composerMode, setComposerMode] = useState<"add" | "find">("add");
   const [composerCategory, setComposerCategory] = useState("");
-  const [composerFocus, setComposerFocus] = useState(0);
+  const [addDishOpen, setAddDishOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [composerPending, setComposerPending] = useState(false);
+  const [boardPending, setBoardPending] = useState(false);
   const [composerSelection, setComposerSelection] = useState<QuickDish[]>([]);
   const [organizationDishes, setOrganizationDishes] = useState<OrganizationDish[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [lifecycleAction, setLifecycleAction] = useState<"archive" | "unpublish" | null>(null);
   const [confirmName, setConfirmName] = useState("");
@@ -99,17 +96,18 @@ export function MenuStudio({
   const dialog = useRef<HTMLDialogElement>(null);
   const lifecycleDialog = useRef<HTMLDialogElement>(null);
   const previewDialog = useRef<HTMLDialogElement>(null);
+  const bulkDialog = useRef<HTMLDialogElement>(null);
   const headers = { "content-type": "application/json", "x-outlet-id": outlet.id };
   const path = (menuId: string) => `/api/catalog/${menuId}`;
   useEffect(() => {
-    if (!dirty && !composerPending) return;
+    if (!dirty && !composerPending && !boardPending) return;
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty, composerPending]);
+  }, [dirty, composerPending, boardPending]);
   useEffect(() => {
     if (!detail?.id) return;
     let cancelled = false;
@@ -162,11 +160,21 @@ export function MenuStudio({
     if (selected.current !== menuId) return;
     setDetail(next);
     setDoc(next.document);
-    setDishSearch("");
-    setCategoryFilter("all");
+    setList((current) =>
+      current.map((menu) =>
+        menu.id === menuId
+          ? {
+              ...menu,
+              document: next.document,
+              archived: next.archived,
+              revision: next.revision,
+              publishedRevision: next.publishedRevision,
+            }
+          : menu
+      )
+    );
     setComposerCategory("");
     setOrganizationDishes([]);
-    setComposerMode("add");
     if (changedMenu) {
       setComposerPending(false);
       setComposerSelection([]);
@@ -177,6 +185,123 @@ export function MenuStudio({
     }
     setDirty(false);
   }
+  // A library selection is explicit: browsing cards never mutates the editor.
+  async function switchMenu(menuId: string): Promise<boolean> {
+    if (running.current) return false;
+    if (menuId === detail?.id) return true;
+    if (
+      (dirty || composerPending || boardPending) &&
+      !window.confirm("Discard unsaved menu changes and selected dishes?")
+    )
+      return false;
+    running.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await load(menuId);
+      router.refresh();
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not open that menu.");
+      return false;
+    } finally {
+      running.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function createMenu(): Promise<boolean> {
+    if (running.current) return false;
+    if (
+      (dirty || composerPending || boardPending) &&
+      !window.confirm("Discard unsaved menu changes and selected dishes to create another menu?")
+    )
+      return false;
+    running.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await json("/api/catalog", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ key: creationKey.current }),
+      });
+      const next = await json("/api/catalog");
+      setList(next);
+      await load(result.menuId);
+      creationKey.current = id();
+      setMessage("Menu draft created");
+      router.refresh();
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not create the menu.");
+      return false;
+    } finally {
+      running.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function previewMenu(menuId: string): Promise<boolean> {
+    if (!(await switchMenu(menuId))) return false;
+    setPreviewDevice("desktop");
+    setPreview(true);
+    return true;
+  }
+
+  async function manageMenu(menuId: string, action: MenuLibraryAction): Promise<boolean> {
+    if (!(await switchMenu(menuId))) return false;
+    // Permissions and expected revision are retrieved for the selected target,
+    // not borrowed from a stale render's previously selected menu.
+    let target: Detail;
+    try {
+      target = (await json(path(menuId))) as Detail;
+      if (!target.canWrite) throw new Error("You do not have permission to manage this menu.");
+      if (action === "restore") {
+        if (!target.archived) throw new Error("This menu is already active.");
+        setBusy(true);
+        await json(path(menuId), {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            key: id(),
+            expectedRevision: target.revision,
+            action: "restore",
+            data: {},
+          }),
+        });
+        setList(await json("/api/catalog"));
+        await load(menuId);
+        setMessage("Menu restored as an unpublished draft.");
+        router.refresh();
+        return true;
+      }
+      if (target.archived) throw new Error("Restore this menu before managing its publication.");
+      if (action === "unpublish" && !target.publishedRevision)
+        throw new Error("This menu is not published.");
+      setLifecycleAction(action);
+      setConfirmName("");
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Menu action failed.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!libraryOpen && lifecycleAction && !lifecycleDialog.current?.open) {
+      lifecycleDialog.current?.showModal();
+    }
+  }, [libraryOpen, lifecycleAction]);
+
+  useEffect(() => {
+    if (!libraryOpen && preview && !previewDialog.current?.open) {
+      previewDialog.current?.showModal();
+    }
+  }, [libraryOpen, preview]);
+
   function change(next: MenuDocument) {
     setDoc(next);
     setDirty(true);
@@ -207,7 +332,8 @@ export function MenuStudio({
   }
   async function save() {
     if (!doc || !detail) throw new Error("Select a menu");
-    if (composerPending) throw new Error("Review or clear selected Composer dishes before saving.");
+    if (composerPending || boardPending)
+      throw new Error("Complete or cancel the open dish or section editor before saving.");
     if (!form.current?.reportValidity()) throw new Error("Check the highlighted fields");
     const parsed = menuDocumentSchema.safeParse(doc);
     if (!parsed.success)
@@ -258,9 +384,28 @@ export function MenuStudio({
   }
   function openComposer(categoryId: string) {
     setComposerCategory(categoryId);
-    setComposerMode("add");
-    setComposerFocus((i) => i + 1);
+    setAddDishOpen(true);
   }
+  function openBulkComposer() {
+    setComposerCategory("");
+    setBulkOpen(true);
+  }
+  function closeBulkComposer() {
+    if (composerPending && !window.confirm("Discard your selected unsaved dishes?")) return;
+    setComposerSelection([]);
+    setComposerPending(false);
+    bulkDialog.current?.close();
+  }
+  useEffect(() => {
+    const modal = bulkDialog.current;
+    if (bulkOpen && modal && !modal.open) {
+      modal.showModal();
+      // The dialog's initial focus step runs after the composer mounts. Restore focus
+      // inside the now-open modal so keyboard search works on desktop and mobile.
+      modal.querySelector<HTMLInputElement>("#smart-dish-search")?.focus();
+    }
+    if (!bulkOpen && modal?.open) modal.close();
+  }, [bulkOpen]);
   function addQuickDishes(items: QuickDish[], newSectionName: string) {
     if (!doc || !detail?.canWrite || detail.archived) throw new Error("This menu is not editable.");
     const next = structuredClone(doc);
@@ -295,7 +440,7 @@ export function MenuStudio({
       category.items.push({
         id: id(),
         name: item.name.trim(),
-        description: "",
+        description: item.description ?? findPublicDishDescription(item.name),
         priceMinor,
         soldOut: false,
         archived: false,
@@ -307,6 +452,12 @@ export function MenuStudio({
             : item.imageMode === "artwork" && art
               ? "artwork"
               : "none",
+        ...draftCulinaryDefaults(
+          item.name,
+          next.categories
+            .filter((section) => !section.archived)
+            .flatMap((section) => section.items.filter((dish) => !dish.archived))
+        ),
         dietary: [],
         variants: [],
         addOnGroups: [],
@@ -316,15 +467,13 @@ export function MenuStudio({
     const parsed = menuDocumentSchema.safeParse(next);
     if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid menu draft.");
     change(parsed.data);
-    setDishSearch("");
-    setCategoryFilter("all");
     setMessage(items.length + " dishes added to private draft. Save when ready.");
   }
-  function move(ci: number, delta: number) {
+  function moveSection(ci: number, delta: number) {
     if (!doc) return;
-    const categories = [...doc.categories];
     const target = ci + delta;
-    if (target < 0 || target >= categories.length) return;
+    if (target < 0 || target >= doc.categories.length) return;
+    const categories = [...doc.categories];
     [categories[ci], categories[target]] = [categories[target]!, categories[ci]!];
     change({ ...doc, categories });
   }
@@ -339,133 +488,81 @@ export function MenuStudio({
   }
   return (
     <div className="product studio-atelier" data-testid="recipe-atelier-studio">
-      <StudioHero outlet={outlet} />
+      <StudioHero outlet={outlet} onOpenLibrary={() => setLibraryOpen(true)} />
+      {libraryOpen && (
+        <StudioMenuGallery
+          open
+          menus={list}
+          currentMenuId={detail?.id ?? ""}
+          currency={outlet.currency}
+          busy={busy}
+          error={error}
+          onClose={() => setLibraryOpen(false)}
+          onCreate={createMenu}
+          onOpenMenu={switchMenu}
+          onPreviewMenu={previewMenu}
+          onManage={manageMenu}
+        />
+      )}
       <div className="atelier-body">
-        <div className="atelier-menu-bar">
-          <label className="field">
-            Your menus
-            <select
-              aria-label="Your menus"
-              disabled={busy}
-              value={detail?.id ?? ""}
-              onChange={(e) => {
-                if (e.target.value === selected.current) return;
-                if (
-                  (dirty || composerPending) &&
-                  !window.confirm("Discard unsaved menu changes and selected dishes?")
-                )
-                  return;
-                void run(() => load(e.target.value));
-              }}
-            >
-              <option value="" disabled>
-                Select a menu
-              </option>
-              <optgroup label="Active menus">
-                {list
-                  .filter((m) => !m.archived)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {(m.document as MenuDocument).name}
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Recently deleted · recoverable">
-                {list
-                  .filter((m) => m.archived)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {(m.document as MenuDocument).name} (deleted)
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-          </label>
-          <button
-            type="button"
-            className="ember"
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                if (
-                  (dirty || composerPending) &&
-                  !window.confirm(
-                    "Discard unsaved changes and selected dishes to create another menu?"
-                  )
-                )
-                  return;
-                const result = await json("/api/catalog", {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({ key: creationKey.current }),
-                });
-                const next = await json("/api/catalog");
-                setList(next);
-                await load(result.menuId);
-                // Do not rotate a successful request identity until reconciliation completes.
-                // If the list/load response was lost, retry with the same key, not a duplicate menu.
-                creationKey.current = id();
-                setMessage("Menu draft created");
-              })
+        {doc && detail && (
+          <StudioAddDish
+            key={detail.id}
+            open={addDishOpen}
+            doc={doc}
+            outletId={outlet.id}
+            menuId={detail.id}
+            organization={organizationDishes}
+            defaultCategoryId={composerCategory}
+            onClose={() => setAddDishOpen(false)}
+            onAdd={addQuickDishes}
+          />
+        )}
+        <dialog
+          ref={bulkDialog}
+          className="menu-board-dialog menu-board-bulk-dialog"
+          aria-labelledby="menu-board-bulk-title"
+          onCancel={(event) => {
+            if (composerPending && !window.confirm("Discard your selected unsaved dishes?")) {
+              event.preventDefault();
+              return;
             }
-          >
-            <Plus size={16} />
-            Create menu
-          </button>
-          {detail && (
-            <details className="atelier-menu-actions">
-              <summary aria-label="Menu actions" aria-haspopup="true">
-                Menu actions
-              </summary>
-              <div className="atelier-menu-actions-list">
-                {detail.archived ? (
-                  <button
-                    type="button"
-                    disabled={busy || !detail.canWrite}
-                    onClick={() =>
-                      void run(async () => {
-                        await command("restore");
-                        setList(await json("/api/catalog"));
-                        await load(detail.id);
-                        setMessage("Menu restored as an unpublished draft.");
-                      })
-                    }
-                  >
-                    <ArchiveRestore size={16} /> Restore menu
-                  </button>
-                ) : (
-                  <>
-                    {detail.publishedRevision && (
-                      <button
-                        type="button"
-                        disabled={busy || !detail.canWrite}
-                        onClick={() => {
-                          setLifecycleAction("unpublish");
-                          setConfirmName("");
-                          lifecycleDialog.current?.showModal();
-                        }}
-                      >
-                        <EyeOff size={16} /> Unpublish menu
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="atelier-danger"
-                      disabled={busy || !detail.canWrite}
-                      onClick={() => {
-                        setLifecycleAction("archive");
-                        setConfirmName("");
-                        lifecycleDialog.current?.showModal();
-                      }}
-                    >
-                      <Trash2 size={16} /> Delete menu
-                    </button>
-                  </>
-                )}
-              </div>
-            </details>
-          )}
-        </div>
+            setComposerSelection([]);
+            setComposerPending(false);
+          }}
+          onClose={() => setBulkOpen(false)}
+        >
+          <div className="menu-board-dialog-head">
+            <div>
+              <span className="atelier-eyebrow">BATCH ENTRY</span>
+              <h2 id="menu-board-bulk-title">Add multiple dishes</h2>
+              <p>Search or paste a list, review outlet prices and add them together.</p>
+            </div>
+            <button type="button" aria-label="Close batch editor" onClick={closeBulkComposer}>
+              <X size={19} />
+            </button>
+          </div>
+          <div className="menu-board-dialog-body">
+            {bulkOpen && doc && detail && (
+              <SmartDishComposer
+                doc={doc}
+                outletId={outlet.id}
+                menuId={detail.id}
+                media={media}
+                organization={organizationDishes}
+                defaultCategoryId={composerCategory}
+                focusRequest={1}
+                selection={composerSelection}
+                setSelection={setComposerSelection}
+                onAdd={(items, name) => {
+                  addQuickDishes(items, name);
+                  bulkDialog.current?.close();
+                }}
+                onPendingChange={setComposerPending}
+              />
+            )}
+          </div>
+        </dialog>
         <dialog
           ref={lifecycleDialog}
           className="atelier-lifecycle-dialog"
@@ -543,6 +640,16 @@ export function MenuStudio({
           publishedRevision={detail?.publishedRevision}
           revision={detail?.revision}
           dirty={dirty}
+          selector={
+            <StudioMenuSelector
+              menus={list}
+              selectedId={detail?.id ?? ""}
+              disabled={busy}
+              onSelect={(menuId) => {
+                void switchMenu(menuId);
+              }}
+            />
+          }
         />
         <StudioImportNotice imports={imports} />
         {error && (
@@ -574,7 +681,7 @@ export function MenuStudio({
               archived={detail.archived}
               writable={detail.canWrite}
               busy={busy}
-              pending={composerPending}
+              pending={composerPending || boardPending}
               dirty={dirty}
               revision={detail.revision}
               publishedRevision={detail.publishedRevision}
@@ -643,6 +750,10 @@ export function MenuStudio({
                         aria-pressed={tab === t}
                         className={tab === t ? "ember" : ""}
                         onClick={() => {
+                          if (t !== tab && boardPending) {
+                            setError("Complete or cancel section changes before leaving this tab.");
+                            return;
+                          }
                           if (t !== tab && form.current && !form.current.reportValidity()) {
                             setError(
                               "Check the highlighted fields before switching editor sections."
@@ -683,236 +794,31 @@ export function MenuStudio({
                       />
                     )}
                     {tab === "dishes" && (
-                      <>
-                        <div
-                          className="atelier-composer stack"
-                          aria-label="Dish entry and menu filtering"
-                        >
-                          <div className="atelier-composer-head">
-                            <div>
-                              <span className="atelier-eyebrow">SMART COMPOSER</span>
-                              <h2>Add something delicious.</h2>
-                              <p className="quiet">
-                                Find a familiar dish or create your own. Nothing is published
-                                automatically.
-                              </p>
-                            </div>
-                            <Image
-                              src="/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp"
-                              alt=""
-                              width={120}
-                              height={88}
-                            />
-                          </div>
-                          <div className="row" role="group" aria-label="Menu Studio dish tools">
-                            <button
-                              type="button"
-                              className={composerMode === "add" ? "ember" : ""}
-                              aria-pressed={composerMode === "add"}
-                              onClick={() => {
-                                setComposerMode("add");
-                                setDishSearch("");
-                                setCategoryFilter("all");
-                                setComposerFocus((n) => n + 1);
-                              }}
-                            >
-                              + Add dishes
-                            </button>
-                            <button
-                              type="button"
-                              className={composerMode === "find" ? "ember" : ""}
-                              aria-pressed={composerMode === "find"}
-                              onClick={() => setComposerMode("find")}
-                            >
-                              Find in menu
-                            </button>
-                          </div>
-                          <div hidden={composerMode !== "add"}>
-                            <SmartDishComposer
-                              key={detail.id + ":" + composerFocus}
-                              doc={doc}
-                              outletId={outlet.id}
-                              menuId={detail.id}
-                              media={media}
-                              organization={organizationDishes}
-                              defaultCategoryId={composerCategory}
-                              focusRequest={composerFocus}
-                              selection={composerSelection}
-                              setSelection={setComposerSelection}
-                              onAdd={addQuickDishes}
-                              onPendingChange={setComposerPending}
-                            />
-                          </div>
-                          {composerMode === "find" && (
-                            <div className="atelier-filter-panel stack">
-                              <label className="field">
-                                Find a dish or section
-                                <input
-                                  aria-label="Find a dish or section"
-                                  type="search"
-                                  value={dishSearch}
-                                  onChange={(e) => setDishSearch(e.target.value)}
-                                  placeholder="Filter names and descriptions"
-                                />
-                              </label>
-                              <p className="quiet">
-                                Filtering only changes this view, never the saved menu.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        <nav
-                          aria-label="Filter menu sections"
-                          className="atelier-section-filter row"
-                        >
-                          <button
-                            type="button"
-                            aria-pressed={categoryFilter === "all"}
-                            onClick={() => setCategoryFilter("all")}
-                          >
-                            All sections
-                          </button>
-                          {doc.categories.map((cat) => (
-                            <button
-                              key={cat.id}
-                              type="button"
-                              aria-pressed={categoryFilter === cat.id}
-                              onClick={() => setCategoryFilter(cat.id)}
-                            >
-                              {cat.name}
-                              {cat.archived ? " (archived)" : ""} ·{" "}
-                              {cat.items.filter((item) => !item.archived).length}
-                            </button>
-                          ))}
-                        </nav>
-                        <div className="row between">
-                          <h2>Sections & dishes</h2>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              change({
-                                ...doc,
-                                categories: [
-                                  ...doc.categories,
-                                  {
-                                    id: id(),
-                                    name: "New section",
-                                    description: "",
-                                    archived: false,
-                                    items: [],
-                                  },
-                                ],
-                              })
-                            }
-                          >
-                            <Plus size={16} />
-                            Add category
-                          </button>
-                        </div>
-                        {doc.categories
-                          .map((c, ci) => ({ c, ci }))
-                          .filter(
-                            ({ c }) =>
-                              (categoryFilter === "all" || categoryFilter === c.id) &&
-                              (!dishSearch.trim() ||
-                                [
-                                  c.name,
-                                  c.description,
-                                  ...c.items.flatMap((d) => [d.name, d.description]),
-                                ].some((value) =>
-                                  value
-                                    .toLocaleLowerCase()
-                                    .includes(dishSearch.trim().toLocaleLowerCase())
-                                ))
-                          )
-                          .map(({ c, ci }) => (
-                            <section key={c.id} className="atelier-menu-section panel stack">
-                              <div className="row between">
-                                <span className="eyebrow">Section {ci + 1}</span>
-                                <div className="row">
-                                  <button
-                                    type="button"
-                                    aria-label={`Move ${c.name} up`}
-                                    onClick={() => move(ci, -1)}
-                                  >
-                                    <ArrowUp size={16} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    aria-label={`Move ${c.name} down`}
-                                    onClick={() => move(ci, 1)}
-                                  >
-                                    <ArrowDown size={16} />
-                                  </button>
-                                  <label>
-                                    <input
-                                      type="checkbox"
-                                      checked={c.archived}
-                                      onChange={(e) =>
-                                        updateCategory(ci, (c) => ({
-                                          ...c,
-                                          archived: e.target.checked,
-                                        }))
-                                      }
-                                    />
-                                    Archive section
-                                  </label>
-                                </div>
-                              </div>
-                              <Field
-                                label={`Category name ${ci + 1}`}
-                                value={c.name}
-                                onChange={(name) => updateCategory(ci, (c) => ({ ...c, name }))}
-                              />
-                              <label className="field">
-                                Section description
-                                <textarea
-                                  value={c.description}
-                                  onChange={(e) =>
-                                    updateCategory(ci, (c) => ({
-                                      ...c,
-                                      description: e.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              {c.items
-                                .map((dish, di) => ({ dish, di }))
-                                .filter(
-                                  ({ dish }) =>
-                                    !dishSearch.trim() ||
-                                    [c.name, c.description, dish.name, dish.description].some(
-                                      (value) =>
-                                        value
-                                          .toLocaleLowerCase()
-                                          .includes(dishSearch.trim().toLocaleLowerCase())
-                                    )
-                                )
-                                .map(({ dish, di }) => (
-                                  <StudioDishEditor
-                                    key={dish.id}
-                                    dish={dish}
-                                    ci={ci}
-                                    di={di}
-                                    dishCount={c.items.length}
-                                    canWrite={detail.canWrite}
-                                    currency={doc.currency}
-                                    media={media}
-                                    companionDishes={companionCandidates}
-                                    onUpdate={(patch) => updateDish(ci, di, patch)}
-                                    onMove={(delta) => moveDish(ci, di, delta)}
-                                  />
-                                ))}
-                              <button
-                                type="button"
-                                className="ember"
-                                onClick={() => openComposer(c.id)}
-                              >
-                                <Plus size={16} /> Add dish
-                              </button>
-                            </section>
-                          ))}
-                      </>
+                      <StudioMenuBoard
+                        key={detail.id}
+                        doc={doc}
+                        currency={doc.currency}
+                        media={media}
+                        canWrite={detail.canWrite && !detail.archived}
+                        onAddDish={openComposer}
+                        onAddMultiple={openBulkComposer}
+                        onPendingChange={setBoardPending}
+                        onCreateSection={(name) =>
+                          change({
+                            ...doc,
+                            categories: [
+                              ...doc.categories,
+                              { id: id(), name, description: "", archived: false, items: [] },
+                            ],
+                          })
+                        }
+                        onUpdateCategory={(ci, patch) =>
+                          updateCategory(ci, (category) => ({ ...category, ...patch }))
+                        }
+                        onUpdateDish={updateDish}
+                        onMoveDish={moveDish}
+                        onMoveSection={moveSection}
+                      />
                     )}
                     {tab === "storefront" && (
                       <section
@@ -1084,7 +990,7 @@ export function MenuStudio({
                 )}
                 {tab === "assignments" && (
                   <div className="atelier-assignment-workspace">
-                    {(dirty || composerPending) && (
+                    {(dirty || composerPending || boardPending) && (
                       <p role="status" className="atelier-assignment-warning">
                         Save your draft and review queued Composer dishes before changing
                         shared-menu assignments or local overrides.
@@ -1092,7 +998,7 @@ export function MenuStudio({
                     )}
                     <fieldset
                       className="atelier-assignment-lock"
-                      disabled={dirty || composerPending}
+                      disabled={dirty || composerPending || boardPending}
                     >
                       <StudioAssignmentsTab
                         doc={doc}
@@ -1110,7 +1016,7 @@ export function MenuStudio({
                   </div>
                 )}
               </div>
-              {!preview && (
+              {!preview && tab !== "dishes" && (
                 <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
               )}
             </div>
