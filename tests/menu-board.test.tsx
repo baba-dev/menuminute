@@ -71,6 +71,8 @@ describe("Menu Board and curated editorial references", () => {
       <StudioMenuBoard
         doc={doc}
         currency="INR"
+        menuId="test-menu"
+        outletId="test-outlet"
         media={[]}
         canWrite
         onAddDish={() => {}}
