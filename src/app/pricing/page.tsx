@@ -60,7 +60,7 @@ const plans = [
     altPrice: "Available after Kitchen Pro release approval",
     description:
       "Full digital Kitchen Display System replacing paper tickets with real-time station tablets and chimes.",
-    cta: "Get Kitchen Pro",
+    cta: "Join Kitchen Pro early access",
     ctaHref: "/register",
     primary: false,
     badge: "High Rush Kitchens",
@@ -193,7 +193,7 @@ export default function PricingPage() {
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
                 Prefer to run your own infrastructure? MenuMinute is open source under the MIT License.
                 Single-user self-hosted instances have all features (ordering, KDS, AI scans)
-                100% unlocked for free.
+                unlocked without subscription fees; operational safety checks still apply.
               </p>
             </div>
             <a
