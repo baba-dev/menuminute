@@ -607,8 +607,13 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await atelier.getByRole("button", { name: "Midnight Luxe" }).click();
   await expect(printPreview.locator("article")).toHaveAttribute("data-palette", "ink");
   for (const theme of [
-    "Botanical Estate", "Citrus Pop", "Ruby Velvet", "Coastal Club",
-    "Neon Diner", "Patisserie Pastel", "Modern Mono",
+    "Botanical Estate",
+    "Citrus Pop",
+    "Ruby Velvet",
+    "Coastal Club",
+    "Neon Diner",
+    "Patisserie Pastel",
+    "Modern Mono",
   ]) {
     await atelier.getByRole("button", { name: theme }).click();
   }
@@ -619,7 +624,8 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await expect(atelier.getByText(/Too light or invalid/)).toBeVisible();
   await atelier.getByLabel("HEX").fill("#152A42");
   await expect(printPreview.locator("img[data-real-qr-matrix]")).toHaveAttribute(
-    "src", /ink=%23152A42/
+    "src",
+    /ink=%23152A42/
   );
   await expect(printPreview).toContainText("MenuMinute · by BabaBuilds");
   await atelier.getByRole("button", { name: /Window \/ Counter Sticker/ }).click();
