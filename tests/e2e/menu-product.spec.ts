@@ -396,6 +396,11 @@ test("Smart Composer batches autocomplete suggestions, validates prices and pres
   await expect(page.locator(".menu-board-dish")).toContainText("Palak Paneer");
   await page.getByPlaceholder("Search dishes or sections").clear();
   await expect(page.locator(".menu-board-dish")).toHaveCount(2);
+  // Native dialogs must return keyboard focus to the search box on every opening.
+  await page.getByRole("button", { name: "Add multiple" }).click();
+  await expect(page.getByLabel("Search the dish catalogue")).toBeFocused();
+  await page.getByRole("button", { name: "Close batch editor" }).click();
+  await expect(page.getByLabel("Search the dish catalogue")).toHaveCount(0);
 });
 
 test("PR C bulk composer deduplicates pasted dishes and matches Hindi input without publishing", async ({
