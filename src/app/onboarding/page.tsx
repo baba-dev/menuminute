@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import Link from "next/link";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { redirect } from "next/navigation";
@@ -19,7 +20,7 @@ export default async function OnboardingPage() {
     >
       <SessionContinuity />
       <p className="wizard-counter">
-        <a href="/start">← Choose another setup path</a>
+        <Link href="/start">← Choose another setup path</Link>
       </p>
       <div className="wizard-welcome-media" aria-hidden="true">
         <ThemedArtwork

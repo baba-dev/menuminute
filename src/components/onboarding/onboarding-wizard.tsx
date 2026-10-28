@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-react";
 import { ChefStickyNote } from "@/components/ui/tactile-elements";
 import { WizardMediaSlot, type WizardStepId } from "./wizard-media-slot";
@@ -362,7 +363,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       {inaccessible && (
         <p role="alert">
           Your previous outlet is no longer accessible. Please contact its administrator or{" "}
-          <a href="/account">review your account</a>.
+          <Link href="/account">review your account</Link>.
         </p>
       )}
       {provisioning && (
