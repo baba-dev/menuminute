@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
-  // This is the public trust boundary: never let a client choose a log correlation identity.
+  // Reject caller-supplied identities; provide one correlation ID per API request.
   const id = crypto.randomUUID();
   const headers = new Headers(request.headers);
   headers.set("x-request-id", id);

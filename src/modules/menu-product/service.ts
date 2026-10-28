@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
@@ -10,6 +11,15 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
 import { artworkById } from "./dish-artwork";
+import {
+  getCachedPublicProduct,
+  setCachedPublicProduct,
+  invalidateOutletMenuCache,
+  invalidateOutletMenuCaches,
+  revokeCachedQrToken,
+} from "./cache";
+
+export { invalidateOutletMenuCache };
 import {
   applyMenuTranslation,
   menuLocaleSchema,
@@ -146,14 +156,19 @@ export async function saveMenuTranslation(
       "Translation structure no longer matches the published menu. Refresh and translate again."
     );
   try {
-    return await withActor(actor, async (tx) => {
+    const mutation = await withActor(actor, async (tx) => {
       const rows = await tx.execute<{ result: MenuTranslation }>(
         sql`select app_private.menu_translation_command(
           ${outletId},${menuId},${input.locale},${input.sourceRevision},${input.expectedRevision},
           ${JSON.stringify(input.document)}::jsonb,${input.key}) as result`
       );
-      return rows.rows[0]!.result;
+      const assigned = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${menuId}`
+      );
+      return { value: rows.rows[0]!.result, affected: assigned.rows.map((row) => row.outlet_id) };
     });
+    await invalidateOutletMenuCaches([outletId, ...mutation.affected]);
+    return mutation.value;
   } catch (error) {
     domainError(error);
   }
@@ -170,15 +185,24 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
       }
   }
   try {
-    return await withActor(
-      actor,
-      async (tx) =>
-        (
-          await tx.execute<{ result: { menuId: string; revision: number } }>(
-            sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
-          )
-        ).rows[0]!.result
-    );
+    const mutation = await withActor(actor, async (tx) => {
+      // Capture BOTH sides of assignment mutations while the transaction is open.
+      const before = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${id}`
+      );
+      const rows = await tx.execute<{ result: { menuId: string; revision: number } }>(
+        sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
+      );
+      const after = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${id}`
+      );
+      return {
+        value: rows.rows[0]!.result,
+        affected: [...before.rows, ...after.rows].map((row) => row.outlet_id),
+      };
+    });
+    await invalidateOutletMenuCaches([outletId, ...mutation.affected]);
+    return mutation.value;
   } catch (e) {
     const inner = e instanceof Error && e.cause ? e.cause : e;
     if (
@@ -236,15 +260,23 @@ export async function qrCommand(actor: Actor, outletId: string, raw: unknown) {
   if (input.action !== "create" && !input.data.qrId)
     throw new ForbiddenError("QR identity is required");
   try {
-    return await withActor(
-      actor,
-      async (tx) =>
-        (
-          await tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
-            sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
-          )
-        ).rows[0]!.result
-    );
+    const mutation = await withActor(actor, async (tx) => {
+      const oldToken =
+        input.action === "create"
+          ? null
+          : (
+              await tx.execute<{ destination_token: string }>(
+                sql`select destination_token from qr_codes where id=${input.data.qrId} and restaurant_id=${outletId}`
+              )
+            ).rows[0]?.destination_token;
+      const rows = await tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
+        sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
+      );
+      return { value: rows.rows[0]!.result, oldToken };
+    });
+    if (mutation.oldToken) await revokeCachedQrToken(outletId, mutation.oldToken);
+    else await invalidateOutletMenuCache(outletId);
+    return mutation.value;
   } catch (e) {
     domainError(e);
   }
@@ -296,105 +328,124 @@ export type PublicProduct = {
     overrides: { dishId: string; priceMinor: number | null; soldOut: boolean | null }[];
   }[];
 };
-export async function publicProduct(
-  token: string,
-  requestedLocale?: string | null
-): Promise<PublicProduct | null> {
-  if (!z.string().min(1).max(128).safeParse(token).success) return null;
-  const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
-  const locale = parsedLocale?.success ? parsedLocale.data : null;
-  const r = await getPool().query<{
-    data: PublicProduct | null;
-    fingerprint: string | null;
-    ordering_enabled: boolean;
-    pickup_settings: {
-      leadMinutes: number;
-      slotMinutes: number;
-      advanceDays: number;
-    } | null;
-    locales: string[] | null;
-    translations: Array<{
-      menuId: string;
-      sourceRevision: number;
-      document: unknown;
-    }> | null;
-  }>(
-    `with p as (select app_private.free_menu_public($1) as data)
+export const publicProduct = cache(
+  async (token: string, requestedLocale?: string | null): Promise<PublicProduct | null> => {
+    if (!z.string().min(1).max(128).safeParse(token).success) return null;
+    const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
+    const locale = parsedLocale?.success ? parsedLocale.data : null;
+
+    const cached = await getCachedPublicProduct(token, locale);
+    if (cached.data && cached.fence) {
+      // PostgreSQL remains the authority for QR revocation, outlet publication
+      // and organization status even when Redis invalidation is unavailable.
+      // This deliberately cheap gate avoids materializing the large menu JSON.
+      const live = await getPool().query<{ active: boolean }>(
+        "select app_private.public_menu_cache_token_active($1,$2) as active",
+        [token, cached.fence.outletId]
+      );
+      if (live.rows[0]?.active) return cached.data;
+      return null;
+    }
+
+    const r = await getPool().query<{
+      data: PublicProduct | null;
+      fingerprint: string | null;
+      ordering_enabled: boolean;
+      pickup_settings: {
+        leadMinutes: number;
+        slotMinutes: number;
+        advanceDays: number;
+      } | null;
+      locales: string[] | null;
+      translations: Array<{
+        menuId: string;
+        sourceRevision: number;
+        document: unknown;
+      }> | null;
+    }>(
+      `with p as (select app_private.free_menu_public($1) as data)
      select data, md5((data->'menus')::text) as fingerprint,
        app_private.public_ordering_enabled($1) as ordering_enabled,
        app_private.public_pickup_settings($1) as pickup_settings,
        app_private.public_menu_locales($1) as locales,
        app_private.public_menu_translations($1,$2) as translations
      from p`,
-    [token, locale]
-  );
-  const data = r.rows[0]?.data;
-  if (data) {
-    data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
-    data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
-    data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
-    data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
-    data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
-    data.availableLocales = r.rows[0]?.locales ?? [];
-    data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
-  }
-  if (!data) return null;
-  if (!data.outlet.versioned) {
-    const legacy = await getPublicMenu(token);
-    if (!legacy) return null;
-    data.menus = [
-      {
-        id: "legacy",
-        revision: 0,
-        brand: null,
-        overrides: [],
-        document: menuDocumentSchema.parse({
-          name: "Menu",
-          currency: data.outlet.currency,
-          categories: legacy.menu.map(({ category, items }) => ({
-            id: category.id,
-            name: category.name,
-            description: category.description ?? "",
-            items: items.map((i) => ({
-              id: i.id,
-              name: i.name,
-              description: i.description ?? "",
-              priceMinor: i.pricePaise,
-              soldOut: !i.isAvailable,
-              dietary: [
-                ...(i.isVeg ? ["vegetarian"] : []),
-                ...(i.isVegan ? ["vegan"] : []),
-                ...(i.isGlutenFree ? ["gluten_free"] : []),
-              ],
-            })),
-          })),
-        }),
-      },
-    ];
-  } else
-    data.menus = data.menus.map((m) => ({ ...m, document: menuDocumentSchema.parse(m.document) }));
-  if (data.locale) {
-    const translations = new Map(
-      (r.rows[0]?.translations ?? []).map((translation) => [translation.menuId, translation])
+      [token, locale]
     );
-    data.menus = data.menus.map((menu) => {
-      const translation = translations.get(menu.id);
-      if (!translation || translation.sourceRevision !== menu.revision) return menu;
-      const parsed = menuTranslationDocumentSchema.safeParse(translation.document);
-      return parsed.success
-        ? { ...menu, document: applyMenuTranslation(menu.document, parsed.data) }
-        : menu;
-    });
+    const data = r.rows[0]?.data;
+    if (data) {
+      data.catalogFingerprint = r.rows[0]?.fingerprint ?? "";
+      data.outlet.orderingEnabled = r.rows[0]?.ordering_enabled ?? false;
+      data.outlet.pickupLeadMinutes = r.rows[0]?.pickup_settings?.leadMinutes ?? 15;
+      data.outlet.pickupSlotMinutes = r.rows[0]?.pickup_settings?.slotMinutes ?? 15;
+      data.outlet.pickupAdvanceDays = r.rows[0]?.pickup_settings?.advanceDays ?? 7;
+      data.availableLocales = r.rows[0]?.locales ?? [];
+      data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
+    }
+    if (!data) return null;
+    if (!data.outlet.versioned) {
+      const legacy = await getPublicMenu(token);
+      if (!legacy) return null;
+      data.menus = [
+        {
+          id: "legacy",
+          revision: 0,
+          brand: null,
+          overrides: [],
+          document: menuDocumentSchema.parse({
+            name: "Menu",
+            currency: data.outlet.currency,
+            categories: legacy.menu.map(({ category, items }) => ({
+              id: category.id,
+              name: category.name,
+              description: category.description ?? "",
+              items: items.map((i) => ({
+                id: i.id,
+                name: i.name,
+                description: i.description ?? "",
+                priceMinor: i.pricePaise,
+                soldOut: !i.isAvailable,
+                dietary: [
+                  ...(i.isVeg ? ["vegetarian"] : []),
+                  ...(i.isVegan ? ["vegan"] : []),
+                  ...(i.isGlutenFree ? ["gluten_free"] : []),
+                ],
+              })),
+            })),
+          }),
+        },
+      ];
+    } else
+      data.menus = data.menus.map((m) => ({
+        ...m,
+        document: menuDocumentSchema.parse(m.document),
+      }));
+    if (data.locale) {
+      const translations = new Map(
+        (r.rows[0]?.translations ?? []).map((translation) => [translation.menuId, translation])
+      );
+      data.menus = data.menus.map((menu) => {
+        const translation = translations.get(menu.id);
+        if (!translation || translation.sourceRevision !== menu.revision) return menu;
+        const parsed = menuTranslationDocumentSchema.safeParse(translation.document);
+        return parsed.success
+          ? { ...menu, document: applyMenuTranslation(menu.document, parsed.data) }
+          : menu;
+      });
+    }
+    // Public payload contains display data only; opaque identities remain internal to API/DOM as needed.
+    data.menus = data.menus.map((m) => ({
+      ...m,
+      document: {
+        ...m.document,
+        categories: m.document.categories
+          .filter((c) => !c.archived)
+          .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
+      },
+    }));
+    if (data) {
+      await setCachedPublicProduct(token, locale, data, cached.fence);
+    }
+    return data;
   }
-  // Public payload contains display data only; opaque identities remain internal to API/DOM as needed.
-  data.menus = data.menus.map((m) => ({
-    ...m,
-    document: {
-      ...m.document,
-      categories: m.document.categories
-        .filter((c) => !c.archived)
-        .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
-    },
-  }));
-  return data;
-}
+);

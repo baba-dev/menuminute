@@ -16,7 +16,8 @@ export async function GET(req: Request, c: { params: Promise<{ mediaId: string }
     const media = await publicMediaResponse(
       (await c.params).mediaId,
       new URL(req.url).searchParams.get("size") === "thumb",
-      req.headers.get("if-none-match")
+      req.headers.get("if-none-match"),
+      true
     );
     const headers = {
       "cache-control": cacheControl,
@@ -25,6 +26,16 @@ export async function GET(req: Request, c: { params: Promise<{ mediaId: string }
       "ratelimit-remaining": String(rate.remaining),
     };
     if (media.notModified) return new Response(null, { status: 304, headers });
+    if (media.internalPath) {
+      return new Response(null, {
+        headers: {
+          ...headers,
+          "x-accel-redirect": media.internalPath,
+          "content-type": "image/webp",
+          "content-security-policy": "default-src 'none'; sandbox",
+        },
+      });
+    }
     return new Response(new Uint8Array(media.bytes), {
       headers: {
         ...headers,

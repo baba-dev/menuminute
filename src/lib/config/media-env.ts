@@ -14,6 +14,11 @@ const optionalEndpoint = z.preprocess(
 export const mediaEnvShape = {
   MEDIA_STORAGE: z.enum(["local", "r2"]),
   MEDIA_ROOT: z.string().optional(),
+  // Disabled until the host's Nginx internal alias has been validated and reloaded.
+  MEDIA_X_ACCEL_REDIRECT_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   MEDIA_OUTLET_BUDGET_BYTES: z.coerce
     .number()
     .int()
@@ -28,12 +33,27 @@ export const mediaEnvShape = {
 export type MediaEnvInput = {
   MEDIA_STORAGE: "local" | "r2";
   MEDIA_ROOT?: string;
+  MEDIA_X_ACCEL_REDIRECT_ENABLED?: boolean;
   R2_ACCESS_KEY_ID?: string;
   R2_SECRET_ACCESS_KEY?: string;
   R2_ENDPOINT?: string;
 };
 
 export function validateMediaEnv(value: MediaEnvInput, ctx: z.RefinementCtx) {
+  if (value.MEDIA_X_ACCEL_REDIRECT_ENABLED && value.MEDIA_STORAGE !== "local") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["MEDIA_X_ACCEL_REDIRECT_ENABLED"],
+      message: "X-Accel-Redirect requires local media storage",
+    });
+  }
+  if (value.MEDIA_X_ACCEL_REDIRECT_ENABLED && value.MEDIA_ROOT !== "/var/lib/menuminute/media") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["MEDIA_ROOT"],
+      message: "Enabled Nginx offload requires the reviewed local media root",
+    });
+  }
   if (value.MEDIA_STORAGE === "local") {
     if (!value.MEDIA_ROOT || !path.isAbsolute(value.MEDIA_ROOT)) {
       ctx.addIssue({

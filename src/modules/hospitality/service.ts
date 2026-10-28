@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getPool } from "@/db";
 import { withActor, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { NotFoundError } from "@/lib/errors";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/service";
 
 export const serviceSignalSchema = z
   .object({
@@ -132,11 +133,13 @@ export async function kitchenSetAvailability(
   identity.parse(organizationId);
   identity.parse(outletId);
   const input = setKitchenAvailabilitySchema.parse(raw);
-  return withActor(actor, async (tx) => {
+  const result = await withActor(actor, async (tx) => {
     await tx.execute(sql`select set_config('app.outlet_id',${outletId},true)`);
     const r = await tx.execute<{ data: { menuId: string; dishId: string; soldOut: boolean } }>(
       sql`select app_private.kitchen_set_dish_availability(${organizationId},${outletId},${input.menuId},${input.dishId},${input.soldOut}) as data`
     );
     return r.rows[0]?.data;
   });
+  await invalidateOutletMenuCache(outletId);
+  return result;
 }

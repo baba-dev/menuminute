@@ -1,23 +1,17 @@
-# Place inside the reviewed HTTPS server for the confirmed production hostname.
-# Preserve existing ERP server blocks and certificates. Do not paste this as a replacement nginx.conf.
+# HTTPS food.bababuilds.com server location sample. NEVER replace the entire vhost.
+# Preserve ERP coexistence, trusted Cloudflare real_ip and existing order attestation.
 location / {
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
-    # Preserve canonical first-party host/scheme; never trust user supplied forwarding headers.
-    # Cloudflare must use Full (strict), not Flexible TLS; preserve Set-Cookie unmodified.
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
-    # Overwrite untrusted client forwarding headers; configure real_ip only for trusted proxies.
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_read_timeout 60s;
     client_max_body_size 1m;
 }
 
-# Authentication responses, including renewed session cookies, must never be edge cached.
-# Apply equivalent authenticated-path cache bypass in Cloudflare; this file is an example,
-# not proof that the installed production vhost has been changed.
 location ^~ /api/auth/ {
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
@@ -33,29 +27,26 @@ location ^~ /api/auth/ {
     client_max_body_size 16k;
 }
 
-# Production order path (replace only the matching location in the reviewed Food vhost).
-# MUST use trusted Cloudflare CIDRs + real_ip_header CF-Connecting-IP at server/http level;
-# NEVER trust caller-provided forwarding/attestation headers.
-# A root-only include defines: set $menuminute_edge_secret "<identical web.env secret>";
-# Do not commit the real value. Configure edge proof BEFORE deploying the PR.
-# location ^~ /api/public-orders {
-#     include /etc/menuminute/nginx-order-edge-secret.conf;
-#     proxy_pass http://127.0.0.1:3100;
-#     proxy_http_version 1.1;
-#     proxy_set_header Host $host;
-#     proxy_set_header X-Forwarded-Proto $scheme;
-#     proxy_set_header X-Forwarded-For $remote_addr;
-#     proxy_set_header X-Real-IP $remote_addr;
-#     proxy_set_header X-MenuMinute-Client-IP $remote_addr;
-#     proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
-#     client_max_body_size 64k;
-#     proxy_read_timeout 30s;
-#     add_header Cache-Control "private, no-store" always;
-# }
+# Apply the existing /api/public-orders attestation location unchanged,
+# including the root-only /etc/menuminute/nginx-order-edge-secret.conf include.
 
-# Public media requires the same private attestation as public orders.
-# Apply within the reviewed Food HTTPS vhost and trusted Cloudflare real_ip setup.
-# The root-only include must define $menuminute_edge_secret, matching web.env.
+# Internal-only bytes transport: NEVER expose this location to clients.
+# Before enabling, verify MEDIA_ROOT=/var/lib/menuminute/media and access
+# for the Nginx worker user/group. No regex/globs or public filesystem mapping.
+# This preserves API-driven database authorization, rate limiting and ETag checks.
+location ^~ /_menuminute_media_internal/ {
+    internal;
+    alias /var/lib/menuminute/media/;
+    autoindex off;
+    default_type image/webp;
+    add_header Cache-Control "private, no-cache, max-age=0, must-revalidate" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+}
+
+# The PUBLIC /api/public-media/[mediaId] route must continue proxying to
+# Next.js, which verifies publication, approval, tenant scope and rate limits.
+# Do not add a public direct-file location or public immutable caching.
 location ^~ /api/public-media/ {
     include /etc/menuminute/nginx-order-edge-secret.conf;
     proxy_pass http://127.0.0.1:3100;
@@ -70,3 +61,7 @@ location ^~ /api/public-media/ {
     client_max_body_size 16k;
     add_header Cache-Control "private, no-cache, max-age=0, must-revalidate" always;
 }
+
+# Host-only activation (AFTER nginx -t, nginx reload and ERP /health smoke):
+#  MEDIA_X_ACCEL_REDIRECT_ENABLED=true
+# Keep false for R2 deployments, local tests, and hosts without this alias.
