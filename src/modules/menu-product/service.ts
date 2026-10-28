@@ -15,6 +15,8 @@ import {
   getCachedPublicProduct,
   setCachedPublicProduct,
   invalidateOutletMenuCache,
+  invalidateOutletMenuCaches,
+  revokeCachedQrToken,
 } from "./cache";
 
 export { invalidateOutletMenuCache };
@@ -154,16 +156,19 @@ export async function saveMenuTranslation(
       "Translation structure no longer matches the published menu. Refresh and translate again."
     );
   try {
-    const result = await withActor(actor, async (tx) => {
+    const mutation = await withActor(actor, async (tx) => {
       const rows = await tx.execute<{ result: MenuTranslation }>(
         sql`select app_private.menu_translation_command(
           ${outletId},${menuId},${input.locale},${input.sourceRevision},${input.expectedRevision},
           ${JSON.stringify(input.document)}::jsonb,${input.key}) as result`
       );
-      return rows.rows[0]!.result;
+      const assigned = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${menuId}`
+      );
+      return { value: rows.rows[0]!.result, affected: assigned.rows.map((row) => row.outlet_id) };
     });
-    await invalidateOutletMenuCache(outletId);
-    return result;
+    await invalidateOutletMenuCaches([outletId, ...mutation.affected]);
+    return mutation.value;
   } catch (error) {
     domainError(error);
   }
@@ -180,17 +185,24 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
       }
   }
   try {
-    const result = await withActor(
-      actor,
-      async (tx) =>
-        (
-          await tx.execute<{ result: { menuId: string; revision: number } }>(
-            sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
-          )
-        ).rows[0]!.result
-    );
-    await invalidateOutletMenuCache(outletId);
-    return result;
+    const mutation = await withActor(actor, async (tx) => {
+      // Capture BOTH sides of assignment mutations while the transaction is open.
+      const before = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${id}`
+      );
+      const rows = await tx.execute<{ result: { menuId: string; revision: number } }>(
+        sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
+      );
+      const after = await tx.execute<{ outlet_id: string }>(
+        sql`select outlet_id from menu_assignments where menu_id=${id}`
+      );
+      return {
+        value: rows.rows[0]!.result,
+        affected: [...before.rows, ...after.rows].map((row) => row.outlet_id),
+      };
+    });
+    await invalidateOutletMenuCaches([outletId, ...mutation.affected]);
+    return mutation.value;
   } catch (e) {
     const inner = e instanceof Error && e.cause ? e.cause : e;
     if (
@@ -248,15 +260,23 @@ export async function qrCommand(actor: Actor, outletId: string, raw: unknown) {
   if (input.action !== "create" && !input.data.qrId)
     throw new ForbiddenError("QR identity is required");
   try {
-    return await withActor(
-      actor,
-      async (tx) =>
-        (
-          await tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
-            sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
-          )
-        ).rows[0]!.result
-    );
+    const mutation = await withActor(actor, async (tx) => {
+      const oldToken =
+        input.action === "create"
+          ? null
+          : (
+              await tx.execute<{ destination_token: string }>(
+                sql`select destination_token from qr_codes where id=${input.data.qrId} and restaurant_id=${outletId}`
+              )
+            ).rows[0]?.destination_token;
+      const rows = await tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
+        sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
+      );
+      return { value: rows.rows[0]!.result, oldToken };
+    });
+    if (mutation.oldToken) await revokeCachedQrToken(outletId, mutation.oldToken);
+    else await invalidateOutletMenuCache(outletId);
+    return mutation.value;
   } catch (e) {
     domainError(e);
   }
@@ -318,7 +338,7 @@ export const publicProduct = cache(
     const locale = parsedLocale?.success ? parsedLocale.data : null;
 
     const cached = await getCachedPublicProduct(token, locale);
-    if (cached) return cached;
+    if (cached.data) return cached.data;
 
     const r = await getPool().query<{
     data: PublicProduct | null;
@@ -414,7 +434,7 @@ export const publicProduct = cache(
     },
   }));
   if (data) {
-    await setCachedPublicProduct(token, locale, data);
+    await setCachedPublicProduct(token, locale, data, cached.fence);
   }
   return data;
 });
