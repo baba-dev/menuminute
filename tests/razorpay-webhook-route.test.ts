@@ -105,21 +105,68 @@ describe("Razorpay webhook route", () => {
     expect(m.status).toHaveBeenCalledWith(expect.objectContaining({ status: "cancelled" }));
     expect(m.charge).not.toHaveBeenCalled();
   });
-  it("ignores partial refunds and processes complete captured-payment refunds", async () => {
+  it("ignores partial Razorpay refund.processed events and reconciles full refunds", async () => {
     const payment = { id: "pay_TEST123456", currency: "INR", amount: 11900, amount_refunded: 100 };
-    const body = { event: "payment.refunded", payload: { payment: { entity: payment } } };
-    expect((await POST(request(body))).status).toBe(200);
+    const refund = {
+      id: "rfnd_TEST123456",
+      payment_id: payment.id,
+      currency: "INR",
+      status: "processed",
+      amount: 100,
+    };
+    const event = {
+      event: "refund.processed",
+      created_at: current,
+      payload: { refund: { entity: refund }, payment: { entity: payment } },
+    };
+    expect((await POST(request(event))).status).toBe(200);
     expect(m.refund).not.toHaveBeenCalled();
+    const full = {
+      ...event,
+      payload: {
+        refund: { entity: { ...refund, amount: 11800 } },
+        payment: { entity: { ...payment, amount_refunded: 11900 } },
+      },
+    };
+    expect((await POST(request(full))).status).toBe(200);
+    expect(m.refund).toHaveBeenCalledWith({
+      eventId: "evt-test-1234",
+      paymentId: "pay_TEST123456",
+    });
+  });
+  it("rejects mismatched payment IDs and refund amounts, without revoking access", async () => {
+    const payment = {
+      id: "pay_TEST123456",
+      currency: "INR",
+      amount: 11900,
+      amount_refunded: 11900,
+    };
+    const refund = {
+      id: "rfnd_TEST123456",
+      payment_id: "pay_UNRELATED",
+      currency: "INR",
+      status: "processed",
+      amount: 11900,
+    };
+    const event = {
+      event: "refund.processed",
+      created_at: current,
+      payload: { refund: { entity: refund }, payment: { entity: payment } },
+    };
+    expect((await POST(request(event))).status).toBe(422);
     expect(
       (
         await POST(
           request({
-            ...body,
-            payload: { payment: { entity: { ...payment, amount_refunded: 11900 } } },
+            ...event,
+            payload: {
+              refund: { entity: { ...refund, payment_id: payment.id, amount: 11901 } },
+              payment: { entity: payment },
+            },
           })
         )
       ).status
-    ).toBe(200);
-    expect(m.refund).toHaveBeenCalledOnce();
+    ).toBe(422);
+    expect(m.refund).not.toHaveBeenCalled();
   });
 });
