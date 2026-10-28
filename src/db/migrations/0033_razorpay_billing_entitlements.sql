@@ -358,10 +358,17 @@ BEGIN
   INSERT INTO app_private.razorpay_refund_events(event_id,payment_id) VALUES(p_event,p_payment);
   UPDATE entitlement_grants SET revoked_at=clock_timestamp()
     WHERE id=original.grant_id AND revoked_at IS NULL;
+  -- A historical refund must never revoke a later, independently paid cycle.
+  -- Resume grants are scoped to the matching verified original billing period.
   UPDATE entitlement_grants SET revoked_at=clock_timestamp()
-    WHERE id IN (SELECT grant_id FROM app_private.razorpay_resume_grants
-      WHERE subscription_id=original.subscription_id)
-    AND revoked_at IS NULL;
+    WHERE id IN (
+      SELECT resumed.grant_id
+      FROM app_private.razorpay_resume_grants resumed
+      JOIN entitlement_grants restored ON restored.id=resumed.grant_id
+      JOIN entitlement_grants paid ON paid.id=original.grant_id
+      WHERE resumed.subscription_id=original.subscription_id
+        AND restored.ends_at=paid.ends_at
+    ) AND revoked_at IS NULL;
   RETURN true;
 END $$;
 REVOKE ALL ON FUNCTION app_private.record_razorpay_refund(text,text)
