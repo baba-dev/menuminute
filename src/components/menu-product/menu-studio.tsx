@@ -398,7 +398,12 @@ export function MenuStudio({
   }
   useEffect(() => {
     const modal = bulkDialog.current;
-    if (bulkOpen && modal && !modal.open) modal.showModal();
+    if (bulkOpen && modal && !modal.open) {
+      modal.showModal();
+      // The dialog's initial focus step runs after the composer mounts. Restore focus
+      // inside the now-open modal so keyboard search works on desktop and mobile.
+      modal.querySelector<HTMLInputElement>("#smart-dish-search")?.focus();
+    }
     if (!bulkOpen && modal?.open) modal.close();
   }, [bulkOpen]);
   function addQuickDishes(items: QuickDish[], newSectionName: string) {
