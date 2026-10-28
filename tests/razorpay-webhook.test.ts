@@ -25,29 +25,20 @@ describe("Razorpay Webhook Signature Verification", () => {
   });
 
   it("verifies a valid HMAC-SHA256 signature successfully", () => {
-    const validSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
+    const validSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
 
     expect(verifyRazorpayWebhookSignature(payload, validSignature, secret)).toBe(true);
   });
 
   it("rejects an invalid or tampered signature", () => {
-    const validSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
+    const validSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
 
     const forgedSignature = validSignature.slice(0, -4) + "abcd";
     expect(verifyRazorpayWebhookSignature(payload, forgedSignature, secret)).toBe(false);
   });
 
   it("rejects when the payload was modified after signing", () => {
-    const signature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
+    const signature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
 
     const tamperedPayload = payload + " ";
     expect(verifyRazorpayWebhookSignature(tamperedPayload, signature, secret)).toBe(false);
