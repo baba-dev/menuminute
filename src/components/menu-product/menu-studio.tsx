@@ -783,13 +783,15 @@ export function MenuStudio({
                         canWrite={detail.canWrite && !detail.archived}
                         onAddDish={openComposer}
                         onAddMultiple={openBulkComposer}
-                        onCreateSection={(name) => change({
-                          ...doc,
-                          categories: [
-                            ...doc.categories,
-                            { id: id(), name, description: "", archived: false, items: [] },
-                          ],
-                        })}
+                        onCreateSection={(name) =>
+                          change({
+                            ...doc,
+                            categories: [
+                              ...doc.categories,
+                              { id: id(), name, description: "", archived: false, items: [] },
+                            ],
+                          })
+                        }
                         onUpdateCategory={(ci, patch) =>
                           updateCategory(ci, (category) => ({ ...category, ...patch }))
                         }
