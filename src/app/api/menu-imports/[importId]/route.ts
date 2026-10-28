@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { importDetail } from "@/modules/menu-import/service";
 type C = { params: Promise<{ importId: string }> };
-export async function GET(req: Request, c: C) {
+async function observed_GET(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req);
     return NextResponse.json(await importDetail(actor, restaurant.id, (await c.params).importId), {
@@ -12,3 +13,5 @@ export async function GET(req: Request, c: C) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

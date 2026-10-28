@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { submitGuestOrder } from "@/modules/orders/service";
@@ -19,7 +20,7 @@ const tokenSchema = z
   .regex(/^[A-Za-z0-9_-]+$/);
 const noStore = { "cache-control": "no-store" };
 
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     if (req.headers.get("origin") !== new URL(env.APP_URL).origin) {
       return NextResponse.json({ message: "Invalid request origin" }, { status: 403 });
@@ -79,3 +80,5 @@ export async function POST(req: Request) {
     return errorResponse(err, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

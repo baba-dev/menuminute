@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/lib/config/env";
@@ -34,7 +35,7 @@ const webhook = z.object({
   }),
 });
 
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   if (!env.RAZORPAY_ENABLED || env.COMMUNITY_EDITION || !env.RAZORPAY_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Billing is unavailable" }, { status: 503 });
   }
@@ -177,3 +178,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Reconciliation temporarily unavailable" }, { status: 503 });
   }
 }
+
+export const POST = observedRoute(observed_POST);

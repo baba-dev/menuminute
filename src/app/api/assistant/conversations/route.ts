@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { boundedJson } from "@/modules/intelligence/request";
@@ -8,7 +9,7 @@ import {
 } from "@/modules/intelligence/store";
 import { env } from "@/lib/config/env";
 const scopeSchema = conversationInput.omit({ key: true });
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const actor = await requestActor(req);
     const params = Object.fromEntries(new URL(req.url).searchParams.entries());
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     return errorResponse(error, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const actor = await requestActor(req, true);
     if (!env.AI_ASSISTANT_READ_ONLY_ENABLED)
@@ -41,3 +42,6 @@ export async function POST(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { menuDetail, commandMenu } from "@/modules/menu-product/service";
 import { boundedJson } from "@/lib/bounded-input";
 type C = { params: Promise<{ menuId: string }> };
-export async function GET(req: Request, c: C) {
+async function observed_GET(req: Request, c: C) {
   try {
     const { actor } = await requestContext(req);
     return NextResponse.json(await menuDetail(actor, (await c.params).menuId));
@@ -11,7 +12,7 @@ export async function GET(req: Request, c: C) {
     return errorResponse(e, req);
   }
 }
-export async function PATCH(req: Request, c: C) {
+async function observed_PATCH(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     return NextResponse.json(
@@ -21,3 +22,6 @@ export async function PATCH(req: Request, c: C) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const PATCH = observedRoute(observed_PATCH);

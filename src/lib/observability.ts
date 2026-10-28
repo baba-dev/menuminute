@@ -1,37 +1,49 @@
+import { getTraceContext } from "./tracing";
+import { telemetry } from "./telemetry";
+
 const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const generatedIds = new WeakMap<Request, string>();
-
-export function requestId(request: Request) {
+export function requestId(request: Request): string {
   const supplied = request.headers.get("x-request-id");
   if (supplied && requestIdPattern.test(supplied)) return supplied;
-  const existing = generatedIds.get(request);
-  if (existing) return existing;
-  const generated = crypto.randomUUID();
-  generatedIds.set(request, generated);
-  return generated;
+  const previous = generatedIds.get(request);
+  if (previous) return previous;
+  const next = crypto.randomUUID();
+  generatedIds.set(request, next);
+  return next;
 }
 
-export function logRequestError(request: Request, error: unknown, status: number) {
-  const pathname = (() => {
+export function logRequestError(request: Request, error: unknown, status: number): void {
+  const trace = getTraceContext();
+  // Observed routes record final status exactly once in observedRoute.
+  if (trace?.metadata?.["observedRequest"] !== true) {
+    const startHeader = request.headers.get("x-request-start");
+    const candidate = startHeader ? Number(startHeader) : NaN;
+    const duration =
+      Number.isFinite(candidate) && candidate > 0 && candidate <= Date.now()
+        ? Date.now() - candidate
+        : 0;
+    telemetry.recordRequest(status, duration);
+  }
+  // Preserve existing conservative error event format: no messages, URLs or stack traces.
+  if (status >= 500) {
+    let path = "/unknown";
     try {
-      // Report endpoint families only: never log tokens, user IDs or customer identifiers.
-      return "/" + new URL(request.url).pathname.split("/").filter(Boolean).slice(0, 2).join("/");
+      path = "/" + new URL(request.url).pathname.split("/").filter(Boolean).slice(0, 2).join("/");
     } catch {
-      return "invalid-url";
+      /* No user URL content in fallback. */
     }
-  })();
-  const record = {
-    timestamp: new Date().toISOString(),
-    level: "error",
-    event: "http.request.failed",
-    requestId: requestId(request),
-    method: request.method,
-    path: pathname,
-    status,
-    errorType: error instanceof Error ? error.name : "UnknownError",
-  };
-  const line = JSON.stringify(record);
-  // Expected client errors are returned with correlation IDs without creating attacker-controlled
-  // log volume. Authorization/audit events belong in their domain-specific durable records.
-  if (status >= 500) console.error(line);
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        event: "http.request.failed",
+        requestId: requestId(request),
+        method: request.method,
+        path,
+        status,
+        errorType: error instanceof Error ? error.name : "UnknownError",
+      })
+    );
+  }
 }

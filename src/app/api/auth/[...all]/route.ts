@@ -1,11 +1,12 @@
+import { observedRoute } from "@/lib/observed-route";
 import { toNextJsHandler } from "better-auth/next-js";
 import { authServer } from "@/lib/auth";
 import { allowAuthRequest } from "@/lib/auth-abuse";
 import { TERMS_VERSION } from "@/content/legal";
 import { env } from "@/lib/config/env";
 const handler = toNextJsHandler(authServer);
-export const GET = handler.GET;
-export async function POST(request: Request) {
+export const GET = observedRoute(handler.GET);
+async function observed_POST(request: Request) {
   try {
     if (!(await allowAuthRequest(request)))
       return Response.json(
@@ -73,3 +74,5 @@ export async function POST(request: Request) {
   }
   return handler.POST(request);
 }
+
+export const POST = observedRoute(observed_POST);

@@ -1,4 +1,6 @@
 import { redisClient } from "@/lib/redis";
+import { telemetry } from "@/lib/telemetry";
+import { logger } from "@/lib/logger";
 import type { PublicProduct } from "./service";
 
 const TOKEN_OUTLET_TTL_SECONDS = 86400;
@@ -42,16 +44,14 @@ return 1
 `;
 
 function logCacheFailure(operation: string, error: unknown) {
-  console.error("[public-menu-cache] operation failed", {
-    operation,
-    reason: error instanceof Error ? error.message : "unknown",
-  });
+  logger.error("[public-menu-cache] operation failed", error, { operation });
 }
 
 export async function getCachedPublicProduct(
   token: string,
   locale: string | null
 ): Promise<MenuCacheRead> {
+  let payloadRetrieved = false;
   try {
     const redis = await redisClient("cache");
     const response = (await redis.eval(readScript, {
@@ -59,13 +59,24 @@ export async function getCachedPublicProduct(
       arguments: ["cache:outlet-version:", `cache:public-menu:${token}:`, locale ?? "default"],
     })) as Array<string | null>;
     const [outletId, version, payload] = response;
-    if (!outletId || !version) return { data: null, fence: null };
+    if (!outletId || !version) {
+      telemetry.recordCacheMiss();
+      return { data: null, fence: null };
+    }
     const fence = { outletId, version };
-    if (!payload) return { data: null, fence };
+    if (!payload) {
+      telemetry.recordCacheMiss();
+      return { data: null, fence };
+    }
+    payloadRetrieved = true;
     const data = JSON.parse(payload) as PublicProduct;
+    telemetry.recordCacheHit();
     data.now = new Date().toISOString();
     return { data, fence };
   } catch (error) {
+    if (payloadRetrieved) telemetry.recordCacheCorrupt();
+    else telemetry.recordCacheError();
+    telemetry.recordCacheFallback();
     logCacheFailure("read", error);
     // A Redis outage degrades to the authoritative PostgreSQL query.
     return { data: null, fence: null };
@@ -105,6 +116,7 @@ export async function setCachedPublicProduct(
       ],
     });
   } catch (error) {
+    telemetry.recordCacheError();
     logCacheFailure("write", error);
   }
 }
@@ -117,6 +129,7 @@ export async function invalidateOutletMenuCache(outletId: string): Promise<void>
     const redis = await redisClient("cache");
     await redis.incr(outletVersionKey(outletId));
   } catch (error) {
+    telemetry.recordCacheError();
     logCacheFailure("invalidate", error);
   }
 }
@@ -130,6 +143,7 @@ export async function invalidateOutletMenuCaches(outletIds: Iterable<string>): P
     for (const outletId of unique) batch.incr(outletVersionKey(outletId));
     await batch.exec();
   } catch (error) {
+    telemetry.recordCacheError();
     logCacheFailure("invalidate-many", error);
   }
 }
@@ -146,6 +160,7 @@ export async function revokeCachedQrToken(outletId: string, token: string): Prom
       .incr(outletVersionKey(outletId))
       .exec();
   } catch (error) {
+    telemetry.recordCacheError();
     logCacheFailure("revoke", error);
   }
 }

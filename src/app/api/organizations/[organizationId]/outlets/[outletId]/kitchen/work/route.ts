@@ -1,7 +1,8 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { kitchenWorkCommand } from "@/modules/kitchen/service";
-export async function POST(
+async function observed_POST(
   req: Request,
   { params }: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
@@ -14,3 +15,5 @@ export async function POST(
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

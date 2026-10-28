@@ -18,7 +18,7 @@ pnpm install --prod --frozen-lockfile --prefer-offline
 node -e 'require("pg");require("bullmq");require("sharp");require("nodemailer")'
 stage="$(mktemp -d)"
 trap 'rm -rf -- "$stage"' EXIT
-install -d "$stage/.next/standalone/.next" "$stage/dist" "$stage/src/db" "$stage/infra"
+install -d "$stage/.next/standalone/.next" "$stage/dist" "$stage/src/db" "$stage/infra/log-collector"
 cp -a .next/standalone/. "$stage/.next/standalone/"
 cp -a .next/static "$stage/.next/standalone/.next/static"
 cp -a public "$stage/.next/standalone/public"
@@ -26,10 +26,12 @@ cp -a dist/. "$stage/dist/"
 cp -a node_modules "$stage/node_modules"
 cp -a src/db/migrations "$stage/src/db/migrations"
 cp -a infra/systemd "$stage/infra/systemd"
+cp -a infra/log-collector/. "$stage/infra/log-collector/"
 cp -a infra/nginx "$stage/infra/nginx"
 cp package.json pnpm-lock.yaml pnpm-workspace.yaml "$stage/"
 printf '%s\n' "$sha" > "$stage/RELEASE-SHA"
 test -s "$stage/src/db/migrations/meta/_journal.json"
+test -s "$stage/infra/log-collector/collector.mjs"
 test ! -e "$stage/.env"
 test ! -e "$stage/.env.production"
 (

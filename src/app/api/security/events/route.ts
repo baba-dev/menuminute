@@ -1,7 +1,8 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { getPool } from "@/db";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const actor = await requestActor(req);
     const result = await getPool().query(
@@ -13,3 +14,5 @@ export async function GET(req: Request) {
     return errorResponse(err, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextRequest, NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import {
@@ -6,7 +7,7 @@ import {
   createCategorySchema,
 } from "@/modules/menus/service";
 
-export async function GET(req: NextRequest) {
+async function observed_GET(req: NextRequest) {
   try {
     const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function observed_POST(req: NextRequest) {
   try {
     const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
@@ -37,3 +38,6 @@ export async function POST(req: NextRequest) {
     return errorResponse(err, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

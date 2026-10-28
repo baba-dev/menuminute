@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { boundedBytes } from "@/lib/bounded-input";
 import { applyStripeWebhook } from "@/modules/pos/finance";
 
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const body = await boundedBytes(req, 256_000);
     await applyStripeWebhook(body, req.headers.get("stripe-signature"));
@@ -14,3 +15,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const POST = observedRoute(observed_POST);

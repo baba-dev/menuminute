@@ -1,10 +1,11 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { errorResponse } from "@/lib/request-context";
 import { callGuestService, guestServiceState } from "@/modules/hospitality/service";
 type Params = { params: Promise<{ orderId: string }> };
 const headers = { "cache-control": "no-store" };
-export async function POST(req: Request, { params }: Params) {
+async function observed_POST(req: Request, { params }: Params) {
   try {
     const { orderId } = await params;
     const result = await callGuestService(orderId, await req.json());
@@ -13,7 +14,7 @@ export async function POST(req: Request, { params }: Params) {
     return errorResponse(e, req);
   }
 }
-export async function GET(req: Request, { params }: Params) {
+async function observed_GET(req: Request, { params }: Params) {
   try {
     const { orderId } = await params;
     const url = new URL(req.url);
@@ -28,3 +29,6 @@ export async function GET(req: Request, { params }: Params) {
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);
+export const GET = observedRoute(observed_GET);

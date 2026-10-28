@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { boundedJson } from "@/lib/bounded-input";
 import { createImport, listImports } from "@/modules/menu-import/service";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     return NextResponse.json(await listImports(actor, restaurant.id), {
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
     return errorResponse(error, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const result = await createImport(actor, restaurant.id, await boundedJson(req));
@@ -24,3 +25,6 @@ export async function POST(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

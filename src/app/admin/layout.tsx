@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Server,
   Layers,
+  FileText,
 } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -77,6 +78,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <Layers className="h-4 w-4 text-amber-500" />
             <span>System & Queues</span>
+          </Link>
+
+          <Link
+            href="/admin/logs"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-stone-300 transition hover:bg-stone-800 hover:text-white"
+          >
+            <FileText className="h-4 w-4 text-amber-400" />
+            <span>Logs &amp; Diagnostics</span>
           </Link>
 
           <Link

@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { boundedJson } from "@/modules/intelligence/request";
 import { proposalInput, proposeAvailability } from "@/modules/intelligence/actions";
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const actor = await requestActor(req, true);
     if (!env.AI_ASSISTANT_ACTIONS_ENABLED || !env.AI_ASSISTANT_READ_ONLY_ENABLED)
@@ -21,3 +22,5 @@ export async function POST(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { z } from "zod";
 import { UnauthorizedError } from "@/lib/errors";
 import { errorResponse } from "@/lib/request-context";
@@ -16,7 +17,7 @@ const id = z
 const noStore = { "content-type": "application/json", "cache-control": "private, no-store" };
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-export async function GET(
+async function observed_GET(
   req: Request,
   { params }: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
@@ -126,3 +127,5 @@ export async function GET(
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

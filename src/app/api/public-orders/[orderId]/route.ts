@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getGuestOrderTracking } from "@/modules/orders/service";
@@ -16,7 +17,7 @@ const tokenSchema = z
   .regex(/^[A-Za-z0-9_-]+$/);
 const noStore = { "cache-control": "no-store" };
 
-export async function GET(req: Request, context: { params: Promise<{ orderId: string }> }) {
+async function observed_GET(req: Request, context: { params: Promise<{ orderId: string }> }) {
   try {
     // Even malformed tracking requests consume a bounded source allowance.
     let source: string;
@@ -62,3 +63,5 @@ export async function GET(req: Request, context: { params: Promise<{ orderId: st
     return errorResponse(err, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

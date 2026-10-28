@@ -1,0 +1,33 @@
+[Unit]
+Description=MenuMinute read-only journal indexer
+After=systemd-journald.service
+Wants=systemd-journald.service
+
+[Service]
+Type=simple
+# Provision the non-login user explicitly. It reads the system journal; the
+# indexer itself restricts ingestion to two allowlisted service unit names.
+User=menuminute-logreader
+Group=menuminute
+SupplementaryGroups=systemd-journal
+WorkingDirectory=/var/www/menuminute/current
+ExecStart=/opt/menuminute/node24/bin/node infra/log-collector/collector.mjs
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/var/lib/menuminute/log-index
+MemoryMax=96M
+CPUQuota=10%
+TasksMax=20
+LimitNOFILE=128
+
+[Install]
+WantedBy=multi-user.target

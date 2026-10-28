@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { getPool, verifyRuntimeRole } from "@/db";
 import { redisHealth } from "@/lib/redis";
 import { mediaStorageHealth } from "@/modules/media/storage";
 export const dynamic = "force-dynamic";
-export async function GET() {
+async function observed_GET() {
   let database = false;
   try {
     await verifyRuntimeRole();
@@ -24,3 +25,5 @@ export async function GET() {
     { status: ready ? 200 : 503, headers: { "Cache-Control": "no-store" } }
   );
 }
+
+export const GET = observedRoute(observed_GET);

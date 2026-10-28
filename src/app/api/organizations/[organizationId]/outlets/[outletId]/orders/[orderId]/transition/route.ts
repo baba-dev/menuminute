@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { transitionOutletOrder } from "@/modules/orders/service";
 
-export async function POST(
+async function observed_POST(
   req: Request,
   context: { params: Promise<{ organizationId: string; outletId: string; orderId: string }> }
 ) {
@@ -26,3 +27,5 @@ export async function POST(
     return errorResponse(err, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

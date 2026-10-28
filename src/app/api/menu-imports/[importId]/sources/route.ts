@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { env } from "@/lib/config/env";
@@ -5,7 +6,7 @@ import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { boundedBytes } from "@/lib/bounded-input";
 import { addImportSource } from "@/modules/menu-import/service";
 type C = { params: Promise<{ importId: string }> };
-export async function POST(req: Request, c: C) {
+async function observed_POST(req: Request, c: C) {
   try {
     if (req.headers.get("origin") !== new URL(env.APP_URL).origin) throw new ForbiddenError();
     if (!["image/jpeg", "image/png", "image/webp"].includes(req.headers.get("content-type") ?? ""))
@@ -30,3 +31,5 @@ export async function POST(req: Request, c: C) {
     return errorResponse(error, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

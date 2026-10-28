@@ -1,8 +1,12 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { retryEvent } from "@/modules/organizations/service";
-export async function POST(req: Request, context: { params: Promise<{ organizationId: string }> }) {
+async function observed_POST(
+  req: Request,
+  context: { params: Promise<{ organizationId: string }> }
+) {
   try {
     const actor = await requestActor(req, true);
     const body = z
@@ -15,3 +19,5 @@ export async function POST(req: Request, context: { params: Promise<{ organizati
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

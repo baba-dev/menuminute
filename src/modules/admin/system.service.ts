@@ -4,6 +4,9 @@ import { redisHealth } from "@/lib/redis";
 import { env } from "@/lib/config/env";
 import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { withActor } from "@/modules/tenancy/service";
+import { telemetry, type TelemetrySnapshot } from "@/lib/telemetry";
+import { evaluateOperationalAlerts, type OperationalAlert } from "@/lib/operational-alerts";
+import { getLoggerHealth } from "@/lib/logger";
 
 export interface SystemHealthReport {
   database: {
@@ -19,6 +22,9 @@ export interface SystemHealthReport {
     counts: Record<string, number>;
     oldestDue: string | null;
   };
+  telemetry: TelemetrySnapshot;
+  alerts: OperationalAlert[];
+  logger: ReturnType<typeof getLoggerHealth>;
   runtime: {
     nodeVersion: string;
     platform: string;
@@ -84,6 +90,9 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
       counts,
       oldestDue,
     },
+    telemetry: telemetry.getSnapshot(),
+    alerts: evaluateOperationalAlerts(telemetry.getSnapshot()),
+    logger: getLoggerHealth(),
     runtime: {
       nodeVersion: process.version,
       platform: process.platform,

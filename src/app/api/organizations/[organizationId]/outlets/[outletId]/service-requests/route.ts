@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { staffServiceRequests, staffServiceRequestAction } from "@/modules/hospitality/service";
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
 const headers = { "cache-control": "private, no-store" };
-export async function GET(req: Request, { params }: Params) {
+async function observed_GET(req: Request, { params }: Params) {
   try {
     const actor = await requestActor(req);
     const { organizationId, outletId } = await params;
@@ -14,7 +15,7 @@ export async function GET(req: Request, { params }: Params) {
     return errorResponse(e, req);
   }
 }
-export async function POST(req: Request, { params }: Params) {
+async function observed_POST(req: Request, { params }: Params) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
@@ -26,3 +27,6 @@ export async function POST(req: Request, { params }: Params) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

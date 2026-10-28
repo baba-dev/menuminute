@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { organizationDetail, manageOrganization } from "@/modules/organizations/service";
 type Context = { params: Promise<{ organizationId: string }> };
-export async function GET(req: Request, context: Context) {
+async function observed_GET(req: Request, context: Context) {
   try {
     return NextResponse.json(
       await organizationDetail(await requestActor(req), (await context.params).organizationId)
@@ -11,7 +12,7 @@ export async function GET(req: Request, context: Context) {
     return errorResponse(e, req);
   }
 }
-export async function PATCH(req: Request, context: Context) {
+async function observed_PATCH(req: Request, context: Context) {
   try {
     return NextResponse.json(
       await manageOrganization(
@@ -24,3 +25,6 @@ export async function PATCH(req: Request, context: Context) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const PATCH = observedRoute(observed_PATCH);

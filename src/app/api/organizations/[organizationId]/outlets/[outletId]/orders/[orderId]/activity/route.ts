@@ -1,7 +1,8 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { serviceOrderActivity } from "@/modules/orders/workspace";
-export async function GET(
+async function observed_GET(
   req: Request,
   context: {
     params: Promise<{ organizationId: string; outletId: string; orderId: string }>;
@@ -17,3 +18,5 @@ export async function GET(
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

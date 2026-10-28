@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { conversationInput } from "@/modules/intelligence/store";
 import { availabilityOptions } from "@/modules/intelligence/actions";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const actor = await requestActor(req);
     if (!env.AI_ASSISTANT_ACTIONS_ENABLED || !env.AI_ASSISTANT_READ_ONLY_ENABLED)
@@ -18,3 +19,5 @@ export async function GET(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
