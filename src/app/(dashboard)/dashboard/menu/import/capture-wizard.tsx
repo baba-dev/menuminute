@@ -323,6 +323,7 @@ export function CaptureWizard({
   async function splitPending(id: string) {
     const item = drafts.find((d) => d.id === id && d.state === "pending");
     if (!session || busy || session.status !== "collecting" || !item) return;
+    const sourceFile = item.file;
     const indices = [...session.sources, ...drafts].map((s) => s.pageIndex);
     if (indices.includes(11) || session.sources.some((s) => s.pageIndex >= item.pageIndex)) {
       setError(
@@ -334,7 +335,7 @@ export function CaptureWizard({
     setError("");
     let bitmap: ImageBitmap | undefined;
     try {
-      bitmap = await createImageBitmap(item.file);
+      bitmap = await createImageBitmap(sourceFile);
       if (bitmap.width < 320 || bitmap.height < 320)
         throw new Error(
           "The photo is too small to split reliably. Capture a higher-resolution menu."
@@ -358,7 +359,7 @@ export function CaptureWizard({
           throw new Error("The cropped photo exceeds the supported format or size.");
         return new File(
           [blob],
-          item.file.name.replace(/\.[^.]+$/, "") +
+          sourceFile.name.replace(/\.[^.]+$/, "") +
             "-" +
             suffix +
             "." +
