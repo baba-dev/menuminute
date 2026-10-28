@@ -422,10 +422,7 @@ export function CartDrawer({
             </div>
 
             {/* Itemized List */}
-            <div
-              className="cart-body stack"
-              style={{ flex: 1, overflowY: "auto", gap: "0.8rem" }}
-            >
+            <div className="cart-body stack" style={{ flex: 1, overflowY: "auto", gap: "0.8rem" }}>
               <div className="cart-items stack" style={{ gap: "0.75rem" }}>
                 {items.map((item, index) => (
                   <div
@@ -605,7 +602,11 @@ export function CartDrawer({
                   charges before accepting your order.
                 </small>
               </div>
-              <div className="ticket-receipt-tear" style={{ marginBottom: "0.5rem" }} aria-hidden="true" />
+              <div
+                className="ticket-receipt-tear"
+                style={{ marginBottom: "0.5rem" }}
+                aria-hidden="true"
+              />
 
               {/* Invariant Alert: Submission is not acceptance */}
               <div className="alert-notice stack" style={{ gap: "0.2rem" }}>

@@ -133,7 +133,11 @@ export function MarketingSubpageNav() {
                     </Link>
                   ))}
                   <div className="border-border my-1 border-t" />
-                  <HomeAuthActions surface="subpage" mobile onNavigate={() => setMobileOpen(false)} />
+                  <HomeAuthActions
+                    surface="subpage"
+                    mobile
+                    onNavigate={() => setMobileOpen(false)}
+                  />
                 </div>
               )}
             </div>
