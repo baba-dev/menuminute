@@ -18,11 +18,11 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
-  X,
 } from "lucide-react";
 import { filterQrCodes, qrDestination, qrStatistics } from "./qr-studio-types";
 import type { QR, QRFilter } from "./qr-studio-types";
 import { QrPrintStudio } from "./qr-print-studio";
+import { QrCreateDialog } from "./qr-create-dialog";
 
 const art = "/brand/qr-studio/tabletop-press/";
 const pageSize = 24;
@@ -54,16 +54,14 @@ export function QrManager({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [label, setLabel] = useState("");
-  const [pointLabel, setPointLabel] = useState("");
-  const [showCreate, setShowCreate] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [created, setCreated] = useState<QR | null>(null);
   const [tab, setTab] = useState<"library" | "print">("library");
   const [danger, setDanger] = useState<Danger | null>(null);
   const [confirmed, setConfirmed] = useState("");
   const retry = useRef({ signature: "", key: "" });
   const running = useRef(false);
   const dangerDialog = useRef<HTMLDialogElement>(null);
-  const pointRef = useRef<HTMLInputElement>(null);
   const detailRef = useRef<HTMLElement>(null);
 
   const stats = useMemo(() => qrStatistics(codes), [codes]);
@@ -120,14 +118,10 @@ export function QrManager({
           );
         selectCode(next.id);
         setFilter("active");
+        if (action === "create") setCreated(next);
       } else {
         setSelectedId(result.id ?? selectedId);
         setFilter("all");
-      }
-      if (action === "create") {
-        setLabel("");
-        setPointLabel("");
-        setShowCreate(false);
       }
       retry.current = { signature: "", key: "" };
       setMessage(
@@ -189,12 +183,16 @@ export function QrManager({
       });
     }
   }
+  function openCreate() {
+    if (busy) return;
+    setCreated(null);
+    setError("");
+    setCreateOpen(true);
+  }
   function openPrintStudio() {
     const active = selected?.isActive ? selected : codes.find((q) => q.isActive);
     if (!active) {
-      setShowCreate(true);
-      setMessage("Create a permanent QR before opening Print Studio.");
-      window.requestAnimationFrame(() => scrollToSection("qr-create", "center"));
+      openCreate();
       return;
     }
     setSelectedId(active.id);
@@ -231,10 +229,7 @@ export function QrManager({
           <div className="qr-hero-actions">
             <button
               type="button"
-              onClick={() => {
-                setShowCreate(true);
-                scrollToSection("qr-create", "center");
-              }}
+              onClick={openCreate}
             >
               {" "}
               <Plus size={17} aria-hidden="true" /> Create QR
@@ -333,78 +328,6 @@ export function QrManager({
               </div>
             </section>
 
-            <section className="qr-create-section" id="qr-create" aria-labelledby="qr-create-title">
-              <div className="qr-create-head">
-                <div>
-                  <span className="qr-eyebrow">MAKE A NEW CONNECTION</span>
-                  <h2 id="qr-create-title">Create a permanent QR</h2>
-                  <p>
-                    Label it for your staff. Add an optional service-point label for a table or
-                    counter.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="qr-outline"
-                  aria-expanded={showCreate}
-                  aria-controls="qr-create-fields"
-                  onClick={() => setShowCreate((v) => !v)}
-                >
-                  {showCreate ? "Close creator" : "Open creator"}
-                </button>
-              </div>
-              {showCreate && (
-                <form
-                  id="qr-create-fields"
-                  className="qr-create-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const cleanLabel = label.trim(),
-                      cleanPoint = pointLabel.trim();
-                    if (!cleanLabel) return;
-                    void command("create", {
-                      label: cleanLabel,
-                      ...(cleanPoint ? { pointLabel: cleanPoint } : {}),
-                    });
-                  }}
-                >
-                  <div className="qr-create-grid">
-                    <label className="field">
-                      QR label{" "}
-                      <input
-                        name="label"
-                        value={label}
-                        onChange={(e) => setLabel(e.target.value)}
-                        required
-                        maxLength={80}
-                        placeholder="Front counter menu"
-                      />
-                    </label>
-                    <label className="field">
-                      Table / counter label (optional){" "}
-                      <input
-                        ref={pointRef}
-                        name="pointLabel"
-                        value={pointLabel}
-                        onChange={(e) => setPointLabel(e.target.value)}
-                        maxLength={80}
-                        placeholder="Table 4"
-                      />
-                    </label>
-                  </div>
-                  <div className="qr-create-bottom">
-                    <p>
-                      A service-point label provides guest context. It does not enable ordering or
-                      prove physical presence.
-                    </p>
-                    <button className="ember" disabled={busy || !label.trim()} type="submit">
-                      <Plus size={17} aria-hidden="true" /> Create QR code
-                    </button>
-                  </div>
-                </form>
-              )}
-            </section>
-
             {codes.length === 0 ? (
               <section className="qr-empty" aria-labelledby="qr-empty-heading">
                 <Image
@@ -417,9 +340,12 @@ export function QrManager({
                   <span className="qr-eyebrow">YOUR FIRST PRINTED CONNECTION</span>
                   <h2 id="qr-empty-heading">Your table is ready. Let guests find you.</h2>
                   <p>
-                    Create a permanent code above, print it, and keep updating your menu without
-                    changing the printed link.
+                    Create your first permanent QR using the button below. Menu edits will not
+                    change its printed destination.
                   </p>
+                  <button type="button" className="qr-outline" onClick={openCreate}>
+                    <Plus size={17} aria-hidden="true" /> Create your first QR
+                  </button>
                 </div>
               </section>
             ) : (
@@ -634,26 +560,6 @@ export function QrManager({
                 </div>
               </div>
             )}
-            {message === "QR code created" && (
-              <section className="qr-celebration">
-                <Image src={art + "qr-creation-celebration.webp"} width={150} height={113} alt="" />
-                <div>
-                  <span className="qr-eyebrow">A NEW CONNECTION</span>
-                  <h2>Your QR is ready to serve.</h2>
-                  <p>
-                    The server confirmed creation. Download, print or share it from the selected
-                    workspace.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMessage("")}
-                  aria-label="Dismiss creation message"
-                >
-                  <X size={18} />
-                </button>
-              </section>
-            )}
           </>
         )}
         {tab === "print" && (
@@ -668,6 +574,27 @@ export function QrManager({
           />
         )}
       </div>
+      <QrCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        outletName={outletName}
+        origin={origin}
+        busy={busy}
+        error={error}
+        created={created}
+        existingLabels={codes.map((code) => code.label ?? "")}
+        onCreate={(name, point) => void command("create", {
+          label: name,
+          ...(point ? { pointLabel: point } : {}),
+        })}
+        onReset={() => { setCreated(null); setError(""); }}
+        onLibrary={() => { setCreateOpen(false); setTab("library"); }}
+        onPrint={() => {
+          setCreateOpen(false);
+          setTab("print");
+          window.requestAnimationFrame(() => scrollToSection("qr-tab-navigation"));
+        }}
+      />
       <dialog
         className="qr-confirm"
         ref={dangerDialog}
