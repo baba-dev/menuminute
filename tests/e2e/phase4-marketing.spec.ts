@@ -1,22 +1,33 @@
 import { expect, test } from "@playwright/test";
 
-test("public pricing separates the available free product from future, unpriced plans", async ({
+test("public pricing advertises the reviewed INR catalog without unsupported international checkout", async ({
   page,
 }) => {
   await page.goto("/pricing");
-  await expect(page.getByRole("heading", { name: "Simple, transparent pricing" })).toBeVisible();
-  await expect(page.getByText("Free", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("TBA", { exact: true })).toHaveCount(2);
-  await expect(page.getByText("Coming soon · pricing pending")).toHaveCount(2);
+  await expect(page.getByRole("heading", { name: "Simple, honest pricing." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Free Forever" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Live Table Ordering" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kitchen Pro KDS" })).toBeVisible();
+
+  await expect(page.getByText("₹119", { exact: true })).toBeVisible();
+  await expect(page.getByText("₹299", { exact: true })).toBeVisible();
+  await expect(page.getByText("INR billing · international pricing coming later")).toBeVisible();
+  await expect(page.getByText("Available after Kitchen Pro release approval")).toBeVisible();
+  await expect(page.getByText("TBA", { exact: true })).toHaveCount(0);
   await expect(page.locator('a[href="#"]')).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Get started free" }).first()).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Get started free" })).toHaveAttribute(
     "href",
     "/register"
   );
-  await expect(page.locator("body")).not.toContainText(/₹149|₹299/);
+  await expect(page.getByRole("link", { name: "Join Kitchen Pro early access" })).toHaveAttribute(
+    "href",
+    "/register"
+  );
+  await expect(page.getByText(/under the MIT License/)).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/\$19\/mo|\$39\/mo|₹149/);
 });
 
-test("homepage describes ordering and kitchen as development, not currently purchasable", async ({
+test("homepage preserves explicit development and free-menu availability messaging", async ({
   page,
 }) => {
   await page.goto("/");
