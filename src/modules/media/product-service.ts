@@ -109,7 +109,7 @@ export async function publicMediaResponse(
   const etag = `"${createHash("sha256").update(key).digest("base64url")}"`;
   const validators = ifNoneMatch?.split(",").map((value) => value.trim().replace(/^W\//, ""));
   if (validators?.includes(etag) || validators?.includes("*")) {
-    return { etag, notModified: true as const };
+    return { etag, notModified: true as const, bytes: Buffer.alloc(0), internalPath: null };
   }
   // The internal path is derived solely from an authorized database storage key,
   // never from the public request URL. Nginx's location must be marked internal.
@@ -125,6 +125,7 @@ export async function publicMediaResponse(
     return {
       etag,
       notModified: false as const,
+      bytes: Buffer.alloc(0),
       internalPath: `/_menuminute_media_internal/${key}`,
     };
   }
