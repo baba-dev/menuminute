@@ -572,6 +572,7 @@ export function QrManager({
         )}
       </div>
       <QrCreateDialog
+        key={createOpen ? "open" : "closed"}
         open={createOpen}
         onOpenChange={setCreateOpen}
         outletName={outletName}

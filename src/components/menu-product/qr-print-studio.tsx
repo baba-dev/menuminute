@@ -86,7 +86,11 @@ export function QrPrintStudio({
   }
   function updateInk(next: string) {
     setCustomInk(next);
-    if (safeQrInk(next)) updateDesign({ ink: next.toUpperCase() });
+    if (safeQrInk(next)) {
+      updateDesign({ ink: next.toUpperCase() });
+    } else {
+      invalidateProof();
+    }
   }
   function resetDesign() {
     setCustomInk(DEFAULT_PRINT_DESIGN.ink);
@@ -95,7 +99,8 @@ export function QrPrintStudio({
     invalidateProof();
   }
   async function printDesign() {
-    if (!selected || !imageReady || !proof || printingRef.current) return;
+    if (!selected || !imageReady || !proof || !safeQrInk(customInk) || printingRef.current)
+      return;
     printingRef.current = true;
     setPrinting(true);
     setError("");
@@ -496,7 +501,7 @@ export function QrPrintStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={!proof || !imageReady || printing || !design.invitation.trim()}
+                disabled={!proof || !imageReady || printing || !design.invitation.trim() || !safeQrInk(customInk)}
                 onClick={() => void printDesign()}
               >
                 <Printer size={17} aria-hidden="true" /> Print / Save as PDF

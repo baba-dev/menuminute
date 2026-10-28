@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -54,16 +54,6 @@ export function QrCreateDialog({
   const [label, setLabel] = useState("");
   const [pointLabel, setPointLabel] = useState("");
   const [copyError, setCopyError] = useState("");
-  useEffect(() => {
-    if (open) {
-      setStep(1);
-      setPurpose("menu");
-      setLabel("");
-      setPointLabel("");
-      setCopyError("");
-    }
-  }, [open]);
-
   const cleanLabel = label.trim();
   const cleanPoint = pointLabel.trim();
   const valid = Boolean(cleanLabel && (purpose === "menu" || cleanPoint));

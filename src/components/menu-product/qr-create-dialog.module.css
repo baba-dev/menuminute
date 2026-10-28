@@ -7,6 +7,8 @@
   animation: qr-overlay-in 170ms ease-out;
 }
 .dialog {
+  --qr-line: #e7dbcd;
+  --qr-soft: #faf3e9;
   position: fixed;
   z-index: 2001;
   left: 50%;
@@ -22,6 +24,10 @@
   color: var(--ink);
   border: 1px solid var(--qr-line, #e7dbcd);
   box-shadow: 0 30px 100px rgb(22 12 6 / 35%);
+}
+:root[data-theme="dark"] .dialog {
+  --qr-line: #544438;
+  --qr-soft: #30261e;
 }
 .header {
   padding: 30px 34px 22px;
