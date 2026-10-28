@@ -33,19 +33,20 @@ test("subpage navigation keeps active routes and account actions styled on direc
 test("theme controls stay synchronized across responsive breakpoints and system changes", async ({
   page,
 }) => {
-  await page.addInitScript(() => localStorage.setItem("menuminute.appearance", "light"));
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.goto("/pricing");
+  await page.evaluate(() => localStorage.setItem("menuminute.appearance", "light"));
+  await page.reload();
   const nav = page.getByRole("navigation", { name: "Subpage navigation" });
   await nav.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator("html")).toHaveClass(/\\bdark\\b/);
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 
   await page.setViewportSize({ width: 360, height: 800 });
   await expect(nav.getByRole("button", { name: "Switch to light mode" })).toBeVisible();
   await nav.getByRole("button", { name: "Switch to light mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(page.locator("html")).not.toHaveClass(/\\bdark\\b/);
+  await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
 
   await page.setViewportSize({ width: 1024, height: 900 });
   await expect(nav.getByRole("button", { name: "Switch to dark mode" })).toBeVisible();

@@ -106,7 +106,7 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
     await page.getByRole("button", { name: "Switch to dark mode" }).click();
   }
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator("html")).toHaveClass(/\\bdark\\b/);
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
   await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ink", "#f6eddf");
   await expect(
     page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /The Till/ })
