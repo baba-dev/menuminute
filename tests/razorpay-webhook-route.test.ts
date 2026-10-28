@@ -95,7 +95,11 @@ describe("Razorpay webhook route", () => {
   });
   it("reconciles cancellation without inventing a paid grant", async () => {
     const response = await POST(
-      request({ event: "subscription.cancelled", created_at: current, payload: { subscription: { entity: subscription } } })
+      request({
+        event: "subscription.cancelled",
+        created_at: current,
+        payload: { subscription: { entity: subscription } },
+      })
     );
     expect(response.status).toBe(200);
     expect(m.status).toHaveBeenCalledWith(expect.objectContaining({ status: "cancelled" }));
@@ -106,10 +110,16 @@ describe("Razorpay webhook route", () => {
     const body = { event: "payment.refunded", payload: { payment: { entity: payment } } };
     expect((await POST(request(body))).status).toBe(200);
     expect(m.refund).not.toHaveBeenCalled();
-    expect((await POST(request({
-      ...body,
-      payload: { payment: { entity: { ...payment, amount_refunded: 11900 } } },
-    }))).status).toBe(200);
+    expect(
+      (
+        await POST(
+          request({
+            ...body,
+            payload: { payment: { entity: { ...payment, amount_refunded: 11900 } } },
+          })
+        )
+      ).status
+    ).toBe(200);
     expect(m.refund).toHaveBeenCalledOnce();
   });
 });
