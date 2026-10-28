@@ -338,7 +338,17 @@ export const publicProduct = cache(
     const locale = parsedLocale?.success ? parsedLocale.data : null;
 
     const cached = await getCachedPublicProduct(token, locale);
-    if (cached.data) return cached.data;
+    if (cached.data && cached.fence) {
+      // PostgreSQL remains the authority for QR revocation, outlet publication
+      // and organization status even when Redis invalidation is unavailable.
+      // This deliberately cheap gate avoids materializing the large menu JSON.
+      const live = await getPool().query<{ active: boolean }>(
+        "select app_private.public_menu_cache_token_active($1,$2) as active",
+        [token, cached.fence.outletId]
+      );
+      if (live.rows[0]?.active) return cached.data;
+      return null;
+    }
 
     const r = await getPool().query<{
     data: PublicProduct | null;
