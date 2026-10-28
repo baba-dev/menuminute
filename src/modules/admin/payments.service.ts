@@ -10,6 +10,7 @@ import { eq, desc, and, or, sql, asc } from "drizzle-orm";
 import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { ValidationError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
+import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
 export async function listSubscriptionPlans() {
   const db = getDb();
@@ -31,7 +32,7 @@ export async function listSubscriptionPlans() {
       id: "plan_ordering",
       name: "ordering",
       displayName: "Live Table Ordering",
-      monthlyPricePaise: 11900, // ₹119 / mo
+      monthlyPricePaise: PAID_PLAN_CATALOG.ordering.monthlyPricePaise,
       features: "Table Ordering, Cart, Service Counter, Order Tracking",
       isActive: true,
       sortOrder: 2,
@@ -40,7 +41,7 @@ export async function listSubscriptionPlans() {
       id: "plan_kitchen_pro",
       name: "kitchen_pro",
       displayName: "Kitchen Pro KDS",
-      monthlyPricePaise: 29900, // ₹299 / mo
+      monthlyPricePaise: PAID_PLAN_CATALOG.kitchen_pro.monthlyPricePaise,
       features: "Live KDS Station Displays, Audio Chimes, Station Routing, POS Till",
       isActive: true,
       sortOrder: 3,
@@ -59,6 +60,8 @@ export async function updateSubscriptionPlan(
     sortOrder?: number;
   }
 ) {
+  if (data?.monthlyPricePaise !== undefined)
+    throw new ValidationError("Price changes require a reviewed provider plan release");
   if (!planId || !data || Object.keys(data).length === 0)
     throw new ValidationError("A plan change is required");
   if (
