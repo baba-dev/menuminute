@@ -86,6 +86,16 @@ function publicMediaReader(id: string) {
     ).rows[0]?.data;
 }
 
+/** The storage key is controlled by PostgreSQL, not by the request URL. */
+export function isPublicDerivativeKey(key: string): boolean {
+  const parts = key.split("/");
+  return (
+    parts.length === 3 &&
+    parts.slice(0, 2).every((part) => /^[A-Za-z0-9_-]+$/.test(part)) &&
+    (parts[2] === "display.webp" || parts[2] === "thumb.webp")
+  );
+}
+
 export async function publicMediaResponse(
   id: string,
   thumbnail = false,
@@ -107,7 +117,7 @@ export async function publicMediaResponse(
     allowInternalOffload &&
     mediaEnv.MEDIA_STORAGE === "local" &&
     mediaEnv.MEDIA_X_ACCEL_REDIRECT_ENABLED &&
-    /^[A-Za-z0-9_-]+\\/[A-Za-z0-9_-]+\\/(display|thumb)\\.webp$/.test(key)
+    isPublicDerivativeKey(key)
   ) {
     const current = await read();
     if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
