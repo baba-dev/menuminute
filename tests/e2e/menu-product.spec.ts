@@ -247,7 +247,8 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(guest.getByText("Sold Out", { exact: true })).toBeVisible();
   await page.goto("/dashboard/qr-codes");
   await page.getByRole("button", { name: "Create QR", exact: true }).click();
-  const creator = page.getByRole("dialog", { name: "Create a permanent QR" });
+  const creator = page.getByRole("dialog");
+  await expect(creator).toHaveAccessibleName("Create a permanent QR");
   await creator.getByRole("button", { name: /Table or counter/i }).click();
   await creator.getByRole("textbox", { name: /QR label/i }).fill("Patio menu");
   await creator.getByRole("textbox", { name: /Table \/ counter label/i }).fill("Table 4");
