@@ -55,22 +55,28 @@ export async function POST(
       throw new ValidationError("This organization already has an active entitlement.");
 
     const amountPaise = PAID_PLAN_CATALOG[plan].monthlyPricePaise;
-    const prior = Array.isArray(current.subscriptions)
-      ? current.subscriptions.find((sub: { product?: string; status?: string; createdAt?: string }) =>
-          sub.product === plan &&
-          ["created", "authenticated", "pending"].includes(sub.status ?? "") &&
-          Date.now() - new Date(sub.createdAt ?? 0).getTime() < 24 * 3600_000
-        ) as { subscriptionId?: string } | undefined
-      : undefined;
-    const sub = prior?.subscriptionId
-      ? { id: prior.subscriptionId }
+    const reservation = await withActor(actor, async (tx) => {
+      const row = await tx.execute<{
+        reservation: { state: string; subscriptionId?: string; requestKey?: string };
+      }>(
+        sql`SELECT app_private.begin_razorpay_checkout(${organizationId},${plan}) AS reservation`
+      );
+      return row.rows[0]?.reservation;
+    });
+    if (!reservation || reservation.state === "in_progress")
+      throw new ValidationError("Another checkout is already in progress. Please retry shortly.");
+    if (reservation.state !== "reserved" && reservation.state !== "ready")
+      throw new ValidationError("Unable to reserve checkout");
+
+    const sub = reservation.state === "ready" && reservation.subscriptionId
+      ? { id: reservation.subscriptionId }
       : await createRazorpaySubscription({ planId, organizationId });
 
-    if (!prior?.subscriptionId) {
-      // The DB owner-only subscription record is the sole authority used by webhooks.
+    if (reservation.state === "reserved") {
+      if (!reservation.requestKey) throw new ValidationError("Checkout reservation was lost");
       await withActor(actor, async (tx) => {
-        await tx.execute(sql`SELECT app_private.register_razorpay_subscription(
-          ${sub.id},${organizationId},${plan},${planId}
+        await tx.execute(sql`SELECT app_private.complete_razorpay_checkout(
+          ${organizationId},${plan},${reservation.requestKey},${sub.id},${planId}
         )`);
       });
     }
