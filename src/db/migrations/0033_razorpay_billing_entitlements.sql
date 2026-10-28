@@ -139,7 +139,7 @@ GRANT EXECUTE ON FUNCTION app_private.razorpay_subscription_state(text) TO menum
 -- It never changes an entitlement or pretends that a payment was reversed.
 CREATE FUNCTION app_private.mark_razorpay_cancel_requested(p_org text,p_subscription text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER
-SET search_path=pg_catalog,public,pg_temp AS $
+SET search_path=pg_catalog,public,pg_temp AS $$
 BEGIN
   IF NOT app_private.org_admin(p_org,true,false) THEN
     RAISE EXCEPTION 'Owner authorization required' USING ERRCODE='42501';
@@ -149,7 +149,7 @@ BEGIN
     WHERE subscription_id=p_subscription AND organization_id=p_org
       AND status IN ('active','authenticated','pending','created');
   IF NOT FOUND THEN RAISE EXCEPTION 'Subscription not cancellable' USING ERRCODE='22023'; END IF;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION app_private.mark_razorpay_cancel_requested(text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.mark_razorpay_cancel_requested(text,text) TO menuminute_app;
 
@@ -265,7 +265,7 @@ GRANT EXECUTE ON FUNCTION app_private.record_razorpay_status(text,text,text,time
 -- Unrelated POS or other merchant refunds have no effect on subscription state.
 CREATE FUNCTION app_private.record_razorpay_refund(p_event text,p_payment text)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER
-SET search_path=pg_catalog,public,pg_temp AS $
+SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE original app_private.razorpay_charges%ROWTYPE;
 BEGIN
   IF length(p_event) NOT BETWEEN 8 AND 128 OR length(p_payment) NOT BETWEEN 8 AND 128
@@ -282,7 +282,7 @@ BEGIN
       WHERE subscription_id=original.subscription_id)
     AND revoked_at IS NULL;
   RETURN true;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION app_private.record_razorpay_refund(text,text)
   FROM PUBLIC,menuminute_app,menuminute_worker;
 GRANT EXECUTE ON FUNCTION app_private.record_razorpay_refund(text,text) TO menuminute_billing;
