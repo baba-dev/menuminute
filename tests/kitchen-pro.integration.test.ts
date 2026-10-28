@@ -88,6 +88,26 @@ async function place(f: Awaited<ReturnType<typeof setup>>) {
   });
 }
 describe("Kitchen Pro restricted PostgreSQL integration", () => {
+  it("lets a sole organization owner staff a station without an explicit outlet grant", async () => {
+    const f = await fixture();
+    const created = (await kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
+      action: "station.create",
+      data: { name: "Main Stove" },
+    })) as { stationId: string };
+    const before = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const owner = before.members.find((m) => m.role === "owner");
+    expect(owner).toBeDefined();
+    expect(owner?.eligible).toBe(true);
+    expect(owner?.stationIds).toEqual([]);
+    await kitchenAdmin(f.actor, f.outlet.organizationId, f.outlet.id, {
+      action: "member.assign",
+      data: { stationId: created.stationId, memberId: owner!.id },
+    });
+    const after = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(after.members.find((m) => m.id === owner!.id)?.stationIds).toContain(created.stationId);
+    // Staff configuration is not the Kitchen Pro commercial or pilot enable action.
+    expect(after.enabled).toBe(false);
+  });
   it("retains legacy ordering when not enabled and creates no phantom work", async () => {
     const f = await setup(false);
     const o = await place(f);
