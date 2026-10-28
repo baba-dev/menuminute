@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { recordOrdersReadFailure } from "@/modules/orders/diagnostics";
@@ -9,7 +10,7 @@ import {
   listServiceRail,
   servicePulse,
 } from "@/modules/orders/workspace";
-export async function GET(
+async function observed_GET(
   req: Request,
   context: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
@@ -43,3 +44,5 @@ export async function GET(
     return response;
   }
 }
+
+export const GET = observedRoute(observed_GET);

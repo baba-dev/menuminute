@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { posConfigure } from "@/modules/pos/service";
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
-export async function POST(req: Request, { params }: Params) {
+async function observed_POST(req: Request, { params }: Params) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
@@ -12,3 +13,5 @@ export async function POST(req: Request, { params }: Params) {
     return errorResponse(error, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

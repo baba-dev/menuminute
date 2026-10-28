@@ -1,7 +1,8 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { saveOutletProfile } from "@/modules/restaurants/profile";
-export async function PATCH(
+async function observed_PATCH(
   req: Request,
   { params }: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
@@ -16,3 +17,5 @@ export async function PATCH(
     return errorResponse(e, req);
   }
 }
+
+export const PATCH = observedRoute(observed_PATCH);

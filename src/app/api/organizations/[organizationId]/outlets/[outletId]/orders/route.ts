@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { listOutletOrders } from "@/modules/orders/service";
 
-export async function GET(
+async function observed_GET(
   req: Request,
   context: { params: Promise<{ organizationId: string; outletId: string }> }
 ) {
@@ -22,3 +23,5 @@ export async function GET(
     return errorResponse(err, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
