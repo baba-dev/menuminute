@@ -118,6 +118,77 @@ END $$;
 REVOKE ALL ON FUNCTION app_private.register_razorpay_subscription(text,text,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.register_razorpay_subscription(text,text,text,text) TO menuminute_app;
 
+-- A two-minute database reservation prevents concurrent checkout creation for
+-- the same organization/plan without keeping a transaction open during HTTP.
+CREATE TABLE app_private.razorpay_checkout_intents (
+  organization_id text NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
+  product_key text NOT NULL CHECK(product_key IN ('ordering','kitchen_pro')),
+  request_key text NOT NULL,
+  status text NOT NULL CHECK(status IN ('creating','ready')),
+  subscription_id text,
+  started_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  PRIMARY KEY(organization_id,product_key)
+);
+REVOKE ALL ON app_private.razorpay_checkout_intents
+  FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
+CREATE FUNCTION app_private.begin_razorpay_checkout(p_org text,p_product text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE intent app_private.razorpay_checkout_intents%ROWTYPE;
+        key text:=gen_random_uuid()::text;
+BEGIN
+  IF p_product NOT IN ('ordering','kitchen_pro') OR NOT app_private.org_admin(p_org,true,false)
+  THEN RAISE EXCEPTION 'Checkout owner access required' USING ERRCODE='42501'; END IF;
+  PERFORM 1 FROM organizations WHERE id=p_org AND is_active FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Organization unavailable' USING ERRCODE='42501'; END IF;
+  SELECT * INTO intent FROM app_private.razorpay_checkout_intents
+    WHERE organization_id=p_org AND product_key=p_product FOR UPDATE;
+  IF FOUND THEN
+    IF intent.status='ready' AND intent.started_at>clock_timestamp()-interval '1 day'
+      AND EXISTS(SELECT 1 FROM app_private.razorpay_subscriptions s
+        WHERE s.subscription_id=intent.subscription_id
+          AND s.organization_id=p_org AND s.product_key=p_product
+          AND s.status IN ('created','authenticated','pending')) THEN
+      RETURN jsonb_build_object('state','ready','subscriptionId',intent.subscription_id);
+    END IF;
+    IF intent.status='creating' AND intent.started_at>clock_timestamp()-interval '2 minutes' THEN
+      RETURN jsonb_build_object('state','in_progress');
+    END IF;
+    UPDATE app_private.razorpay_checkout_intents SET request_key=key,status='creating',
+      subscription_id=NULL,started_at=clock_timestamp()
+      WHERE organization_id=p_org AND product_key=p_product;
+  ELSE
+    INSERT INTO app_private.razorpay_checkout_intents(
+      organization_id,product_key,request_key,status
+    ) VALUES(p_org,p_product,key,'creating');
+  END IF;
+  RETURN jsonb_build_object('state','reserved','requestKey',key);
+END $$;
+REVOKE ALL ON FUNCTION app_private.begin_razorpay_checkout(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.begin_razorpay_checkout(text,text) TO menuminute_app;
+
+CREATE FUNCTION app_private.complete_razorpay_checkout(
+  p_org text,p_product text,p_key text,p_subscription text,p_provider_plan text
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+BEGIN
+  IF NOT app_private.org_admin(p_org,true,false) THEN
+    RAISE EXCEPTION 'Checkout owner access required' USING ERRCODE='42501';
+  END IF;
+  PERFORM 1 FROM app_private.razorpay_checkout_intents
+  WHERE organization_id=p_org AND product_key=p_product
+    AND request_key=p_key AND status='creating' FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Stale checkout reservation' USING ERRCODE='40001'; END IF;
+  PERFORM app_private.register_razorpay_subscription(
+    p_subscription,p_org,p_product,p_provider_plan);
+  UPDATE app_private.razorpay_checkout_intents SET status='ready',
+    subscription_id=p_subscription WHERE organization_id=p_org AND product_key=p_product;
+END $$;
+REVOKE ALL ON FUNCTION app_private.complete_razorpay_checkout(text,text,text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.complete_razorpay_checkout(text,text,text,text,text)
+  TO menuminute_app;
+
 CREATE FUNCTION app_private.razorpay_subscription_state(p_org text) RETURNS jsonb
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 BEGIN
