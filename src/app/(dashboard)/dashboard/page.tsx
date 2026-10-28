@@ -25,11 +25,8 @@ import {
   dashboardPublicProjection,
   dashboardQrRows,
 } from "@/modules/menu-product/dashboard-data";
-import {
-  dashboardSetup,
-  dashboardSummary,
-  preferredMenuQr,
-} from "@/modules/menu-product/dashboard-summary";
+import { dashboardSummary, preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
+import { outletSetupReadiness } from "@/modules/onboarding/readiness";
 import { DashboardTooltip } from "./dashboard-tooltip";
 import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 import { DashboardServicePulse } from "./dashboard-service-pulse";
@@ -91,13 +88,7 @@ export default async function DashboardPage() {
     ? await dashboardPublicProjection(primaryQr.destinationToken)
     : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
-  const hasSavedMenu = menus.some((menu) => !menu.archived);
-  const setup = dashboardSetup({
-    hasOutlet: Boolean(outlet.name && outlet.currency && outlet.timezone),
-    hasSavedMenu,
-    hasPublicMenu: stats.hasPublicMenu,
-    hasActiveQr: stats.activeQrCount > 0,
-  });
+  const setup = await outletSetupReadiness(actor, outlet);
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
   const kpis = [

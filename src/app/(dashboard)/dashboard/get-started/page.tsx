@@ -1,25 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { Metadata } from "next";
-import {
-  ArrowRight,
-  BookOpenCheck,
-  Camera,
-  ChefHat,
-  ClipboardList,
-  QrCode,
-  Settings,
-  Store,
-  Wallet,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, CircleDashed, ClipboardList } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { outletSetupReadiness } from "@/modules/onboarding/readiness";
 import { ThemedArtwork } from "@/components/onboarding/themed-artwork";
 import "@/components/onboarding/onboarding-wizard.css";
 import "./get-started.css";
 
-export const metadata: Metadata = {
-  title: "Your restaurant is ready | MenuMinute",
+export const metadata = {
+  title: "Your restaurant setup checklist | MenuMinute",
   robots: { index: false, follow: false },
 };
 
@@ -27,141 +17,49 @@ export default async function GetStartedPage() {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
-  if (!outlet) redirect("/onboarding");
-
-  // A selected goal is a checklist preference, never an entitlement or activation state.
-  const goal = outlet.onboardingGoal;
-  const priorities = [
-    {
-      id: "import",
-      title: "Import your existing menu",
-      detail: "Turn a menu photo or PDF into editable dishes.",
-      href: "/dashboard/menu/import",
-      Icon: Camera,
-    },
-    {
-      id: "create",
-      title: "Build your menu",
-      detail: "Add dishes, prices, descriptions and photographs.",
-      href: "/dashboard/menu",
-      Icon: BookOpenCheck,
-    },
-    {
-      id: "publish",
-      title: "Review and publish",
-      detail: "Your draft stays private until you explicitly publish.",
-      href: "/dashboard/menu",
-      Icon: Store,
-    },
-    {
-      id: "qr",
-      title: "Prepare your permanent QR",
-      detail: "Download and print your restaurant QR after publishing.",
-      href: "/dashboard/qr-codes",
-      Icon: QrCode,
-    },
-  ];
-  const advanced =
-    goal === "qr_menu"
-      ? []
-      : [
-          {
-            id: "ordering",
-            title: "Prepare online ordering",
-            detail: "Set service availability and confirm ordering entitlement.",
-            href: "/dashboard/settings",
-            Icon: Settings,
-          },
-          ...(goal === "full_operations"
-            ? [
-                {
-                  id: "kitchen",
-                  title: "Configure Kitchen Pro readiness",
-                  detail: "Prepare kitchen stations and staff assignments, then seek approval.",
-                  href: "/dashboard/orders",
-                  Icon: ChefHat,
-                },
-                {
-                  id: "pos",
-                  title: "Configure POS and invoicing",
-                  detail:
-                    "Complete the seller and tax profile before enabling financial operations.",
-                  href: "/dashboard/pos",
-                  Icon: Wallet,
-                },
-              ]
-            : []),
-        ];
+  if (!outlet) redirect("/start");
+  const readiness = await outletSetupReadiness({ userId: session.user.id, sessionId: session.session.id }, outlet);
+  const next = readiness.checks.find((item) => !item.complete);
   return (
-    <div
-      className="product"
-      style={{ maxWidth: 1080, margin: "0 auto", padding: "clamp(1rem,3vw,2rem)" }}
-    >
+    <main className="mm-setup-page">
       <section className="wizard-completion-hero">
         <div>
-          <span className="wizard-eyebrow">OUTLET CREATED · MENU REMAINS PRIVATE</span>
-          <h1 style={{ fontSize: "clamp(1.8rem,4vw,3rem)", fontWeight: 800, lineHeight: 1.13 }}>
-            Welcome, {outlet.name}.
-          </h1>
-          <p style={{ maxWidth: 650, marginTop: "1rem" }}>
-            Your restaurant and private menu draft are ready. Choose a starting point and return
-            whenever you need to.
-          </p>
-          <p className="wizard-counter">
-            Goal:{" "}
-            {goal === "qr_menu"
-              ? "QR Menu"
-              : goal === "ordering"
-                ? "Online Ordering"
-                : "Restaurant Operations"}{" "}
-            · {outlet.currency} · {outlet.timezone}
-          </p>
+          <span className="wizard-eyebrow">RESTAURANT CREATED · YOUR NEXT MILESTONES</span>
+          <h1>Welcome, {outlet.name}.</h1>
+          <p>Your workspace is ready. Only completed, verified steps earn credit; creating a draft never means your menu is public.</p>
+          <p className="wizard-counter">Goal: {outlet.onboardingGoal.replaceAll("_", " ")} · {outlet.currency} · {outlet.timezone}</p>
         </div>
         <ThemedArtwork name="celebration-overlay" width={1000} height={600} />
       </section>
-      <section style={{ marginTop: "2rem" }}>
-        <h2
-          style={{
-            fontSize: "1.3rem",
-            fontWeight: 700,
-            display: "flex",
-            gap: ".5rem",
-            alignItems: "center",
-          }}
-        >
-          <ClipboardList size={22} aria-hidden="true" /> Your next steps
-        </h2>
-        <p className="wizard-counter">
-          Only outlet creation is complete. Menu publishing, online orders, Kitchen Pro and POS have
-          independent readiness requirements.
-        </p>
+      <section className="mm-readiness-section" aria-labelledby="mm-readiness-title">
+        <div className="mm-readiness-heading">
+          <div>
+            <h2 id="mm-readiness-title"><ClipboardList size={21} aria-hidden="true" /> Your live launch checklist</h2>
+            <p>Progress is calculated from saved dishes, published releases, QR readiness, and applicable operational status.</p>
+          </div>
+          <strong>{readiness.completed} of {readiness.total} verified</strong>
+        </div>
+        <progress max={readiness.total} value={readiness.completed} aria-label="Verified setup progress" />
         <div className="wizard-next-grid">
-          {[...priorities, ...advanced].map((item, index) => (
-            <Link key={item.id} href={item.href} className="wizard-next-card">
-              <item.Icon size={22} color="#f97316" aria-hidden="true" />
-              <strong>
-                {index + 1}. {item.title}
-              </strong>
-              <span>{item.detail}</span>
-              <span className="wizard-next-link">
-                Open workspace <ArrowRight size={15} aria-hidden="true" />
-              </span>
+          {readiness.checks.map((check) => (
+            <Link key={check.id} href={check.href} className="wizard-next-card mm-readiness-card">
+              {check.complete ? <CheckCircle2 size={24} color="#159765" aria-hidden="true" /> :
+                <CircleDashed size={24} aria-hidden="true" />}
+              <strong>{check.label}</strong>
+              <span>{check.description}</span>
+              <span className="mm-readiness-status">{check.complete ? "Verified complete" : "Needs action"}</span>
+              <span className="wizard-next-link">{check.complete ? "Review" : "Continue setup"} <ArrowRight size={15} aria-hidden="true" /></span>
             </Link>
           ))}
         </div>
+        {next ? <p className="mm-readiness-hint">Recommended next step: <Link href={next.href}>{next.label}</Link>.</p>
+          : <p className="mm-readiness-hint" role="status">All steps for your selected goal are verified. Keep your menu current!</p>}
       </section>
-      <div style={{ display: "flex", gap: "1rem", marginTop: "2rem", flexWrap: "wrap" }}>
-        <Link
-          href="/dashboard/menu"
-          className="wizard-primary-btn"
-          style={{ textDecoration: "none" }}
-        >
-          Start building your menu <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-        <Link href="/dashboard" className="wizard-back-btn" style={{ textDecoration: "none" }}>
-          Go to dashboard
-        </Link>
-      </div>
-    </div>
+      <nav className="mm-readiness-actions" aria-label="Continue your restaurant setup">
+        <Link href="/dashboard/menu" className="wizard-primary-btn">Open Menu Studio <ArrowRight size={16} aria-hidden="true" /></Link>
+        <Link href="/dashboard" className="wizard-back-btn">Go to dashboard</Link>
+        <Link href="/start" className="wizard-back-btn">Manage another journey</Link>
+      </nav>
+    </main>
   );
 }
