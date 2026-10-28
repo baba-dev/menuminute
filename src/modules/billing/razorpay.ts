@@ -149,7 +149,7 @@ export async function recordRazorpaySubscriptionGrant(params: {
 export async function recordRazorpaySubscriptionStatus(params: {
   eventId: string;
   subscriptionId: string;
-  status: "paused" | "halted" | "cancelled" | "completed" | "expired";
+  status: "pending" | "active" | "paused" | "halted" | "cancelled" | "completed" | "expired";
   providerCreated: number;
 }): Promise<void> {
   if (!Number.isSafeInteger(params.providerCreated))
@@ -184,4 +184,16 @@ export async function requestRazorpayCancellation(subscriptionId: string): Promi
   const body: unknown = await response.json();
   if (!body || typeof body !== "object" || !("id" in body) || body.id !== subscriptionId)
     throw new ValidationError("Unexpected provider cancellation response");
+}
+
+/** Refunds cannot mutate an entitlement without a verified original subscription charge. */
+export async function recordRazorpaySubscriptionRefund(params: {
+  eventId: string;
+  paymentId: string;
+}): Promise<boolean> {
+  const result = await billingQuery<{ recorded: boolean }>(
+    "SELECT app_private.record_razorpay_refund($1,$2) AS recorded",
+    [params.eventId, params.paymentId]
+  );
+  return result.recorded;
 }
