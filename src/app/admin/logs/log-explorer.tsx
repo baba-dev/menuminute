@@ -1,3 +1,4 @@
+import Link from "next/link";
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -56,7 +57,7 @@ export function LogExplorer() {
         </div>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-200"><input type="checkbox" checked={live} onChange={event=>setLive(event.target.checked)} className="accent-orange-500"/> Live tail (8s)</label>
-          <a href="/account/security" title="Complete password and authenticator approval for exporting" className="rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-800">Confirm access</a>
+          <Link href="/account/security" title="Complete password and authenticator approval for exporting" className="rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-800">Confirm access</Link>
           <button type="button" onClick={async () => {
             try {
               const response = await fetch("/api/admin/logs/export", {
