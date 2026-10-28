@@ -15,10 +15,11 @@ export function draftCulinaryDefaults(
   const profile = findCulinaryProfile(name);
   if (!profile) return {};
   const companionIds = profile.culinary.suggestedPairings
-    .map((suggested) =>
-      availableDishes.find(
-        (dish) => normalizeDishText(dish.name) === normalizeDishText(suggested)
-      )?.id
+    .map(
+      (suggested) =>
+        availableDishes.find(
+          (dish) => normalizeDishText(dish.name) === normalizeDishText(suggested)
+        )?.id
     )
     .filter((value): value is string => Boolean(value))
     .filter((value, index, all) => all.indexOf(value) === index)

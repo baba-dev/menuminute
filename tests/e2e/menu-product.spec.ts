@@ -126,7 +126,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("link", { name: "Import from photos" })).toBeVisible();
   await expect(page.getByLabel("Menu Studio overview")).toBeVisible();
   await page.getByPlaceholder("Search dishes or sections").fill("nonexistent-dish-search");
-  await expect(page.getByPlaceholder("Search dishes or sections")).toHaveValue("nonexistent-dish-search");
+  await expect(page.getByPlaceholder("Search dishes or sections")).toHaveValue(
+    "nonexistent-dish-search"
+  );
   await page.getByPlaceholder("Search dishes or sections").clear();
   if ((page.viewportSize()?.width ?? 1440) <= 720) {
     await page.getByRole("button", { name: "Preview draft" }).click();
@@ -205,8 +207,12 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("status").filter({ hasText: "Photo approved" })).toBeVisible();
   await page.getByRole("button", { name: "Dishes", exact: true }).click();
   await page.getByRole("button", { name: "Edit Signature thali" }).click();
-  await page.getByLabel("Dish photo 1.1", { exact: true }).selectOption({ label: "Approved photo 1" });
-  await expect(page.getByRole("img", { name: "Uploaded photograph for Signature thali" })).toBeVisible();
+  await page
+    .getByLabel("Dish photo 1.1", { exact: true })
+    .selectOption({ label: "Approved photo 1" });
+  await expect(
+    page.getByRole("img", { name: "Uploaded photograph for Signature thali" })
+  ).toBeVisible();
   await page.getByRole("button", { name: "Done editing" }).click();
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -519,7 +525,10 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
   await page.getByRole("button", { name: "Add dish", exact: true }).click();
   const addDish = page.getByRole("dialog", { name: "Add a dish" });
   await addDish.getByLabel("Dish name", { exact: true }).fill("Butter Chicken");
-  await addDish.locator(".menu-board-suggestions button").filter({ hasText: "Butter Chicken" }).click();
+  await addDish
+    .locator(".menu-board-suggestions button")
+    .filter({ hasText: "Butter Chicken" })
+    .click();
   await expect(addDish.getByText(/Curated dish description suggested/)).toBeVisible();
   await expect(addDish.getByText(/unverified suggestions/)).toBeVisible();
   await addDish.getByLabel(/Price \(/).fill("12.500");
@@ -532,7 +541,9 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   await page.reload();
-  await expect(page.locator(".menu-board-dish").filter({ hasText: "Butter Chicken" }).locator("img")).toBeVisible();
+  await expect(
+    page.locator(".menu-board-dish").filter({ hasText: "Butter Chicken" }).locator("img")
+  ).toBeVisible();
   await page.getByRole("button", { name: "Preview draft" }).click();
   await expect(page.locator(".atelier-preview-dialog")).toBeVisible();
   await expect(page.locator(".atelier-preview-viewport")).toBeVisible();

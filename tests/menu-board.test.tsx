@@ -42,7 +42,9 @@ describe("Menu Board and curated editorial references", () => {
     expect(profile).not.toHaveProperty("dietary");
     expect(profile).not.toHaveProperty("priceMinor");
     expect(profile).not.toHaveProperty("mediaId");
-    expect(profile.culinary?.pairingDishIds.every((id) => ["pair-one", "pair-two"].includes(id))).toBe(true);
+    expect(
+      profile.culinary?.pairingDishIds.every((id) => ["pair-one", "pair-two"].includes(id))
+    ).toBe(true);
     expect(draftCulinaryDefaults("Unlisted dish", [])).toEqual({});
   });
 
@@ -54,8 +56,14 @@ describe("Menu Board and curated editorial references", () => {
         {
           id: "mains",
           name: "Main Course",
-          items: [{ id: "paneer", name: "Paneer Tikka", priceMinor: 24500,
-            description: findPublicDishDescription("Paneer Tikka") }],
+          items: [
+            {
+              id: "paneer",
+              name: "Paneer Tikka",
+              priceMinor: 24500,
+              description: findPublicDishDescription("Paneer Tikka"),
+            },
+          ],
         },
       ],
     });
