@@ -123,6 +123,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [draft, setDraft] = useState<WizardDraft>(initialWizardDraft);
   const [ready, setReady] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
+  const [provisioning, setProvisioning] = useState(false);
+  const [inaccessible, setInaccessible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [persisted, setPersisted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -142,6 +145,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       if (!res.ok) throw new Error("Unable to load saved progress.");
       const data = await res.json();
 
+      if (data.status === "inaccessible") {
+        setInaccessible(true);
+        setReady(false);
+        setErrorMessage("This previously created outlet is no longer accessible. Contact its administrator.");
+        return;
+      }
       if (data.status === "completed" && data.outletId) {
         if (onSuccess) {
           onSuccess(data.outletId);
@@ -157,6 +166,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         return;
       }
 
+      setRestoreFailed(false);
+      setProvisioning(data.status === "provisioning");
+      if (data.status === "provisioning") setCurrentStep(STEPS.length - 1);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
         if (typeof data.draft.timezone === "string") timezoneTouched.current = true;
@@ -176,14 +188,15 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       } catch {
         /* Private browsing or blocked storage. */
       }
-      if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep < STEPS.length)
+      if (data.status !== "provisioning" && Number.isInteger(storedStep) && storedStep >= 0 && storedStep < STEPS.length)
         setCurrentStep(storedStep);
       setReady(true);
     } catch {
-      setErrorMessage(
-        "Unable to restore saved progress. Reconnect and retry before creating an outlet."
-      );
-      setReady(true);
+      // Do not enable autosave with unverified defaults: a failed GET must
+      // never replace a durable draft with empty form values.
+      setRestoreFailed(true);
+      setReady(false);
+      setErrorMessage("Saved progress could not be loaded. Reconnect and retry; nothing was overwritten.");
     } finally {
       reconciliation.current = false;
     }
@@ -225,16 +238,17 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || provisioning) return;
     const timeout = window.setTimeout(() => {
       void save(draft).catch((e) =>
         setErrorMessage(e instanceof Error ? e.message : "Unable to save.")
       );
     }, 700);
     return () => window.clearTimeout(timeout);
-  }, [draft, ready, save]);
+  }, [draft, ready, provisioning, save]);
 
   const updateDraft = <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => {
+    if (!ready || provisioning) return;
     draftRevision.current += 1;
     setPersisted(false);
     setErrorMessage("");
@@ -263,7 +277,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   };
 
   const handleLaunch = async () => {
-    if (busy) return;
+    if (busy || !ready || restoreFailed || inaccessible) return;
     setBusy(true);
     setErrorMessage("");
 
@@ -276,7 +290,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         }
       }
 
-      await save(draft);
+      // A prior POST may have committed while its response was lost.
+      // Never rewrite the durable draft of a provisioning operation.
+      if (!provisioning) await save(draft);
 
       const response = await fetch("/api/onboarding", {
         method: "POST",
@@ -314,6 +330,14 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
   return (
     <div className="wizard-container" aria-busy={busy || !ready}>
+      {restoreFailed && (
+        <div className="wizard-error-banner" role="alert">
+          Saved progress could not be verified. Editing is paused to protect your data.
+          <button type="button" className="wizard-back-btn" onClick={() => void reconcile()}>Retry loading saved progress</button>
+        </div>
+      )}
+      {inaccessible && <p role="alert">Your previous outlet is no longer accessible. Please contact its administrator or <a href="/account">review your account</a>.</p>}
+      {provisioning && <p role="status">A previous creation request is being reconciled. The existing request will be reused.</p>}
       {/* Stepper Progress Bar */}
       <nav className="wizard-stepper" aria-label="Onboarding Progress">
         {STEPS.map((step, idx) => {
@@ -331,7 +355,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
               <button
                 type="button"
                 className={`wizard-step-node ${isActive ? "wizard-step-node--active" : ""} ${isCompleted ? "wizard-step-node--completed" : ""}`}
-                disabled={!ready || busy || idx > currentStep}
+                disabled={!ready || busy || provisioning || idx > currentStep}
                 onClick={() => setCurrentStep(idx)}
               >
                 <span className="wizard-step-badge">
@@ -397,7 +421,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
         {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
         {currentStep === 4 && (
-          <StepLaunch key={draft.timezone} draft={draft} busy={busy} onLaunch={handleLaunch} />
+          <StepLaunch key={draft.timezone} draft={draft} busy={busy || !ready} onLaunch={handleLaunch} />
         )}
 
         {/* Error and Status Banner */}
@@ -462,7 +486,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
                   type="button"
                   className="wizard-primary-btn"
                   onClick={handleNext}
-                  disabled={!ready || busy || (currentStep === 0 && draft.name.trim().length < 2)}
+                  disabled={!ready || busy || provisioning || (currentStep === 0 && draft.name.trim().length < 2)}
                 >
                   <span>Continue</span>
                   <ArrowRight size={16} />

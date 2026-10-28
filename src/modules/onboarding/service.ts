@@ -52,6 +52,9 @@ export async function onboardingState(actor: Actor) {
     const visible = await tx.execute<{ id: string }>(
       sql`select id from restaurants where id=${expected} limit 1`
     );
+    if (state.status === "completed" && !visible.rows[0]) {
+      return { key: state.operation_key, draft: {}, status: "inaccessible" as const, outletId: null };
+    }
     if (visible.rows[0] && state.status !== "completed") {
       await tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${expected},
         updated_at=now() where user_id=${actor.userId}`);
@@ -103,6 +106,8 @@ export async function provisionOnboarding(actor: Actor) {
   const state = await onboardingState(actor);
   if (state.status === "completed" && state.outletId)
     return { outletId: state.outletId, status: "completed" as const };
+  if (state.status === "inaccessible")
+    throw new ConflictError("Previously created outlet is unavailable. Contact its administrator.");
   if (!state.key) throw new ValidationError("Save your outlet settings first.");
   const input = createRestaurantSchema.safeParse(state.draft);
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
