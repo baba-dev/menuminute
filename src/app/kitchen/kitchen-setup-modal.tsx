@@ -407,11 +407,16 @@ export function KitchenSetupModal({
                         <div className="kk-setup-memberships">
                           {m.stationIds.length ? (
                             m.stationIds.map((stationId) => (
-                              <button type="button" key={stationId} disabled={busy}
+                              <button
+                                type="button"
+                                key={stationId}
+                                disabled={busy}
                                 className="kk-setup-mini-button"
                                 onClick={() => void removeStaff(m.id, stationId)}
-                                aria-label={`Remove ${m.name} from ${snapshot.stations.find((st) => st.id === stationId)?.name ?? "station"}`}>
-                                {snapshot.stations.find((st) => st.id === stationId)?.name ?? "Station"}
+                                aria-label={`Remove ${m.name} from ${snapshot.stations.find((st) => st.id === stationId)?.name ?? "station"}`}
+                              >
+                                {snapshot.stations.find((st) => st.id === stationId)?.name ??
+                                  "Station"}
                                 <X size={13} aria-hidden="true" />
                               </button>
                             ))
@@ -466,20 +471,34 @@ export function KitchenSetupModal({
                         : `Route ${progress.missing.length} unassigned dish${progress.missing.length === 1 ? "" : "es"}`}
                     </button>
                   </div>
-                  <form className="kk-setup-fieldgroup kk-setup-route-individual"
-                    onSubmit={(e) => void routeDish(e)}>
+                  <form
+                    className="kk-setup-fieldgroup kk-setup-route-individual"
+                    onSubmit={(e) => void routeDish(e)}
+                  >
                     <h4>Route a specific dish</h4>
                     <label htmlFor="kk-individual-dish">Published dish</label>
-                    <select id="kk-individual-dish" value={selectedDish || dishes[0]?.id || ""}
-                      onChange={(e) => setSelectedDish(e.target.value)} disabled={busy}>
+                    <select
+                      id="kk-individual-dish"
+                      value={selectedDish || dishes[0]?.id || ""}
+                      onChange={(e) => setSelectedDish(e.target.value)}
+                      disabled={busy}
+                    >
                       <option value="">Choose a dish</option>
-                      {dishes.map((dish) => <option value={dish.id} key={dish.id}>{dish.name}</option>)}
+                      {dishes.map((dish) => (
+                        <option value={dish.id} key={dish.id}>
+                          {dish.name}
+                        </option>
+                      ))}
                     </select>
                     <p className="kk-setup-field-help">
-                      Uses the destination station selected above. A dish may be routed to multiple stations.
+                      Uses the destination station selected above. A dish may be routed to multiple
+                      stations.
                     </p>
-                    <button type="submit" className="kk-setup-secondary"
-                      disabled={busy || !target || !dishes.length}>
+                    <button
+                      type="submit"
+                      className="kk-setup-secondary"
+                      disabled={busy || !target || !dishes.length}
+                    >
                       <Plus size={16} aria-hidden="true" /> Add dish route
                     </button>
                   </form>
@@ -504,12 +523,17 @@ export function KitchenSetupModal({
                             {snapshot.routes
                               .filter((route) => route.dishId === dish.id)
                               .map((route) => (
-                                <button key={route.stationId} type="button" disabled={busy}
+                                <button
+                                  key={route.stationId}
+                                  type="button"
+                                  disabled={busy}
                                   className="kk-setup-mini-button"
                                   onClick={() => void removeDishRoute(dish.id, route.stationId)}
-                                  aria-label={`Remove ${dish.name} route to ${snapshot.stations.find((st) => st.id === route.stationId)?.name ?? "station"}`}>
-                                  {snapshot.stations.find((st) => st.id === route.stationId)?.name ?? "Inactive station"}
-                                  <X size={13} aria-hidden="true"/>
+                                  aria-label={`Remove ${dish.name} route to ${snapshot.stations.find((st) => st.id === route.stationId)?.name ?? "station"}`}
+                                >
+                                  {snapshot.stations.find((st) => st.id === route.stationId)
+                                    ?.name ?? "Inactive station"}
+                                  <X size={13} aria-hidden="true" />
                                 </button>
                               ))}
                             {!done && <span>Needs route</span>}
