@@ -73,7 +73,7 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(setup).toBeVisible();
   await setup.getByLabel("Station name").fill("Grill");
   await setup.getByRole("button", { name: "Add station" }).click();
-  await expect(setup.getByText("Grill", { exact: true })).toBeVisible();
+  await expect(setup.locator(".kk-setup-collection-row").filter({ hasText: "Grill" })).toBeVisible();
   await setup.getByRole("button", { name: "Close kitchen setup" }).click();
   await expect(setup).toHaveCount(0);
   await expect(
