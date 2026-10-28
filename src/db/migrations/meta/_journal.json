@@ -225,6 +225,13 @@
       "when": 1793010000003,
       "tag": "0031_outlet_timezone_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793180000000,
+      "tag": "0032_public_menu_cache_token_gate",
+      "breakpoints": true
     }
   ]
 }
