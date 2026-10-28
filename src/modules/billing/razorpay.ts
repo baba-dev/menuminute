@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
-import { sql } from "drizzle-orm";
-import { getDb } from "@/db";
+import { Pool } from "pg";
 import { env } from "@/lib/config/env";
 import { ValidationError } from "@/lib/errors";
 
@@ -11,7 +10,6 @@ export interface RazorpaySubscriptionOptions {
   customerName?: string;
   totalCount?: number;
 }
-
 export interface RazorpaySubscriptionResponse {
   id: string;
   plan_id: string;
@@ -22,139 +20,145 @@ export interface RazorpaySubscriptionResponse {
   notes?: Record<string, string>;
 }
 
-/**
- * Validates the HMAC SHA256 webhook signature sent by Razorpay.
- */
 export function verifyRazorpayWebhookSignature(
   rawBody: string,
   signature: string,
   webhookSecret: string
 ): boolean {
   if (!signature || !webhookSecret || !rawBody) return false;
-  const expectedSignature = crypto
-    .createHmac("sha256", webhookSecret)
-    .update(rawBody)
-    .digest("hex");
-
-  if (signature.length !== expectedSignature.length) return false;
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, "utf8"),
-      Buffer.from(expectedSignature, "utf8")
-    );
-  } catch {
-    return false;
-  }
+  const expected = crypto.createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
+  if (signature.length !== expected.length || !/^[0-9a-f]{64}$/i.test(signature)) return false;
+  return crypto.timingSafeEqual(Buffer.from(signature, "utf8"), Buffer.from(expected, "utf8"));
 }
 
-/**
- * Creates a subscription via Razorpay's Subscriptions API.
- * Uses native fetch and HTTP Basic Auth.
- */
+export function providerEventId(rawBody: string): string {
+  return crypto.createHash("sha256").update(rawBody).digest("hex");
+}
+
+export function razorpayPlanForProduct(product: "ordering" | "kitchen_pro") {
+  const planId =
+    product === "ordering" ? env.RAZORPAY_PLAN_ORDERING_ID : env.RAZORPAY_PLAN_KITCHEN_ID;
+  if (!planId) throw new ValidationError("Billing provider plan is unavailable");
+  if (product === "kitchen_pro" && !env.RAZORPAY_KITCHEN_ENABLED)
+    throw new ValidationError("Kitchen Pro is not approved for commercial activation");
+  return { planId, amountPaise: product === "ordering" ? 11900 : 29900 };
+}
+
 export async function createRazorpaySubscription(
   options: RazorpaySubscriptionOptions
 ): Promise<RazorpaySubscriptionResponse> {
-  const keyId = env.RAZORPAY_KEY_ID;
-  const keySecret = env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    throw new ValidationError(
-      "Razorpay API credentials are not configured on this server."
-    );
-  }
-
-  const payload = {
-    plan_id: options.planId,
-    total_count: options.totalCount || 120, // 10 years monthly max
-    quantity: 1,
-    customer_notify: 1,
-    notes: {
-      organizationId: options.organizationId,
-      customerEmail: options.customerEmail || "",
-      customerName: options.customerName || "",
-    },
-  };
-
-  const authHeader = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
-
+  if (!env.RAZORPAY_ENABLED || !env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
+    throw new ValidationError("Subscriptions are not enabled");
+  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
   const response = await fetch("https://api.razorpay.com/v1/subscriptions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: authHeader,
-    },
-    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json", Authorization: `Basic ${authorization}` },
+    body: JSON.stringify({
+      plan_id: options.planId,
+      total_count: options.totalCount ?? 60,
+      quantity: 1,
+      customer_notify: 1,
+      notes: { organizationId: options.organizationId },
+    }),
+    signal: AbortSignal.timeout(12000),
+    cache: "no-store",
   });
-
   if (!response.ok) {
-    const errorBody = await response.text();
-    let message = "Failed to create subscription with payment provider";
-    try {
-      const parsed = JSON.parse(errorBody);
-      if (parsed.error?.description) {
-        message = parsed.error.description;
-      }
-    } catch {
-      // ignore JSON parse error
-    }
-    throw new ValidationError(message);
+    // Do not leak provider payloads, customer data, or credentials into the UI/logs.
+    throw new ValidationError("The payment provider could not create this subscription");
   }
-
-  return (await response.json()) as RazorpaySubscriptionResponse;
+  const result: unknown = await response.json();
+  if (
+    !result ||
+    typeof result !== "object" ||
+    !("id" in result) ||
+    typeof result.id !== "string" ||
+    !result.id.startsWith("sub_") ||
+    !("plan_id" in result) ||
+    result.plan_id !== options.planId
+  ) throw new ValidationError("Unexpected provider subscription response");
+  return result as RazorpaySubscriptionResponse;
 }
 
-/**
- * Records an entitlement grant resulting from a Razorpay subscription charge.
- * Uses the security definer function `app_private.record_razorpay_grant`.
- */
+let paymentPool: Pool | undefined;
+function isolatedPool(): Pool {
+  if (!env.RAZORPAY_ENABLED || !env.BILLING_DATABASE_URL)
+    throw new ValidationError("The billing writer is not configured");
+  if (!paymentPool) {
+    paymentPool = new Pool({
+      connectionString: env.BILLING_DATABASE_URL,
+      max: 2,
+      connectionTimeoutMillis: 3000,
+      statement_timeout: 5000,
+      query_timeout: 6000,
+      application_name: "menuminute-billing-webhook",
+    });
+    paymentPool.on("error", () => console.error("[billing] Database connection error"));
+  }
+  return paymentPool;
+}
+async function billingQuery<T extends Record<string, unknown>>(
+  sql: string,
+  params: readonly unknown[]
+): Promise<T> {
+  const client = await isolatedPool().connect();
+  try {
+    const identity = await client.query<{ current_user: string }>("SELECT current_user");
+    if (identity.rows[0]?.current_user !== "menuminute_billing")
+      throw new Error("Billing connection is not the restricted payment identity");
+    const response = await client.query<T>(sql, [...params]);
+    if (!response.rows[0]) throw new Error("Missing database billing acknowledgement");
+    return response.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
+/** Caller MUST have verified the Razorpay signature, payment status, amount and plan. */
 export async function recordRazorpaySubscriptionGrant(params: {
-  organizationId: string;
+  eventId: string;
+  subscriptionId: string;
   planId: string;
   paymentId: string;
-  subscriptionId: string;
-  currentStart?: number | null;
-  currentEnd?: number | null;
+  currentStart: number;
+  currentEnd: number;
+  providerCreated: number;
 }): Promise<string> {
-  const db = getDb();
-
-  // Determine capability based on plan ID or env configuration
-  let capability: "ordering.new" | "kitchen.new" = "ordering.new";
+  const { eventId, subscriptionId, planId, paymentId, currentStart, currentEnd, providerCreated } =
+    params;
   if (
-    params.planId === env.RAZORPAY_PLAN_KITCHEN_ID ||
-    params.planId.toLowerCase().includes("kitchen")
-  ) {
-    capability = "kitchen.new";
-  }
-
-  const now = new Date();
-  const startsAt = params.currentStart ? new Date(params.currentStart * 1000) : now;
-  // If no currentEnd supplied, grant 32 days
-  const endsAt =
-    params.currentEnd && params.currentEnd * 1000 > startsAt.getTime()
-      ? new Date(params.currentEnd * 1000)
-      : new Date(startsAt.getTime() + 32 * 24 * 60 * 60 * 1000);
-
-  // Deterministic UUID for the grant request key based on payment ID or subscription ID
-  const requestKey = crypto
-    .createHash("sha256")
-    .update(`razorpay:${params.subscriptionId}:${params.paymentId}`)
-    .digest("hex")
-    .slice(0, 32);
-
-  const formattedKey = `${requestKey.slice(0, 8)}-${requestKey.slice(8, 12)}-4${requestKey.slice(13, 16)}-8${requestKey.slice(17, 20)}-${requestKey.slice(20, 32)}`;
-
-  const result = await db.execute<{ record_razorpay_grant: string }>(
-    sql`SELECT app_private.record_razorpay_grant(
-      ${params.organizationId},
-      ${capability},
-      'INR',
-      ${startsAt.toISOString()}::timestamptz,
-      ${endsAt.toISOString()}::timestamptz,
-      'razorpay-webhook',
-      ${`Razorpay subscription ${params.subscriptionId} charge ${params.paymentId}`},
-      ${formattedKey}
-    )`
+    !Number.isSafeInteger(currentStart) ||
+    !Number.isSafeInteger(currentEnd) ||
+    !Number.isSafeInteger(providerCreated) ||
+    currentEnd <= currentStart ||
+    currentEnd <= Date.now() / 1000 ||
+    currentEnd - currentStart > 40 * 86400
+  ) throw new ValidationError("Invalid subscription billing period");
+  const result = await billingQuery<{ grant_id: string }>(
+    `SELECT app_private.record_razorpay_charge($1,$2,$3,$4,$5::timestamptz,$6::timestamptz,$7::timestamptz) AS grant_id`,
+    [
+      eventId, subscriptionId, planId, paymentId,
+      new Date(currentStart * 1000).toISOString(),
+      new Date(currentEnd * 1000).toISOString(),
+      new Date(providerCreated * 1000).toISOString(),
+    ]
   );
+  return result.grant_id;
+}
 
-  return result.rows[0]?.record_razorpay_grant ?? formattedKey;
+export async function recordRazorpaySubscriptionStatus(params: {
+  eventId: string;
+  subscriptionId: string;
+  status: "paused" | "halted" | "cancelled" | "completed" | "expired";
+  providerCreated: number;
+}): Promise<void> {
+  if (!Number.isSafeInteger(params.providerCreated))
+    throw new ValidationError("Invalid provider event timestamp");
+  await billingQuery<{ recorded: string }>(
+    "SELECT app_private.record_razorpay_status($1,$2,$3,$4::timestamptz)::text AS recorded",
+    [
+      params.eventId, params.subscriptionId, params.status,
+      new Date(params.providerCreated * 1000).toISOString(),
+    ]
+  );
 }
