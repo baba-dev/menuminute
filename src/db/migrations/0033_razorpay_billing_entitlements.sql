@@ -172,13 +172,15 @@ BEGIN
   THEN RAISE EXCEPTION 'Invalid captured subscription charge' USING ERRCODE='22023'; END IF;
   SELECT * INTO sub FROM app_private.razorpay_subscriptions
     WHERE subscription_id=p_subscription FOR UPDATE;
-  IF NOT FOUND OR sub.provider_plan_id<>p_provider_plan OR
-     sub.status IN ('cancelled','completed','expired','paused','halted') THEN
+  IF NOT FOUND OR sub.provider_plan_id<>p_provider_plan THEN
     RAISE EXCEPTION 'Subscription is not eligible' USING ERRCODE='42501';
   END IF;
   SELECT c.grant_id INTO existing FROM app_private.razorpay_charges c
     WHERE c.event_id=p_event OR c.payment_id=p_payment;
   IF FOUND THEN RETURN existing; END IF;
+  IF sub.status IN ('cancelled','completed','expired','paused','halted') THEN
+    RAISE EXCEPTION 'Subscription is not eligible' USING ERRCODE='42501';
+  END IF;
   IF sub.last_provider_event_at IS NOT NULL AND p_provider_created<sub.last_provider_event_at THEN
     RAISE EXCEPTION 'Stale payment event' USING ERRCODE='22023';
   END IF;
