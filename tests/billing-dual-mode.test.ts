@@ -5,6 +5,7 @@ const state = vi.hoisted(() => ({
   dbCommunity: false,
   appCommunity: false,
   entitlementAllowed: true,
+  orgAllowed: true,
 }));
 vi.mock("@/lib/config/env", () => ({
   env: {
@@ -18,7 +19,7 @@ vi.mock("@/modules/tenancy/service", () => {
     execute: vi.fn(async () => ({
       rows: [
         {
-          allowed: state.entitlementAllowed,
+          allowed: state.orgAllowed,
           community: state.dbCommunity,
           ordering: state.entitlementAllowed,
           kitchen: state.entitlementAllowed,
