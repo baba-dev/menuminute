@@ -6,25 +6,31 @@ const state = vi.hoisted(() => ({
   appCommunity: false,
   entitlementAllowed: true,
 }));
-vi.mock("@/lib/config/env", () => ({ env: {
-  get COMMUNITY_EDITION() { return state.appCommunity; },
-} }));
+vi.mock("@/lib/config/env", () => ({
+  env: {
+    get COMMUNITY_EDITION() {
+      return state.appCommunity;
+    },
+  },
+}));
 vi.mock("@/modules/tenancy/service", () => {
   const transaction = () => ({
     execute: vi.fn(async () => ({
-      rows: [{
-        allowed: state.entitlementAllowed,
-        community: state.dbCommunity,
-        ordering: state.entitlementAllowed,
-        kitchen: state.entitlementAllowed,
-      }],
+      rows: [
+        {
+          allowed: state.entitlementAllowed,
+          community: state.dbCommunity,
+          ordering: state.entitlementAllowed,
+          kitchen: state.entitlementAllowed,
+        },
+      ],
     })),
     select: () => ({
       from: () => ({
-        where: () => Object.assign(
-          Promise.resolve([{ organizationId: "org-1" }]),
-          { orderBy: () => ({ limit: async () => [] }) }
-        ),
+        where: () =>
+          Object.assign(Promise.resolve([{ organizationId: "org-1" }]), {
+            orderBy: () => ({ limit: async () => [] }),
+          }),
       }),
     }),
   });
