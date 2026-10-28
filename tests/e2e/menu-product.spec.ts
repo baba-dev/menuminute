@@ -728,6 +728,9 @@ test("Menu Library stays responsive and preserves publication and accessible dia
   const launch = page.getByRole("button", { name: "Your menus" });
   await expect(launch).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Menu displayed in Studio" })).toBeVisible();
+  await expect(page.getByLabel("Menu name")).toHaveCount(1);
+  await expect(page.locator(".atelier-gallery-dialog")).toHaveCount(0);
+  await expect(page.locator(".atelier-gallery-error")).toHaveCount(0);
   await expect(page.locator(".atelier-menu-bar")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
 
@@ -744,7 +747,10 @@ test("Menu Library stays responsive and preserves publication and accessible dia
       true
     );
     await page.keyboard.press("Escape");
-    await expect(library).toBeHidden();
+    await expect(library).toHaveCount(0);
+    // Closing the gallery must remove its inputs and alerts from the editor DOM.
+    await expect(page.getByLabel("Menu name")).toHaveCount(1);
+    await expect(page.locator(".atelier-gallery-error")).toHaveCount(0);
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.evaluate(() => {
