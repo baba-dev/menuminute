@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { qrCommand } from "@/modules/menu-product/service";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     const rows = await getRestaurantQrCodes(actor, restaurant.id);
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     return errorResponse(e, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     return NextResponse.json(await qrCommand(actor, restaurant.id, await req.json()));
@@ -28,3 +29,6 @@ export async function POST(req: Request) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

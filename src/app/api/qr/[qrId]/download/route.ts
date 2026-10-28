@@ -1,10 +1,11 @@
+import { observedRoute } from "@/lib/observed-route";
 import QRCode from "qrcode";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { NotFoundError } from "@/lib/errors";
 import { validatedQrInk } from "@/modules/qr/ink";
-export async function GET(req: Request, c: { params: Promise<{ qrId: string }> }) {
+async function observed_GET(req: Request, c: { params: Promise<{ qrId: string }> }) {
   try {
     const { actor, restaurant } = await requestContext(req);
     const id = (await c.params).qrId;
@@ -40,3 +41,5 @@ export async function GET(req: Request, c: { params: Promise<{ qrId: string }> }
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

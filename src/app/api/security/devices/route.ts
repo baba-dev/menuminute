@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { errorResponse } from "@/lib/request-context";
@@ -25,7 +26,7 @@ async function deviceActor(req: Request, mutation = false) {
   if (!session?.user.id || !session.session.id) throw new UnauthorizedError();
   return { userId: session.user.id, sessionId: session.session.id };
 }
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const actor = await deviceActor(req);
     if (!actor.sessionId)
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
     return errorResponse(err, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const actor = await deviceActor(req, true); // verified origin, JSON and active session
     if (!actor.sessionId)
@@ -60,3 +61,6 @@ export async function POST(req: Request) {
     return errorResponse(err, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { confirmStepUp } from "@/lib/step-up";
 import { allowStepUpAttempt } from "@/lib/auth-abuse";
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const actor = await requestActor(req, true);
     const body = z
@@ -45,3 +46,5 @@ export async function POST(req: Request) {
     return errorResponse(err, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);
