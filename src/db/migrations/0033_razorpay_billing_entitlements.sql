@@ -37,7 +37,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $
 BEGIN
   IF app_private.is_community_edition() THEN
     INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
-    SELECT gen_random_uuid()::text,NEW.id,c,'INR',clock_timestamp(),'infinity'::timestamptz,
+    SELECT gen_random_uuid()::text,NEW.id,c,'INR',clock_timestamp(),clock_timestamp()+interval '100 years',
            'community-edition','Locally hosted Community Edition',gen_random_uuid()::text
     FROM unnest(ARRAY['ordering.new','kitchen.new']) AS c;
   END IF;
@@ -308,7 +308,15 @@ BEGIN
       SELECT r.grant_id FROM app_private.razorpay_resume_grants r WHERE r.subscription_id=p_subscription
     ) AND revoked_at IS NULL AND ends_at>clock_timestamp();
   ELSIF p_status='active' AND sub.current_end>clock_timestamp()
-    AND EXISTS(SELECT 1 FROM app_private.razorpay_charges WHERE subscription_id=p_subscription)
+    AND EXISTS(
+      SELECT 1 FROM app_private.razorpay_charges charge
+      JOIN entitlement_grants paid ON paid.id=charge.grant_id
+      WHERE charge.subscription_id=p_subscription AND paid.ends_at=sub.current_end
+        AND NOT EXISTS(
+          SELECT 1 FROM app_private.razorpay_refund_events refunded
+          WHERE refunded.payment_id=charge.payment_id
+        )
+    )
     AND NOT EXISTS (
       SELECT 1 FROM entitlement_grants g WHERE g.revoked_at IS NULL
       AND g.organization_id=sub.organization_id
