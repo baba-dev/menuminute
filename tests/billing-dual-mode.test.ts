@@ -15,11 +15,11 @@ vi.mock("@/lib/config/env", () => ({
   },
 }));
 vi.mock("@/modules/tenancy/service", () => {
-  const transaction = () => ({
+  const transaction = (workAllowed?: boolean) => ({
     execute: vi.fn(async () => ({
       rows: [
         {
-          allowed: state.orgAllowed,
+          allowed: workAllowed ?? state.orgAllowed,
           community: state.dbCommunity,
           ordering: state.entitlementAllowed,
           kitchen: state.entitlementAllowed,
@@ -37,7 +37,9 @@ vi.mock("@/modules/tenancy/service", () => {
   });
   return {
     withActor: vi.fn(async (_actor, work) => work(transaction())),
-    withOutlet: vi.fn(async (_actor, _outlet, _permission, work) => work(transaction())),
+    withOutlet: vi.fn(async (_actor, _outlet, _permission, work) =>
+      work(transaction(state.entitlementAllowed))
+    ),
   };
 });
 
