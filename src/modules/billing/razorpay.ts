@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { Pool } from "pg";
 import { env } from "@/lib/config/env";
 import { ValidationError } from "@/lib/errors";
+import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
 export interface RazorpaySubscriptionOptions {
   planId: string;
@@ -41,7 +42,7 @@ export function razorpayPlanForProduct(product: "ordering" | "kitchen_pro") {
   if (!planId) throw new ValidationError("Billing provider plan is unavailable");
   if (product === "kitchen_pro" && !env.RAZORPAY_KITCHEN_ENABLED)
     throw new ValidationError("Kitchen Pro is not approved for commercial activation");
-  return { planId, amountPaise: product === "ordering" ? 11900 : 29900 };
+  return { planId, amountPaise: PAID_PLAN_CATALOG[product].monthlyPricePaise };
 }
 
 export async function createRazorpaySubscription(
