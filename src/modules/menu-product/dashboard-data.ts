@@ -19,6 +19,15 @@ export const dashboardMenuRows = cache(
           archived: menus.archived,
           revision: menus.revision,
           publishedRevision: menus.publishedRevision,
+          // A stock override can increment revision without changing editable menu
+          // content. Compare the persisted draft to the committed release instead
+          // of treating every revision increment as unpublished menu work.
+          hasUnpublishedChanges: sql<boolean>`
+            ${menus.publishedRevision} IS NULL OR ${menus.document} IS DISTINCT FROM
+            (SELECT release.document FROM menu_releases release
+             WHERE release.menu_id = ${menus.id}
+               AND release.revision = ${menus.publishedRevision})
+          `.as("has_unpublished_changes"),
         })
         .from(menus)
         .leftJoin(

@@ -1,5 +1,11 @@
 /** Dashboard counts reflect the guest-visible published projection, never mutable drafts. */
-export type MenuRow = { archived: boolean; revision: number; publishedRevision: number | null };
+export type MenuRow = {
+  archived: boolean;
+  revision: number;
+  publishedRevision: number | null;
+  /** SQL comparison to the released document; stock-only overrides are not drafts. */
+  hasUnpublishedChanges?: boolean;
+};
 export type MenuQr = {
   isActive: boolean;
   purpose: string;
@@ -38,7 +44,9 @@ export function dashboardSummary(
   return {
     draftCount: rows.filter(
       (row) =>
-        !row.archived && (row.publishedRevision === null || row.revision > row.publishedRevision)
+        !row.archived &&
+        (row.publishedRevision === null ||
+          (row.hasUnpublishedChanges ?? row.revision > row.publishedRevision))
     ).length,
     publishedMenuCount: published.length,
     publishedCategoryCount: visibleCategories.length,

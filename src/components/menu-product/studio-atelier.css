@@ -66,7 +66,7 @@
   margin: 11px 0 0;
   color: inherit;
   font:
-    800 clamp(32px, 3.9vw, 56px)/1 var(--font-display),
+    800 clamp(38px, 4vw, 59px)/0.99 var(--font-display),
     sans-serif;
   letter-spacing: -0.045em;
 }
@@ -95,7 +95,7 @@
   flex-wrap: wrap;
   margin-top: 20px;
 }
-.atelier-hero-links a {
+.atelier-hero-links :is(a, button) {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -107,6 +107,8 @@
   font-size: 12px;
   font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
 }
 .atelier-hero-primary {
   background: #40271d;
@@ -139,6 +141,7 @@
   color: #f0c7a8;
 }
 .atelier-body {
+  container-type: inline-size;
   width: min(100%, 1590px);
   margin-inline: auto;
   padding: 24px clamp(16px, 3vw, 44px) 64px;
@@ -678,7 +681,7 @@
 .product.studio-atelier .atelier-preview-blank p {
   font-size: 12px;
 }
-.product.studio-atelier dialog {
+.product.studio-atelier dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) {
   max-width: min(490px, calc(100vw - 24px));
   background: var(--paper);
   border: 1px solid var(--atelier-line);
@@ -1329,4 +1332,580 @@
   .atelier-culinary-details input[type="search"] {
     max-width: 100%;
   }
+}
+
+/* Menu Library: restrained editorial overlays, fluid grids, and one source of helper copy. */
+.product.studio-atelier .atelier-supporting-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+.product.studio-atelier .atelier-composer-head .quiet,
+.product.studio-atelier .smart-composer-head p,
+.product.studio-atelier .smart-composer-search > .quiet,
+.product.studio-atelier .smart-composer-tray > .quiet {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.product.studio-atelier .atelier-preview-cover {
+  position: relative;
+  isolation: isolate;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 15px;
+  background-color: #f6e8d8;
+  background-position: center;
+  background-size: cover;
+  border-radius: 10px;
+  border-bottom: 0;
+  overflow: hidden;
+  color: #382016;
+}
+.product.studio-atelier .atelier-preview-cover::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgb(255 249 241 / 98%) 0%,
+    rgb(255 249 241 / 88%) 45%,
+    rgb(255 249 241 / 20%) 100%
+  );
+}
+.product.studio-atelier .atelier-preview-cover > * {
+  position: relative;
+  z-index: 1;
+}
+.product.studio-atelier .atelier-preview-cover h2 {
+  color: #382016;
+  text-shadow: none;
+}
+.product.studio-atelier .atelier-preview-cover small {
+  color: #654735;
+  font-size: 11px;
+  line-height: 1.5;
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover {
+  background-color: #271a13;
+  color: #fff2df;
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover::before {
+  background: linear-gradient(
+    90deg,
+    rgb(24 17 13 / 97%) 0%,
+    rgb(31 21 15 / 91%) 48%,
+    rgb(31 21 15 / 34%) 100%
+  );
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover h2 {
+  color: #fff2df;
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-preview-cover small {
+  color: #f2d7c1;
+}
+.product.studio-atelier .atelier-preview-disclaimer {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product.studio-atelier .atelier-selected-menu {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: min(100%, 360px);
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 999px;
+  background: var(--paper);
+  padding: 0 12px;
+}
+.atelier-selected-menu-status {
+  color: #26904a;
+  flex: none;
+}
+.product.studio-atelier .atelier-selected-menu select {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+.atelier-selected-menu > svg {
+  flex: none;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+.product.studio-atelier .atelier-gallery-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(96vw, 1220px);
+  max-width: none;
+  height: min(94dvh, 970px);
+  max-height: none;
+  padding: 0;
+  margin: auto;
+  border: 1px solid var(--atelier-line);
+  border-radius: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  overflow: hidden;
+  box-shadow: 0 38px 100px rgb(15 10 8 / 32%);
+}
+.product.studio-atelier .atelier-gallery-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.atelier-gallery-dialog::backdrop {
+  background: rgb(19 13 9 / 72%);
+  backdrop-filter: blur(6px);
+}
+.atelier-gallery-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: clamp(17px, 2.2vw, 30px);
+  border-bottom: 1px solid var(--atelier-line);
+  background: var(--atelier-soft);
+}
+.product.studio-atelier .atelier-gallery-header h2 {
+  margin: 4px 0 6px;
+  font:
+    800 clamp(26px, 3vw, 36px)/1.12 var(--font-display),
+    sans-serif;
+  letter-spacing: -0.035em;
+}
+.atelier-gallery-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.product.studio-atelier .atelier-gallery-heading-actions button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 10px 15px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.product.studio-atelier .atelier-gallery-heading-actions .atelier-gallery-close {
+  width: 44px;
+  padding: 0;
+  border: 1px solid var(--atelier-line);
+  background: var(--paper);
+  color: var(--ink);
+}
+.atelier-gallery-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(205px, 250px) minmax(0, 1fr);
+}
+.atelier-gallery-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+  padding: 18px 12px;
+  border-right: 1px solid var(--atelier-line);
+  background: var(--atelier-soft);
+}
+.atelier-gallery-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 0 10px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 11px;
+  background: var(--paper);
+}
+.product.studio-atelier .atelier-gallery-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  padding: 7px 2px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+}
+.atelier-gallery-rail-items {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.product.studio-atelier .atelier-gallery-rail-items button {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15px;
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.product.studio-atelier .atelier-gallery-rail-items button:hover,
+.product.studio-atelier .atelier-gallery-rail-items button.is-selected {
+  background: var(--paper);
+  border-color: var(--atelier-line);
+}
+.atelier-gallery-menu-name {
+  grid-column: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.atelier-gallery-menu-meta {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.atelier-gallery-menu-meta > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a9a29e;
+}
+.atelier-gallery-menu-meta > span.is-live {
+  background: #26904a;
+}
+.atelier-gallery-rail-items button > svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.atelier-gallery-content {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(15px, 2.5vw, 30px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+}
+.atelier-gallery-menu-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.atelier-gallery-heading-copy {
+  min-width: 0;
+}
+.product.studio-atelier .atelier-gallery-heading-copy h3 {
+  margin: 4px 0 6px;
+  font:
+    800 clamp(22px, 3vw, 32px)/1.15 var(--font-display),
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.atelier-gallery-actions {
+  position: relative;
+  flex: none;
+}
+.atelier-gallery-actions > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.atelier-gallery-actions > summary::-webkit-details-marker {
+  display: none;
+}
+.atelier-gallery-actions-list {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 25;
+  width: max-content;
+  min-width: 192px;
+  max-width: 75vw;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 13px;
+  background: var(--paper);
+  box-shadow: 0 18px 55px rgb(0 0 0 / 19%);
+}
+.product.studio-atelier .atelier-gallery-actions-list button {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  text-align: left;
+}
+.product.studio-atelier .atelier-gallery-actions-list button:hover {
+  background: var(--atelier-soft);
+}
+.product.studio-atelier .atelier-gallery-actions-list .atelier-gallery-danger {
+  color: var(--danger);
+}
+.atelier-gallery-categories {
+  display: flex;
+  gap: 6px;
+  padding: 0 0 15px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  border-bottom: 1px solid var(--atelier-line);
+}
+.product.studio-atelier .atelier-gallery-categories button {
+  flex: none;
+  min-height: 36px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 999px;
+  padding: 7px 13px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 750;
+}
+.product.studio-atelier .atelier-gallery-categories button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.atelier-gallery-dish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 205px), 1fr));
+  align-items: stretch;
+  gap: 13px;
+}
+.atelier-gallery-dish {
+  min-width: 0;
+  border: 1px solid var(--atelier-line);
+  border-radius: 15px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.atelier-gallery-dish-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-position: center;
+  background: var(--atelier-soft);
+}
+.atelier-gallery-dish-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+}
+.atelier-gallery-dish-section {
+  color: var(--ember);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.product.studio-atelier .atelier-gallery-dish h4 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.atelier-gallery-dish .atelier-supporting-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.atelier-gallery-dish-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 12px;
+}
+.atelier-gallery-sold-out {
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 800;
+}
+.atelier-gallery-empty {
+  min-height: 190px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 9px;
+  text-align: center;
+  color: var(--muted);
+}
+.atelier-gallery-empty strong {
+  color: var(--ink);
+}
+.product.studio-atelier .atelier-gallery-more {
+  display: block;
+  min-height: 44px;
+  margin: 18px auto 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--atelier-line);
+  background: var(--atelier-soft);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+.atelier-gallery-error {
+  flex: none;
+  margin: 12px 18px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  color: var(--danger);
+  font-size: 12px;
+}
+@container (max-width: 960px) {
+  .product.studio-atelier .atelier-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .atelier-preview-panel {
+    position: static;
+  }
+}
+@container (max-width: 650px) {
+  .atelier-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .atelier-metric:nth-child(odd) {
+    padding-left: 0;
+    border-right: 1px solid var(--atelier-line);
+  }
+  .atelier-metric:nth-child(even) {
+    padding-right: 0;
+    border-right: 0;
+  }
+}
+@container (max-width: 460px) {
+  .atelier-metrics-heading {
+    align-items: stretch;
+  }
+  .product.studio-atelier .atelier-selected-menu {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+@media (max-width: 820px) {
+  .product.studio-atelier .atelier-gallery-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .atelier-gallery-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .atelier-gallery-rail {
+    flex: none;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--atelier-line);
+  }
+  .atelier-gallery-rail-items {
+    display: flex;
+    max-height: 110px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .product.studio-atelier .atelier-gallery-rail-items button {
+    flex: 0 0 min(185px, 55vw);
+  }
+  .atelier-gallery-content {
+    flex: 1;
+  }
+}
+@media (max-width: 490px) {
+  .atelier-gallery-header {
+    align-items: flex-start;
+  }
+  .atelier-gallery-heading-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .atelier-gallery-menu-heading {
+    flex-wrap: wrap;
+  }
+  .atelier-gallery-dish-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atelier-gallery-dialog *,
+  .atelier-selected-menu * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* The hero library entry is a button, so it must outrank shared .product button defaults. */
+.product.studio-atelier .atelier-hero-links button.atelier-hero-secondary {
+  border-color: rgb(62 40 28 / 20%);
+  background: rgb(255 253 246 / 80%);
+  color: #42291b;
+}
+:root[data-theme="dark"] .product.studio-atelier .atelier-hero-links button.atelier-hero-secondary {
+  border-color: #826347;
+  background: #4b3122;
+  color: #ffebd5;
 }

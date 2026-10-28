@@ -711,3 +711,55 @@ test("confirmed culinary claims show only after explicit verification and cross-
   ).toBeVisible();
   await expect(page.getByRole("dialog").getByText("Contains Allergens:")).toHaveCount(0);
 });
+
+test("Menu Library stays responsive and preserves publication and accessible dialog navigation", async ({
+  page,
+}, info) => {
+  test.setTimeout(90000);
+  const fixture = await seed(true);
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(fixture.email);
+  await page.getByLabel("Password", { exact: true }).fill(fixture.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+
+  const launch = page.getByRole("button", { name: "Your menus" });
+  await expect(launch).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Menu displayed in Studio" })).toBeVisible();
+  await expect(page.getByLabel("Menu name")).toHaveCount(1);
+  await expect(page.locator(".atelier-gallery-dialog")).toHaveCount(0);
+  await expect(page.locator(".atelier-gallery-error")).toHaveCount(0);
+  await expect(page.locator(".atelier-menu-bar")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 860 });
+    await launch.click();
+    const library = page.getByRole("dialog", { name: "Your menus" });
+    await expect(library).toBeVisible();
+    await expect(library.getByRole("heading", { name: "All-day kitchen" })).toBeVisible();
+    await expect(library.getByText("Signature thali")).toBeVisible();
+    await expect(library.getByText("Seasonal special")).toBeVisible();
+    await expect(library.getByText("Sold out")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+    await page.keyboard.press("Escape");
+    await expect(library).toHaveCount(0);
+    // Closing the gallery must remove its inputs and alerts from the editor DOM.
+    await expect(page.getByLabel("Menu name")).toHaveCount(1);
+    await expect(page.locator(".atelier-gallery-error")).toHaveCount(0);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "dark";
+  });
+  const cover = page.locator(".atelier-preview-cover");
+  await expect(cover).toBeVisible();
+  expect(await cover.evaluate((el) => getComputedStyle(el, "::before").backgroundImage)).toContain(
+    "linear-gradient"
+  );
+  await page.screenshot({ path: info.outputPath("menu-studio-dark-library.png"), fullPage: false });
+});

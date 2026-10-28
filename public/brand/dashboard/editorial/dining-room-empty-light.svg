@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+<title id="title">Empty dining room illustration — light mode</title>
+<desc id="desc">Two empty bentwood cafe chairs flank a cream-topped bistro table set with a small plate and an olive sprig, framed by botanical branches and soft editorial highlights.</desc>
+<defs>
+ <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#E7AA6B"/><stop offset=".52" stop-color="#C77C44"/><stop offset="1" stop-color="#954C2B"/></linearGradient>
+ <linearGradient id="woodDark" x1="0" y1="0" x2=".25" y2="1"><stop stop-color="#C77C44"/><stop offset="1" stop-color="#954C2B"/></linearGradient>
+ <linearGradient id="seat" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F7C994"/><stop offset=".52" stop-color="#E6A166"/><stop offset="1" stop-color="#C77C44"/></linearGradient>
+ <linearGradient id="tableTop" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#FFF8EA"/><stop offset=".54" stop-color="#F2DCBC"/><stop offset="1" stop-color="#E7C49E"/></linearGradient>
+ <linearGradient id="tableRim" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFE3A0"/><stop offset=".4" stop-color="#C98D3E"/><stop offset="1" stop-color="#845124"/></linearGradient>
+ <linearGradient id="brass" x1="0" y1="0" x2=".95" y2=".9"><stop stop-color="#FFE3A0"/><stop offset=".48" stop-color="#C98D3E"/><stop offset="1" stop-color="#845124"/></linearGradient>
+ <linearGradient id="plateGrad" x1="0" y1="0" x2=".85" y2=".9"><stop stop-color="#FBF5E9"/><stop offset="1" stop-color="#EDD9B6"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#F5D6B9" stop-opacity=".79"/><stop offset="1" stop-color="#F5D6B9" stop-opacity="0"/></radialGradient>
+ <filter id="groundBlur" x="-45%" y="-80%" width="190%" height="260%"><feGaussianBlur stdDeviation="13"/></filter>
+ <filter id="softDrop" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#724832" flood-opacity=".22"/></filter>
+ <clipPath id="caneClip"><path d="M-48 36 C-48 5 -34 -13 -3 -14 C27 -13 44 3 45 36 L47 103 Q-4 95 -49 107Z"/></clipPath>
+</defs>
+<!-- Open transparent canvas: an airy vignette, not a background rectangle -->
+<ellipse cx="328" cy="232" rx="247" ry="195" fill="url(#glow)" opacity=".67"/>
+<path d="M142 232 C125 170 161 104 229 84 C303 44 397 54 470 113 C518 152 546 234 513 318 C485 384 398 424 313 397 C231 429 141 367 142 232Z" fill="#F6D7BC" opacity=".22"/>
+<!-- Scattered understated ink flecks echo the service-dispatch illustration -->
+<path d="M165 104 Q261 50 364 74" stroke="#D98542" stroke-width="2.6" stroke-dasharray="2 14" stroke-linecap="round" opacity=".28" fill="none"/>
+<path d="M83 198 v19 M73.5 207.5 h19 M555 115 v17 M546.5 123.5 h17" stroke="#D98542" stroke-width="2.7" opacity=".75" stroke-linecap="round"/>
+<circle cx="116" cy="131" r="3.6" fill="#D98542" opacity=".5"/>
+<circle cx="542" cy="263" r="3.3" fill="#D98542" opacity=".47"/>
+<path d="M514 177 q16 -12 27 -2 M109 290 q-9 -9 -20 -4" stroke="#D98542" stroke-width="2.3" opacity=".35" stroke-linecap="round" fill="none"/>
+<!-- A distant floor accent; no hard enclosing panel -->
+<path d="M176 409 Q328 430 487 411" stroke="#7A4D31" opacity=".16" stroke-width="2" fill="none"/>
+<ellipse cx="313" cy="399" rx="222" ry="25" fill="#724832" opacity=".16" filter="url(#groundBlur)"/>
+<!-- Rear seating and planted vignette -->
+<g filter="url(#softDrop)">
+<g transform="translate(173 158) scale(1 1)">
+      <!-- rear chair legs, visible behind the table -->
+      <path d="M-45 131 L-52 237 M54 131 L71 235" stroke="url(#woodDark)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M-47 130 L-54 232 M53 133 L68 229" stroke="#F7C994" stroke-width="3" stroke-linecap="round" fill="none" opacity=".68"/>
+      <!-- chair curved wooden frame -->
+      <path d="M-67 134 L-70 28 C-72 -13 -42 -39 -3 -40 C44 -41 70 -16 69 23 L73 139" fill="none" stroke="#8C4C2D" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-67 134 L-70 28 C-72 -13 -42 -39 -3 -40 C44 -41 70 -16 69 23 L73 139" fill="none" stroke="url(#wood)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-67 35 C-68 -11 -44 -29 -5 -29 C38 -30 62 -8 64 35" fill="none" stroke="#F7C994" stroke-width="3.5" opacity=".75" stroke-linecap="round"/>
+      <!-- woven cane inset, clipped inside arched backrest -->
+      <path d="M-48 36 C-48 5 -34 -13 -3 -14 C27 -13 44 3 45 36 L47 103 Q-4 95 -49 107Z" fill="#F1D4A6" stroke="#8C4C2D" stroke-width="3.2"/>
+      <g clip-path="url(#caneClip)" opacity=".36" stroke="#9E7650" stroke-width="2.3">
+        <path d="M-48 10 L50 106 M-48 31 L48 125 M-48 -10 L50 87 M-48 54 L50 150 M-55 79 L40 164 M-54 102 L47 194"/>
+        <path d="M50 5 L-50 107 M47 26 L-48 127 M45 -18 L-49 90 M48 48 L-47 147 M49 70 L-49 169"/>
+      </g>
+      <path d="M-51 107 Q-2 91 51 107" stroke="#8C4C2D" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M-48 105 Q-2 91 48 105" stroke="#F7C994" stroke-width="3" opacity=".63" stroke-linecap="round" fill="none"/>
+      <!-- seat and cushion -->
+      <path d="M-82 136 C-81 116 -45 108 0 109 C46 108 80 119 83 138 L81 154 C51 174 -49 176 -80 155Z" fill="url(#woodDark)" stroke="#8C4C2D" stroke-width="3"/>
+      <ellipse cx="0" cy="135" rx="83" ry="23" fill="url(#seat)" stroke="#8C4C2D" stroke-width="3"/>
+      <path d="M-62 131 Q-3 107 61 129" stroke="#F7C994" stroke-width="3" opacity=".6" fill="none" stroke-linecap="round"/>
+      <path d="M-75 150 Q-3 173 72 150" stroke="#F7C994" stroke-width="3" opacity=".5" fill="none"/>
+      <!-- slim chair front legs -->
+      <path d="M-61 158 L-67 252 M65 158 L78 253" stroke="#8C4C2D" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <path d="M-61 158 L-67 249 M65 158 L78 250" stroke="url(#wood)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path d="M-36 214 Q10 205 56 213" stroke="#8C4C2D" stroke-width="7" opacity=".8" stroke-linecap="round" fill="none"/>
+    </g>
+<g transform="translate(457 156) scale(-1 1)">
+      <!-- rear chair legs, visible behind the table -->
+      <path d="M-45 131 L-52 237 M54 131 L71 235" stroke="url(#woodDark)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M-47 130 L-54 232 M53 133 L68 229" stroke="#F7C994" stroke-width="3" stroke-linecap="round" fill="none" opacity=".68"/>
+      <!-- chair curved wooden frame -->
+      <path d="M-67 134 L-70 28 C-72 -13 -42 -39 -3 -40 C44 -41 70 -16 69 23 L73 139" fill="none" stroke="#8C4C2D" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-67 134 L-70 28 C-72 -13 -42 -39 -3 -40 C44 -41 70 -16 69 23 L73 139" fill="none" stroke="url(#wood)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-67 35 C-68 -11 -44 -29 -5 -29 C38 -30 62 -8 64 35" fill="none" stroke="#F7C994" stroke-width="3.5" opacity=".75" stroke-linecap="round"/>
+      <!-- woven cane inset, clipped inside arched backrest -->
+      <path d="M-48 36 C-48 5 -34 -13 -3 -14 C27 -13 44 3 45 36 L47 103 Q-4 95 -49 107Z" fill="#F1D4A6" stroke="#8C4C2D" stroke-width="3.2"/>
+      <g clip-path="url(#caneClip)" opacity=".36" stroke="#9E7650" stroke-width="2.3">
+        <path d="M-48 10 L50 106 M-48 31 L48 125 M-48 -10 L50 87 M-48 54 L50 150 M-55 79 L40 164 M-54 102 L47 194"/>
+        <path d="M50 5 L-50 107 M47 26 L-48 127 M45 -18 L-49 90 M48 48 L-47 147 M49 70 L-49 169"/>
+      </g>
+      <path d="M-51 107 Q-2 91 51 107" stroke="#8C4C2D" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M-48 105 Q-2 91 48 105" stroke="#F7C994" stroke-width="3" opacity=".63" stroke-linecap="round" fill="none"/>
+      <!-- seat and cushion -->
+      <path d="M-82 136 C-81 116 -45 108 0 109 C46 108 80 119 83 138 L81 154 C51 174 -49 176 -80 155Z" fill="url(#woodDark)" stroke="#8C4C2D" stroke-width="3"/>
+      <ellipse cx="0" cy="135" rx="83" ry="23" fill="url(#seat)" stroke="#8C4C2D" stroke-width="3"/>
+      <path d="M-62 131 Q-3 107 61 129" stroke="#F7C994" stroke-width="3" opacity=".6" fill="none" stroke-linecap="round"/>
+      <path d="M-75 150 Q-3 173 72 150" stroke="#F7C994" stroke-width="3" opacity=".5" fill="none"/>
+      <!-- slim chair front legs -->
+      <path d="M-61 158 L-67 252 M65 158 L78 253" stroke="#8C4C2D" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <path d="M-61 158 L-67 249 M65 158 L78 250" stroke="url(#wood)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path d="M-36 214 Q10 205 56 213" stroke="#8C4C2D" stroke-width="7" opacity=".8" stroke-linecap="round" fill="none"/>
+    </g>
+</g>
+<!-- Table base and cast-metal stem: anchored to the ground -->
+<g filter="url(#softDrop)">
+ <ellipse cx="323" cy="395" rx="87" ry="14" fill="url(#tableRim)" stroke="#8C4C2D" stroke-width="3"/>
+ <ellipse cx="322" cy="389" rx="70" ry="7.6" fill="#FFE3A0" opacity=".55"/>
+ <path d="M302 305 L299 385 Q322 393 344 385 L342 305Z" fill="url(#tableRim)" stroke="#8C4C2D" stroke-width="3"/>
+ <path d="M307 327 L306 374" fill="none" stroke="#FFE3A0" stroke-width="4.4" opacity=".72" stroke-linecap="round"/>
+ <path d="M336 334 L337 374" fill="none" stroke="#8C4C2D" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+ <ellipse cx="322" cy="313" rx="34" ry="12" fill="url(#woodDark)" stroke="#8C4C2D" stroke-width="3"/>
+</g>
+<!-- Round bistro table in front of both chairs -->
+<g filter="url(#softDrop)">
+ <path d="M176 284 Q174 321 324 330 Q476 321 475 283 L462 285 Q323 313 191 281Z" fill="url(#tableRim)" stroke="#8C4C2D" stroke-width="3.3"/>
+ <ellipse cx="325" cy="281" rx="152" ry="49" fill="url(#tableTop)" stroke="#8C4C2D" stroke-width="4"/>
+ <ellipse cx="325" cy="278" rx="143" ry="43" fill="none" stroke="#FFE3A0" stroke-width="3.3" opacity=".73"/>
+ <path d="M203 266 Q278 242 362 246" stroke="white" stroke-width="4.5" opacity=".4" stroke-linecap="round" fill="none"/>
+ <path d="M204 299 Q325 328 450 298" stroke="#FFE3A0" opacity=".75" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+</g>
+<!-- Still life: single unoccupied place setting, modest in scale -->
+<g transform="rotate(-8 260 271)">
+ <ellipse cx="265" cy="268" rx="44" ry="15" fill="url(#plateGrad)" stroke="#7A4D31" stroke-width="1.75" opacity=".96"/>
+ <ellipse cx="265" cy="266.5" rx="35" ry="10" fill="none" stroke="#EDD9B6" stroke-width="2.8"/>
+ <ellipse cx="265" cy="267" rx="24" ry="6" fill="#FFF8EA" opacity=".72"/>
+</g>
+<!-- Folded napkin and a menu slip, intentionally without wording -->
+<g transform="translate(375 267) rotate(11)">
+ <path d="M-18 -13 L23 -13 L31 5 L-28 5Z" fill="#FEF0D9" stroke="#7A4D31" stroke-width="1.5"/>
+ <path d="M-18 -13 L0 4 L23 -13" stroke="#EDD9B6" stroke-width="2" fill="none"/>
+ <path d="M0 4 L-2 -11" stroke="#7A4D31" opacity=".36" fill="none" stroke-width="1.5"/>
+</g>
+<!-- Tiny olive-stem vase at the far side of the table -->
+<g transform="translate(333 231)">
+ <path d="M-3 12 Q-6 -2 -3 -18 M1 12 Q8 -6 17 -22 M0 4 Q-14 -14 -15 -30" stroke="#8B6742" stroke-width="2" fill="none" stroke-linecap="round"/>
+ <ellipse cx="-15" cy="-25" rx="5.2" ry="12.5" transform="rotate(-40 -15 -25)" fill="#4B6540"/>
+ <ellipse cx="7" cy="-13" rx="5.2" ry="12.5" transform="rotate(44 7 -13)" fill="#7B8F57"/>
+ <ellipse cx="15" cy="-24" rx="5.2" ry="12" transform="rotate(36 15 -24)" fill="#A5AF7C"/>
+ <ellipse cx="-3" cy="-14" rx="4.5" ry="10" transform="rotate(-24 -3 -14)" fill="#7B8F57"/>
+ <path d="M-11 6 H12 L8 29 Q0 34 -7 29Z" fill="url(#brass)" stroke="#8C4C2D" stroke-width="2"/>
+ <ellipse cx=".5" cy="6" rx="11.5" ry="4" fill="#FFE3A0" stroke="#8C4C2D" stroke-width="1.6"/>
+ <path d="M-6 11 L-5 25" stroke="#FFE3A0" stroke-width="2.4" opacity=".72" stroke-linecap="round"/>
+</g>
+<!-- Botanical framing, layered in front but clear of the main table -->
+<g transform="translate(114 396) scale(0.73 0.73)" opacity=".96">
+      <path d="M0 0 C5 -26 28 -61 54 -98 C65 -112 67 -128 72 -137" fill="none" stroke="#8B6742" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M19 -44 C-3 -58 -12 -78 -14 -92 M39 -77 C23 -99 17 -112 11 -122 M56 -104 C82 -107 96 -122 107 -138" fill="none" stroke="#8B6742" stroke-width="2.8" stroke-linecap="round"/>
+      <ellipse cx="-10" cy="-88" rx="11" ry="23" transform="rotate(-43 -10 -88)" fill="#4B6540"/>
+      <ellipse cx="13" cy="-111" rx="11" ry="24" transform="rotate(-34 13 -111)" fill="#7B8F57"/>
+      <ellipse cx="32" cy="-100" rx="10" ry="23" transform="rotate(40 32 -100)" fill="#A5AF7C"/>
+      <ellipse cx="64" cy="-133" rx="10" ry="23" transform="rotate(23 64 -133)" fill="#4B6540"/>
+      <ellipse cx="91" cy="-131" rx="11" ry="25" transform="rotate(53 91 -131)" fill="#7B8F57"/>
+      <ellipse cx="43" cy="-77" rx="11" ry="23" transform="rotate(37 43 -77)" fill="#7B8F57"/>
+      <ellipse cx="7" cy="-47" rx="10" ry="21" transform="rotate(-48 7 -47)" fill="#A5AF7C"/>
+      <path d="M-18 -95 Q-6 -80 0 -75 M56 -130 Q64 -121 68 -112" stroke="#D8DAAC" fill="none" opacity=".33" stroke-width="1.5"/>
+    </g>
+<g transform="translate(527 387) scale(-0.71 0.71)" opacity=".96">
+      <path d="M0 0 C5 -26 28 -61 54 -98 C65 -112 67 -128 72 -137" fill="none" stroke="#8B6742" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M19 -44 C-3 -58 -12 -78 -14 -92 M39 -77 C23 -99 17 -112 11 -122 M56 -104 C82 -107 96 -122 107 -138" fill="none" stroke="#8B6742" stroke-width="2.8" stroke-linecap="round"/>
+      <ellipse cx="-10" cy="-88" rx="11" ry="23" transform="rotate(-43 -10 -88)" fill="#4B6540"/>
+      <ellipse cx="13" cy="-111" rx="11" ry="24" transform="rotate(-34 13 -111)" fill="#7B8F57"/>
+      <ellipse cx="32" cy="-100" rx="10" ry="23" transform="rotate(40 32 -100)" fill="#A5AF7C"/>
+      <ellipse cx="64" cy="-133" rx="10" ry="23" transform="rotate(23 64 -133)" fill="#4B6540"/>
+      <ellipse cx="91" cy="-131" rx="11" ry="25" transform="rotate(53 91 -131)" fill="#7B8F57"/>
+      <ellipse cx="43" cy="-77" rx="11" ry="23" transform="rotate(37 43 -77)" fill="#7B8F57"/>
+      <ellipse cx="7" cy="-47" rx="10" ry="21" transform="rotate(-48 7 -47)" fill="#A5AF7C"/>
+      <path d="M-18 -95 Q-6 -80 0 -75 M56 -130 Q64 -121 68 -112" stroke="#D8DAAC" fill="none" opacity=".33" stroke-width="1.5"/>
+    </g>
+<!-- Decorative seeds, subtle printmaker finish -->
+<circle cx="145" cy="362" r="3" fill="#D98542" opacity=".59"/>
+<circle cx="505" cy="356" r="2.6" fill="#D98542" opacity=".55"/>
+<circle cx="515" cy="184" r="2.1" fill="#D98542" opacity=".36"/>
+</svg>

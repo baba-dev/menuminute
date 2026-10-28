@@ -2,24 +2,40 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { RefreshCw } from "lucide-react";
 import type { DashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 
 const REFRESH_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
-function timeLabel(timestamp: string) {
+function timeLabel(timestamp: string, timezone: string) {
   const time = new Date(timestamp);
-  return Number.isNaN(time.getTime())
-    ? "time unavailable"
-    : time.toISOString().slice(11, 16) + " UTC";
+  if (Number.isNaN(time.getTime())) return "time unavailable";
+  try {
+    return (
+      new Intl.DateTimeFormat("en", {
+        timeZone: timezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(time) +
+      " (" +
+      timezone +
+      ")"
+    );
+  } catch {
+    return time.toISOString().slice(11, 16) + " UTC";
+  }
 }
 
 export function DashboardServicePulse({
   outletId,
+  timezone,
   initial,
 }: {
   outletId: string;
+  timezone: string;
   initial: DashboardPulseSnapshot;
 }) {
   const [snapshot, setSnapshot] = useState(initial);
@@ -112,28 +128,35 @@ export function DashboardServicePulse({
   return (
     <section className="mm-dashboard-operations" aria-labelledby="mm-operations-title">
       <div className="mm-dashboard-operations-heading">
-        <div>
-          <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
-          <h2 id="mm-operations-title">What needs attention now</h2>
-          <p>Current outlet counts from the authoritative order ledger.</p>
+        <div className="mm-dashboard-service-heading">
+          <div>
+            <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
+            <h2 id="mm-operations-title">The Service Dispatch</h2>
+            <p>What needs attention now · From your live order ledger.</p>
+          </div>
+          <div className="mm-dashboard-service-art-wrap" aria-hidden="true">
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--light"
+              src="/brand/dashboard/editorial/service-dispatch-light.svg"
+              alt=""
+              width={130}
+              height={91}
+            />
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--dark"
+              src="/brand/dashboard/editorial/service-dispatch-dark.svg"
+              alt=""
+              width={130}
+              height={91}
+            />
+          </div>
         </div>
-        {snapshot.state !== "restricted" && (
-          <button
-            type="button"
-            className="mm-dashboard-operations-refresh"
-            disabled={refreshing}
-            aria-label="Refresh service activity"
-            onClick={() => void refresh()}
-          >
-            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
-          </button>
-        )}
       </div>
       {snapshot.state === "ready" ? (
         <>
           <p className="mm-dashboard-operations-freshness" role="status">
-            Snapshot updated at {timeLabel(snapshot.checkedAt)} · Refreshes every 30 seconds while
-            this tab is active
+            Snapshot updated at {timeLabel(snapshot.checkedAt, timezone)} · Refreshes every 30
+            seconds while this tab is active
           </p>
           <div className="mm-dashboard-operations-grid">
             {(
@@ -165,6 +188,20 @@ export function DashboardServicePulse({
           </p>
         </div>
       )}
+      <div className="mm-dashboard-service-footer">
+        <Link href="/dashboard/orders">View all orders &rarr;</Link>
+        {snapshot.state !== "restricted" && (
+          <button
+            type="button"
+            className="mm-dashboard-operations-refresh"
+            disabled={refreshing}
+            aria-label="Refresh service activity"
+            onClick={() => void refresh()}
+          >
+            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

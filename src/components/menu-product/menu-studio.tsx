@@ -2,10 +2,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowUp, ArrowDown, Trash2, ArchiveRestore, EyeOff, X } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, X } from "lucide-react";
 import { artworkById } from "@/modules/menu-product/dish-artwork";
 import { covers, type CoverPreset } from "@/modules/menu-product/public-presentation";
 import { SmartDishComposer, type QuickDish } from "./smart-dish-composer";
+import {
+  StudioMenuGallery,
+  type MenuLibraryAction,
+  type MenuLibraryEntry,
+} from "./studio-menu-gallery";
+import { StudioMenuSelector } from "./studio-menu-selector";
 import {
   findDishDuplicate,
   normalizeDishText,
@@ -50,7 +56,7 @@ export function MenuStudio({
     fulfillmentModes: string[];
     publicId: string;
   };
-  initialList: { id: string; document: unknown; archived: boolean }[];
+  initialList: MenuLibraryEntry[];
   initialDetail: Detail | null;
   initialMedia: Media[];
   outletChoices: { id: string; name: string; currency: string }[];
@@ -86,6 +92,7 @@ export function MenuStudio({
   const [organizationDishes, setOrganizationDishes] = useState<OrganizationDish[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [preview, setPreview] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [lifecycleAction, setLifecycleAction] = useState<"archive" | "unpublish" | null>(null);
   const [confirmName, setConfirmName] = useState("");
@@ -162,6 +169,19 @@ export function MenuStudio({
     if (selected.current !== menuId) return;
     setDetail(next);
     setDoc(next.document);
+    setList((current) =>
+      current.map((menu) =>
+        menu.id === menuId
+          ? {
+              ...menu,
+              document: next.document,
+              archived: next.archived,
+              revision: next.revision,
+              publishedRevision: next.publishedRevision,
+            }
+          : menu
+      )
+    );
     setDishSearch("");
     setCategoryFilter("all");
     setComposerCategory("");
@@ -177,6 +197,123 @@ export function MenuStudio({
     }
     setDirty(false);
   }
+  // A library selection is explicit: browsing cards never mutates the editor.
+  async function switchMenu(menuId: string): Promise<boolean> {
+    if (running.current) return false;
+    if (menuId === detail?.id) return true;
+    if (
+      (dirty || composerPending) &&
+      !window.confirm("Discard unsaved menu changes and selected dishes?")
+    )
+      return false;
+    running.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await load(menuId);
+      router.refresh();
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not open that menu.");
+      return false;
+    } finally {
+      running.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function createMenu(): Promise<boolean> {
+    if (running.current) return false;
+    if (
+      (dirty || composerPending) &&
+      !window.confirm("Discard unsaved menu changes and selected dishes to create another menu?")
+    )
+      return false;
+    running.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await json("/api/catalog", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ key: creationKey.current }),
+      });
+      const next = await json("/api/catalog");
+      setList(next);
+      await load(result.menuId);
+      creationKey.current = id();
+      setMessage("Menu draft created");
+      router.refresh();
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not create the menu.");
+      return false;
+    } finally {
+      running.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function previewMenu(menuId: string): Promise<boolean> {
+    if (!(await switchMenu(menuId))) return false;
+    setPreviewDevice("desktop");
+    setPreview(true);
+    return true;
+  }
+
+  async function manageMenu(menuId: string, action: MenuLibraryAction): Promise<boolean> {
+    if (!(await switchMenu(menuId))) return false;
+    // Permissions and expected revision are retrieved for the selected target,
+    // not borrowed from a stale render's previously selected menu.
+    let target: Detail;
+    try {
+      target = (await json(path(menuId))) as Detail;
+      if (!target.canWrite) throw new Error("You do not have permission to manage this menu.");
+      if (action === "restore") {
+        if (!target.archived) throw new Error("This menu is already active.");
+        setBusy(true);
+        await json(path(menuId), {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            key: id(),
+            expectedRevision: target.revision,
+            action: "restore",
+            data: {},
+          }),
+        });
+        setList(await json("/api/catalog"));
+        await load(menuId);
+        setMessage("Menu restored as an unpublished draft.");
+        router.refresh();
+        return true;
+      }
+      if (target.archived) throw new Error("Restore this menu before managing its publication.");
+      if (action === "unpublish" && !target.publishedRevision)
+        throw new Error("This menu is not published.");
+      setLifecycleAction(action);
+      setConfirmName("");
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Menu action failed.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!libraryOpen && lifecycleAction && !lifecycleDialog.current?.open) {
+      lifecycleDialog.current?.showModal();
+    }
+  }, [libraryOpen, lifecycleAction]);
+
+  useEffect(() => {
+    if (!libraryOpen && preview && !previewDialog.current?.open) {
+      previewDialog.current?.showModal();
+    }
+  }, [libraryOpen, preview]);
+
   function change(next: MenuDocument) {
     setDoc(next);
     setDirty(true);
@@ -339,133 +476,23 @@ export function MenuStudio({
   }
   return (
     <div className="product studio-atelier" data-testid="recipe-atelier-studio">
-      <StudioHero outlet={outlet} />
+      <StudioHero outlet={outlet} onOpenLibrary={() => setLibraryOpen(true)} />
+      {libraryOpen && (
+        <StudioMenuGallery
+          open
+          menus={list}
+          currentMenuId={detail?.id ?? ""}
+          currency={outlet.currency}
+          busy={busy}
+          error={error}
+          onClose={() => setLibraryOpen(false)}
+          onCreate={createMenu}
+          onOpenMenu={switchMenu}
+          onPreviewMenu={previewMenu}
+          onManage={manageMenu}
+        />
+      )}
       <div className="atelier-body">
-        <div className="atelier-menu-bar">
-          <label className="field">
-            Your menus
-            <select
-              aria-label="Your menus"
-              disabled={busy}
-              value={detail?.id ?? ""}
-              onChange={(e) => {
-                if (e.target.value === selected.current) return;
-                if (
-                  (dirty || composerPending) &&
-                  !window.confirm("Discard unsaved menu changes and selected dishes?")
-                )
-                  return;
-                void run(() => load(e.target.value));
-              }}
-            >
-              <option value="" disabled>
-                Select a menu
-              </option>
-              <optgroup label="Active menus">
-                {list
-                  .filter((m) => !m.archived)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {(m.document as MenuDocument).name}
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Recently deleted · recoverable">
-                {list
-                  .filter((m) => m.archived)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {(m.document as MenuDocument).name} (deleted)
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-          </label>
-          <button
-            type="button"
-            className="ember"
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                if (
-                  (dirty || composerPending) &&
-                  !window.confirm(
-                    "Discard unsaved changes and selected dishes to create another menu?"
-                  )
-                )
-                  return;
-                const result = await json("/api/catalog", {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({ key: creationKey.current }),
-                });
-                const next = await json("/api/catalog");
-                setList(next);
-                await load(result.menuId);
-                // Do not rotate a successful request identity until reconciliation completes.
-                // If the list/load response was lost, retry with the same key, not a duplicate menu.
-                creationKey.current = id();
-                setMessage("Menu draft created");
-              })
-            }
-          >
-            <Plus size={16} />
-            Create menu
-          </button>
-          {detail && (
-            <details className="atelier-menu-actions">
-              <summary aria-label="Menu actions" aria-haspopup="true">
-                Menu actions
-              </summary>
-              <div className="atelier-menu-actions-list">
-                {detail.archived ? (
-                  <button
-                    type="button"
-                    disabled={busy || !detail.canWrite}
-                    onClick={() =>
-                      void run(async () => {
-                        await command("restore");
-                        setList(await json("/api/catalog"));
-                        await load(detail.id);
-                        setMessage("Menu restored as an unpublished draft.");
-                      })
-                    }
-                  >
-                    <ArchiveRestore size={16} /> Restore menu
-                  </button>
-                ) : (
-                  <>
-                    {detail.publishedRevision && (
-                      <button
-                        type="button"
-                        disabled={busy || !detail.canWrite}
-                        onClick={() => {
-                          setLifecycleAction("unpublish");
-                          setConfirmName("");
-                          lifecycleDialog.current?.showModal();
-                        }}
-                      >
-                        <EyeOff size={16} /> Unpublish menu
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="atelier-danger"
-                      disabled={busy || !detail.canWrite}
-                      onClick={() => {
-                        setLifecycleAction("archive");
-                        setConfirmName("");
-                        lifecycleDialog.current?.showModal();
-                      }}
-                    >
-                      <Trash2 size={16} /> Delete menu
-                    </button>
-                  </>
-                )}
-              </div>
-            </details>
-          )}
-        </div>
         <dialog
           ref={lifecycleDialog}
           className="atelier-lifecycle-dialog"
@@ -543,6 +570,16 @@ export function MenuStudio({
           publishedRevision={detail?.publishedRevision}
           revision={detail?.revision}
           dirty={dirty}
+          selector={
+            <StudioMenuSelector
+              menus={list}
+              selectedId={detail?.id ?? ""}
+              disabled={busy}
+              onSelect={(menuId) => {
+                void switchMenu(menuId);
+              }}
+            />
+          }
         />
         <StudioImportNotice imports={imports} />
         {error && (
