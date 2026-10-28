@@ -1,4 +1,4 @@
--- 0033: Subscription records and restricted provider-authorized entitlement writing.
+-- 0034: Subscription records and restricted provider-authorized entitlement writing.
 -- This migration requires the separately provisioned NOINHERIT menuminute_billing role.
 -- The ordinary web role may register a checkout, but CANNOT mint or revoke paid grants.
 

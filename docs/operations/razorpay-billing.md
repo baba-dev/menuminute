@@ -1,7 +1,7 @@
 # Razorpay billing rollout: restricted-provider event authority
 
 Paid checkout is **off by default**. Do not enable live charges merely because
-`0033_razorpay_billing_entitlements.sql` was applied. Existing Kitchen Pro
+`0034_razorpay_billing_entitlements.sql` was applied. Existing Kitchen Pro
 controlled-pilot safeguards remain in place. The kitchen catalog entry is
 commercially inactive pending an independent release approval.
 

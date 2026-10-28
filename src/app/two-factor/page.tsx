@@ -48,7 +48,7 @@ export default function TwoFactorPage() {
               const r = await fetch("/api/context", { cache: "no-store" });
               if (r.ok) {
                 const ctx = await r.json();
-                next = ctx.hasOutlets ? "/dashboard" : "/onboarding";
+                next = ctx.hasOutlets ? "/dashboard" : "/start";
               }
             }
             router.replace(next || "/dashboard");

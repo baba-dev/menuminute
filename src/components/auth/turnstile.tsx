@@ -1,9 +1,10 @@
 "use client";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Script from "next/script";
 declare global {
   interface Window {
     turnstile?: {
+      reset: (widgetId?: string) => void;
       render: (
         element: HTMLElement,
         options: {
@@ -16,7 +17,13 @@ declare global {
     };
   }
 }
-export function RegistrationChallenge({ onToken }: { onToken: (token: string) => void }) {
+export function RegistrationChallenge({
+  onToken,
+  resetKey = 0,
+}: {
+  onToken: (token: string) => void;
+  resetKey?: number;
+}) {
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const container = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
@@ -29,6 +36,9 @@ export function RegistrationChallenge({ onToken }: { onToken: (token: string) =>
       "error-callback": () => onToken(""),
     });
   }, [sitekey, onToken]);
+  useEffect(() => {
+    if (resetKey > 0 && widget.current) window.turnstile?.reset?.(widget.current);
+  }, [resetKey]);
   if (!sitekey) return null;
   return (
     <div className="grid gap-2">

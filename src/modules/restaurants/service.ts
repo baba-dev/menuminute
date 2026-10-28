@@ -11,6 +11,7 @@ import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { generateMenuQrCode } from "@/modules/qr/service";
 import { currencyExponent } from "@/lib/money";
 import { canonicalOutletTimezone, isRuntimeTimezone } from "@/lib/outlet-timezones";
+import { regions } from "@/modules/onboarding/locales";
 import { verifyOutletTimezone } from "@/modules/timezones/service";
 export const createRestaurantSchema = z.object({
   fulfillmentModes: z
@@ -33,7 +34,10 @@ export const createRestaurantSchema = z.object({
   city: z.string().max(100).optional().nullable(),
   state: z.string().max(100).optional().nullable(),
   postalCode: z.string().max(24).optional().nullable(),
-  country: z.string().regex(/^[A-Z]{2}$/),
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .refine((code) => regions.includes(code), "Unsupported country"),
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
   phone: z.string().max(40).optional().nullable(),

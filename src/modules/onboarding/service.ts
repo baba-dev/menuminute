@@ -52,13 +52,26 @@ export async function onboardingState(actor: Actor) {
     const visible = await tx.execute<{ id: string }>(
       sql`select id from restaurants where id=${expected} limit 1`
     );
+    if (state.status === "completed" && !visible.rows[0]) {
+      return {
+        key: state.operation_key,
+        draft: {},
+        status: "inaccessible" as const,
+        outletId: null,
+      };
+    }
+    if (visible.rows[0] && state.status === "completed" && Object.keys(state.draft).length) {
+      await tx.execute(
+        sql`update onboarding_progress set draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`
+      );
+    }
     if (visible.rows[0] && state.status !== "completed") {
       await tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${expected},
-        updated_at=now() where user_id=${actor.userId}`);
+        draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`);
     }
     return {
       key: state.operation_key,
-      draft: state.draft,
+      draft: visible.rows[0] ? {} : state.draft,
       status: visible.rows[0] ? ("completed" as const) : state.status,
       outletId: visible.rows[0] ? expected : state.outlet_id,
     };
@@ -103,6 +116,8 @@ export async function provisionOnboarding(actor: Actor) {
   const state = await onboardingState(actor);
   if (state.status === "completed" && state.outletId)
     return { outletId: state.outletId, status: "completed" as const };
+  if (state.status === "inaccessible")
+    throw new ConflictError("Previously created outlet is unavailable. Contact its administrator.");
   if (!state.key) throw new ValidationError("Save your outlet settings first.");
   const input = createRestaurantSchema.safeParse(state.draft);
   if (!input.success) throw new ValidationError("Complete the required outlet settings.");
@@ -120,7 +135,7 @@ export async function provisionOnboarding(actor: Actor) {
     const outlet = await createRestaurant(actor.userId, input.data, state.key);
     await withActor(actor, async (tx) =>
       tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${outlet.id},
-        updated_at=now() where user_id=${actor.userId} and operation_key=${state.key}`)
+        draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId} and operation_key=${state.key}`)
     );
     return { outletId: outlet.id, status: "completed" as const };
   } catch (error) {

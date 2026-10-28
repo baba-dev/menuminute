@@ -25,11 +25,8 @@ import {
   dashboardPublicProjection,
   dashboardQrRows,
 } from "@/modules/menu-product/dashboard-data";
-import {
-  dashboardSetup,
-  dashboardSummary,
-  preferredMenuQr,
-} from "@/modules/menu-product/dashboard-summary";
+import { dashboardSummary, preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
+import { outletSetupReadiness } from "@/modules/onboarding/readiness";
 import { DashboardTooltip } from "./dashboard-tooltip";
 import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
 import { DashboardServicePulse } from "./dashboard-service-pulse";
@@ -71,7 +68,7 @@ export default async function DashboardPage() {
           title="Aprons tied, knives sharpened."
           description="Every great restaurant begins with its first outlet. Set up your dining room and kitchen to publish a permanent QR menu."
           action={
-            <Link href="/onboarding" className="mm-dashboard-button mm-dashboard-button--primary">
+            <Link href="/start" className="mm-dashboard-button mm-dashboard-button--primary">
               Set up an outlet <ArrowRight size={17} aria-hidden="true" />
             </Link>
           }
@@ -91,13 +88,8 @@ export default async function DashboardPage() {
     ? await dashboardPublicProjection(primaryQr.destinationToken)
     : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
-  const hasSavedMenu = menus.some((menu) => !menu.archived);
-  const setup = dashboardSetup({
-    hasOutlet: Boolean(outlet.name && outlet.currency && outlet.timezone),
-    hasSavedMenu,
-    hasPublicMenu: stats.hasPublicMenu,
-    hasActiveQr: stats.activeQrCount > 0,
-  });
+  const setup = await outletSetupReadiness(actor, outlet);
+  const hasSavedMenu = setup.checks.some((check) => check.id === "dishes" && check.complete);
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
   const kpis = [

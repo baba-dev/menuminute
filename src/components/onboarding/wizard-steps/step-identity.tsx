@@ -13,6 +13,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
+import type { KeyboardEvent } from "react";
 import type { WizardDraft } from "../wizard-types";
 
 interface StepIdentityProps {
@@ -45,7 +46,7 @@ const OUTLET_TYPES = [
   {
     id: "cloud_kitchen" as const,
     name: "Cloud / Ghost Kitchen",
-    desc: "Delivery & pickup focused commercial kitchen with no dining room.",
+    desc: "Pickup-focused kitchen without a dining room. Delivery integrations are not yet available.",
     icon: Flame,
     defaultFulfillment: ["pickup" as const],
   },
@@ -73,6 +74,28 @@ const PRESET_PALETTES = [
   { name: "Velvet Obsidian", primary: "#eab308", secondary: "#18181b" },
 ];
 
+/** WAI-ARIA radio keyboard navigation: arrow keys, Home and End. */
+function moveRadio(event: KeyboardEvent<HTMLDivElement>) {
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key))
+    return;
+  const radios = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('button[role="radio"]')
+  );
+  const index = radios.indexOf(event.target as HTMLButtonElement);
+  if (index < 0 || !radios.length) return;
+  event.preventDefault();
+  const target =
+    event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? radios.length - 1
+        : (index +
+            (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) +
+            radios.length) %
+          radios.length;
+  radios[target]?.focus();
+  radios[target]?.click();
+}
 export function StepIdentity({ draft, onChange }: StepIdentityProps) {
   return (
     <div className="wizard-content">
@@ -88,7 +111,12 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
       {/* A setup goal personalizes the next steps, never grants entitlements. */}
       <div className="wizard-field-group">
         <label className="wizard-label">What would you like to start with?</label>
-        <div className="wizard-goal-grid" role="radiogroup" aria-label="Initial setup goal">
+        <div
+          className="wizard-goal-grid"
+          role="radiogroup"
+          aria-label="Initial setup goal"
+          onKeyDown={moveRadio}
+        >
           {(
             [
               {
@@ -116,6 +144,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
               type="button"
               role="radio"
               aria-checked={draft.onboardingGoal === option.id}
+              tabIndex={draft.onboardingGoal === option.id ? 0 : -1}
               key={option.id}
               onClick={() => onChange("onboardingGoal", option.id)}
             >
@@ -155,7 +184,12 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
         <label className="wizard-label">
           <span>Outlet Type *</span>
         </label>
-        <div className="wizard-type-grid" role="radiogroup" aria-label="Outlet Type">
+        <div
+          className="wizard-type-grid"
+          role="radiogroup"
+          aria-label="Outlet Type"
+          onKeyDown={moveRadio}
+        >
           {OUTLET_TYPES.map((type) => {
             const isSelected = draft.outletType === type.id;
             const Icon = type.icon;
@@ -165,6 +199,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
+                tabIndex={isSelected ? 0 : -1}
                 className={`wizard-type-tile ${isSelected ? "wizard-type-tile--selected" : ""}`}
                 onClick={() => {
                   onChange("outletType", type.id);
@@ -256,6 +291,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
             </label>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
               <input
+                aria-label="Choose primary accent color"
                 type="color"
                 value={draft.primaryColor}
                 onChange={(e) => onChange("primaryColor", e.target.value)}
@@ -284,6 +320,7 @@ export function StepIdentity({ draft, onChange }: StepIdentityProps) {
             </label>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
               <input
+                aria-label="Choose secondary surface color"
                 type="color"
                 value={draft.secondaryColor}
                 onChange={(e) => onChange("secondaryColor", e.target.value)}
