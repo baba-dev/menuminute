@@ -162,3 +162,26 @@ export async function recordRazorpaySubscriptionStatus(params: {
     ]
   );
 }
+
+/** Owner-initiated cancellation: retain already-paid access until the provider's cycle end. */
+export async function requestRazorpayCancellation(subscriptionId: string): Promise<void> {
+  if (!env.RAZORPAY_ENABLED || !env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
+    throw new ValidationError("Subscriptions are not enabled");
+  if (!/^sub_[a-zA-Z0-9]{6,100}$/.test(subscriptionId))
+    throw new ValidationError("Invalid subscription ID");
+  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  const response = await fetch(
+    `https://api.razorpay.com/v1/subscriptions/${subscriptionId}/cancel`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Basic ${authorization}` },
+      body: JSON.stringify({ cancel_at_cycle_end: true }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(12000),
+    }
+  );
+  if (!response.ok) throw new ValidationError("Unable to schedule cancellation with provider");
+  const body: unknown = await response.json();
+  if (!body || typeof body !== "object" || !("id" in body) || body.id !== subscriptionId)
+    throw new ValidationError("Unexpected provider cancellation response");
+}
