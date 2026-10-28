@@ -107,7 +107,10 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   }
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ink", "#f6eddf");
+  // The editorial POS layer intentionally overrides the base Till token.
+  await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ink", "#fff");
+  await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ember", "#ffc078");
+  await expect(page.getByTestId("pos-till")).toHaveCSS("--pos-surface", "#28231e");
   await expect(
     page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /The Till/ })
   ).toHaveAttribute("aria-current", "page");
