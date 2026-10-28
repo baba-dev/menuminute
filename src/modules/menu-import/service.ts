@@ -119,7 +119,13 @@ export async function importDetail(actor: Actor, outletId: string, rawId: string
       requests: number;
     }>(sql`select state, error_code as "errorCode", model, requests
         from menu_import_ai_usage where import_id=${id} and outlet_id=${outletId} limit 1`);
-    return { ...row, sources, candidate: latest, review, engineResult: engineResult.rows[0] ?? null };
+    return {
+      ...row,
+      sources,
+      candidate: latest,
+      review,
+      engineResult: engineResult.rows[0] ?? null,
+    };
   });
 }
 /** Only fully authorized editors may obtain private bytes; recheck after the storage read. */

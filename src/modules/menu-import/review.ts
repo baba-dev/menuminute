@@ -123,7 +123,9 @@ export async function saveReview(actor: Actor, outletId: string, rawId: string, 
   if (candidate.importId !== id || current.currency !== candidate.currency)
     throw new ValidationError("Import scope changed");
   if (input.finalize && candidate.sourceWarnings?.length && !input.acknowledgePartial)
-    throw new ValidationError("Acknowledge the missing source pages before confirming a partial import");
+    throw new ValidationError(
+      "Acknowledge the missing source pages before confirming a partial import"
+    );
   assertReviewStructure(candidate, input.document, input.confirmedIds, input.finalize);
   try {
     return await withActor(

@@ -347,18 +347,29 @@ export function ReviewWorkspace({
         </span>
       </div>
       {!!candidate.sourceWarnings?.length && (
-        <section role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+        <section
+          role="alert"
+          className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+        >
           <p className="font-bold">Partial transcription — some photographs were not recognized.</p>
           <p className="mt-2">
-            Missing page(s): {candidate.sourceWarnings.map((warning) => {
-              const source = initial.sources.find((s) => s.id === warning.sourceId);
-              return source ? source.pageIndex + 1 : "unknown";
-            }).join(", ")}. The items on these pages have NOT been imported. Check the original photos and add
+            Missing page(s):{" "}
+            {candidate.sourceWarnings
+              .map((warning) => {
+                const source = initial.sources.find((s) => s.id === warning.sourceId);
+                return source ? source.pageIndex + 1 : "unknown";
+              })
+              .join(", ")}
+            . The items on these pages have NOT been imported. Check the original photos and add
             missing dishes manually in Menu Studio, or create another import with clearer captures.
           </p>
           <label className="mt-3 flex items-start gap-2 font-medium">
-            <input type="checkbox" className="mt-1" checked={acknowledgedMissingPages}
-              onChange={(event) => setAcknowledgedMissingPages(event.target.checked)} />
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={acknowledgedMissingPages}
+              onChange={(event) => setAcknowledgedMissingPages(event.target.checked)}
+            />
             I understand this private draft may omit dishes from the missing pages.
           </label>
         </section>

@@ -227,7 +227,12 @@ export async function extractNvidiaCandidate(
             id: randomUUID(),
             name: recognition(item.name, source.id),
             ...(item.description ? { description: recognition(item.description, source.id) } : {}),
-            priceMinor: parsedPrice(item.price ?? null, item.uncertain ?? true, input.currency, source.id),
+            priceMinor: parsedPrice(
+              item.price ?? null,
+              item.uncertain ?? true,
+              input.currency,
+              source.id
+            ),
             variants: [],
           })),
         });

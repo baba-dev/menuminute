@@ -127,20 +127,32 @@ it("accepts fenced JSON while leaving uncertain prices null", async () => {
       apiKey: "k",
     },
     async () =>
-      new Response(JSON.stringify({
-        choices: [{ message: { content: "\x60\x60\x60json\n" +
-          JSON.stringify({ categories: [{ name: "Snacks", items: [
-            { name: "Chowmein", price: "75" },
-          ] }] }) + "\n\x60\x60\x60" } }],
-      }))
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  "\x60\x60\x60json\n" +
+                  JSON.stringify({
+                    categories: [{ name: "Snacks", items: [{ name: "Chowmein", price: "75" }] }],
+                  }) +
+                  "\n\x60\x60\x60",
+              },
+            },
+          ],
+        })
+      )
   );
   expect(out.candidate.categories[0]?.items[0]?.priceMinor).toMatchObject({
-    value: null, review: "needs_attention",
+    value: null,
+    review: "needs_attention",
   });
   expect(out.usage.requests).toBe(1);
 });
 it("retains good pages and records rejected ones without bypassing review", async () => {
-  const bad = crypto.randomUUID(), good = crypto.randomUUID();
+  const bad = crypto.randomUUID(),
+    good = crypto.randomUUID();
   let calls = 0;
   const out = await extractNvidiaCandidate(
     {
@@ -155,36 +167,64 @@ it("retains good pages and records rejected ones without bypassing review", asyn
     },
     async () => {
       calls++;
-      return new Response(JSON.stringify({
-        choices: [{ message: { content: calls === 1 ? "{broken" : JSON.stringify({
-          categories: [{ name: "Meals", items: [
-            { name: "Veg Burger", description: null, price: "75", uncertain: false },
-          ] }],
-        }) } }],
-        usage: { prompt_tokens: 50, completion_tokens: 50 },
-      }));
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  calls === 1
+                    ? "{broken"
+                    : JSON.stringify({
+                        categories: [
+                          {
+                            name: "Meals",
+                            items: [
+                              {
+                                name: "Veg Burger",
+                                description: null,
+                                price: "75",
+                                uncertain: false,
+                              },
+                            ],
+                          },
+                        ],
+                      }),
+              },
+            },
+          ],
+          usage: { prompt_tokens: 50, completion_tokens: 50 },
+        })
+      );
     }
   );
   expect(out.usage.requests).toBe(2);
   expect(out.candidate.categories[0]?.items[0]?.name.value).toBe("Veg Burger");
   expect(out.candidate.categories[0]?.items[0]?.priceMinor.value).toBe(7500);
-  expect(out.candidate.sourceWarnings).toEqual([{ sourceId: bad, reason: "invalid_provider_response" }]);
+  expect(out.candidate.sourceWarnings).toEqual([
+    { sourceId: bad, reason: "invalid_provider_response" },
+  ]);
 });
 it("does not issue more billable pages following an unavailable provider", async () => {
   let calls = 0;
-  await expect(extractNvidiaCandidate(
-    {
-      importId: crypto.randomUUID(),
-      currency: "INR",
-      sources: [
-        { id: crypto.randomUUID(), pageIndex: 0, bytes: await picture() },
-        { id: crypto.randomUUID(), pageIndex: 1, bytes: await picture() },
-      ],
-      model: "example/vision",
-      apiKey: "k",
-    },
-    async () => { calls++; return new Response("upstream failure", { status: 503 }); }
-  )).rejects.toMatchObject({ code: "provider_unavailable" });
+  await expect(
+    extractNvidiaCandidate(
+      {
+        importId: crypto.randomUUID(),
+        currency: "INR",
+        sources: [
+          { id: crypto.randomUUID(), pageIndex: 0, bytes: await picture() },
+          { id: crypto.randomUUID(), pageIndex: 1, bytes: await picture() },
+        ],
+        model: "example/vision",
+        apiKey: "k",
+      },
+      async () => {
+        calls++;
+        return new Response("upstream failure", { status: 503 });
+      }
+    )
+  ).rejects.toMatchObject({ code: "provider_unavailable" });
   expect(calls).toBe(1);
 });
 it("durably queues, meters, and writes a review-only candidate using the restricted worker role", async () => {

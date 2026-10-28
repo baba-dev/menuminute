@@ -98,9 +98,13 @@ test("explicit two-column splitting uploads private left and right sources", asy
   await page.getByRole("button", { name: "Create private draft" }).click();
   const photo = await sharp({
     create: { width: 640, height: 880, channels: 3, background: "white" },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
   await page.getByLabel("Choose menu photographs").setInputFiles({
-    name: "two-columns.png", mimeType: "image/png", buffer: photo,
+    name: "two-columns.png",
+    mimeType: "image/png",
+    buffer: photo,
   });
   await page.getByRole("button", { name: "Split two-columns.png into two columns" }).click();
   await expect(page.getByText("two-columns-left.webp")).toBeVisible();

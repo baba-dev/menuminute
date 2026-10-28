@@ -67,10 +67,17 @@ export const importCandidateSchema = z
     importId,
     currency: z.string().regex(/^[A-Z]{3}$/),
     categories: z.array(candidateCategory).max(100),
-    sourceWarnings: z.array(z.object({
-      sourceId: importId,
-      reason: z.literal("invalid_provider_response"),
-    }).strict()).max(sourceLimit).optional(),
+    sourceWarnings: z
+      .array(
+        z
+          .object({
+            sourceId: importId,
+            reason: z.literal("invalid_provider_response"),
+          })
+          .strict()
+      )
+      .max(sourceLimit)
+      .optional(),
   })
   .strict()
   .superRefine((doc, ctx) => {

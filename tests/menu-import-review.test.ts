@@ -92,9 +92,12 @@ it("requires explicit server-side acknowledgement before finalizing a partial ex
     confirmedIds: f.ids,
     finalize: true,
   };
-  await expect(saveReview(f.actor, f.outlet.id, f.id, input)).rejects.toMatchObject({ statusCode: 422 });
+  await expect(saveReview(f.actor, f.outlet.id, f.id, input)).rejects.toMatchObject({
+    statusCode: 422,
+  });
   const ready = await saveReview(f.actor, f.outlet.id, f.id, {
-    ...input, acknowledgePartial: true,
+    ...input,
+    acknowledgePartial: true,
   });
   expect(ready.status).toBe("ready");
 });
