@@ -364,6 +364,9 @@ export function OrganizationManager({
     ordering: boolean;
     kitchen: boolean;
     isCommunityEdition?: boolean;
+    billingEnabled?: boolean;
+    kitchenCommerceEnabled?: boolean;
+    subscriptions?: { subscriptionId: string; product: string; status: string; currentPeriodEnd: string | null; createdAt: string }[];
     grants: {
       id: string;
       capability: string;
@@ -374,6 +377,7 @@ export function OrganizationManager({
   } | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutMessage, setCheckoutMessage] = useState("");
   const activeSelection = useRef(selected);
   const requestGeneration = useRef(0);
   const selectedOrg = organizations.find((o) => o.id === selected);
@@ -402,6 +406,7 @@ export function OrganizationManager({
   const handleUpgrade = async (plan: "ordering" | "kitchen_pro") => {
     setCheckoutBusy(plan);
     setCheckoutError("");
+    setCheckoutMessage("");
     try {
       const res = await fetch(`/api/organizations/${selected}/billing/checkout`, {
         method: "POST",
@@ -434,6 +439,7 @@ export function OrganizationManager({
               ? "Kitchen Pro KDS (₹299/mo)"
               : "Live Table Ordering (₹119/mo)",
           handler: function () {
+            setCheckoutMessage("Payment authorization received. Access activates after secure billing confirmation.");
             void load();
           },
           theme: { color: "#ea580c" },
@@ -901,7 +907,7 @@ export function OrganizationManager({
                         </div>
                         {billing.isCommunityEdition ? (
                           <div className="mb-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-3.5 text-xs text-orange-800 dark:text-orange-200">
-                            <strong>Self-Hosted Community Edition:</strong> All capabilities (QR Menus, Table Ordering, and Kitchen Pro) are fully unlocked for this single-user instance.
+                            <strong>Self-Hosted Community Edition:</strong> No subscription is required. Live capabilities are enforced by local database grants and operational readiness checks.
                           </div>
                         ) : (
                           <>
@@ -911,7 +917,9 @@ export function OrganizationManager({
                               {billing.kitchen ? "enabled" : "no active grant"}
                             </p>
                             <p className="oh-hint">
-                              Monthly subscriptions billed in INR via Razorpay. Entitlement grants enable automated table ordering and kitchen stations.
+                              {billing.billingEnabled
+                                ? "Subscriptions use INR billing. Features activate only after verified provider confirmation."
+                                : "Paid subscription checkout is currently unavailable. Existing free menus remain accessible."}
                             </p>
                           </>
                         )}
@@ -932,7 +940,25 @@ export function OrganizationManager({
                             <small>{billing.kitchen ? "Enabled" : "No active grant"}</small>
                           </article>
                         </div>
-                        {!billing.isCommunityEdition && (!billing.ordering || !billing.kitchen) && (
+                        {billing.subscriptions && billing.subscriptions.length > 0 && (
+                          <div className="mt-3 rounded-xl border border-stone-200 p-3 text-xs dark:border-stone-700">
+                            <strong className="mb-2 block">Your subscriptions</strong>
+                            <ul className="space-y-2">
+                              {billing.subscriptions.map((sub) => (
+                                <li key={sub.subscriptionId} className="flex flex-wrap items-center justify-between gap-2">
+                                  <span>{sub.product === "ordering" ? "Live ordering" : "Kitchen Pro"}</span>
+                                  <span className="rounded-full bg-stone-100 px-2 py-1 font-medium capitalize text-stone-700 dark:bg-stone-800 dark:text-stone-200">
+                                    {sub.status}
+                                  </span>
+                                  {sub.currentPeriodEnd && (
+                                    <span>Period ends {new Date(sub.currentPeriodEnd).toLocaleDateString()}</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {!billing.isCommunityEdition && billing.billingEnabled && (!billing.ordering || !billing.kitchen) && (
                           <div className="mt-4 flex flex-wrap gap-3">
                             {!billing.ordering && (
                               <button
@@ -944,7 +970,7 @@ export function OrganizationManager({
                                 {checkoutBusy === "ordering" ? "Connecting..." : "Upgrade to Live Ordering (₹119/mo)"}
                               </button>
                             )}
-                            {!billing.kitchen && (
+                            {!billing.kitchen && billing.kitchenCommerceEnabled && (
                               <button
                                 type="button"
                                 disabled={checkoutBusy !== null}
@@ -957,7 +983,10 @@ export function OrganizationManager({
                           </div>
                         )}
                         {checkoutError && (
-                          <p className="mt-2 text-xs text-red-500">{checkoutError}</p>
+                          <p className="mt-2 text-xs text-red-500" role="alert">{checkoutError}</p>
+                        )}
+                        {checkoutMessage && (
+                          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400" role="status">{checkoutMessage}</p>
                         )}
                         <ul className="mt-3 text-sm">
                           {billing.grants.map((g) => (
