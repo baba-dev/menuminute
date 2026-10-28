@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -57,6 +57,10 @@ export function PublicMenu({
 
   // Online Ordering Cart & Customization State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const cartRef = useRef(cartItems);
+  useEffect(() => {
+    cartRef.current = cartItems;
+  }, [cartItems]);
   const [cartHydrated, setCartHydrated] = useState(false);
   useEffect(() => {
     if (!token) return;
@@ -108,72 +112,82 @@ export function PublicMenu({
   useEffect(() => {
     if (!token || preview) return;
     let stopped = false;
+    let active: AbortController | null = null;
     const refresh = async () => {
+      if (document.visibilityState === "hidden") return;
+      // Aborting older requests prevents a slow response overwriting a fresher menu.
+      active?.abort();
+      const controller = new AbortController();
+      active = controller;
       try {
         const language = data.locale ? `?lang=${encodeURIComponent(data.locale)}` : "";
         const r = await fetch(`/api/public-menu/${encodeURIComponent(token)}${language}`, {
           cache: "no-store",
+          signal: controller.signal,
         });
+        if (stopped || controller.signal.aborted) return;
         if (!r.ok) {
-          if (!stopped) {
-            if (r.status === 404 || r.status === 410) {
-              // Revoked/deleted QR must not leave stale published dishes on screen.
-              setData((previous) => ({ ...previous, menus: [] }));
-              setCartItems([]);
-              try {
-                sessionStorage.removeItem("cart_" + token);
-              } catch {
-                /* storage unavailable */
-              }
-              setStatus("This menu is no longer available. Please ask the staff.");
-            } else {
-              setStatus("Menu updates could not be checked. This view may be outdated.");
+          if (r.status === 404 || r.status === 410) {
+            setData((previous) => ({ ...previous, menus: [] }));
+            setCartItems([]);
+            try {
+              sessionStorage.removeItem("cart_" + token);
+            } catch {
+              /* storage unavailable */
             }
+            setStatus("This menu is no longer available. Please ask the staff.");
+          } else {
+            setStatus("Menu updates could not be checked. This view may be outdated.");
           }
           return;
         }
         const next = (await r.json()) as PublicProduct;
-        if (!stopped) {
-          setData(next);
-          const currentDishes = next.menus.flatMap((menu) =>
-            projectMenu(
-              menu.document,
-              next.outlet.timezone,
-              new Date(next.now),
-              menu.overrides
-            ).categories.flatMap((category) => category.items)
-          );
-          const reconciled = reconcileGuestCart(cartItems, currentDishes);
-          setCartItems(reconciled.items);
-          setStatus(
-            reconciled.changed
-              ? `${reconciled.changed} cart ${reconciled.changed === 1 ? "item was" : "items were"} updated or removed because the menu changed.`
-              : ""
-          );
-        }
+        if (stopped || controller.signal.aborted) return;
+        setData(next);
+        const currentDishes = next.menus.flatMap((menu) =>
+          projectMenu(
+            menu.document,
+            next.outlet.timezone,
+            new Date(next.now),
+            menu.overrides
+          ).categories.flatMap((category) => category.items)
+        );
+        const reconciled = reconcileGuestCart(cartRef.current, currentDishes);
+        cartRef.current = reconciled.items;
+        setCartItems(reconciled.items);
+        setStatus(
+          reconciled.changed
+            ? `${reconciled.changed} cart ${reconciled.changed === 1 ? "item was" : "items were"} updated or removed because the menu changed.`
+            : ""
+        );
       } catch {
-        if (!stopped)
+        if (!stopped && !controller.signal.aborted) {
           setStatus(
             "You are offline. This menu was last loaded earlier; availability may have changed."
           );
+        }
+      } finally {
+        if (active === controller) active = null;
       }
     };
-    const timer = setInterval(refresh, 30000);
+    const timer = setInterval(() => void refresh(), 30000);
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") void refresh();
     };
-    window.addEventListener("online", refresh);
+    const onOnline = () => void refresh();
+    const onOffline = () => setStatus("You are offline. Availability may have changed.");
+    window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", onVisibilityChange);
-    const offline = () => setStatus("You are offline. Availability may have changed.");
-    window.addEventListener("offline", offline);
+    window.addEventListener("offline", onOffline);
     return () => {
       stopped = true;
+      active?.abort();
       clearInterval(timer);
-      window.removeEventListener("online", refresh);
+      window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("offline", offline);
+      window.removeEventListener("offline", onOffline);
     };
-  }, [token, preview, cartItems, data.locale]);
+  }, [token, preview, data.locale]);
 
   const languageName = (locale: string) => {
     try {
