@@ -123,7 +123,10 @@ export async function outletSetupReadiness(actor: Actor, outlet: Outlet) {
         "Ordering entitlement, selected service mode, and configured service hours must all be present.",
       href: "/dashboard/settings",
       complete:
-        live && nav?.ordering === true && outlet.fulfillmentModes.length > 0 && serviceWindows.length > 0,
+        live &&
+        nav?.ordering === true &&
+        outlet.fulfillmentModes.length > 0 &&
+        serviceWindows.length > 0,
     });
     if (outlet.onboardingGoal === "full_operations") {
       checks.push({
