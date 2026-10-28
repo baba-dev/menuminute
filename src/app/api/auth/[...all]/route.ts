@@ -34,7 +34,18 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     const site = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (env.NODE_ENV === "production" && Boolean(site) !== Boolean(env.TURNSTILE_SECRET_KEY))
+    // The local TLS browser fixture compiles a synthetic site key but has no
+    // real Cloudflare secret. Exempt *only* the existing isolated test DB and
+    // localhost test origin; real deployments fail closed on unpaired keys.
+    const isolatedBrowserFixture =
+      env.AUTH_ALLOW_TEST_EMAIL &&
+      new URL(env.APP_URL).hostname === "localhost" &&
+      new URL(env.DATABASE_URL).pathname === "/menuminute_test";
+    if (
+      env.NODE_ENV === "production" &&
+      !isolatedBrowserFixture &&
+      Boolean(site) !== Boolean(env.TURNSTILE_SECRET_KEY)
+    )
       return Response.json(
         { message: "Registration verification is temporarily unavailable" },
         { status: 503 }
