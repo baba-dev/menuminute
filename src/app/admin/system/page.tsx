@@ -6,7 +6,7 @@ import {
   retryOutboxEvent,
 } from "@/modules/admin/system.service";
 import { SystemConsole } from "./system-console";
-import { Database, Activity, Layers, CheckCircle2, XCircle, GitBranch } from "lucide-react";
+import { Database, Activity, Layers, CheckCircle2, XCircle, GitBranch, Gauge, Zap, Server } from "lucide-react";
 import { revalidatePath } from "next/cache";
 
 export default async function AdminSystemPage() {
@@ -50,6 +50,111 @@ export default async function AdminSystemPage() {
           Telemetry, PostgreSQL connection pool, Redis workloads, outbox state, and domain
           projections.
         </p>
+      </div>
+
+      {/* Live Telemetry & Latency Registry */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Latency Percentiles */}
+        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
+              Latency (Rolling Window)
+            </span>
+            <Gauge className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div className="mt-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">p50 Latency</span>
+              <span className="font-mono font-bold text-stone-200">{health.telemetry.p50Ms} ms</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">p95 Latency</span>
+              <span className="font-mono font-bold text-amber-300">{health.telemetry.p95Ms} ms</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">p99 Latency</span>
+              <span className="font-mono font-bold text-rose-400">{health.telemetry.p99Ms} ms</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Public Menu Cache Efficiency */}
+        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
+              Redis Menu Cache
+            </span>
+            <Zap className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="mt-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Hit Ratio</span>
+              <span className="font-mono font-bold text-emerald-400">{health.telemetry.cacheHitRatio}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Hits / Misses</span>
+              <span className="font-mono text-stone-200">
+                {health.telemetry.cacheHits} / {health.telemetry.cacheMisses}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Cache Strategy</span>
+              <span className="font-mono text-[11px] text-stone-300">Atomic Lua Fence</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Traffic & Status Distribution */}
+        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
+              Traffic & Errors
+            </span>
+            <Activity className="h-4 w-4 text-sky-400" />
+          </div>
+          <div className="mt-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Total API Requests</span>
+              <span className="font-mono font-bold text-stone-200">{health.telemetry.requestsTotal}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Status 2xx / 4xx / 5xx</span>
+              <span className="font-mono text-stone-200">
+                <span className="text-emerald-400">{health.telemetry.statusCodes["2xx"]}</span> /{" "}
+                <span className="text-amber-400">{health.telemetry.statusCodes["4xx"]}</span> /{" "}
+                <span className="text-rose-400">{health.telemetry.statusCodes["5xx"]}</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Slow (&gt;250ms)</span>
+              <span className="font-mono text-amber-300">{health.telemetry.slowRequests}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Node.js Runtime Memory & Uptime */}
+        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
+              Host Memory & Uptime
+            </span>
+            <Server className="h-4 w-4 text-purple-400" />
+          </div>
+          <div className="mt-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Heap Used</span>
+              <span className="font-mono font-bold text-stone-200">{health.telemetry.memoryUsage.heapUsedMb} MB</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Process RSS</span>
+              <span className="font-mono font-bold text-stone-200">{health.telemetry.memoryUsage.rssMb} MB</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-400">Process Uptime</span>
+              <span className="font-mono text-stone-300">{Math.floor(health.telemetry.uptimeSeconds / 60)} min</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Connectivity & Workload Cards */}

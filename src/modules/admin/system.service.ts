@@ -4,6 +4,7 @@ import { redisHealth } from "@/lib/redis";
 import { env } from "@/lib/config/env";
 import { type AdminActor, runAdminCommand } from "@/lib/admin-guard";
 import { withActor } from "@/modules/tenancy/service";
+import { telemetry, type TelemetrySnapshot } from "@/lib/telemetry";
 
 export interface SystemHealthReport {
   database: {
@@ -19,6 +20,7 @@ export interface SystemHealthReport {
     counts: Record<string, number>;
     oldestDue: string | null;
   };
+  telemetry: TelemetrySnapshot;
   runtime: {
     nodeVersion: string;
     platform: string;
@@ -84,6 +86,7 @@ export async function getSystemHealth(actor: AdminActor): Promise<SystemHealthRe
       counts,
       oldestDue,
     },
+    telemetry: telemetry.getSnapshot(),
     runtime: {
       nodeVersion: process.version,
       platform: process.platform,

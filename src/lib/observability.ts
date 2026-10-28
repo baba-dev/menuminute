@@ -1,3 +1,5 @@
+import { telemetry } from "./telemetry";
+
 const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const generatedIds = new WeakMap<Request, string>();
 
@@ -12,6 +14,10 @@ export function requestId(request: Request) {
 }
 
 export function logRequestError(request: Request, error: unknown, status: number) {
+  const startHeader = request.headers.get("x-request-start");
+  const durationMs = startHeader ? Math.max(0, Date.now() - Number(startHeader)) : 0;
+  telemetry.recordRequest(status, durationMs);
+
   const pathname = (() => {
     try {
       // Report endpoint families only: never log tokens, user IDs or customer identifiers.

@@ -1,4 +1,6 @@
 import { redisClient } from "@/lib/redis";
+import { telemetry } from "@/lib/telemetry";
+import { logger } from "@/lib/logger";
 import type { PublicProduct } from "./service";
 
 const TOKEN_OUTLET_TTL_SECONDS = 86400;
@@ -42,10 +44,7 @@ return 1
 `;
 
 function logCacheFailure(operation: string, error: unknown) {
-  console.error("[public-menu-cache] operation failed", {
-    operation,
-    reason: error instanceof Error ? error.message : "unknown",
-  });
+  logger.error("[public-menu-cache] operation failed", error, { operation });
 }
 
 export async function getCachedPublicProduct(
@@ -59,9 +58,16 @@ export async function getCachedPublicProduct(
       arguments: ["cache:outlet-version:", `cache:public-menu:${token}:`, locale ?? "default"],
     })) as Array<string | null>;
     const [outletId, version, payload] = response;
-    if (!outletId || !version) return { data: null, fence: null };
+    if (!outletId || !version) {
+      telemetry.recordCacheMiss();
+      return { data: null, fence: null };
+    }
     const fence = { outletId, version };
-    if (!payload) return { data: null, fence };
+    if (!payload) {
+      telemetry.recordCacheMiss();
+      return { data: null, fence };
+    }
+    telemetry.recordCacheHit();
     const data = JSON.parse(payload) as PublicProduct;
     data.now = new Date().toISOString();
     return { data, fence };
