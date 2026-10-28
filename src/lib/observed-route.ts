@@ -33,7 +33,7 @@ export function observedRoute<T extends (request: never, ...args: never[]) => un
       }),
       async () => {
         try {
-          const response = await handler(...args);
+          const response: unknown = await Reflect.apply(handler, undefined, args);
           const status = response instanceof Response ? response.status : 500;
           const duration = performance.now() - started;
           telemetry.recordRequest(status, duration);

@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { open, readdir, readFile, stat } from "node:fs/promises";
+import { open, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface AdminLogEntry {
