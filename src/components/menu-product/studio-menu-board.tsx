@@ -27,6 +27,8 @@ function findEditingDish(doc: MenuDocument, editingId: string | null) {
 export function StudioMenuBoard({
   doc,
   currency,
+  menuId,
+  outletId,
   media,
   canWrite,
   onAddDish,
@@ -40,6 +42,8 @@ export function StudioMenuBoard({
 }: {
   doc: MenuDocument;
   currency: string;
+  menuId: string;
+  outletId: string;
   media: Media[];
   canWrite: boolean;
   onAddDish: (categoryId: string) => void;
@@ -432,12 +436,16 @@ export function StudioMenuBoard({
         <div className="menu-board-dialog-body">
           {editing && (
             <StudioDishEditor
+              key={editing.dish.id}
               dish={editing.dish}
               ci={editing.categoryIndex}
               di={editing.dishIndex}
               dishCount={doc.categories[editing.categoryIndex]?.items.length ?? 0}
               canWrite={canWrite}
               currency={currency}
+              menuId={menuId}
+              outletId={outletId}
+              categoryName={doc.categories[editing.categoryIndex]?.name ?? ""}
               media={media}
               companionDishes={doc.categories
                 .filter((c) => !c.archived)

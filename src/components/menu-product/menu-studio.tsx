@@ -798,6 +798,8 @@ export function MenuStudio({
                         key={detail.id}
                         doc={doc}
                         currency={doc.currency}
+                        menuId={detail.id}
+                        outletId={outlet.id}
                         media={media}
                         canWrite={detail.canWrite && !detail.archived}
                         onAddDish={openComposer}
