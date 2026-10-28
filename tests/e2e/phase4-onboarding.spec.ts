@@ -26,10 +26,16 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await expect(page).toHaveURL(/\/onboarding/);
   await page.goto("/onboarding");
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
+  if ((page.viewportSize()?.width ?? 0) <= 640) {
+    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 1 of 5");
+  }
   await page.getByLabel(/Outlet Public Name/).fill("Kitchen for Guided Setup");
   await page.getByRole("radio", { name: /Online Ordering/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Where is your outlet located?" })).toBeVisible();
+  if ((page.viewportSize()?.width ?? 0) <= 640) {
+    await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 2 of 5");
+  }
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(
     page.getByRole("heading", { name: "How will your restaurant operate?" })
