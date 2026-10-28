@@ -1521,7 +1521,7 @@
   font-family: var(--font-display), sans-serif;
   font-size: 16px;
   font-weight: 800;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 .kk-setup-route-individual .kk-setup-secondary {
   width: fit-content;
