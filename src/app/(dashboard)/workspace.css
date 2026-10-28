@@ -1209,11 +1209,24 @@
   .mm-dashboard-topbar {
     min-height: 62px;
     padding: 8px 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mm-dashboard-top-actions {
+    max-width: 100%;
+    margin-left: auto;
+  }
+
+  .mm-dashboard-preview {
+    max-width: min(60vw, 220px);
+    text-align: center;
+    overflow-wrap: anywhere;
   }
 
   .mm-dashboard-breadcrumb {
     gap: 7px;
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .mm-dashboard-top-actions {
@@ -1288,12 +1301,25 @@
 }
 
 @media (max-width: 390px) {
+  .mm-workspace-brand {
+    padding-right: 54px;
+    margin: 0 10px;
+  }
+
+  .mm-workspace-brand img {
+    width: 110px;
+  }
+
+  .mm-workspace-profile {
+    top: 8px;
+    right: 8px;
+  }
+
   .mm-dashboard-hero {
     min-height: 620px;
   }
 
   .mm-dashboard-topbar {
-    flex-wrap: wrap;
     gap: 5px;
   }
 

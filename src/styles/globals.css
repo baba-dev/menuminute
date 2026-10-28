@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
 @custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────────
@@ -93,7 +93,8 @@
   }
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+.dark {
   --color-background: var(--color-stone-950);
   --color-foreground: var(--color-stone-50);
   --color-muted: var(--color-stone-900);

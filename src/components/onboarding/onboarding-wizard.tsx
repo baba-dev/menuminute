@@ -358,13 +358,18 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         />
 
         <div className="wizard-content" style={{ paddingTop: "0.5rem", paddingBottom: "0.25rem" }}>
-          <p
-            className="font-display text-sm font-semibold text-amber-900 dark:text-amber-200"
-            aria-live="polite"
-            data-testid="wizard-milestone"
-          >
-            {activeStepMeta.subtitle}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="wizard-mobile-step-pill">
+              Step {currentStep + 1} of {STEPS.length}
+            </span>
+            <p
+              className="font-display text-sm font-semibold text-amber-900 dark:text-amber-200"
+              aria-live="polite"
+              data-testid="wizard-milestone"
+            >
+              {activeStepMeta.subtitle}
+            </p>
+          </div>
         </div>
         {currentStep === 4 && (
           <div style={{ padding: "0 2.25rem" }}>
