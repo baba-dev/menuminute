@@ -50,7 +50,9 @@ export async function createRazorpaySubscription(
 ): Promise<RazorpaySubscriptionResponse> {
   if (!env.RAZORPAY_ENABLED || !env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
     throw new ValidationError("Subscriptions are not enabled");
-  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
+    "base64"
+  );
   const response = await fetch("https://api.razorpay.com/v1/subscriptions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Basic ${authorization}` },
@@ -77,7 +79,8 @@ export async function createRazorpaySubscription(
     !result.id.startsWith("sub_") ||
     !("plan_id" in result) ||
     result.plan_id !== options.planId
-  ) throw new ValidationError("Unexpected provider subscription response");
+  )
+    throw new ValidationError("Unexpected provider subscription response");
   return result as RazorpaySubscriptionResponse;
 }
 
@@ -151,11 +154,15 @@ export async function recordRazorpaySubscriptionGrant(params: {
     currentEnd <= currentStart ||
     currentEnd <= Date.now() / 1000 ||
     currentEnd - currentStart > 40 * 86400
-  ) throw new ValidationError("Invalid subscription billing period");
+  )
+    throw new ValidationError("Invalid subscription billing period");
   const result = await billingQuery<{ grant_id: string }>(
     `SELECT app_private.record_razorpay_charge($1,$2,$3,$4,$5::timestamptz,$6::timestamptz,$7::timestamptz) AS grant_id`,
     [
-      eventId, subscriptionId, planId, paymentId,
+      eventId,
+      subscriptionId,
+      planId,
+      paymentId,
       new Date(currentStart * 1000).toISOString(),
       new Date(currentEnd * 1000).toISOString(),
       new Date(providerCreated * 1000).toISOString(),
@@ -175,7 +182,9 @@ export async function recordRazorpaySubscriptionStatus(params: {
   await billingQuery<{ recorded: string }>(
     "SELECT app_private.record_razorpay_status($1,$2,$3,$4::timestamptz)::text AS recorded",
     [
-      params.eventId, params.subscriptionId, params.status,
+      params.eventId,
+      params.subscriptionId,
+      params.status,
       new Date(params.providerCreated * 1000).toISOString(),
     ]
   );
@@ -187,7 +196,9 @@ export async function requestRazorpayCancellation(subscriptionId: string): Promi
     throw new ValidationError("Subscriptions are not enabled");
   if (!/^sub_[a-zA-Z0-9]{6,100}$/.test(subscriptionId))
     throw new ValidationError("Invalid subscription ID");
-  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
+    "base64"
+  );
   const response = await fetch(
     `https://api.razorpay.com/v1/subscriptions/${subscriptionId}/cancel`,
     {
