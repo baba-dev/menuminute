@@ -50,7 +50,9 @@ export function QrPrintSheet({
           } as React.CSSProperties
         }
       >
-        <span className={styles.ornament} aria-hidden="true">{theme.ornament}</span>
+        <span className={styles.ornament} aria-hidden="true">
+          {theme.ornament}
+        </span>
         <div className={styles.identity}>
           <span className={styles.kicker}>
             {format === "sticker" ? "YOUR MENU IS HERE" : theme.heading}
@@ -64,7 +66,12 @@ export function QrPrintSheet({
           <img
             data-real-qr-matrix
             className={styles.matrix}
-            src={"/api/qr/" + encodeURIComponent(qr.id) + "/download?format=svg&inline=1&ink=" + encodeURIComponent(design.ink)}
+            src={
+              "/api/qr/" +
+              encodeURIComponent(qr.id) +
+              "/download?format=svg&inline=1&ink=" +
+              encodeURIComponent(design.ink)
+            }
             width={300}
             height={300}
             alt={`Real QR opening ${restaurant}'s menu`}

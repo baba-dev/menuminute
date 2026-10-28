@@ -18,11 +18,15 @@ export async function GET(req: Request, c: { params: Promise<{ qrId: string }> }
     const url = `${env.APP_URL}/m/${qr.destinationToken}`;
     const data = svg
       ? await QRCode.toString(url, {
-          type: "svg", margin: 4, errorCorrectionLevel: "M",
+          type: "svg",
+          margin: 4,
+          errorCorrectionLevel: "M",
           color: { dark: ink + "FF", light: "#FFFFFFFF" },
         })
       : await QRCode.toBuffer(url, {
-          margin: 4, width: 1024, errorCorrectionLevel: "M",
+          margin: 4,
+          width: 1024,
+          errorCorrectionLevel: "M",
           color: { dark: ink + "FF", light: "#FFFFFFFF" },
         });
     return new Response(typeof data === "string" ? data : new Uint8Array(data), {

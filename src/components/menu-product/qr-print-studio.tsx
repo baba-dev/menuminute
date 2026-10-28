@@ -102,7 +102,10 @@ export function QrPrintStudio({
     try {
       // The active-code endpoint rechecks membership, outlet scope and revocation at export time.
       const endpoint =
-        "/api/qr/" + encodeURIComponent(selected.id) + "/download?format=svg&inline=1&ink=" + encodeURIComponent(design.ink);
+        "/api/qr/" +
+        encodeURIComponent(selected.id) +
+        "/download?format=svg&inline=1&ink=" +
+        encodeURIComponent(design.ink);
       const response = await fetch(endpoint, {
         headers: { "x-outlet-id": outletId },
         cache: "no-store",
@@ -284,7 +287,9 @@ export function QrPrintStudio({
                 </select>
               </label>
               <fieldset className={styles.paletteField}>
-                <legend>Choose a design theme <small>· Nine distinctive looks</small></legend>
+                <legend>
+                  Choose a design theme <small>· Nine distinctive looks</small>
+                </legend>
                 <div className={styles.themeGallery}>
                   {PRINT_THEMES.map((theme) => (
                     <button
@@ -294,9 +299,15 @@ export function QrPrintStudio({
                       aria-pressed={design.palette === theme.id}
                       onClick={() => updateDesign({ palette: theme.id })}
                     >
-                      <span className={styles.themeSample}
+                      <span
+                        className={styles.themeSample}
                         data-theme-preview={theme.id}
-                        style={{ "--theme-paper": theme.paper, "--theme-accent": theme.accent } as React.CSSProperties}
+                        style={
+                          {
+                            "--theme-paper": theme.paper,
+                            "--theme-accent": theme.accent,
+                          } as React.CSSProperties
+                        }
                         aria-hidden="true"
                       >
                         <span>✦ MENUMINUTE ✦</span>
@@ -305,49 +316,85 @@ export function QrPrintStudio({
                       </span>
                       <span className={styles.themeName}>{theme.name}</span>
                       <small>{theme.description}</small>
-                      {design.palette === theme.id && <CheckCircle2 className={styles.themeCheck} size={18} aria-label="Selected" />}
+                      {design.palette === theme.id && (
+                        <CheckCircle2
+                          className={styles.themeCheck}
+                          size={18}
+                          aria-label="Selected"
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
               </fieldset>
               <fieldset className={styles.paletteField}>
-                <legend>Typography <small>· Five expressive fonts</small></legend>
+                <legend>
+                  Typography <small>· Five expressive fonts</small>
+                </legend>
                 <div className={styles.fontGallery}>
                   {PRINT_FONTS.map((font) => (
-                    <button type="button" className={styles.fontCard} key={font.id}
+                    <button
+                      type="button"
+                      className={styles.fontCard}
+                      key={font.id}
                       data-font-preview={font.id}
                       aria-pressed={design.font === font.id}
                       onClick={() => updateDesign({ font: font.id })}
                     >
                       <span className={styles.fontSample}>Aa</span>
-                      <span><strong>{font.name}</strong><small>{font.description}</small></span>
+                      <span>
+                        <strong>{font.name}</strong>
+                        <small>{font.description}</small>
+                      </span>
                       {design.font === font.id && <CheckCircle2 size={16} aria-label="Selected" />}
                     </button>
                   ))}
                 </div>
               </fieldset>
               <fieldset className={styles.paletteField}>
-                <legend>QR ink colour <small>· Protected scan contrast</small></legend>
+                <legend>
+                  QR ink colour <small>· Protected scan contrast</small>
+                </legend>
                 <div className={styles.inkSwatches}>
                   {QR_INK_PRESETS.map((preset) => (
-                    <button type="button" key={preset.name} title={preset.name}
+                    <button
+                      type="button"
+                      key={preset.name}
+                      title={preset.name}
                       aria-label={"Use " + preset.name + " QR ink"}
                       aria-pressed={design.ink === preset.hex}
                       className={styles.inkButton}
                       style={{ "--ink-swatch": preset.hex } as React.CSSProperties}
-                      onClick={() => { setCustomInk(preset.hex); updateDesign({ ink: preset.hex }); }}
-                    >{design.ink === preset.hex && <CheckCircle2 size={19} aria-hidden="true" />}</button>
+                      onClick={() => {
+                        setCustomInk(preset.hex);
+                        updateDesign({ ink: preset.hex });
+                      }}
+                    >
+                      {design.ink === preset.hex && <CheckCircle2 size={19} aria-hidden="true" />}
+                    </button>
                   ))}
                 </div>
                 <div className={styles.inkCustom}>
-                  <label htmlFor="qr-ink-picker">Pick a colour
-                    <input id="qr-ink-picker" type="color" value={safeQrInk(customInk) ? customInk : design.ink}
-                      onChange={(event) => updateInk(event.target.value)} />
+                  <label htmlFor="qr-ink-picker">
+                    Pick a colour
+                    <input
+                      id="qr-ink-picker"
+                      type="color"
+                      value={safeQrInk(customInk) ? customInk : design.ink}
+                      onChange={(event) => updateInk(event.target.value)}
+                    />
                   </label>
-                  <label htmlFor="qr-ink-hex">HEX
-                    <input id="qr-ink-hex" type="text" maxLength={7} spellCheck={false}
-                      value={customInk} onChange={(event) => updateInk(event.target.value)}
-                      aria-describedby="qr-ink-contrast" />
+                  <label htmlFor="qr-ink-hex">
+                    HEX
+                    <input
+                      id="qr-ink-hex"
+                      type="text"
+                      maxLength={7}
+                      spellCheck={false}
+                      value={customInk}
+                      onChange={(event) => updateInk(event.target.value)}
+                      aria-describedby="qr-ink-contrast"
+                    />
                   </label>
                 </div>
                 <p className={styles.inkNotice} id="qr-ink-contrast" role="status">
@@ -355,7 +402,10 @@ export function QrPrintStudio({
                     ? "Scan-safe on white · " + qrInkContrast(customInk).toFixed(1) + ":1 contrast"
                     : "Too light or invalid. The previous safe colour remains selected."}
                 </p>
-                <p className={styles.inkHint}>The QR is rendered server-side on solid white with its four-module quiet zone. Decorative effects never overlap the matrix.</p>
+                <p className={styles.inkHint}>
+                  The QR is rendered server-side on solid white with its four-module quiet zone.
+                  Decorative effects never overlap the matrix.
+                </p>
               </fieldset>
               <label className={styles.field}>
                 Guest invitation

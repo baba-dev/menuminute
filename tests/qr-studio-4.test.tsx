@@ -8,8 +8,12 @@ import { QrPrintSheet } from "../src/components/menu-product/qr-print-sheet";
 import type { QR } from "../src/components/menu-product/qr-studio-types";
 
 const active: QR = {
-  id: "live-code", label: "Baba Bakery counter", isActive: true,
-  destinationToken: "stable-destination", tableId: null, pointLabel: null,
+  id: "live-code",
+  label: "Baba Bakery counter",
+  isActive: true,
+  destinationToken: "stable-destination",
+  tableId: null,
+  pointLabel: null,
 };
 
 describe("QR Studio 4.0 production contracts", () => {
@@ -42,29 +46,46 @@ describe("QR Studio 4.0 production contracts", () => {
       for (const theme of PRINT_THEMES) {
         const html = renderToStaticMarkup(
           <QrPrintSheet
-            qr={active} format={format} restaurant="Baba Bakery" origin="http://localhost:3000"
-            design={{ ...DEFAULT_PRINT_DESIGN, palette: theme.id, font: "playfair", ink: "#152A42" }}
-            active={false} onMatrixReady={() => {}} onMatrixError={() => {}}
+            qr={active}
+            format={format}
+            restaurant="Baba Bakery"
+            origin="http://localhost:3000"
+            design={{
+              ...DEFAULT_PRINT_DESIGN,
+              palette: theme.id,
+              font: "playfair",
+              ink: "#152A42",
+            }}
+            active={false}
+            onMatrixReady={() => {}}
+            onMatrixError={() => {}}
           />
         );
         expect(html).toContain("MenuMinute");
         expect(html).toContain("by BabaBuilds");
         expect(html).toContain("data-real-qr-matrix");
         expect(html).toContain("ink=%23152A42");
-        expect(html).toContain("data-font=\"playfair\"");
-        expect(html).toContain("data-palette=\"" + theme.id + "\"");
+        expect(html).toContain('data-font="playfair"');
+        expect(html).toContain('data-palette="' + theme.id + '"');
         expect(html.indexOf("data-real-qr-matrix")).toBeLessThan(html.indexOf("MenuMinute"));
         expect(html).toContain("live-code");
       }
     }
   });
   it("does not print a revoked destination", () => {
-    expect(renderToStaticMarkup(
-      <QrPrintSheet qr={{ ...active, isActive: false }} format="stand"
-        restaurant="Baba Bakery" origin="http://localhost:3000"
-        design={DEFAULT_PRINT_DESIGN} active={false}
-        onMatrixReady={() => {}} onMatrixError={() => {}}
-      />
-    )).toBe("");
+    expect(
+      renderToStaticMarkup(
+        <QrPrintSheet
+          qr={{ ...active, isActive: false }}
+          format="stand"
+          restaurant="Baba Bakery"
+          origin="http://localhost:3000"
+          design={DEFAULT_PRINT_DESIGN}
+          active={false}
+          onMatrixReady={() => {}}
+          onMatrixError={() => {}}
+        />
+      )
+    ).toBe("");
   });
 });

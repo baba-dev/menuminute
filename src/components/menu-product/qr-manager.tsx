@@ -227,10 +227,7 @@ export function QrManager({
             reprinting your existing codes.
           </p>
           <div className="qr-hero-actions">
-            <button
-              type="button"
-              onClick={openCreate}
-            >
+            <button type="button" onClick={openCreate}>
               {" "}
               <Plus size={17} aria-hidden="true" /> Create QR
             </button>
@@ -583,12 +580,20 @@ export function QrManager({
         error={error}
         created={created}
         existingLabels={codes.map((code) => code.label ?? "")}
-        onCreate={(name, point) => void command("create", {
-          label: name,
-          ...(point ? { pointLabel: point } : {}),
-        })}
-        onReset={() => { setCreated(null); setError(""); }}
-        onLibrary={() => { setCreateOpen(false); setTab("library"); }}
+        onCreate={(name, point) =>
+          void command("create", {
+            label: name,
+            ...(point ? { pointLabel: point } : {}),
+          })
+        }
+        onReset={() => {
+          setCreated(null);
+          setError("");
+        }}
+        onLibrary={() => {
+          setCreateOpen(false);
+          setTab("library");
+        }}
         onPrint={() => {
           setCreateOpen(false);
           setTab("print");

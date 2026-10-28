@@ -1,7 +1,13 @@
 import { themeScript } from "@/components/menu-product/theme-script";
 import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
-import { Bebas_Neue, Bricolage_Grotesque, DM_Sans, Kalam, Playfair_Display } from "next/font/google";
+import {
+  Bebas_Neue,
+  Bricolage_Grotesque,
+  DM_Sans,
+  Kalam,
+  Playfair_Display,
+} from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 

@@ -7,8 +7,12 @@ import type { QR } from "../src/components/menu-product/qr-studio-types";
 afterEach(cleanup);
 
 const created: QR = {
-  id: "created", label: "Counter Menu", destinationToken: "stable-created",
-  isActive: true, tableId: null, pointLabel: null,
+  id: "created",
+  label: "Counter Menu",
+  destinationToken: "stable-created",
+  isActive: true,
+  tableId: null,
+  pointLabel: null,
 };
 
 function dialog(overrides: Partial<React.ComponentProps<typeof QrCreateDialog>> = {}) {
@@ -16,10 +20,19 @@ function dialog(overrides: Partial<React.ComponentProps<typeof QrCreateDialog>> 
   const onPrint = vi.fn();
   const onLibrary = vi.fn();
   const props: React.ComponentProps<typeof QrCreateDialog> = {
-    open: true, onOpenChange: vi.fn(), outletName: "Baba Bakery",
-    origin: "http://localhost:3000", busy: false, error: "",
-    created: null, existingLabels: ["Main Menu QR"], onCreate,
-    onReset: vi.fn(), onLibrary, onPrint, ...overrides,
+    open: true,
+    onOpenChange: vi.fn(),
+    outletName: "Baba Bakery",
+    origin: "http://localhost:3000",
+    busy: false,
+    error: "",
+    created: null,
+    existingLabels: ["Main Menu QR"],
+    onCreate,
+    onReset: vi.fn(),
+    onLibrary,
+    onPrint,
+    ...overrides,
   };
   return { ...render(<QrCreateDialog {...props} />), onCreate, onPrint, onLibrary };
 }
@@ -29,7 +42,9 @@ describe("Connection Atelier", () => {
     const { onCreate } = dialog();
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Review QR/i })).toBeTruthy();
-    fireEvent.change(screen.getByRole("textbox", { name: /QR label/i }), { target: { value: "Counter Menu" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /QR label/i }), {
+      target: { value: "Counter Menu" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Review QR/i }));
     expect(onCreate).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /Create QR code/i }));
@@ -39,9 +54,15 @@ describe("Connection Atelier", () => {
   it("requires a service point label for table / counter mode", () => {
     const { onCreate } = dialog();
     fireEvent.click(screen.getByRole("button", { name: /Table or counter/i }));
-    fireEvent.change(screen.getByRole("textbox", { name: /QR label/i }), { target: { value: "Counter" } });
-    expect((screen.getByRole("button", { name: /Review QR/i }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: /Table \/ counter label/i }), { target: { value: "Table 8" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /QR label/i }), {
+      target: { value: "Counter" },
+    });
+    expect((screen.getByRole("button", { name: /Review QR/i }) as HTMLButtonElement).disabled).toBe(
+      true
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: /Table \/ counter label/i }), {
+      target: { value: "Table 8" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Review QR/i }));
     fireEvent.click(screen.getByRole("button", { name: /Create QR code/i }));
     expect(onCreate).toHaveBeenCalledWith("Counter", "Table 8");
