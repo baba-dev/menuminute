@@ -98,7 +98,7 @@ export function LogExplorer() {
               <span className="text-xs text-stone-400">{entry.service}</span>
               <span className="min-w-0 truncate text-xs text-stone-200">{entry.message}</span>
             </button>)}
-            {result.entries.length===0 && <p className="p-10 text-center text-sm text-stone-400">No indexed events match these filters.</p>}
+            {result.entries.length===0 && <p className="p-10 text-center text-sm text-stone-400">No matching events in the bounded searchable index.</p>}
           </div>
         </div>
         {result.nextBefore && <button onClick={()=>{setPageCursor(result.nextBefore);setLive(false);}} className="flex items-center gap-2 rounded-lg border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-800"><ArrowDown className="h-4 w-4"/>Older entries</button>}
@@ -111,7 +111,7 @@ export function LogExplorer() {
           <p className="mt-4 text-xs text-stone-500">Only approved sanitized fields are displayed. Raw journal entries are never exposed.</p>
         </div>
       </div>}
-      <div className="flex items-center gap-2 text-xs text-stone-500"><Search className="h-4 w-4"/>This read-only viewer does not run host shell commands or query other applications.</div>
+      <div className="flex items-center gap-2 text-xs text-stone-500"><Search className="h-4 w-4"/>This read-only viewer scans bounded file tails (32 KiB per segment), not the complete journal. Very busy segments may require host-level incident investigation. No shell commands or other applications are exposed.</div>
     </div>
   );
 }
