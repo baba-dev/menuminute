@@ -86,6 +86,29 @@ test("menu editor can create and privately upload a gallery image without an ena
   await expect(page.getByRole("button", { name: "Start extraction" })).toHaveCount(0);
 });
 
+test("explicit two-column splitting uploads private left and right sources", async ({ page }) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.goto("/dashboard/menu/import");
+  await page.getByRole("button", { name: "Create private draft" }).click();
+  const photo = await sharp({
+    create: { width: 640, height: 880, channels: 3, background: "white" },
+  }).png().toBuffer();
+  await page.getByLabel("Choose menu photographs").setInputFiles({
+    name: "two-columns.png", mimeType: "image/png", buffer: photo,
+  });
+  await page.getByRole("button", { name: "Split two-columns.png into two columns" }).click();
+  await expect(page.getByText("two-columns-left.webp")).toBeVisible();
+  await expect(page.getByText("two-columns-right.webp")).toBeVisible();
+  await page.getByRole("button", { name: "Upload photos privately" }).click();
+  await expect(page.getByText("Page 1 · ready")).toBeVisible();
+  await expect(page.getByText("Page 2 · ready")).toBeVisible();
+});
 test("scan table allows selecting photos before creating a private session", async ({ page }) => {
   test.setTimeout(90000);
   const f = await seed();
