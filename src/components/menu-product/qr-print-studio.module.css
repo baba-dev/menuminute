@@ -37,7 +37,7 @@
   object-fit: contain;
   flex: none;
 }
-.back {
+.studio .back {
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -71,7 +71,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
-.formatCard {
+.studio .formatCard {
   display: flex;
   align-items: center;
   gap: 15px;
@@ -88,7 +88,7 @@
     box-shadow 0.2s,
     transform 0.2s;
 }
-.formatCard:hover {
+.studio .formatCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 26px #4c271018;
 }
@@ -228,7 +228,7 @@
   display: grid;
   gap: 8px;
 }
-.paletteButton {
+.studio .paletteButton {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -365,7 +365,7 @@
   align-content: center;
   gap: 9px;
 }
-.exportActions :is(button, a) {
+.studio .exportActions :is(button, a) {
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -411,7 +411,7 @@
   line-height: 1.6;
   margin: 0;
 }
-.noCode button {
+.studio .noCode button {
   padding: 11px 19px;
   border-radius: 999px;
 }
@@ -426,7 +426,7 @@
 :root[data-theme="dark"] .hero p {
   color: #f1d0b2;
 }
-:root[data-theme="dark"] .back {
+:root[data-theme="dark"] .studio .back {
   background: #503522;
   color: #fff0db;
   border-color: #95633e;
@@ -446,7 +446,7 @@
   .workbench {
     grid-template-columns: minmax(0, 1fr) minmax(275px, 0.82fr);
   }
-  .formatCard {
+  .studio .formatCard {
     padding: 12px;
     gap: 9px;
   }
@@ -464,7 +464,7 @@
   .export {
     grid-template-columns: 1fr;
   }
-  .formatCard {
+  .studio .formatCard {
     min-height: 95px;
   }
   .stage {
@@ -498,7 +498,7 @@
   .studio {
     gap: 22px;
   }
-  .formatCard {
+  .studio .formatCard {
     min-height: 90px;
   }
   .previewPane,
@@ -522,7 +522,7 @@
     transition: none !important;
     animation: none !important;
   }
-  .formatCard:hover {
+  .studio .formatCard:hover {
     transform: none;
   }
 }
@@ -538,9 +538,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-.themeCard {
+.studio .themeCard {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  justify-items: stretch;
   gap: 4px;
   min-width: 0;
   text-align: left;
@@ -554,11 +557,11 @@
     transform 0.15s,
     box-shadow 0.15s;
 }
-.themeCard:hover {
+.studio .themeCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 18px rgb(47 30 15 / 12%);
 }
-.themeCard[aria-pressed="true"] {
+.studio .themeCard[aria-pressed="true"] {
   border: 2px solid var(--ember);
   padding: 7px;
 }
@@ -570,6 +573,8 @@
   outline-offset: 2px;
 }
 .themeSample {
+  width: 100%;
+  min-width: 0;
   background: var(--theme-paper);
   color: var(--theme-accent);
   border: 1px solid color-mix(in srgb, var(--theme-accent), transparent 40%);
@@ -648,7 +653,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-.fontCard {
+.studio .fontCard {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -660,7 +665,7 @@
   color: var(--ink);
   text-align: left;
 }
-.fontCard[aria-pressed="true"] {
+.studio .fontCard[aria-pressed="true"] {
   border: 2px solid var(--ember);
   padding: 10px;
   background: var(--qr-soft);
@@ -713,18 +718,20 @@
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 7px;
 }
-.inkButton {
+.studio .inkButton {
   display: grid;
   place-items: center;
   min-width: 0;
+  width: 100%;
   aspect-ratio: 1;
+  padding: 0;
   border: 3px solid var(--paper);
   border-radius: 50%;
   background: var(--ink-swatch);
   color: white;
   box-shadow: 0 0 0 1px var(--qr-line);
 }
-.inkButton[aria-pressed="true"] {
+.studio .inkButton[aria-pressed="true"] {
   box-shadow: 0 0 0 2px var(--ember);
 }
 .inkCustom {
@@ -741,7 +748,7 @@
   font-size: 11px;
   font-weight: 750;
 }
-.inkCustom input[type="color"] {
+.studio .inkCustom input[type="color"] {
   width: 42px;
   height: 39px;
   padding: 3px;
@@ -750,7 +757,7 @@
   border-radius: 8px;
   cursor: pointer;
 }
-.inkCustom input[type="text"] {
+.studio .inkCustom input[type="text"] {
   width: min(100%, 110px);
   height: 39px;
   padding: 6px 10px;
@@ -772,7 +779,7 @@
   line-height: 1.6;
   margin: 0;
 }
-.resetDesign {
+.studio .resetDesign {
   justify-self: start;
   color: var(--ember);
   border: 1px solid var(--qr-line);
@@ -799,14 +806,21 @@
     grid-template-columns: 1fr;
   }
   .inkSwatches {
-    gap: 4px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .inkCustom {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .themeCard {
+  .studio .themeCard {
     transition: none;
   }
-  .themeCard:hover {
+  .studio .themeCard:hover {
     transform: none;
   }
 }
+
+/* The shared .product button/input rules carry more specificity than one CSS Module class.
+   Keep workbench controls scoped so gallery tiles, ink circles and inputs win the cascade. */
