@@ -28,9 +28,11 @@ export async function billingState(actor: Actor, organizationId: string) {
       .limit(100);
     const state = community
       ? []
-      : (await tx.execute<{ subscriptions: unknown }>(
-          sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
-        )).rows[0]?.subscriptions;
+      : (
+          await tx.execute<{ subscriptions: unknown }>(
+            sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
+          )
+        ).rows[0]?.subscriptions;
     return {
       freeMenu: true,
       isCommunityEdition: community,
