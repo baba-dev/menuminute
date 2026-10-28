@@ -81,7 +81,10 @@ export const envSchema = z
       .trim()
       .regex(/^whsec_[A-Za-z0-9]+$/)
       .optional(),
-    COMMUNITY_EDITION: strictBoolean.default(true),
+    COMMUNITY_EDITION: strictBoolean.default(false),
+    RAZORPAY_ENABLED: strictBoolean.default(false),
+    RAZORPAY_KITCHEN_ENABLED: strictBoolean.default(false),
+    BILLING_DATABASE_URL: pgUrl.optional(),
     RAZORPAY_KEY_ID: z.string().trim().min(1).optional(),
     RAZORPAY_KEY_SECRET: z.string().trim().min(1).optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
@@ -155,6 +158,14 @@ export const envSchema = z
         path: [!e.POS_STRIPE_SECRET_KEY ? "POS_STRIPE_SECRET_KEY" : "POS_STRIPE_WEBHOOK_SECRET"],
         message: "Stripe secret and webhook signing secret are required",
       });
+    if (e.RAZORPAY_ENABLED && (!e.RAZORPAY_KEY_ID || !e.RAZORPAY_KEY_SECRET || !e.RAZORPAY_WEBHOOK_SECRET || !e.RAZORPAY_PLAN_ORDERING_ID || !e.BILLING_DATABASE_URL))
+      ctx.addIssue({ code: "custom", path: ["RAZORPAY_ENABLED"], message: "Billing requires verified provider keys, an ordering plan, and an isolated billing database URL" });
+    if (e.RAZORPAY_ENABLED && e.BILLING_DATABASE_URL === e.DATABASE_URL)
+      ctx.addIssue({ code: "custom", path: ["BILLING_DATABASE_URL"], message: "Billing must not reuse the application database identity" });
+    if (e.RAZORPAY_KITCHEN_ENABLED && (!e.RAZORPAY_ENABLED || !e.RAZORPAY_PLAN_KITCHEN_ID))
+      ctx.addIssue({ code: "custom", path: ["RAZORPAY_KITCHEN_ENABLED"], message: "Kitchen subscriptions require a verified provider plan and enabled billing" });
+    if (e.COMMUNITY_EDITION && e.RAZORPAY_ENABLED)
+      ctx.addIssue({ code: "custom", path: ["RAZORPAY_ENABLED"], message: "Community Edition cannot collect hosted subscriptions" });
     if (e.RAZORPAY_KEY_ID && (!e.RAZORPAY_KEY_SECRET || !e.RAZORPAY_WEBHOOK_SECRET))
       ctx.addIssue({
         code: "custom",
