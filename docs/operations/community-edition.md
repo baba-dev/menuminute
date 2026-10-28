@@ -26,14 +26,14 @@ UPDATE app_private.deployment_edition SET edition='community' WHERE singleton;
 INSERT INTO public.entitlement_grants (
   id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key
 )
-SELECT gen_random_uuid()::text,o.id,cap,'INR',clock_timestamp(),'infinity'::timestamptz,
+SELECT gen_random_uuid()::text,o.id,cap,'INR',clock_timestamp(),clock_timestamp()+interval '100 years',
   'community-edition','Local self-hosted edition',gen_random_uuid()::text
 FROM public.organizations o
 CROSS JOIN unnest(ARRAY['ordering.new','kitchen.new']) cap
 WHERE NOT EXISTS (
   SELECT 1 FROM public.entitlement_grants e
   WHERE e.organization_id=o.id AND e.capability=cap AND e.revoked_at IS NULL
-    AND e.ends_at='infinity'::timestamptz
+    AND e.ends_at>clock_timestamp()+interval '90 years'
 );
 COMMIT;
 ```
