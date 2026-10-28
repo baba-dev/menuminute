@@ -201,14 +201,20 @@ export function StudioMenuBoard({
                   </div>
                   <div className="menu-board-section-actions">
                     <span>{visible.length} dishes</span>
-                    <button type="button" aria-label={"Move section " + category.name + " up"}
+                    <button
+                      type="button"
+                      aria-label={"Move section " + category.name + " up"}
                       disabled={!canWrite || categoryIndex === 0}
-                      onClick={() => onMoveSection(categoryIndex, -1)}>
+                      onClick={() => onMoveSection(categoryIndex, -1)}
+                    >
                       <ArrowUp size={16} aria-hidden="true" />
                     </button>
-                    <button type="button" aria-label={"Move section " + category.name + " down"}
+                    <button
+                      type="button"
+                      aria-label={"Move section " + category.name + " down"}
                       disabled={!canWrite || categoryIndex === doc.categories.length - 1}
-                      onClick={() => onMoveSection(categoryIndex, 1)}>
+                      onClick={() => onMoveSection(categoryIndex, 1)}
+                    >
                       <ArrowDown size={16} aria-hidden="true" />
                     </button>
                     <button

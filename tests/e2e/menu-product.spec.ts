@@ -459,7 +459,9 @@ test("Menu Board remains usable at 320px and hydrates private editorial descript
     await page.setViewportSize({ width, height: 800 });
     const sheetWidth = await sheet.evaluate((element) => element.getBoundingClientRect().width);
     expect(sheetWidth).toBeLessThanOrEqual(width + 1);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
   }
   await sheet.getByRole("button", { name: "Add to draft" }).click();
   await expect(page.locator(".menu-board-dish").filter({ hasText: "Paneer Tikka" })).toBeVisible();
@@ -469,7 +471,9 @@ test("Menu Board remains usable at 320px and hydrates private editorial descript
   await page.getByRole("button", { name: "Edit Paneer Tikka" }).click();
   const editor = page.getByRole("dialog", { name: "Edit Paneer Tikka" });
   await expect(editor).toBeVisible();
-  expect(await editor.evaluate((element) => element.getBoundingClientRect().width)).toBeLessThanOrEqual(321);
+  expect(
+    await editor.evaluate((element) => element.getBoundingClientRect().width)
+  ).toBeLessThanOrEqual(321);
   await editor.getByRole("button", { name: "Done editing" }).click();
   await expect(editor).toBeHidden();
 });
