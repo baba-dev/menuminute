@@ -15,6 +15,7 @@ const saveSchema = z
     document: menuDocumentSchema,
     confirmedIds: z.array(importId).max(120000),
     finalize: z.boolean(),
+    acknowledgePartial: z.boolean().optional().default(false),
   })
   .strict();
 const applySchema = z
@@ -121,6 +122,8 @@ export async function saveReview(actor: Actor, outletId: string, rawId: string, 
   const candidate = parseImportCandidate(current.candidate.document);
   if (candidate.importId !== id || current.currency !== candidate.currency)
     throw new ValidationError("Import scope changed");
+  if (input.finalize && candidate.sourceWarnings?.length && !input.acknowledgePartial)
+    throw new ValidationError("Acknowledge the missing source pages before confirming a partial import");
   assertReviewStructure(candidate, input.document, input.confirmedIds, input.finalize);
   try {
     return await withActor(

@@ -229,6 +229,7 @@ export function ReviewWorkspace({
             document: doc,
             confirmedIds: confirmed,
             finalize,
+            acknowledgePartial: acknowledgedMissingPages,
           }),
         }
       );

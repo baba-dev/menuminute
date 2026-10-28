@@ -77,6 +77,27 @@ it("keeps immutable evidence and rejects structurally invented review entries", 
   expect(f.candidate.categories[0]!.items[0]!.priceMinor.value).toBeNull();
   expect(() => assertReviewStructure(f.candidate, f.doc, [f.ids[0]!], true)).toThrow();
 });
+it("requires explicit server-side acknowledgement before finalizing a partial extraction", async () => {
+  const f = await seedReview();
+  await admin(async (_db, pool) => {
+    await pool.query(
+      "update menu_import_candidates set document=jsonb_set(document,'{sourceWarnings}',$2::jsonb) where import_id=$1",
+      [f.id, JSON.stringify([{ sourceId: f.sourceId, reason: "invalid_provider_response" }])]
+    );
+  });
+  const input = {
+    expectedRevision: 2,
+    candidateRevision: 2,
+    document: f.doc,
+    confirmedIds: f.ids,
+    finalize: true,
+  };
+  await expect(saveReview(f.actor, f.outlet.id, f.id, input)).rejects.toMatchObject({ statusCode: 422 });
+  const ready = await saveReview(f.actor, f.outlet.id, f.id, {
+    ...input, acknowledgePartial: true,
+  });
+  expect(ready.status).toBe("ready");
+});
 it("saves partial corrections, rejects stale revisions, confirms every ID, and applies a private new menu only once", async () => {
   const f = await seedReview(),
     foreign = await fixture();
