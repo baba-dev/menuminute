@@ -56,6 +56,23 @@ export function LogExplorer() {
         </div>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-200"><input type="checkbox" checked={live} onChange={event=>setLive(event.target.checked)} className="accent-orange-500"/> Live tail (8s)</label>
+          <a href="/account/security" title="Complete password and authenticator approval for exporting" className="rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-800">Confirm access</a>
+          <button type="button" onClick={async () => {
+            try {
+              const response = await fetch("/api/admin/logs/export", {
+                method: "POST", credentials: "same-origin",
+                headers: { "Content-Type": "application/json" }, body: "{}",
+              });
+              if (!response.ok) throw new Error("Export requires a fresh password and authenticator confirmation");
+              const blob = await response.blob();
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url; link.download = "menuminute-diagnostics.json"; link.click();
+              URL.revokeObjectURL(url);
+            } catch (error) {
+              setFailure(error instanceof Error ? error.message : "Export unavailable");
+            }
+          }} className="rounded-xl border border-stone-700 px-3 py-2 text-xs text-stone-200 hover:bg-stone-800">Export 100</button>
           <button type="button" onClick={()=>void refresh()} className="flex items-center gap-2 rounded-xl bg-orange-600 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-500"><RefreshCw className="h-4 w-4"/>Refresh</button>
         </div>
       </div>
