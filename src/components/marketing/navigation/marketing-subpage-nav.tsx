@@ -58,9 +58,10 @@ export function MarketingSubpageNav() {
           <div className="hidden items-center gap-5 md:flex lg:gap-7">
             <Link
               href="/pricing"
+              aria-current={pathname === "/pricing" ? "page" : undefined}
               className={`text-sm font-medium transition-colors ${
                 pathname === "/pricing"
-                  ? "text-brand-600 dark:text-brand-400 font-semibold"
+                  ? "text-brand-800 dark:text-brand-200 font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -68,15 +69,16 @@ export function MarketingSubpageNav() {
             </Link>
             <Link
               href="/demo"
+              aria-current={pathname === "/demo" ? "page" : undefined}
               className={`text-sm font-medium transition-colors ${
                 pathname === "/demo"
-                  ? "text-brand-600 dark:text-brand-400 font-semibold"
+                  ? "text-brand-800 dark:text-brand-200 font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Demo
             </Link>
-            <HomeAuthActions />
+            <HomeAuthActions surface="subpage" />
             <ThemeControl />
           </div>
 
@@ -109,9 +111,10 @@ export function MarketingSubpageNav() {
                     <Link
                       key={link.href}
                       href={link.href}
+                      aria-current={pathname === link.href ? "page" : undefined}
                       className={`block rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                         pathname === link.href
-                          ? "bg-muted text-brand-600 dark:text-brand-400"
+                          ? "bg-muted text-brand-800 dark:text-brand-200"
                           : "text-foreground hover:bg-muted"
                       }`}
                       onClick={() => setMobileOpen(false)}
@@ -120,7 +123,7 @@ export function MarketingSubpageNav() {
                     </Link>
                   ))}
                   <div className="border-border my-1 border-t" />
-                  <HomeAuthActions mobile onNavigate={() => setMobileOpen(false)} />
+                  <HomeAuthActions surface="subpage" mobile onNavigate={() => setMobileOpen(false)} />
                 </div>
               )}
             </div>
