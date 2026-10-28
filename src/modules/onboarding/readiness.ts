@@ -38,17 +38,42 @@ export async function outletSetupReadiness(actor: Actor, outlet: Outlet) {
     dashboardMenuRows(actor.userId, outlet.id),
     dashboardQrRows(actor.userId, outlet.id),
     withOutlet(actor, outlet.id, "menu.read", (tx) =>
-      tx.execute<{ has_content: boolean }>(sql`select exists(
-        select 1 from menus m where m.outlet_id=${outlet.id}
-          and m.archived=false
-          and jsonb_path_exists(m.document, '$.categories[*].items[*]')
-      ) as has_content`)
+      tx.execute<{ has_content: boolean; has_release: boolean }>(sql`select
+        exists (
+          select 1 from menus m
+          where m.archived=false
+            and (m.outlet_id=${outlet.id} or exists (
+              select 1 from menu_assignments ma where ma.menu_id=m.id and ma.outlet_id=${outlet.id}
+            ))
+            and exists (
+              select 1 from jsonb_array_elements(m.document->'categories') as category(value)
+              cross join lateral jsonb_array_elements(category.value->'items') as dish(value)
+              where coalesce(category.value->>'archived', 'false') <> 'true'
+                and coalesce(dish.value->>'archived', 'false') <> 'true'
+            )
+        ) as has_content,
+        exists (
+          select 1 from menus m
+          join menu_releases release on release.menu_id=m.id
+            and release.revision=m.published_revision
+          where m.archived=false
+            and (m.outlet_id=${outlet.id} or exists (
+              select 1 from menu_assignments ma where ma.menu_id=m.id and ma.outlet_id=${outlet.id}
+            ))
+            and exists (
+              select 1 from jsonb_array_elements(release.document->'categories') as category(value)
+              cross join lateral jsonb_array_elements(category.value->'items') as dish(value)
+              where coalesce(category.value->>'archived', 'false') <> 'true'
+                and coalesce(dish.value->>'archived', 'false') <> 'true'
+            )
+        ) as has_release`)
     ),
   ]);
   const primary = preferredMenuQr(codes);
   const projection = primary ? await dashboardPublicProjection(primary.destinationToken) : null;
   const summary = dashboardSummary(menus, codes, projection);
   const hasContent = content.rows[0]?.has_content === true;
+  const hasPublishedRelease = content.rows[0]?.has_release === true;
   const serviceWindows =
     outlet.serviceHours &&
     typeof outlet.serviceHours === "object" &&
@@ -77,7 +102,7 @@ export async function outletSetupReadiness(actor: Actor, outlet: Outlet) {
       label: "Publish a guest-facing menu",
       description: "Requires a committed release with a visible dish; private drafts never count.",
       href: "/dashboard/menu",
-      complete: live,
+      complete: hasPublishedRelease,
     },
     {
       id: "qr",
@@ -98,7 +123,7 @@ export async function outletSetupReadiness(actor: Actor, outlet: Outlet) {
         "Ordering entitlement, selected service mode, and configured service hours must all be present.",
       href: "/dashboard/settings",
       complete:
-        nav?.ordering === true && outlet.fulfillmentModes.length > 0 && serviceWindows.length > 0,
+        live && nav?.ordering === true && outlet.fulfillmentModes.length > 0 && serviceWindows.length > 0,
     });
     if (outlet.onboardingGoal === "full_operations") {
       checks.push({

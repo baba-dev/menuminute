@@ -71,8 +71,9 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   const recoveredLaunch = page.getByRole("button", { name: "Confirm & Create Outlet" });
   await expect(recoveredLaunch).toBeDisabled();
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
-  await expect(recoveredLaunch).toBeEnabled();
+  await expect(recoveredLaunch).toBeDisabled();
   await page.getByRole("checkbox", { name: /I confirm INR is the currency/ }).check();
+  await expect(recoveredLaunch).toBeEnabled();
   await recoveredLaunch.click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
   await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();

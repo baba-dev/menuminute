@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-import { getRestaurantsByUserId } from "@/modules/restaurants/service";
+import { listOrganizations } from "@/modules/organizations/service";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "./setup-form";
@@ -11,7 +11,9 @@ export const metadata = { title: "Set up your outlet — MenuMinute" };
 export default async function OnboardingPage() {
   const session = await auth();
   if (!session?.user.id) redirect("/login?next=%2Fonboarding");
-  if ((await getRestaurantsByUserId(session.user.id)).length) redirect("/dashboard/organization");
+  const memberships = await listOrganizations({ userId: session.user.id });
+  if (memberships.some((org) => org.isActive && org.role === "owner"))
+    redirect("/dashboard/organization");
   return (
     <AuthShell
       eyebrow="FIRST OUTLET / SAVED AS YOU GO"

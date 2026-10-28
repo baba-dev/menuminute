@@ -19,6 +19,9 @@ export default async function StartPage() {
     getRestaurantsByUserId(session.user.id),
     listOrganizations({ userId: session.user.id }),
   ]);
+  // Joining another restaurant as staff must never prevent someone from
+  // creating their own first independently owned restaurant.
+  const ownsRestaurant = memberships.some((org) => org.isActive && org.role === "owner");
   const canAddOutlet = memberships.some(
     (org) => org.isActive && (org.role === "owner" || org.role === "admin")
   );
@@ -26,8 +29,8 @@ export default async function StartPage() {
     {
       title: "Create my first restaurant",
       copy: "Start your own restaurant workspace and build a free QR menu. You can complete the optional details later.",
-      href: outlets.length ? "/dashboard" : "/onboarding",
-      action: outlets.length ? "Open my restaurants" : "Create my restaurant",
+      href: ownsRestaurant ? "/dashboard/organization" : "/onboarding",
+      action: ownsRestaurant ? "Manage my restaurants" : "Create my restaurant",
       Icon: Store,
     },
     {
