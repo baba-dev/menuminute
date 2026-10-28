@@ -1,7 +1,7 @@
 import { themeScript } from "@/components/menu-product/theme-script";
 import { ThemeSync } from "@/components/menu-product/theme-control";
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, DM_Sans, Kalam } from "next/font/google";
+import { Bebas_Neue, Bricolage_Grotesque, DM_Sans, Kalam, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 
@@ -18,6 +18,18 @@ const handwritingFont = Kalam({
   weight: ["300", "400", "700"],
   display: "swap",
   variable: "--font-kalam",
+});
+
+const printSerif = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-print-playfair",
+});
+const printDisplay = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-print-bebas",
 });
 
 export const metadata: Metadata = {
@@ -72,7 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
-        className={`${displayFont.variable} ${bodyFont.variable} ${handwritingFont.variable} font-sans antialiased`}
+        className={`${displayFont.variable} ${bodyFont.variable} ${handwritingFont.variable} ${printSerif.variable} ${printDisplay.variable} font-sans antialiased`}
       >
         <ThemeSync />
         {children}
