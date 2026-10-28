@@ -4,7 +4,7 @@ import { withActor } from "@/modules/tenancy/service";
 import { sql } from "drizzle-orm";
 import { env } from "@/lib/config/env";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
-import { createRazorpaySubscription } from "@/modules/billing/razorpay";
+import { createRazorpaySubscription, verifyBillingWriterReady } from "@/modules/billing/razorpay";
 import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
 export async function POST(
@@ -54,6 +54,8 @@ export async function POST(
         (plan === "kitchen_pro" && current.grants?.kitchen))
       throw new ValidationError("This organization already has an active entitlement.");
 
+    // Fail before calling Razorpay if entitlement reconciliation cannot complete.
+    await verifyBillingWriterReady();
     const amountPaise = PAID_PLAN_CATALOG[plan].monthlyPricePaise;
     const reservation = await withActor(actor, async (tx) => {
       const row = await tx.execute<{
