@@ -125,27 +125,27 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Import from photos" })).toBeVisible();
   await expect(page.getByLabel("Menu Studio overview")).toBeVisible();
-  await page.getByRole("button", { name: "Find in menu" }).click();
-  await page.getByLabel("Find a dish or section").fill("nonexistent-dish-search");
-  await expect(page.getByLabel("Find a dish or section")).toHaveValue("nonexistent-dish-search");
-  await page.getByLabel("Find a dish or section").clear();
+  await page.getByPlaceholder("Search dishes or sections").fill("nonexistent-dish-search");
+  await expect(page.getByPlaceholder("Search dishes or sections")).toHaveValue(
+    "nonexistent-dish-search"
+  );
+  await page.getByPlaceholder("Search dishes or sections").clear();
   if ((page.viewportSize()?.width ?? 1440) <= 720) {
     await page.getByRole("button", { name: "Preview draft" }).click();
     await expect(page.getByText("Draft preview — not public")).toBeVisible();
     await page.getByRole("button", { name: "Back to edit" }).click();
   } else {
-    await expect(page.getByLabel("Integrated private draft preview")).toBeVisible();
+    await expect(page.getByLabel("Integrated private draft preview")).toHaveCount(0);
   }
-  await page.getByRole("button", { name: "+ Add dishes" }).click();
-  await page.getByRole("button", { name: "Add category", exact: true }).click();
-  await page.getByLabel("Category name 1", { exact: true }).fill("Chef’s specials");
+  await page.getByRole("button", { name: "New section" }).click();
+  await page.getByLabel("Section name", { exact: true }).fill("Chef’s specials");
+  await page.getByRole("button", { name: "Create section" }).click();
   await page.getByRole("button", { name: "Add dish", exact: true }).click();
-  await expect(page.getByLabel("Search the dish catalogue")).toBeFocused();
-  await page.getByLabel("Search the dish catalogue").fill("Signature thali");
-  await page.getByRole("button", { name: /Create custom dish: Signature thali/ }).click();
-  await page.getByRole("button", { name: "Review & Add 1 dish" }).click();
-  await page.getByLabel("Quick price for Signature thali").fill("12.500");
-  await page.getByRole("button", { name: "Add 1 to private draft" }).click();
+  const addDialog = page.getByRole("dialog", { name: "Add a dish" });
+  await addDialog.getByLabel("Dish name", { exact: true }).fill("Signature thali");
+  await addDialog.getByLabel(/Price \(/).fill("12.500");
+  await addDialog.getByRole("button", { name: "Add to draft" }).click();
+  await page.getByRole("button", { name: "Edit Signature thali" }).click();
   await page.getByLabel("Dish name 1.1", { exact: true }).fill("Signature thali");
   await page.getByLabel("Dish price 1.1", { exact: true }).fill("12.500");
   await expect(page.getByRole("button", { name: "Move dish 1 up" })).toBeDisabled();
@@ -163,6 +163,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
     .locator("xpath=ancestor::div[contains(@class,'panel')]");
   await extras.getByRole("checkbox", { name: "Available", exact: true }).uncheck();
   await extras.getByRole("checkbox", { name: "Available", exact: true }).check();
+  await page.getByRole("button", { name: "Done editing" }).click();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   expect((await page.request.get(`/api/public-menu/${f.token}`)).status()).toBe(404);
@@ -205,12 +206,14 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.getByRole("button", { name: "Approve photo", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Photo approved" })).toBeVisible();
   await page.getByRole("button", { name: "Dishes", exact: true }).click();
+  await page.getByRole("button", { name: "Edit Signature thali" }).click();
   await page
     .getByLabel("Dish photo 1.1", { exact: true })
     .selectOption({ label: "Approved photo 1" });
   await expect(
     page.getByRole("img", { name: "Uploaded photograph for Signature thali" })
   ).toBeVisible();
+  await page.getByRole("button", { name: "Done editing" }).click();
   await page.getByRole("button", { name: "Publish menu", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -235,7 +238,9 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await guestDetails.getByRole("button", { name: "Back to menu" }).click();
   await expect(guest.getByRole("button", { name: "View order cart" })).toHaveCount(0);
   await expect(guest.getByText("Sold Out", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Edit Signature thali" }).click();
   await page.getByLabel("Sold out", { exact: true }).check();
+  await page.getByRole("button", { name: "Done editing" }).click();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   await guest.reload();
@@ -366,9 +371,10 @@ test("Smart Composer batches autocomplete suggestions, validates prices and pres
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
-  await page.getByRole("button", { name: "Add category", exact: true }).click();
-  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
-  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  await page.getByRole("button", { name: "New section" }).click();
+  await page.getByLabel("Section name", { exact: true }).fill("Main Course");
+  await page.getByRole("button", { name: "Create section" }).click();
+  await page.getByRole("button", { name: "Add multiple" }).click();
   const search = page.getByLabel("Search the dish catalogue");
   await expect(search).toBeFocused();
   await search.fill("kadai");
@@ -382,15 +388,14 @@ test("Smart Composer batches autocomplete suggestions, validates prices and pres
   await expect(page.getByRole("alert").filter({ hasText: "Enter every dish price" })).toBeVisible();
   await page.getByLabel("Quick price for Palak Paneer").fill("4.000");
   await page.getByRole("button", { name: "Add 2 to private draft" }).click();
-  await expect(page.getByLabel("Dish name 1.1")).toHaveValue("Kadai Paneer");
-  await expect(page.getByLabel("Dish name 1.2")).toHaveValue("Palak Paneer");
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Kadai Paneer" })).toBeVisible();
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Palak Paneer" })).toBeVisible();
   expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
-  await page.getByRole("button", { name: "Find in menu" }).click();
-  await page.getByLabel("Find a dish or section").fill("Palak");
-  await expect(page.getByLabel("Dish name 1.1")).toHaveCount(0);
-  await expect(page.getByLabel("Dish name 1.2")).toBeVisible();
-  await page.getByRole("button", { name: "+ Add dishes" }).click();
-  await expect(page.getByLabel("Dish name 1.1")).toBeVisible();
+  await page.getByPlaceholder("Search dishes or sections").fill("Palak");
+  await expect(page.locator(".menu-board-dish")).toHaveCount(1);
+  await expect(page.locator(".menu-board-dish")).toContainText("Palak Paneer");
+  await page.getByPlaceholder("Search dishes or sections").clear();
+  await expect(page.locator(".menu-board-dish")).toHaveCount(2);
 });
 
 test("PR C bulk composer deduplicates pasted dishes and matches Hindi input without publishing", async ({
@@ -404,9 +409,10 @@ test("PR C bulk composer deduplicates pasted dishes and matches Hindi input with
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
-  await page.getByRole("button", { name: "Add category", exact: true }).click();
-  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
-  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  await page.getByRole("button", { name: "New section" }).click();
+  await page.getByLabel("Section name", { exact: true }).fill("Main Course");
+  await page.getByRole("button", { name: "Create section" }).click();
+  await page.getByRole("button", { name: "Add multiple" }).click();
   await page.getByRole("button", { name: "Paste a dish list" }).click();
   await page.getByLabel("Bulk dish names").fill("Paneer Tikka\nBiryani\npaneer-tikka");
   await page.getByRole("button", { name: "Select pasted dishes" }).click();
@@ -416,13 +422,60 @@ test("PR C bulk composer deduplicates pasted dishes and matches Hindi input with
   await page.getByLabel("Quick price for Paneer Tikka").fill("9.000");
   await page.getByLabel("Quick price for Biryani").fill("10.000");
   await page.getByRole("button", { name: "Add 2 to private draft" }).click();
-  await expect(page.getByLabel("Dish name 1.1")).toHaveValue("Paneer Tikka");
-  await expect(page.getByLabel("Dish name 1.2")).toHaveValue("Biryani");
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Paneer Tikka" })).toBeVisible();
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Biryani" })).toBeVisible();
+  await page.getByRole("button", { name: "Add multiple" }).click();
   await expect(page.getByText("Recently used in this menu")).toBeVisible();
   const search = page.getByLabel("Search the dish catalogue");
   await search.fill("पनीर");
   await expect(page.getByRole("option", { name: /Paneer Tikka/ })).toBeVisible();
   expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
+});
+
+test("Menu Board remains usable at 320px and hydrates private editorial descriptions", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu");
+
+  await page.setViewportSize({ width: 320, height: 690 });
+  await page.getByRole("button", { name: "Add dish", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Add a dish" });
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel("Dish name", { exact: true }).fill("Paneer Tikka");
+  await sheet.locator(".menu-board-suggestions button").filter({ hasText: "Paneer Tikka" }).click();
+  await expect(sheet.getByLabel(/Public description/)).toHaveValue(/paneer cubes/i);
+  await expect(sheet.getByText(/unverified suggestions/)).toBeVisible();
+  await sheet.getByLabel(/Price \(/).fill("2.500");
+
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    const sheetWidth = await sheet.evaluate((element) => element.getBoundingClientRect().width);
+    expect(sheetWidth).toBeLessThanOrEqual(width + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+  }
+  await sheet.getByRole("button", { name: "Add to draft" }).click();
+  await expect(page.locator(".menu-board-dish").filter({ hasText: "Paneer Tikka" })).toBeVisible();
+  expect((await page.request.get("/api/public-menu/" + f.token)).status()).toBe(404);
+
+  await page.setViewportSize({ width: 320, height: 690 });
+  await page.getByRole("button", { name: "Edit Paneer Tikka" }).click();
+  const editor = page.getByRole("dialog", { name: "Edit Paneer Tikka" });
+  await expect(editor).toBeVisible();
+  expect(
+    await editor.evaluate((element) => element.getBoundingClientRect().width)
+  ).toBeLessThanOrEqual(321);
+  await editor.getByRole("button", { name: "Done editing" }).click();
+  await expect(editor).toBeHidden();
 });
 
 test("Recipe Atelier uses the approved media, meaningful draft metrics and adaptive editor", async ({
@@ -442,13 +495,8 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await expect(studio).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
-  const compact = (page.viewportSize()?.width ?? 1440) <= 720;
-  if (compact) {
-    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
-  } else {
-    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
-  }
-  await expect(studio.getByRole("navigation", { name: "Filter menu sections" })).toBeVisible();
+  await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
+  await expect(studio.getByRole("navigation", { name: "Filter sections" })).toBeVisible();
   await studio.locator("summary[aria-label='About Sections']").click();
   await expect(studio.getByText("Active sections in the selected editable draft.")).toBeVisible();
   await studio.getByRole("button", { name: "Preview draft" }).click();
@@ -461,11 +509,7 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   ).toBeDisabled();
   await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
   await studio.getByRole("button", { name: "Back to edit" }).click();
-  if (compact) {
-    await expect(studio.getByLabel("Integrated private draft preview")).toBeHidden();
-  } else {
-    await expect(studio.getByLabel("Integrated private draft preview")).toBeVisible();
-  }
+  await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
   await page.getByLabel("Menu name").fill("Kitchen seasonal menu");
   await studio.getByRole("button", { name: "Assignments", exact: true }).click();
   await expect(studio.locator(".atelier-assignment-lock")).toHaveAttribute("disabled", "");
@@ -530,30 +574,28 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
   await page.goto("/dashboard/menu");
   await expect(page.locator(".mm-shared-topbar")).toBeVisible();
   await expect(page.locator(".mm-workspace-sidebar .mm-theme-toggle")).toHaveCount(0);
-  await page.getByRole("button", { name: "Add category", exact: true }).click();
-  await page.getByLabel("Category name 1", { exact: true }).fill("Main Course");
   await page.getByRole("button", { name: "Add dish", exact: true }).click();
-  await page.getByLabel("Search the dish catalogue").fill("Butter Chicken");
-  const result = page.getByRole("option", { name: /Butter Chicken/ });
-  await expect(result.locator("img")).toHaveAttribute(
-    "src",
-    "/assets/food/dishes/indian/butter-chicken.png"
-  );
-  await result.click();
-  await page.getByRole("button", { name: "Review & Add 1 dish" }).click();
-  const review = page.getByLabel("Review selected dishes");
-  await expect(review).toHaveClass(/smart-review-arrival/);
-  await expect(review.getByRole("heading", { name: /Review prices, categories/ })).toBeFocused();
-  await expect(page.getByLabel("Quick photo for Butter Chicken")).toHaveValue("artwork");
-  await page.getByLabel("Quick price for Butter Chicken").fill("12.500");
-  await page.getByRole("button", { name: "Add 1 to private draft" }).click();
-  await expect(
-    page.getByRole("img", { name: "Selected image for Butter Chicken" })
-  ).toHaveAttribute("src", "/assets/food/dishes/indian/butter-chicken.png");
+  const addDish = page.getByRole("dialog", { name: "Add a dish" });
+  await addDish.getByLabel("Dish name", { exact: true }).fill("Butter Chicken");
+  await addDish
+    .locator(".menu-board-suggestions button")
+    .filter({ hasText: "Butter Chicken" })
+    .click();
+  await expect(addDish.getByText(/Curated dish description suggested/)).toBeVisible();
+  await expect(addDish.getByText(/unverified suggestions/)).toBeVisible();
+  await addDish.getByLabel(/Price \(/).fill("12.500");
+  await addDish.getByRole("button", { name: "Add to draft" }).click();
+  const butterCard = page.locator(".menu-board-dish").filter({ hasText: "Butter Chicken" });
+  await expect(butterCard.locator("img")).toHaveAttribute("src", /butter-chicken/);
+  await page.getByRole("button", { name: "Edit Butter Chicken" }).click();
+  await expect(page.getByText("Authentic profile available for")).toBeVisible();
+  await page.getByRole("button", { name: "Done editing" }).click();
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("img", { name: "Selected image for Butter Chicken" })).toBeVisible();
+  await expect(
+    page.locator(".menu-board-dish").filter({ hasText: "Butter Chicken" }).locator("img")
+  ).toBeVisible();
   await page.getByRole("button", { name: "Preview draft" }).click();
   await expect(page.locator(".atelier-preview-dialog")).toBeVisible();
   await expect(page.locator(".atelier-preview-viewport")).toBeVisible();
@@ -785,10 +827,8 @@ test("Menu Library stays responsive and preserves publication and accessible dia
   await page.evaluate(() => {
     document.documentElement.dataset.theme = "dark";
   });
-  const cover = page.locator(".atelier-preview-cover");
-  await expect(cover).toBeVisible();
-  expect(await cover.evaluate((el) => getComputedStyle(el, "::before").backgroundImage)).toContain(
-    "linear-gradient"
-  );
+  await expect(page.getByLabel("Visual menu board")).toBeVisible();
+  await page.getByRole("button", { name: "Preview draft" }).click();
+  await expect(page.locator(".atelier-preview-dialog")).toBeVisible();
   await page.screenshot({ path: info.outputPath("menu-studio-dark-library.png"), fullPage: false });
 });

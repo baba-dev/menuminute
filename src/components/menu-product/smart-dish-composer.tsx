@@ -20,6 +20,7 @@ export type QuickDish = {
   key: string;
   name: string;
   categoryId: string;
+  description?: string;
   priceText: string;
   free: boolean;
   mediaId: string | null;
