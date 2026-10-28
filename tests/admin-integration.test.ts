@@ -49,9 +49,10 @@ beforeAll(async () => {
   );
   // This test exercises a deliberate platform-admin MFA policy transition.
   // New customer organizations default to optional MFA, so opt in explicitly.
-  await owner.query("insert into organizations(id,name,mfa_required) values($1,'Isolated platform tenant',true)", [
-    orgId,
-  ]);
+  await owner.query(
+    "insert into organizations(id,name,mfa_required) values($1,'Isolated platform tenant',true)",
+    [orgId]
+  );
 }, 30000);
 afterAll(async () => {
   if (!owner) return;
