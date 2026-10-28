@@ -29,6 +29,7 @@ type Source = {
 };
 type Candidate = {
   document: {
+    sourceWarnings?: Array<{ sourceId: string; reason: "invalid_provider_response" }>;
     categories: Array<{
       id: string;
       name: { value: string | null };
@@ -47,6 +48,7 @@ type Session = {
   currency: string;
   sources: Source[];
   candidate: Candidate | null;
+  engineResult?: { state: string; errorCode: string | null; model: string; requests: number } | null;
 };
 type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status"> & {
   createdAt?: string;
@@ -62,6 +64,14 @@ type Draft = {
 };
 const MAX_PHOTO = 5 * 1024 * 1024;
 const supported = new Set(["image/jpeg", "image/png", "image/webp"]);
+const failureHelp: Record<string, string> = {
+  invalid_provider_response: "The AI model returned data that could not be validated. Retake blurry photos, split dense columns, or use a vision-capable model.",
+  provider_unavailable: "The configured image-capable provider was unavailable, timed out or rejected the request. Ask the operator to check provider access before trying a fresh import.",
+  source_unavailable: "A private source photograph could not be read or prepared. Start a new import and upload the photo again.",
+  processing_failed: "Processing ended unexpectedly. Contact the operator with this import ID for investigation.",
+  engine_unavailable: "AI extraction is not enabled on the processing worker. Contact the operator.",
+  ambiguous_delivery: "Processing was interrupted and the provider's billing status is uncertain. The request will not be repeated automatically.",
+};
 function statusText(status: string) {
   return (
     (
@@ -297,6 +307,59 @@ export function CaptureWizard({
     });
     setDrafts((prev) => [...prev, ...items]);
     setNotice("Use a clear, flat image with all prices visible.");
+  }
+  /** Splitting is user-directed; no automatic guesswork about page layout. */
+  async function splitPending(id: string) {
+    const item = drafts.find((d) => d.id === id && d.state === "pending");
+    if (!session || busy || session.status !== "collecting" || !item) return;
+    const indices = [...session.sources, ...drafts].map((s) => s.pageIndex);
+    if (indices.includes(11) || session.sources.some((s) => s.pageIndex >= item.pageIndex)) {
+      setError("Split columns before uploading the remaining pages. Saved pages cannot be reordered.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    let bitmap: ImageBitmap | undefined;
+    try {
+      bitmap = await createImageBitmap(item.file);
+      if (bitmap.width < 320 || bitmap.height < 320)
+        throw new Error("The photo is too small to split reliably. Capture a higher-resolution menu.");
+      const middle = Math.floor(bitmap.width / 2);
+      async function column(left: number, width: number, suffix: string) {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = bitmap!.height;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Image preparation is unavailable in this browser");
+        context.drawImage(bitmap!, left, 0, width, bitmap!.height, 0, 0, width, bitmap!.height);
+        const blob = await new Promise<Blob>((resolve, reject) =>
+          canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Photo crop failed")), "image/webp", 0.94)
+        );
+        if (!supported.has(blob.type) || blob.size > MAX_PHOTO)
+          throw new Error("The cropped photo exceeds the supported format or size.");
+        return new File([blob], item.file.name.replace(/\.[^.]+$/, "") + "-" + suffix + "." + (blob.type === "image/webp" ? "webp" : "png"), { type: blob.type });
+      }
+      const left = await column(0, middle, "left");
+      const right = await column(middle, bitmap.width - middle, "right");
+      const leftUrl = URL.createObjectURL(left);
+      const rightUrl = URL.createObjectURL(right);
+      localUrls.current.add(leftUrl);
+      localUrls.current.add(rightUrl);
+      setDrafts((previous) => previous.flatMap((d) =>
+        d.id === id ? [
+          { ...d, file: left, preview: leftUrl },
+          { id: crypto.randomUUID(), pageIndex: d.pageIndex + 1, file: right, preview: rightUrl, state: "pending" as const },
+        ] : [{ ...d, pageIndex: d.pageIndex > item.pageIndex ? d.pageIndex + 1 : d.pageIndex }]
+      ).sort((a, b) => a.pageIndex - b.pageIndex));
+      URL.revokeObjectURL(item.preview);
+      localUrls.current.delete(item.preview);
+      setNotice("Two column crops are ready for private upload. Splitting helps recognition but cannot restore unreadable text.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not split this photo.");
+    } finally {
+      bitmap?.close();
+      setBusy(false);
+    }
   }
   function movePending(id: string, offset: -1 | 1) {
     if (busy) return;
@@ -795,6 +858,18 @@ export function CaptureWizard({
                             </button>
                           </div>
                         )}
+                        {d.state === "pending" && (
+                          <button
+                            type="button"
+                            disabled={busy || [...session.sources, ...drafts].some((s) => s.pageIndex === 11) || session.sources.some((s) => s.pageIndex >= d.pageIndex)}
+                            onClick={() => { void splitPending(d.id); }}
+                            aria-label={"Split " + d.file.name + " into two columns"}
+                            title="Use when a photographed menu has two vertical columns"
+                            className="rounded-lg border border-orange-200 bg-orange-50 px-2 py-1.5 text-xs font-semibold text-orange-900 disabled:opacity-40"
+                          >
+                            Split columns
+                          </button>
+                        )}
                         {d.state !== "ready" && d.state !== "uploading" && (
                           <button
                             type="button"
@@ -851,6 +926,11 @@ export function CaptureWizard({
                       <p className="text-xs text-stone-500">
                         {s.width && s.height ? s.width + " × " + s.height : "Upload may need retry"}
                       </p>
+                      {s.width && s.height && (s.width < 900 || s.height < 700) && (
+                        <p className="mt-1 text-xs font-medium text-amber-800">
+                          Low resolution. Small printed prices may be unreadable; recapture at a higher resolution when possible.
+                        </p>
+                      )
                     </div>
                   ))}
                 </div>
@@ -910,10 +990,17 @@ export function CaptureWizard({
               </p>
             )}
             {session.status === "failed" && (
-              <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">
-                The engine could not produce a trustworthy draft. Nothing has been published. Start
-                a fresh private import if you want to try again.
-              </p>
+              <div role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+                <p className="font-semibold">The engine could not produce a trustworthy draft. Nothing has been published.</p>
+                <p className="mt-1">
+                  {failureHelp[session.engineResult?.errorCode ?? ""] ??
+                    "Start a fresh private import after checking the photographs and provider configuration."}
+                </p>
+                <p className="mt-2 text-xs">
+                  Import ID: <code className="select-all">{session.id}</code>
+                  {session.engineResult?.errorCode && " · Reason: " + session.engineResult.errorCode}
+                </p>
+              </div>
             )}
             {!["applied", "cancelled", "failed", "expired"].includes(session.status) && (
               <button
@@ -940,6 +1027,12 @@ export function CaptureWizard({
                 These are untrusted suggestions. Check every name and price against the photographs.
                 You must confirm every entry before creating a private editable draft.
               </p>
+              {!!session.candidate.document.sourceWarnings?.length && (
+                <div role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  Partial extraction: {session.candidate.document.sourceWarnings.length} photographed page(s) did not return trustworthy data.
+                  Review the successful pages carefully; missing entries must be added manually or reimported from a clearer photograph.
+                </div>
+              )
               <Link
                 href={"/dashboard/menu/import/" + encodeURIComponent(session.id) + "/review"}
                 className="scan-action mt-4"
