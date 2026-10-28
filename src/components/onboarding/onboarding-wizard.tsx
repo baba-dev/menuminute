@@ -12,6 +12,7 @@ import { StepContactTables } from "./wizard-steps/step-contact-tables";
 import { StepLaunch } from "./wizard-steps/step-launch";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
+import { regions } from "@/modules/onboarding/locales";
 import "./onboarding-wizard.css";
 
 const STEPS: { id: WizardStepId; label: string; number: number; subtitle: string }[] = [
@@ -56,7 +57,7 @@ function validateStep(step: number, draft: WizardDraft): string | null {
       return "Use valid six-digit HEX brand colors.";
   }
   if (step === 1) {
-    if (!/^[A-Z]{2}$/.test(draft.country)) return "Select a valid outlet country.";
+    if (!regions.includes(draft.country)) return "Select a supported outlet country.";
     if ((draft.latitude === null) !== (draft.longitude === null))
       return "Enter both latitude and longitude, or leave both empty.";
     if (
