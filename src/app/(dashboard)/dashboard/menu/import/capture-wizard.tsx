@@ -1032,7 +1032,7 @@ export function CaptureWizard({
                   Partial extraction: {session.candidate.document.sourceWarnings.length} photographed page(s) did not return trustworthy data.
                   Review the successful pages carefully; missing entries must be added manually or reimported from a clearer photograph.
                 </div>
-              )
+              )}
               <Link
                 href={"/dashboard/menu/import/" + encodeURIComponent(session.id) + "/review"}
                 className="scan-action mt-4"
