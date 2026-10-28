@@ -1,50 +1,69 @@
-import { it, expect, describe, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { billingState, withEntitledOutlet } from "../src/modules/billing/service";
 
-// Mock tenancy service
-vi.mock("@/modules/tenancy/service", () => ({
-  withActor: vi.fn(async (_actor, work) => {
-    // Mock successful org admin check
-    const mockTx = {
-      execute: vi.fn().mockResolvedValue({ rows: [{ allowed: true }] }),
-    };
-    return work(mockTx);
-  }),
-  withOutlet: vi.fn(async (_actor, _outletId, _perm, work) => {
-    const mockTx = {
-      execute: vi.fn().mockResolvedValue({ rows: [{ allowed: true }] }),
-    };
-    return work(mockTx);
-  }),
+const state = vi.hoisted(() => ({
+  dbCommunity: false,
+  appCommunity: false,
+  entitlementAllowed: true,
 }));
-
-describe("Billing Dual-Mode (Community Edition vs Cloud)", () => {
-  it("grants all capabilities in Community Edition mode", async () => {
-    const actor = { userId: "user-123", sessionId: "sess-123" };
-    const orgId = "org-test-community";
-
-    const state = await billingState(actor, orgId);
-    expect(state.freeMenu).toBe(true);
-    expect(state.ordering).toBe(true);
-    expect(state.kitchen).toBe(true);
-    expect(state.isCommunityEdition).toBe(true);
+vi.mock("@/lib/config/env", () => ({ env: {
+  get COMMUNITY_EDITION() { return state.appCommunity; },
+} }));
+vi.mock("@/modules/tenancy/service", () => {
+  const transaction = () => ({
+    execute: vi.fn(async () => ({
+      rows: [{
+        allowed: state.entitlementAllowed,
+        community: state.dbCommunity,
+        ordering: state.entitlementAllowed,
+        kitchen: state.entitlementAllowed,
+      }],
+    })),
+    select: () => ({
+      from: () => ({
+        where: () => Object.assign(
+          Promise.resolve([{ organizationId: "org-1" }]),
+          { orderBy: () => ({ limit: async () => [] }) }
+        ),
+      }),
+    }),
   });
+  return {
+    withActor: vi.fn(async (_actor, work) => work(transaction())),
+    withOutlet: vi.fn(async (_actor, _outlet, _permission, work) => work(transaction())),
+  };
+});
 
-  it("permits work via withEntitledOutlet in Community Edition without DB entitlement check", async () => {
-    const actor = { userId: "user-123", sessionId: "sess-123" };
-    let executed = false;
-
-    await withEntitledOutlet(
-      actor,
-      "outlet-test",
-      "orders.accept",
-      "ordering.new",
-      async () => {
-        executed = true;
-        return true;
-      }
-    );
-
-    expect(executed).toBe(true);
+describe("Billing edition and DB entitlement enforcement", () => {
+  const actor = { userId: "user-1", sessionId: "session-1" };
+  it("reports effective cloud grants, not hardcoded premium access", async () => {
+    state.appCommunity = false;
+    state.dbCommunity = false;
+    state.entitlementAllowed = false;
+    const actual = await billingState(actor, "org-1");
+    expect(actual.isCommunityEdition).toBe(false);
+    expect(actual.ordering).toBe(false);
+    expect(actual.kitchen).toBe(false);
+  });
+  it("refuses a mismatched application/database edition", async () => {
+    state.appCommunity = true;
+    state.dbCommunity = false;
+    await expect(billingState(actor, "org-1")).rejects.toThrow("Deployment edition mismatch");
+  });
+  it("shows community capabilities only when database entitlements exist", async () => {
+    state.appCommunity = true;
+    state.dbCommunity = true;
+    state.entitlementAllowed = true;
+    const actual = await billingState(actor, "org-1");
+    expect(actual.isCommunityEdition).toBe(true);
+    expect(actual.ordering).toBe(true);
+  });
+  it("does not bypass database entitlements for Community Edition work", async () => {
+    state.appCommunity = true;
+    state.dbCommunity = true;
+    state.entitlementAllowed = false;
+    await expect(
+      withEntitledOutlet(actor, "outlet-1", "orders.accept", "ordering.new", async () => true)
+    ).rejects.toThrow("An active entitlement is required");
   });
 });
