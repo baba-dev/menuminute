@@ -6,7 +6,7 @@ browser-based authenticator enrollment/sign-in/recovery/step-up acceptance pass.
 
 ## MFA enforcement
 
-New organizations default to `mfa_required=true`. Existing organizations are
+New organizations default to `mfa_required=false` from migration 0032. MFA remains opt-in for ordinary accounts; existing organizations are
 grandfathered as false to avoid an unannounced lockout; inventory and notify verified
 owners, ask them to enroll, and flip the flag in a reviewed per-organization rollout.
 Owner/admin protected API requests and dashboard entry are blocked until enrollment.

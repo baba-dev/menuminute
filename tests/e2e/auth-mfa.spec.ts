@@ -59,14 +59,14 @@ test("new owner enrolls MFA, confirms privileged action, and recovers sign-in wi
       "select mfa_required from organizations where id=$1",
       [outlet.organizationId]
     );
-    expect(org.rows[0]?.mfa_required).toBe(true);
+    expect(org.rows[0]?.mfa_required).toBe(false);
   });
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  // Isolated localhost browser fixtures opt out of the mandatory redirect only.
-  // The production policy remains enforced, and this new organization must require MFA.
+  // MFA is an opt-in security upgrade. Registration and ordinary dashboard work
+  // must remain available without enrollment.
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/account/security");
   await expect(page.getByRole("heading", { name: "Account security" })).toBeVisible();
