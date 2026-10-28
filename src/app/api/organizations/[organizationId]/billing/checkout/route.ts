@@ -39,8 +39,8 @@ export async function POST(
       return { subscriptions: existing.rows[0]?.subscriptions, grants: grants.rows[0] };
     });
 
-    const body = await req.json();
-    const plan = body?.plan;
+    const body: unknown = await req.json();
+    const plan = body !== null && typeof body === "object" && "plan" in body ? body.plan : undefined;
     if (plan !== "ordering" && plan !== "kitchen_pro") {
       throw new ValidationError("Invalid plan. Choose 'ordering' or 'kitchen_pro'");
     }
