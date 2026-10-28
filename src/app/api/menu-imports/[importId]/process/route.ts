@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -12,7 +13,7 @@ type C = { params: Promise<{ importId: string }> };
 const command = z
   .object({ expectedRevision: z.number().int().positive(), consent: z.literal(true) })
   .strict();
-export async function POST(req: Request, c: C) {
+async function observed_POST(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     if (!importEngineEnabled())
@@ -42,3 +43,5 @@ export async function POST(req: Request, c: C) {
     return errorResponse(err, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);

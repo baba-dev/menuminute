@@ -1,9 +1,10 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { privateMedia, mediaCommand } from "@/modules/media/product-service";
 type C = { params: Promise<{ mediaId: string }> };
-export async function GET(req: Request, c: C) {
+async function observed_GET(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req);
     return new Response(
@@ -14,7 +15,7 @@ export async function GET(req: Request, c: C) {
     return errorResponse(e, req);
   }
 }
-export async function PATCH(req: Request, c: C) {
+async function observed_PATCH(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const data = z
@@ -28,3 +29,6 @@ export async function PATCH(req: Request, c: C) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const PATCH = observedRoute(observed_PATCH);
