@@ -35,8 +35,9 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("browser-password-123");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/start/);
+  await page.getByRole("link", { name: /Create my first restaurant/ }).click();
   await expect(page).toHaveURL(/\/onboarding/);
-  await page.goto("/onboarding");
   // The first-outlet wizard replaced the legacy single-step form. Exercise every
   // stage before continuing the existing private mutation/session recovery check.
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
@@ -52,6 +53,8 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   const launch = page.getByRole("button", { name: "Confirm & Create Outlet" });
   await expect(launch).toBeDisabled();
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
+  await expect(launch).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I confirm OMR is the currency/ }).check();
   await expect(launch).toBeEnabled();
   await launch.click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
