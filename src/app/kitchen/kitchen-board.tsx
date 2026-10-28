@@ -287,7 +287,8 @@ export function KitchenBoard({
     await command(base + "/admin", { action, data });
   }
   const setupProgress = useMemo(
-    () => kitchenSetupProgress(snapshot, menuDishes), [snapshot, menuDishes]
+    () => kitchenSetupProgress(snapshot, menuDishes),
+    [snapshot, menuDishes]
   );
   useEffect(() => {
     if (!canManage || revoked.current) return;
@@ -556,87 +557,88 @@ export function KitchenBoard({
         {canManage && (
           <KitchenExpeditor base={base} enabled={snapshot.enabled} cursor={snapshot.cursor} />
         )}
-        {canManage && snapshot.work.some((w) => w.status === "queued" || w.status === "preparing") && (
-          <details className="kk-transfer-panel">
-            <summary>Transfer an active ticket</summary>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void moveWork();
-              }}
-              className="space-y-3"
-            >
-              <h3 className="font-extrabold">Transfer an active ticket</h3>
-              <p className="text-xs text-stone-600 dark:text-stone-300">
-                An auditable transfer keeps the same ticket and its original work history. Completed
-                work cannot be moved.
-              </p>
-              <label htmlFor="reassign-work" className="block text-sm font-medium">
-                Ticket
-              </label>
-              <select
-                id="reassign-work"
-                required
-                value={reassignWork}
-                onChange={(e) => setReassignWork(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
+        {canManage &&
+          snapshot.work.some((w) => w.status === "queued" || w.status === "preparing") && (
+            <details className="kk-transfer-panel">
+              <summary>Transfer an active ticket</summary>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void moveWork();
+                }}
+                className="space-y-3"
               >
-                <option value="">Select active ticket</option>
-                {snapshot.work
-                  .filter((w) => w.status === "queued" || w.status === "preparing")
-                  .map((w) => (
-                    <option key={w.id} value={w.id}>
-                      #{w.orderNumber} · {w.dishName} ·{" "}
-                      {snapshot.stations.find((st) => st.id === w.stationId)?.name}
-                    </option>
-                  ))}
-              </select>
-              <label htmlFor="reassign-station" className="block text-sm font-medium">
-                Move to
-              </label>
-              <select
-                id="reassign-station"
-                required
-                value={reassignStation}
-                onChange={(e) => setReassignStation(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              >
-                <option value="">Choose another station</option>
-                {snapshot.stations
-                  .filter(
-                    (st) => st.id !== snapshot.work.find((w) => w.id === reassignWork)?.stationId
-                  )
-                  .map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.name}
-                    </option>
-                  ))}
-              </select>
-              <label htmlFor="reassign-reason" className="block text-sm font-medium">
-                Reason for transfer
-              </label>
-              <input
-                id="reassign-reason"
-                required
-                minLength={5}
-                maxLength={500}
-                value={reassignReason}
-                onChange={(e) => setReassignReason(e.target.value)}
-                placeholder="e.g. Grill station temporarily unavailable"
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              />
-              <button
-                type="submit"
-                disabled={
-                  !!busy || !reassignWork || !reassignStation || reassignReason.trim().length < 5
-                }
-                className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
-              >
-                Transfer ticket
-              </button>
-            </form>
-          </details>
-        )}
+                <h3 className="font-extrabold">Transfer an active ticket</h3>
+                <p className="text-xs text-stone-600 dark:text-stone-300">
+                  An auditable transfer keeps the same ticket and its original work history.
+                  Completed work cannot be moved.
+                </p>
+                <label htmlFor="reassign-work" className="block text-sm font-medium">
+                  Ticket
+                </label>
+                <select
+                  id="reassign-work"
+                  required
+                  value={reassignWork}
+                  onChange={(e) => setReassignWork(e.target.value)}
+                  className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
+                >
+                  <option value="">Select active ticket</option>
+                  {snapshot.work
+                    .filter((w) => w.status === "queued" || w.status === "preparing")
+                    .map((w) => (
+                      <option key={w.id} value={w.id}>
+                        #{w.orderNumber} · {w.dishName} ·{" "}
+                        {snapshot.stations.find((st) => st.id === w.stationId)?.name}
+                      </option>
+                    ))}
+                </select>
+                <label htmlFor="reassign-station" className="block text-sm font-medium">
+                  Move to
+                </label>
+                <select
+                  id="reassign-station"
+                  required
+                  value={reassignStation}
+                  onChange={(e) => setReassignStation(e.target.value)}
+                  className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
+                >
+                  <option value="">Choose another station</option>
+                  {snapshot.stations
+                    .filter(
+                      (st) => st.id !== snapshot.work.find((w) => w.id === reassignWork)?.stationId
+                    )
+                    .map((st) => (
+                      <option key={st.id} value={st.id}>
+                        {st.name}
+                      </option>
+                    ))}
+                </select>
+                <label htmlFor="reassign-reason" className="block text-sm font-medium">
+                  Reason for transfer
+                </label>
+                <input
+                  id="reassign-reason"
+                  required
+                  minLength={5}
+                  maxLength={500}
+                  value={reassignReason}
+                  onChange={(e) => setReassignReason(e.target.value)}
+                  placeholder="e.g. Grill station temporarily unavailable"
+                  className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
+                />
+                <button
+                  type="submit"
+                  disabled={
+                    !!busy || !reassignWork || !reassignStation || reassignReason.trim().length < 5
+                  }
+                  className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
+                >
+                  Transfer ticket
+                </button>
+              </form>
+            </details>
+          )}
         <section aria-label="Station ticket board" className="kk-workspace">
           <div className="kk-section-heading">
             <div>
