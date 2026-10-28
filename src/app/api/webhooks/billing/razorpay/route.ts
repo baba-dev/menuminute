@@ -4,6 +4,7 @@ import { env } from "@/lib/config/env";
 import {
   providerEventId,
   recordRazorpaySubscriptionGrant,
+  recordRazorpaySubscriptionRefund,
   recordRazorpaySubscriptionStatus,
   verifyRazorpayWebhookSignature,
 } from "@/modules/billing/razorpay";
@@ -55,7 +56,37 @@ export async function POST(req: Request) {
   const eventName = (parsed as { event?: unknown } | null)?.event;
   if (typeof eventName !== "string")
     return NextResponse.json({ error: "Invalid event" }, { status: 422 });
+  const recordId = providerEventId(raw);
+  if (eventName === "payment.refunded") {
+    const refund = z.object({
+      event: z.literal("payment.refunded"),
+      payload: z.object({
+        payment: z.object({
+          entity: z.object({
+            id: z.string().startsWith("pay_"),
+            currency: z.literal("INR"),
+            amount: z.number().int().positive(),
+            amount_refunded: z.number().int().nonnegative(),
+          }),
+        }),
+      }),
+    }).safeParse(parsed);
+    if (!refund.success)
+      return NextResponse.json({ error: "Invalid refund event" }, { status: 422 });
+    const payment = refund.data.payload.payment.entity;
+    if (payment.amount_refunded < payment.amount)
+      return NextResponse.json({ received: true, ignored: "partial_refund" });
+    try {
+      const linked = await recordRazorpaySubscriptionRefund({ eventId: recordId, paymentId: payment.id });
+      return NextResponse.json({ received: true, linked });
+    } catch {
+      console.error("[billing] Full refund reconciliation failed");
+      return NextResponse.json({ error: "Reconciliation temporarily unavailable" }, { status: 503 });
+    }
+  }
   const supported = new Set([
+    "subscription.pending",
+    "subscription.resumed",
     "subscription.charged",
     "subscription.paused",
     "subscription.halted",
@@ -70,7 +101,6 @@ export async function POST(req: Request) {
   const result = webhook.safeParse(parsed);
   if (!result.success) return NextResponse.json({ error: "Invalid provider event" }, { status: 422 });
   const { event, created_at: createdAt, payload } = result.data;
-  const recordId = providerEventId(raw);
   const sub = payload.subscription.entity;
   try {
     if (event === "subscription.charged") {
@@ -102,8 +132,9 @@ export async function POST(req: Request) {
       });
       return NextResponse.json({ received: true, state: "charged" });
     }
-    const status = event.slice("subscription.".length) as
-      | "paused" | "halted" | "cancelled" | "completed" | "expired";
+    const status = event === "subscription.resumed" ? "active" :
+      event.slice("subscription.".length) as
+        "pending" | "paused" | "halted" | "cancelled" | "completed" | "expired";
     await recordRazorpaySubscriptionStatus({
       eventId: recordId,
       subscriptionId: sub.id,
