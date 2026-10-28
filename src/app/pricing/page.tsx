@@ -35,7 +35,7 @@ const plans = [
     name: "Live Table Ordering",
     price: "₹119",
     period: "/ month",
-    altPrice: "or $19/mo Global",
+    altPrice: "INR billing · international pricing coming later",
     description:
       "Let diners order directly from their phone at the table. Eliminate waiter wait times and turn tables faster.",
     cta: "Start Live Ordering",
@@ -56,7 +56,7 @@ const plans = [
     name: "Kitchen Pro KDS",
     price: "₹299",
     period: "/ month",
-    altPrice: "or $39/mo Global",
+    altPrice: "Available after Kitchen Pro release approval",
     description:
       "Full digital Kitchen Display System replacing paper tickets with real-time station tablets and chimes.",
     cta: "Get Kitchen Pro",
@@ -190,7 +190,7 @@ export default function PricingPage() {
                 Self-host MenuMinute on your own server.
               </h2>
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
-                Prefer to run your own infrastructure? MenuMinute is open source under the AGPL.
+                Prefer to run your own infrastructure? MenuMinute is open source under the MIT License.
                 Single-user self-hosted instances have all features (ordering, KDS, AI scans)
                 100% unlocked for free.
               </p>
