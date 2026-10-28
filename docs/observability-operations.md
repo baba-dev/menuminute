@@ -17,7 +17,7 @@ until the collector is explicitly installed.
    \`menuminute-logreader:menuminute\` mode 0750. Set default index files to 0640.
 5. Install the reviewed \`infra/systemd/menuminute-log-collector.service\`
    as a root-owned service under \`/etc/systemd/system\`.
-6. Deploy the audited artifact, then \`systemctl daemon-reload\`,
+6. Confirm the immutable release package contains `infra/log-collector/collector.mjs` and the collector unit, then deploy the audited artifact. Then \`systemctl daemon-reload\`,
    \`systemctl enable --now menuminute-log-collector.service\`.
 7. Check \`systemctl status menuminute-log-collector.service\` and
    \`journalctl -u menuminute-log-collector.service --since -10min\`.
