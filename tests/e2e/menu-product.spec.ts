@@ -701,7 +701,8 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
     await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
     const galleryLayout = await classicTheme.evaluate((card) => {
       const sample = card.querySelector('[data-theme-preview="ember"]');
-      const title = card.querySelector("span:nth-of-type(2)");
+      // :scope excludes the decorative captions nested inside the theme sample.
+      const title = card.querySelector(":scope > span:nth-of-type(2)");
       if (!sample || !title) return null;
       const box = card.getBoundingClientRect();
       const preview = sample.getBoundingClientRect();
