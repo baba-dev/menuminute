@@ -930,7 +930,7 @@ export function CaptureWizard({
                         <p className="mt-1 text-xs font-medium text-amber-800">
                           Low resolution. Small printed prices may be unreadable; recapture at a higher resolution when possible.
                         </p>
-                      )
+                      )}
                     </div>
                   ))}
                 </div>
