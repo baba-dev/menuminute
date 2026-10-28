@@ -115,6 +115,23 @@ async function billingQuery<T extends Record<string, unknown>>(
   }
 }
 
+/** Fail checkout BEFORE a customer authorizes payment when the billing writer is unavailable. */
+export async function verifyBillingWriterReady(): Promise<void> {
+  const client = await isolatedPool().connect();
+  try {
+    const check = await client.query<{ role: string; permitted: boolean }>(
+      `SELECT current_user AS role,
+        has_function_privilege(current_user,
+          'app_private.record_razorpay_charge(text,text,text,text,timestamptz,timestamptz,timestamptz)',
+          'EXECUTE') AS permitted`
+    );
+    if (check.rows[0]?.role !== "menuminute_billing" || !check.rows[0]?.permitted)
+      throw new Error("Isolated webhook database role has not been provisioned");
+  } finally {
+    client.release();
+  }
+}
+
 /** Caller MUST have verified the Razorpay signature, payment status, amount and plan. */
 export async function recordRazorpaySubscriptionGrant(params: {
   eventId: string;
