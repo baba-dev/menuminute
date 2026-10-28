@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowLeft,
@@ -97,14 +97,6 @@ export function KitchenSetupModal({
   ];
   const percent = Math.round((passed.filter(Boolean).length / passed.length) * 100);
 
-  useEffect(() => {
-    if (open) {
-      setMessage("");
-      setBatchDone(0);
-      setStep((old) => (old === "review" ? "stations" : old));
-    }
-  }, [open]);
-
   async function execute(action: string, data: Record<string, string>) {
     setBusy(true);
     setMessage("");
@@ -166,7 +158,13 @@ export function KitchenSetupModal({
     <Dialog.Root
       open={open}
       onOpenChange={(next) => {
-        if (!busy) onOpenChange(next);
+        if (busy) return;
+        if (!next) {
+          setMessage("");
+          setBatchDone(0);
+          setStep("stations");
+        }
+        onOpenChange(next);
       }}
     >
       <Dialog.Portal>
