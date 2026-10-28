@@ -18,7 +18,9 @@ export default async function OnboardingPage() {
       description="Set up your first outlet. We save your progress to your verified account, so interruptions and reloads are safe."
     >
       <SessionContinuity />
-      <p className="wizard-counter"><a href="/start">← Choose another setup path</a></p>
+      <p className="wizard-counter">
+        <a href="/start">← Choose another setup path</a>
+      </p>
       <div className="wizard-welcome-media" aria-hidden="true">
         <ThemedArtwork
           name="welcome-hero-desktop"

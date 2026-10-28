@@ -25,14 +25,33 @@ export function InvitationEntry() {
     }
   }
   return (
-    <form className="mm-auth-form" onSubmit={(event) => { event.preventDefault(); openInvitation(); }}>
-      <label className="mm-auth-field" htmlFor="invite-link">Your invitation link
-        <input id="invite-link" type="text" autoComplete="off" value={value}
+    <form
+      className="mm-auth-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        openInvitation();
+      }}
+    >
+      <label className="mm-auth-field" htmlFor="invite-link">
+        Your invitation link
+        <input
+          id="invite-link"
+          type="text"
+          autoComplete="off"
+          value={value}
           placeholder="https://food.bababuilds.com/invite/..."
-          onChange={(event) => setValue(event.target.value)} required />
+          onChange={(event) => setValue(event.target.value)}
+          required
+        />
       </label>
-      {error && <p role="alert" className="mm-auth-message mm-auth-message--error">{error}</p>}
-      <button type="submit" className="mm-auth-submit">Continue to invitation</button>
+      {error && (
+        <p role="alert" className="mm-auth-message mm-auth-message--error">
+          {error}
+        </p>
+      )}
+      <button type="submit" className="mm-auth-submit">
+        Continue to invitation
+      </button>
     </form>
   );
 }

@@ -34,7 +34,10 @@ export const createRestaurantSchema = z.object({
   city: z.string().max(100).optional().nullable(),
   state: z.string().max(100).optional().nullable(),
   postalCode: z.string().max(24).optional().nullable(),
-  country: z.string().regex(/^[A-Z]{2}$/).refine((code) => regions.includes(code), "Unsupported country"),
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .refine((code) => regions.includes(code), "Unsupported country"),
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
   phone: z.string().max(40).optional().nullable(),

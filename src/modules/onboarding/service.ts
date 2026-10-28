@@ -53,10 +53,17 @@ export async function onboardingState(actor: Actor) {
       sql`select id from restaurants where id=${expected} limit 1`
     );
     if (state.status === "completed" && !visible.rows[0]) {
-      return { key: state.operation_key, draft: {}, status: "inaccessible" as const, outletId: null };
+      return {
+        key: state.operation_key,
+        draft: {},
+        status: "inaccessible" as const,
+        outletId: null,
+      };
     }
     if (visible.rows[0] && state.status === "completed" && Object.keys(state.draft).length) {
-      await tx.execute(sql`update onboarding_progress set draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`);
+      await tx.execute(
+        sql`update onboarding_progress set draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`
+      );
     }
     if (visible.rows[0] && state.status !== "completed") {
       await tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${expected},

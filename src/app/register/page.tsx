@@ -181,7 +181,12 @@ function RegistrationForm() {
         </label>
         {errors.acceptTerms && <small role="alert">{errors.acceptTerms.message}</small>}
         <label className="mm-auth-secondary">
-          <input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show passwords
+          <input
+            type="checkbox"
+            checked={showPassword}
+            onChange={(event) => setShowPassword(event.target.checked)}
+          />{" "}
+          Show passwords
         </label>
         <RegistrationChallenge onToken={setChallenge} resetKey={challengeRetry} />
         <button

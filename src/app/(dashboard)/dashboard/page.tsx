@@ -89,6 +89,7 @@ export default async function DashboardPage() {
     : null;
   const stats = dashboardSummary(menus, codes, publicProjection);
   const setup = await outletSetupReadiness(actor, outlet);
+  const hasSavedMenu = setup.checks.some((check) => check.id === "dishes" && check.complete);
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
   const kpis = [

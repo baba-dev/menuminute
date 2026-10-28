@@ -17,7 +17,13 @@ declare global {
     };
   }
 }
-export function RegistrationChallenge({ onToken, resetKey = 0 }: { onToken: (token: string) => void; resetKey?: number }) {
+export function RegistrationChallenge({
+  onToken,
+  resetKey = 0,
+}: {
+  onToken: (token: string) => void;
+  resetKey?: number;
+}) {
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const container = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);

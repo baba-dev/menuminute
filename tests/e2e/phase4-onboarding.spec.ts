@@ -23,8 +23,10 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("onboarding-secure-password-123");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/start/);
+  await expect(page.getByRole("link", { name: /Create my first restaurant/ })).toBeVisible();
+  await page.getByRole("link", { name: /Create my first restaurant/ }).click();
   await expect(page).toHaveURL(/\/onboarding/);
-  await page.goto("/onboarding");
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) <= 640) {
     await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 1 of 5");
@@ -58,6 +60,7 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
     return route.continue();
   });
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
+  await page.getByRole("checkbox", { name: /I confirm INR is the currency/ }).check();
   await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
   await expect(page.locator('.wizard-error-banner[role="alert"]')).toContainText(
     "Temporary provisioning error"
@@ -69,6 +72,7 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await expect(recoveredLaunch).toBeDisabled();
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
   await expect(recoveredLaunch).toBeEnabled();
+  await page.getByRole("checkbox", { name: /I confirm INR is the currency/ }).check();
   await recoveredLaunch.click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
   await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();

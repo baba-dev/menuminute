@@ -74,8 +74,10 @@ function validateStep(step: number, draft: WizardDraft): string | null {
   }
   if (step === 2) {
     if (!draft.fulfillmentModes.length) return "Choose at least one fulfillment mode.";
-    if (draft.operatingHours && !scheduleSchema.safeParse(draft.operatingHours).success) return "Review your opening hours.";
-    if (draft.serviceHours && !scheduleSchema.safeParse(draft.serviceHours).success) return "Review your service hours.";
+    if (draft.operatingHours && !scheduleSchema.safeParse(draft.operatingHours).success)
+      return "Review your opening hours.";
+    if (draft.serviceHours && !scheduleSchema.safeParse(draft.serviceHours).success)
+      return "Review your service hours.";
     if (!Intl.supportedValuesOf("currency").includes(draft.currency))
       return "Choose a supported currency.";
     try {
@@ -149,12 +151,15 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       const res = await fetch("/api/onboarding", { cache: "no-store" });
       if (!res.ok) throw new Error("Unable to load saved progress.");
       const data = await res.json();
-      if (typeof data.userId === "string") progressStorageKey.current = "menuminute.first-outlet.step." + data.userId;
+      if (typeof data.userId === "string")
+        progressStorageKey.current = "menuminute.first-outlet.step." + data.userId;
 
       if (data.status === "inaccessible") {
         setInaccessible(true);
         setReady(false);
-        setErrorMessage("This previously created outlet is no longer accessible. Contact its administrator.");
+        setErrorMessage(
+          "This previously created outlet is no longer accessible. Contact its administrator."
+        );
         return;
       }
       if (data.status === "completed" && data.outletId) {
@@ -194,7 +199,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       } catch {
         /* Private browsing or blocked storage. */
       }
-      if (data.status !== "provisioning" && Number.isInteger(storedStep) && storedStep >= 0 && storedStep < STEPS.length)
+      if (
+        data.status !== "provisioning" &&
+        Number.isInteger(storedStep) &&
+        storedStep >= 0 &&
+        storedStep < STEPS.length
+      )
         setCurrentStep(storedStep);
       setReady(true);
     } catch {
@@ -202,7 +212,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       // never replace a durable draft with empty form values.
       setRestoreFailed(true);
       setReady(false);
-      setErrorMessage("Saved progress could not be loaded. Reconnect and retry; nothing was overwritten.");
+      setErrorMessage(
+        "Saved progress could not be loaded. Reconnect and retry; nothing was overwritten."
+      );
     } finally {
       reconciliation.current = false;
     }
@@ -342,11 +354,22 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       {restoreFailed && (
         <div className="wizard-error-banner" role="alert">
           Saved progress could not be verified. Editing is paused to protect your data.
-          <button type="button" className="wizard-back-btn" onClick={() => void reconcile()}>Retry loading saved progress</button>
+          <button type="button" className="wizard-back-btn" onClick={() => void reconcile()}>
+            Retry loading saved progress
+          </button>
         </div>
       )}
-      {inaccessible && <p role="alert">Your previous outlet is no longer accessible. Please contact its administrator or <a href="/account">review your account</a>.</p>}
-      {provisioning && <p role="status">A previous creation request is being reconciled. The existing request will be reused.</p>}
+      {inaccessible && (
+        <p role="alert">
+          Your previous outlet is no longer accessible. Please contact its administrator or{" "}
+          <a href="/account">review your account</a>.
+        </p>
+      )}
+      {provisioning && (
+        <p role="status">
+          A previous creation request is being reconciled. The existing request will be reused.
+        </p>
+      )}
       {/* Stepper Progress Bar */}
       <nav className="wizard-stepper" aria-label="Onboarding Progress">
         {STEPS.map((step, idx) => {
@@ -430,7 +453,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
         {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
         {currentStep === 4 && (
-          <StepLaunch key={draft.timezone} draft={draft} busy={busy || !ready} onLaunch={handleLaunch} />
+          <StepLaunch
+            key={draft.timezone}
+            draft={draft}
+            busy={busy || !ready}
+            onLaunch={handleLaunch}
+          />
         )}
 
         {/* Error and Status Banner */}
@@ -495,7 +523,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
                   type="button"
                   className="wizard-primary-btn"
                   onClick={handleNext}
-                  disabled={!ready || busy || provisioning || (currentStep === 0 && draft.name.trim().length < 2)}
+                  disabled={
+                    !ready ||
+                    busy ||
+                    provisioning ||
+                    (currentStep === 0 && draft.name.trim().length < 2)
+                  }
                 >
                   <span>Continue</span>
                   <ArrowRight size={16} />

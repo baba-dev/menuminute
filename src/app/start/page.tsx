@@ -7,7 +7,10 @@ import { listOrganizations } from "@/modules/organizations/service";
 import { AuthShell } from "@/components/auth/auth-shell";
 import "./start.css";
 
-export const metadata = { title: "Choose your path — MenuMinute", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Choose your path — MenuMinute",
+  robots: { index: false, follow: false },
+};
 
 export default async function StartPage() {
   const session = await auth();
@@ -16,7 +19,9 @@ export default async function StartPage() {
     getRestaurantsByUserId(session.user.id),
     listOrganizations({ userId: session.user.id }),
   ]);
-  const canAddOutlet = memberships.some((org) => org.isActive && (org.role === "owner" || org.role === "admin"));
+  const canAddOutlet = memberships.some(
+    (org) => org.isActive && (org.role === "owner" || org.role === "admin")
+  );
   const cards = [
     {
       title: "Create my first restaurant",
@@ -41,20 +46,33 @@ export default async function StartPage() {
     },
   ];
   return (
-    <AuthShell eyebrow="WELCOME / YOUR WORKSPACE" title="What brings you here?"
-      description="Choose the path that fits you. You can change workspaces whenever you need.">
+    <AuthShell
+      eyebrow="WELCOME / YOUR WORKSPACE"
+      title="What brings you here?"
+      description="Choose the path that fits you. You can change workspaces whenever you need."
+    >
       <div className="mm-entry-grid">
         {cards.map(({ title, copy, href, action, Icon }) => (
           <Link key={title} href={href} className="mm-entry-card">
             <Icon size={25} aria-hidden="true" />
             <strong>{title}</strong>
             <span>{copy}</span>
-            <em>{action} <ArrowRight size={16} aria-hidden="true" /></em>
+            <em>
+              {action} <ArrowRight size={16} aria-hidden="true" />
+            </em>
           </Link>
         ))}
       </div>
-      {!!outlets.length && <p className="mm-entry-note">You already have access to {outlets.length} outlet{outlets.length === 1 ? "" : "s"}. <Link href="/dashboard">Go to dashboard</Link>.</p>}
-      <p className="mm-entry-note">No payment card is needed to begin a QR menu. Email verification protects your team and restaurant data; authenticator MFA is optional for ordinary accounts.</p>
+      {!!outlets.length && (
+        <p className="mm-entry-note">
+          You already have access to {outlets.length} outlet{outlets.length === 1 ? "" : "s"}.{" "}
+          <Link href="/dashboard">Go to dashboard</Link>.
+        </p>
+      )}
+      <p className="mm-entry-note">
+        No payment card is needed to begin a QR menu. Email verification protects your team and
+        restaurant data; authenticator MFA is optional for ordinary accounts.
+      </p>
     </AuthShell>
   );
 }
