@@ -83,9 +83,7 @@ export async function importSqlite(
     // Only these immutable target seeds are permissible; never overwrite a
     // previously imported/edited plan or silently erase the hosted catalog.
     const canonicalPlans = new Set(["plan_free", "plan_ordering", "plan_kitchen_pro"]);
-    const existingPlans = (
-      await c.query<{ id: string }>("select id from subscription_plans")
-    ).rows;
+    const existingPlans = (await c.query<{ id: string }>("select id from subscription_plans")).rows;
     if (existingPlans.some((plan) => !canonicalPlans.has(plan.id)))
       throw new Error("Import target must be empty");
     if (rows("subscription_plans").some((plan) => canonicalPlans.has(String(plan.id))))
@@ -217,9 +215,8 @@ export async function importSqlite(
                 [rows(table).map((plan) => String(plan.id))]
               )
             ).rows[0]!.count
-          : (
-              await c.query<{ count: string }>(`select count(*)::text as count from "${table}"`)
-            ).rows[0]!.count;
+          : (await c.query<{ count: string }>(`select count(*)::text as count from "${table}"`))
+              .rows[0]!.count;
       if (Number(count) !== rows(table).length) throw new Error(`Reconciliation failed: ${table}`);
       report[table] = Number(count);
     }
