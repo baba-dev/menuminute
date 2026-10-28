@@ -464,6 +464,14 @@ export function MenuStudio({
     change(parsed.data);
     setMessage(items.length + " dishes added to private draft. Save when ready.");
   }
+  function moveSection(ci: number, delta: number) {
+    if (!doc) return;
+    const target = ci + delta;
+    if (target < 0 || target >= doc.categories.length) return;
+    const categories = [...doc.categories];
+    [categories[ci], categories[target]] = [categories[target]!, categories[ci]!];
+    change({ ...doc, categories });
+  }
   function moveDish(ci: number, di: number, delta: number) {
     updateCategory(ci, (category) => {
       const items = [...category.items];
@@ -804,6 +812,7 @@ export function MenuStudio({
                         }
                         onUpdateDish={updateDish}
                         onMoveDish={moveDish}
+                        onMoveSection={moveSection}
                       />
                     )}
                     {tab === "storefront" && (

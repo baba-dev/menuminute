@@ -80,6 +80,7 @@ describe("Menu Board and curated editorial references", () => {
         onUpdateCategory={() => {}}
         onUpdateDish={() => {}}
         onMoveDish={() => {}}
+        onMoveSection={() => {}}
       />
     );
     expect(html).toContain("Visual menu board");

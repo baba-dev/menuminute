@@ -36,6 +36,7 @@ export function StudioMenuBoard({
   onUpdateCategory,
   onUpdateDish,
   onMoveDish,
+  onMoveSection,
 }: {
   doc: MenuDocument;
   currency: string;
@@ -48,6 +49,7 @@ export function StudioMenuBoard({
   onUpdateCategory: (index: number, patch: Partial<Category>) => void;
   onUpdateDish: (categoryIndex: number, dishIndex: number, patch: Partial<Dish>) => void;
   onMoveDish: (categoryIndex: number, dishIndex: number, delta: number) => void;
+  onMoveSection: (categoryIndex: number, delta: number) => void;
 }) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -199,6 +201,16 @@ export function StudioMenuBoard({
                   </div>
                   <div className="menu-board-section-actions">
                     <span>{visible.length} dishes</span>
+                    <button type="button" aria-label={"Move section " + category.name + " up"}
+                      disabled={!canWrite || categoryIndex === 0}
+                      onClick={() => onMoveSection(categoryIndex, -1)}>
+                      <ArrowUp size={16} aria-hidden="true" />
+                    </button>
+                    <button type="button" aria-label={"Move section " + category.name + " down"}
+                      disabled={!canWrite || categoryIndex === doc.categories.length - 1}
+                      onClick={() => onMoveSection(categoryIndex, 1)}>
+                      <ArrowDown size={16} aria-hidden="true" />
+                    </button>
                     <button
                       type="button"
                       aria-label={"Edit section " + category.name}
