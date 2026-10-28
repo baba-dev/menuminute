@@ -76,9 +76,20 @@ export async function importSqlite(
     c = await pool.connect();
     await c.query("begin");
     await c.query("select pg_advisory_xact_lock(60312103)");
-    for (const table of ["users", "organizations", "restaurants", "subscription_plans"])
+    for (const table of ["users", "organizations", "restaurants"])
       if ((await c.query(`select 1 from ${table} limit 1`)).rowCount)
         throw new Error("Import target must be empty");
+    // Migration 0033 seeds canonical plans before legacy import begins.
+    // Only these immutable target seeds are permissible; never overwrite a
+    // previously imported/edited plan or silently erase the hosted catalog.
+    const canonicalPlans = new Set(["plan_free", "plan_ordering", "plan_kitchen_pro"]);
+    const existingPlans = (
+      await c.query<{ id: string }>("select id from subscription_plans")
+    ).rows;
+    if (existingPlans.some((plan) => !canonicalPlans.has(plan.id)))
+      throw new Error("Import target must be empty");
+    if (rows("subscription_plans").some((plan) => canonicalPlans.has(String(plan.id))))
+      throw new Error("Legacy subscription plan conflicts with the canonical billing catalog");
     await c.query(
       "alter table menu_categories disable trigger category_audit; alter table menu_items disable trigger item_audit"
     );
@@ -197,9 +208,18 @@ export async function importSqlite(
       "audit_logs",
     ]) {
       for (const row of rows(table)) await insert(table, row);
-      const count = (
-        await c.query<{ count: string }>(`select count(*)::text as count from "${table}"`)
-      ).rows[0]!.count;
+      // Pre-seeded canonical plans are not imported legacy rows.
+      const count =
+        table === "subscription_plans"
+          ? (
+              await c.query<{ count: string }>(
+                "select count(*)::text as count from subscription_plans where id = any($1::text[])",
+                [rows(table).map((plan) => String(plan.id))]
+              )
+            ).rows[0]!.count
+          : (
+              await c.query<{ count: string }>(`select count(*)::text as count from "${table}"`)
+            ).rows[0]!.count;
       if (Number(count) !== rows(table).length) throw new Error(`Reconciliation failed: ${table}`);
       report[table] = Number(count);
     }
