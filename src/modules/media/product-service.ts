@@ -8,6 +8,8 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { putObject, getObject } from "./storage";
 import { env } from "@/lib/config/env";
 import { createHash } from "node:crypto";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
+import { mediaEnv } from "@/lib/config/media-env";
 export async function mediaCommand(
   actor: Actor,
   outletId: string,
@@ -16,7 +18,7 @@ export async function mediaCommand(
   data: Record<string, unknown> = {}
 ) {
   try {
-    return await withActor(
+    const result = await withActor(
       actor,
       async (tx) =>
         (
@@ -25,6 +27,10 @@ export async function mediaCommand(
           )
         ).rows[0]!.result
     );
+    if (action === "approve" || action === "unapprove") {
+      await invalidateOutletMenuCache(outletId);
+    }
+    return result;
   } catch (e) {
     domainError(e);
   }
@@ -80,10 +86,21 @@ function publicMediaReader(id: string) {
     ).rows[0]?.data;
 }
 
+/** The storage key is controlled by PostgreSQL, not by the request URL. */
+export function isPublicDerivativeKey(key: string): boolean {
+  const parts = key.split("/");
+  return (
+    parts.length === 3 &&
+    parts.slice(0, 2).every((part) => /^[A-Za-z0-9_-]+$/.test(part)) &&
+    (parts[2] === "display.webp" || parts[2] === "thumb.webp")
+  );
+}
+
 export async function publicMediaResponse(
   id: string,
   thumbnail = false,
-  ifNoneMatch: string | null = null
+  ifNoneMatch: string | null = null,
+  allowInternalOffload = false
 ) {
   const read = publicMediaReader(id);
   const a = await read();
@@ -92,17 +109,37 @@ export async function publicMediaResponse(
   const etag = `"${createHash("sha256").update(key).digest("base64url")}"`;
   const validators = ifNoneMatch?.split(",").map((value) => value.trim().replace(/^W\//, ""));
   if (validators?.includes(etag) || validators?.includes("*")) {
-    return { etag, notModified: true as const };
+    return { etag, notModified: true as const, bytes: Buffer.alloc(0), internalPath: null };
+  }
+  // The internal path is derived solely from an authorized database storage key,
+  // never from the public request URL. Nginx's location must be marked internal.
+  if (
+    allowInternalOffload &&
+    mediaEnv.MEDIA_STORAGE === "local" &&
+    mediaEnv.MEDIA_X_ACCEL_REDIRECT_ENABLED &&
+    isPublicDerivativeKey(key)
+  ) {
+    const current = await read();
+    if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
+      throw new NotFoundError("Photo");
+    return {
+      etag,
+      notModified: false as const,
+      bytes: Buffer.alloc(0),
+      internalPath: `/_menuminute_media_internal/${key}`,
+    };
   }
   const bytes = await getObject(key);
   const current = await read();
   if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
     throw new NotFoundError("Photo");
-  return { bytes, etag, notModified: false as const };
+  return { bytes, etag, notModified: false as const, internalPath: null };
 }
 
 export async function publicMedia(id: string, thumbnail = false) {
   const result = await publicMediaResponse(id, thumbnail);
-  if (result.notModified) throw new Error("Unexpected conditional media response");
+  if (result.notModified || !result.bytes) {
+    throw new Error("Unexpected conditional media response");
+  }
   return result.bytes;
 }

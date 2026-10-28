@@ -9,6 +9,7 @@ import { withOutlet, type Actor } from "@/modules/tenancy/service";
 import { displayToMinor } from "@/lib/money";
 import { menuCategories, menuItems, restaurants } from "@/db/schema";
 import { NotFoundError } from "@/lib/errors";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
 
 // ─── Validation Schemas ──────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ export async function getCategoryById(actor: Actor, id: string, restaurantId: st
 }
 export async function createCategory(actor: Actor, restaurantId: string, raw: CreateCategoryInput) {
   const input = createCategorySchema.parse(raw);
-  return withOutlet(
+  const result = await withOutlet(
     actor,
     restaurantId,
     "menu.write",
@@ -87,6 +88,8 @@ export async function createCategory(actor: Actor, restaurantId: string, raw: Cr
           .returning()
       )[0]!
   );
+  await invalidateOutletMenuCache(restaurantId);
+  return result;
 }
 export async function updateCategory(
   actor: Actor,
@@ -95,7 +98,7 @@ export async function updateCategory(
   raw: UpdateCategoryInput
 ) {
   const input = updateCategorySchema.parse(raw);
-  return withOutlet(actor, restaurantId, "menu.write", async (tx) => {
+  const result = await withOutlet(actor, restaurantId, "menu.write", async (tx) => {
     const [row] = await tx
       .update(menuCategories)
       .set({ ...input, updatedAt: new Date() })
@@ -104,6 +107,8 @@ export async function updateCategory(
     if (!row) throw new NotFoundError("Category");
     return row;
   });
+  await invalidateOutletMenuCache(restaurantId);
+  return result;
 }
 export async function deleteCategory(actor: Actor, id: string, restaurantId: string) {
   await updateCategory(actor, id, restaurantId, { isActive: false } as UpdateCategoryInput);
@@ -155,7 +160,7 @@ export async function getFullMenu(actor: Actor, restaurantId: string) {
 }
 export async function createMenuItem(actor: Actor, restaurantId: string, raw: CreateMenuItemInput) {
   const input = createMenuItemSchema.parse(raw);
-  return withOutlet(actor, restaurantId, "menu.write", async (tx) => {
+  const result = await withOutlet(actor, restaurantId, "menu.write", async (tx) => {
     const [outlet] = await tx
       .select({ currency: restaurants.currency })
       .from(restaurants)
@@ -174,6 +179,8 @@ export async function createMenuItem(actor: Actor, restaurantId: string, raw: Cr
         .returning()
     )[0]!;
   });
+  await invalidateOutletMenuCache(restaurantId);
+  return result;
 }
 export async function updateMenuItem(
   actor: Actor,
@@ -182,7 +189,7 @@ export async function updateMenuItem(
   raw: UpdateMenuItemInput
 ) {
   const { priceRupees, ...input } = updateMenuItemSchema.parse(raw);
-  return withOutlet(actor, restaurantId, "menu.write", async (tx) => {
+  const result = await withOutlet(actor, restaurantId, "menu.write", async (tx) => {
     const [outlet] = await tx
       .select({ currency: restaurants.currency })
       .from(restaurants)
@@ -202,6 +209,8 @@ export async function updateMenuItem(
     if (!row) throw new NotFoundError("Menu item");
     return row;
   });
+  await invalidateOutletMenuCache(restaurantId);
+  return result;
 }
 export async function deleteMenuItem(actor: Actor, id: string, restaurantId: string) {
   await updateMenuItem(actor, id, restaurantId, { isAvailable: false });

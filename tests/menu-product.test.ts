@@ -251,6 +251,15 @@ it("enforces organization/currency sharing, all-assignment edits, and outlet-loc
   const local = await publicProduct(localToken);
   expect(local?.menus[0]?.overrides[0]?.soldOut).toBe(true);
   expect((await publicProduct(f.outlet.publicId))?.menus[0]?.overrides).toEqual([]);
+  // Warm the outlet-local Redis cache, then publish through the origin outlet.
+  await publicProduct(localToken);
+  const updated = document();
+  updated.categories[0]!.items[0]!.name = "Shared menu refreshed";
+  await command(f, id, "save", { document: updated });
+  await command(f, id, "publish");
+  expect((await publicProduct(localToken))?.menus[0]?.document.categories[0]?.items[0]?.name).toBe(
+    "Shared menu refreshed"
+  );
   await expect(
     withActor(f.actor, (tx) =>
       tx.execute(sql`update menus set published_revision=1 where id=${id}`)
@@ -381,4 +390,20 @@ it("archives a published menu without destroying its release, blocks foreign del
   expect(await publicProduct(f.outlet.publicId)).toBeNull();
   await command(f, id, "publish");
   expect((await publicProduct(f.outlet.publicId))?.menus[0]?.document.name).toBe("Lunch menu");
+});
+
+it("rejects cached menus when PostgreSQL says the organization has become inactive", async () => {
+  const f = await fixture();
+  const id = await create(f);
+  await command(f, id, "publish");
+  // First request teaches the token-outlet association; second fills Redis.
+  await publicProduct(f.outlet.publicId);
+  expect(await publicProduct(f.outlet.publicId)).not.toBeNull();
+  await admin(async (_, pool) => {
+    await pool.query("update organizations set is_active=false where id=$1", [
+      f.outlet.organizationId,
+    ]);
+  });
+  // This intentionally bypasses application invalidation: the SQL gate must still deny.
+  expect(await publicProduct(f.outlet.publicId)).toBeNull();
 });

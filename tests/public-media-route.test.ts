@@ -41,7 +41,7 @@ it("returns a private revalidating ETag and avoids a body after authorization on
     "private, no-cache, max-age=0, must-revalidate"
   );
   expect(response.headers.get("etag")).toBe('"validator"');
-  expect(mediaResponse).toHaveBeenCalledWith("media-test", false, 'W/"validator"');
+  expect(mediaResponse).toHaveBeenCalledWith("media-test", false, 'W/"validator"', true);
 });
 
 it("returns rate-limit and dependency failures without querying media authorization", async () => {
@@ -67,4 +67,25 @@ it("returns rate-limit and dependency failures without querying media authorizat
   );
   expect(unavailable.status).toBe(503);
   expect(mediaResponse).not.toHaveBeenCalled();
+});
+
+it("streams approved local derivatives through the internal Nginx location only after the public gate", async () => {
+  mediaResponse.mockResolvedValue({
+    etag: '"approved"',
+    notModified: false,
+    internalPath: "/_menuminute_media_internal/org-a/asset-a/thumb.webp",
+  });
+  const response = await GET(
+    new Request("https://menu.invalid/api/public-media/media-test?size=thumb"),
+    context
+  );
+  expect(response.status).toBe(200);
+  expect(response.headers.get("x-accel-redirect")).toBe(
+    "/_menuminute_media_internal/org-a/asset-a/thumb.webp"
+  );
+  expect(response.headers.get("cache-control")).toBe(
+    "private, no-cache, max-age=0, must-revalidate"
+  );
+  expect(mediaResponse).toHaveBeenCalledWith("media-test", true, null, true);
+  expect(consumeLimit).toHaveBeenCalledTimes(1);
 });
