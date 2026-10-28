@@ -178,9 +178,7 @@
     "id": "MM-CORE-biryani",
     "name": "Biryani",
     "categoryHint": "Indian",
-    "aliases": [
-      "biriyani"
-    ],
+    "aliases": ["biriyani"],
     "publicDescription": "Fragrant, layered rice dish prepared with aromatic spices and a chosen filling."
   },
   {
@@ -397,10 +395,7 @@
     "id": "MM-CORE-chole-bhature",
     "name": "Chole Bhature",
     "categoryHint": "Indian",
-    "aliases": [
-      "chhole bhature",
-      "chana bhatura"
-    ],
+    "aliases": ["chhole bhature", "chana bhatura"],
     "publicDescription": "Spiced chickpea curry served with fluffy, deep-fried bread."
   },
   {
@@ -463,9 +458,7 @@
     "id": "MM-IN-001",
     "name": "Dal Makhani",
     "categoryHint": "Main Course",
-    "aliases": [
-      "daal makhani"
-    ],
+    "aliases": ["daal makhani"],
     "publicDescription": "Slow-cooked black lentils and kidney beans in a rich, creamy sauce."
   },
   {
@@ -577,9 +570,7 @@
     "id": "MM-CORE-french-fries",
     "name": "French Fries",
     "categoryHint": "Western",
-    "aliases": [
-      "chips"
-    ],
+    "aliases": ["chips"],
     "publicDescription": "Golden fried potato strips, lightly seasoned."
   },
   {
@@ -747,9 +738,7 @@
     "id": "MM-IN-004",
     "name": "Kadai Paneer",
     "categoryHint": "Main Course",
-    "aliases": [
-      "karahi paneer"
-    ],
+    "aliases": ["karahi paneer"],
     "publicDescription": "Paneer cooked with bell peppers and freshly ground spices."
   },
   {
@@ -973,9 +962,7 @@
     "id": "MM-CORE-masala-dosa",
     "name": "Masala Dosa",
     "categoryHint": "Indian",
-    "aliases": [
-      "masala dosai"
-    ],
+    "aliases": ["masala dosai"],
     "publicDescription": "Crisp fermented rice-and-lentil crepe wrapped around spiced potatoes."
   },
   {
@@ -1234,9 +1221,7 @@
     "id": "MM-CORE-pizza-margherita",
     "name": "Pizza Margherita",
     "categoryHint": "Italian",
-    "aliases": [
-      "margherita pizza"
-    ],
+    "aliases": ["margherita pizza"],
     "publicDescription": "Classic pizza with tomato, mozzarella and basil."
   },
   {
@@ -1376,9 +1361,7 @@
     "id": "MM-CORE-samosa",
     "name": "Samosa",
     "categoryHint": "Indian",
-    "aliases": [
-      "samosay"
-    ],
+    "aliases": ["samosay"],
     "publicDescription": "Crisp pastry parcel with a savory spiced filling."
   },
   {
@@ -1553,9 +1536,7 @@
     "id": "MM-CORE-vada-pav",
     "name": "Vada Pav",
     "categoryHint": "Indian",
-    "aliases": [
-      "wada pav"
-    ],
+    "aliases": ["wada pav"],
     "publicDescription": "Spiced potato fritter in a soft bun with chutneys."
   },
   {

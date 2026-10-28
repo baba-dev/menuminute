@@ -303,7 +303,8 @@ export function findPublicDishDescription(name: string): string {
   if (profile) return profile.publicDescription;
   const normalized = normalizeDishText(name);
   const match = dishCatalogue.find(
-    (dish) => normalizeDishText(dish.name) === normalized ||
+    (dish) =>
+      normalizeDishText(dish.name) === normalized ||
       dish.aliases.some((alias) => normalizeDishText(alias) === normalized)
   );
   return match?.publicDescription ?? "";
