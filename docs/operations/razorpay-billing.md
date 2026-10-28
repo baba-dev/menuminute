@@ -23,7 +23,8 @@ NEXT_PUBLIC value or worker configuration.
   (`11900` paise). Verify its plan ID, recurrence, pricing, GST policy and merchant account.
 - Create a webhook with a distinct high-entropy signing secret, subscribed to
   `subscription.charged`, `subscription.paused`, `subscription.halted`,
-  `subscription.cancelled` and `subscription.completed`.
+  `subscription.cancelled`, `subscription.completed`, `subscription.resumed`,
+  `subscription.pending`, and `refund.processed`.
 - Confirm test and live keys are never crossed. Verify signed event fixtures
   against the real provider sandbox before processing production charges.
 - Install `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`,
@@ -43,7 +44,9 @@ period must fail closed. Event and payment IDs are unique in the database.
 
 Only charges activate new paid ordering work; an authorization or payment.captured
 event alone does not. A paused/halted/expired subscription revokes paid grants;
-cancellation leaves access through its already-paid billing-period end.
+cancellation leaves access through its already-paid billing-period end. A verified
+`refund.processed` event can revoke the specific fully refunded payment period, not
+unrelated later renewal periods; partial refunds do not revoke a whole entitlement.
 The webhook returns a retriable 503 for database reconciliation failures.
 
 ## Operator runbook
