@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextRequest, NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { updateMenuItem, deleteMenuItem, updateMenuItemSchema } from "@/modules/menus/service";
@@ -8,7 +9,7 @@ interface RouteParams {
   }>;
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteParams) {
+async function observed_PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { itemId } = await params;
     const { actor, restaurant } = await requestContext(req, req.method !== "GET");
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: RouteParams) {
+async function observed_DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { itemId } = await params;
     const { actor, restaurant } = await requestContext(req, req.method !== "GET");
@@ -41,3 +42,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     return errorResponse(err, req);
   }
 }
+
+export const PATCH = observedRoute(observed_PATCH);
+export const DELETE = observedRoute(observed_DELETE);

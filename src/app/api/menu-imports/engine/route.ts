@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { withOutlet } from "@/modules/tenancy/service";
 import { importEngineEnabled } from "@/modules/menu-import/nvidia";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     await withOutlet(actor, restaurant.id, "menu.write", async () => true);
@@ -16,3 +17,5 @@ export async function GET(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

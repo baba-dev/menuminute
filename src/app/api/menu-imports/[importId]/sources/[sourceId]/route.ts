@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { readImportSource } from "@/modules/menu-import/service";
 type C = { params: Promise<{ importId: string; sourceId: string }> };
-export async function GET(req: Request, c: C) {
+async function observed_GET(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req);
     const { importId, sourceId } = await c.params;
@@ -19,3 +20,5 @@ export async function GET(req: Request, c: C) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
