@@ -1,13 +1,16 @@
 import type { QR } from "./qr-studio-types";
+import type { PrintFont } from "./qr-print-fonts";
+import type { PrintPalette } from "./qr-print-themes";
+export type { PrintPalette } from "./qr-print-themes";
 
 export type PrintFormat = "stand" | "sticker" | "insert";
-export type PrintPalette = "ember" | "ink" | "botanical";
 export type PrintDesign = {
   palette: PrintPalette;
   invitation: string;
   supportingCopy: string;
   showUrl: boolean;
-  showBrand: boolean;
+  font: PrintFont;
+  ink: string;
 };
 
 export const PRINT_FORMATS: Record<
@@ -53,7 +56,8 @@ export const DEFAULT_PRINT_DESIGN: PrintDesign = {
   invitation: "Scan to explore our menu",
   supportingCopy: "Fresh choices, always up to date.",
   showUrl: false,
-  showBrand: true,
+  font: "dm",
+  ink: "#111111",
 };
 
 export function normalizePrintCopy(value: string, max: number): string {
