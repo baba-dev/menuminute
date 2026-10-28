@@ -1,10 +1,11 @@
+import { observedRoute } from "@/lib/observed-route";
 import { publicMediaResponse } from "@/modules/media/product-service";
 import { errorResponse } from "@/lib/request-context";
 import { consumePublicMediaLimit, publicClientIdentity } from "@/lib/public-rate-limit";
 import { RateLimitError, UnavailableError } from "@/lib/errors";
 
 const cacheControl = "private, no-cache, max-age=0, must-revalidate";
-export async function GET(req: Request, c: { params: Promise<{ mediaId: string }> }) {
+async function observed_GET(req: Request, c: { params: Promise<{ mediaId: string }> }) {
   try {
     let rate;
     try {
@@ -47,3 +48,5 @@ export async function GET(req: Request, c: { params: Promise<{ mediaId: string }
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

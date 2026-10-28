@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { listOrganizations, domainError } from "@/modules/organizations/service";
 import { requestActor } from "@/lib/request-context";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { createRestaurant } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { errorResponse } from "@/lib/request-context";
 import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     if (
       req.headers.get("origin") !== new URL(env.APP_URL).origin ||
@@ -31,10 +32,13 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     return NextResponse.json(await listOrganizations(await requestActor(req)));
   } catch (e) {
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);
+export const GET = observedRoute(observed_GET);

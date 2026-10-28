@@ -1,8 +1,9 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { errorResponse, requestActor } from "@/lib/request-context";
 import { availableOutletTimezones } from "@/modules/timezones/service";
 
-export async function GET(request: Request) {
+async function observed_GET(request: Request) {
   try {
     await requestActor(request);
     const options = await availableOutletTimezones();
@@ -14,3 +15,5 @@ export async function GET(request: Request) {
     return errorResponse(error, request);
   }
 }
+
+export const GET = observedRoute(observed_GET);
