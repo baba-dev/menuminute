@@ -26,17 +26,14 @@ import {
   printableQr,
   PRINT_FORMATS,
 } from "./qr-print-contract";
-import type { PrintDesign, PrintFormat, PrintPalette } from "./qr-print-contract";
+import type { PrintDesign, PrintFormat } from "./qr-print-contract";
+import { PRINT_THEMES } from "./qr-print-themes";
+import { PRINT_FONTS } from "./qr-print-fonts";
+import { QR_INK_PRESETS, qrInkContrast, safeQrInk } from "@/modules/qr/ink";
 import { QrPrintSheet } from "./qr-print-sheet";
 import styles from "./qr-print-studio.module.css";
 
 const formats = ["stand", "sticker", "insert"] as const;
-const palettes: { id: PrintPalette; name: string; description: string }[] = [
-  { id: "ember", name: "Classic Ember", description: "Cream and tangerine" },
-  { id: "ink", name: "Midnight Ink", description: "Contrast and elegance" },
-  { id: "botanical", name: "Botanical", description: "Olive and parchment" },
-];
-
 export function QrPrintStudio({
   codes,
   selectedId,
@@ -57,6 +54,7 @@ export function QrPrintStudio({
   const selected = printableQr(codes, selectedId);
   const [format, setFormat] = useState<PrintFormat>("stand");
   const [design, setDesign] = useState<PrintDesign>(DEFAULT_PRINT_DESIGN);
+  const [customInk, setCustomInk] = useState(DEFAULT_PRINT_DESIGN.ink);
   const [matrixReady, setMatrixReady] = useState<string | null>(null);
   const [proof, setProof] = useState(false);
   const [printing, setPrinting] = useState(false);
@@ -65,7 +63,7 @@ export function QrPrintStudio({
   const printingRef = useRef(false);
   const previewRef = useRef<HTMLElement>(null);
 
-  const selectedKey = selected ? selected.id : "";
+  const selectedKey = selected ? selected.id + ":" + design.ink : "";
   const imageReady = Boolean(selected && matrixReady === selectedKey);
   useEffect(() => {
     const resetPrint = () => {
@@ -82,18 +80,38 @@ export function QrPrintStudio({
   }
 
   function updateDesign(patch: Partial<PrintDesign>) {
+    if (patch.ink !== undefined) setMatrixReady(null);
     setDesign((current) => ({ ...current, ...patch }));
     invalidateProof();
   }
+  function updateInk(next: string) {
+    setCustomInk(next);
+    if (safeQrInk(next)) {
+      updateDesign({ ink: next.toUpperCase() });
+    } else {
+      invalidateProof();
+    }
+  }
+  function resetDesign() {
+    setCustomInk(DEFAULT_PRINT_DESIGN.ink);
+    setMatrixReady(null);
+    setDesign(DEFAULT_PRINT_DESIGN);
+    invalidateProof();
+  }
   async function printDesign() {
-    if (!selected || !imageReady || !proof || printingRef.current) return;
+    if (!selected || !imageReady || !proof || !safeQrInk(customInk) || printingRef.current) {
+      return;
+    }
     printingRef.current = true;
     setPrinting(true);
     setError("");
     try {
       // The active-code endpoint rechecks membership, outlet scope and revocation at export time.
       const endpoint =
-        "/api/qr/" + encodeURIComponent(selected.id) + "/download?format=svg&inline=1";
+        "/api/qr/" +
+        encodeURIComponent(selected.id) +
+        "/download?format=svg&inline=1&ink=" +
+        encodeURIComponent(design.ink);
       const response = await fetch(endpoint, {
         headers: { "x-outlet-id": outletId },
         cache: "no-store",
@@ -224,14 +242,14 @@ export function QrPrintStudio({
               </div>
               <div className={styles.stage}>
                 <QrPrintSheet
-                  key={selected.id}
+                  key={selectedKey}
                   qr={selected}
                   format={format}
                   restaurant={restaurant}
                   origin={origin}
                   design={design}
                   active={printTarget}
-                  onMatrixReady={() => setMatrixReady(selected.id)}
+                  onMatrixReady={() => setMatrixReady(selectedKey)}
                   onMatrixError={() => {
                     setMatrixReady(null);
                     setError(
@@ -275,31 +293,127 @@ export function QrPrintStudio({
                 </select>
               </label>
               <fieldset className={styles.paletteField}>
-                <legend>Colour story</legend>
-                <div className={styles.paletteChoices}>
-                  {palettes.map((palette) => (
+                <legend>
+                  Choose a design theme <small>· Nine distinctive looks</small>
+                </legend>
+                <div className={styles.themeGallery}>
+                  {PRINT_THEMES.map((theme) => (
                     <button
                       type="button"
-                      key={palette.id}
-                      className={styles.paletteButton}
-                      aria-pressed={design.palette === palette.id}
-                      onClick={() => updateDesign({ palette: palette.id })}
+                      key={theme.id}
+                      className={styles.themeCard}
+                      aria-pressed={design.palette === theme.id}
+                      aria-label={theme.name}
+                      onClick={() => updateDesign({ palette: theme.id })}
                     >
                       <span
-                        className={styles.swatch}
-                        data-palette={palette.id}
+                        className={styles.themeSample}
+                        data-theme-preview={theme.id}
+                        style={
+                          {
+                            "--theme-paper": theme.paper,
+                            "--theme-accent": theme.accent,
+                          } as React.CSSProperties
+                        }
                         aria-hidden="true"
-                      />
-                      <span>
-                        <strong>{palette.name}</strong>
-                        <small>{palette.description}</small>
+                      >
+                        <span>✦ MENUMINUTE ✦</span>
+                        <QrCode size={35} strokeWidth={1.8} />
+                        <span>SCAN THE MENU</span>
                       </span>
-                      {design.palette === palette.id && (
-                        <CheckCircle2 size={16} aria-label="Selected" />
+                      <span className={styles.themeName}>{theme.name}</span>
+                      <small>{theme.description}</small>
+                      {design.palette === theme.id && (
+                        <CheckCircle2
+                          className={styles.themeCheck}
+                          size={18}
+                          aria-label="Selected"
+                        />
                       )}
                     </button>
                   ))}
                 </div>
+              </fieldset>
+              <fieldset className={styles.paletteField}>
+                <legend>
+                  Typography <small>· Five expressive fonts</small>
+                </legend>
+                <div className={styles.fontGallery}>
+                  {PRINT_FONTS.map((font) => (
+                    <button
+                      type="button"
+                      className={styles.fontCard}
+                      key={font.id}
+                      data-font-preview={font.id}
+                      aria-pressed={design.font === font.id}
+                      aria-label={"Use " + font.name + " font"}
+                      onClick={() => updateDesign({ font: font.id })}
+                    >
+                      <span className={styles.fontSample}>Aa</span>
+                      <span>
+                        <strong>{font.name}</strong>
+                        <small>{font.description}</small>
+                      </span>
+                      {design.font === font.id && <CheckCircle2 size={16} aria-label="Selected" />}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className={styles.paletteField}>
+                <legend>
+                  QR ink colour <small>· Protected scan contrast</small>
+                </legend>
+                <div className={styles.inkSwatches}>
+                  {QR_INK_PRESETS.map((preset) => (
+                    <button
+                      type="button"
+                      key={preset.name}
+                      title={preset.name}
+                      aria-label={"Use " + preset.name + " QR ink"}
+                      aria-pressed={design.ink === preset.hex}
+                      className={styles.inkButton}
+                      style={{ "--ink-swatch": preset.hex } as React.CSSProperties}
+                      onClick={() => {
+                        setCustomInk(preset.hex);
+                        updateDesign({ ink: preset.hex });
+                      }}
+                    >
+                      {design.ink === preset.hex && <CheckCircle2 size={19} aria-hidden="true" />}
+                    </button>
+                  ))}
+                </div>
+                <div className={styles.inkCustom}>
+                  <label htmlFor="qr-ink-picker">
+                    Pick a colour
+                    <input
+                      id="qr-ink-picker"
+                      type="color"
+                      value={safeQrInk(customInk) ? customInk : design.ink}
+                      onChange={(event) => updateInk(event.target.value)}
+                    />
+                  </label>
+                  <label htmlFor="qr-ink-hex">
+                    HEX
+                    <input
+                      id="qr-ink-hex"
+                      type="text"
+                      maxLength={7}
+                      spellCheck={false}
+                      value={customInk}
+                      onChange={(event) => updateInk(event.target.value)}
+                      aria-describedby="qr-ink-contrast"
+                    />
+                  </label>
+                </div>
+                <p className={styles.inkNotice} id="qr-ink-contrast" role="status">
+                  {safeQrInk(customInk)
+                    ? "Scan-safe on white · " + qrInkContrast(customInk).toFixed(1) + ":1 contrast"
+                    : "Too light or invalid. The previous safe colour remains selected."}
+                </p>
+                <p className={styles.inkHint}>
+                  The QR is rendered server-side on solid white with its four-module quiet zone.
+                  Decorative effects never overlap the matrix.
+                </p>
               </fieldset>
               <label className={styles.field}>
                 Guest invitation
@@ -330,14 +444,6 @@ export function QrPrintStudio({
                 <label>
                   <input
                     type="checkbox"
-                    checked={design.showBrand}
-                    onChange={(event) => updateDesign({ showBrand: event.target.checked })}
-                  />{" "}
-                  Include MenuMinute signature
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
                     checked={design.showUrl}
                     onChange={(event) => updateDesign({ showUrl: event.target.checked })}
                   />{" "}
@@ -347,10 +453,13 @@ export function QrPrintStudio({
               <div className={styles.help}>
                 <CircleHelp size={17} aria-hidden="true" />
                 <p>
-                  Restaurant name, service-point identity and QR destination come from the selected
-                  outlet; appearance changes never alter the QR token.
+                  MenuMinute branding is included on every print. Restaurant and service-point
+                  identity come from your selected outlet; appearance never changes a QR token.
                 </p>
               </div>
+              <button type="button" className={styles.resetDesign} onClick={resetDesign}>
+                Restore design defaults
+              </button>
             </section>
           </div>
           <section className={styles.export} aria-labelledby="print-export-heading">
@@ -393,7 +502,13 @@ export function QrPrintStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={!proof || !imageReady || printing || !design.invitation.trim()}
+                disabled={
+                  !proof ||
+                  !imageReady ||
+                  printing ||
+                  !design.invitation.trim() ||
+                  !safeQrInk(customInk)
+                }
                 onClick={() => void printDesign()}
               >
                 <Printer size={17} aria-hidden="true" /> Print / Save as PDF
