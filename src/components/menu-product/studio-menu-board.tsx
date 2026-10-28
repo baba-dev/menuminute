@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Pencil, Plus, Search, X } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { formatPrice } from "@/lib/utils";
@@ -13,6 +13,16 @@ import { StudioDishEditor } from "./studio-dish-editor";
 type Category = MenuDocument["categories"][number];
 type Dish = Category["items"][number];
 type Media = { id: string; status: string; approvedAt: string | null; lastError: string | null };
+
+function findEditingDish(doc: MenuDocument, editingId: string | null) {
+  if (!editingId) return null;
+  for (const [categoryIndex, category] of doc.categories.entries()) {
+    const dishIndex = category.items.findIndex((dish) => dish.id === editingId);
+    const dish = category.items[dishIndex];
+    if (dishIndex >= 0 && dish) return { categoryIndex, dishIndex, dish };
+  }
+  return null;
+}
 
 export function StudioMenuBoard({
   doc,
@@ -56,14 +66,7 @@ export function StudioMenuBoard({
   const categories = doc.categories
     .map((category, categoryIndex) => ({ category, categoryIndex }))
     .filter(({ category }) => showArchived || !category.archived);
-  const editing = useMemo(() => {
-    for (const [categoryIndex, category] of doc.categories.entries()) {
-      const dishIndex = category.items.findIndex((dish) => dish.id === editingId);
-      const dish = category.items[dishIndex];
-      if (dishIndex >= 0 && dish) return { categoryIndex, dishIndex, dish };
-    }
-    return null;
-  }, [doc, editingId]);
+  const editing = findEditingDish(doc, editingId);
   useEffect(() => {
     const dialog = editorDialog.current;
     if (editing && dialog && !dialog.open) dialog.showModal();
