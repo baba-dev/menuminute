@@ -41,10 +41,14 @@ export async function POST(request: Request) {
       );
     const headers = new Headers(request.headers);
     headers.delete("content-length");
+    // Consent is an HTTP-side guard, not an additional Better Auth user field.
+    // Forward only fields that the authentication schema actually accepts.
+    const accountFields = { ...input };
+    delete accountFields.acceptTerms;
     const normalized = new Request(request, {
       headers,
       body: JSON.stringify({
-        ...input,
+        ...accountFields,
         termsVersion: TERMS_VERSION,
         termsAcceptedAt: new Date().toISOString(),
       }),

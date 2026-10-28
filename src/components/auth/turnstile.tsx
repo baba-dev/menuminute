@@ -37,7 +37,7 @@ export function RegistrationChallenge({
     });
   }, [sitekey, onToken]);
   useEffect(() => {
-    if (resetKey > 0 && widget.current) window.turnstile?.reset(widget.current);
+    if (resetKey > 0 && widget.current) window.turnstile?.reset?.(widget.current);
   }, [resetKey]);
   if (!sitekey) return null;
   return (
