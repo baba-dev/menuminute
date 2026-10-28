@@ -59,11 +59,20 @@ export async function POST(req: Request) {
   if (typeof eventName !== "string")
     return NextResponse.json({ error: "Invalid event" }, { status: 422 });
   const recordId = providerEventId(raw);
-  if (eventName === "payment.refunded") {
+  if (eventName === "refund.processed") {
     const refund = z
       .object({
-        event: z.literal("payment.refunded"),
+        event: z.literal("refund.processed"),
         payload: z.object({
+          refund: z.object({
+            entity: z.object({
+              id: z.string().startsWith("rfnd_"),
+              payment_id: z.string().startsWith("pay_"),
+              status: z.literal("processed"),
+              amount: z.number().int().positive(),
+              currency: z.literal("INR"),
+            }),
+          }),
           payment: z.object({
             entity: z.object({
               id: z.string().startsWith("pay_"),
@@ -78,6 +87,11 @@ export async function POST(req: Request) {
     if (!refund.success)
       return NextResponse.json({ error: "Invalid refund event" }, { status: 422 });
     const payment = refund.data.payload.payment.entity;
+    const processed = refund.data.payload.refund.entity;
+    if (payment.id !== processed.payment_id || processed.amount > payment.amount)
+      return NextResponse.json({ error: "Refund and payment do not match" }, { status: 422 });
+    // A partial refund cannot revoke an entire paid period. Razorpay reports
+    // the cumulative amount_refunded on the associated payment entity.
     if (payment.amount_refunded < payment.amount)
       return NextResponse.json({ received: true, ignored: "partial_refund" });
     try {
