@@ -75,6 +75,7 @@ describe("Menu Board and curated editorial references", () => {
         canWrite
         onAddDish={() => {}}
         onAddMultiple={() => {}}
+        onPendingChange={() => {}}
         onCreateSection={() => {}}
         onUpdateCategory={() => {}}
         onUpdateDish={() => {}}
