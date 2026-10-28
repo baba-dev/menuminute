@@ -436,6 +436,7 @@ export function StudioMenuBoard({
         <div className="menu-board-dialog-body">
           {editing && (
             <StudioDishEditor
+              key={editing.dish.id}
               dish={editing.dish}
               ci={editing.categoryIndex}
               di={editing.dishIndex}
