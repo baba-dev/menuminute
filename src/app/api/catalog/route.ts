@@ -1,10 +1,11 @@
+import { observedRoute } from "@/lib/observed-route";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { listMenus, defaultDocument, commandMenu } from "@/modules/menu-product/service";
 import { boundedJson } from "@/lib/bounded-input";
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     return NextResponse.json(await listMenus(actor, restaurant.id));
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
     return errorResponse(e, req);
   }
 }
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const body = await boundedJson(req);
@@ -30,3 +31,6 @@ export async function POST(req: Request) {
     return errorResponse(e, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);
+export const POST = observedRoute(observed_POST);

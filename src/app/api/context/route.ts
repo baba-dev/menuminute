@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -16,7 +17,7 @@ import { ForbiddenError } from "@/lib/errors";
 import { UnauthorizedError } from "@/lib/errors";
 import { cookies } from "next/headers";
 import { env } from "@/lib/config/env";
-export async function POST(req: Request) {
+async function observed_POST(req: Request) {
   try {
     const actor = await requestActor(req, true);
     // Legacy outlet payload remains supported for existing clients.
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const session = await auth();
     if (!session?.user.id) throw new UnauthorizedError();
@@ -97,3 +98,6 @@ export async function GET(req: Request) {
     return errorResponse(e, req);
   }
 }
+
+export const POST = observedRoute(observed_POST);
+export const GET = observedRoute(observed_GET);

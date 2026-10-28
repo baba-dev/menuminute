@@ -1,10 +1,11 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { listReusableDishes } from "@/modules/menu-product/service";
 import { entityId } from "@/modules/menu-product/contracts";
 
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     const url = new URL(req.url);
@@ -17,3 +18,5 @@ export async function GET(req: Request) {
     return errorResponse(error, req);
   }
 }
+
+export const GET = observedRoute(observed_GET);

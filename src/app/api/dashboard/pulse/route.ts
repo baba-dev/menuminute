@@ -1,3 +1,4 @@
+import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -7,7 +8,7 @@ import { dashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optiona
 const privateHeaders = { "cache-control": "private, no-store", vary: "Cookie" };
 
 /** Never accept client-supplied organization/outlet scopes: resolve them from the authenticated session. */
-export async function GET(req: Request) {
+async function observed_GET(req: Request) {
   const started = Date.now();
   try {
     const actor = await requestActor(req);
@@ -36,3 +37,5 @@ export async function GET(req: Request) {
     return response;
   }
 }
+
+export const GET = observedRoute(observed_GET);
