@@ -71,6 +71,19 @@ CREATE TABLE app_private.razorpay_charges (
   grant_id text NOT NULL UNIQUE REFERENCES entitlement_grants(id),
   created_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
+CREATE TABLE app_private.razorpay_resume_grants (
+  event_id text PRIMARY KEY,
+  subscription_id text NOT NULL REFERENCES app_private.razorpay_subscriptions(subscription_id),
+  grant_id text NOT NULL UNIQUE REFERENCES entitlement_grants(id)
+);
+CREATE TABLE app_private.razorpay_refund_events (
+  event_id text PRIMARY KEY,
+  payment_id text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+REVOKE ALL ON app_private.razorpay_resume_grants,app_private.razorpay_refund_events
+  FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
 CREATE TABLE app_private.razorpay_status_events (
   event_id text PRIMARY KEY,
   subscription_id text NOT NULL REFERENCES app_private.razorpay_subscriptions(subscription_id),
@@ -199,8 +212,9 @@ CREATE FUNCTION app_private.record_razorpay_status(
 ) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE sub app_private.razorpay_subscriptions%ROWTYPE;
+        existing_grant_id text;
 BEGIN
-  IF p_status NOT IN ('paused','halted','cancelled','completed','expired')
+  IF p_status NOT IN ('pending','active','paused','halted','cancelled','completed','expired')
     OR length(p_event) NOT BETWEEN 8 AND 128 OR p_provider_created IS NULL
   THEN RAISE EXCEPTION 'Invalid provider status' USING ERRCODE='22023'; END IF;
   SELECT * INTO sub FROM app_private.razorpay_subscriptions
@@ -215,8 +229,30 @@ BEGIN
     WHERE subscription_id=p_subscription;
   IF p_status IN ('paused','halted','expired') THEN
     UPDATE entitlement_grants SET revoked_at=clock_timestamp()
-    WHERE id IN (SELECT c.grant_id FROM app_private.razorpay_charges c WHERE c.subscription_id=p_subscription)
-      AND revoked_at IS NULL AND ends_at>clock_timestamp();
+    WHERE id IN (
+      SELECT c.grant_id FROM app_private.razorpay_charges c WHERE c.subscription_id=p_subscription
+      UNION
+      SELECT r.grant_id FROM app_private.razorpay_resume_grants r WHERE r.subscription_id=p_subscription
+    ) AND revoked_at IS NULL AND ends_at>clock_timestamp();
+  ELSIF p_status='active' AND sub.current_end>clock_timestamp()
+    AND EXISTS(SELECT 1 FROM app_private.razorpay_charges WHERE subscription_id=p_subscription)
+    AND NOT EXISTS (
+      SELECT 1 FROM entitlement_grants g WHERE g.revoked_at IS NULL
+      AND g.organization_id=sub.organization_id
+      AND g.capability=(CASE WHEN sub.product_key='ordering' THEN 'ordering.new' ELSE 'kitchen.new' END)
+      AND g.ends_at>clock_timestamp()
+    )
+  THEN
+    -- A signed resumption restores only the REMAINDER of a previously paid period.
+    -- It never creates unpaid future access and does not depend on payment notes.
+    INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
+    VALUES(gen_random_uuid()::text,sub.organization_id,
+      CASE WHEN sub.product_key='ordering' THEN 'ordering.new' ELSE 'kitchen.new' END,
+      'INR',clock_timestamp(),sub.current_end,'razorpay-webhook',
+      'Provider-resumed paid subscription '||p_subscription,gen_random_uuid()::text)
+    RETURNING id INTO existing_grant_id;
+    INSERT INTO app_private.razorpay_resume_grants(event_id,subscription_id,grant_id)
+      VALUES(p_event,p_subscription,existing_grant_id);
   END IF;
   -- 'cancelled' and 'completed' retain already-paid access until the verified end.
 END $$;
@@ -224,6 +260,32 @@ REVOKE ALL ON FUNCTION app_private.record_razorpay_status(text,text,text,timesta
   FROM PUBLIC,menuminute_app,menuminute_worker;
 GRANT EXECUTE ON FUNCTION app_private.record_razorpay_status(text,text,text,timestamptz)
   TO menuminute_billing;
+
+-- Refund events revoke access only for FULLY refunded, previously recorded subscription payments.
+-- Unrelated POS or other merchant refunds have no effect on subscription state.
+CREATE FUNCTION app_private.record_razorpay_refund(p_event text,p_payment text)
+RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $
+DECLARE original app_private.razorpay_charges%ROWTYPE;
+BEGIN
+  IF length(p_event) NOT BETWEEN 8 AND 128 OR length(p_payment) NOT BETWEEN 8 AND 128
+  THEN RAISE EXCEPTION 'Invalid refund event' USING ERRCODE='22023'; END IF;
+  SELECT * INTO original FROM app_private.razorpay_charges
+    WHERE payment_id=p_payment FOR UPDATE;
+  IF NOT FOUND THEN RETURN false; END IF;
+  IF EXISTS(SELECT 1 FROM app_private.razorpay_refund_events WHERE event_id=p_event) THEN RETURN true; END IF;
+  INSERT INTO app_private.razorpay_refund_events(event_id,payment_id) VALUES(p_event,p_payment);
+  UPDATE entitlement_grants SET revoked_at=clock_timestamp()
+    WHERE id=original.grant_id AND revoked_at IS NULL;
+  UPDATE entitlement_grants SET revoked_at=clock_timestamp()
+    WHERE id IN (SELECT grant_id FROM app_private.razorpay_resume_grants
+      WHERE subscription_id=original.subscription_id)
+    AND revoked_at IS NULL;
+  RETURN true;
+END $;
+REVOKE ALL ON FUNCTION app_private.record_razorpay_refund(text,text)
+  FROM PUBLIC,menuminute_app,menuminute_worker;
+GRANT EXECUTE ON FUNCTION app_private.record_razorpay_refund(text,text) TO menuminute_billing;
 
 -- Seed amounts in INR minor units. Kitchen remains commercially inactive until
 -- the separate Kitchen Pro production approval and database activation migration.
