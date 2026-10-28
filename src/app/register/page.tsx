@@ -30,6 +30,8 @@ function RegistrationForm() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [challenge, setChallenge] = useState("");
+  const [challengeRetry, setChallengeRetry] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -63,12 +65,16 @@ function RegistrationForm() {
               email: values.email,
               password: values.password,
               termsVersion: TERMS_VERSION,
-              termsAcceptedAt: new Date(),
+              termsAcceptedAt: new Date(), // Server replaces this with a trusted timestamp.
+              acceptTerms: values.acceptTerms,
+              callbackURL: "/login?verified=1" + (next ? "&next=" + encodeURIComponent(next) : ""),
               fetchOptions: challenge
                 ? { headers: { "x-captcha-response": challenge } }
                 : undefined,
             } as Parameters<typeof authClient.signUp.email>[0]);
             if (response.error) {
+              setChallenge("");
+              setChallengeRetry((value) => value + 1);
               setError(response.error.message ?? "Unable to register. Try again.");
               return;
             }
@@ -78,6 +84,8 @@ function RegistrationForm() {
                 (next ? "&next=" + encodeURIComponent(next) : "")
             );
           } catch {
+            setChallenge("");
+            setChallengeRetry((value) => value + 1);
             setError("Unable to create an account. Your entries remain here.");
           } finally {
             setBusy(false);
@@ -130,7 +138,7 @@ function RegistrationForm() {
           <input
             {...register("password")}
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="new-password"
             minLength={8}
             maxLength={128}
@@ -149,7 +157,7 @@ function RegistrationForm() {
           <input
             {...register("confirmPassword")}
             id="confirmPassword"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="new-password"
             aria-invalid={!!errors.confirmPassword}
             aria-describedby={errors.confirmPassword ? "registration-confirm-error" : undefined}
@@ -172,7 +180,10 @@ function RegistrationForm() {
           .
         </label>
         {errors.acceptTerms && <small role="alert">{errors.acceptTerms.message}</small>}
-        <RegistrationChallenge onToken={setChallenge} />
+        <label className="mm-auth-secondary">
+          <input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show passwords
+        </label>
+        <RegistrationChallenge onToken={setChallenge} resetKey={challengeRetry} />
         <button
           className="mm-auth-submit"
           disabled={busy || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !challenge)}
