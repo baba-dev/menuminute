@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { env } from "@/lib/config/env";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { createRazorpaySubscription } from "@/modules/billing/razorpay";
+import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 
 export async function POST(
   req: Request,
@@ -53,7 +54,7 @@ export async function POST(
         (plan === "kitchen_pro" && current.grants?.kitchen))
       throw new ValidationError("This organization already has an active entitlement.");
 
-    const amountPaise = plan === "kitchen_pro" ? 29900 : 11900;
+    const amountPaise = PAID_PLAN_CATALOG[plan].monthlyPricePaise;
     const prior = Array.isArray(current.subscriptions)
       ? current.subscriptions.find((sub: { product?: string; status?: string; createdAt?: string }) =>
           sub.product === plan &&
