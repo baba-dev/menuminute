@@ -99,8 +99,15 @@ export function QrPrintStudio({
     invalidateProof();
   }
   async function printDesign() {
-    if (!selected || !imageReady || !proof || !safeQrInk(customInk) || printingRef.current)
+    if (
+      !selected ||
+      !imageReady ||
+      !proof ||
+      !safeQrInk(customInk) ||
+      printingRef.current
+    ) {
       return;
+    }
     printingRef.current = true;
     setPrinting(true);
     setError("");
@@ -501,7 +508,13 @@ export function QrPrintStudio({
               <button
                 type="button"
                 className="ember"
-                disabled={!proof || !imageReady || printing || !design.invitation.trim() || !safeQrInk(customInk)}
+                disabled={
+                  !proof ||
+                  !imageReady ||
+                  printing ||
+                  !design.invitation.trim() ||
+                  !safeQrInk(customInk)
+                }
                 onClick={() => void printDesign()}
               >
                 <Printer size={17} aria-hidden="true" /> Print / Save as PDF
