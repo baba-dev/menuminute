@@ -366,7 +366,7 @@ export function OrganizationManager({
     isCommunityEdition?: boolean;
     billingEnabled?: boolean;
     kitchenCommerceEnabled?: boolean;
-    subscriptions?: { subscriptionId: string; product: string; status: string; currentPeriodEnd: string | null; createdAt: string }[];
+    subscriptions?: { subscriptionId: string; product: string; status: string; currentPeriodEnd: string | null; createdAt: string; cancelRequestedAt: string | null }[];
     grants: {
       id: string;
       capability: string;
@@ -378,6 +378,8 @@ export function OrganizationManager({
   const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelBusy, setCancelBusy] = useState(false);
   const activeSelection = useRef(selected);
   const requestGeneration = useRef(0);
   const selectedOrg = organizations.find((o) => o.id === selected);
@@ -451,6 +453,26 @@ export function OrganizationManager({
       setCheckoutError(err.message || "Checkout failed");
     } finally {
       setCheckoutBusy(null);
+    }
+  };
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelBusy(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch(
+        `/api/organizations/${selected}/billing/${encodeURIComponent(cancelTarget)}/cancel`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
+      );
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message ?? "Unable to schedule cancellation");
+      setCheckoutMessage("Renewal cancellation scheduled at the end of the paid billing period.");
+      setCancelTarget(null);
+      await load();
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Cancellation unavailable");
+    } finally {
+      setCancelBusy(false);
     }
   };
   useEffect(() => {
@@ -953,6 +975,17 @@ export function OrganizationManager({
                                   {sub.currentPeriodEnd && (
                                     <span>Period ends {new Date(sub.currentPeriodEnd).toLocaleDateString()}</span>
                                   )}
+                                  {sub.cancelRequestedAt ? (
+                                    <span className="text-amber-600">Cancellation scheduled</span>
+                                  ) : ["active", "authenticated", "pending", "created"].includes(sub.status) && billing.billingEnabled ? (
+                                    <button
+                                      type="button"
+                                      className="rounded-lg border border-stone-300 px-3 py-1.5 font-semibold hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800"
+                                      onClick={() => setCancelTarget(sub.subscriptionId)}
+                                    >
+                                      Cancel renewal
+                                    </button>
+                                  ) : null}
                                 </li>
                               ))}
                             </ul>
@@ -980,6 +1013,20 @@ export function OrganizationManager({
                                 {checkoutBusy === "kitchen_pro" ? "Connecting..." : "Upgrade to Kitchen Pro (₹299/mo)"}
                               </button>
                             )}
+                          </div>
+                        )}
+                        {cancelTarget && (
+                          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                            <div role="dialog" aria-modal="true" aria-labelledby="billing-cancel-title" className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-700 dark:bg-stone-950">
+                              <h3 id="billing-cancel-title" className="text-lg font-bold">Stop automatic renewal?</h3>
+                              <p className="mt-3 text-sm text-stone-600 dark:text-stone-300">
+                                Your existing paid access stays available until its verified billing-period end. This does not issue a refund.
+                              </p>
+                              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                                <button type="button" disabled={cancelBusy} onClick={() => setCancelTarget(null)} className="rounded-xl border border-stone-300 px-4 py-2 text-sm font-semibold dark:border-stone-700">Keep subscription</button>
+                                <button type="button" disabled={cancelBusy} onClick={() => void handleCancel()} className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{cancelBusy ? "Scheduling..." : "Confirm cancellation"}</button>
+                              </div>
+                            </div>
                           </div>
                         )}
                         {checkoutError && (
