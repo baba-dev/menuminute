@@ -298,3 +298,185 @@
     zoom: 0.72;
   }
 }
+
+/* QR Studio 4.0: composition themes stay within the same certified paper dimensions. */
+.sheet[data-palette="ink"] {
+  background: #142532;
+  color: #fff4d9;
+  --accent: #ecc68b;
+  --soft: #244253;
+  border: 2px solid #ca9d5e;
+}
+.sheet[data-palette="ink"]::before {
+  opacity: 0.8;
+  border-style: double;
+  border-width: 3px;
+}
+.sheet[data-palette="ink"] .ornament {
+  letter-spacing: 0.09em;
+  color: #edcd95;
+}
+.sheet[data-palette="botanical"] {
+  background: #f4f0df;
+  --accent: #456b40;
+  --soft: #dce9ce;
+}
+.sheet[data-palette="botanical"]::before {
+  border-radius: 32% 4mm 32% 4mm;
+  opacity: 0.32;
+}
+.sheet[data-palette="botanical"] .ornament {
+  font-family: Georgia, serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+.sheet[data-palette="citrus"] {
+  background: #eafe5f;
+  color: #1d2918;
+  --accent: #b73b05;
+  --soft: #fff6d2;
+  border: 3px solid #ea6a14;
+}
+.sheet[data-palette="citrus"]::before {
+  border: 3px dashed #ea6a14;
+  opacity: 0.65;
+  inset: 3mm;
+}
+.sheet[data-palette="citrus"] .ornament {
+  font-size: 19px;
+  letter-spacing: 0.1em;
+}
+.sheet[data-palette="citrus"] h3 {
+  text-transform: uppercase;
+  letter-spacing: -0.06em;
+}
+.sheet[data-palette="ruby"] {
+  background: linear-gradient(160deg, #ffe4e8, #f6cbd8);
+  color: #58152f;
+  --accent: #80183a;
+  border: 1px solid #b87d8f;
+}
+.sheet[data-palette="ruby"]::before {
+  border: 3px double #963b59;
+  inset: 3mm;
+  opacity: 0.45;
+}
+.sheet[data-palette="ruby"] .ornament {
+  font-family: Georgia, serif;
+  letter-spacing: 0.07em;
+}
+.sheet[data-palette="coastal"] {
+  background: #e5f8f8;
+  color: #0a365b;
+  --accent: #096d96;
+  border: 3px solid #086cb7;
+}
+.sheet[data-palette="coastal"]::before {
+  border: 2px dashed #22b0bd;
+  opacity: 0.5;
+}
+.sheet[data-palette="coastal"] .ornament {
+  font-size: 14px;
+  color: #0072b5;
+}
+.sheet[data-palette="neon"] {
+  background: #11172b;
+  color: #f9eaff;
+  --accent: #ff7bc0;
+  --soft: #162b48;
+  border: 3px solid #14d5ec;
+}
+.sheet[data-palette="neon"]::before {
+  border: 2px solid #f64da5;
+  opacity: 0.85;
+}
+.sheet[data-palette="neon"] .ornament,
+.sheet[data-palette="neon"] .kicker {
+  color: #28d6df;
+}
+.sheet[data-palette="neon"] h3 {
+  color: #fff2ae;
+  text-transform: uppercase;
+}
+.sheet[data-palette="patisserie"] {
+  background: #f4ebff;
+  color: #5c307a;
+  --accent: #8054b7;
+  --soft: #fce6dc;
+  border: 2px solid #ad86cf;
+  border-radius: 4mm;
+}
+.sheet[data-palette="patisserie"]::before {
+  border: 2px dotted #d6a3c5;
+  opacity: 0.8;
+  border-radius: 3mm;
+}
+.sheet[data-palette="patisserie"] .ornament {
+  font-family: Georgia, serif;
+  letter-spacing: 0.05em;
+}
+.sheet[data-palette="mono"] {
+  background: #fff;
+  color: #111;
+  --accent: #111;
+  --soft: #eaeaea;
+  border: 4px solid #111;
+}
+.sheet[data-palette="mono"]::before {
+  border: 0;
+  border-top: 2px solid #111;
+  border-bottom: 2px solid #111;
+  inset: 4mm;
+  opacity: 1;
+}
+.sheet[data-palette="mono"] h3 {
+  text-transform: uppercase;
+  letter-spacing: -0.07em;
+  font-weight: 900;
+}
+.sheet[data-palette="mono"] .ornament {
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.2em;
+}
+
+.sheet[data-font="dm"] {
+  --print-font: var(--font-dm), Arial, sans-serif;
+}
+.sheet[data-font="playfair"] {
+  --print-font: var(--font-print-playfair), Georgia, serif;
+}
+.sheet[data-font="bricolage"] {
+  --print-font: var(--font-bricolage), Arial, sans-serif;
+}
+.sheet[data-font="bebas"] {
+  --print-font: var(--font-print-bebas), Impact, sans-serif;
+}
+.sheet[data-font="kalam"] {
+  --print-font: var(--font-kalam), cursive;
+}
+.sheet .identity h3,
+.sheet .invitation strong {
+  font-family: var(--print-font, sans-serif);
+}
+.sheet[data-font="bebas"] .identity h3 {
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  font-size: 30px;
+}
+.sheet[data-font="kalam"] .identity h3 {
+  line-height: 1.35;
+  font-weight: 700;
+}
+.sheet[data-font="playfair"] .identity h3 {
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+}
+.sheet[data-format="sticker"][data-font="bebas"] .identity h3 {
+  font-size: 18px;
+}
+.sheet[data-format="sticker"][data-font="kalam"] .identity h3 {
+  font-size: 15px;
+}
+.sheet[data-format="sticker"] .brand {
+  white-space: nowrap;
+}
