@@ -9,6 +9,7 @@ import { putObject, getObject } from "./storage";
 import { env } from "@/lib/config/env";
 import { createHash } from "node:crypto";
 import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
+import { mediaEnv } from "@/lib/config/media-env";
 export async function mediaCommand(
   actor: Actor,
   outletId: string,
@@ -88,7 +89,8 @@ function publicMediaReader(id: string) {
 export async function publicMediaResponse(
   id: string,
   thumbnail = false,
-  ifNoneMatch: string | null = null
+  ifNoneMatch: string | null = null,
+  allowInternalOffload = false
 ) {
   const read = publicMediaReader(id);
   const a = await read();
@@ -99,15 +101,34 @@ export async function publicMediaResponse(
   if (validators?.includes(etag) || validators?.includes("*")) {
     return { etag, notModified: true as const };
   }
+  // The internal path is derived solely from an authorized database storage key,
+  // never from the public request URL. Nginx's location must be marked internal.
+  if (
+    allowInternalOffload &&
+    mediaEnv.MEDIA_STORAGE === "local" &&
+    mediaEnv.MEDIA_X_ACCEL_REDIRECT_ENABLED &&
+    /^[A-Za-z0-9_-]+\\/[A-Za-z0-9_-]+\\/(display|thumb)\\.webp$/.test(key)
+  ) {
+    const current = await read();
+    if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
+      throw new NotFoundError("Photo");
+    return {
+      etag,
+      notModified: false as const,
+      internalPath: `/_menuminute_media_internal/${key}`,
+    };
+  }
   const bytes = await getObject(key);
   const current = await read();
   if (!current || (thumbnail ? current.thumbnail : current.key) !== key)
     throw new NotFoundError("Photo");
-  return { bytes, etag, notModified: false as const };
+  return { bytes, etag, notModified: false as const, internalPath: null };
 }
 
 export async function publicMedia(id: string, thumbnail = false) {
   const result = await publicMediaResponse(id, thumbnail);
-  if (result.notModified) throw new Error("Unexpected conditional media response");
+  if (result.notModified || !result.bytes) {
+    throw new Error("Unexpected conditional media response");
+  }
   return result.bytes;
 }
