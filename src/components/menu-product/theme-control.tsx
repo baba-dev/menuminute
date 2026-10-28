@@ -1,31 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
+import {
+  getResolvedAppearance,
+  setResolvedAppearance,
+  subscribeToAppearance,
+  syncResolvedAppearance,
+} from "./appearance-store";
 
-/** Use the bootstrapped resolved theme; one click opts out of automatic system mode. */
+const getServerAppearance = () => "light" as const;
+
+/** All mounted theme controls share the same resolved appearance. */
 export function ThemeControl() {
-  const [resolved, setResolved] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-color-scheme: dark)");
-    const sync = () => {
-      const selected = localStorage.getItem("menuminute.appearance") ?? "system";
-      const next = selected === "system" ? (query.matches ? "dark" : "light") : selected;
-      const mode = next === "dark" ? "dark" : "light";
-      document.documentElement.dataset.theme = mode;
-      document.documentElement.classList.toggle("dark", mode === "dark");
-      setResolved(mode);
-    };
-    queueMicrotask(sync);
-    query.addEventListener("change", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      query.removeEventListener("change", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
+  const resolved = useSyncExternalStore(
+    subscribeToAppearance,
+    getResolvedAppearance,
+    getServerAppearance
+  );
   const isDark = resolved === "dark";
   return (
     <button
@@ -34,13 +26,7 @@ export function ThemeControl() {
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={isDark}
-      onClick={() => {
-        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-        localStorage.setItem("menuminute.appearance", next);
-        document.documentElement.dataset.theme = next;
-        document.documentElement.classList.toggle("dark", next === "dark");
-        setResolved(next);
-      }}
+      onClick={() => setResolvedAppearance(isDark ? "light" : "dark")}
     >
       {isDark ? (
         <Sun className="h-5 w-5" aria-hidden="true" />
@@ -51,30 +37,11 @@ export function ThemeControl() {
   );
 }
 
-/** Keep System mode responsive even on routes without a visible theme toggle. */
+/** Keep system mode responsive even on routes without a visible theme toggle. */
 export function ThemeSync() {
   useEffect(() => {
-    const query = window.matchMedia("(prefers-color-scheme: dark)");
-    const sync = () => {
-      const selected = localStorage.getItem("menuminute.appearance") ?? "system";
-      const mode =
-        selected === "system"
-          ? query.matches
-            ? "dark"
-            : "light"
-          : selected === "dark"
-            ? "dark"
-            : "light";
-      document.documentElement.dataset.theme = mode;
-      document.documentElement.classList.toggle("dark", mode === "dark");
-    };
-    queueMicrotask(sync);
-    query.addEventListener("change", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      query.removeEventListener("change", sync);
-      window.removeEventListener("storage", sync);
-    };
+    syncResolvedAppearance();
+    return subscribeToAppearance(() => {});
   }, []);
   return null;
 }
