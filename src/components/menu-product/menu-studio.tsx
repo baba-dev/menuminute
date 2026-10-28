@@ -536,7 +536,7 @@ export function MenuStudio({
                 media={media}
                 organization={organizationDishes}
                 defaultCategoryId={composerCategory}
-                focusRequest={0}
+                focusRequest={1}
                 selection={composerSelection}
                 setSelection={setComposerSelection}
                 onAdd={(items, name) => {

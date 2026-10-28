@@ -449,7 +449,6 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await expect(studio).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
-  const compact = (page.viewportSize()?.width ?? 1440) <= 720;
   await expect(studio.getByLabel("Integrated private draft preview")).toHaveCount(0);
   await expect(studio.getByRole("navigation", { name: "Filter sections" })).toBeVisible();
   await studio.locator("summary[aria-label='About Sections']").click();

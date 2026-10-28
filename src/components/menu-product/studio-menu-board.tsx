@@ -230,6 +230,7 @@ export function StudioMenuBoard({
                       Description
                       <input
                         value={editDescription}
+                        maxLength={1000}
                         onChange={(event) => setEditDescription(event.target.value)}
                       />
                     </label>

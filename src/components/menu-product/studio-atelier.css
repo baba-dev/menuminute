@@ -2317,7 +2317,7 @@
   padding: 0 !important;
 }
 .menu-board-dialog-foot {
-  padding: 12px 22px 24px;
+  padding: 12px 22px max(24px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--atelier-line);
   flex-wrap: wrap;
 }
