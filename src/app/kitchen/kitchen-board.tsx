@@ -292,20 +292,23 @@ export function KitchenBoard({
   );
   useEffect(() => {
     if (!canManage || revoked.current) return;
-    // This browser preference affects only modal presentation, never the readiness
-    // or entitlement gate. Readiness always comes from the server snapshot.
-    const firstKey = `menuminute.kitchen.setup.v2:${organizationId}:${outletId}`;
-    const activationKey = `menuminute.kitchen.activated.v2:${organizationId}:${outletId}`;
-    try {
-      const first = sessionStorage.getItem(firstKey) !== "seen";
-      const newActivation = snapshot.enabled && localStorage.getItem(activationKey) !== "seen";
-      if (first) sessionStorage.setItem(firstKey, "seen");
-      if (newActivation) localStorage.setItem(activationKey, "seen");
-      if ((first && !setupProgress.complete) || newActivation) setShowSettings(true);
-    } catch {
-      // Private browsing must not prevent the first-run setup.
-      if (!setupProgress.complete) setShowSettings(true);
-    }
+    // Schedule presentation after hydration. React Strict Mode can cancel a
+    // superseded frame without prematurely marking a first visit as seen.
+    const frame = window.requestAnimationFrame(() => {
+      const firstKey = `menuminute.kitchen.setup.v2:${organizationId}:${outletId}`;
+      const activationKey = `menuminute.kitchen.activated.v2:${organizationId}:${outletId}`;
+      try {
+        const first = sessionStorage.getItem(firstKey) !== "seen";
+        const newActivation = snapshot.enabled && localStorage.getItem(activationKey) !== "seen";
+        if (first) sessionStorage.setItem(firstKey, "seen");
+        if (newActivation) localStorage.setItem(activationKey, "seen");
+        if ((first && !setupProgress.complete) || newActivation) setShowSettings(true);
+      } catch {
+        // Private browsing must not prevent the first-run setup.
+        if (!setupProgress.complete) setShowSettings(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [canManage, organizationId, outletId, snapshot.enabled, setupProgress.complete]);
   async function moveWork() {
     const ticket = snapshot.work.find((w) => w.id === reassignWork);
