@@ -1,0 +1,16 @@
+export const PRINT_THEMES = [
+  { id: "ember", name: "Classic Ember", description: "Cream & tangerine", accent: "#CB501A", paper: "#FFF9ED", ornament: "✦  ✳  ✦", heading: "WELCOME TO OUR TABLE" },
+  { id: "ink", name: "Midnight Luxe", description: "Navy & gold", accent: "#D8AD68", paper: "#142532", ornament: "◆  THE PRIVATE TABLE  ◆", heading: "A PERSONAL INVITATION" },
+  { id: "botanical", name: "Botanical Estate", description: "Olive & parchment", accent: "#456B40", paper: "#F4F0DF", ornament: "❧  FROM OUR GARDEN  ❧", heading: "FRESH FROM OUR TABLE" },
+  { id: "citrus", name: "Citrus Pop", description: "Lime & electric orange", accent: "#F66B14", paper: "#EAFE5F", ornament: "✳ ✳ ✳", heading: "HEY THERE, FOOD LOVER!" },
+  { id: "ruby", name: "Ruby Velvet", description: "Burgundy & blush", accent: "#80183A", paper: "#FCE3E7", ornament: "✧  DINING, BEAUTIFULLY  ✧", heading: "AN INVITATION TO DINE" },
+  { id: "coastal", name: "Coastal Club", description: "Cobalt & turquoise", accent: "#096D96", paper: "#E5F8F8", ornament: "〰  THE GOOD LIFE  〰", heading: "A LITTLE TASTE OF SUNSHINE" },
+  { id: "neon", name: "Neon Diner", description: "Pink & electric cyan", accent: "#F64DA5", paper: "#11172B", ornament: "★  EAT • SCAN • REPEAT  ★", heading: "WELCOME TO THE FUTURE" },
+  { id: "patisserie", name: "Patisserie Pastel", description: "Lavender & peach", accent: "#8054B7", paper: "#F4EBFF", ornament: "♡  MADE WITH LOVE  ♡", heading: "SOMETHING SWEET AWAITS" },
+  { id: "mono", name: "Modern Mono", description: "Black & architectural", accent: "#151515", paper: "#FFFFFF", ornament: "M E N U  /  0 1", heading: "THE MENU / PLEASE SCAN" },
+] as const;
+
+export type PrintPalette = (typeof PRINT_THEMES)[number]["id"];
+export function getPrintTheme(id: PrintPalette) {
+  return PRINT_THEMES.find((theme) => theme.id === id) ?? PRINT_THEMES[0];
+}
