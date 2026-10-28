@@ -15,12 +15,12 @@ import {
 import { StudioMenuSelector } from "./studio-menu-selector";
 import {
   findDishDuplicate,
-  findCulinaryProfile,
   findPublicDishDescription,
   normalizeDishText,
   type OrganizationDish,
 } from "@/modules/menu-product/dish-intelligence";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
+import { draftCulinaryDefaults } from "@/modules/menu-product/draft-culinary";
 import { displayToMinor } from "@/lib/money";
 import { Field } from "./studio-fields";
 import { StudioMediaTab, StudioAssignmentsTab } from "./studio-resources";
@@ -445,31 +445,12 @@ export function MenuStudio({
             : item.imageMode === "artwork" && art
               ? "artwork"
               : "none",
-        // Suggested recipes never carry a verified restaurant or dietary claim.
-        ...(findCulinaryProfile(item.name)
-          ? (() => {
-              const profile = findCulinaryProfile(item.name)!;
-              const pairings = next.categories
-                .filter((section) => !section.archived)
-                .flatMap((section) => section.items.filter((dish) => !dish.archived))
-                .filter((dish) => profile.culinary.suggestedPairings.some(
-                  (name) => normalizeDishText(name) === normalizeDishText(dish.name)
-                ))
-                .slice(0, 4)
-                .map((dish) => dish.id);
-              return {
-                nutrition: { ...profile.nutrition, verified: false },
-                culinary: {
-                  spiceLevel: profile.culinary.spiceLevel,
-                  flavorNotes: [...profile.culinary.flavorNotes],
-                  chefNote: profile.culinary.chefNote,
-                  servingTemp: profile.culinary.servingTemp,
-                  pairingDishIds: pairings,
-                },
-                safety: { ...profile.safety, verified: false, verifiedFreeFrom: [] },
-              };
-            })()
-          : {}),
+        ...draftCulinaryDefaults(
+          item.name,
+          next.categories
+            .filter((section) => !section.archived)
+            .flatMap((section) => section.items.filter((dish) => !dish.archived))
+        ),
         dietary: [],
         variants: [],
         addOnGroups: [],
