@@ -565,7 +565,12 @@ export function KitchenSetupModal({
                   type="button"
                   disabled={busy}
                   className="kk-setup-action"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    setStep("stations");
+                    setMessage("");
+                    setBatchDone(0);
+                    onOpenChange(false);
+                  }}
                 >
                   {progress.complete ? "Finish setup" : "Close and finish later"}{" "}
                   <Check size={17} />
