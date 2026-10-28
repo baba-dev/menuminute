@@ -53,10 +53,30 @@ location ^~ /api/auth/ {
 #     add_header Cache-Control "private, no-store" always;
 # }
 
-# Public media requires the same private attestation as public orders.
-# Apply within the reviewed Food HTTPS vhost and trusted Cloudflare real_ip setup.
-# The root-only include must define $menuminute_edge_secret, matching web.env.
-location ^~ /api/public-media/ {
+# Public media serving:
+# Option 1 (Recommended for production): Direct static serving of derivative WebP images
+# via Linux kernel sendfile to eliminate Node.js memory allocations and database queries.
+# Strictly matches display.webp / thumb.webp only; blocks raw 'original' uploads and directory indexing.
+# Note: www-data must have read permissions: sudo usermod -aG menuminute-media www-data
+location ~ ^/api/public-media/([a-zA-Z0-9_-]+)$ {
+    set $media_size "display.webp";
+    if ($arg_size = "thumb") {
+        set $media_size "thumb.webp";
+    }
+
+    alias /var/lib/menuminute/media/;
+    try_files /var/lib/menuminute/media/*/$1/$media_size @nextjs_media;
+
+    expires 30d;
+    add_header Cache-Control "public, max-age=2592000, stale-while-revalidate=604800, immutable" always;
+    add_header Content-Type "image/webp" always;
+    add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    autoindex off;
+}
+
+# Fallback for dynamic authorization checks or legacy proxied media
+location @nextjs_media {
     include /etc/menuminute/nginx-order-edge-secret.conf;
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
@@ -68,5 +88,4 @@ location ^~ /api/public-media/ {
     proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
     proxy_read_timeout 30s;
     client_max_body_size 16k;
-    add_header Cache-Control "private, no-cache, max-age=0, must-revalidate" always;
 }

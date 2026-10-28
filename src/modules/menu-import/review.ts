@@ -4,6 +4,7 @@ import { withActor, type Actor } from "@/modules/tenancy/service";
 import { domainError } from "@/modules/organizations/service";
 import { ValidationError } from "@/lib/errors";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/service";
 import { importId, parseImportCandidate, type ImportCandidate } from "./contracts";
 import { importDetail } from "./service";
 
@@ -139,7 +140,7 @@ export async function applyReview(actor: Actor, outletId: string, rawId: string,
   const id = importId.parse(rawId),
     input = applySchema.parse(raw);
   try {
-    return await withActor(
+    const result = await withActor(
       actor,
       async (tx) =>
         (
@@ -157,6 +158,8 @@ export async function applyReview(actor: Actor, outletId: string, rawId: string,
           )
         ).rows[0]!.result
     );
+    await invalidateOutletMenuCache(outletId);
+    return result;
   } catch (err) {
     domainError(err);
   }

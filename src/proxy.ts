@@ -1,13 +1,1 @@
-import { NextRequest, NextResponse } from "next/server";
-
-export function proxy(request: NextRequest) {
-  // This is the public trust boundary: never let a client choose a log correlation identity.
-  const id = crypto.randomUUID();
-  const headers = new Headers(request.headers);
-  headers.set("x-request-id", id);
-  const response = NextResponse.next({ request: { headers } });
-  response.headers.set("x-request-id", id);
-  return response;
-}
-
-export const config = { matcher: "/api/:path*" };
+export * from "./middleware";

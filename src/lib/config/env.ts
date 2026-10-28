@@ -28,7 +28,7 @@ export const envSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     APP_URL: z.string().url(),
     DATABASE_URL: pgUrl,
-    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
+    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(10),
     AUTH_SECRET: z.string().min(32),
     EMAIL_PROVIDER: z.enum(["smtp", "resend", "test"]).default("test"),
     EMAIL_FROM: z.string().trim().email().optional(),

@@ -159,13 +159,18 @@ export function PublicMenu({
       }
     };
     const timer = setInterval(refresh, 30000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
     window.addEventListener("online", refresh);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     const offline = () => setStatus("You are offline. Availability may have changed.");
     window.addEventListener("offline", offline);
     return () => {
       stopped = true;
       clearInterval(timer);
       window.removeEventListener("online", refresh);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("offline", offline);
     };
   }, [token, preview, cartItems, data.locale]);

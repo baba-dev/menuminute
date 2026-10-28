@@ -4,6 +4,7 @@ import { restaurants } from "@/db/schema";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { domainError } from "@/modules/organizations/service";
 import { withOutlet, type Actor } from "@/modules/tenancy/service";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/service";
 const optional = (max: number) => z.string().trim().max(max).nullable();
 const color = z
   .string()
@@ -102,7 +103,9 @@ export async function saveOutletProfile(
         .where(and(eq(restaurants.id, outletId), eq(restaurants.organizationId, orgId)))
         .limit(1);
       if (!latest) throw new NotFoundError("Outlet");
-      return { profileVersion: result.rows[0]!.version, fields: editableOutletProfile(latest) };
+      const res = { profileVersion: result.rows[0]!.version, fields: editableOutletProfile(latest) };
+      await invalidateOutletMenuCache(outletId);
+      return res;
     });
   } catch (e) {
     domainError(e);

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
@@ -10,6 +11,13 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@
 import { entityId, validateMenuCommand, menuDocumentSchema, type MenuDocument } from "./contracts";
 import { organizationFromAuthorizedMenus } from "./dish-reuse";
 import { artworkById } from "./dish-artwork";
+import {
+  getCachedPublicProduct,
+  setCachedPublicProduct,
+  invalidateOutletMenuCache,
+} from "./cache";
+
+export { invalidateOutletMenuCache };
 import {
   applyMenuTranslation,
   menuLocaleSchema,
@@ -146,7 +154,7 @@ export async function saveMenuTranslation(
       "Translation structure no longer matches the published menu. Refresh and translate again."
     );
   try {
-    return await withActor(actor, async (tx) => {
+    const result = await withActor(actor, async (tx) => {
       const rows = await tx.execute<{ result: MenuTranslation }>(
         sql`select app_private.menu_translation_command(
           ${outletId},${menuId},${input.locale},${input.sourceRevision},${input.expectedRevision},
@@ -154,6 +162,8 @@ export async function saveMenuTranslation(
       );
       return rows.rows[0]!.result;
     });
+    await invalidateOutletMenuCache(outletId);
+    return result;
   } catch (error) {
     domainError(error);
   }
@@ -170,7 +180,7 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
       }
   }
   try {
-    return await withActor(
+    const result = await withActor(
       actor,
       async (tx) =>
         (
@@ -179,6 +189,8 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
           )
         ).rows[0]!.result
     );
+    await invalidateOutletMenuCache(outletId);
+    return result;
   } catch (e) {
     const inner = e instanceof Error && e.cause ? e.cause : e;
     if (
@@ -296,14 +308,19 @@ export type PublicProduct = {
     overrides: { dishId: string; priceMinor: number | null; soldOut: boolean | null }[];
   }[];
 };
-export async function publicProduct(
-  token: string,
-  requestedLocale?: string | null
-): Promise<PublicProduct | null> {
-  if (!z.string().min(1).max(128).safeParse(token).success) return null;
-  const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
-  const locale = parsedLocale?.success ? parsedLocale.data : null;
-  const r = await getPool().query<{
+export const publicProduct = cache(
+  async (
+    token: string,
+    requestedLocale?: string | null
+  ): Promise<PublicProduct | null> => {
+    if (!z.string().min(1).max(128).safeParse(token).success) return null;
+    const parsedLocale = requestedLocale ? menuLocaleSchema.safeParse(requestedLocale) : null;
+    const locale = parsedLocale?.success ? parsedLocale.data : null;
+
+    const cached = await getCachedPublicProduct(token, locale);
+    if (cached) return cached;
+
+    const r = await getPool().query<{
     data: PublicProduct | null;
     fingerprint: string | null;
     ordering_enabled: boolean;
@@ -396,5 +413,8 @@ export async function publicProduct(
         .map((c) => ({ ...c, items: c.items.filter((i) => !i.archived) })),
     },
   }));
+  if (data) {
+    await setCachedPublicProduct(token, locale, data);
+  }
   return data;
-}
+});
