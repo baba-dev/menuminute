@@ -582,29 +582,31 @@ export function CartDrawer({
               </div>
 
               {/* Price Breakdown */}
-              <div className="panel quiet stack" style={{ gap: "0.3rem", marginTop: "0.5rem" }}>
-                <div className="row between">
-                  <span>Subtotal</span>
-                  <span className="money">{formatPrice(subtotalMinor, currency)}</span>
+              <div
+                className="ticket-receipt-card stack"
+                style={{
+                  gap: "0.35rem",
+                  marginTop: "0.5rem",
+                  padding: "1.1rem 1.25rem 0.8rem",
+                  borderRadius: "14px 14px 0 0",
+                }}
+              >
+                <div className="row between" style={{ alignItems: "baseline", gap: "0.75rem" }}>
+                  <span style={{ fontWeight: 800 }}>Estimated item subtotal</span>
+                  <span className="money" style={{ fontSize: "1.2rem", fontWeight: 800 }}>
+                    {formatPrice(subtotalMinor, currency)}
+                  </span>
                 </div>
                 <small className="quiet">
                   Item subtotal is estimated. The restaurant validates prices and any applicable
                   charges before accepting your order.
                 </small>
-                <div
-                  className="row between"
-                  style={{
-                    borderTop: "1px solid var(--line)",
-                    paddingTop: "0.4rem",
-                    fontWeight: 800,
-                  }}
-                >
-                  <span>Estimated item subtotal</span>
-                  <span className="money" style={{ fontSize: "1.2rem" }}>
-                    {formatPrice(subtotalMinor, currency)}
-                  </span>
-                </div>
               </div>
+              <div
+                className="ticket-receipt-tear"
+                style={{ marginBottom: "0.5rem" }}
+                aria-hidden="true"
+              />
 
               {/* Invariant Alert: Submission is not acceptance */}
               <div className="alert-notice stack" style={{ gap: "0.2rem" }}>

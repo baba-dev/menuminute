@@ -389,6 +389,21 @@
   background: var(--dc-surface);
   border: 1px solid var(--dc-line);
   border-radius: 18px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .dining-dish:hover:not(.is-unavailable) {
+    transform: translateY(-2px);
+    border-color: var(--dc-ember);
+    box-shadow: 0 6px 20px -3px rgba(0, 0, 0, 0.08);
+  }
+}
+.dining-dish:focus-within {
+  border-color: var(--dc-ember);
+  box-shadow: 0 6px 20px -3px rgba(0, 0, 0, 0.08);
 }
 .dining-photo-button {
   border: 0;
@@ -624,9 +639,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .dining-category-tile,
+  .dining-dish,
   .dining-dish-cta {
     transition: none;
     animation: none;
+  }
+  .dining-dish:hover:not(.is-unavailable) {
+    transform: none;
   }
 }
 @media print {
