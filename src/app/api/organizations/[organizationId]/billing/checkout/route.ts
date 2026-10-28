@@ -14,6 +14,7 @@ export async function POST(
     const actor = await requestActor(req, true);
     const { organizationId } = await context.params;
 
+    if (!env.RAZORPAY_ENABLED) throw new ValidationError("Subscriptions are not enabled on this deployment.");
     if (env.COMMUNITY_EDITION) {
       throw new ValidationError(
         "Self-hosted Community Edition has all features unlocked without subscriptions."
@@ -36,10 +37,10 @@ export async function POST(
       throw new ValidationError("Invalid plan. Choose 'ordering' or 'kitchen_pro'");
     }
 
-    const planId =
-      plan === "kitchen_pro"
-        ? env.RAZORPAY_PLAN_KITCHEN_ID || "plan_KITCHEN_299"
-        : env.RAZORPAY_PLAN_ORDERING_ID || "plan_ORDERING_119";
+    if (plan === "kitchen_pro" && !env.RAZORPAY_KITCHEN_ENABLED)
+      throw new ValidationError("Kitchen Pro paid activation is not approved yet.");
+    const planId = plan === "kitchen_pro" ? env.RAZORPAY_PLAN_KITCHEN_ID : env.RAZORPAY_PLAN_ORDERING_ID;
+    if (!planId) throw new ValidationError("Provider plan is not configured.");
 
     const amountPaise = plan === "kitchen_pro" ? 29900 : 11900;
 
