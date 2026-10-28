@@ -15,7 +15,7 @@ test("public pricing advertises the reviewed INR catalog without unsupported int
   await expect(page.getByText("Available after Kitchen Pro release approval")).toBeVisible();
   await expect(page.getByText("TBA", { exact: true })).toHaveCount(0);
   await expect(page.locator('a[href="#"]')).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Get started free" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Get started free" }).first()).toHaveAttribute(
     "href",
     "/register"
   );
