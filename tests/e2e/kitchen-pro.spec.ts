@@ -75,7 +75,9 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await expect(setup.getByLabel("Organization member")).toContainText("Kitchen owner");
   await expect(setup.getByLabel("Organization member")).not.toHaveValue("");
   await setup.getByRole("button", { name: "Assign teammate" }).click();
-  await expect(setup.getByText("1 station(s)")).toBeVisible();
+  await expect(
+    setup.getByRole("button", { name: "Remove Kitchen owner from Grill" })
+  ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(setup).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
