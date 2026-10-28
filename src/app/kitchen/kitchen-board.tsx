@@ -13,7 +13,6 @@ import {
   CheckCheck,
   Flame,
   ListChecks,
-  Plus,
   Settings2,
   AlertTriangle,
   LoaderCircle,
@@ -24,6 +23,7 @@ import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
+import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { kitchenPulse, stationGroups, outstandingDishes } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
@@ -138,11 +138,6 @@ export function KitchenBoard({
   const [sound, setSound] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mobileLane, setMobileLane] = useState<"all" | "queued" | "preparing" | "complete">("all");
-  const [stationName, setStationName] = useState("");
-  const [dishId, setDishId] = useState(menuDishes[0]?.id ?? "");
-  const [routeStation, setRouteStation] = useState(initial.stations[0]?.id ?? "");
-  const [memberId, setMemberId] = useState("");
-  const [memberStation, setMemberStation] = useState("");
   const [reassignWork, setReassignWork] = useState("");
   const [reassignStation, setReassignStation] = useState("");
   const [reassignReason, setReassignReason] = useState("");
@@ -287,18 +282,30 @@ export function KitchenBoard({
       setBusy("");
     }
   }
-  async function admin(action: string, data: Record<string, string>) {
-    setBusy(action);
-    setError("");
-    try {
-      await command(base + "/admin", { action, data });
-      setStationName("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Settings could not be saved");
-    } finally {
-      setBusy("");
-    }
+  async function setupCommand(action: string, data: Record<string, string>) {
+    if (revoked.current) throw new Error("Kitchen access changed. Sign in again.");
+    await command(base + "/admin", { action, data });
   }
+  const setupProgress = useMemo(
+    () => kitchenSetupProgress(snapshot, menuDishes), [snapshot, menuDishes]
+  );
+  useEffect(() => {
+    if (!canManage || revoked.current) return;
+    // This browser preference affects only modal presentation, never the readiness
+    // or entitlement gate. Readiness always comes from the server snapshot.
+    const firstKey = `menuminute.kitchen.setup.v2:${organizationId}:${outletId}`;
+    const activationKey = `menuminute.kitchen.activated.v2:${organizationId}:${outletId}`;
+    try {
+      const first = sessionStorage.getItem(firstKey) !== "seen";
+      const newActivation = snapshot.enabled && localStorage.getItem(activationKey) !== "seen";
+      if (first) sessionStorage.setItem(firstKey, "seen");
+      if (newActivation) localStorage.setItem(activationKey, "seen");
+      if ((first && !setupProgress.complete) || newActivation) setShowSettings(true);
+    } catch {
+      // Private browsing must not prevent the first-run setup.
+      if (!setupProgress.complete) setShowSettings(true);
+    }
+  }, [canManage, organizationId, outletId, snapshot.enabled, setupProgress.complete]);
   async function moveWork() {
     const ticket = snapshot.work.find((w) => w.id === reassignWork);
     if (!ticket || !reassignStation || !reassignReason.trim()) return;
@@ -505,11 +512,11 @@ export function KitchenBoard({
           {canManage && (
             <button
               type="button"
-              onClick={() => setShowSettings((v) => !v)}
-              aria-expanded={showSettings}
+              onClick={() => setShowSettings(true)}
+              aria-haspopup="dialog"
               className="kk-setup-toggle"
             >
-              <Settings2 size={17} /> Station setup
+              <Settings2 size={17} /> Configure kitchen
             </button>
           )}
         </div>
@@ -549,123 +556,9 @@ export function KitchenBoard({
         {canManage && (
           <KitchenExpeditor base={base} enabled={snapshot.enabled} cursor={snapshot.cursor} />
         )}
-        {showSettings && canManage && (
-          <section aria-label="Station configuration" className="kk-configuration">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void admin("station.create", { name: stationName });
-              }}
-              className="space-y-3"
-            >
-              <h3 className="font-extrabold">Add preparation station</h3>
-              <label className="block text-sm font-medium" htmlFor="station-name">
-                Station name
-              </label>
-              <input
-                id="station-name"
-                required
-                minLength={2}
-                maxLength={64}
-                value={stationName}
-                onChange={(e) => setStationName(e.target.value)}
-                placeholder="e.g. Tandoor"
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              />
-              <button
-                type="submit"
-                disabled={!!busy}
-                className="flex min-h-11 items-center gap-2 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
-              >
-                <Plus size={16} /> Create station
-              </button>
-            </form>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const target = routeStation || snapshot.stations[0]?.id;
-                if (dishId && target) void admin("route.assign", { dishId, stationId: target });
-              }}
-              className="space-y-3"
-            >
-              <h3 className="font-extrabold">Route a published dish</h3>
-              <label htmlFor="route-dish" className="block text-sm font-medium">
-                Dish
-              </label>
-              <select
-                id="route-dish"
-                required
-                value={dishId}
-                onChange={(e) => setDishId(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              >
-                <option value="">Select dish</option>
-                {menuDishes.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="route-station" className="block text-sm font-medium">
-                Station
-              </label>
-              <select
-                id="route-station"
-                required
-                value={routeStation || snapshot.stations[0]?.id || ""}
-                onChange={(e) => setRouteStation(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              >
-                <option value="">Select station</option>
-                {snapshot.stations.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={!!busy || !dishId || !(routeStation || snapshot.stations[0]?.id)}
-                className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
-              >
-                Assign route
-              </button>
-              <p className="text-xs text-stone-500 dark:text-stone-300">
-                A dish may be routed to multiple stations. Final activation requires commercial and
-                end-to-end release sign-off.
-              </p>
-              <h4 className="text-sm font-bold">Current dish routes</h4>
-              <ul className="max-h-48 space-y-2 overflow-y-auto">
-                {snapshot.routes.map((route) => (
-                  <li
-                    key={route.dishId + route.stationId}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-stone-200 p-2 text-sm dark:border-stone-700"
-                  >
-                    <span>
-                      {menuDishes.find((d) => d.id === route.dishId)?.name ?? route.dishId} ·{" "}
-                      {snapshot.stations.find((st) => st.id === route.stationId)?.name ??
-                        "Inactive station"}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={!!busy}
-                      onClick={() =>
-                        void admin("route.remove", {
-                          dishId: route.dishId,
-                          stationId: route.stationId,
-                        })
-                      }
-                      className="min-h-10 shrink-0 rounded-lg px-2 text-xs font-bold text-red-700 underline disabled:opacity-50 dark:text-red-400"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-                {!snapshot.routes.length && (
-                  <li className="text-xs text-stone-500">No routes configured yet.</li>
-                )}
-              </ul>
-            </form>
+        {canManage && snapshot.work.some((w) => w.status === "queued" || w.status === "preparing") && (
+          <details className="kk-transfer-panel">
+            <summary>Transfer an active ticket</summary>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -742,94 +635,7 @@ export function KitchenBoard({
                 Transfer ticket
               </button>
             </form>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (memberId && (memberStation || snapshot.stations[0]?.id))
-                  void admin("member.assign", {
-                    memberId,
-                    stationId: memberStation || snapshot.stations[0]!.id,
-                  });
-              }}
-              className="space-y-3"
-            >
-              <h3 className="font-extrabold">Assign kitchen staff</h3>
-              <p className="text-xs text-stone-600 dark:text-stone-300">
-                Assign an active teammate with a kitchen or manager outlet role. Revoking the
-                assignment removes their station access on the next request.
-              </p>
-              <label className="block text-sm font-medium" htmlFor="kitchen-member">
-                Team member
-              </label>
-              <select
-                id="kitchen-member"
-                required
-                value={memberId}
-                onChange={(e) => setMemberId(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              >
-                <option value="">Choose a teammate</option>
-                {snapshot.members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-              <label className="block text-sm font-medium" htmlFor="kitchen-member-station">
-                Assigned station
-              </label>
-              <select
-                id="kitchen-member-station"
-                required
-                value={memberStation || snapshot.stations[0]?.id || ""}
-                onChange={(e) => setMemberStation(e.target.value)}
-                className="min-h-12 w-full rounded-xl border border-stone-300 bg-transparent px-3 dark:border-stone-600"
-              >
-                <option value="">Choose a station</option>
-                {snapshot.stations.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={!!busy || !memberId || !(memberStation || snapshot.stations[0]?.id)}
-                className="min-h-11 rounded-xl bg-orange-600 px-4 font-bold text-white disabled:opacity-50"
-              >
-                Assign teammate
-              </button>
-              {snapshot.members.filter((m) => m.stationIds.length > 0).length > 0 && (
-                <ul className="space-y-2 text-sm">
-                  {snapshot.members
-                    .filter((m) => m.stationIds.length > 0)
-                    .flatMap((m) => m.stationIds.map((stationId) => ({ member: m, stationId })))
-                    .map(({ member, stationId }) => (
-                      <li
-                        key={member.id + stationId}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-stone-200 p-2 dark:border-stone-700"
-                      >
-                        <span>
-                          {member.name} ·{" "}
-                          {snapshot.stations.find((st) => st.id === stationId)?.name ??
-                            "Inactive station"}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={!!busy}
-                          onClick={() =>
-                            void admin("member.remove", { memberId: member.id, stationId })
-                          }
-                          className="min-h-10 rounded-lg px-3 text-xs font-bold text-red-700 underline dark:text-red-400"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </form>
-          </section>
+          </details>
         )}
         <section aria-label="Station ticket board" className="kk-workspace">
           <div className="kk-section-heading">
@@ -903,6 +709,16 @@ export function KitchenBoard({
           gated.
         </p>
       </div>
+      {canManage && (
+        <KitchenSetupModal
+          open={showSettings}
+          onOpenChange={setShowSettings}
+          outletName={outletName}
+          snapshot={snapshot}
+          dishes={menuDishes}
+          onCommand={setupCommand}
+        />
+      )}
     </main>
   );
 }
