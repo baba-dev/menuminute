@@ -3,1416 +3,1671 @@
     "id": "MM-IN-048",
     "name": "Adai with Avial",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mixed-lentil rice crepes served with a Kerala-style vegetable and coconut accompaniment."
   },
   {
     "id": "MM-IN-054",
     "name": "Akki Roti",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Karnataka-style flatbread made from rice flour, often seasoned with herbs and spices."
   },
   {
     "id": "MM-IN-007",
     "name": "Aloo Gobi",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Cauliflower and potatoes cooked with aromatic Indian spices."
   },
   {
     "id": "MM-IN-105",
     "name": "Aloo Posto",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali-style potatoes cooked in a delicate poppy seed paste."
   },
   {
     "id": "MM-IN-013",
     "name": "Amritsari Fish",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Punjab-inspired fish pieces coated in spiced gram-flour batter and fried."
   },
   {
     "id": "MM-IN-011",
     "name": "Amritsari Kulcha",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stuffed North Indian flatbread traditionally baked until golden and lightly crisp."
   },
   {
     "id": "MM-IN-076",
     "name": "Andhra Kodi Vepudu",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Andhra-style dry chicken preparation with bold spices and curry leaves."
   },
   {
     "id": "MM-IN-061",
     "name": "Appam with Vegetable Stew",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, lacy rice pancakes paired with a gently spiced vegetable stew."
   },
   {
     "id": "MM-IN-137",
     "name": "Assamese Duck Curry",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Assamese-style duck curry cooked with regional aromatics."
   },
   {
     "id": "MM-IN-070",
     "name": "Avial",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mixed vegetables coated in a lightly spiced coconut and yogurt preparation."
   },
   {
     "id": "MM-IN-130",
     "name": "Axone Pork",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Naga-style pork prepared with fermented soybean seasoning."
   },
   {
     "id": "MM-IN-030",
     "name": "Baati Chokha",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Baked wheat dumplings paired with seasoned mashed vegetables."
   },
   {
     "id": "MM-IN-078",
     "name": "Bagara Baingan",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Hyderabadi baby eggplants simmered in a nutty, tangy spiced gravy."
   },
   {
     "id": "MM-IN-008",
     "name": "Baingan Bharta",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Fire-roasted mashed eggplant cooked with onions, tomatoes and spices."
   },
   {
     "id": "MM-IN-197",
     "name": "Balushahi",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Flaky, deep-fried traditional sweet finished in sugar syrup."
   },
   {
     "id": "MM-IN-028",
     "name": "Banarasi Kachori Sabzi",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp kachori paired with a spicy North Indian potato curry."
   },
   {
     "id": "MM-IN-027",
     "name": "Banarasi Tamatar Chaat",
     "categoryHint": "Street Food",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tangy, warmly spiced tomato chaat with a sweet-sour finish."
   },
   {
     "id": "MM-IN-108",
     "name": "Basanti Pulao",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali-style fragrant, lightly sweet yellow rice with whole spices."
   },
   {
     "id": "MM-IN-199",
     "name": "Bebinca",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Layered Goan dessert traditionally made with coconut milk and eggs."
   },
   {
     "id": "MM-IN-025",
     "name": "Bedmi Puri with Aloo Sabzi",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Spiced lentil-stuffed fried bread served with potato curry."
   },
   {
     "id": "MM-IN-187",
     "name": "Besan Ladoo",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Traditional sweet balls made from roasted gram flour and ghee."
   },
   {
     "id": "MM-IN-087",
     "name": "Bharli Mirchi",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Maharashtrian-style stuffed chilies with a seasoned filling."
   },
   {
     "id": "MM-IN-088",
     "name": "Bharli Vangi",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Small eggplants stuffed with a fragrant Maharashtrian spice mixture."
   },
   {
     "id": "MM-IN-009",
     "name": "Bhindi Masala",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tender okra tossed with onions, tomatoes and warm spices."
   },
   {
     "id": "MM-IN-039",
     "name": "Bhutte Ka Kees",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Indore-style grated corn simmered with milk and mild spices."
   },
   {
     "id": "MM-CORE-biryani",
     "name": "Biryani",
     "categoryHint": "Indian",
-    "aliases": ["biriyani"]
+    "aliases": [
+      "biriyani"
+    ],
+    "publicDescription": "Fragrant, layered rice dish prepared with aromatic spices and a chosen filling."
   },
   {
     "id": "MM-IN-052",
     "name": "Bisi Bele Bath",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Karnataka-style rice and lentils cooked with vegetables and a spiced blend."
   },
   {
     "id": "MM-CORE-bruschetta",
     "name": "Bruschetta",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Toasted Italian bread topped with savory ingredients."
   },
   {
     "id": "MM-CORE-burger",
     "name": "Burger",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "A filled bun with a patty and toppings chosen by the kitchen."
   },
   {
     "id": "MM-CORE-butter-chicken",
     "name": "Butter Chicken",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken pieces in a rich, mildly spiced tomato and butter sauce."
   },
   {
     "id": "MM-CORE-caesar-salad",
     "name": "Caesar Salad",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp salad tossed in a creamy Caesar-style dressing with crunchy garnish."
   },
   {
     "id": "MM-CORE-caprese-salad",
     "name": "Caprese Salad",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Italian salad of tomatoes, mozzarella and fresh basil."
   },
   {
     "id": "MM-IN-128",
     "name": "Chak Hao Kheer",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Manipuri black-rice pudding with a naturally deep purple color."
   },
   {
     "id": "MM-IN-045",
     "name": "Chettinad Chicken",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken cooked with bold, roasted South Indian spices."
   },
   {
     "id": "MM-IN-046",
     "name": "Chettinad Pepper Mushroom",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mushrooms sautéed with fragrant Chettinad-style pepper and spices."
   },
   {
     "id": "MM-IN-113",
     "name": "Chhena Poda",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Baked Odia sweet made from fresh cottage cheese and sugar."
   },
   {
     "id": "MM-IN-158",
     "name": "Chicken 65",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "South Indian-style fried chicken tossed in spicy aromatics."
   },
   {
     "id": "MM-IN-100",
     "name": "Chicken Cafreal",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Goan chicken marinated in green herbs and spices."
   },
   {
     "id": "MM-IN-173",
     "name": "Chicken Chop Suey",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy noodles or vegetables served with a savory chicken sauce."
   },
   {
     "id": "MM-IN-170",
     "name": "Chicken Fried Rice",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried rice with chicken, vegetables and savory seasonings."
   },
   {
     "id": "MM-IN-175",
     "name": "Chicken Hot and Sour Soup",
     "categoryHint": "Soups",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tangy, peppery soup with chicken and vegetables."
   },
   {
     "id": "MM-IN-180",
     "name": "Chicken in Black Pepper Sauce",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken in a savory, pepper-forward sauce."
   },
   {
     "id": "MM-IN-178",
     "name": "Chicken in Hot Garlic Sauce",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken coated in a bold, garlicky, spicy sauce."
   },
   {
     "id": "MM-IN-110",
     "name": "Chicken Kathi Roll",
     "categoryHint": "Street Food",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Seasoned chicken wrapped in a soft flatbread with accompaniments."
   },
   {
     "id": "MM-IN-145",
     "name": "Chicken Lollipop",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken wing drumettes marinated, fried and served as a snack."
   },
   {
     "id": "MM-IN-165",
     "name": "Chicken Manchurian Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Indo-Chinese fried chicken bites tossed in a tangy savory glaze."
   },
   {
     "id": "MM-IN-152",
     "name": "Chicken Spring Rolls",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp rolls filled with seasoned chicken and vegetables."
   },
   {
     "id": "MM-IN-058",
     "name": "Chicken Sukka",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "South Indian-style dry chicken preparation with roasted spices."
   },
   {
     "id": "MM-IN-015",
     "name": "Chicken Tikka",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Boneless chicken pieces marinated with spices and roasted."
   },
   {
     "id": "MM-IN-144",
     "name": "Chilli Chicken Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Indo-Chinese chicken tossed with chilies, peppers and savory sauce."
   },
   {
     "id": "MM-IN-157",
     "name": "Chilli Garlic Fish",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Fish pieces tossed in a vibrant chili-garlic preparation."
   },
   {
     "id": "MM-IN-161",
     "name": "Chilli Garlic Veg Momos",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Vegetable dumplings finished in a spicy chili-garlic sauce."
   },
   {
     "id": "MM-IN-149",
     "name": "Chilli Mushroom Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mushrooms tossed with peppers, chilies and a savory glaze."
   },
   {
     "id": "MM-IN-143",
     "name": "Chilli Paneer Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Cubes of paneer tossed with peppers and spicy Indo-Chinese seasoning."
   },
   {
     "id": "MM-IN-163",
     "name": "Chilli Soya Chaap",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soya chaap pieces tossed in spicy chili sauce with aromatics."
   },
   {
     "id": "MM-IN-103",
     "name": "Chingri Malai Curry",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali-style prawns simmered in a fragrant coconut-milk curry."
   },
   {
     "id": "MM-CORE-chole-bhature",
     "name": "Chole Bhature",
     "categoryHint": "Indian",
-    "aliases": ["chhole bhature", "chana bhatura"]
+    "aliases": [
+      "chhole bhature",
+      "chana bhatura"
+    ],
+    "publicDescription": "Spiced chickpea curry served with fluffy, deep-fried bread."
   },
   {
     "id": "MM-IN-059",
     "name": "Chow Chow Bath",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Karnataka breakfast pairing of savory upma and sweet kesari bath."
   },
   {
     "id": "MM-IN-148",
     "name": "Crispy Chilli Baby Corn",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp baby corn tossed with chilies and savory sauce."
   },
   {
     "id": "MM-IN-153",
     "name": "Crispy Corn Salt and Pepper",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp corn kernels seasoned with pepper, salt and aromatics."
   },
   {
     "id": "MM-IN-160",
     "name": "Crispy Lotus Stem",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Thin lotus-stem pieces fried until crisp and seasoned."
   },
   {
     "id": "MM-IN-177",
     "name": "Crispy Pan-Fried Noodles",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Pan-crisped noodles topped with a savory vegetable or protein sauce."
   },
   {
     "id": "MM-IN-049",
     "name": "Curd Rice",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft rice mixed with yogurt and a fragrant tempered seasoning."
   },
   {
     "id": "MM-IN-031",
     "name": "Dal Baati Churma",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani combination of lentil curry, baked wheat baati and sweet churma."
   },
   {
     "id": "MM-IN-096",
     "name": "Dal Dhokli",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Wheat-flour pieces simmered in a seasoned lentil stew."
   },
   {
     "id": "MM-IN-001",
     "name": "Dal Makhani",
     "categoryHint": "Main Course",
-    "aliases": ["daal makhani"]
+    "aliases": [
+      "daal makhani"
+    ],
+    "publicDescription": "Slow-cooked black lentils and kidney beans in a rich, creamy sauce."
   },
   {
     "id": "MM-IN-118",
     "name": "Dal Pitha",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Steamed or cooked rice-flour dumplings filled with seasoned lentils."
   },
   {
     "id": "MM-CORE-dal-tadka",
     "name": "Dal Tadka",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Yellow lentils finished with a fragrant spiced tempering."
   },
   {
     "id": "MM-IN-111",
     "name": "Dalma",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Odia lentil-and-vegetable stew seasoned with gentle spices."
   },
   {
     "id": "MM-IN-091",
     "name": "Dhokla",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Light, steamed savory gram-flour cake with a seasoned tempering."
   },
   {
     "id": "MM-IN-119",
     "name": "Dhuska",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Jharkhand-style fried rice-and-lentil breakfast bread."
   },
   {
     "id": "MM-IN-133",
     "name": "Dohneiiong",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Meghalayan pork dish flavored with black sesame."
   },
   {
     "id": "MM-IN-104",
     "name": "Doi Maach",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali fish curry prepared with a yogurt-based sauce."
   },
   {
     "id": "MM-CORE-donut",
     "name": "Donut",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, ring-shaped fried sweet bread with a chosen finish."
   },
   {
     "id": "MM-IN-198",
     "name": "Double Ka Meetha",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Hyderabadi bread dessert soaked in sweetened milk and flavored syrup."
   },
   {
     "id": "MM-IN-154",
     "name": "Dragon Chicken",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy chicken strips tossed in a hot and tangy Indo-Chinese sauce."
   },
   {
     "id": "MM-IN-146",
     "name": "Drums of Heaven",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Saucy chicken wing drumettes in a spicy Indo-Chinese glaze."
   },
   {
     "id": "MM-IN-169",
     "name": "Egg Fried Rice",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried rice with eggs, vegetables and savory seasonings."
   },
   {
     "id": "MM-IN-068",
     "name": "Erachi Pathiri",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Malabar-style stuffed pastry filled with spiced meat."
   },
   {
     "id": "MM-IN-126",
     "name": "Eromba",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Manipuri mashed vegetable preparation traditionally flavored with fermented fish."
   },
   {
     "id": "MM-CORE-focaccia",
     "name": "Focaccia",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft Italian flatbread baked with olive oil and savory toppings."
   },
   {
     "id": "MM-CORE-french-fries",
     "name": "French Fries",
     "categoryHint": "Western",
-    "aliases": ["chips"]
+    "aliases": [
+      "chips"
+    ],
+    "publicDescription": "Golden fried potato strips, lightly seasoned."
   },
   {
     "id": "MM-CORE-fried-chicken",
     "name": "Fried Chicken",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp-coated chicken fried until golden."
   },
   {
     "id": "MM-IN-185",
     "name": "Gajar Ka Halwa",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Slow-cooked grated carrot dessert with milk, ghee and warming flavor."
   },
   {
     "id": "MM-IN-021",
     "name": "Galouti Kebab",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, finely minced Lucknowi-style kebabs with aromatic spices."
   },
   {
     "id": "MM-IN-032",
     "name": "Gatte Ki Sabzi",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani gram-flour dumplings simmered in a spiced gravy."
   },
   {
     "id": "MM-CORE-gelato",
     "name": "Gelato",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Italian-style frozen dessert with a smooth, dense texture."
   },
   {
     "id": "MM-IN-194",
     "name": "Ghevar",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Honeycomb-textured Rajasthani sweet soaked in syrup."
   },
   {
     "id": "MM-CORE-gnocchi",
     "name": "Gnocchi",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft Italian potato dumplings served with a chosen sauce."
   },
   {
     "id": "MM-IN-098",
     "name": "Goan Fish Curry",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Coastal fish curry with coconut and tangy spices."
   },
   {
     "id": "MM-IN-142",
     "name": "Gobi Manchurian Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp cauliflower florets tossed in a tangy Indo-Chinese sauce."
   },
   {
     "id": "MM-IN-072",
     "name": "Gongura Mutton",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Andhra-style mutton curry flavored with tangy gongura leaves."
   },
   {
     "id": "MM-IN-071",
     "name": "Gongura Pachadi",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tangy Andhra sorrel-leaf chutney with a spicy tempering."
   },
   {
     "id": "MM-CORE-grilled-fish",
     "name": "Grilled Fish",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Fish cooked on the grill with a chosen seasoning."
   },
   {
     "id": "MM-IN-139",
     "name": "Gudok with Dried Fish",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tripuri mixed vegetable dish flavored with dried fish."
   },
   {
     "id": "MM-CORE-gulab-jamun",
     "name": "Gulab Jamun",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft milk-solid dumplings soaked in fragrant sugar syrup."
   },
   {
     "id": "MM-IN-125",
     "name": "Gundruk Soup",
     "categoryHint": "Soups",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tangy Himalayan soup featuring fermented leafy greens."
   },
   {
     "id": "MM-IN-075",
     "name": "Gutti Vankaya Kura",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Andhra-style stuffed baby eggplant curry."
   },
   {
     "id": "MM-IN-164",
     "name": "Honey Chilli Cauliflower",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy cauliflower tossed in a sweet-spicy chili glaze."
   },
   {
     "id": "MM-IN-147",
     "name": "Honey Chilli Potato",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy potato strips in a sweet and spicy chili sauce."
   },
   {
     "id": "MM-CORE-hot-dog",
     "name": "Hot Dog",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Sausage served in a soft bun with chosen toppings."
   },
   {
     "id": "MM-IN-077",
     "name": "Hyderabadi Haleem",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Slow-simmered meat, wheat and lentil preparation with aromatic spices."
   },
   {
     "id": "MM-CORE-idli-sambar",
     "name": "Idli Sambar",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft steamed rice cakes served with spiced lentil-and-vegetable sambar."
   },
   {
     "id": "MM-IN-132",
     "name": "Jadoh",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Meghalayan rice dish traditionally cooked with meat and spices."
   },
   {
     "id": "MM-IN-184",
     "name": "Jalebi",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp spiral-shaped sweet soaked in sugar syrup."
   },
   {
     "id": "MM-IN-004",
     "name": "Kadai Paneer",
     "categoryHint": "Main Course",
-    "aliases": ["karahi paneer"]
+    "aliases": [
+      "karahi paneer"
+    ],
+    "publicDescription": "Paneer cooked with bell peppers and freshly ground spices."
   },
   {
     "id": "MM-IN-183",
     "name": "Kaju Katli",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Smooth cashew-based sweet cut into delicate pieces."
   },
   {
     "id": "MM-IN-022",
     "name": "Kakori Kebab",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Delicately textured minced-meat kebab with fragrant Awadhi spices."
   },
   {
     "id": "MM-IN-065",
     "name": "Karimeen Pollichathu",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kerala-style pearl spot fish wrapped and roasted in a spiced masala."
   },
   {
     "id": "MM-IN-006",
     "name": "Kashmiri Dum Aloo",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Small potatoes simmered in an aromatic Kashmiri-style gravy."
   },
   {
     "id": "MM-IN-019",
     "name": "Kashmiri Haak Saag",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Simple Kashmiri leafy greens cooked with mild seasoning."
   },
   {
     "id": "MM-IN-017",
     "name": "Kashmiri Mutton Yakhni",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tender mutton in a fragrant Kashmiri yogurt-based broth."
   },
   {
     "id": "MM-IN-033",
     "name": "Ker Sangri",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani desert berries and beans cooked with spices."
   },
   {
     "id": "MM-IN-067",
     "name": "Kerala Beef Fry",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kerala-style dry-fried beef with coconut and roasted spices."
   },
   {
     "id": "MM-IN-063",
     "name": "Kerala Sadya",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Traditional Kerala festive meal featuring rice and assorted accompaniments."
   },
   {
     "id": "MM-IN-092",
     "name": "Khandvi",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Delicate rolled gram-flour ribbons with a seasoned tempering."
   },
   {
     "id": "MM-IN-089",
     "name": "Kolhapuri Tambda Rassa",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Fiery red Kolhapuri-style meat curry."
   },
   {
     "id": "MM-IN-057",
     "name": "Kori Rotti",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Coastal Karnataka chicken curry served with crisp rice wafers."
   },
   {
     "id": "MM-IN-102",
     "name": "Kosha Mangsho",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Slow-cooked Bengali mutton curry with deeply caramelized spices."
   },
   {
     "id": "MM-IN-086",
     "name": "Kothimbir Vadi",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Maharashtrian coriander-and-gram-flour savory bites."
   },
   {
     "id": "MM-IN-196",
     "name": "Kulfi",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Traditional Indian frozen milk dessert with a rich texture."
   },
   {
     "id": "MM-IN-162",
     "name": "Kung Pao Chicken Indian Style",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried chicken with chilies, vegetables and a savory-spicy sauce."
   },
   {
     "id": "MM-IN-047",
     "name": "Kuzhi Paniyaram",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Small savory rice-and-lentil batter dumplings cooked in a molded pan."
   },
   {
     "id": "MM-IN-034",
     "name": "Laal Maas",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani red chili and mutton curry with robust spices."
   },
   {
     "id": "MM-CORE-lasagna",
     "name": "Lasagna",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Layers of pasta, savory filling and sauce baked together."
   },
   {
     "id": "MM-IN-050",
     "name": "Lemon Rice",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "South Indian rice tempered with mustard seeds, curry leaves and lemon."
   },
   {
     "id": "MM-IN-116",
     "name": "Litti Chokha",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Roasted stuffed wheat balls served with mashed seasoned vegetables."
   },
   {
     "id": "MM-IN-109",
     "name": "Luchi with Aloo Dum",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Puffy Bengali fried bread paired with spiced potatoes."
   },
   {
     "id": "MM-IN-023",
     "name": "Lucknowi Nihari",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Slow-cooked Awadhi-style meat stew with warming spices."
   },
   {
     "id": "MM-CORE-mac-and-cheese",
     "name": "Mac & Cheese",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Pasta coated in a rich cheese sauce."
   },
   {
     "id": "MM-IN-115",
     "name": "Macha Besara",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Odia-style fish curry with mustard and spices."
   },
   {
     "id": "MM-IN-055",
     "name": "Maddur Vada",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy Karnataka savory fritter made with onions and spices."
   },
   {
     "id": "MM-IN-012",
     "name": "Makki di Roti with Sarson da Saag",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Cornmeal flatbread served with spiced mustard greens."
   },
   {
     "id": "MM-IN-064",
     "name": "Malabar Parotta with Chicken Curry",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Flaky layered parotta served with Malabar-style chicken curry."
   },
   {
     "id": "MM-IN-005",
     "name": "Malai Kofta",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft dumplings served in a rich, creamy curry."
   },
   {
     "id": "MM-IN-195",
     "name": "Malpua with Rabri",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Sweet fried pancakes served with thickened sweet milk."
   },
   {
     "id": "MM-IN-056",
     "name": "Mangalore Buns",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, slightly sweet deep-fried banana bread from coastal Karnataka."
   },
   {
     "id": "MM-CORE-masala-dosa",
     "name": "Masala Dosa",
     "categoryHint": "Indian",
-    "aliases": ["masala dosai"]
+    "aliases": [
+      "masala dosai"
+    ],
+    "publicDescription": "Crisp fermented rice-and-lentil crepe wrapped around spiced potatoes."
   },
   {
     "id": "MM-IN-135",
     "name": "Masor Tenga",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Assamese sour fish curry with a light, tangy broth."
   },
   {
     "id": "MM-IN-029",
     "name": "Matar Ka Nimona",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "North Indian green-pea curry with a gently spiced texture."
   },
   {
     "id": "MM-IN-041",
     "name": "Medu Vada",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp South Indian lentil fritters with a soft center."
   },
   {
     "id": "MM-IN-066",
     "name": "Meen Moilee",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kerala-style mild fish curry simmered with coconut milk."
   },
   {
     "id": "MM-IN-093",
     "name": "Methi Thepla",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Gujarati whole-wheat flatbread seasoned with fenugreek."
   },
   {
     "id": "MM-CORE-milkshake",
     "name": "Milkshake",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chilled blended milk beverage with a chosen flavor."
   },
   {
     "id": "MM-IN-080",
     "name": "Mirchi Ka Salan",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Hyderabadi chili peppers in a tangy, nutty sauce."
   },
   {
     "id": "MM-IN-037",
     "name": "Mirchi Vada",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani chili fritter stuffed and fried in gram-flour batter."
   },
   {
     "id": "MM-IN-082",
     "name": "Misal Pav",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Spicy sprouted-bean curry served with bread and crunchy toppings."
   },
   {
     "id": "MM-IN-179",
     "name": "Mixed Vegetables in Hot Garlic Sauce",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mixed vegetables tossed in a bold, garlic-forward sauce."
   },
   {
     "id": "MM-IN-107",
     "name": "Mochar Ghonto",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali banana-blossom preparation with vegetables and spices."
   },
   {
     "id": "MM-IN-191",
     "name": "Modak",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Traditional sweet dumpling with a coconut-and-jaggery filling."
   },
   {
     "id": "MM-IN-186",
     "name": "Moong Dal Halwa",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rich, slow-cooked yellow lentil dessert with ghee and sugar."
   },
   {
     "id": "MM-IN-188",
     "name": "Motichoor Ladoo",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tiny gram-flour pearls bound into sweet ladoos."
   },
   {
     "id": "MM-IN-150",
     "name": "Mushroom Manchurian",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy mushrooms coated in a tangy Indo-Chinese sauce."
   },
   {
     "id": "MM-IN-020",
     "name": "Mutton Korma",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mutton simmered in a rich, aromatic spiced gravy."
   },
   {
     "id": "MM-IN-060",
     "name": "Mysore Bonda",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Light, fried South Indian savory batter balls."
   },
   {
     "id": "MM-IN-189",
     "name": "Mysore Pak",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rich Karnataka sweet made with gram flour, ghee and sugar."
   },
   {
     "id": "MM-CORE-naan",
     "name": "Naan",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, leavened flatbread baked at high heat."
   },
   {
     "id": "MM-IN-018",
     "name": "Nadru Yakhni",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kashmiri lotus-stem curry in a lightly spiced yogurt sauce."
   },
   {
     "id": "MM-IN-112",
     "name": "Pakhala Bhata",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Odia fermented or soaked rice preparation served with traditional accompaniments."
   },
   {
     "id": "MM-IN-190",
     "name": "Palada Payasam",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kerala-style milk pudding prepared with rice ada and sugar."
   },
   {
     "id": "MM-IN-002",
     "name": "Palak Paneer",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Paneer cubes in a smooth, spiced spinach gravy."
   },
   {
     "id": "MM-CORE-pancakes",
     "name": "Pancakes",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft griddle cakes served with sweet or savory toppings."
   },
   {
     "id": "MM-IN-159",
     "name": "Paneer 65",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy spiced paneer bites prepared in a South Indian-inspired style."
   },
   {
     "id": "MM-CORE-paneer-tikka",
     "name": "Paneer Tikka",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Paneer cubes marinated in spices and roasted with vegetables."
   },
   {
     "id": "MM-IN-136",
     "name": "Papaya Khar",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Assamese-style papaya preparation flavored with alkaline khar."
   },
   {
     "id": "MM-IN-044",
     "name": "Parotta with Salna",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Flaky South Indian layered flatbread served with a spiced salna curry."
   },
   {
     "id": "MM-IN-200",
     "name": "Patishapta",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali thin crepes wrapped around a sweet coconut or milk filling."
   },
   {
     "id": "MM-IN-097",
     "name": "Patra",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Steamed and sliced colocasia-leaf rolls with spiced gram-flour paste."
   },
   {
     "id": "MM-IN-081",
     "name": "Pav Bhaji",
     "categoryHint": "Street Food",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mashed spiced vegetables served with butter-toasted buns."
   },
   {
     "id": "MM-IN-069",
     "name": "Pazham Pori",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kerala-style ripe banana fritters with a golden coating."
   },
   {
     "id": "MM-CORE-penne-alfredo",
     "name": "Penne Alfredo",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Penne pasta tossed in a creamy Alfredo-style sauce."
   },
   {
     "id": "MM-IN-073",
     "name": "Pesarattu Upma",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Green-gram crepe served with savory semolina upma."
   },
   {
     "id": "MM-IN-123",
     "name": "Phagshapa",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Sikkimese pork preparation with radish and dried chilies."
   },
   {
     "id": "MM-IN-085",
     "name": "Pithla Bhakri",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Spiced gram-flour curry served with rustic millet or sorghum flatbread."
   },
   {
     "id": "MM-CORE-pizza-margherita",
     "name": "Pizza Margherita",
     "categoryHint": "Italian",
-    "aliases": ["margherita pizza"]
+    "aliases": [
+      "margherita pizza"
+    ],
+    "publicDescription": "Classic pizza with tomato, mozzarella and basil."
   },
   {
     "id": "MM-IN-038",
     "name": "Poha Jalebi",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Savory flattened rice paired with sweet jalebi."
   },
   {
     "id": "MM-IN-099",
     "name": "Prawn Balchao",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Goan prawns in a tangy, spicy vinegar-based masala."
   },
   {
     "id": "MM-IN-051",
     "name": "Puliyodarai",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "South Indian tamarind rice with peanuts and a tempered spice mix."
   },
   {
     "id": "MM-IN-010",
     "name": "Punjabi Kadhi Pakora",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Gram-flour and yogurt curry with savory fritters."
   },
   {
     "id": "MM-IN-192",
     "name": "Puran Poli",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Sweet lentil-stuffed Indian flatbread flavored with cardamom."
   },
   {
     "id": "MM-IN-062",
     "name": "Puttu Kadala Curry",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Steamed rice-flour cylinders served with Kerala-style black chickpea curry."
   },
   {
     "id": "MM-IN-036",
     "name": "Pyaaz Kachori",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp fried pastry filled with spiced onions."
   },
   {
     "id": "MM-IN-053",
     "name": "Ragi Mudde with Bassaru",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Finger-millet balls served with a Karnataka-style greens-and-lentil broth."
   },
   {
     "id": "MM-CORE-rajma-chawal",
     "name": "Rajma Chawal",
     "categoryHint": "Indian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Spiced red kidney bean curry served with rice."
   },
   {
     "id": "MM-IN-181",
     "name": "Rasgulla",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft chhena balls soaked in light sugar syrup."
   },
   {
     "id": "MM-IN-182",
     "name": "Rasmalai",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft chhena patties soaked in sweetened flavored milk."
   },
   {
     "id": "MM-CORE-ravioli",
     "name": "Ravioli",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Filled Italian pasta pockets served with a chosen sauce."
   },
   {
     "id": "MM-CORE-risotto",
     "name": "Risotto",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Creamy Italian rice dish gradually cooked with stock and chosen additions."
   },
   {
     "id": "MM-IN-016",
     "name": "Rogan Josh",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Kashmiri-style aromatic red mutton curry."
   },
   {
     "id": "MM-IN-074",
     "name": "Royyala Iguru",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Andhra-style thick prawn curry with robust spices."
   },
   {
     "id": "MM-IN-120",
     "name": "Rugra Curry",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Jharkhand-style curry made with seasonal rugra mushrooms."
   },
   {
     "id": "MM-IN-083",
     "name": "Sabudana Khichdi",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tapioca pearls tossed with potatoes, peanuts and mild spices."
   },
   {
     "id": "MM-IN-035",
     "name": "Safed Maas",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Rajasthani white mutton curry with a creamy, gently spiced sauce."
   },
   {
     "id": "MM-IN-155",
     "name": "Salt and Pepper Prawns",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Prawns cooked crisp and finished with salt, pepper and aromatics."
   },
   {
     "id": "MM-CORE-samosa",
     "name": "Samosa",
     "categoryHint": "Indian",
-    "aliases": ["samosay"]
+    "aliases": [
+      "samosay"
+    ],
+    "publicDescription": "Crisp pastry parcel with a savory spiced filling."
   },
   {
     "id": "MM-CORE-sandwich",
     "name": "Sandwich",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bread layered with fillings selected by the kitchen."
   },
   {
     "id": "MM-IN-114",
     "name": "Santula",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Odia lightly spiced mixed vegetables, gently cooked."
   },
   {
     "id": "MM-IN-090",
     "name": "Saoji Chicken",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Nagpur-style chicken curry with bold Saoji spices."
   },
   {
     "id": "MM-IN-079",
     "name": "Sarva Pindi",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Telangana-style crispy rice-flour savory flatbread."
   },
   {
     "id": "MM-IN-117",
     "name": "Sattu Paratha",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stuffed whole-wheat flatbread with spiced roasted-gram filling."
   },
   {
     "id": "MM-IN-156",
     "name": "Schezwan Paneer Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Paneer cubes tossed in a spicy Schezwan-style sauce."
   },
   {
     "id": "MM-IN-095",
     "name": "Sev Tameta Nu Shaak",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Gujarati tangy tomato curry topped with crunchy sev."
   },
   {
     "id": "MM-IN-124",
     "name": "Sha Phaley",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Tibetan fried bread pockets filled with seasoned meat."
   },
   {
     "id": "MM-IN-003",
     "name": "Shahi Paneer",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Paneer simmered in a rich, mildly spiced royal-style gravy."
   },
   {
     "id": "MM-IN-024",
     "name": "Sheermal",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft, lightly sweet saffron-scented leavened flatbread."
   },
   {
     "id": "MM-IN-101",
     "name": "Shorshe Ilish",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali hilsa fish cooked with a pungent mustard sauce."
   },
   {
     "id": "MM-IN-193",
     "name": "Shrikhand",
     "categoryHint": "Desserts",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Thickened sweet yogurt flavored with aromatic spices or fruit."
   },
   {
     "id": "MM-IN-106",
     "name": "Shukto",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Bengali mixed-vegetable dish with a characteristic gentle bitterness."
   },
   {
     "id": "MM-IN-040",
     "name": "Siddu",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Steamed Himachali wheat bread, usually stuffed and served warm."
   },
   {
     "id": "MM-IN-127",
     "name": "Singju",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Manipuri salad of shredded vegetables and aromatic herbs."
   },
   {
     "id": "MM-IN-129",
     "name": "Smoked Pork with Bamboo Shoot",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Smoked pork simmered with bamboo shoots and regional spices."
   },
   {
     "id": "MM-CORE-spaghetti",
     "name": "Spaghetti",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Long Italian pasta served with the kitchen's choice of sauce."
   },
   {
     "id": "MM-CORE-steak",
     "name": "Steak",
     "categoryHint": "Western",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Grilled or pan-seared cut of protein served with selected accompaniments."
   },
   {
     "id": "MM-IN-121",
     "name": "Steamed Vegetable Momos",
     "categoryHint": "Snacks",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Soft steamed dumplings filled with seasoned vegetables."
   },
   {
     "id": "MM-IN-014",
     "name": "Tandoori Chicken",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chicken marinated in spiced yogurt and roasted in a tandoor-style oven."
   },
   {
     "id": "MM-IN-084",
     "name": "Thalipeeth",
     "categoryHint": "Breads",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Maharashtrian multigrain savory flatbread with spices."
   },
   {
     "id": "MM-CORE-tiramisu",
     "name": "Tiramisu",
     "categoryHint": "Italian",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Italian layered dessert with coffee-soaked biscuits and creamy filling."
   },
   {
     "id": "MM-IN-134",
     "name": "Tungrymbai",
     "categoryHint": "Sides",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Meghalayan fermented soybean preparation with aromatic seasoning."
   },
   {
     "id": "MM-IN-094",
     "name": "Undhiyu",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Gujarati mixed winter vegetables cooked with aromatic spices."
   },
   {
     "id": "MM-CORE-vada-pav",
     "name": "Vada Pav",
     "categoryHint": "Indian",
-    "aliases": ["wada pav"]
+    "aliases": [
+      "wada pav"
+    ],
+    "publicDescription": "Spiced potato fritter in a soft bun with chutneys."
   },
   {
     "id": "MM-IN-172",
     "name": "Veg American Chop Suey",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crispy noodles with mixed vegetables in a tangy sauce."
   },
   {
     "id": "MM-IN-166",
     "name": "Veg Hakka Noodles",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried noodles tossed with vegetables and savory seasoning."
   },
   {
     "id": "MM-IN-174",
     "name": "Veg Manchow Soup",
     "categoryHint": "Soups",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Hot, tangy Indo-Chinese vegetable soup with crisp noodle garnish."
   },
   {
     "id": "MM-IN-141",
     "name": "Veg Manchurian Dry",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Fried vegetable balls tossed in a tangy Indo-Chinese glaze."
   },
   {
     "id": "MM-IN-168",
     "name": "Veg Schezwan Fried Rice",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried vegetable rice seasoned with spicy Schezwan sauce."
   },
   {
     "id": "MM-IN-167",
     "name": "Veg Schezwan Noodles",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Stir-fried vegetable noodles in a bold Schezwan sauce."
   },
   {
     "id": "MM-IN-176",
     "name": "Veg Sweet Corn Soup",
     "categoryHint": "Soups",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Light vegetable soup featuring sweet corn."
   },
   {
     "id": "MM-IN-171",
     "name": "Veg Triple Schezwan Rice",
     "categoryHint": "Other",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Layered Indo-Chinese rice-and-noodle dish served with spicy sauce."
   },
   {
     "id": "MM-IN-138",
     "name": "Vegetable Bai",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Mizoram-style vegetable stew with a gentle broth."
   },
   {
     "id": "MM-IN-131",
     "name": "Vegetable Galho",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Naga-style rice and vegetable porridge."
   },
   {
     "id": "MM-IN-043",
     "name": "Vegetable Kothu Parotta",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Chopped flaky parotta stir-fried with vegetables and spices."
   },
   {
     "id": "MM-IN-151",
     "name": "Vegetable Spring Rolls",
     "categoryHint": "Starters",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Crisp pastry rolls filled with seasoned vegetables."
   },
   {
     "id": "MM-IN-026",
     "name": "Vegetable Tehri",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "North Indian spiced vegetable rice preparation."
   },
   {
     "id": "MM-IN-122",
     "name": "Vegetable Thukpa",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Warm Himalayan noodle soup with mixed vegetables."
   },
   {
     "id": "MM-IN-042",
     "name": "Ven Pongal",
     "categoryHint": "Breakfast",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "South Indian rice and moong-lentil porridge seasoned with pepper and cumin."
   },
   {
     "id": "MM-IN-140",
     "name": "Zan",
     "categoryHint": "Main Course",
-    "aliases": []
+    "aliases": [],
+    "publicDescription": "Arunachali millet-based traditional staple, served with savory accompaniments."
   }
 ]

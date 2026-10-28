@@ -15,6 +15,7 @@ const entry = z
     name: z.string().trim().min(1).max(100),
     categoryHint: z.string().trim().min(1).max(100),
     aliases: z.array(z.string().trim().min(2).max(100)).max(12),
+    publicDescription: z.string().trim().min(12).max(240),
   })
   .strict();
 export const catalogueSchema = z.array(entry).min(1).max(2500);
@@ -272,6 +273,7 @@ export type AuthenticCulinaryProfile = {
   nutrition: DishNutrition;
   culinary: DishCulinaryProfile & { suggestedPairings: string[] };
   safety: DishSafetyProfile;
+  publicDescription: string;
 };
 
 export const culinaryProfiles = rawCulinaryProfiles as AuthenticCulinaryProfile[];
@@ -293,4 +295,16 @@ export function findCulinaryProfile(dishName: string): AuthenticCulinaryProfile 
   // Only exact names or explicitly curated aliases may nominate safety-related templates.
   // Broad substring matching can map generic "dal" to a specific recipe.
   return null;
+}
+
+/** Descriptions are editable editorial examples, never restaurant-verified recipes. */
+export function findPublicDishDescription(name: string): string {
+  const profile = findCulinaryProfile(name);
+  if (profile) return profile.publicDescription;
+  const normalized = normalizeDishText(name);
+  const match = dishCatalogue.find(
+    (dish) => normalizeDishText(dish.name) === normalized ||
+      dish.aliases.some((alias) => normalizeDishText(alias) === normalized)
+  );
+  return match?.publicDescription ?? "";
 }
