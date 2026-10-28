@@ -55,13 +55,16 @@ export async function onboardingState(actor: Actor) {
     if (state.status === "completed" && !visible.rows[0]) {
       return { key: state.operation_key, draft: {}, status: "inaccessible" as const, outletId: null };
     }
+    if (visible.rows[0] && state.status === "completed" && Object.keys(state.draft).length) {
+      await tx.execute(sql`update onboarding_progress set draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`);
+    }
     if (visible.rows[0] && state.status !== "completed") {
       await tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${expected},
-        updated_at=now() where user_id=${actor.userId}`);
+        draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId}`);
     }
     return {
       key: state.operation_key,
-      draft: state.draft,
+      draft: visible.rows[0] ? {} : state.draft,
       status: visible.rows[0] ? ("completed" as const) : state.status,
       outletId: visible.rows[0] ? expected : state.outlet_id,
     };
@@ -125,7 +128,7 @@ export async function provisionOnboarding(actor: Actor) {
     const outlet = await createRestaurant(actor.userId, input.data, state.key);
     await withActor(actor, async (tx) =>
       tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${outlet.id},
-        updated_at=now() where user_id=${actor.userId} and operation_key=${state.key}`)
+        draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId} and operation_key=${state.key}`)
     );
     return { outletId: outlet.id, status: "completed" as const };
   } catch (error) {

@@ -13,6 +13,7 @@ import { StepLaunch } from "./wizard-steps/step-launch";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
 import { regions } from "@/modules/onboarding/locales";
+import { scheduleSchema } from "@/modules/menu-product/contracts";
 import "./onboarding-wizard.css";
 
 const STEPS: { id: WizardStepId; label: string; number: number; subtitle: string }[] = [
@@ -73,6 +74,8 @@ function validateStep(step: number, draft: WizardDraft): string | null {
   }
   if (step === 2) {
     if (!draft.fulfillmentModes.length) return "Choose at least one fulfillment mode.";
+    if (draft.operatingHours && !scheduleSchema.safeParse(draft.operatingHours).success) return "Review your opening hours.";
+    if (draft.serviceHours && !scheduleSchema.safeParse(draft.serviceHours).success) return "Review your service hours.";
     if (!Intl.supportedValuesOf("currency").includes(draft.currency))
       return "Choose a supported currency.";
     try {
@@ -136,6 +139,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   const draftRevision = useRef(0);
   const timezoneTouched = useRef(false);
   const reconciliation = useRef(false);
+  const progressStorageKey = useRef("menuminute.first-outlet.step");
 
   // Reconcile and restore server-owned draft
   const reconcile = useCallback(async () => {
@@ -145,6 +149,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       const res = await fetch("/api/onboarding", { cache: "no-store" });
       if (!res.ok) throw new Error("Unable to load saved progress.");
       const data = await res.json();
+      if (typeof data.userId === "string") progressStorageKey.current = "menuminute.first-outlet.step." + data.userId;
 
       if (data.status === "inaccessible") {
         setInaccessible(true);
@@ -157,7 +162,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           onSuccess(data.outletId);
         } else {
           try {
-            window.sessionStorage.removeItem("menuminute.first-outlet.step");
+            window.sessionStorage.removeItem(progressStorageKey.current);
           } catch {
             /* Storage may be unavailable. */
           }
@@ -184,7 +189,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       }
       let storedStep = Number.NaN;
       try {
-        const savedStep = window.sessionStorage.getItem("menuminute.first-outlet.step");
+        const savedStep = window.sessionStorage.getItem(progressStorageKey.current);
         if (savedStep !== null) storedStep = Number(savedStep);
       } catch {
         /* Private browsing or blocked storage. */
@@ -210,7 +215,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   useEffect(() => {
     if (ready) {
       try {
-        window.sessionStorage.setItem("menuminute.first-outlet.step", String(currentStep));
+        window.sessionStorage.setItem(progressStorageKey.current, String(currentStep));
       } catch {
         /* Storage disabled; server draft remains authoritative. */
       }
@@ -240,6 +245,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
 
   useEffect(() => {
     if (!ready || provisioning) return;
+    // While a field is temporarily incomplete (HEX, email, time), keep its
+    // unsaved local value rather than sending a known-invalid partial draft.
+    if (STEPS.some((_, index) => index < STEPS.length - 1 && validateStep(index, draft))) return;
     const timeout = window.setTimeout(() => {
       void save(draft).catch((e) =>
         setErrorMessage(e instanceof Error ? e.message : "Unable to save.")
@@ -311,7 +319,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           onSuccess(value.outletId);
         } else {
           try {
-            window.sessionStorage.removeItem("menuminute.first-outlet.step");
+            window.sessionStorage.removeItem(progressStorageKey.current);
           } catch {
             /* Storage may be unavailable. */
           }

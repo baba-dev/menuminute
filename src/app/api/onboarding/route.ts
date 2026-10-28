@@ -7,7 +7,8 @@ export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session) throw new UnauthorizedError();
-    return NextResponse.json(await onboardingState({ userId: session.user.id }));
+    const state = await onboardingState({ userId: session.user.id });
+    return NextResponse.json({ ...state, userId: session.user.id });
   } catch (e) {
     return errorResponse(e, req);
   }

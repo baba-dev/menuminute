@@ -135,7 +135,7 @@ export function StepContactTables({ draft, onChange }: StepContactTablesProps) {
             <LayoutGrid size={18} className="text-amber-500" />
             <span>Auto-Provision Initial Dining Tables</span>
           </div>
-          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#a8a29e", lineHeight: 1.4 }}>
+          <p style={{ margin: 0, fontSize: "0.8125rem", lineHeight: 1.4 }}>
             We can create {draft.tableCount} initial table records. After creating your outlet, use
             Print Studio to generate the table-specific QR codes.
           </p>
