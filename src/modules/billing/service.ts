@@ -2,6 +2,7 @@ import { sql, eq, desc } from "drizzle-orm";
 import { entitlementGrants, restaurants } from "@/db/schema";
 import { withActor, withOutlet, type Actor, type Permission } from "@/modules/tenancy/service";
 import { ForbiddenError } from "@/lib/errors";
+import { env } from "@/lib/config/env";
 import type { Transaction } from "@/db";
 export type Capability = "ordering.new" | "kitchen.new";
 export async function billingState(actor: Actor, organizationId: string) {
@@ -10,6 +11,15 @@ export async function billingState(actor: Actor, organizationId: string) {
       sql`select app_private.org_admin(${organizationId},true,true) as allowed`
     );
     if (!p.rows[0]?.allowed) throw new ForbiddenError();
+    if (env.COMMUNITY_EDITION) {
+      return {
+        freeMenu: true,
+        ordering: true,
+        kitchen: true,
+        isCommunityEdition: true,
+        grants: [],
+      };
+    }
     const effective = await tx.execute<{ ordering: boolean; kitchen: boolean }>(
       sql`select app_private.entitlement_allowed(${organizationId},'ordering.new') as ordering,app_private.entitlement_allowed(${organizationId},'kitchen.new') as kitchen`
     );
@@ -19,7 +29,7 @@ export async function billingState(actor: Actor, organizationId: string) {
       .where(eq(entitlementGrants.organizationId, organizationId))
       .orderBy(desc(entitlementGrants.createdAt))
       .limit(100);
-    return { freeMenu: true, ...effective.rows[0]!, grants };
+    return { freeMenu: true, isCommunityEdition: false, ...effective.rows[0]!, grants };
   });
 }
 /** Use only for creating NEW paid work. Accepted work completion uses withOutlet alone. */
@@ -31,6 +41,9 @@ export async function withEntitledOutlet<T>(
   work: (tx: Transaction) => Promise<T>
 ) {
   return withOutlet(actor, outletId, permission, async (tx) => {
+    if (env.COMMUNITY_EDITION) {
+      return work(tx);
+    }
     const outlet = (
       await tx
         .select({ organizationId: restaurants.organizationId })

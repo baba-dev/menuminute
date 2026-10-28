@@ -9,6 +9,7 @@ import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
 import { twoFactor, captcha } from "better-auth/plugins";
+import { APIError } from "better-auth/api";
 import { recordAuthEvent, alertSecurityEvent } from "@/lib/security-events";
 import { sendAuthEmail } from "@/lib/auth-email";
 export const authServer = betterAuth({
@@ -67,6 +68,22 @@ export const authServer = betterAuth({
     },
   },
   databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (env.COMMUNITY_EDITION) {
+            const existing = await getDb().select({ id: users.id }).from(users).limit(1);
+            if (existing.length > 0) {
+              throw new APIError("FORBIDDEN", {
+                message:
+                  "Self-hosted Community Edition is restricted to a single administrator. Multi-user accounts are available on food.bababuilds.com.",
+              });
+            }
+          }
+          return { data: user };
+        },
+      },
+    },
     session: {
       create: {
         after: async (session) => {

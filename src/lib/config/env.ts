@@ -81,6 +81,12 @@ export const envSchema = z
       .trim()
       .regex(/^whsec_[A-Za-z0-9]+$/)
       .optional(),
+    COMMUNITY_EDITION: strictBoolean.default(true),
+    RAZORPAY_KEY_ID: z.string().trim().min(1).optional(),
+    RAZORPAY_KEY_SECRET: z.string().trim().min(1).optional(),
+    RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
+    RAZORPAY_PLAN_ORDERING_ID: z.string().trim().min(1).optional(),
+    RAZORPAY_PLAN_KITCHEN_ID: z.string().trim().min(1).optional(),
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
@@ -148,6 +154,12 @@ export const envSchema = z
         code: "custom",
         path: [!e.POS_STRIPE_SECRET_KEY ? "POS_STRIPE_SECRET_KEY" : "POS_STRIPE_WEBHOOK_SECRET"],
         message: "Stripe secret and webhook signing secret are required",
+      });
+    if (e.RAZORPAY_KEY_ID && (!e.RAZORPAY_KEY_SECRET || !e.RAZORPAY_WEBHOOK_SECRET))
+      ctx.addIssue({
+        code: "custom",
+        path: [!e.RAZORPAY_KEY_SECRET ? "RAZORPAY_KEY_SECRET" : "RAZORPAY_WEBHOOK_SECRET"],
+        message: "Razorpay key secret and webhook secret are required when key ID is configured",
       });
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
       ctx.addIssue({

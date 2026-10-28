@@ -363,6 +363,7 @@ export function OrganizationManager({
     freeMenu: boolean;
     ordering: boolean;
     kitchen: boolean;
+    isCommunityEdition?: boolean;
     grants: {
       id: string;
       capability: string;
@@ -371,6 +372,8 @@ export function OrganizationManager({
       revokedAt: string | null;
     }[];
   } | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
   const activeSelection = useRef(selected);
   const requestGeneration = useRef(0);
   const selectedOrg = organizations.find((o) => o.id === selected);
@@ -395,6 +398,55 @@ export function OrganizationManager({
         setBilling(value);
     } else setBilling(null);
   }, [selected, selectedOrg?.role]);
+
+  const handleUpgrade = async (plan: "ordering" | "kitchen_pro") => {
+    setCheckoutBusy(plan);
+    setCheckoutError("");
+    try {
+      const res = await fetch(`/api/organizations/${selected}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to initiate checkout");
+      }
+
+      if (typeof window !== "undefined") {
+        if (!(window as any).Razorpay) {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.async = true;
+          document.body.appendChild(script);
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Unable to load Razorpay checkout SDK"));
+          });
+        }
+
+        const options = {
+          key: data.keyId,
+          subscription_id: data.subscriptionId,
+          name: "MenuMinute",
+          description:
+            plan === "kitchen_pro"
+              ? "Kitchen Pro KDS (₹299/mo)"
+              : "Live Table Ordering (₹119/mo)",
+          handler: function () {
+            void load();
+          },
+          theme: { color: "#ea580c" },
+        };
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      setCheckoutError(err.message || "Checkout failed");
+    } finally {
+      setCheckoutBusy(null);
+    }
+  };
   useEffect(() => {
     if (selected)
       void Promise.resolve()
@@ -844,18 +896,25 @@ export function OrganizationManager({
                           <h2 className="oh-subtitle">Billing entitlements</h2>
                           <Help label="billing entitlements">
                             Features reflect the actual organization grants. Outlet currency is
-                            independent from billing currency. This page cannot activate paid plans.
+                            independent from billing currency.
                           </Help>
                         </div>
-                        <p className="text-sm">
-                          Public QR menus: free · New ordering:{" "}
-                          {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
-                          {billing.kitchen ? "enabled" : "no active grant"}
-                        </p>
-                        <p className="oh-hint">
-                          Commercial plans and checkout are not available yet. Entitlement grants
-                          use USD or INR billing independently of outlet currency.
-                        </p>
+                        {billing.isCommunityEdition ? (
+                          <div className="mb-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-3.5 text-xs text-orange-800 dark:text-orange-200">
+                            <strong>Self-Hosted Community Edition:</strong> All capabilities (QR Menus, Table Ordering, and Kitchen Pro) are fully unlocked for this single-user instance.
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm">
+                              Public QR menus: free · Live ordering:{" "}
+                              {billing.ordering ? "enabled" : "no active grant"} · Kitchen Pro:{" "}
+                              {billing.kitchen ? "enabled" : "no active grant"}
+                            </p>
+                            <p className="oh-hint">
+                              Monthly subscriptions billed in INR via Razorpay. Entitlement grants enable automated table ordering and kitchen stations.
+                            </p>
+                          </>
+                        )}
                         <div className="oh-capability-grid" aria-label="Live capabilities">
                           <article className="oh-capability">
                             <QrCode size={23} aria-hidden="true" />
@@ -873,7 +932,34 @@ export function OrganizationManager({
                             <small>{billing.kitchen ? "Enabled" : "No active grant"}</small>
                           </article>
                         </div>
-                        <ul className="text-sm">
+                        {!billing.isCommunityEdition && (!billing.ordering || !billing.kitchen) && (
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            {!billing.ordering && (
+                              <button
+                                type="button"
+                                disabled={checkoutBusy !== null}
+                                onClick={() => handleUpgrade("ordering")}
+                                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
+                              >
+                                {checkoutBusy === "ordering" ? "Connecting..." : "Upgrade to Live Ordering (₹119/mo)"}
+                              </button>
+                            )}
+                            {!billing.kitchen && (
+                              <button
+                                type="button"
+                                disabled={checkoutBusy !== null}
+                                onClick={() => handleUpgrade("kitchen_pro")}
+                                className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-stone-800 dark:bg-stone-800 dark:hover:bg-stone-700 disabled:opacity-50"
+                              >
+                                {checkoutBusy === "kitchen_pro" ? "Connecting..." : "Upgrade to Kitchen Pro (₹299/mo)"}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {checkoutError && (
+                          <p className="mt-2 text-xs text-red-500">{checkoutError}</p>
+                        )}
+                        <ul className="mt-3 text-sm">
                           {billing.grants.map((g) => (
                             <li key={g.id}>
                               {g.capability} · {g.billingCurrency} · ends {g.endsAt}{" "}

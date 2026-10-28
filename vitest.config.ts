@@ -20,6 +20,7 @@ export default defineConfig({
       MEDIA_STORAGE: process.env["MEDIA_STORAGE"] ?? "local",
       MEDIA_ROOT: process.env["MEDIA_ROOT"] ?? "/tmp/menuminute-test-media",
       MEDIA_OUTLET_BUDGET_BYTES: process.env["MEDIA_OUTLET_BUDGET_BYTES"] ?? "104857600",
+      AUTH_ALLOW_TEST_EMAIL: "true",
     },
     testTimeout: 15000,
     fileParallelism: false,

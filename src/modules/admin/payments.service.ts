@@ -13,7 +13,39 @@ import { withActor } from "@/modules/tenancy/service";
 
 export async function listSubscriptionPlans() {
   const db = getDb();
-  return db.select().from(subscriptionPlans).orderBy(subscriptionPlans.sortOrder);
+  const plans = await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.sortOrder);
+  if (plans.length > 0) return plans;
+
+  // Canonical fallback plans matching approved India pricing (paise)
+  return [
+    {
+      id: "plan_free",
+      name: "free",
+      displayName: "Free Forever",
+      monthlyPricePaise: 0,
+      features: "QR Menu, Unlimited Items, AI Paper Menu Scanner, 86 Sold-out",
+      isActive: true,
+      sortOrder: 1,
+    },
+    {
+      id: "plan_ordering",
+      name: "ordering",
+      displayName: "Live Table Ordering",
+      monthlyPricePaise: 11900, // ₹119 / mo
+      features: "Table Ordering, Cart, Service Counter, Order Tracking",
+      isActive: true,
+      sortOrder: 2,
+    },
+    {
+      id: "plan_kitchen_pro",
+      name: "kitchen_pro",
+      displayName: "Kitchen Pro KDS",
+      monthlyPricePaise: 29900, // ₹299 / mo
+      features: "Live KDS Station Displays, Audio Chimes, Station Routing, POS Till",
+      isActive: true,
+      sortOrder: 3,
+    },
+  ];
 }
 
 export async function updateSubscriptionPlan(
