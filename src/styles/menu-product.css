@@ -597,25 +597,24 @@ body.font-sans {
 /* ─── Online Ordering & Live Tracking (Ink & Ember) ────────────────────────── */
 
 .product .ticket-receipt-card {
-  background: var(--card, var(--paper, #fff));
-  border: 1px solid var(--line);
+  --ticket-paper: var(--dc-surface, var(--paper, #fff));
+  --ticket-edge: var(--dc-line, var(--line, #777));
+  background: var(--ticket-paper);
+  color: var(--dc-ink, var(--ink));
+  border: 1px solid var(--ticket-edge);
   border-bottom: none;
-  filter: drop-shadow(0 4px 6px -1px rgb(0 0 0 / 0.06));
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.06);
 }
 
 .product .ticket-receipt-tear {
+  --ticket-paper: var(--dc-surface, var(--paper, #fff));
   position: relative;
   height: 12px;
   width: 100%;
-  background: radial-gradient(
-    circle,
-    transparent,
-    transparent 50%,
-    var(--card, var(--paper, #fff)) 50%,
-    var(--card, var(--paper, #fff)) 100%
-  );
-  background-size: 16px 16px;
-  background-position: bottom left;
+  pointer-events: none;
+  background: radial-gradient(circle at 8px 0, transparent 7px, var(--ticket-paper) 7.5px);
+  background-size: 16px 12px;
+  background-repeat: repeat-x;
 }
 
 .sticky-cart-bar {
