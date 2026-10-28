@@ -21,14 +21,21 @@ export async function POST(
       );
     }
 
-    // Verify actor is organization owner
-    await withActor(actor, async (tx) => {
+    // Check authorization and active entitlements BEFORE calling the payment provider.
+    const current = await withActor(actor, async (tx) => {
       const check = await tx.execute<{ allowed: boolean }>(
         sql`SELECT app_private.org_admin(${organizationId}, true, true) as allowed`
       );
-      if (!check.rows[0]?.allowed) {
+      if (!check.rows[0]?.allowed)
         throw new ForbiddenError("Only organization owners can manage subscriptions");
-      }
+      const existing = await tx.execute<{ subscriptions: unknown }>(
+        sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
+      );
+      const grants = await tx.execute<{ ordering: boolean; kitchen: boolean }>(
+        sql`SELECT app_private.entitlement_allowed(${organizationId},'ordering.new') AS ordering,
+          app_private.entitlement_allowed(${organizationId},'kitchen.new') AS kitchen`
+      );
+      return { subscriptions: existing.rows[0]?.subscriptions, grants: grants.rows[0] };
     });
 
     const body = await req.json();
@@ -42,12 +49,30 @@ export async function POST(
     const planId = plan === "kitchen_pro" ? env.RAZORPAY_PLAN_KITCHEN_ID : env.RAZORPAY_PLAN_ORDERING_ID;
     if (!planId) throw new ValidationError("Provider plan is not configured.");
 
-    const amountPaise = plan === "kitchen_pro" ? 29900 : 11900;
+    if ((plan === "ordering" && current.grants?.ordering) ||
+        (plan === "kitchen_pro" && current.grants?.kitchen))
+      throw new ValidationError("This organization already has an active entitlement.");
 
-    const sub = await createRazorpaySubscription({
-      planId,
-      organizationId,
-    });
+    const amountPaise = plan === "kitchen_pro" ? 29900 : 11900;
+    const prior = Array.isArray(current.subscriptions)
+      ? current.subscriptions.find((sub: { product?: string; status?: string; createdAt?: string }) =>
+          sub.product === plan &&
+          ["created", "authenticated", "pending"].includes(sub.status ?? "") &&
+          Date.now() - new Date(sub.createdAt ?? 0).getTime() < 24 * 3600_000
+        ) as { subscriptionId?: string } | undefined
+      : undefined;
+    const sub = prior?.subscriptionId
+      ? { id: prior.subscriptionId }
+      : await createRazorpaySubscription({ planId, organizationId });
+
+    if (!prior?.subscriptionId) {
+      // The DB owner-only subscription record is the sole authority used by webhooks.
+      await withActor(actor, async (tx) => {
+        await tx.execute(sql`SELECT app_private.register_razorpay_subscription(
+          ${sub.id},${organizationId},${plan},${planId}
+        )`);
+      });
+    }
 
     return NextResponse.json({
       subscriptionId: sub.id,
