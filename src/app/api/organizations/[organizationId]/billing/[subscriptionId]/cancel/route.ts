@@ -24,12 +24,14 @@ export async function POST(
         sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
       );
       const subscriptions = record.rows[0]?.subscriptions;
-      const allowed = Array.isArray(subscriptions) && subscriptions.some(
-        (item: { subscriptionId?: string; status?: string; cancelRequestedAt?: string | null }) =>
-          item.subscriptionId === subscriptionId &&
-          ["active", "authenticated", "pending", "created"].includes(item.status ?? "") &&
-          !item.cancelRequestedAt
-      );
+      const allowed =
+        Array.isArray(subscriptions) &&
+        subscriptions.some(
+          (item: { subscriptionId?: string; status?: string; cancelRequestedAt?: string | null }) =>
+            item.subscriptionId === subscriptionId &&
+            ["active", "authenticated", "pending", "created"].includes(item.status ?? "") &&
+            !item.cancelRequestedAt
+        );
       if (!allowed) throw new ValidationError("Subscription is not eligible for cancellation");
     });
 
