@@ -8,5 +8,6 @@ beforeAll(async () => {
   await migrateDatabase(process.env["MIGRATION_DATABASE_URL"]);
 }, 30000);
 afterAll(async () => {
+  if (!process.env["MIGRATION_DATABASE_URL"]) return;
   await closeDb();
 });

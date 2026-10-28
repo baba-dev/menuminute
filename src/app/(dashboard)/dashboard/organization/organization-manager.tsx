@@ -363,6 +363,17 @@ export function OrganizationManager({
     freeMenu: boolean;
     ordering: boolean;
     kitchen: boolean;
+    isCommunityEdition?: boolean;
+    billingEnabled?: boolean;
+    kitchenCommerceEnabled?: boolean;
+    subscriptions?: {
+      subscriptionId: string;
+      product: string;
+      status: string;
+      currentPeriodEnd: string | null;
+      createdAt: string;
+      cancelRequestedAt: string | null;
+    }[];
     grants: {
       id: string;
       capability: string;
@@ -371,6 +382,11 @@ export function OrganizationManager({
       revokedAt: string | null;
     }[];
   } | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelBusy, setCancelBusy] = useState(false);
   const activeSelection = useRef(selected);
   const requestGeneration = useRef(0);
   const selectedOrg = organizations.find((o) => o.id === selected);
@@ -395,6 +411,77 @@ export function OrganizationManager({
         setBilling(value);
     } else setBilling(null);
   }, [selected, selectedOrg?.role]);
+
+  const handleUpgrade = async (plan: "ordering" | "kitchen_pro") => {
+    setCheckoutBusy(plan);
+    setCheckoutError("");
+    setCheckoutMessage("");
+    try {
+      const res = await fetch(`/api/organizations/${selected}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to initiate checkout");
+      }
+
+      if (typeof window !== "undefined") {
+        if (!(window as any).Razorpay) {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.async = true;
+          document.body.appendChild(script);
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Unable to load Razorpay checkout SDK"));
+          });
+        }
+
+        const options = {
+          key: data.keyId,
+          subscription_id: data.subscriptionId,
+          name: "MenuMinute",
+          description:
+            plan === "kitchen_pro" ? "Kitchen Pro KDS (₹299/mo)" : "Live Table Ordering (₹119/mo)",
+          handler: function () {
+            setCheckoutMessage(
+              "Payment authorization received. Access activates after secure billing confirmation."
+            );
+            void load();
+          },
+          theme: { color: "#ea580c" },
+        };
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      setCheckoutError(err.message || "Checkout failed");
+    } finally {
+      setCheckoutBusy(null);
+    }
+  };
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelBusy(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch(
+        `/api/organizations/${selected}/billing/${encodeURIComponent(cancelTarget)}/cancel`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
+      );
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message ?? "Unable to schedule cancellation");
+      setCheckoutMessage("Renewal cancellation scheduled at the end of the paid billing period.");
+      setCancelTarget(null);
+      await load();
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Cancellation unavailable");
+    } finally {
+      setCancelBusy(false);
+    }
+  };
   useEffect(() => {
     if (selected)
       void Promise.resolve()
@@ -844,18 +931,29 @@ export function OrganizationManager({
                           <h2 className="oh-subtitle">Billing entitlements</h2>
                           <Help label="billing entitlements">
                             Features reflect the actual organization grants. Outlet currency is
-                            independent from billing currency. This page cannot activate paid plans.
+                            independent from billing currency.
                           </Help>
                         </div>
-                        <p className="text-sm">
-                          Public QR menus: free · New ordering:{" "}
-                          {billing.ordering ? "enabled" : "no active grant"} · New kitchen work:{" "}
-                          {billing.kitchen ? "enabled" : "no active grant"}
-                        </p>
-                        <p className="oh-hint">
-                          Commercial plans and checkout are not available yet. Entitlement grants
-                          use USD or INR billing independently of outlet currency.
-                        </p>
+                        {billing.isCommunityEdition ? (
+                          <div className="mb-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-3.5 text-xs text-orange-800 dark:text-orange-200">
+                            <strong>Self-Hosted Community Edition:</strong> No subscription is
+                            required. Live capabilities are enforced by local database grants and
+                            operational readiness checks.
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm">
+                              Public QR menus: free · Live ordering:{" "}
+                              {billing.ordering ? "enabled" : "no active grant"} · Kitchen Pro:{" "}
+                              {billing.kitchen ? "enabled" : "no active grant"}
+                            </p>
+                            <p className="oh-hint">
+                              {billing.billingEnabled
+                                ? "Subscriptions use INR billing. Features activate only after verified provider confirmation."
+                                : "Paid subscription checkout is currently unavailable. Existing free menus remain accessible."}
+                            </p>
+                          </>
+                        )}
                         <div className="oh-capability-grid" aria-label="Live capabilities">
                           <article className="oh-capability">
                             <QrCode size={23} aria-hidden="true" />
@@ -873,7 +971,125 @@ export function OrganizationManager({
                             <small>{billing.kitchen ? "Enabled" : "No active grant"}</small>
                           </article>
                         </div>
-                        <ul className="text-sm">
+                        {billing.subscriptions && billing.subscriptions.length > 0 && (
+                          <div className="mt-3 rounded-xl border border-stone-200 p-3 text-xs dark:border-stone-700">
+                            <strong className="mb-2 block">Your subscriptions</strong>
+                            <ul className="space-y-2">
+                              {billing.subscriptions.map((sub) => (
+                                <li
+                                  key={sub.subscriptionId}
+                                  className="flex flex-wrap items-center justify-between gap-2"
+                                >
+                                  <span>
+                                    {sub.product === "ordering" ? "Live ordering" : "Kitchen Pro"}
+                                  </span>
+                                  <span className="rounded-full bg-stone-100 px-2 py-1 font-medium text-stone-700 capitalize dark:bg-stone-800 dark:text-stone-200">
+                                    {sub.status}
+                                  </span>
+                                  {sub.currentPeriodEnd && (
+                                    <span>
+                                      Period ends{" "}
+                                      {new Date(sub.currentPeriodEnd).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                  {sub.cancelRequestedAt ? (
+                                    <span className="text-amber-600">Cancellation scheduled</span>
+                                  ) : ["active", "authenticated", "pending", "created"].includes(
+                                      sub.status
+                                    ) && billing.billingEnabled ? (
+                                    <button
+                                      type="button"
+                                      className="rounded-lg border border-stone-300 px-3 py-1.5 font-semibold hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800"
+                                      onClick={() => setCancelTarget(sub.subscriptionId)}
+                                    >
+                                      Cancel renewal
+                                    </button>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {!billing.isCommunityEdition &&
+                          billing.billingEnabled &&
+                          (!billing.ordering || !billing.kitchen) && (
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              {!billing.ordering && (
+                                <button
+                                  type="button"
+                                  disabled={checkoutBusy !== null}
+                                  onClick={() => handleUpgrade("ordering")}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
+                                >
+                                  {checkoutBusy === "ordering"
+                                    ? "Connecting..."
+                                    : "Upgrade to Live Ordering (₹119/mo)"}
+                                </button>
+                              )}
+                              {!billing.kitchen && billing.kitchenCommerceEnabled && (
+                                <button
+                                  type="button"
+                                  disabled={checkoutBusy !== null}
+                                  onClick={() => handleUpgrade("kitchen_pro")}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-stone-800 disabled:opacity-50 dark:bg-stone-800 dark:hover:bg-stone-700"
+                                >
+                                  {checkoutBusy === "kitchen_pro"
+                                    ? "Connecting..."
+                                    : "Upgrade to Kitchen Pro (₹299/mo)"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        {cancelTarget && (
+                          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                            <div
+                              role="dialog"
+                              aria-modal="true"
+                              aria-labelledby="billing-cancel-title"
+                              className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-700 dark:bg-stone-950"
+                            >
+                              <h3 id="billing-cancel-title" className="text-lg font-bold">
+                                Stop automatic renewal?
+                              </h3>
+                              <p className="mt-3 text-sm text-stone-600 dark:text-stone-300">
+                                Your existing paid access stays available until its verified
+                                billing-period end. This does not issue a refund.
+                              </p>
+                              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                                <button
+                                  type="button"
+                                  disabled={cancelBusy}
+                                  onClick={() => setCancelTarget(null)}
+                                  className="rounded-xl border border-stone-300 px-4 py-2 text-sm font-semibold dark:border-stone-700"
+                                >
+                                  Keep subscription
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={cancelBusy}
+                                  onClick={() => void handleCancel()}
+                                  className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                                >
+                                  {cancelBusy ? "Scheduling..." : "Confirm cancellation"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {checkoutError && (
+                          <p className="mt-2 text-xs text-red-500" role="alert">
+                            {checkoutError}
+                          </p>
+                        )}
+                        {checkoutMessage && (
+                          <p
+                            className="mt-2 text-xs text-emerald-600 dark:text-emerald-400"
+                            role="status"
+                          >
+                            {checkoutMessage}
+                          </p>
+                        )}
+                        <ul className="mt-3 text-sm">
                           {billing.grants.map((g) => (
                             <li key={g.id}>
                               {g.capability} · {g.billingCurrency} · ends {g.endsAt}{" "}

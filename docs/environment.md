@@ -26,6 +26,8 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled            |
 | POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook     |
 
+Billing and edition are opt-in: the hosted service must set `COMMUNITY_EDITION=false`; `RAZORPAY_ENABLED=false` and `RAZORPAY_KITCHEN_ENABLED=false` are safe defaults. Before enabling Razorpay install verified production plan IDs, webhook/REST keys and a distinct restricted `BILLING_DATABASE_URL` identity. Never reuse the application or migration-owner credential. Self-hosted edition needs a separately provisioned, owner-controlled database configuration.
+
 Set explicit connection/request timeouts and pool/concurrency limits in validated configuration.
 Implementation may rename variables for SDK conventions, but must update the schema, examples,
 operations guide and CI together. Do not expose secrets through NEXT_PUBLIC variables.

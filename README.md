@@ -66,17 +66,19 @@ See [design system](docs/design-system.md), [buttons](docs/button-options.md) an
   - Create full digital menus with categories, dishes, descriptions, and dietary indicators.
   - Generate permanent QR codes that diners scan with zero registration required.
   - Unlimited menu items with real-time updates.
-- **Online Ordering — ₹149/outlet/month hypothesis**:
+- **Live Table Ordering — ₹119/month (INR, provider-gated)**:
   - Dine-in/table and pickup ordering with mobile cart and staff acceptance.
   - Live order management for front-of-house staff.
-- **Kitchen Pro — ₹299/outlet/month hypothesis**:
+- **Kitchen Pro — ₹299/month (commercial activation gated)**:
   - Dedicated Kitchen Display System (KDS) tablet interface.
   - Order acceptance and preparation stages with audible notifications.
 
 ---
 
-Prices are hypotheses, not finalized paid offerings. Free menus remain accessible after a paid plan ends.
-Subscription collection, USD prices and exact plan quotas remain decisions.
+Published India pricing is ₹119/month for Live Table Ordering and ₹299/month for Kitchen Pro.
+Checkout is disabled by default pending verified Razorpay provider configuration, and Kitchen Pro remains
+behind its independent commercial release gate. Free menus remain accessible after paid access ends.
+USD billing and multi-outlet subscription units are not yet supported; do not advertise them as available.
 
 ## 🛠️ Technical Stack
 

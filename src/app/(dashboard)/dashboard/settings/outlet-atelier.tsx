@@ -43,7 +43,12 @@ type Props = {
   outlet: Outlet;
   initial: OutletProfileFields;
   canManage: boolean;
-  billing: { freeMenu: boolean; ordering: boolean; kitchen: boolean } | null;
+  billing: {
+    freeMenu: boolean;
+    ordering: boolean;
+    kitchen: boolean;
+    isCommunityEdition?: boolean;
+  } | null;
 };
 const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
   ...fields,
@@ -642,13 +647,25 @@ export function OutletAtelier({
                   </div>
                   <div>
                     <Globe2 size={18} />
-                    <span>New online ordering</span>
-                    <strong>{billing.ordering ? "Enabled" : "No active grant"}</strong>
+                    <span>Live online ordering</span>
+                    <strong>
+                      {billing.isCommunityEdition
+                        ? "Unlocked (Community Edition)"
+                        : billing.ordering
+                          ? "Enabled"
+                          : "Available (₹119/mo)"}
+                    </strong>
                   </div>
                   <div>
                     <ClipboardList size={18} />
-                    <span>New Kitchen Pro work</span>
-                    <strong>{billing.kitchen ? "Enabled" : "No active grant"}</strong>
+                    <span>Kitchen Pro work</span>
+                    <strong>
+                      {billing.isCommunityEdition
+                        ? "Unlocked (Community Edition)"
+                        : billing.kitchen
+                          ? "Enabled"
+                          : "Available (₹299/mo)"}
+                    </strong>
                   </div>
                 </div>
               ) : (

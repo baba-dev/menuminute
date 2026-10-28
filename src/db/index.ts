@@ -40,4 +40,9 @@ export async function verifyRuntimeRole() {
  AS safe FROM pg_roles r WHERE r.rolname=current_user`
   );
   if (!result.rows[0]?.safe) throw new Error("Restricted non-owner database role required");
+  const edition = await getPool().query<{ community: boolean }>(
+    "SELECT app_private.is_community_edition() AS community"
+  );
+  if (edition.rows[0]?.community !== env.COMMUNITY_EDITION)
+    throw new Error("Deployment edition does not match the owner-provisioned database edition");
 }

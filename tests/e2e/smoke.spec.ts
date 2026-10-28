@@ -14,14 +14,14 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
 
   test("Pricing page displays all 3 product tiers correctly", async ({ page }) => {
     await page.goto("/pricing");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Simple, transparent pricing"
-    );
-    await expect(page.getByText("Free Forever")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Online Ordering", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Kitchen Pro", exact: true })).toBeVisible();
-    await expect(page.getByText("TBA", { exact: true })).toHaveCount(2);
-    await expect(page.getByText("Coming soon · pricing pending")).toHaveCount(2);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Simple, honest pricing.");
+    await expect(page.getByRole("heading", { name: "Free Forever" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Live Table Ordering" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Kitchen Pro KDS" })).toBeVisible();
+    await expect(page.getByText("₹119", { exact: true })).toBeVisible();
+    await expect(page.getByText("₹299", { exact: true })).toBeVisible();
+    await expect(page.getByText("Available after Kitchen Pro release approval")).toBeVisible();
+    await expect(page.getByText("TBA", { exact: true })).toHaveCount(0);
   });
 
   test("Demo page displays live QR code and sample showcase", async ({ page }) => {
