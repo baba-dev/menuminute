@@ -26,7 +26,20 @@ export async function billingState(actor: Actor, organizationId: string) {
       .where(eq(entitlementGrants.organizationId, organizationId))
       .orderBy(desc(entitlementGrants.createdAt))
       .limit(100);
-    return { freeMenu: true, isCommunityEdition: community, ...effective.rows[0]!, grants };
+    const state = community
+      ? []
+      : (await tx.execute<{ subscriptions: unknown }>(
+          sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
+        )).rows[0]?.subscriptions;
+    return {
+      freeMenu: true,
+      isCommunityEdition: community,
+      billingEnabled: !community && env.RAZORPAY_ENABLED,
+      kitchenCommerceEnabled: !community && env.RAZORPAY_ENABLED && env.RAZORPAY_KITCHEN_ENABLED,
+      subscriptions: Array.isArray(state) ? state : [],
+      ...effective.rows[0]!,
+      grants,
+    };
   });
 }
 /** Use only for creating NEW paid work. Accepted work completion uses withOutlet alone. */
