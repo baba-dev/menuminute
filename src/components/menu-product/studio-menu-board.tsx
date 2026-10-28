@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChefHat, Pencil, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Search, X } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { formatPrice } from "@/lib/utils";
 import { startingPriceMinor } from "@/modules/menu-product/public-presentation";
@@ -42,6 +42,9 @@ export function StudioMenuBoard({
   const [showArchived, setShowArchived] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newSection, setNewSection] = useState(false);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   const [sectionName, setSectionName] = useState("");
   const [sectionError, setSectionError] = useState("");
   const editorDialog = useRef<HTMLDialogElement>(null);
@@ -53,8 +56,8 @@ export function StudioMenuBoard({
   const editing = useMemo(() => {
     for (const [categoryIndex, category] of doc.categories.entries()) {
       const dishIndex = category.items.findIndex((dish) => dish.id === editingId);
-      if (dishIndex >= 0)
-        return { categoryIndex, dishIndex, dish: category.items[dishIndex] };
+      const dish = category.items[dishIndex];
+      if (dishIndex >= 0 && dish) return { categoryIndex, dishIndex, dish };
     }
     return null;
   }, [doc, editingId]);
@@ -146,12 +149,51 @@ export function StudioMenuBoard({
                   </div>
                   <div className="menu-board-section-actions">
                     <span>{visible.length} dishes</span>
+                    <button type="button" aria-label={"Edit section " + category.name}
+                      disabled={!canWrite}
+                      onClick={() => {
+                        setEditingSection(editingSection === category.id ? null : category.id);
+                        setEditName(category.name);
+                        setEditDescription(category.description);
+                        setSectionError("");
+                      }}>
+                      <Pencil size={16} aria-hidden="true" />
+                    </button>
                     <button type="button" title={"Add dish to " + category.name} aria-label={"Add dish to " + category.name}
                       onClick={() => onAddDish(category.id)} disabled={!canWrite || category.archived}>
                       <Plus size={17} aria-hidden="true" />
                     </button>
                   </div>
                 </div>
+                {editingSection === category.id && (
+                  <div className="menu-board-section-edit">
+                    <label className="field">Section name
+                      <input value={editName} maxLength={100}
+                        onChange={(event) => { setEditName(event.target.value); setSectionError(""); }} />
+                    </label>
+                    <label className="field">Description
+                      <input value={editDescription}
+                        onChange={(event) => setEditDescription(event.target.value)} />
+                    </label>
+                    <label className="menu-board-free">
+                      <input type="checkbox" checked={category.archived}
+                        onChange={(event) => onUpdateCategory(categoryIndex, { archived: event.target.checked })} />
+                      Archived section
+                    </label>
+                    {sectionError && <p role="alert">{sectionError}</p>}
+                    <button type="button" className="ember" onClick={() => {
+                      const name = editName.trim();
+                      if (!name || doc.categories.some((c) => c.id !== category.id && !c.archived &&
+                        normalizeDishText(c.name) === normalizeDishText(name))) {
+                        setSectionError("Enter a distinct section name.");
+                        return;
+                      }
+                      onUpdateCategory(categoryIndex, { name, description: editDescription });
+                      setEditingSection(null);
+                    }}>Apply section changes</button>
+                    <button type="button" onClick={() => setEditingSection(null)}>Cancel</button>
+                  </div>
+                )}
                 {visible.length ? (
                   <div className="menu-board-grid">
                     {visible.map(({ dish, dishIndex }) => (
@@ -224,7 +266,7 @@ export function StudioMenuBoard({
             dish={editing.dish}
             ci={editing.categoryIndex}
             di={editing.dishIndex}
-            dishCount={doc.categories[editing.categoryIndex].items.length}
+            dishCount={doc.categories[editing.categoryIndex]?.items.length ?? 0}
             canWrite={canWrite}
             currency={currency}
             media={media}

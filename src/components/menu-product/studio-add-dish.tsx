@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Plus, Search, Sparkles, X } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { artworkForDish } from "@/modules/menu-product/dish-artwork";
@@ -80,7 +80,7 @@ export function StudioAddDish({
     setError("");
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const clean = name.trim();
     if (!clean) { setError("Enter a dish name."); return; }

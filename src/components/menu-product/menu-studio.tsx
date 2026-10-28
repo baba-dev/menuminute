@@ -511,6 +511,7 @@ export function MenuStudio({
       <div className="atelier-body">
         {doc && detail && (
           <StudioAddDish
+            key={detail.id}
             open={addDishOpen}
             doc={doc}
             outletId={outlet.id}
@@ -794,6 +795,7 @@ export function MenuStudio({
                     )}
                     {tab === "dishes" && (
                       <StudioMenuBoard
+                        key={detail.id}
                         doc={doc}
                         currency={doc.currency}
                         media={media}
@@ -1010,7 +1012,7 @@ export function MenuStudio({
                   </div>
                 )}
               </div>
-              {!preview && (
+              {!preview && tab !== "dishes" && (
                 <StudioPreview doc={doc} currency={outlet.currency} timezone={outlet.timezone} />
               )}
             </div>

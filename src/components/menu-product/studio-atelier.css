@@ -1909,3 +1909,162 @@
   background: #4b3122;
   color: #ffebd5;
 }
+
+
+/* Menu Board 3.0: the actual menu, not a permanently expanded configuration form. */
+.product.studio-atelier .atelier-hero h1 {
+  font-family: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
+  font-size: clamp(38px, 4vw, 59px);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 0.99;
+  letter-spacing: -0.045em;
+}
+.product.studio-atelier .atelier-workspace:has(.menu-board) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.product.studio-atelier .menu-board { min-width: 0; width: 100%; margin: 8px 0 35px; }
+.menu-board-heading, .menu-board-toolbar, .menu-board-section-heading,
+.menu-board-section-actions, .menu-board-actions, .menu-board-dialog-head,
+.menu-board-dialog-foot, .menu-board-add-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 13px;
+}
+.menu-board-heading, .menu-board-section-heading { align-items: flex-start; }
+.menu-board-heading > div:first-child, .menu-board-section-heading > div:first-child { min-width: 0; }
+.product.studio-atelier .menu-board-heading h2 {
+  margin: 6px 0; font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.07; letter-spacing: -0.045em;
+}
+.menu-board-heading p { max-width: 620px; font-size: 13px; }
+.menu-board-actions { justify-content: flex-end; flex-wrap: wrap; }
+.product.studio-atelier .menu-board-actions button,
+.product.studio-atelier .menu-board-section-actions button,
+.product.studio-atelier .menu-board-footer button {
+  min-height: 44px; display: inline-flex; align-items: center;
+  justify-content: center; gap: 7px;
+}
+.product.studio-atelier .menu-board-toolbar {
+  margin: 20px 0; padding: 12px 0; border-block: 1px solid var(--atelier-line);
+  align-items: center; flex-wrap: wrap;
+}
+.menu-board-search {
+  display: flex; min-width: 0; align-items: center; gap: 8px;
+  padding: 0 12px; min-height: 44px;
+  border: 1px solid var(--atelier-line); border-radius: 12px; background: var(--paper);
+}
+.menu-board-toolbar > .menu-board-search { flex: 1 1 230px; }
+.menu-board-search input { flex: 1; min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); }
+.menu-board-filters { display: flex; flex: 2 1 270px; min-width: 0; gap: 6px; overflow-x: auto; padding-block: 3px; scrollbar-width: thin; }
+.product.studio-atelier .menu-board-filters button {
+  flex: 0 0 auto; min-height: 40px; padding: 8px 13px; border-radius: 99px; white-space: nowrap;
+}
+.menu-board-filters button[aria-pressed="true"] {
+  background: var(--atelier-cream); border-color: var(--ember); color: var(--ember);
+}
+.menu-board-archived, .menu-board-free { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.menu-board-archived input, .menu-board-free input { width: 16px; height: 16px; flex: none; }
+.menu-board-section { min-width: 0; padding: 16px 0 25px; border-bottom: 1px solid var(--atelier-line); }
+.product.studio-atelier .menu-board-section h3 {
+  margin: 5px 0; font-size: clamp(21px, 2vw, 27px);
+  font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere;
+}
+.menu-board-section-heading p { font-size: 12px; }
+.menu-board-section-actions { flex: none; }
+.menu-board-section-actions > span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.menu-board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 13px; margin-top: 15px; }
+.menu-board-dish {
+  display: grid; grid-template-columns: 94px minmax(0, 1fr); grid-template-rows: 1fr auto;
+  gap: 0 13px; min-width: 0; padding: 12px; border: 1px solid var(--atelier-line);
+  border-radius: 17px; background: var(--paper); transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.menu-board-dish:hover { border-color: #d69867; box-shadow: 0 4px 18px #0000000b; }
+.menu-board-dish-art { width: 94px; height: 94px; object-fit: cover; border-radius: 12px; background: var(--atelier-cream); }
+.menu-board-dish-copy { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.menu-board-dish-copy > strong { font-size: 15px; line-height: 1.2; overflow-wrap: anywhere; }
+.menu-board-dish-copy p {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.menu-board-price { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.menu-board-status { display: inline-flex; align-self: flex-start; color: #b34b2a; font-size: 10px; font-weight: 800; }
+.menu-board-dish-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.product.studio-atelier .menu-board-dish-actions button { min-width: 40px; min-height: 40px; display: grid; place-items: center; padding: 8px; }
+.menu-board-dish-actions button:disabled { opacity: 0.35; }
+.menu-board-empty { margin: 18px 0; font-size: 13px; }
+.menu-board-footer { margin-top: 18px; }
+.menu-board-new-section, .menu-board-section-edit {
+  display: flex; flex-wrap: wrap; align-items: end; gap: 12px; padding: 14px;
+  background: var(--atelier-soft); border-radius: 14px;
+}
+.menu-board-section-edit { margin: 12px 0; }
+.menu-board-new-section .field, .menu-board-section-edit .field { flex: 1 1 190px; min-width: 0; }
+.menu-board-new-section p, .menu-board-section-edit p { color: #bd3d20; font-size: 12px; }
+.product.studio-atelier dialog.menu-board-dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) {
+  width: min(570px, 100vw); max-width: min(570px, 100vw); max-height: 100dvh;
+  height: 100dvh; margin: 0 0 0 auto; inset: 0 0 0 auto;
+  padding: 0; border: 1px solid var(--atelier-line); border-radius: 22px 0 0 22px;
+  background: var(--paper); color: var(--ink); overflow: auto;
+  box-shadow: -16px 0 75px rgb(20 10 4 / 22%); overscroll-behavior: contain;
+}
+.product.studio-atelier dialog.menu-board-bulk-dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) { width: min(870px, 100vw); max-width: min(870px, 100vw); }
+.product.studio-atelier dialog.menu-board-dialog::backdrop { background: rgb(23 15 11 / 62%); backdrop-filter: blur(4px); }
+.menu-board-dialog-head {
+  position: sticky; z-index: 2; top: 0; padding: 20px clamp(15px, 3vw, 25px);
+  background: var(--paper); border-bottom: 1px solid var(--atelier-line); align-items: flex-start;
+}
+.menu-board-dialog-head > div { min-width: 0; }
+.menu-board-dialog-head h2 { margin: 5px 0 3px; font-size: clamp(23px, 3vw, 31px); }
+.menu-board-dialog-head p { margin: 0; font-size: 12px; }
+.product.studio-atelier .menu-board-dialog-head button { width: 44px; min-height: 44px; flex: none; padding: 10px; border-radius: 50%; }
+.menu-board-dialog-body { padding: 18px clamp(15px, 3vw, 25px) 28px; min-width: 0; }
+.menu-board-add-form { display: flex; flex-direction: column; gap: 17px; }
+.menu-board-add-form > .field { display: flex; flex-direction: column; gap: 7px; }
+.menu-board-add-form .field small { color: var(--muted); font-weight: 500; }
+.menu-board-add-form textarea { width: 100%; min-height: 84px; resize: vertical; }
+.menu-board-add-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.menu-board-add-fields .field { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.menu-board-add-fields input, .menu-board-add-fields select { width: 100%; min-width: 0; }
+.menu-board-reference-note { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; }
+.menu-board-reference-note svg { flex: none; color: var(--ember); }
+.menu-board-suggestions { display: grid; gap: 4px; max-height: 250px; overflow-y: auto; border: 1px solid var(--atelier-line); border-radius: 12px; padding: 5px; }
+.product.studio-atelier .menu-board-suggestions button {
+  display: flex; align-items: center; justify-content: space-between;
+  min-width: 0; min-height: 44px; text-align: left; gap: 10px; border: 0;
+}
+.menu-board-suggestions button > span { display: grid; min-width: 0; font-weight: 800; overflow-wrap: anywhere; }
+.menu-board-suggestions small { color: var(--muted); font-size: 11px; font-weight: 500; }
+.menu-board-add-bottom { flex-wrap: wrap; border-top: 1px solid var(--atelier-line); padding-top: 14px; }
+.menu-board-add-bottom p { font-size: 11px; max-width: 230px; }
+.product.studio-atelier .menu-board-add-bottom button { min-height: 48px; }
+.menu-board-editor-dialog .atelier-dish-row { border: 0 !important; padding: 0 !important; }
+.menu-board-dialog-foot {
+  padding: 12px 22px 24px; border-top: 1px solid var(--atelier-line); flex-wrap: wrap;
+}
+.menu-board-dialog-foot span { font-size: 11px; color: var(--muted); }
+.menu-board-bulk-dialog .smart-composer-grid { grid-template-columns: minmax(0,1fr); }
+.menu-board-bulk-dialog .smart-composer-tray { max-width: 100%; }
+@media (max-width: 720px) {
+  .product.studio-atelier .atelier-hero h1 { font-size: clamp(36px, 8.5vw, 46px); }
+  .menu-board-heading { flex-direction: column; align-items: stretch; }
+  .menu-board-actions { justify-content: flex-start; width: 100%; }
+  .menu-board-actions button { flex: 1 1 130px; }
+  .menu-board-toolbar { align-items: stretch; }
+  .menu-board-toolbar > .menu-board-search { flex-basis: 100%; }
+  .menu-board-filters { flex-basis: 100%; }
+  .menu-board-archived { min-height: 38px; }
+  .menu-board-dish { grid-template-columns: 82px minmax(0,1fr); }
+  .menu-board-dish-art { width: 82px; height: 82px; }
+  .product.studio-atelier dialog.menu-board-dialog:not(.atelier-gallery-dialog):not(.atelier-preview-dialog) {
+    width: 100vw; max-width: 100vw; border-radius: 0;
+  }
+}
+@media (max-width: 400px) {
+  .menu-board-section-heading { gap: 7px; }
+  .menu-board-section-actions { gap: 4px; }
+  .menu-board-grid { grid-template-columns: minmax(0,1fr); }
+  .menu-board-add-fields { grid-template-columns: minmax(0,1fr); }
+  .menu-board-dish-actions button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-board-dish { transition: none; }
+}
