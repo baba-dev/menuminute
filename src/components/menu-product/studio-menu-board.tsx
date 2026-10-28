@@ -21,6 +21,7 @@ export function StudioMenuBoard({
   canWrite,
   onAddDish,
   onAddMultiple,
+  onPendingChange,
   onCreateSection,
   onUpdateCategory,
   onUpdateDish,
@@ -32,6 +33,7 @@ export function StudioMenuBoard({
   canWrite: boolean;
   onAddDish: (categoryId: string) => void;
   onAddMultiple: () => void;
+  onPendingChange: (pending: boolean) => void;
   onCreateSection: (name: string) => void;
   onUpdateCategory: (index: number, patch: Partial<Category>) => void;
   onUpdateDish: (categoryIndex: number, dishIndex: number, patch: Partial<Dish>) => void;
@@ -45,6 +47,7 @@ export function StudioMenuBoard({
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editArchived, setEditArchived] = useState(false);
   const [sectionName, setSectionName] = useState("");
   const [sectionError, setSectionError] = useState("");
   const editorDialog = useRef<HTMLDialogElement>(null);
@@ -69,6 +72,10 @@ export function StudioMenuBoard({
   useEffect(() => {
     if (newSection) input.current?.focus();
   }, [newSection]);
+  useEffect(() => {
+    onPendingChange(newSection || editingSection !== null);
+    return () => onPendingChange(false);
+  }, [newSection, editingSection, onPendingChange]);
 
   function addSection() {
     const name = sectionName.trim();
@@ -197,6 +204,7 @@ export function StudioMenuBoard({
                         setEditingSection(editingSection === category.id ? null : category.id);
                         setEditName(category.name);
                         setEditDescription(category.description);
+                        setEditArchived(category.archived);
                         setSectionError("");
                       }}
                     >
@@ -237,10 +245,8 @@ export function StudioMenuBoard({
                     <label className="menu-board-free">
                       <input
                         type="checkbox"
-                        checked={category.archived}
-                        onChange={(event) =>
-                          onUpdateCategory(categoryIndex, { archived: event.target.checked })
-                        }
+                        checked={editArchived}
+                        onChange={(event) => setEditArchived(event.target.checked)}
                       />
                       Archived section
                     </label>
@@ -262,7 +268,12 @@ export function StudioMenuBoard({
                           setSectionError("Enter a distinct section name.");
                           return;
                         }
-                        onUpdateCategory(categoryIndex, { name, description: editDescription });
+                        onUpdateCategory(categoryIndex, {
+                          name,
+                          description: editDescription,
+                          archived: editArchived,
+                        });
+                        if (editArchived) setShowArchived(true);
                         setEditingSection(null);
                       }}
                     >

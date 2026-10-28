@@ -78,6 +78,7 @@ export function MenuStudio({
   const [addDishOpen, setAddDishOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [composerPending, setComposerPending] = useState(false);
+  const [boardPending, setBoardPending] = useState(false);
   const [composerSelection, setComposerSelection] = useState<QuickDish[]>([]);
   const [organizationDishes, setOrganizationDishes] = useState<OrganizationDish[]>([]);
   const [preview, setPreview] = useState(false);
@@ -99,14 +100,14 @@ export function MenuStudio({
   const headers = { "content-type": "application/json", "x-outlet-id": outlet.id };
   const path = (menuId: string) => `/api/catalog/${menuId}`;
   useEffect(() => {
-    if (!dirty && !composerPending) return;
+    if (!dirty && !composerPending && !boardPending) return;
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty, composerPending]);
+  }, [dirty, composerPending, boardPending]);
   useEffect(() => {
     if (!detail?.id) return;
     let cancelled = false;
@@ -189,7 +190,7 @@ export function MenuStudio({
     if (running.current) return false;
     if (menuId === detail?.id) return true;
     if (
-      (dirty || composerPending) &&
+      (dirty || composerPending || boardPending) &&
       !window.confirm("Discard unsaved menu changes and selected dishes?")
     )
       return false;
@@ -212,7 +213,7 @@ export function MenuStudio({
   async function createMenu(): Promise<boolean> {
     if (running.current) return false;
     if (
-      (dirty || composerPending) &&
+      (dirty || composerPending || boardPending) &&
       !window.confirm("Discard unsaved menu changes and selected dishes to create another menu?")
     )
       return false;
@@ -331,7 +332,8 @@ export function MenuStudio({
   }
   async function save() {
     if (!doc || !detail) throw new Error("Select a menu");
-    if (composerPending) throw new Error("Review or clear selected Composer dishes before saving.");
+    if (composerPending || boardPending)
+      throw new Error("Complete or cancel the open dish or section editor before saving.");
     if (!form.current?.reportValidity()) throw new Error("Check the highlighted fields");
     const parsed = menuDocumentSchema.safeParse(doc);
     if (!parsed.success)
@@ -666,7 +668,7 @@ export function MenuStudio({
               archived={detail.archived}
               writable={detail.canWrite}
               busy={busy}
-              pending={composerPending}
+              pending={composerPending || boardPending}
               dirty={dirty}
               revision={detail.revision}
               publishedRevision={detail.publishedRevision}
@@ -735,6 +737,10 @@ export function MenuStudio({
                         aria-pressed={tab === t}
                         className={tab === t ? "ember" : ""}
                         onClick={() => {
+                          if (t !== tab && boardPending) {
+                            setError("Complete or cancel section changes before leaving this tab.");
+                            return;
+                          }
                           if (t !== tab && form.current && !form.current.reportValidity()) {
                             setError(
                               "Check the highlighted fields before switching editor sections."
@@ -783,6 +789,7 @@ export function MenuStudio({
                         canWrite={detail.canWrite && !detail.archived}
                         onAddDish={openComposer}
                         onAddMultiple={openBulkComposer}
+                        onPendingChange={setBoardPending}
                         onCreateSection={(name) =>
                           change({
                             ...doc,
@@ -969,7 +976,7 @@ export function MenuStudio({
                 )}
                 {tab === "assignments" && (
                   <div className="atelier-assignment-workspace">
-                    {(dirty || composerPending) && (
+                    {(dirty || composerPending || boardPending) && (
                       <p role="status" className="atelier-assignment-warning">
                         Save your draft and review queued Composer dishes before changing
                         shared-menu assignments or local overrides.
@@ -977,7 +984,7 @@ export function MenuStudio({
                     )}
                     <fieldset
                       className="atelier-assignment-lock"
-                      disabled={dirty || composerPending}
+                      disabled={dirty || composerPending || boardPending}
                     >
                       <StudioAssignmentsTab
                         doc={doc}
