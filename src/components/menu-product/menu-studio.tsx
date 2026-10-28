@@ -477,19 +477,21 @@ export function MenuStudio({
   return (
     <div className="product studio-atelier" data-testid="recipe-atelier-studio">
       <StudioHero outlet={outlet} onOpenLibrary={() => setLibraryOpen(true)} />
-      <StudioMenuGallery
-        open={libraryOpen}
-        menus={list}
-        currentMenuId={detail?.id ?? ""}
-        currency={outlet.currency}
-        busy={busy}
-        error={error}
-        onClose={() => setLibraryOpen(false)}
-        onCreate={createMenu}
-        onOpenMenu={switchMenu}
-        onPreviewMenu={previewMenu}
-        onManage={manageMenu}
-      />
+      {libraryOpen && (
+        <StudioMenuGallery
+          open
+          menus={list}
+          currentMenuId={detail?.id ?? ""}
+          currency={outlet.currency}
+          busy={busy}
+          error={error}
+          onClose={() => setLibraryOpen(false)}
+          onCreate={createMenu}
+          onOpenMenu={switchMenu}
+          onPreviewMenu={previewMenu}
+          onManage={manageMenu}
+        />
+      )}
       <div className="atelier-body">
         <dialog
           ref={lifecycleDialog}
