@@ -66,7 +66,7 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   // from the accessibility tree. Verify first-run onboarding before page content.
   const setup = page.getByRole("dialog", { name: "Build your kitchen, beautifully." });
   await expect(setup).toBeVisible({ timeout: 15000 });
-  await setup.getByLabel("Station name").fill("Grill");
+  await setup.getByRole("textbox", { name: "Station name", exact: true }).fill("Grill");
   await setup.getByRole("button", { name: "Add station" }).click();
   await expect(
     setup.locator(".kk-setup-collection-row").filter({ hasText: "Grill" })
