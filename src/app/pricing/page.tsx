@@ -83,7 +83,7 @@ export default function PricingPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3.5 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 mb-4">
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3.5 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Accessible Pricing · Zero Merchant Lock-In</span>
           </div>
@@ -111,7 +111,7 @@ export default function PricingPage() {
                   className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold ${
                     plan.primary
                       ? "bg-stone-900 text-white dark:bg-stone-950"
-                      : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-700"
+                      : "border border-stone-200 bg-stone-100 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                   }`}
                 >
                   {plan.badge}
@@ -138,7 +138,7 @@ export default function PricingPage() {
                 </div>
                 {plan.altPrice && (
                   <p
-                    className={`text-xs mb-3 ${plan.primary ? "text-orange-200" : "text-muted-foreground"}`}
+                    className={`mb-3 text-xs ${plan.primary ? "text-orange-200" : "text-muted-foreground"}`}
                   >
                     {plan.altPrice}
                   </p>
@@ -166,10 +166,10 @@ export default function PricingPage() {
               <div className="mt-8 pt-4">
                 <Link
                   href={plan.ctaHref}
-                  className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors shadow-md ${
+                  className={`block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md transition-colors ${
                     plan.primary
-                      ? "bg-white text-brand-700 hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
-                      : "bg-brand-600 text-white hover:bg-brand-700 dark:bg-orange-600 dark:hover:bg-orange-500"
+                      ? "text-brand-700 bg-white hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
+                      : "bg-brand-600 hover:bg-brand-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
                   }`}
                 >
                   {plan.cta}
@@ -180,10 +180,10 @@ export default function PricingPage() {
         </div>
 
         {/* Open Source & Self-Hosted Banner */}
-        <div className="mx-auto mt-16 max-w-5xl rounded-2xl border border-stone-200 bg-stone-50 p-6 dark:border-stone-800 dark:bg-stone-900/60 sm:p-8">
+        <div className="mx-auto mt-16 max-w-5xl rounded-2xl border border-stone-200 bg-stone-50 p-6 sm:p-8 dark:border-stone-800 dark:bg-stone-900/60">
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold text-stone-600 uppercase tracking-wider dark:text-stone-400">
+              <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-stone-600 uppercase dark:text-stone-400">
                 <Terminal className="h-4 w-4 text-orange-500" />
                 <span>Open Source & Community Edition</span>
               </div>
@@ -191,9 +191,9 @@ export default function PricingPage() {
                 Self-host MenuMinute on your own server.
               </h2>
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
-                Prefer to run your own infrastructure? MenuMinute is open source under the MIT License.
-                Single-user self-hosted instances have all features (ordering, KDS, AI scans)
-                unlocked without subscription fees; operational safety checks still apply.
+                Prefer to run your own infrastructure? MenuMinute is open source under the MIT
+                License. Single-user self-hosted instances have all features (ordering, KDS, AI
+                scans) unlocked without subscription fees; operational safety checks still apply.
               </p>
             </div>
             <a
