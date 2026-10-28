@@ -105,10 +105,6 @@ export function StudioDishEditor({
   useEffect(() => {
     const controller = new AbortController();
     activeRequest.current?.abort();
-    setGenerating(false);
-    setProposal(null);
-    setAiError("");
-    setCheckingProviders(true);
     void fetch("/api/catalog/dish-autofill?menuId=" + encodeURIComponent(menuId), {
       headers: { "x-outlet-id": outletId },
       signal: controller.signal,
