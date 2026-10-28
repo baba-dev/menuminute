@@ -99,13 +99,7 @@ export function QrPrintStudio({
     invalidateProof();
   }
   async function printDesign() {
-    if (
-      !selected ||
-      !imageReady ||
-      !proof ||
-      !safeQrInk(customInk) ||
-      printingRef.current
-    ) {
+    if (!selected || !imageReady || !proof || !safeQrInk(customInk) || printingRef.current) {
       return;
     }
     printingRef.current = true;
