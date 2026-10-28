@@ -297,6 +297,7 @@ export function QrPrintStudio({
                       key={theme.id}
                       className={styles.themeCard}
                       aria-pressed={design.palette === theme.id}
+                      aria-label={theme.name}
                       onClick={() => updateDesign({ palette: theme.id })}
                     >
                       <span
@@ -339,6 +340,7 @@ export function QrPrintStudio({
                       key={font.id}
                       data-font-preview={font.id}
                       aria-pressed={design.font === font.id}
+                      aria-label={"Use " + font.name + " font"}
                       onClick={() => updateDesign({ font: font.id })}
                     >
                       <span className={styles.fontSample}>Aa</span>

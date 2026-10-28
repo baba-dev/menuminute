@@ -45,7 +45,8 @@ jobs:
             'src/modules/qr/ink.ts' \
             'tests/qr-studio-4.test.tsx' \
             'tests/qr-create-dialog.test.tsx' \
-            'docs/qr-studio-4-connection-atelier.md'
+            'docs/qr-studio-4-connection-atelier.md' \
+            'tests/e2e/menu-product.spec.ts'
       - name: Commit scoped formatting only
         run: |
           git config user.name "menuminute-ci-format"

@@ -246,9 +246,15 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await guest.reload();
   await expect(guest.getByText("Sold Out", { exact: true })).toBeVisible();
   await page.goto("/dashboard/qr-codes");
-  await page.getByLabel("QR label", { exact: true }).fill("Patio menu");
-  await page.getByLabel("Table / counter label (optional)", { exact: true }).fill("Table 4");
-  await page.getByRole("button", { name: "Create QR code", exact: true }).click();
+  await page.getByRole("button", { name: "Create QR", exact: true }).click();
+  const creator = page.getByRole("dialog", { name: "Create a permanent QR" });
+  await creator.getByRole("button", { name: /Table or counter/i }).click();
+  await creator.getByRole("textbox", { name: /QR label/i }).fill("Patio menu");
+  await creator.getByRole("textbox", { name: /Table \/ counter label/i }).fill("Table 4");
+  await creator.getByRole("button", { name: "Review QR" }).click();
+  await creator.getByRole("button", { name: "Create QR code" }).click();
+  await expect(creator.getByRole("heading", { name: "Your connection is ready." })).toBeVisible();
+  await creator.getByRole("button", { name: "View in library" }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("QR code created");
   const rows = await (await page.request.get("/api/qr")).json();
   const q = rows.find((q: { label: string }) => q.label === "Patio menu");
@@ -597,8 +603,24 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await expect(printPreview.locator('img[src*="format=svg"]')).toHaveCount(1);
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeHidden();
   await atelier.getByRole("button", { name: "Classic Ember" }).click();
-  await atelier.getByRole("button", { name: "Midnight Ink" }).click();
+  await atelier.getByRole("button", { name: "Midnight Luxe" }).click();
   await expect(printPreview.locator("article")).toHaveAttribute("data-palette", "ink");
+  for (const theme of [
+    "Botanical Estate", "Citrus Pop", "Ruby Velvet", "Coastal Club",
+    "Neon Diner", "Patisserie Pastel", "Modern Mono",
+  ]) {
+    await atelier.getByRole("button", { name: theme }).click();
+  }
+  await expect(printPreview.locator("article")).toHaveAttribute("data-palette", "mono");
+  await atelier.getByRole("button", { name: "Use Playfair Display font" }).click();
+  await expect(printPreview.locator("article")).toHaveAttribute("data-font", "playfair");
+  await atelier.getByLabel("HEX").fill("#F0F0F0");
+  await expect(atelier.getByText(/Too light or invalid/)).toBeVisible();
+  await atelier.getByLabel("HEX").fill("#152A42");
+  await expect(printPreview.locator("img[data-real-qr-matrix]")).toHaveAttribute(
+    "src", /ink=%23152A42/
+  );
+  await expect(printPreview).toContainText("MenuMinute · by BabaBuilds");
   await atelier.getByRole("button", { name: /Window \/ Counter Sticker/ }).click();
   await expect(studio.getByLabel("Window / Counter Sticker print preview")).toBeVisible();
   await atelier.getByRole("button", { name: /Menu Insert/ }).click();
