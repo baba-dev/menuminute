@@ -14,6 +14,7 @@ import {
 } from "@/db/schema";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { verifyOutletTimezone } from "@/modules/timezones/service";
+import { invalidateOutletMenuCaches } from "@/modules/menu-product/cache";
 import { createRestaurantSchema } from "@/modules/restaurants/service";
 import { AppError, ConflictError, ForbiddenError, ValidationError } from "@/lib/errors";
 const id = z.string().min(1).max(128);
@@ -111,7 +112,10 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
   const input = organizationCommandSchema.parse(raw);
   id.parse(organizationId);
   try {
-    return await withActor(actor, async (tx) => {
+    const mutation = await withActor(actor, async (tx) => {
+      const before = await tx.execute<{ id: string }>(
+        sql`select id from restaurants where organization_id=${organizationId}`
+      );
       // Pass the validated canonical identifier to the SQL command, not the
       // original legacy alias (e.g. Asia/Calcutta) supplied by an API client.
       const commandData: Record<string, unknown> = { ...input.command.data };
@@ -124,8 +128,22 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
       const r = await tx.execute<{ result: Record<string, string | number> }>(
         sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(commandData)}::jsonb,${input.key},${input.expectedVersion}) as result`
       );
-      return r.rows[0]!.result;
+      const after = await tx.execute<{ id: string }>(
+        sql`select id from restaurants where organization_id=${organizationId}`
+      );
+      return {
+        value: r.rows[0]!.result,
+        affected: [...before.rows, ...after.rows].map((row) => row.id),
+      };
     });
+    if (
+      ["organization.active", "outlet.create", "outlet.update", "brand.link"].includes(
+        input.command.action
+      )
+    ) {
+      await invalidateOutletMenuCaches(mutation.affected);
+    }
+    return mutation.value;
   } catch (e) {
     domainError(e);
   }

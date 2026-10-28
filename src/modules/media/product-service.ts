@@ -8,6 +8,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { putObject, getObject } from "./storage";
 import { env } from "@/lib/config/env";
 import { createHash } from "node:crypto";
+import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
 export async function mediaCommand(
   actor: Actor,
   outletId: string,
@@ -16,7 +17,7 @@ export async function mediaCommand(
   data: Record<string, unknown> = {}
 ) {
   try {
-    return await withActor(
+    const result = await withActor(
       actor,
       async (tx) =>
         (
@@ -25,6 +26,10 @@ export async function mediaCommand(
           )
         ).rows[0]!.result
     );
+    if (action === "approve" || action === "unapprove") {
+      await invalidateOutletMenuCache(outletId);
+    }
+    return result;
   } catch (e) {
     domainError(e);
   }

@@ -85,7 +85,7 @@ export async function saveOutletProfile(
   const input = outletProfileCommandSchema.parse(raw);
   if (!orgId || !outletId) throw new NotFoundError("Outlet");
   try {
-    return await withOutlet(actor, outletId, "outlet.manage", async (tx) => {
+    const mutation = await withOutlet(actor, outletId, "outlet.manage", async (tx) => {
       const [match] = await tx
         .select({ id: restaurants.id })
         .from(restaurants)
@@ -104,9 +104,11 @@ export async function saveOutletProfile(
         .limit(1);
       if (!latest) throw new NotFoundError("Outlet");
       const res = { profileVersion: result.rows[0]!.version, fields: editableOutletProfile(latest) };
-      await invalidateOutletMenuCache(outletId);
       return res;
     });
+    // Never perform Redis I/O inside an open database transaction.
+    await invalidateOutletMenuCache(outletId);
+    return mutation;
   } catch (e) {
     domainError(e);
   }
