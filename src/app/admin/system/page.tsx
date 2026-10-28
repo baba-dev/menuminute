@@ -58,7 +58,7 @@ export default async function AdminSystemPage() {
         <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
             <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
-              Latency (Rolling Window)
+              Latency (5-min sample)
             </span>
             <Gauge className="h-4 w-4 text-emerald-400" />
           </div>
@@ -114,7 +114,7 @@ export default async function AdminSystemPage() {
           </div>
           <div className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-stone-400">Total API Requests</span>
+              <span className="text-stone-400">Recorded Requests (process)</span>
               <span className="font-mono font-bold text-stone-200">{health.telemetry.requestsTotal}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -136,7 +136,7 @@ export default async function AdminSystemPage() {
         <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
             <span className="text-xs font-semibold tracking-wider text-stone-400 uppercase">
-              Host Memory & Uptime
+              Process Memory & Uptime
             </span>
             <Server className="h-4 w-4 text-purple-400" />
           </div>
@@ -157,6 +157,16 @@ export default async function AdminSystemPage() {
         </div>
       </div>
 
+      {/* Read-only, process-local diagnostic signals. */}
+      <div className="rounded-2xl border border-stone-800 bg-stone-900 p-4 text-xs text-stone-400">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>Process telemetry · sampled last {health.telemetry.latencyWindowSeconds / 60} minutes · {health.telemetry.latencySamples} latency samples</span>
+          <span>Updated {new Date(health.telemetry.capturedAt).toLocaleString()}</span>
+        </div>
+        <p className="mt-2">Total requests count only instrumented handlers plus legacy error paths and resets on restart. These counters are not host-wide.</p>
+        {health.logger.dropped > 0 && <p role="alert" className="mt-2 text-amber-300">Logging backpressure: {health.logger.dropped} lower-priority events dropped since process start.</p>}
+        {health.alerts.map((alert) => <p key={alert.id} role="alert" className="mt-2 rounded-lg border border-amber-800 bg-amber-950/30 p-3 text-amber-200"><strong>{alert.title}</strong> — {alert.explanation}</p>)}
+      </div>
       {/* Connectivity & Workload Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {/* PostgreSQL Pool */}

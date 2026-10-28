@@ -5,6 +5,7 @@ export interface TelemetrySnapshot {
   latencySamples: number;
   latencyWindowSeconds: number;
   slowRequests: number; invalidSamples: number;
+  windowRequests: number; windowServerErrors: number; windowSlowRequests: number;
   cacheHits: number; cacheMisses: number; cacheHitRatio: string;
   cacheErrors: number; cacheCorrupt: number; cacheFallbacks: number;
   uptimeSeconds: number; capturedAt: string; scope: "process";
@@ -15,6 +16,7 @@ export class TelemetryRegistry {
   private readonly maxSamples: number;
   private readonly latencies: Float64Array;
   private readonly times: Float64Array;
+  private readonly statuses: Uint16Array;
   private latencyCount = 0;
   private latencyIdx = 0;
   public requestsTotal = 0;
@@ -29,6 +31,7 @@ export class TelemetryRegistry {
     this.maxSamples = maxSamples;
     this.latencies = new Float64Array(maxSamples);
     this.times = new Float64Array(maxSamples);
+    this.statuses = new Uint16Array(maxSamples);
   }
   public recordRequest(status: number, durationMs: number): void {
     if (!Number.isSafeInteger(status) || status < 200 || status > 599 ||
@@ -44,6 +47,7 @@ export class TelemetryRegistry {
     if (durationMs > 250) this.slowRequests++;
     this.latencies[this.latencyIdx] = durationMs;
     this.times[this.latencyIdx] = Date.now();
+    this.statuses[this.latencyIdx] = status;
     this.latencyIdx = (this.latencyIdx + 1) % this.maxSamples;
     if (this.latencyCount < this.maxSamples) this.latencyCount++;
   }
@@ -55,8 +59,14 @@ export class TelemetryRegistry {
   public getSnapshot(): TelemetrySnapshot {
     const now = Date.now();
     const active: number[] = [];
+    let windowServerErrors = 0;
+    let windowSlowRequests = 0;
     for (let i = 0; i < this.latencyCount; i++) {
-      if (now - this.times[i]! <= LATENCY_WINDOW_MS) active.push(this.latencies[i]!);
+      if (now - this.times[i]! <= LATENCY_WINDOW_MS) {
+        active.push(this.latencies[i]!);
+        if (this.statuses[i]! >= 500) windowServerErrors++;
+        if (this.latencies[i]! > 250) windowSlowRequests++;
+      }
     }
     active.sort((a, b) => a - b);
     const at = (fraction: number) =>
@@ -69,6 +79,7 @@ export class TelemetryRegistry {
       p50Ms: at(0.5), p95Ms: at(0.95), p99Ms: at(0.99),
       latencySamples: active.length, latencyWindowSeconds: LATENCY_WINDOW_MS / 1000,
       slowRequests: this.slowRequests, invalidSamples: this.invalidSamples,
+      windowRequests: active.length, windowServerErrors, windowSlowRequests,
       cacheHits: this.cacheHits, cacheMisses: this.cacheMisses,
       cacheHitRatio: cacheTotal ? ((100 * this.cacheHits) / cacheTotal).toFixed(1) + "%" : "N/A",
       cacheErrors: this.cacheErrors, cacheCorrupt: this.cacheCorrupt,
@@ -88,7 +99,7 @@ export class TelemetryRegistry {
     this.cacheHits = 0; this.cacheMisses = 0; this.cacheErrors = 0;
     this.cacheCorrupt = 0; this.cacheFallbacks = 0;
     this.slowRequests = 0; this.invalidSamples = 0; this.startedAt = Date.now();
-    this.latencies.fill(0); this.times.fill(0);
+    this.latencies.fill(0); this.times.fill(0); this.statuses.fill(0);
   }
 }
 const globalForTelemetry = globalThis as unknown as { __menuMinuteTelemetry?: TelemetryRegistry };
