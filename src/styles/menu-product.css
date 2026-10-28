@@ -596,6 +596,28 @@ body.font-sans {
 
 /* ─── Online Ordering & Live Tracking (Ink & Ember) ────────────────────────── */
 
+.product .ticket-receipt-card {
+  background: var(--card, var(--paper, #fff));
+  border: 1px solid var(--line);
+  border-bottom: none;
+  filter: drop-shadow(0 4px 6px -1px rgb(0 0 0 / 0.06));
+}
+
+.product .ticket-receipt-tear {
+  position: relative;
+  height: 12px;
+  width: 100%;
+  background: radial-gradient(
+    circle,
+    transparent,
+    transparent 50%,
+    var(--card, var(--paper, #fff)) 50%,
+    var(--card, var(--paper, #fff)) 100%
+  );
+  background-size: 16px 16px;
+  background-position: bottom left;
+}
+
 .sticky-cart-bar {
   position: fixed;
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));

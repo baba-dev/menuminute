@@ -1213,7 +1213,7 @@
 
   .mm-dashboard-breadcrumb {
     gap: 7px;
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .mm-dashboard-top-actions {
@@ -1288,6 +1288,20 @@
 }
 
 @media (max-width: 390px) {
+  .mm-workspace-brand {
+    padding-right: 54px;
+    margin: 0 10px;
+  }
+
+  .mm-workspace-brand img {
+    width: 110px;
+  }
+
+  .mm-workspace-profile {
+    top: 8px;
+    right: 8px;
+  }
+
   .mm-dashboard-hero {
     min-height: 620px;
   }

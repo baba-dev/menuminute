@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
-import { ThemeControl } from "@/components/menu-product/theme-control";
-import { BrandNavLogo } from "@/components/marketing/brand/brand-nav-logo";
-import "@/components/marketing/brand/brand-nav-logo.css";
+import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
 import { CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -72,38 +70,15 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-stone-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2" aria-label="MenuMinute home">
-              <BrandNavLogo />
-            </Link>
-            <div className="flex items-center gap-3 sm:gap-4">
-              <ThemeControl />
-              <Link
-                href="/login"
-                className="hidden text-sm font-medium text-stone-600 hover:text-stone-900 sm:inline"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="bg-brand-600 hover:bg-brand-700 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
-              >
-                <span className="sm:hidden">Start free</span>
-                <span className="hidden sm:inline">Get started free</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="bg-background text-foreground min-h-screen transition-colors">
+      <MarketingSubpageNav />
 
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-stone-900">Simple, transparent pricing</h1>
-          <p className="mx-auto max-w-2xl text-xl text-stone-600">
+          <h1 className="font-display text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+            Simple, transparent pricing
+          </h1>
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
             Free QR menus are available now. Ordering and Kitchen Pro pricing and subscription terms
             are not finalized.
           </p>
@@ -113,48 +88,50 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative rounded-2xl p-8 transition-shadow ${
                 plan.primary
-                  ? "bg-brand-600 ring-brand-600 text-white ring-2"
-                  : "border border-stone-200 bg-white"
+                  ? "bg-brand-600 ring-brand-600 text-white shadow-xl ring-2"
+                  : "border-border bg-card text-card-foreground border shadow-sm hover:shadow-md"
               }`}
             >
               {plan.soon && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white dark:bg-stone-700">
                   Coming soon
                 </div>
               )}
               <h3
-                className={`mb-2 text-lg font-bold ${plan.primary ? "text-white" : "text-stone-900"}`}
+                className={`mb-2 text-lg font-bold ${plan.primary ? "text-white" : "text-foreground"}`}
               >
                 {plan.name}
               </h3>
               <div className="mb-4">
                 <span
-                  className={`text-4xl font-bold ${plan.primary ? "text-white" : "text-stone-900"}`}
+                  className={`text-4xl font-bold ${plan.primary ? "text-white" : "text-foreground"}`}
                 >
                   {plan.price}
                 </span>
                 <span
-                  className={`ml-1 text-sm ${plan.primary ? "text-brand-100" : "text-stone-500"}`}
+                  className={`ml-1 text-sm ${plan.primary ? "text-brand-100" : "text-muted-foreground"}`}
                 >
                   {plan.period}
                 </span>
               </div>
-              <p className={`mb-6 text-sm ${plan.primary ? "text-brand-100" : "text-stone-600"}`}>
+              <p
+                className={`mb-6 text-sm ${plan.primary ? "text-brand-100" : "text-muted-foreground"}`}
+              >
                 {plan.description}
               </p>
               {plan.soon ? (
                 <span
                   aria-disabled="true"
-                  className="mb-8 block w-full cursor-not-allowed rounded-xl bg-stone-100 py-3 text-center text-sm font-semibold text-stone-600"
+                  className="bg-muted text-muted-foreground mb-8 block w-full cursor-not-allowed rounded-xl py-3 text-center text-sm font-semibold"
                 >
                   Coming soon · pricing pending
                 </span>
               ) : (
                 <Link
                   href={plan.ctaHref}
-                  className="bg-brand-600 hover:bg-brand-700 mb-8 block w-full rounded-xl py-3 text-center text-sm font-semibold text-white transition-colors"
+                  className="bg-brand-600 hover:bg-brand-700 mb-8 block w-full rounded-xl py-3 text-center text-sm font-semibold text-white shadow-md transition-colors"
                 >
                   {plan.cta}
                 </Link>
@@ -165,7 +142,7 @@ export default function PricingPage() {
                     <CheckCircle
                       className={`mt-0.5 h-4 w-4 shrink-0 ${plan.primary ? "text-brand-200" : "text-green-500"}`}
                     />
-                    <span className={plan.primary ? "text-brand-100" : "text-stone-700"}>
+                    <span className={plan.primary ? "text-brand-100" : "text-muted-foreground"}>
                       {feature}
                     </span>
                   </li>

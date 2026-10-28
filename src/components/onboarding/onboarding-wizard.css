@@ -139,6 +139,10 @@
   gap: 1.5rem;
 }
 
+.wizard-mobile-step-pill {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .wizard-content {
     padding: 1.25rem 1rem;
@@ -146,6 +150,18 @@
   }
   .wizard-step-label {
     display: none;
+  }
+  .wizard-mobile-step-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    background: #f97316;
+    color: #1c1917;
   }
 }
 

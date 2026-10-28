@@ -14,6 +14,7 @@ export function ThemeControl() {
       const next = selected === "system" ? (query.matches ? "dark" : "light") : selected;
       const mode = next === "dark" ? "dark" : "light";
       document.documentElement.dataset.theme = mode;
+      document.documentElement.classList.toggle("dark", mode === "dark");
       setResolved(mode);
     };
     queueMicrotask(sync);
@@ -37,6 +38,7 @@ export function ThemeControl() {
         const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         localStorage.setItem("menuminute.appearance", next);
         document.documentElement.dataset.theme = next;
+        document.documentElement.classList.toggle("dark", next === "dark");
         setResolved(next);
       }}
     >
@@ -55,7 +57,7 @@ export function ThemeSync() {
     const query = window.matchMedia("(prefers-color-scheme: dark)");
     const sync = () => {
       const selected = localStorage.getItem("menuminute.appearance") ?? "system";
-      document.documentElement.dataset.theme =
+      const mode =
         selected === "system"
           ? query.matches
             ? "dark"
@@ -63,6 +65,8 @@ export function ThemeSync() {
           : selected === "dark"
             ? "dark"
             : "light";
+      document.documentElement.dataset.theme = mode;
+      document.documentElement.classList.toggle("dark", mode === "dark");
     };
     queueMicrotask(sync);
     query.addEventListener("change", sync);

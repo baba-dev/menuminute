@@ -422,7 +422,10 @@ export function CartDrawer({
             </div>
 
             {/* Itemized List */}
-            <div className="cart-body stack" style={{ flex: 1, overflowY: "auto", gap: "0.8rem" }}>
+            <div
+              className="cart-body stack"
+              style={{ flex: 1, overflowY: "auto", gap: "0.8rem", overscrollBehavior: "contain" }}
+            >
               <div className="cart-items stack" style={{ gap: "0.75rem" }}>
                 {items.map((item, index) => (
                   <div
@@ -582,9 +585,17 @@ export function CartDrawer({
               </div>
 
               {/* Price Breakdown */}
-              <div className="panel quiet stack" style={{ gap: "0.3rem", marginTop: "0.5rem" }}>
+              <div
+                className="ticket-receipt-card stack"
+                style={{
+                  gap: "0.35rem",
+                  marginTop: "0.5rem",
+                  padding: "1.1rem 1.25rem 0.8rem",
+                  borderRadius: "14px 14px 0 0",
+                }}
+              >
                 <div className="row between">
-                  <span>Subtotal</span>
+                  <span style={{ fontWeight: 600 }}>Subtotal</span>
                   <span className="money">{formatPrice(subtotalMinor, currency)}</span>
                 </div>
                 <small className="quiet">
@@ -594,8 +605,8 @@ export function CartDrawer({
                 <div
                   className="row between"
                   style={{
-                    borderTop: "1px solid var(--line)",
-                    paddingTop: "0.4rem",
+                    borderTop: "1px dashed var(--line)",
+                    paddingTop: "0.5rem",
                     fontWeight: 800,
                   }}
                 >
@@ -605,6 +616,7 @@ export function CartDrawer({
                   </span>
                 </div>
               </div>
+              <div className="ticket-receipt-tear" style={{ marginBottom: "0.5rem" }} />
 
               {/* Invariant Alert: Submission is not acceptance */}
               <div className="alert-notice stack" style={{ gap: "0.2rem" }}>
