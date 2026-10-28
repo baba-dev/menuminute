@@ -209,8 +209,10 @@ export function PaymentsConsole({
 
                   <h3 className="mt-2 text-base font-bold text-white">{p.displayName}</h3>
                   <div className="mt-1 flex items-baseline gap-1 text-2xl font-extrabold text-orange-400">
-                    <span>{(p.monthlyPricePaise / 100).toFixed(0)}</span>
-                    <span className="text-xs font-normal text-stone-400">minor units / mo</span>
+                    <span>₹{(p.monthlyPricePaise / 100).toFixed(0)}</span>
+                    <span className="text-xs font-normal text-stone-400">
+                      / month ({p.monthlyPricePaise.toLocaleString()} paise)
+                    </span>
                   </div>
 
                   <p className="mt-3 font-mono text-[11px] text-stone-400">

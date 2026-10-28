@@ -106,7 +106,7 @@ export function LoginForm() {
               const res = await fetch("/api/context", { cache: "no-store" });
               if (res.ok) {
                 const current = await res.json();
-                destination = current.hasOutlets ? "/dashboard" : "/onboarding";
+                destination = current.hasOutlets ? "/dashboard" : "/start";
               }
             }
             router.replace(destination || "/dashboard");

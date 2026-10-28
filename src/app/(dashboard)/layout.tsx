@@ -20,7 +20,6 @@ import {
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
-import { needsMfaEnrollment } from "@/lib/privileged-access";
 import {
   getDefaultOrActiveRestaurant,
   getRestaurantsByUserId,
@@ -36,8 +35,6 @@ export const metadata: Metadata = {
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
-  if (await needsMfaEnrollment(session.user.id, Boolean(session.user.twoFactorEnabled)))
-    redirect("/account/security");
 
   const [restaurant, outlets] = await Promise.all([
     getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId),

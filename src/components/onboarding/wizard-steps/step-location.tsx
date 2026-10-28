@@ -307,6 +307,12 @@ export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLoca
             </option>
           ))}
         </select>
+        {!currencyFor[draft.country] && (
+          <p className="wizard-counter" role="status">
+            No automatic currency match for this country. Select and confirm your pricing currency
+            in the next step.
+          </p>
+        )}
       </div>
     </div>
   );

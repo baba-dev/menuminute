@@ -232,6 +232,20 @@
       "when": 1793180000000,
       "tag": "0032_public_menu_cache_token_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793180000001,
+      "tag": "0033_optional_mfa_for_new_organizations",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793180000002,
+      "tag": "0034_razorpay_billing_entitlements",
+      "breakpoints": true
     }
   ]
 }

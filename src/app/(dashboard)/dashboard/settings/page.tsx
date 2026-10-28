@@ -31,10 +31,20 @@ export default async function SettingsPage() {
     );
   const actor = { userId: session.user.id, sessionId: session.session.id };
   const canManage = await canManageOutletProfile(actor, outlet.id);
-  let billing: { freeMenu: boolean; ordering: boolean; kitchen: boolean } | null = null;
+  let billing: {
+    freeMenu: boolean;
+    ordering: boolean;
+    kitchen: boolean;
+    isCommunityEdition?: boolean;
+  } | null = null;
   try {
     const result = await billingState(actor, outlet.organizationId);
-    billing = { freeMenu: result.freeMenu, ordering: result.ordering, kitchen: result.kitchen };
+    billing = {
+      freeMenu: result.freeMenu,
+      ordering: result.ordering,
+      kitchen: result.kitchen,
+      isCommunityEdition: result.isCommunityEdition,
+    };
   } catch (error) {
     if (!(error instanceof ForbiddenError)) throw error;
   }

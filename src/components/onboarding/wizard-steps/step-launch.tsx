@@ -15,6 +15,7 @@ interface StepLaunchProps {
 export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
   const [celebrating, setCelebrating] = useState(false);
   const [confirmedTimezone, setConfirmedTimezone] = useState(false);
+  const [confirmedCurrency, setConfirmedCurrency] = useState(false);
   const [localNow, setLocalNow] = useState<Date | null>(null);
   useEffect(() => {
     const first = window.setTimeout(() => setLocalNow(new Date()), 0);
@@ -121,6 +122,14 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
           />{" "}
           I confirm the operating timezone ({draft.timezone}) matches my restaurant location.
         </label>
+        <label className="wizard-label">
+          <input
+            type="checkbox"
+            checked={confirmedCurrency}
+            onChange={(event) => setConfirmedCurrency(event.target.checked)}
+          />{" "}
+          I confirm {draft.currency} is the currency in which my menu prices will be entered.
+        </label>
         {localNow && (
           <p className="wizard-counter">
             Restaurant local time: {outletLocalClock(draft.timezone, localNow)}
@@ -141,7 +150,13 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
         <button
           type="button"
           className="wizard-primary-btn wizard-launch-btn"
-          disabled={busy || celebrating || !confirmedTimezone || draft.name.trim().length < 2}
+          disabled={
+            busy ||
+            celebrating ||
+            !confirmedTimezone ||
+            !confirmedCurrency ||
+            draft.name.trim().length < 2
+          }
           onClick={handleLaunchClick}
         >
           <Sparkles size={16} aria-hidden="true" />
