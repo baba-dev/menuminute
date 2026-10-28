@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/lib/config/env";
+import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 import {
   providerEventId,
   recordRazorpaySubscriptionGrant,
@@ -107,9 +108,9 @@ export async function POST(req: Request) {
       const payment = payload.payment?.entity;
       const expectedAmount =
         sub.plan_id === env.RAZORPAY_PLAN_ORDERING_ID
-          ? 11900
+          ? PAID_PLAN_CATALOG.ordering.monthlyPricePaise
           : sub.plan_id === env.RAZORPAY_PLAN_KITCHEN_ID && env.RAZORPAY_KITCHEN_ENABLED
-            ? 29900
+            ? PAID_PLAN_CATALOG.kitchen_pro.monthlyPricePaise
             : null;
       if (
         expectedAmount === null ||
