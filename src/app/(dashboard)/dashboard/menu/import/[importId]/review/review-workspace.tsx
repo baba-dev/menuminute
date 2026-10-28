@@ -60,6 +60,7 @@ export function ReviewWorkspace({
   const [zoom, setZoom] = useState(100);
   const [mobileView, setMobileView] = useState<"source" | "details">("details");
   const [filter, setFilter] = useState<"all" | "attention" | "verified">("all");
+  const [acknowledgedMissingPages, setAcknowledgedMissingPages] = useState(false);
   const newMenu = useRef(crypto.randomUUID());
   const [priceTexts, setPriceTexts] = useState<Record<string, string>>(() => {
     const result: Record<string, string> = {};
@@ -197,6 +198,10 @@ export function ReviewWorkspace({
   async function save(finalize: boolean) {
     if (busy) return;
     setError("");
+    if (finalize && candidate.sourceWarnings?.length && !acknowledgedMissingPages) {
+      setError("Acknowledge the missing pages before finalizing this partial import.");
+      return;
+    }
     setNotice("");
     setBusy(true);
     try {
@@ -255,6 +260,10 @@ export function ReviewWorkspace({
   }
   async function apply() {
     if (busy || dirty || session.status !== "ready") return;
+    if (candidate.sourceWarnings?.length && !acknowledgedMissingPages) {
+      setError("Acknowledge the missing pages before applying this partial import.");
+      return;
+    }
     if (
       !window.confirm(
         "Create or update an editable menu DRAFT from the confirmed review? The published menu will not change."
@@ -336,6 +345,23 @@ export function ReviewWorkspace({
           <ShieldCheck className="size-4" /> Human verified · Never auto-published
         </span>
       </div>
+      {!!candidate.sourceWarnings?.length && (
+        <section role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+          <p className="font-bold">Partial transcription — some photographs were not recognized.</p>
+          <p className="mt-2">
+            Missing page(s): {candidate.sourceWarnings.map((warning) => {
+              const source = initial.sources.find((s) => s.id === warning.sourceId);
+              return source ? source.pageIndex + 1 : "unknown";
+            }).join(", ")}. The items on these pages have NOT been imported. Check the original photos and add
+            missing dishes manually in Menu Studio, or create another import with clearer captures.
+          </p>
+          <label className="mt-3 flex items-start gap-2 font-medium">
+            <input type="checkbox" className="mt-1" checked={acknowledgedMissingPages}
+              onChange={(event) => setAcknowledgedMissingPages(event.target.checked)} />
+            I understand this private draft may omit dishes from the missing pages.
+          </label>
+        </section>
+      )}
       <header className="scan-hero">
         <div className="scan-hero-copy">
           <p className="scan-eyebrow">RECIPE ATELIER / THE REVIEW DESK</p>

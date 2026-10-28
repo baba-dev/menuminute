@@ -72,6 +72,14 @@ export function importEngineEnabled(vars: Partial<NodeJS.ProcessEnv> = process.e
   );
 }
 type Source = { id: string; pageIndex: number; bytes: Buffer };
+/** Avoid requesting more output tokens than a configured vision NIM supports. */
+export function importOutputTokenBudget(vars: Partial<NodeJS.ProcessEnv> = process.env) {
+  const raw = vars["NVIDIA_IMPORT_MAX_OUTPUT_TOKENS"];
+  if (!raw) return 4096;
+  if (!/^[0-9]{4}$/.test(raw)) return null;
+  const tokens = Number(raw);
+  return tokens >= 1024 && tokens <= 8192 ? tokens : null;
+}
 /** Accept only one JSON object, optionally wrapped by a fenced JSON code block. */
 function decodePageJson(content: string): unknown {
   const clean = content.trim();
@@ -124,7 +132,9 @@ export async function extractNvidiaCandidate(
   request: typeof fetch = fetch
 ): Promise<{ candidate: ImportCandidate; usage: Meter }> {
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };
+  const tokenBudget = importOutputTokenBudget();
   if (
+    tokenBudget === null ||
     !input.sources.length ||
     input.sources.length > 12 ||
     !/^[A-Za-z0-9._/-]{1,100}$/.test(input.model) ||
@@ -164,9 +174,8 @@ export async function extractNvidiaCandidate(
         body: JSON.stringify({
           model: input.model,
           temperature: 0,
-          // Dense printed menus can exceed the previous 3,072-token ceiling.
-          // Keep a fixed, bounded budget rather than a caller-controlled setting.
-          max_tokens: 6144,
+          // A bounded worker setting; never controlled by a restaurant client.
+          max_tokens: tokenBudget,
           stream: false,
           messages: [
             {

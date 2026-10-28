@@ -11,6 +11,7 @@ import { createImport, addImportSource, importDetail } from "../src/modules/menu
 import {
   extractNvidiaCandidate,
   importEngineEnabled,
+  importOutputTokenBudget,
   NvidiaExtractionError,
 } from "../src/modules/menu-import/nvidia";
 import { processImport } from "../src/modules/menu-import/engine";
@@ -40,6 +41,12 @@ it("requires explicit production-entitlement gates", () => {
       NVIDIA_IMPORT_MODEL: "../ bad",
     })
   ).toBe(false);
+});
+it("bounds model-specific output budgets without user-controlled provider parameters", () => {
+  expect(importOutputTokenBudget({})).toBe(4096);
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "6144" })).toBe(6144);
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "99999" })).toBeNull();
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "bad" })).toBeNull();
 });
 it("maps synthetic NVIDIA page JSON into candidate v1 with exact private source provenance and currency minor units", async () => {
   const id = crypto.randomUUID(),
