@@ -87,7 +87,9 @@ export function StudioDishEditor({
 }) {
   const [customFlavorInput, setCustomFlavorInput] = useState("");
   const [pairingSearch, setPairingSearch] = useState("");
-  const [providers, setProviders] = useState<{ provider: "cloudflare" | "nvidia"; model: string }[]>([]);
+  const [providers, setProviders] = useState<
+    { provider: "cloudflare" | "nvidia"; model: string }[]
+  >([]);
   const [selectedProvider, setSelectedProvider] = useState<"cloudflare" | "nvidia">("cloudflare");
   const [checkingProviders, setCheckingProviders] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -171,7 +173,11 @@ export function StudioDishEditor({
       }
       const suggestion = dishAutofillSuggestionSchema.parse(payload.suggestion);
       if (!controller.signal.aborted) {
-        setProposal({ suggestion, model: String(payload.model ?? selectedProvider), name: initialName });
+        setProposal({
+          suggestion,
+          model: String(payload.model ?? selectedProvider),
+          name: initialName,
+        });
         setApplyMode("missing");
       }
     } catch (error) {
@@ -285,11 +291,16 @@ export function StudioDishEditor({
       </div>
       <section className="atelier-ai-panel" aria-label="AI dish autofill">
         <div className="atelier-ai-heading">
-          <div className="atelier-ai-heading-icon"><WandSparkles size={21} aria-hidden="true" /></div>
+          <div className="atelier-ai-heading-icon">
+            <WandSparkles size={21} aria-hidden="true" />
+          </div>
           <div>
             <span className="atelier-eyebrow">YOUR AI RECIPE ASSISTANT</span>
             <h3>Bring this dish to life</h3>
-            <p>Generate a guest description, flavor, likely ingredients, nutrition estimates and more.</p>
+            <p>
+              Generate a guest description, flavor, likely ingredients, nutrition estimates and
+              more.
+            </p>
           </div>
         </div>
         <div className="atelier-ai-toolbar">
@@ -298,7 +309,9 @@ export function StudioDishEditor({
             <select
               disabled={checkingProviders || generating || !providers.length || !canWrite}
               value={selectedProvider}
-              onChange={(event) => setSelectedProvider(event.target.value as "cloudflare" | "nvidia")}
+              onChange={(event) =>
+                setSelectedProvider(event.target.value as "cloudflare" | "nvidia")
+              }
               aria-label="AI provider for dish autofill"
             >
               {!providers.length && <option value="cloudflare">No AI provider enabled</option>}
@@ -312,62 +325,101 @@ export function StudioDishEditor({
           <button
             type="button"
             className="atelier-ai-generate"
-            disabled={!canWrite || checkingProviders || generating || !providers.length || !dish.name.trim()}
+            disabled={
+              !canWrite || checkingProviders || generating || !providers.length || !dish.name.trim()
+            }
             onClick={() => void generateSuggestion()}
           >
-            {generating ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> :
-              <Sparkles size={17} aria-hidden="true" />}
-            {generating ? "Creating profile…" : proposal ? "Regenerate with AI" : "Autofill with AI"}
+            {generating ? (
+              <Loader2 size={17} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Sparkles size={17} aria-hidden="true" />
+            )}
+            {generating
+              ? "Creating profile…"
+              : proposal
+                ? "Regenerate with AI"
+                : "Autofill with AI"}
           </button>
         </div>
         <p className="atelier-ai-footnote">
-          {checkingProviders ? "Checking configured AI engines…" :
-            providers.length ? "Suggestions are editable and never published automatically." :
-            "Ask your administrator to enable Cloudflare or NVIDIA AI for this workspace."}
+          {checkingProviders
+            ? "Checking configured AI engines…"
+            : providers.length
+              ? "Suggestions are editable and never published automatically."
+              : "Ask your administrator to enable Cloudflare or NVIDIA AI for this workspace."}
         </p>
-        {aiError && <p className="atelier-ai-error" role="alert">{aiError}</p>}
+        {aiError && (
+          <p className="atelier-ai-error" role="alert">
+            {aiError}
+          </p>
+        )}
         {proposal && (
           <div className="atelier-ai-preview" aria-label="Generated dish preview">
             <div className="atelier-ai-preview-head">
-              <span><Sparkles size={15} aria-hidden="true" /> Generated proposal</span>
+              <span>
+                <Sparkles size={15} aria-hidden="true" /> Generated proposal
+              </span>
               <small>{proposal.model}</small>
             </div>
             <p className="atelier-ai-proposed-description">{proposal.suggestion.description}</p>
             <div className="atelier-ai-preview-grid">
-              <div><strong>Taste &amp; heat</strong>
-                <span>Level {proposal.suggestion.culinary.spiceLevel} · {proposal.suggestion.culinary.flavorNotes.join(", ") || "No flavor notes"}</span>
+              <div>
+                <strong>Taste &amp; heat</strong>
+                <span>
+                  Level {proposal.suggestion.culinary.spiceLevel} ·{" "}
+                  {proposal.suggestion.culinary.flavorNotes.join(", ") || "No flavor notes"}
+                </span>
               </div>
-              <div><strong>Serving &amp; nutrition</strong>
-                <span>{proposal.suggestion.nutrition.servingSize || "Portion unspecified"} · {proposal.suggestion.nutrition.calories ?? "?"} kcal est.</span>
+              <div>
+                <strong>Serving &amp; nutrition</strong>
+                <span>
+                  {proposal.suggestion.nutrition.servingSize || "Portion unspecified"} ·{" "}
+                  {proposal.suggestion.nutrition.calories ?? "?"} kcal est.
+                </span>
               </div>
-              <div><strong>Possible ingredients</strong>
+              <div>
+                <strong>Possible ingredients</strong>
                 <span>{proposal.suggestion.safety.ingredients.join(", ") || "Unspecified"}</span>
               </div>
-              <div><strong>Possible allergens</strong>
-                <span>{proposal.suggestion.safety.allergens.join(", ") || "Unknown — not allergen-free"}</span>
+              <div>
+                <strong>Possible allergens</strong>
+                <span>
+                  {proposal.suggestion.safety.allergens.join(", ") || "Unknown — not allergen-free"}
+                </span>
               </div>
             </div>
             <p className="atelier-ai-caution">
-              Review against your actual recipe before publishing. Allergens, dietary classifications and nutrition are unverified suggestions.
+              Review against your actual recipe before publishing. Allergens, dietary
+              classifications and nutrition are unverified suggestions.
             </p>
             <label className="atelier-ai-apply-mode">
               When applying
-              <select value={applyMode} onChange={(event) => setApplyMode(event.target.value as AutofillMode)}>
+              <select
+                value={applyMode}
+                onChange={(event) => setApplyMode(event.target.value as AutofillMode)}
+              >
                 <option value="missing">Fill missing details (recommended)</option>
                 <option value="replace">Replace existing details</option>
               </select>
             </label>
             {proposal.name !== dish.name && (
-              <p role="alert" className="atelier-ai-error">Dish name changed; regenerate before applying.</p>
+              <p role="alert" className="atelier-ai-error">
+                Dish name changed; regenerate before applying.
+              </p>
             )}
             <div className="atelier-ai-preview-actions">
-              <button type="button" onClick={() => setProposal(null)}>Discard</button>
+              <button type="button" onClick={() => setProposal(null)}>
+                Discard
+              </button>
               <button
                 type="button"
                 className="atelier-ai-apply"
                 disabled={!canWrite || proposal.name !== dish.name}
                 onClick={() => {
-                  onUpdate(applyDishAutofill(dish, proposal.suggestion, applyMode, companionDishes));
+                  onUpdate(
+                    applyDishAutofill(dish, proposal.suggestion, applyMode, companionDishes)
+                  );
                   setProposal(null);
                 }}
               >

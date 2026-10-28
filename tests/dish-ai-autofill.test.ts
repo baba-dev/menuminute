@@ -47,32 +47,44 @@ const dish = dishSchema.parse({
     verifiedFreeFrom: ["nuts"],
   },
 });
-const companions = [{ id: "naan-1", name: "Naan" }, { id: "dish-1", name: "Kadai Paneer" }];
+const companions = [
+  { id: "naan-1", name: "Naan" },
+  { id: "dish-1", name: "Kadai Paneer" },
+];
 describe("AI dish autofill is always a merchant-reviewed, unverified draft suggestion", () => {
   it("rejects fabricated verification flags, unknown allergens and out-of-range nutrition", () => {
-    expect(() => dishAutofillSuggestionSchema.parse({
-      ...candidate,
-      safety: { ...candidate.safety, verified: true },
-    })).toThrow();
-    expect(() => dishAutofillSuggestionSchema.parse({
-      ...candidate,
-      safety: { ...candidate.safety, allergens: ["unknown"] },
-    })).toThrow();
-    expect(() => dishAutofillSuggestionSchema.parse({
-      ...candidate,
-      nutrition: { ...candidate.nutrition, calories: 20000 },
-    })).toThrow();
+    expect(() =>
+      dishAutofillSuggestionSchema.parse({
+        ...candidate,
+        safety: { ...candidate.safety, verified: true },
+      })
+    ).toThrow();
+    expect(() =>
+      dishAutofillSuggestionSchema.parse({
+        ...candidate,
+        safety: { ...candidate.safety, allergens: ["unknown"] },
+      })
+    ).toThrow();
+    expect(() =>
+      dishAutofillSuggestionSchema.parse({
+        ...candidate,
+        nutrition: { ...candidate.nutrition, calories: 20000 },
+      })
+    ).toThrow();
     expect(() => parseDishAutofillResponse("plain language rather than JSON")).toThrow();
-    expect(parseDishAutofillResponse("```json\n" + JSON.stringify(candidate) + "\n```"))
-      .toEqual(candidate);
+    expect(parseDishAutofillResponse("```json\n" + JSON.stringify(candidate) + "\n```")).toEqual(
+      candidate
+    );
   });
   it("fills missing fields without replacing existing merchant descriptions or nutrition", () => {
     const patch = applyDishAutofill(dish, candidate, "missing", companions);
     expect(patch.description).toBe("My own recipe");
     expect(patch.nutrition).toMatchObject({ calories: 500, proteinGrams: 17, verified: false });
     expect(patch.safety).toMatchObject({
-      ingredients: ["Homemade paneer"], allergens: ["dairy"],
-      verified: false, verifiedFreeFrom: [],
+      ingredients: ["Homemade paneer"],
+      allergens: ["dairy"],
+      verified: false,
+      verifiedFreeFrom: [],
     });
     expect(patch.culinary?.pairingDishIds).toEqual(["naan-1"]);
     expect(patch.dietary).toEqual(["vegetarian", "gluten_free"]);
@@ -92,9 +104,12 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
     expect(edited.safety?.verified).toBe(false);
     expect(edited.safety?.verifiedFreeFrom).toEqual([]);
     expect(edited.dietary).toEqual(["vegetarian", "gluten_free"]);
-    expect(menuDocumentSchema.safeParse({
-      name: "Dinner", currency: "INR",
-      categories: [{ id: "main", name: "Main", items: [edited] }],
-    }).success).toBe(true);
+    expect(
+      menuDocumentSchema.safeParse({
+        name: "Dinner",
+        currency: "INR",
+        categories: [{ id: "main", name: "Main", items: [edited] }],
+      }).success
+    ).toBe(true);
   });
 });

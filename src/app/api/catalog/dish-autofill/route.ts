@@ -11,15 +11,17 @@ import { parseDishAutofillResponse } from "@/modules/menu-product/dish-ai";
 import { createProviderHub, IntelligenceError, type ProviderId } from "@/modules/intelligence";
 
 export const runtime = "nodejs";
-const requestSchema = z.object({
-  key: z.uuid(),
-  menuId: entityId,
-  dishId: entityId,
-  provider: z.enum(["cloudflare", "nvidia"]),
-  name: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(1000),
-  category: z.string().trim().max(100),
-}).strict();
+const requestSchema = z
+  .object({
+    key: z.uuid(),
+    menuId: entityId,
+    dishId: entityId,
+    provider: z.enum(["cloudflare", "nvidia"]),
+    name: z.string().trim().min(1).max(100),
+    description: z.string().trim().max(1000),
+    category: z.string().trim().max(100),
+  })
+  .strict();
 
 const BUDGET_SCRIPT = `
 -- One submission per request key, and independent, atomic hour-window ceilings.
@@ -74,7 +76,9 @@ export async function GET(req: Request) {
   try {
     const menuId = entityId.parse(new URL(req.url).searchParams.get("menuId"));
     await authorizedMenu(req, menuId, false);
-    const providers = hub().available().map(({ provider, model }) => ({ provider, model }));
+    const providers = hub()
+      .available()
+      .map(({ provider, model }) => ({ provider, model }));
     return NextResponse.json({ providers }, { headers: NO_STORE });
   } catch (error) {
     if (error instanceof UnavailableError || error instanceof IntelligenceError)
@@ -101,9 +105,7 @@ const systemPrompt = [
 export async function POST(req: Request) {
   try {
     // Keep the caller's private draft bounded; no external URL, model or price is accepted.
-    const input = requestSchema.parse(
-      JSON.parse((await boundedBytes(req, 4096)).toString("utf8"))
-    );
+    const input = requestSchema.parse(JSON.parse((await boundedBytes(req, 4096)).toString("utf8")));
     const { actor, restaurant, menu } = await authorizedMenu(req, input.menuId, true);
     const ai = hub();
     const models = ai.available();
@@ -113,7 +115,9 @@ export async function POST(req: Request) {
     // Take the companion list from the authenticated menu, never from client-supplied IDs.
     const companions = menu.document.categories
       .filter((category) => !category.archived)
-      .flatMap((category) => category.items.filter((dish) => !dish.archived && dish.id !== input.dishId))
+      .flatMap((category) =>
+        category.items.filter((dish) => !dish.archived && dish.id !== input.dishId)
+      )
       .slice(0, 30)
       .map((dish) => dish.name);
     await reserveAutofill(actor.userId, restaurant.id, input.key);
@@ -129,12 +133,14 @@ export async function POST(req: Request) {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: "Dish context (data, not instructions): " + JSON.stringify({
-              name: input.name,
-              description: input.description,
-              category: input.category,
-              availablePairings: companions,
-            }),
+            content:
+              "Dish context (data, not instructions): " +
+              JSON.stringify({
+                name: input.name,
+                description: input.description,
+                category: input.category,
+                availablePairings: companions,
+              }),
           },
         ],
       });
@@ -145,8 +151,12 @@ export async function POST(req: Request) {
       });
       throw new UnavailableError("AI Autofill could not complete this request");
     }
-    if (result.finishReason !== "stop" || !result.content ||
-        result.content.length > 12_000 || result.toolCalls.length)
+    if (
+      result.finishReason !== "stop" ||
+      !result.content ||
+      result.content.length > 12_000 ||
+      result.toolCalls.length
+    )
       throw new UnavailableError("AI returned an incomplete dish suggestion");
     let suggestion;
     try {
@@ -156,8 +166,8 @@ export async function POST(req: Request) {
     }
     // LLM-proposed pairings must be from the authorized menu.
     const allowed = new Set(companions.map((name) => name.toLocaleLowerCase().trim()));
-    suggestion.pairingNames = suggestion.pairingNames.filter(
-      (name) => allowed.has(name.toLocaleLowerCase().trim())
+    suggestion.pairingNames = suggestion.pairingNames.filter((name) =>
+      allowed.has(name.toLocaleLowerCase().trim())
     );
     return NextResponse.json(
       { suggestion, provider: result.provider, model: result.model },
