@@ -78,6 +78,7 @@ export function KitchenSetupModal({
   const [selectedMember, setSelectedMember] = useState("");
   const [staffStation, setStaffStation] = useState("");
   const [routeStation, setRouteStation] = useState("");
+  const [selectedDish, setSelectedDish] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [batchDone, setBatchDone] = useState(0);
@@ -128,6 +129,27 @@ export function KitchenSetupModal({
     if (!station || !memberId) return;
     if (await execute("member.assign", { memberId, stationId: station.id }))
       setMessage("Teammate assigned. Station permissions are enforced by the server.");
+  }
+
+  async function routeDish(e: FormEvent) {
+    e.preventDefault();
+    const dishId = selectedDish || dishes[0]?.id;
+    if (!target || !dishId || busy) return;
+    if (await execute("route.assign", { dishId, stationId: target.id })) {
+      setMessage("Dish route saved. You can route a dish to more than one station.");
+    }
+  }
+
+  async function removeDishRoute(dishId: string, stationId: string) {
+    if (busy) return;
+    const ok = await execute("route.remove", { dishId, stationId });
+    if (ok) setMessage("Dish route removed. Review readiness before activating.");
+  }
+
+  async function removeStaff(memberId: string, stationId: string) {
+    if (busy) return;
+    const ok = await execute("member.remove", { memberId, stationId });
+    if (ok) setMessage("Station assignment removed. Readiness has been recalculated.");
   }
 
   async function routeAll() {
@@ -382,13 +404,21 @@ export function KitchenSetupModal({
                       <div className="kk-setup-collection-row" key={m.id}>
                         <span className="kk-setup-avatar">{m.name.slice(0, 1).toUpperCase()}</span>
                         <strong>{m.name}</strong>
-                        <span>
-                          {m.stationIds.length
-                            ? `${m.stationIds.length} station(s)`
-                            : m.eligible
-                              ? "Available"
-                              : "Needs role"}
-                        </span>
+                        <div className="kk-setup-memberships">
+                          {m.stationIds.length ? (
+                            m.stationIds.map((stationId) => (
+                              <button type="button" key={stationId} disabled={busy}
+                                className="kk-setup-mini-button"
+                                onClick={() => void removeStaff(m.id, stationId)}
+                                aria-label={`Remove ${m.name} from ${snapshot.stations.find((st) => st.id === stationId)?.name ?? "station"}`}>
+                                {snapshot.stations.find((st) => st.id === stationId)?.name ?? "Station"}
+                                <X size={13} aria-hidden="true" />
+                              </button>
+                            ))
+                          ) : (
+                            <span>{m.eligible ? "Available" : "Needs role"}</span>
+                          )}
+                        </div>
                       </div>
                     ))}
                     {!snapshot.members.length && (
@@ -404,8 +434,8 @@ export function KitchenSetupModal({
                   <p className="kk-setup-kicker">03 / FROM MENU TO STOVE</p>
                   <h3 id="kk-routes-title">Make every dish find its way.</h3>
                   <p>
-                    Assign all unassigned published dishes to one station in a single guided action.
-                    You can add more routes later.
+                    Assign missing dishes together, or configure individual dish routes for
+                    different preparation stations. Changes save immediately.
                   </p>
                   <div className="kk-setup-fieldgroup">
                     <label htmlFor="kk-route-station">Destination station</label>
@@ -436,6 +466,23 @@ export function KitchenSetupModal({
                         : `Route ${progress.missing.length} unassigned dish${progress.missing.length === 1 ? "" : "es"}`}
                     </button>
                   </div>
+                  <form className="kk-setup-fieldgroup kk-setup-route-individual"
+                    onSubmit={(e) => void routeDish(e)}>
+                    <h4>Route a specific dish</h4>
+                    <label htmlFor="kk-individual-dish">Published dish</label>
+                    <select id="kk-individual-dish" value={selectedDish || dishes[0]?.id || ""}
+                      onChange={(e) => setSelectedDish(e.target.value)} disabled={busy}>
+                      <option value="">Choose a dish</option>
+                      {dishes.map((dish) => <option value={dish.id} key={dish.id}>{dish.name}</option>)}
+                    </select>
+                    <p className="kk-setup-field-help">
+                      Uses the destination station selected above. A dish may be routed to multiple stations.
+                    </p>
+                    <button type="submit" className="kk-setup-secondary"
+                      disabled={busy || !target || !dishes.length}>
+                      <Plus size={16} aria-hidden="true" /> Add dish route
+                    </button>
+                  </form>
                   <div className="kk-setup-collection kk-setup-dishes">
                     <h4>
                       Published dishes{" "}
@@ -453,7 +500,20 @@ export function KitchenSetupModal({
                             <span className="kk-setup-unrouted" />
                           )}
                           <strong>{dish.name}</strong>
-                          <span>{done ? "Routed" : "Needs route"}</span>
+                          <div className="kk-setup-route-tags">
+                            {snapshot.routes
+                              .filter((route) => route.dishId === dish.id)
+                              .map((route) => (
+                                <button key={route.stationId} type="button" disabled={busy}
+                                  className="kk-setup-mini-button"
+                                  onClick={() => void removeDishRoute(dish.id, route.stationId)}
+                                  aria-label={`Remove ${dish.name} route to ${snapshot.stations.find((st) => st.id === route.stationId)?.name ?? "station"}`}>
+                                  {snapshot.stations.find((st) => st.id === route.stationId)?.name ?? "Inactive station"}
+                                  <X size={13} aria-hidden="true"/>
+                                </button>
+                              ))}
+                            {!done && <span>Needs route</span>}
+                          </div>
                         </div>
                       );
                     })}
