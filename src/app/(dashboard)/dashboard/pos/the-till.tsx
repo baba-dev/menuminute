@@ -128,9 +128,12 @@ export function TheTill({
   const [taxRegistration, setTaxRegistration] = useState(seller?.taxRegistration ?? "");
   const commandRef = useRef<{ fingerprint: string; key: string } | null>(null);
   useEffect(() => {
-    const settings = readTerminalReceiptSettings(outletId);
-    setPrintInvoice(settings.enabled);
-    setReceiptPaper(settings.paper);
+    const frame = window.requestAnimationFrame(() => {
+      const settings = readTerminalReceiptSettings(outletId);
+      setPrintInvoice(settings.enabled);
+      setReceiptPaper(settings.paper);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [outletId]);
   useEffect(
     () => () => {
