@@ -18,6 +18,7 @@ import {
   LoaderCircle,
   ArrowRight,
   ClipboardList,
+  Maximize2,
 } from "lucide-react";
 import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
 import { RubberStamp } from "@/components/ui/tactile-elements";
@@ -25,7 +26,12 @@ import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service
 import { KitchenExpeditor } from "./kitchen-expeditor";
 import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
-import { kitchenPulse, stationGroups, outstandingDishes } from "@/modules/kitchen/presentation";
+import {
+  kitchenPulse,
+  stationGroups,
+  outstandingDishes,
+  stationOverview,
+} from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
   organizationId: string;
@@ -41,8 +47,10 @@ function Ticket({
   onAction,
   busy,
   now,
+  stationName,
 }: {
   work: KitchenWorkView;
+  stationName: string;
   onAction: (work: KitchenWorkView, action: "start" | "complete") => void;
   busy: boolean;
   now: number | null;
@@ -70,10 +78,10 @@ function Ticket({
       <p className="kk-ticket-meta">
         {work.fulfillmentMode === "pickup"
           ? "Pickup"
-          : work.tableLabel
+          : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
             ? "Table " + work.tableLabel
             : "Dine-in"}{" "}
-        · {work.brandLabel}
+        · {stationName}
       </p>
       <h4 className="kk-ticket-dish">
         {work.quantity} × {work.dishName}
@@ -129,7 +137,9 @@ export function KitchenBoard({
   menuDishes,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
-  const [selected, setSelected] = useState(initial.stations[0]?.id ?? "");
+  const [selected, setSelected] = useState(
+    canManage && initial.enabled ? "all" : (initial.stations[0]?.id ?? "")
+  );
   const [connection, setConnection] = useState<Connection>("connecting");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -237,17 +247,27 @@ export function KitchenBoard({
       clearInterval(timer);
     };
   }, [base, apply, refresh]);
-  const station = snapshot.stations.find((s) => s.id === selected) ?? snapshot.stations[0];
+  const station =
+    selected === "all"
+      ? undefined
+      : (snapshot.stations.find((s) => s.id === selected) ?? snapshot.stations[0]);
   const work = useMemo(
-    () => snapshot.work.filter((w) => w.stationId === station?.id),
-    [snapshot.work, station?.id]
+    () =>
+      selected === "all" ? snapshot.work : snapshot.work.filter((w) => w.stationId === station?.id),
+    [snapshot.work, station?.id, selected]
   );
   const groups = useMemo(
-    () => stationGroups(snapshot.work, station?.id),
-    [snapshot.work, station?.id]
+    () => stationGroups(snapshot.work, selected === "all" ? undefined : station?.id),
+    [snapshot.work, station?.id, selected]
   );
   const allDay = useMemo(() => outstandingDishes(work), [work]);
   const pulse = useMemo(() => kitchenPulse(snapshot.work), [snapshot.work]);
+  const overview = useMemo(
+    () => stationOverview(snapshot.stations, snapshot.work, now),
+    [snapshot.stations, snapshot.work, now]
+  );
+  const allPending = overview.reduce((sum, item) => sum + item.queued + item.preparing, 0);
+
   async function command(url: string, body: unknown) {
     const res = await fetch(url, {
       method: "POST",
@@ -400,6 +420,24 @@ export function KitchenBoard({
             >
               <RefreshCw size={17} aria-hidden="true" /> Sync
             </button>
+            <button
+              type="button"
+              className="kk-tool"
+              title="Toggle fullscreen service mode"
+              onClick={() => {
+                if (document.fullscreenElement) {
+                  void document
+                    .exitFullscreen()
+                    .catch(() => setError("Fullscreen exit was blocked."));
+                } else {
+                  void document.documentElement
+                    .requestFullscreen()
+                    .catch(() => setError("Fullscreen is unavailable on this device."));
+                }
+              }}
+            >
+              <Maximize2 size={17} aria-hidden="true" /> Fullscreen
+            </button>
             <ThemeControl />
             <Link href="/dashboard/orders" className="kk-tool kk-return">
               <ArrowLeft size={16} aria-hidden="true" /> Orders
@@ -407,11 +445,18 @@ export function KitchenBoard({
           </div>
         </div>
       </header>
-      <section className="kk-hero" aria-labelledby="kk-title">
+      <section
+        className={"kk-hero" + (snapshot.enabled ? " kk-hero-live" : "")}
+        aria-labelledby="kk-title"
+      >
         <div className="kk-hero-content">
           <span className="kk-eyebrow">01 / THE KITCHEN WORKSPACE</span>
-          <h1 id="kk-title">The Chef’s Pass.</h1>
-          <p className="kk-tagline">Every dish has its place. Every ticket moves with purpose.</p>
+          <h1 id="kk-title">{snapshot.enabled ? "Kitchen live service." : "The Chef’s Pass."}</h1>
+          <p className="kk-tagline">
+            {snapshot.enabled
+              ? "Every station, every order, one live service."
+              : "Every dish has its place. Every ticket moves with purpose."}
+          </p>
           <p className="kk-hero-note">
             From first fire to final handoff. Your preparation stations, live queue, and
             expeditor—together on one focused surface.
@@ -500,13 +545,51 @@ export function KitchenBoard({
             </button>
           </div>
         )}
+        <section className="kk-overview" aria-label="All authorized preparation stations">
+          <div className="kk-overview-heading">
+            <div>
+              <span className="kk-eyebrow">LIVE / PREPARATION OVERVIEW</span>
+              <h2>Every station in sight.</h2>
+              <p>
+                Counts reflect stations you are authorized to view. Incoming orders stay in the
+                attention dock above.
+              </p>
+            </div>
+            <div className="kk-overview-total">{allPending} active station tasks</div>
+          </div>
+          <div className="kk-overview-grid">
+            {overview.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={selected === item.id}
+                onClick={() => setSelected(item.id)}
+                className={"kk-overview-card" + (selected === item.id ? " is-selected" : "")}
+              >
+                <strong>{item.name}</strong>
+                <span>
+                  {item.queued} to prepare · {item.preparing} cooking · {item.completed} done
+                </span>
+                <small>
+                  {item.oldestMinutes === null
+                    ? "All caught up"
+                    : item.oldestMinutes >= 20
+                      ? `Overdue · ${item.oldestMinutes} min oldest`
+                      : `Oldest open task · ${item.oldestMinutes} min`}
+                </small>
+              </button>
+            ))}
+          </div>
+        </section>
         <div className="kk-section-heading kk-station-heading">
           <div>
             <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-amber-400">
               Prep stations
             </p>
             <h2 className="text-3xl font-extrabold tracking-tight">
-              {station?.name ?? "Station assignment required"}
+              {selected === "all"
+                ? "All stations"
+                : (station?.name ?? "Station assignment required")}
             </h2>
             <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
               Last reconciled: {lastSync?.toLocaleTimeString() ?? "Not connected"} · All changes
@@ -526,20 +609,32 @@ export function KitchenBoard({
         </div>
         {snapshot.stations.length > 0 && (
           <nav id="station-rail" aria-label="Kitchen stations" className="kk-stations">
+            {canManage && (
+              <button
+                type="button"
+                aria-current={selected === "all" ? "page" : undefined}
+                onClick={() => setSelected("all")}
+                className={"kk-station-tab" + (selected === "all" ? " is-selected" : "")}
+              >
+                All stations <span>{allPending}</span>
+              </button>
+            )}
             {snapshot.stations.map((s) => (
               <button
                 type="button"
                 key={s.id}
+                aria-label={s.name}
                 aria-current={station?.id === s.id ? "page" : undefined}
                 onClick={() => setSelected(s.id)}
                 className={"kk-station-tab" + (station?.id === s.id ? " is-selected" : "")}
               >
                 {s.name}
+                <span>{overview.find((item) => item.id === s.id)?.queued ?? 0} queued</span>
               </button>
             ))}
           </nav>
         )}
-        {allDay.length > 0 && (
+        {selected !== "all" && allDay.length > 0 && (
           <section aria-label="All-day outstanding preparation counts" className="kk-all-day">
             <h3 className="text-sm font-extrabold">All-day · Remaining to prepare</h3>
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
@@ -558,7 +653,13 @@ export function KitchenBoard({
           </section>
         )}
         {canManage && (
-          <KitchenExpeditor base={base} enabled={snapshot.enabled} cursor={snapshot.cursor} />
+          <KitchenExpeditor
+            base={base}
+            enabled={snapshot.enabled}
+            cursor={snapshot.cursor}
+            work={snapshot.work}
+            stations={snapshot.stations}
+          />
         )}
         {canManage &&
           snapshot.work.some((w) => w.status === "queued" || w.status === "preparing") && (
@@ -648,7 +749,12 @@ export function KitchenBoard({
               <span className="kk-eyebrow">02 / STATION TICKETS</span>
               <h2>Preparation rail.</h2>
             </div>
-            <span>{station?.name ?? "Choose a station"} · oldest ticket first</span>
+            <span>
+              {selected === "all"
+                ? "All authorized stations"
+                : (station?.name ?? "Choose a station")}{" "}
+              · oldest ticket first
+            </span>
           </div>
           <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
             {(
@@ -694,6 +800,10 @@ export function KitchenBoard({
                       <Ticket
                         key={w.id}
                         work={w}
+                        stationName={
+                          snapshot.stations.find((entry) => entry.id === w.stationId)?.name ??
+                          "Assigned station"
+                        }
                         now={now}
                         busy={busy === w.id}
                         onAction={action}
@@ -710,8 +820,8 @@ export function KitchenBoard({
         </section>
         <p className="kk-footnote">
           Station completion does not mark an order Ready for guests. Only an authorized expeditor
-          can release an eligible, fully completed order. Kitchen Pro commercial activation remains
-          gated.
+          can release an eligible, fully completed order. All live actions are verified by the
+          server.
         </p>
       </div>
       {canManage && (

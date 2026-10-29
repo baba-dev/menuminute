@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   grantEndForPreset,
+  grantSubmissionEnd,
+  PERMANENT_ACCESS_END,
   grantOverlaps,
   grantPresetDetails,
   grantStatus,
@@ -17,6 +19,19 @@ describe("grant operator rules", () => {
     expect(grantEndForPreset("permanent", start)?.toISOString()).toBe("9999-12-31T23:59:59.000Z");
     expect(grantPresetDetails.permanent.description).toContain("revoke");
     expect(grantPresetDetails.paid.description).toContain("Verify payment");
+  });
+  it("never round-trips permanent Kitchen expiry through browser-local datetime values", () => {
+    // In IST the UTC sentinel lands in local year 10000, which HTML datetime-local
+    // cannot display. The submission must not depend on the old date field.
+    expect(grantSubmissionEnd("kitchen.new", "permanent", "+010000-01-01T0").toISOString()).toBe(
+      PERMANENT_ACCESS_END
+    );
+    expect(
+      grantSubmissionEnd("kitchen.new", "trial_7", "2026-11-05T15:00").getTime()
+    ).toBeGreaterThan(start.getTime());
+    expect(
+      Number.isNaN(grantSubmissionEnd("ordering.new", "custom", "invalid-date-input").getTime())
+    ).toBe(true);
   });
   it("differentiates revoked, expired, scheduled, expiring, and active", () => {
     const now = new Date("2026-10-25T12:00:00.000Z");

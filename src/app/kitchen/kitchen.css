@@ -1711,3 +1711,316 @@
     gap: 10px;
   }
 }
+
+/* Kitchen Pro 2.0: the operational surface is foregrounded in live mode. */
+.mm-kitchen .kk-hero-live {
+  min-height: 0;
+  padding: clamp(18px, 3vw, 32px) clamp(16px, 3vw, 45px);
+}
+.mm-kitchen .kk-hero-live .kk-pass-art,
+.mm-kitchen .kk-hero-live .kk-hero-note,
+.mm-kitchen .kk-hero-live .kk-hero-actions {
+  display: none;
+}
+.mm-kitchen .kk-hero-live h1 {
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.07;
+}
+.mm-kitchen .kk-hero-live .kk-tagline {
+  font-size: clamp(15px, 2vw, 20px);
+}
+.kk-overview {
+  margin: 16px 0 22px;
+}
+.kk-overview-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.kk-overview-heading h2 {
+  font-weight: 900;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.04em;
+}
+.kk-overview-heading p {
+  font-size: 12px;
+  color: var(--kk-muted);
+  line-height: 1.5;
+}
+.kk-overview-total {
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--kk-line);
+  padding: 9px 13px;
+  border-radius: 999px;
+}
+.kk-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+.kk-overview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  min-height: 114px;
+  padding: 16px;
+  border: 1px solid var(--kk-line);
+  border-radius: 16px;
+  background: var(--kk-panel);
+  color: var(--kk-text);
+  transition:
+    border-color 0.16s,
+    box-shadow 0.16s;
+}
+.kk-overview-card strong {
+  font-weight: 850;
+  font-size: 17px;
+}
+.kk-overview-card span {
+  font-size: 12px;
+  font-weight: 650;
+}
+.kk-overview-card small {
+  font-size: 11px;
+  color: var(--kk-muted);
+}
+.kk-overview-card.is-selected,
+.kk-overview-card:focus-visible {
+  border-color: #d76c22;
+  box-shadow: 0 0 0 2px rgba(215, 108, 34, 0.2);
+}
+.kk-overview-card:hover {
+  border-color: #b97238;
+}
+.kk-station-tab span {
+  margin-left: 7px;
+  font-size: 11px;
+  font-weight: 750;
+  opacity: 0.85;
+}
+.kk-intake-inbox[hidden] {
+  display: none !important;
+}
+.kk-live-intake {
+  position: fixed;
+  top: 84px;
+  right: clamp(12px, 2vw, 28px);
+  width: min(430px, calc(100vw - 26px));
+  z-index: 90;
+  pointer-events: none;
+}
+.kk-intake-dock {
+  pointer-events: auto;
+  max-height: min(72vh, 680px);
+  overflow-y: auto;
+  background: #fffaf4;
+  color: #302018;
+  border: 1px solid #c9a98c;
+  border-radius: 17px;
+  box-shadow: 0 12px 42px rgba(39, 21, 10, 0.25);
+}
+:root[data-theme="dark"] .kk-intake-dock {
+  background: #211914;
+  border-color: #7c614e;
+  color: #fff6e9;
+}
+.kk-intake-dock.is-urgent {
+  border-color: #d65b18;
+  box-shadow:
+    0 0 0 2px rgba(214, 91, 24, 0.25),
+    0 14px 42px rgba(39, 21, 10, 0.25);
+}
+.kk-intake-dock-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 13px;
+  flex-wrap: wrap;
+}
+.kk-intake-dock-summary > strong {
+  font-size: 13px;
+  flex: 1;
+  min-width: 130px;
+}
+.kk-intake-wait {
+  font-size: 11px;
+  color: #ad4b16;
+  font-weight: 850;
+}
+.kk-intake-mini-action,
+.kk-intake-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+  min-height: 42px;
+  min-width: 42px;
+  padding: 8px;
+  border: 1px solid #dbc3ad;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 12px;
+}
+:root[data-theme="dark"] .kk-intake-mini-action,
+:root[data-theme="dark"] .kk-intake-expand {
+  border-color: #684d3c;
+}
+.kk-intake-expand {
+  padding-inline: 12px;
+}
+.kk-live-primary {
+  border-top: 1px solid #ddc7b3;
+}
+.kk-live-order {
+  padding: 15px;
+  border-top: 1px solid #dcc6b0;
+}
+.kk-live-primary .kk-live-order {
+  border-top: 0;
+}
+:root[data-theme="dark"] .kk-live-order {
+  border-color: #624b3b;
+}
+.kk-live-order-head,
+.kk-live-order-head span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+.kk-live-order-head strong {
+  font-weight: 900;
+  font-size: 16px;
+}
+.kk-live-order-head span {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.kk-live-order-meta {
+  margin: 7px 0 12px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.kk-live-order-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.kk-live-order-items li {
+  border: 1px solid #decab6;
+  border-radius: 10px;
+  padding: 7px 9px;
+  font-size: 12px;
+}
+:root[data-theme="dark"] .kk-live-order-items li {
+  border-color: #654b3d;
+}
+.kk-live-order-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.kk-live-order-actions button {
+  min-height: 46px;
+}
+.kk-live-order-actions .kk-intake-accept {
+  background: linear-gradient(120deg, #b94a10, #e38b24);
+}
+.kk-intake-inbox {
+  border-top: 1px solid #dbc3ac;
+  max-height: 53vh;
+  overflow-y: auto;
+}
+.kk-intake-inbox > h2 {
+  font-size: 15px;
+  font-weight: 900;
+  padding: 14px 15px 0;
+}
+.kk-intake-inbox > p {
+  padding: 3px 15px 11px;
+  font-size: 11px;
+  opacity: 0.82;
+}
+.kk-intake-dock .kk-intake-error {
+  margin: 10px 12px;
+}
+.kk-expo-station-progress {
+  padding: 0;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.kk-expo-station-progress li {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid var(--kk-line);
+  border-radius: 9px;
+  font-size: 12px;
+}
+.kk-expo-station-progress li > span {
+  flex: 1;
+  font-weight: 800;
+}
+.kk-expo-station-progress li > strong {
+  font-size: 11px;
+}
+.kk-expo-station-progress li > small {
+  font-size: 11px;
+  color: var(--kk-muted);
+}
+@media (max-width: 700px) {
+  .kk-live-intake {
+    top: auto;
+    bottom: 14px;
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+  .kk-intake-dock {
+    max-height: 53vh;
+  }
+  .kk-intake-dock-summary {
+    gap: 5px;
+  }
+  .kk-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .kk-overview-card {
+    min-height: 130px;
+    padding: 12px;
+  }
+  .kk-overview-card strong {
+    font-size: 14px;
+  }
+  .mm-kitchen .kk-tools {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 390px) {
+  .kk-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kk-intake-dock-summary > strong {
+    min-width: 100px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kk-overview-card {
+    transition: none;
+  }
+}

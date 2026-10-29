@@ -267,6 +267,27 @@
       "when": 1793180000005,
       "tag": "0037_kitchen_paid_auto_route",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793180000006,
+      "tag": "0038_kitchen_live_service",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793286000000,
+      "tag": "0039_till_receipt_atelier",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793286000001,
+      "tag": "0040_reports_finance_read",
+      "breakpoints": true
     }
   ]
 }

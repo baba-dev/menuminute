@@ -23,8 +23,10 @@ export default async function AdminSecurityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Security & Audit Control</h1>
-        <p className="text-xs text-stone-400">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl dark:text-stone-100">
+          Security &amp; Audit Control
+        </h1>
+        <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
           Real-time rate limit unblocking, operator intervention trail, and security policy
           management.
         </p>

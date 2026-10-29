@@ -97,7 +97,7 @@ describe("server-only provider hub", () => {
                     {
                       id: "call_1",
                       type: "function",
-                      function: { name: "orders.summary", arguments: "{}" },
+                      function: { name: "orders_summary", arguments: "{}" },
                     },
                   ],
                 },
@@ -129,7 +129,7 @@ describe("server-only provider hub", () => {
             .calls[0]?.[1]?.body
         )
       ).tools[0].function.name
-    ).toBe("orders.summary");
+    ).toBe("orders_summary");
   });
   it("requires Cloudflare tool calls, maps scoped aliases, and completes a two-round exchange", async () => {
     const requests: Array<Record<string, unknown>> = [];
@@ -190,6 +190,140 @@ describe("server-only provider hub", () => {
     expect(fake).toHaveBeenCalledTimes(2);
   });
 
+  it("supports the verified NVIDIA Nemotron two-round function-call profile without changing internal tool authorization", async () => {
+    const requests: Array<Record<string, unknown>> = [];
+    const fake = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      requests.push(payload);
+      if (requests.length === 1)
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_nv_1",
+                      type: "function",
+                      function: { name: "menu_summary", arguments: "{}" },
+                    },
+                  ],
+                },
+              },
+            ],
+            usage: { prompt_tokens: 200, completion_tokens: 100, total_tokens: 300 },
+          }),
+          { headers: { "content-type": "application/json" } }
+        );
+      return completion({ content: "There are 2 synthetic menu drafts." });
+    }) as unknown as typeof fetch;
+    const hub = createProviderHub(
+      configured({
+        AI_NVIDIA_MODEL: "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        AI_NVIDIA_TOOLS_VERIFIED: "true",
+      }),
+      fake
+    );
+    const first = await hub.infer({
+      provider: "nvidia",
+      messages: user,
+      capability: "tools",
+      tools: [{ ...tool, name: "menu.summary" }],
+      maxOutputTokens: 600,
+      temperature: 0,
+    });
+    expect(requests[0]).toMatchObject({
+      model: "nvidia/nemotron-3.5-super-vl-120b-a12b",
+      max_tokens: 2048,
+      reasoning_effort: "none",
+      tool_choice: "auto",
+      tools: [{ function: { name: "menu_summary" } }],
+    });
+    expect(first).toMatchObject({
+      provider: "nvidia",
+      finishReason: "tool_calls",
+      toolCalls: [{ id: "call_nv_1", name: "menu.summary", arguments: {} }],
+    });
+    const final = await hub.infer({
+      provider: "nvidia",
+      messages: [
+        ...user,
+        { role: "assistant", content: first.content, toolCalls: first.toolCalls },
+        { role: "tool", toolCallId: "call_nv_1", content: '{"data":{"total":2}}' },
+      ],
+      capability: "text",
+      maxOutputTokens: 1024,
+      temperature: 0,
+    });
+    expect(final).toMatchObject({
+      finishReason: "stop",
+      content: "There are 2 synthetic menu drafts.",
+    });
+    expect(requests[1]).toMatchObject({
+      max_tokens: 1024,
+      reasoning_effort: "none",
+      messages: [
+        { role: "user" },
+        {
+          role: "assistant",
+          content: null,
+          tool_calls: [{ id: "call_nv_1", function: { name: "menu_summary", arguments: "{}" } }],
+        },
+        { role: "tool", tool_call_id: "call_nv_1" },
+      ],
+    });
+    expect(requests[1]).not.toHaveProperty("tools");
+    expect(requests[1]).not.toHaveProperty("tool_choice");
+    expect(fake).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects NVIDIA alias collisions and unknown model-generated tool names before executing tools", async () => {
+    const fake = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "tool_calls",
+                message: {
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "unapproved_tool",
+                      type: "function",
+                      function: { name: "admin_execute_sql", arguments: "{}" },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" } }
+        )
+    ) as unknown as typeof fetch;
+    const hub = createProviderHub(configured({ AI_NVIDIA_TOOLS_VERIFIED: "true" }), fake);
+    await expect(
+      hub.infer({
+        provider: "nvidia",
+        messages: user,
+        capability: "tools",
+        tools: [tool, { ...tool, name: "orders_summary" }],
+      })
+    ).rejects.toMatchObject({ code: "invalid_request" });
+    expect(fake).not.toHaveBeenCalled();
+    await expect(
+      hub.infer({
+        provider: "nvidia",
+        messages: user,
+        capability: "tools",
+        tools: [tool],
+      })
+    ).rejects.toMatchObject({ code: "invalid_response" });
+    expect(fake).toHaveBeenCalledTimes(1);
+  });
+
   it("retains NVIDIA null content for a tool-call replay while normalizing Cloudflare only", async () => {
     const payloads: Array<Record<string, unknown>> = [];
     const fake = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
@@ -211,7 +345,7 @@ describe("server-only provider hub", () => {
     });
     const messages = payloads[0]?.messages as Array<Record<string, unknown>>;
     expect(messages[1]?.content).toBeNull();
-    expect(messages[1]?.tool_calls).toBeDefined();
+    expect(messages[1]?.tool_calls).toMatchObject([{ function: { name: "orders_summary" } }]);
   });
 
   it("rejects Cloudflare alias collisions before a call and rejects unapproved returned aliases", async () => {

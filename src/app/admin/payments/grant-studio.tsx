@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   grantEndForPreset,
+  grantSubmissionEnd,
   PERMANENT_ACCESS_END,
   grantOverlaps,
   grantPresetDetails,
@@ -74,11 +75,16 @@ interface GrantStudioProps {
   onRevokeGrant: (id: string, reason: string) => Promise<GrantActionResult>;
 }
 const badgeClasses: Record<GrantStatus, string> = {
-  active: "border-emerald-700/70 bg-emerald-950 text-emerald-300",
-  expiring: "border-amber-700/70 bg-amber-950 text-amber-200",
-  scheduled: "border-sky-700/70 bg-sky-950 text-sky-200",
-  expired: "border-stone-700 bg-stone-800 text-stone-300",
-  revoked: "border-red-900 bg-red-950 text-red-300",
+  active:
+    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700/70 dark:bg-emerald-950 dark:text-emerald-300",
+  expiring:
+    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-700/70 dark:bg-amber-950 dark:text-amber-200",
+  scheduled:
+    "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-700/70 dark:bg-sky-950 dark:text-sky-200",
+  expired:
+    "border-stone-200 bg-stone-100 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300",
+  revoked:
+    "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300",
 };
 const statusNames: Record<GrantStatus, string> = {
   active: "Active",
@@ -176,14 +182,17 @@ export function GrantStudio({
   function changePreset(next: GrantPreset) {
     setPreset(next);
     const end = grantEndForPreset(next, new Date(startAt));
-    if (end) setEndAt(localDateTimeInput(end));
+    // A permanent term has no user-editable local end date. Its UTC
+    // sentinel is assigned on submission, not to an HTML date control.
+    if (next !== "permanent" && end) setEndAt(localDateTimeInput(end));
     setPaymentVerified(false);
   }
   function changeStart(next: string) {
     setStartAt(next);
     const start = new Date(next);
     const end = grantEndForPreset(preset, start);
-    if (end && Number.isFinite(end.getTime())) setEndAt(localDateTimeInput(end));
+    if (preset !== "permanent" && end && Number.isFinite(end.getTime()))
+      setEndAt(localDateTimeInput(end));
   }
   async function searchOrganizations(event: FormEvent) {
     event.preventDefault();
@@ -284,7 +293,7 @@ export function GrantStudio({
         return;
       }
       const start = new Date(startAt);
-      const end = new Date(endAt);
+      const end = grantSubmissionEnd(capability, preset, endAt);
       if (
         !Number.isFinite(start.getTime()) ||
         !Number.isFinite(end.getTime()) ||
@@ -299,10 +308,7 @@ export function GrantStudio({
         return;
       }
       issueStart = start.toISOString();
-      issueEnd =
-        capability === "kitchen.new" && preset === "permanent"
-          ? PERMANENT_ACCESS_END
-          : end.toISOString();
+      issueEnd = end.toISOString();
       const collides = selectedGrants.some(
         (grant) =>
           grant.capability === capability &&
@@ -438,10 +444,10 @@ export function GrantStudio({
           <p className="text-xs font-bold tracking-[.18em] text-orange-400 uppercase">
             Operator access desk
           </p>
-          <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-white">
+          <h2 className="font-display mt-1 text-2xl font-extrabold tracking-tight text-stone-900 dark:text-white">
             Feature access & trials
           </h2>
-          <p className="mt-2 max-w-2xl text-sm text-stone-400">
+          <p className="mt-2 max-w-2xl text-sm text-stone-500 dark:text-stone-400">
             Manage commercial product access by organization. Employee roles and outlet permissions
             stay separate.
           </p>
@@ -456,33 +462,33 @@ export function GrantStudio({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-orange-900/40 bg-gradient-to-br from-stone-900 to-orange-950/30 p-5">
+        <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-stone-900 to-orange-950/30 p-5 dark:border-orange-900/40">
           <div className="flex items-center gap-3">
             <UtensilsCrossed className="text-orange-400" aria-hidden="true" />
-            <h3 className="font-bold text-white">Online Ordering</h3>
-            <span className="rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-300 uppercase">
+            <h3 className="font-bold text-stone-900 dark:text-white">Online Ordering</h3>
+            <span className="rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-300">
               Grantable
             </span>
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-stone-300">
+          <p className="mt-3 text-xs leading-relaxed text-stone-700 dark:text-stone-300">
             Offer a trial, manually approved paid term, or launch incentive. Customers remain free
             to publish QR menus without this grant.
           </p>
         </div>
-        <div className="rounded-2xl border border-amber-900/40 bg-stone-900 p-5">
+        <div className="rounded-2xl border border-amber-900/40 bg-white p-5 dark:bg-stone-900">
           <div className="flex items-center gap-3">
-            <ChefHat className="text-amber-300" aria-hidden="true" />
-            <h3 className="font-bold text-white">Kitchen Pro</h3>
-            <span className="rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-300 uppercase">
+            <ChefHat className="text-amber-700 dark:text-amber-300" aria-hidden="true" />
+            <h3 className="font-bold text-stone-900 dark:text-white">Kitchen Pro</h3>
+            <span className="rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-300">
               Operator grantable
             </span>
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-stone-300">
+          <p className="mt-3 text-xs leading-relaxed text-stone-700 dark:text-stone-300">
             Grant seven-day trial or permanent, revocable Kitchen access. Live ticket routing
             remains disabled until the specific outlet passes readiness and receives an
             authenticated operator activation. Public paid checkout is not enabled.
           </p>
-          <details className="mt-3 text-xs text-stone-300">
+          <details className="mt-3 text-xs text-stone-700 dark:text-stone-300">
             <summary className="cursor-pointer font-semibold text-amber-200">
               Why is Kitchen Pro unavailable?
             </summary>
@@ -506,56 +512,68 @@ export function GrantStudio({
 
       <details
         open
-        className="rounded-2xl border border-stone-800 bg-stone-900/70 p-5 text-sm text-stone-300"
+        className="rounded-2xl border border-stone-200 bg-stone-900/70 p-5 text-sm text-stone-700 dark:border-stone-800 dark:text-stone-300"
       >
-        <summary className="flex cursor-pointer items-center gap-2 font-bold text-white">
+        <summary className="flex cursor-pointer items-center gap-2 font-bold text-stone-900 dark:text-white">
           <CircleHelp size={18} className="text-orange-400" aria-hidden="true" /> Admin tips · 4
           quick steps
         </summary>
         <ol className="mt-4 grid gap-3 text-xs leading-relaxed sm:grid-cols-2 lg:grid-cols-4">
           <li>
-            <strong className="block text-orange-300">1 · Find the restaurant</strong> Search by
-            outlet or organization name. The grant applies to the parent organization.
+            <strong className="block text-orange-700 dark:text-orange-300">
+              1 · Find the restaurant
+            </strong>{" "}
+            Search by outlet or organization name. The grant applies to the parent organization.
           </li>
           <li>
-            <strong className="block text-orange-300">2 · Choose a period</strong> Use a trial
-            preset or set custom dates. Paid terms require separate payment verification.
+            <strong className="block text-orange-700 dark:text-orange-300">
+              2 · Choose a period
+            </strong>{" "}
+            Use a trial preset or set custom dates. Paid terms require separate payment
+            verification.
           </li>
           <li>
-            <strong className="block text-orange-300">3 · Verify securely</strong> Enter your
-            password and current authenticator code inside the dialog for each change.
+            <strong className="block text-orange-700 dark:text-orange-300">
+              3 · Verify securely
+            </strong>{" "}
+            Enter your password and current authenticator code inside the dialog for each change.
           </li>
           <li>
-            <strong className="block text-orange-300">4 · Review access</strong> Audit history,
-            watch expiring access, and schedule a non-overlapping renewal.
+            <strong className="block text-orange-700 dark:text-orange-300">
+              4 · Review access
+            </strong>{" "}
+            Audit history, watch expiring access, and schedule a non-overlapping renewal.
           </li>
         </ol>
       </details>
 
-      <div className="rounded-2xl border border-stone-800 bg-stone-900/70 p-5">
+      <div className="rounded-2xl border border-stone-200 bg-stone-900/70 p-5 dark:border-stone-800">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-white">Grants & history</h3>
-            <p className="mt-1 text-xs text-stone-400">
+            <h3 className="text-base font-bold text-stone-900 dark:text-white">Grants & history</h3>
+            <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
               {total} recorded grants{filterOrg ? " · " + filterOrg.name : ""}. Historical entries
               are preserved.
             </p>
             {expiringCount > 0 && (
-              <p className="mt-2 flex items-center gap-2 text-xs text-amber-300">
+              <p className="mt-2 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
                 <Clock3 size={15} aria-hidden="true" /> {expiringCount} visible grants expire within
                 seven days.
               </p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="grant-status-filter" className="text-xs font-semibold text-stone-300">
+            <label
+              htmlFor="grant-status-filter"
+              className="text-xs font-semibold text-stone-700 dark:text-stone-300"
+            >
               Status
             </label>
             <select
               id="grant-status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-stone-700 bg-stone-950 p-2 text-xs text-white"
+              className="rounded-lg border border-stone-200 bg-stone-50 p-2 text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
             >
               <option value="all">All statuses</option>
               {Object.entries(statusNames).map(([value, label]) => (
@@ -568,7 +586,7 @@ export function GrantStudio({
               <button
                 type="button"
                 onClick={() => void loadHistory(1, null)}
-                className="rounded-lg border border-stone-700 px-3 py-2 text-xs text-stone-200 hover:bg-stone-800"
+                className="rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-200 hover:bg-stone-800 dark:border-stone-700"
               >
                 Clear organization filter
               </button>
@@ -577,7 +595,7 @@ export function GrantStudio({
               type="button"
               disabled={fetchingHistory}
               onClick={() => void loadHistory(1, filterOrg)}
-              className="rounded-lg border border-stone-700 px-3 py-2 text-xs text-stone-200 hover:bg-stone-800 disabled:opacity-50"
+              className="rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-200 hover:bg-stone-800 disabled:opacity-50 dark:border-stone-700"
             >
               Refresh
             </button>
@@ -602,12 +620,12 @@ export function GrantStudio({
             placeholder="Find history by restaurant name"
             value={historySearch}
             onChange={(event) => setHistorySearch(event.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-950 px-3 py-2 text-xs text-white"
+            className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
           />
           <button
             type="submit"
             disabled={searchingHistory}
-            className="rounded-lg border border-stone-700 px-4 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+            className="rounded-lg border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-900 hover:bg-stone-800 disabled:opacity-50 dark:border-stone-700 dark:text-white"
           >
             Find
           </button>
@@ -622,7 +640,7 @@ export function GrantStudio({
                   setHistoryTargets([]);
                   void loadHistory(1, org);
                 }}
-                className="rounded-lg border border-orange-900 bg-orange-950/40 px-3 py-2 text-xs text-orange-200 hover:bg-orange-950"
+                className="rounded-lg border border-orange-200 bg-orange-950/40 px-3 py-2 text-xs text-orange-200 hover:bg-orange-950 dark:border-orange-900"
               >
                 {org.name} {org.outlets.length > 0 ? "· " + org.outlets.slice(0, 2).join(", ") : ""}
               </button>
@@ -631,7 +649,7 @@ export function GrantStudio({
         )}
         <div className="mt-4 grid gap-3">
           {visible.length === 0 && (
-            <p className="rounded-xl border border-dashed border-stone-700 p-6 text-center text-sm text-stone-400">
+            <p className="rounded-xl border border-dashed border-stone-200 p-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400">
               No grants match the current view.
             </p>
           )}
@@ -640,12 +658,14 @@ export function GrantStudio({
             return (
               <article
                 key={grant.id}
-                className="rounded-xl border border-stone-800 bg-stone-950/70 p-4"
+                className="rounded-xl border border-stone-200 bg-stone-950/70 p-4 dark:border-stone-800"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-sm text-white">{grant.organizationName}</strong>
+                      <strong className="text-sm text-stone-900 dark:text-white">
+                        {grant.organizationName}
+                      </strong>
                       <span
                         className={
                           "rounded-full border px-2 py-0.5 text-[10px] font-bold " +
@@ -655,10 +675,10 @@ export function GrantStudio({
                         {statusNames[status]}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs font-semibold text-orange-300">
+                    <p className="mt-1 text-xs font-semibold text-orange-700 dark:text-orange-300">
                       {capabilityName(grant.capability)}
                     </p>
-                    <p className="mt-2 text-xs text-stone-400">
+                    <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
                       {formatDate(grant.startsAt)} – {formatDate(grant.endsAt)} ·{" "}
                       {grant.billingCurrency}
                     </p>
@@ -700,7 +720,7 @@ export function GrantStudio({
                         };
                         void loadHistory(1, org);
                       }}
-                      className="rounded-lg border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-800"
+                      className="rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 hover:bg-stone-800 dark:border-stone-700 dark:text-stone-300"
                     >
                       History
                     </button>
@@ -710,7 +730,7 @@ export function GrantStudio({
             );
           })}
         </div>
-        <div className="mt-4 flex items-center justify-between text-xs text-stone-400">
+        <div className="mt-4 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
           <span>
             Showing {grants.length} of {total} grants. Status filters apply to loaded records.
           </span>
@@ -719,7 +739,7 @@ export function GrantStudio({
               type="button"
               disabled={fetchingHistory}
               onClick={() => void loadHistory(page + 1, filterOrg, true)}
-              className="rounded-lg border border-stone-700 px-4 py-2 text-stone-200 hover:bg-stone-800 disabled:opacity-50"
+              className="rounded-lg border border-stone-200 px-4 py-2 text-stone-200 hover:bg-stone-800 disabled:opacity-50 dark:border-stone-700"
             >
               {fetchingHistory ? "Loading…" : "Load more history"}
             </button>
@@ -734,21 +754,24 @@ export function GrantStudio({
             aria-modal="true"
             aria-labelledby="grant-dialog-title"
             onKeyDown={dialogKeyDown}
-            className="mx-auto w-full max-w-2xl rounded-3xl border border-stone-700 bg-stone-900 p-5 shadow-2xl sm:p-7"
+            className="mx-auto w-full max-w-2xl rounded-3xl border border-stone-200 bg-white p-5 shadow-2xl sm:p-7 dark:border-stone-700 dark:bg-stone-900"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold tracking-widest text-orange-400 uppercase">
                   Feature access
                 </p>
-                <h3 id="grant-dialog-title" className="mt-1 text-xl font-extrabold text-white">
+                <h3
+                  id="grant-dialog-title"
+                  className="mt-1 text-xl font-extrabold text-stone-900 dark:text-white"
+                >
                   {mode === "issue"
                     ? "Grant organization feature access"
                     : mode === "renew"
                       ? "Extend access"
                       : "Revoke access"}
                 </h3>
-                <p className="mt-1 text-xs text-stone-400">
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                   {mode === "issue"
                     ? "Choose a restaurant, period and verified administrative reason."
                     : mode === "renew"
@@ -761,7 +784,7 @@ export function GrantStudio({
                 disabled={busy}
                 onClick={closeDialog}
                 aria-label="Close grant dialog"
-                className="rounded-lg p-2 text-stone-300 hover:bg-stone-800 disabled:opacity-50"
+                className="rounded-lg p-2 text-stone-700 hover:bg-stone-800 disabled:opacity-50 dark:text-stone-300"
               >
                 <X size={20} />
               </button>
@@ -769,8 +792,11 @@ export function GrantStudio({
 
             {mode === "issue" && (
               <div className="mt-5 space-y-5">
-                <div className="rounded-xl border border-stone-700 bg-stone-950/60 p-4">
-                  <label htmlFor="grant-org-search" className="text-sm font-bold text-white">
+                <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-950/60">
+                  <label
+                    htmlFor="grant-org-search"
+                    className="text-sm font-bold text-stone-900 dark:text-white"
+                  >
                     1. Find an organization by restaurant name
                   </label>
                   <form
@@ -785,12 +811,12 @@ export function GrantStudio({
                       placeholder="Search restaurant or organization"
                       maxLength={80}
                       autoComplete="off"
-                      className="min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-950 p-3 text-sm text-white"
+                      className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                     />
                     <button
                       type="submit"
                       disabled={searching}
-                      className="rounded-lg bg-stone-700 px-4 text-sm font-bold text-white disabled:opacity-50"
+                      className="rounded-lg bg-stone-700 px-4 text-sm font-bold text-stone-900 disabled:opacity-50 dark:text-white"
                     >
                       <Search size={18} aria-label={searching ? "Searching" : "Search"} />
                     </button>
@@ -809,11 +835,11 @@ export function GrantStudio({
                           aria-selected={selected?.id === org.id}
                           disabled={!org.active}
                           onClick={() => void selectOrganization(org)}
-                          className="flex w-full items-center justify-between gap-2 rounded-lg border border-stone-700 bg-stone-900 p-3 text-left text-xs text-white hover:border-orange-500 disabled:opacity-40"
+                          className="flex w-full items-center justify-between gap-2 rounded-lg border border-stone-200 bg-white p-3 text-left text-xs text-stone-900 hover:border-orange-500 disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900 dark:text-white"
                         >
                           <span>
                             <strong className="block text-sm">{org.name}</strong>
-                            <span className="mt-1 block text-stone-400">
+                            <span className="mt-1 block text-stone-500 dark:text-stone-400">
                               {org.outlets.join(", ") || "Organization match"}
                             </span>
                           </span>
@@ -823,7 +849,7 @@ export function GrantStudio({
                     </div>
                   )}
                   {selected && (
-                    <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-300">
+                    <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                       <CheckCircle2 size={17} /> Selected: {selected.name}
                     </p>
                   )}
@@ -832,7 +858,9 @@ export function GrantStudio({
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">2. Choose a capability and preset</p>
+                  <p className="text-sm font-bold text-stone-900 dark:text-white">
+                    2. Choose a capability and preset
+                  </p>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
                     {[
                       {
@@ -853,9 +881,15 @@ export function GrantStudio({
                             : "border-stone-700 bg-stone-950/40 hover:border-stone-500"
                         }`}
                       >
-                        <Icon className="mb-2 text-orange-300" size={20} aria-hidden="true" />
-                        <strong className="block text-sm text-white">{label}</strong>
-                        <span className="text-emerald-300">
+                        <Icon
+                          className="mb-2 text-orange-700 dark:text-orange-300"
+                          size={20}
+                          aria-hidden="true"
+                        />
+                        <strong className="block text-sm text-stone-900 dark:text-white">
+                          {label}
+                        </strong>
+                        <span className="text-emerald-700 dark:text-emerald-300">
                           {value === "kitchen.new"
                             ? "Trial or permanent operator grant"
                             : "Grantable"}
@@ -884,40 +918,40 @@ export function GrantStudio({
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-xs text-stone-400">
+                  <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
                     {grantPresetDetails[preset].description}
                     {capability === "kitchen.new" &&
                       " · An operator grant does not switch on stations until outlet activation."}
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <label className="text-xs font-semibold text-stone-300">
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Billing currency
                     <select
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value as "USD" | "INR")}
-                      className="mt-1 block w-full rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
+                      className="mt-1 block w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                     >
                       <option value="INR">INR</option>
                       <option value="USD">USD</option>
                     </select>
                   </label>
-                  <label className="text-xs font-semibold text-stone-300">
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Starts (your local time)
                     <input
                       type="datetime-local"
                       value={startAt}
                       onChange={(e) => changeStart(e.target.value)}
-                      className="mt-1 block w-full min-w-0 rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
+                      className="mt-1 block w-full min-w-0 rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                     />
                   </label>
                   {preset === "permanent" ? (
-                    <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 text-xs text-emerald-300">
+                    <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 text-xs text-emerald-700 dark:text-emerald-300">
                       <strong className="block">No scheduled expiration</strong>
                       Revocable access; disable active kitchen outlets before revocation.
                     </div>
                   ) : (
-                    <label className="text-xs font-semibold text-stone-300">
+                    <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                       Ends (your local time)
                       <input
                         type="datetime-local"
@@ -926,7 +960,7 @@ export function GrantStudio({
                           setEndAt(e.target.value);
                           setPreset("custom");
                         }}
-                        className="mt-1 block w-full min-w-0 rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
+                        className="mt-1 block w-full min-w-0 rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                       />
                     </label>
                   )}
@@ -962,21 +996,21 @@ export function GrantStudio({
             )}
 
             {mode !== "issue" && targetGrant && (
-              <div className="mt-5 rounded-xl border border-stone-700 bg-stone-950/60 p-4 text-sm text-stone-200">
-                <strong className="block text-white">
+              <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-200 dark:border-stone-700 dark:bg-stone-950/60">
+                <strong className="block text-stone-900 dark:text-white">
                   {targetGrant.organizationName} · {capabilityName(targetGrant.capability)}
                 </strong>
-                <p className="mt-2 text-xs text-stone-400">
+                <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
                   Current window ends {formatDate(targetGrant.endsAt)}
                 </p>
                 {mode === "renew" && (
-                  <label className="mt-4 block text-xs font-semibold text-stone-300">
+                  <label className="mt-4 block text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Renewal ends (your local time)
                     <input
                       type="datetime-local"
                       value={endAt}
                       onChange={(e) => setEndAt(e.target.value)}
-                      className="mt-2 block w-full rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
+                      className="mt-2 block w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                     />
                     <span className="mt-2 block font-normal text-stone-500">
                       The new grant starts at the old expiry, with no overlap or lost audit history.
@@ -987,7 +1021,7 @@ export function GrantStudio({
             )}
 
             <form className="mt-5 space-y-4" onSubmit={(event) => void submitAction(event)}>
-              <label className="block text-xs font-bold text-stone-300">
+              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300">
                 {mode === "issue" ? "3. Audit justification" : "Audit justification"}
                 <textarea
                   value={reason}
@@ -998,21 +1032,21 @@ export function GrantStudio({
                   rows={2}
                   required
                   placeholder="Document the approval, agreement or trial reason"
-                  className="mt-2 block w-full resize-y rounded-lg border border-stone-700 bg-stone-950 p-3 text-sm text-white"
+                  className="mt-2 block w-full resize-y rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                 />
               </label>
               <div className="rounded-xl border border-orange-900/50 bg-stone-950/70 p-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                <div className="flex items-center gap-2 text-sm font-bold text-stone-900 dark:text-white">
                   <LockKeyhole size={17} className="text-orange-400" />
                   {mode === "issue" ? "4. " : ""}Confirm this privileged action
                 </div>
-                <p className="mt-1 text-xs text-stone-400">
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                   Enter your account password and current six-digit authenticator code. Both are
                   verified through the existing protected security endpoint. The proof expires in
                   five minutes and works once.
                 </p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs font-semibold text-stone-300">
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Account password
                     <input
                       type="password"
@@ -1020,10 +1054,10 @@ export function GrantStudio({
                       autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full rounded-lg border border-stone-700 bg-stone-900 p-3 text-white"
+                      className="mt-1 block w-full rounded-lg border border-stone-200 bg-white p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white"
                     />
                   </label>
-                  <label className="text-xs font-semibold text-stone-300">
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Authenticator code
                     <input
                       type="text"
@@ -1034,7 +1068,7 @@ export function GrantStudio({
                       autoComplete="one-time-code"
                       value={totp}
                       onChange={(e) => setTotp(e.target.value)}
-                      className="mt-1 block w-full rounded-lg border border-stone-700 bg-stone-900 p-3 text-white"
+                      className="mt-1 block w-full rounded-lg border border-stone-200 bg-white p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-white"
                     />
                   </label>
                 </div>
@@ -1047,12 +1081,12 @@ export function GrantStudio({
                   {error}
                 </p>
               )}
-              <div className="flex flex-wrap justify-end gap-3 border-t border-stone-700 pt-4">
+              <div className="flex flex-wrap justify-end gap-3 border-t border-stone-200 pt-4 dark:border-stone-700">
                 <button
                   type="button"
                   onClick={closeDialog}
                   disabled={busy}
-                  className="rounded-lg border border-stone-700 px-4 py-3 text-xs font-semibold text-stone-300 hover:bg-stone-800"
+                  className="rounded-lg border border-stone-200 px-4 py-3 text-xs font-semibold text-stone-700 hover:bg-stone-800 dark:border-stone-700 dark:text-stone-300"
                 >
                   Cancel
                 </button>

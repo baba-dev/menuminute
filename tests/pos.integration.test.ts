@@ -7,6 +7,8 @@ import {
   posSubmit,
   posAttachOrder,
   posWorkspace,
+  posRecentPage,
+  posReceipt,
 } from "../src/modules/pos/service";
 import { getPool } from "../src/db";
 import {
@@ -246,5 +248,81 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
       pool.query("select payment_status from orders where id=$1", [sale.orderId])
     );
     expect(payment.rows[0]?.payment_status).toBe("unpaid");
+  });
+  it("staff-attested payments work with no finance gateway, are atomic and idempotent", async () => {
+    const f = await ready();
+    const payload = { ...input(f.menuId), markAsPaid: true, paymentMethod: "cash" };
+    const first = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, payload);
+    expect(first.paymentStatus).toBe("complete");
+    expect(first.paymentEvidence).toBe("staff_recorded");
+    const replay = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, payload);
+    expect(replay.saleId).toBe(first.saleId);
+    expect(replay.duplicate).toBe(true);
+    expect(replay.paymentStatus).toBe("complete");
+    expect(replay.paymentEvidence).toBe("staff_recorded");
+    const records = await admin(async (_db, pool) =>
+      pool.query(
+        "select o.payment_status,s.amount_minor,s.method,s.currency from orders o join pos_staff_payment_attestations s on s.order_id=o.id where o.id=$1",
+        [first.orderId]
+      )
+    );
+    expect(records.rows).toHaveLength(1);
+    expect(records.rows[0]).toMatchObject({
+      payment_status: "paid",
+      method: "cash",
+      amount_minor: "28000",
+      currency: f.outlet.currency,
+    });
+    const receipt = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, first.saleId);
+    expect(receipt.paymentStatus).toBe("complete");
+    expect(receipt.paymentEvidence).toBe("staff_recorded");
+    expect(receipt.items).toHaveLength(1);
+    expect(receipt.subtotalMinor).toBe("28000");
+    const register = await posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 0);
+    expect(register.items[0]?.saleId).toBe(first.saleId);
+    expect(register.items[0]?.paymentStatus).toBe("paid");
+    await expect(
+      posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        ...payload,
+        paymentMethod: "upi_external",
+      })
+    ).rejects.toMatchObject({ statusCode: 409 });
+    const other = await fixture();
+    await expect(
+      posReceipt(f.actor, other.outlet.organizationId, other.outlet.id, first.saleId)
+    ).rejects.toThrow();
+  });
+
+  it("keeps provisional unpaid bills separate from fiscal issue and paginates past 30", async () => {
+    const f = await ready();
+    const refs: string[] = [];
+    for (let i = 0; i < 32; i++) {
+      const sale = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        ...input(f.menuId),
+        key: crypto.randomUUID(),
+        customerName: "Pagination fixture " + i,
+      });
+      refs.push(sale.saleId);
+    }
+    const first = await posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 0);
+    const second = await posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 1);
+    const fourth = await posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 3);
+    expect(first.total).toBe(32);
+    expect(first.items).toHaveLength(10);
+    expect(second.items).toHaveLength(10);
+    expect(fourth.items).toHaveLength(2);
+    expect(fourth.hasMore).toBe(false);
+    expect(
+      new Set([...first.items, ...second.items, ...fourth.items].map((item) => item.saleId)).size
+    ).toBe(22);
+    const pending = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, refs[0]!);
+    expect(pending.paymentStatus).toBe("pending");
+    expect(pending.issuedDocumentId).toBe(null);
+    await expect(
+      posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, -1)
+    ).rejects.toThrow();
+    await expect(
+      posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 1001)
+    ).rejects.toThrow();
   });
 });
