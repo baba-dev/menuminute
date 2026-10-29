@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
@@ -28,9 +28,9 @@ import { ZReportPreview } from "./z-report-preview";
 
 export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData }) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
-  const [data] = useState(initialData);
-  const [activeTab, setActiveTab] = useState<ReportTab>(initialData.query.tab || "overview");
+  const [isPending, startTransition] = useTransition();
+  const data = initialData;
+  const activeTab: ReportTab = initialData.query.tab || "overview";
 
   const {
     outlet,
@@ -64,7 +64,6 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
   }
 
   function handleTabChange(tab: ReportTab) {
-    setActiveTab(tab);
     updateQuery({ tab });
   }
 
@@ -73,18 +72,18 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
   }${data.query.to ? `&to=${data.query.to}` : ""}`;
 
   return (
-    <div className="product reports-workspace" data-testid="reports-hub">
+    <div className="product reports-workspace" data-testid="reports-hub" aria-busy={isPending}>
       {/* ─── Editorial Hero Header (Matching Menu Studio & QR Studio) ─────── */}
       <header className="reports-hero">
         <div className="reports-hero-copy">
-          <span className="reports-eyebrow">MENUMINUTE / REPORTS & INTELLIGENCE</span>
+          <span className="reports-eyebrow">THE REPORTS ATELIER / INSIGHTS</span>
           <h1>
-            Every service
+            The story behind
             <br />
-            told in numbers.
+            every service.
           </h1>
           <p>
-            Operational clarity, menu engineering, cashier shift settlements, and kitchen SLAs for{" "}
+            A clearer view of sales, dishes, service and settlements at{" "}
             <strong>{outlet.name}</strong>.
           </p>
           <div className="reports-hero-meta">
@@ -101,14 +100,30 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <button
               type="button"
               className="reports-hero-primary"
-              onClick={() => handleTabChange("z-report")}
+              aria-pressed={activeTab === "z-report"}
+            onClick={() => handleTabChange("z-report")}
             >
-              <Printer size={16} aria-hidden="true" /> Print Daily Z-Report
+              <Printer size={16} aria-hidden="true" /> View Daily Sales Summary
             </button>
             <a href={exportUrl} download className="reports-hero-secondary">
               <Download size={16} aria-hidden="true" /> Export CSV
             </a>
           </div>
+        </div>
+        <div className="reports-hero-art" aria-hidden="true">
+          <span className="reports-art-ring" />
+          <span className="reports-art-paper">
+            <span className="reports-art-icon">
+              <BarChart3 size={30} strokeWidth={1.8} />
+            </span>
+            <span className="reports-art-line" />
+            <span className="reports-art-line reports-art-short" />
+            <span className="reports-art-bars">
+              <i /><i /><i /><i /><i />
+            </span>
+            <span className="reports-art-foot">MENU MINUTE / REPORTS</span>
+          </span>
+          <span className="reports-art-spark" />
         </div>
       </header>
 
@@ -122,6 +137,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
           <button
             type="button"
             className={`reports-tab-btn ${activeTab === "overview" ? "is-active" : ""}`}
+            aria-pressed={activeTab === "overview"}
             onClick={() => handleTabChange("overview")}
           >
             <BarChart3 size={16} aria-hidden="true" />
@@ -130,6 +146,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
           <button
             type="button"
             className={`reports-tab-btn ${activeTab === "menu" ? "is-active" : ""}`}
+            aria-pressed={activeTab === "menu"}
             onClick={() => handleTabChange("menu")}
           >
             <UtensilsCrossed size={16} aria-hidden="true" />
@@ -138,14 +155,16 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
           <button
             type="button"
             className={`reports-tab-btn ${activeTab === "till" ? "is-active" : ""}`}
+            aria-pressed={activeTab === "till"}
             onClick={() => handleTabChange("till")}
           >
             <Receipt size={16} aria-hidden="true" />
-            The Till & Shifts
+            Point of Sale & Shifts
           </button>
           <button
             type="button"
             className={`reports-tab-btn ${activeTab === "kitchen" ? "is-active" : ""}`}
+            aria-pressed={activeTab === "kitchen"}
             onClick={() => handleTabChange("kitchen")}
           >
             <ChefHat size={16} aria-hidden="true" />
@@ -157,7 +176,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             onClick={() => handleTabChange("z-report")}
           >
             <Printer size={16} aria-hidden="true" />
-            Daily Z-Report
+            Daily Sales Summary
           </button>
         </nav>
 
@@ -167,17 +186,17 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             {/* KPI Metrics Strip */}
             <div className="reports-kpis-grid">
               <KpiMetricCard
-                label="Gross Sales"
+                label="Billed Sales"
                 value={formatMoney(executive.grossSalesMinor, currency)}
                 delta={executive.deltas.grossSales}
-                subtext="Total billed value"
+                subtext="Eligible orders · includes unpaid"
                 icon={<DollarSign size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Net Revenue"
+                label="Sales Before Tax"
                 value={formatMoney(executive.netSalesMinor, currency)}
                 delta={executive.deltas.netSales}
-                subtext="Excluding taxes"
+                subtext="Before payment and refunds"
                 icon={<TrendingUp size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
@@ -306,10 +325,9 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <div className="reports-panel">
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
-                  <h2>Menu Engineering Kasavana-Smith Matrix</h2>
+                  <h2>Menu Performance Matrix</h2>
                   <p>
-                    Strategic categorization of menu items based on sales volume and revenue
-                    contribution.
+                    Revenue-based classification of demand; profitability requires verified dish costs.
                   </p>
                 </div>
               </div>
@@ -320,11 +338,17 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
         )}
 
         {/* ─── TAB 3: THE TILL & SHIFTS ────────────────────────────────────── */}
-        {activeTab === "till" && (
+        {activeTab === "till" && !tillReconciliation.available && (
+          <section className="reports-panel" role="status">
+            <h2>Financial settlement access required</h2>
+            <p>Only outlet owners and authorized managers can view restricted register totals.</p>
+          </section>
+        )}
+        {activeTab === "till" && tillReconciliation.available && (
           <div>
             <div className="reports-kpis-grid">
               <KpiMetricCard
-                label="Total Collected"
+                label="POS Tenders Recorded"
                 value={formatMoney(tillReconciliation.totalCollectedMinor, currency)}
                 subtext="Across all tenders"
                 icon={<DollarSign size={18} aria-hidden="true" />}
@@ -332,13 +356,13 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <KpiMetricCard
                 label="Total Refunded"
                 value={formatMoney(tillReconciliation.totalRefundedMinor, currency)}
-                subtext={`${tillReconciliation.recentRefunds.length} refunds logged`}
+                subtext="All refunds in selected period"
                 icon={<AlertCircle size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Net Cash Flow"
+                label="Net POS Collections"
                 value={formatMoney(tillReconciliation.netCashFlowMinor, currency)}
-                subtext="Settled revenue"
+                subtext="Recorded tenders less refunds"
                 icon={<ShieldCheck size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
@@ -394,9 +418,10 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                             </span>
                           </td>
                           <td>
-                            {new Date(s.openedAt).toLocaleTimeString([], {
+                            {new Date(s.openedAt).toLocaleTimeString("en-GB", {
                               hour: "2-digit",
                               minute: "2-digit",
+                              timeZone: outlet.timezone,
                             })}
                           </td>
                           <td>{formatMoney(s.openingFloatMinor, currency)}</td>
@@ -423,7 +448,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <div className="reports-panel">
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
-                  <h2>Settlement Methods Breakdown</h2>
+                  <h2>Recorded Settlement Methods</h2>
                   <p>Tenders accepted by volume and percentage share.</p>
                 </div>
               </div>
@@ -451,8 +476,19 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
         )}
 
         {/* ─── TAB 4: KITCHEN VELOCITY ────────────────────────────────────── */}
-        {activeTab === "kitchen" && (
+        {activeTab === "kitchen" && !kitchenVelocity.available && (
+          <section className="reports-panel" role="status">
+            <h2>Kitchen insights are restricted</h2>
+            <p>Outlet management access is required to view station-wide productivity reports.</p>
+          </section>
+        )}
+        {activeTab === "kitchen" && kitchenVelocity.available && (
           <div>
+            {kitchenVelocity.totalTickets === 0 && (
+              <p className="reports-empty-note" role="status">
+                No completed kitchen work during this period. No SLA is inferred.
+              </p>
+            )}
             <div className="reports-kpis-grid">
               <KpiMetricCard
                 label="Tickets Completed"
@@ -461,21 +497,21 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 icon={<ChefHat size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Average Prep Time"
+                label="Average Work Cycle"
                 value={formatMinutes(kitchenVelocity.avgPrepMinutes)}
                 subtext="Ticket to ready"
                 icon={<Clock size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Median Turnaround"
+                label="Median Work Cycle"
                 value={formatMinutes(kitchenVelocity.medianPrepMinutes)}
                 subtext="Middle order duration"
                 icon={<Flame size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="SLA Compliance"
+                label="Work Cycles Under 12m"
                 value={`${kitchenVelocity.sla.fastPct}%`}
-                subtext="Completed under 12 mins"
+                subtext="Share of completed station work"
                 icon={<ShieldCheck size={18} aria-hidden="true" />}
               />
             </div>
@@ -484,8 +520,8 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <div className="reports-panel">
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
-                  <h2>Service SLA Compliance</h2>
-                  <p>Speed distribution for order prep from ticket acceptance to completion.</p>
+                  <h2>Station Work Cycle Distribution</h2>
+                  <p>Queue-to-completion duration for station work, including waiting time.</p>
                 </div>
               </div>
 
@@ -533,7 +569,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <div className="reports-panel">
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
-                  <h2>Kitchen Station Load</h2>
+                  <h2>Actual Station Workload</h2>
                   <p>Volume and speed across individual culinary stations.</p>
                 </div>
               </div>
@@ -552,7 +588,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                       <span className="text-xs font-normal text-[var(--rep-muted)]">tickets</span>
                     </div>
                     <div className="mt-1 text-xs font-bold text-[var(--rep-brand)]">
-                      Avg speed: {formatMinutes(st.avgPrepMinutes)}
+                      Avg cycle: {formatMinutes(st.avgPrepMinutes)}
                     </div>
                   </div>
                 ))}
