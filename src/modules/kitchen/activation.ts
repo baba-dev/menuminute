@@ -161,6 +161,37 @@ export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand
   });
 }
 
+export const commercialLaunchSchema = z.object({
+  releaseSha: sha,
+  evidenceUrl: z.string().max(500).regex(/^https:\/\/github\.com\/baba-dev\/menuminute\/(issues|pull)\/[0-9]+/),
+  reason: z.string().trim().min(20).max(500),
+  key: z.uuid(),
+}).strict();
+
+export async function kitchenCommercialStatus(actor: AdminActor) {
+  return withActor(actorScope(actor), async tx => {
+    const result = await tx.execute<{enabled:boolean}>(
+      sql`SELECT app_private.kitchen_commerce_enabled() AS enabled`
+    );
+    return result.rows[0]?.enabled === true;
+  });
+}
+
+/** Global release approval occurs once, never during a customer's checkout. */
+export async function kitchenCommercialLaunch(actor: AdminActor, value: unknown) {
+  const input = commercialLaunchSchema.parse(value);
+  const running = await kitchenRunningReleaseSha();
+  if (!running || input.releaseSha !== running) throw new Error("Deployed release SHA does not match");
+  return withActor(actorScope(actor), async tx => {
+    const result = await tx.execute<{data:{enabled:boolean;releaseSha:string}}>(
+      sql`SELECT app_private.kitchen_commercial_launch(
+        ${input.releaseSha},${input.evidenceUrl},${input.reason},${input.key}
+      ) AS data`
+    );
+    return result.rows[0]?.data;
+  });
+}
+
 export function kitchenPilotFailureMessage(error: unknown) {
   if (error instanceof z.ZodError)
     return "Check the outlet, audit reason, release SHA and evidence URL.";
