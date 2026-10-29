@@ -299,7 +299,9 @@ export function GrantStudio({
         return;
       }
       issueStart = start.toISOString();
-      issueEnd = end.toISOString();
+      issueEnd = capability === "kitchen.new" && preset === "permanent"
+        ? PERMANENT_ACCESS_END
+        : end.toISOString();
       const collides = selectedGrants.some(
         (grant) =>
           grant.capability === capability &&
