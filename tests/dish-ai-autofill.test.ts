@@ -80,7 +80,11 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
     );
   });
   it("fills missing fields without replacing existing merchant descriptions or nutrition", () => {
-    const patch = applyDishAutofill(dish, candidate, "missing", companions);
+    const unverifiedDish = dishSchema.parse({
+      ...dish, nutrition: { calories: 500, verified: false },
+      safety: { ingredients: ["Homemade paneer"], allergens: [], verified: false },
+    });
+    const patch = applyDishAutofill(unverifiedDish, candidate, "missing", companions);
     expect(patch.description).toBe("My own recipe");
     expect(patch.nutrition).toMatchObject({ calories: 500, proteinGrams: 17, verified: false });
     expect(patch.safety).toMatchObject({
