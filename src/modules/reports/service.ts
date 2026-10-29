@@ -561,7 +561,9 @@ export async function getReportsWorkspace(
 
     // 7. Daily Z-Report
     const dailyZReport: DailyZReportData = {
-      reportNumber: `Z-${range.to.replace(/-/g, "")}-001`,
+      provisional: true,
+      financeAvailable: financialAccess,
+      reportNumber: `PREVIEW-${range.to.replace(/-/g, "")}`,
       businessDate: range.to,
       generatedAt: new Date().toISOString(),
       outletName: outlet.name,
@@ -570,19 +572,13 @@ export async function getReportsWorkspace(
       grossSalesMinor: curGross,
       netSalesMinor: curNet,
       taxCollectedMinor: Number(cur.tax_sales),
-      discountsMinor: 0,
-      refundsMinor: totalRefunded,
+      discountsMinor: null,
+      refundsMinor: financialAccess ? totalRefunded : null,
       orderCount: curOrders,
-      coversCount: cur.dine_in_orders + cur.pickup_orders,
+      coversCount: null,
       tenders: tillReconciliation.tenders,
       shifts,
-      taxBreakdown: [
-        {
-          rateLabel: "Standard Applicable Rate",
-          taxableMinor: curNet,
-          taxMinor: Number(cur.tax_sales),
-        },
-      ],
+      taxBreakdown: [],
       topDishes: classifiedDishes.slice(0, 5).map((d) => ({
         name: d.name,
         quantity: d.quantitySold,

@@ -378,7 +378,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
                   <h2>Shift & Register Reconciliation</h2>
-                  <p>Cashier float balancing, drawer counts, and closing variances.</p>
+                  <p>Cashier float balancing and all-channel settlements; fulfillment filter does not apply to finance.</p>
                 </div>
               </div>
 
@@ -600,7 +600,14 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
         {/* ─── TAB 5: DAILY Z-REPORT ──────────────────────────────────────── */}
         {activeTab === "z-report" && (
           <div className="py-4">
-            <ZReportPreview report={dailyZReport} />
+            {dateRange.from === dateRange.to ? (
+              <ZReportPreview report={dailyZReport} />
+            ) : (
+              <div className="reports-panel" role="status">
+                <h2>Select a single business day</h2>
+                <p>This provisional day summary cannot combine several dates into a Z-report.</p>
+              </div>
+            )}
           </div>
         )}
       </main>

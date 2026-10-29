@@ -907,3 +907,24 @@
 @media (prefers-reduced-motion: reduce) {
   .reports-workspace * { scroll-behavior: auto !important; transition: none !important; }
 }
+
+@media print {
+  .z-report-preview-toolbar {
+    display: none !important;
+  }
+  .reports-workspace {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .z-report-receipt {
+    background: #fff !important;
+    color: #111 !important;
+    border: none !important;
+  }
+  .z-report-receipt * {
+    color: #111 !important;
+  }
+  @page {
+    margin: 3mm;
+  }
+}

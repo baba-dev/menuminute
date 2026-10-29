@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { ForbiddenError } from "@/lib/errors";
 import { reportQuerySchema } from "@/modules/reports/contracts";
 import { exportReportCsv } from "@/modules/reports/service";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
@@ -11,11 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const outletHeader = request.headers.get("x-outlet-id");
-  const outlet = await getDefaultOrActiveRestaurant(
-    session.user.id,
-    outletHeader ?? session.activeOutletId
-  );
+  const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
 
   if (!outlet) {
     return new NextResponse("Outlet not found", { status: 404 });
@@ -51,6 +48,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
     console.error("[reports] Export failed", err);
     return new NextResponse("Failed to generate report export", { status: 500 });
   }

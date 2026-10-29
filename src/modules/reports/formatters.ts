@@ -37,9 +37,9 @@ export function formatMoneyAmount(
   minor: number | string | null | undefined,
   currency: string
 ): string {
-  if (minor == null) return "0.00";
+  if (minor == null) return "";
   const num = typeof minor === "string" ? Number(minor) : minor;
-  if (!Number.isFinite(num)) return "0.00";
+  if (!Number.isFinite(num)) return "";
   const dec = currencyDecimals(currency);
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: dec,
@@ -84,7 +84,9 @@ export function formatMinutes(minutes: number): string {
  */
 export function escapeCsvCell(cell: unknown): string {
   if (cell == null) return "";
-  const str = String(cell);
+  const raw = String(cell);
+  // Spreadsheet applications can execute untrusted formulas even in correctly quoted CSV.
+  const str = /^\\s*[=+@-]/u.test(raw) ? "'" + raw : raw;
   if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
     return `"${str.replace(/"/g, '""')}"`;
   }

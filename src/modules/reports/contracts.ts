@@ -188,6 +188,8 @@ export type KitchenVelocityReport = {
 // ─── Daily Z-Report ───────────────────────────────────────────────────────────
 
 export type DailyZReportData = {
+  provisional: true;
+  financeAvailable: boolean;
   reportNumber: string;
   businessDate: string;
   generatedAt: string;
@@ -197,10 +199,10 @@ export type DailyZReportData = {
   grossSalesMinor: number;
   netSalesMinor: number;
   taxCollectedMinor: number;
-  discountsMinor: number;
-  refundsMinor: number;
+  discountsMinor: number | null;
+  refundsMinor: number | null;
   orderCount: number;
-  coversCount: number;
+  coversCount: number | null;
   tenders: TenderSummary[];
   shifts: ShiftReconciliationRow[];
   taxBreakdown: {
