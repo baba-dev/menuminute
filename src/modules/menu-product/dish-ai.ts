@@ -103,16 +103,20 @@ export function applyDishAutofill(
         replace || !culinary?.servingTemp ? suggestion.culinary.servingTemp : culinary.servingTemp,
       pairingDishIds: chooseArray(culinary?.pairingDishIds ?? [], pairingIds),
     },
-    nutrition: !replace && nutrition?.verified
-      ? nutrition
-      : { ...(replace ? {} : nutrition), ...nextNutrition, verified: false },
-    safety: !replace && safety?.verified ? safety : {
-      ingredients: chooseArray(safety?.ingredients ?? [], suggestion.safety.ingredients),
-      allergens: chooseArray(safety?.allergens ?? [], suggestion.safety.allergens),
-      crossContact: chooseText(safety?.crossContact, suggestion.safety.crossContact),
-      verified: false,
-      verifiedFreeFrom: [],
-    },
+    nutrition:
+      !replace && nutrition?.verified
+        ? nutrition
+        : { ...(replace ? {} : nutrition), ...nextNutrition, verified: false },
+    safety:
+      !replace && safety?.verified
+        ? safety
+        : {
+            ingredients: chooseArray(safety?.ingredients ?? [], suggestion.safety.ingredients),
+            allergens: chooseArray(safety?.allergens ?? [], suggestion.safety.allergens),
+            crossContact: chooseText(safety?.crossContact, suggestion.safety.crossContact),
+            verified: false,
+            verifiedFreeFrom: [],
+          },
   };
 }
 
@@ -148,7 +152,11 @@ export const dishAutofillJsonSchema = objectSchema({
   }),
   safety: objectSchema({
     ingredients: { type: "array", items: stringProperty(60), maxItems: 30 },
-    allergens: { type: "array", items: { type: "string", enum: allergenEnum.options }, maxItems: 11 },
+    allergens: {
+      type: "array",
+      items: { type: "string", enum: allergenEnum.options },
+      maxItems: 11,
+    },
     crossContact: stringProperty(250),
   }),
   pairingNames: { type: "array", items: stringProperty(100), maxItems: 4 },
@@ -166,8 +174,8 @@ export function dishAutofillResponseFormat(provider: "cloudflare" | "nvidia", mo
       "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
     ]);
     return supported.has(model)
-      ? ({ type: "json_schema" as const, json_schema: dishAutofillJsonSchema })
-      : ({ type: "json_object" as const });
+      ? { type: "json_schema" as const, json_schema: dishAutofillJsonSchema }
+      : { type: "json_object" as const };
   }
   return { type: "json_object" as const };
 }
@@ -195,12 +203,18 @@ function numberOrNull(value: unknown): number | null {
   throw new Error("Invalid numerical estimate");
 }
 const allergenAliases: Record<string, string> = {
-  milk: "dairy", "milk products": "dairy", "tree nuts": "nuts",
-  groundnuts: "peanuts", "ground nuts": "peanuts",
+  milk: "dairy",
+  "milk products": "dairy",
+  "tree nuts": "nuts",
+  groundnuts: "peanuts",
+  "ground nuts": "peanuts",
 };
 function scanForbidden(value: unknown, depth = 0): void {
   if (depth > 8) throw new Error("Response nested too deeply");
-  if (Array.isArray(value)) { value.forEach((item) => scanForbidden(item, depth + 1)); return; }
+  if (Array.isArray(value)) {
+    value.forEach((item) => scanForbidden(item, depth + 1));
+    return;
+  }
   if (!value || typeof value !== "object") return;
   for (const [key, item] of Object.entries(value)) {
     if (/^(?:verified|verifiedFreeFrom|certified|allergenFree|glutenFree|freeFrom)$/i.test(key))
@@ -213,7 +227,10 @@ export type ParsedDishAutofill = { suggestion: DishAutofillSuggestion; recovered
  * categories and verification claims still fail closed. No second billable model call. */
 export function parseDishAutofillWithDiagnostics(raw: string): ParsedDishAutofill {
   if (raw.length > 12_000) throw new Error("Output exceeds size limit");
-  const text = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const text = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
   const original: unknown = JSON.parse(text);
   scanForbidden(original);
   const obj = record(original);
@@ -223,7 +240,9 @@ export function parseDishAutofillWithDiagnostics(raw: string): ParsedDishAutofil
   const nutrition = record(obj.nutrition ?? {});
   const safety = record(obj.safety ?? {});
   const numbers = ["calories", "proteinGrams", "carbsGrams", "fatGrams", "fiberGrams"] as const;
-  const normalizedNumbers = Object.fromEntries(numbers.map((key) => [key, numberOrNull(nutrition[key])]));
+  const normalizedNumbers = Object.fromEntries(
+    numbers.map((key) => [key, numberOrNull(nutrition[key])])
+  );
   const result = {
     description: stringOr(obj.description),
     dietary: list(obj.dietary).map((value) => stringOr(value).toLowerCase()),
@@ -233,8 +252,10 @@ export function parseDishAutofillWithDiagnostics(raw: string): ParsedDishAutofil
       chefNote: stringOr(culinary.chefNote),
       servingTemp: stringOr(culinary.servingTemp, "hot").toLowerCase(),
     },
-    nutrition: { ...normalizedNumbers, servingSize: nutrition.servingSize == null
-      ? null : stringOr(nutrition.servingSize) },
+    nutrition: {
+      ...normalizedNumbers,
+      servingSize: nutrition.servingSize == null ? null : stringOr(nutrition.servingSize),
+    },
     safety: {
       ingredients: list(safety.ingredients).map((value) => stringOr(value)),
       allergens: list(safety.allergens).map((value) => {
