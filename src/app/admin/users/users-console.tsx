@@ -88,6 +88,7 @@ export function UsersConsole({
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedUser, setSelectedUser] = useState<UserDetailPayload | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState<{
     text: string;
     type: "success" | "error";
@@ -118,7 +119,8 @@ export function UsersConsole({
   }
 
   async function handleToggleVerify(verified: boolean) {
-    if (!selectedUser) return;
+    if (!selectedUser || actionBusy) return;
+    setActionBusy(true);
     try {
       await onToggleVerification(selectedUser.user.id, verified);
       setSelectedUser({
@@ -129,17 +131,20 @@ export function UsersConsole({
       router.refresh();
     } catch (err: any) {
       setActionMessage({ text: err.message || "Action failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
   async function handleRevokeSessions() {
-    if (!selectedUser) return;
+    if (!selectedUser || actionBusy) return;
     if (
       !confirm(
         `Revoke all active sessions for ${selectedUser.user.email}? They will be logged out immediately.`
       )
     )
       return;
+    setActionBusy(true);
     try {
       await onRevokeSessions(selectedUser.user.id);
       setSelectedUser({ ...selectedUser, sessions: [] });
@@ -147,11 +152,14 @@ export function UsersConsole({
       router.refresh();
     } catch (err: any) {
       setActionMessage({ text: err.message || "Revoke failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
   async function handleUnlock2FA() {
-    if (!selectedUser) return;
+    if (!selectedUser || actionBusy) return;
+    setActionBusy(true);
     try {
       await onUnlockTwoFactor(selectedUser.user.id);
       if (selectedUser.twoFactor) {
@@ -166,17 +174,20 @@ export function UsersConsole({
       });
     } catch (err: any) {
       setActionMessage({ text: err.message || "Unlock failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
   async function handleToggleSuperAdmin(enable: boolean) {
-    if (!selectedUser) return;
+    if (!selectedUser || actionBusy) return;
     if (
       !confirm(
         `Are you sure you want to ${enable ? "grant" : "revoke"} Superadmin privileges for ${selectedUser.user.email}?`
       )
     )
       return;
+    setActionBusy(true);
     try {
       await onToggleSuperAdmin(selectedUser.user.id, enable);
       setSelectedUser({
@@ -187,6 +198,8 @@ export function UsersConsole({
       router.refresh();
     } catch (err: any) {
       setActionMessage({ text: err.message || "Action failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
@@ -336,7 +349,7 @@ export function UsersConsole({
 
       {/* User Management Modal */}
       {selectedUser && (
-        <AdminDialog title="Manage user account" onClose={() => setSelectedUser(null)} className="max-w-2xl p-6">
+        <AdminDialog title="Manage user account" busy={actionBusy} onClose={() => setSelectedUser(null)} className="max-w-2xl p-6">
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
               <div>
