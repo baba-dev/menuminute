@@ -299,18 +299,17 @@ export function GrantStudio({
         return;
       }
       issueStart = start.toISOString();
-      issueEnd = capability === "kitchen.new" && preset === "permanent"
-        ? PERMANENT_ACCESS_END
-        : end.toISOString();
+      issueEnd =
+        capability === "kitchen.new" && preset === "permanent"
+          ? PERMANENT_ACCESS_END
+          : end.toISOString();
       const collides = selectedGrants.some(
         (grant) =>
           grant.capability === capability &&
           grantOverlaps({ startsAt: issueStart, endsAt: issueEnd }, grant)
       );
       if (collides) {
-        setError(
-          "An overlapping access grant already exists. Revoke or finish that grant first."
-        );
+        setError("An overlapping access grant already exists. Revoke or finish that grant first.");
         return;
       }
     }
@@ -835,23 +834,31 @@ export function GrantStudio({
                 <div>
                   <p className="text-sm font-bold text-white">2. Choose a capability and preset</p>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    {([
-                      { value: "ordering.new" as const, label: "Online Ordering", Icon: UtensilsCrossed },
+                    {[
+                      {
+                        value: "ordering.new" as const,
+                        label: "Online Ordering",
+                        Icon: UtensilsCrossed,
+                      },
                       { value: "kitchen.new" as const, label: "Kitchen Pro", Icon: ChefHat },
-                    ]).map(({ value, label, Icon }) => (
+                    ].map(({ value, label, Icon }) => (
                       <button
                         type="button"
                         key={value}
                         aria-pressed={capability === value}
                         onClick={() => changeCapability(value)}
-                        className={`rounded-xl border p-3 text-left text-xs transition-colors ${capability === value
-                          ? "border-orange-500 bg-orange-950/40"
-                          : "border-stone-700 bg-stone-950/40 hover:border-stone-500"}`}
+                        className={`rounded-xl border p-3 text-left text-xs transition-colors ${
+                          capability === value
+                            ? "border-orange-500 bg-orange-950/40"
+                            : "border-stone-700 bg-stone-950/40 hover:border-stone-500"
+                        }`}
                       >
-                        <Icon className="mb-2 text-orange-300" size={20} aria-hidden="true"/>
+                        <Icon className="mb-2 text-orange-300" size={20} aria-hidden="true" />
                         <strong className="block text-sm text-white">{label}</strong>
                         <span className="text-emerald-300">
-                          {value === "kitchen.new" ? "Trial or permanent operator grant" : "Grantable"}
+                          {value === "kitchen.new"
+                            ? "Trial or permanent operator grant"
+                            : "Grantable"}
                         </span>
                       </button>
                     ))}
@@ -879,7 +886,8 @@ export function GrantStudio({
                   </div>
                   <p className="mt-2 text-xs text-stone-400">
                     {grantPresetDetails[preset].description}
-                    {capability === "kitchen.new" && " · An operator grant does not switch on stations until outlet activation."}
+                    {capability === "kitchen.new" &&
+                      " · An operator grant does not switch on stations until outlet activation."}
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
