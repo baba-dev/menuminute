@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminDialog } from "../admin-dialog";
+
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -332,11 +334,7 @@ export function UsersConsole({
 
       {/* User Management Modal */}
       {selectedUser && (
-        <div className="admin-modal-backdrop" onClick={() => setSelectedUser(null)}>
-          <div
-            className="admin-modal-content max-w-2xl p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <AdminDialog title="Manage user account" onClose={() => setSelectedUser(null)} className="max-w-2xl p-6">
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
               <div>
@@ -500,8 +498,7 @@ export function UsersConsole({
                 )}
               </div>
             </div>
-          </div>
-        </div>
+        </AdminDialog>
       )}
     </div>
   );

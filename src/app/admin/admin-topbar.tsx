@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { AdminAppearanceControl } from "./admin-appearance-control";
+import { AdminMobileNav } from "./admin-mobile-nav";
 import { Server, ShieldCheck, ChevronRight } from "lucide-react";
 
 interface AdminTopbarProps {
@@ -42,16 +43,16 @@ export function AdminTopbar({ actorName, actorEmail, isProd }: AdminTopbarProps)
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-stone-200/80 bg-white/95 px-4 backdrop-blur-sm sm:px-6 dark:border-stone-800 dark:bg-stone-900/95">
       {/* Breadcrumb Section */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs">
+      <div className="flex min-w-0 flex-1 items-center gap-2"><AdminMobileNav /><nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs">
         <span className="font-semibold text-stone-500 dark:text-stone-400">Admin</span>
         <ChevronRight className="h-3.5 w-3.5 text-stone-400 dark:text-stone-500" aria-hidden="true" />
-        <span className="font-bold text-stone-900 dark:text-stone-100" aria-current="page">
+        <span className="truncate font-bold text-stone-900 dark:text-stone-100" aria-current="page">
           {currentTitle}
         </span>
-      </nav>
+      </nav></div>
 
       {/* Top Actions: Environment, Theme Toggle, Operator Profile */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* Environment Badge */}
         <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[11px] font-medium dark:border-stone-800 dark:bg-stone-950">
           <Server className="h-3 w-3 text-stone-500 dark:text-stone-400" />

@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminDialog } from "../admin-dialog";
+
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, CheckCircle2, AlertTriangle, Eye, X, Store, Users, Shield } from "lucide-react";
@@ -298,17 +300,7 @@ export function OrgsConsole({
 
       {/* Organization Detail Modal */}
       {selectedOrg && (
-        <div
-          className="admin-modal-backdrop"
-          onClick={() => {
-            setSelectedOrg(null);
-            setShowSuspendPrompt(false);
-          }}
-        >
-          <div
-            className="admin-modal-content max-w-3xl p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <AdminDialog title="Manage organization" onClose={() => { setSelectedOrg(null); setShowSuspendPrompt(false); }} className="max-w-3xl p-6">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
               <div>
@@ -497,8 +489,7 @@ export function OrgsConsole({
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </AdminDialog>
       )}
     </div>
   );

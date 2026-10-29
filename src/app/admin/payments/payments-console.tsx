@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminDialog } from "../admin-dialog";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TrendingUp } from "lucide-react";
@@ -355,8 +357,7 @@ export function PaymentsConsole({
 
       {/* Edit Plan Modal */}
       {editingPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-md rounded-2xl border border-stone-700 bg-stone-900 p-6 shadow-2xl">
+        <AdminDialog title="Edit subscription plan" onClose={() => setEditingPlan(null)} className="max-w-md p-6">
             <h2 className="text-base font-bold text-white">Edit Plan: {editingPlan.displayName}</h2>
             <form onSubmit={handleSavePlan} className="mt-4 space-y-4 text-xs">
               <div>
@@ -417,8 +418,7 @@ export function PaymentsConsole({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </AdminDialog>
       )}
     </div>
   );
