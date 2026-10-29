@@ -37,9 +37,9 @@ const stateCopy: Record<KitchenPilotStatus["state"], string> = {
 
 function ReadinessLine({ label, passed, note }: { label: string; passed: boolean; note: string }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-800 py-3 text-sm">
-      <span className="text-stone-200">{label}</span>
-      <span className={passed ? "font-semibold text-emerald-300" : "font-semibold text-amber-300"}>
+    <li className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 py-3 text-sm dark:border-stone-800">
+      <span className="font-medium text-stone-700 dark:text-stone-200">{label}</span>
+      <span className={passed ? "font-semibold text-emerald-600 dark:text-emerald-300" : "font-semibold text-amber-600 dark:text-amber-300"}>
         {passed ? "Verified" : "Blocked"} · {note}
       </span>
     </li>
@@ -196,24 +196,25 @@ export function KitchenControlDesk({
 
   return (
     <div className="space-y-6">
-      <header className="rounded-3xl border border-amber-900/50 bg-gradient-to-br from-stone-900 via-stone-900 to-amber-950/30 p-6 sm:p-9">
-        <div className="flex items-center gap-3 text-orange-300">
+      <header className="admin-card border-amber-200 bg-gradient-to-br from-amber-50/60 via-white to-orange-50/40 p-6 dark:border-amber-900/50 dark:from-stone-900 dark:via-stone-900 dark:to-amber-950/30 sm:p-8">
+        <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400">
           <ChefHat size={24} aria-hidden="true" />
           <span className="text-xs font-bold tracking-[.2em] uppercase">
             Platform admin / Kitchen Pro
           </span>
         </div>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        <h1 className="font-display mt-3 text-2xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-3xl">
           The Kitchen Control Desk
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-300">
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-600 dark:text-stone-300">
           Request a seven-day controlled outlet pilot. Separate superadmin review, live station
           checks, release identity and a one-use password + authenticator confirmation are required.
           Installing this feature never switches on customer kitchens automatically.
         </p>
       </header>
-      <section className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-        <h2 className="text-lg font-bold">1 · Find an outlet</h2>
+
+      <section className="admin-card p-5">
+        <h2 className="font-display text-base font-bold text-stone-900 dark:text-white">1 · Find an outlet</h2>
         <form onSubmit={(e) => void handleSearch(e)} className="mt-3 flex flex-wrap gap-2">
           <label htmlFor="kitchen-outlet-search" className="sr-only">
             Restaurant or organization
@@ -225,61 +226,65 @@ export function KitchenControlDesk({
             placeholder="Search restaurant or organization"
             minLength={2}
             maxLength={80}
-            className="min-w-40 flex-1 rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm text-white"
+            className="admin-input min-w-40 flex-1 text-sm"
           />
           <button
             disabled={busy || term.trim().length < 2}
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-2xs hover:bg-orange-500 disabled:opacity-40"
           >
             <Search size={16} /> Find
           </button>
         </form>
         {targets.length > 0 && (
           <ul
-            className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-stone-700"
+            className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
             aria-label="Matching outlets"
           >
             {targets.map((target) => (
-              <li key={target.id} className="border-b border-stone-800 last:border-none">
+              <li key={target.id} className="border-b border-stone-200 last:border-none dark:border-stone-800">
                 <button
                   type="button"
                   onClick={() => void selectOutlet(target)}
                   disabled={busy}
-                  className="w-full p-3 text-left text-sm hover:bg-stone-800 disabled:opacity-50"
+                  className="w-full p-3 text-left text-sm hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50"
                 >
-                  <strong className="block text-white">{target.name}</strong>
-                  <span className="text-stone-400">{target.organizationName}</span>
+                  <strong className="block text-stone-900 dark:text-white">{target.name}</strong>
+                  <span className="text-stone-500 dark:text-stone-400">{target.organizationName}</span>
                 </button>
               </li>
             ))}
           </ul>
         )}
         {outlet && (
-          <p className="mt-3 text-sm text-orange-300">
+          <p className="mt-3 text-sm font-semibold text-orange-600 dark:text-orange-400">
             Selected: {outlet.name} · {outlet.organizationName}
           </p>
         )}
       </section>
+
       {message && (
         <div
           role={message.error ? "alert" : "status"}
           className={
             message.error
-              ? "rounded-xl border border-red-800 bg-red-950 p-4 text-sm text-red-200"
-              : "rounded-xl border border-emerald-900 bg-emerald-950/50 p-4 text-sm text-emerald-200"
+              ? "rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200"
+              : "rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/60 dark:text-emerald-200"
           }
         >
           {message.text}
         </div>
       )}
+
       {status && (
         <>
-          <section className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <section className="admin-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3 dark:border-stone-800">
               <div>
-                <h2 className="text-lg font-bold">2 · Readiness & release identity</h2>
-                <p className="mt-1 text-sm text-stone-400">
+                <h2 className="font-display text-base font-bold text-stone-900 dark:text-white">
+                  2 · Readiness &amp; release identity
+                </h2>
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                   {stateCopy[status.state]} · revision {status.revision}
                 </p>
               </div>
@@ -287,7 +292,7 @@ export function KitchenControlDesk({
                 type="button"
                 disabled={busy}
                 onClick={() => void refresh()}
-                className="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-4 py-2 text-xs font-bold hover:bg-stone-800 disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 shadow-2xs hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700 disabled:opacity-40"
               >
                 <RefreshCw size={14} /> Refresh
               </button>
@@ -334,13 +339,13 @@ export function KitchenControlDesk({
                 note={runningSha ? runningSha.slice(0, 12) : "Unavailable"}
               />
             </ul>
-            <div className="mt-5 rounded-xl border border-amber-900/60 bg-amber-950/30 p-4 text-xs leading-6 text-amber-200">
+            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
               <AlertTriangle className="mr-2 inline" size={15} aria-hidden="true" />
               Independent security/accessibility review, off-host backup and restore, load/failure
               testing, shared ERP measurements and an operator-authorized rollout require external
               evidence. A GitHub link is an operator attestation, not automatic verification.
               <a
-                className="ml-2 font-bold underline"
+                className="ml-2 font-bold underline text-amber-950 dark:text-amber-200"
                 href="https://github.com/baba-dev/menuminute/issues/76"
                 rel="noreferrer"
                 target="_blank"
@@ -349,21 +354,24 @@ export function KitchenControlDesk({
               </a>
             </div>
           </section>
-          <section className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="text-orange-300" size={20} />
-              <h2 className="text-lg font-bold">3 · Reviewed operator action</h2>
+
+          <section className="admin-card p-5">
+            <div className="flex items-center gap-2 border-b border-stone-200 pb-3 dark:border-stone-800">
+              <ShieldCheck className="text-orange-600 dark:text-orange-400" size={20} />
+              <h2 className="font-display text-base font-bold text-stone-900 dark:text-white">
+                3 · Reviewed operator action
+              </h2>
             </div>
-            <p className="mt-2 text-sm text-stone-400">
+            <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
               Requestor and approver must be different superadmins. Approval expires after 24 hours.
               Only one reviewed outlet may be activated per command; no public Kitchen subscription
               is unlocked.
             </p>
             <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-4">
-              <label className="block text-sm font-semibold">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                 Action
                 <select
-                  className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-white"
+                  className="admin-input mt-1"
                   value={selectedAction}
                   onChange={(e) => setAction(e.target.value as Action)}
                 >
@@ -374,7 +382,7 @@ export function KitchenControlDesk({
                   ))}
                 </select>
               </label>
-              <label className="block text-sm font-semibold">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                 Full release SHA
                 <input
                   value={releaseSha}
@@ -382,10 +390,10 @@ export function KitchenControlDesk({
                   spellCheck={false}
                   placeholder="Exact 40-character Git SHA"
                   maxLength={40}
-                  className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 font-mono text-xs text-white"
+                  className="admin-input mt-1 font-mono text-xs"
                 />
               </label>
-              <label className="block text-sm font-semibold">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                 GitHub release evidence URL
                 <input
                   value={evidenceUrl}
@@ -393,10 +401,10 @@ export function KitchenControlDesk({
                   type="url"
                   maxLength={500}
                   placeholder="https://github.com/baba-dev/menuminute/issues/76"
-                  className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm text-white"
+                  className="admin-input mt-1"
                 />
               </label>
-              <label className="block text-sm font-semibold">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                 Operator justification
                 <textarea
                   value={reason}
@@ -406,11 +414,11 @@ export function KitchenControlDesk({
                   minLength={10}
                   maxLength={500}
                   placeholder="Explain evidence reviewed and action justified"
-                  className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm text-white"
+                  className="admin-input mt-1 resize-y"
                 />
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm font-semibold">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                   Account password
                   <input
                     type="password"
@@ -418,10 +426,10 @@ export function KitchenControlDesk({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm text-white"
+                    className="admin-input mt-1"
                   />
                 </label>
-                <label className="block text-sm font-semibold">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
                   Authenticator code
                   <input
                     inputMode="numeric"
@@ -431,7 +439,7 @@ export function KitchenControlDesk({
                     onChange={(e) => setTotp(e.target.value)}
                     required
                     maxLength={6}
-                    className="mt-2 w-full rounded-xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm text-white"
+                    className="admin-input mt-1"
                   />
                 </label>
               </div>
@@ -444,12 +452,12 @@ export function KitchenControlDesk({
                   !password ||
                   !/^\d{6}$/.test(totp)
                 }
-                className="w-full rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-5 py-3 font-display font-bold text-white shadow-2xs hover:from-orange-500 hover:to-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? "Verifying…" : names[selectedAction]}
               </button>
               {!allowed && (
-                <p className="text-xs text-amber-300" role="note">
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300" role="note">
                   This action is not permitted in the current state. Refresh readiness or obtain
                   independent approval.
                 </p>
