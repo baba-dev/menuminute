@@ -1,6 +1,7 @@
 # Dish AI Autofill — production behavior and operator runbook
 
 ## Runtime contract
+
 - Private, authenticated, outlet-scoped menu editor only. A dish must already be saved to the selected menu before AI is charged.
 - Cloudflare's explicitly supported Llama JSON-schema models use `response_format.type=json_schema`. Other configured Cloudflare models and the configured NVIDIA NIM use `json_object`, which may be unsupported by a particular model: explicit provider errors are not retried without constraints.
 - The model's text is not trusted. Strict Zod validation follows deterministic recovery of safe typos (numbers with `kcal` / `g`, casing, known milk/tree-nut aliases, optional sections). Unknown dietary claims, allergen values, verification flags, malformed or excessive output fail closed.
@@ -10,6 +11,7 @@
 - Generated content never publishes automatically. Commerce fields (price, image, status, variants, modifiers, schedules) are not model-controlled.
 
 ## NVIDIA configuration
+
 `AI_NVIDIA_ENABLED=false` is currently the known server setting. This is **why NVIDIA does not appear as an enabled option**. The new UI displays its disabled reason, but code cannot change server secrets or approve commercial licensing.
 
 Only after verifying provider rights and model compatibility, configure in the existing restricted `/etc/menuminute/web.env`:
@@ -28,6 +30,7 @@ Do **not** activate the commercial approval flag without an actual reviewed enti
 Restart only after configuration validation, and confirm `menuminute-web` is healthy. Never paste provider tokens into GitHub issues, logs, or client pages.
 
 ## Verification
+
 1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, ARM64 production build and browser CI before merge.
 2. Sign in as a merchant writer, verify the authenticated GET `/api/catalog/dish-autofill?menuId=...` lists Cloudflare as configured and NVIDIA with a disabled reason. Cross-outlet access must be denied.
 3. Attempt autofill on an unsaved dish ID: must reject before reaching the provider.
@@ -39,6 +42,7 @@ Restart only after configuration validation, and confirm `menuminute-web` is hea
 9. For NVIDIA, use an approved, configured model and conduct a live provider smoke test before claiming operational readiness. Configuration presence alone is not a live network/entitlement check.
 
 ## Monitoring and known limitations
+
 - The route emits safe fields such as provider and invalid field names; never log prompts, API keys or raw generated output.
 - A request killed after an atomic quota reservation may hold one success slot until the one-hour TTL. Attempts remain accounted because provider usage may have occurred.
 - The client requests a model's **configured availability** only, not an authenticated remote-health guarantee. Provider API outages and entitlement rejection remain possible.
