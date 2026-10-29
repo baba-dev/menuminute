@@ -18,6 +18,7 @@ import {
   LoaderCircle,
   ArrowRight,
   ClipboardList,
+  Maximize2,
 } from "lucide-react";
 import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
 import { RubberStamp } from "@/components/ui/tactile-elements";
@@ -409,6 +410,17 @@ export function KitchenBoard({
               disabled={connection === "revoked"}
             >
               <RefreshCw size={17} aria-hidden="true" /> Sync
+            </button>
+            <button type="button" className="kk-tool" title="Toggle fullscreen service mode"
+              onClick={() => {
+                if (document.fullscreenElement) {
+                  void document.exitFullscreen().catch(() => setError("Fullscreen exit was blocked."));
+                } else {
+                  void document.documentElement.requestFullscreen().catch(() =>
+                    setError("Fullscreen is unavailable on this device."));
+                }
+              }}>
+              <Maximize2 size={17} aria-hidden="true" /> Fullscreen
             </button>
             <ThemeControl />
             <Link href="/dashboard/orders" className="kk-tool kk-return">
