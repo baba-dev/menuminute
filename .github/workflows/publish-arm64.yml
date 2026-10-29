@@ -2,6 +2,8 @@ name: Publish verified ARM64 artifact
 
 # A successful same-repository main CI run is the only source of release bytes.
 # Download the exact artifact from its run ID; never rebuild on publisher/VPS.
+# workflow_run uses the default-branch SHA as github.sha: skip CI completions
+# already superseded before dispatch (keep the later live-main rechecks).
 on:
   workflow_run:
     workflows: [CI]
@@ -16,7 +18,8 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
           github.event.workflow_run.head_branch == 'main' &&
-          github.event.workflow_run.head_repository.full_name == github.repository }}
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          github.event.workflow_run.head_sha == github.sha }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
