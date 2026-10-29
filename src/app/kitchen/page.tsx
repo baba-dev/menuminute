@@ -5,6 +5,9 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { KitchenBoard } from "./kitchen-board";
+import { KitchenIntake } from "./kitchen-intake";
+import { withOutlet } from "@/modules/tenancy/service";
+import { sql } from "drizzle-orm";
 import { KitchenAvailabilityPanel } from "./kitchen-availability-panel";
 import { kitchenAvailableDishes } from "@/modules/hospitality/service";
 import { ForbiddenError } from "@/lib/errors";
@@ -43,6 +46,19 @@ export default async function KitchenPage() {
     );
   }
   const canManage = await kitchenCanManage(actor, outlet.id);
+  const kitchenOperational = canManage && await withOutlet(actor, outlet.id, "orders.read", async tx => {
+    const result = await tx.execute<{active:boolean}>(sql`
+      SELECT COALESCE(s.enabled,false) AND
+        EXISTS(SELECT 1 FROM entitlement_grants e
+          WHERE e.organization_id=${outlet.organizationId}
+            AND e.capability='kitchen.new' AND e.revoked_at IS NULL
+            AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp())
+        AND NOT EXISTS(SELECT 1 FROM kitchen_pilot_outlets p
+          WHERE p.outlet_id=${outlet.id} AND p.state='draining')
+      AS active FROM kitchen_outlet_settings s WHERE s.outlet_id=${outlet.id}
+    `);
+    return result.rows[0]?.active === true;
+  });
   const dishList: Array<{ id: string; name: string }> = [];
   if (canManage) {
     const menus = (await listMenus(actor, outlet.id)).filter(
@@ -88,6 +104,9 @@ export default async function KitchenPage() {
         organizationId={outlet.organizationId}
         outletId={outlet.id}
       />
+      {kitchenOperational && (
+        <KitchenIntake organizationId={outlet.organizationId} outletId={outlet.id} />
+      )}
       <KitchenBoard
         organizationId={outlet.organizationId}
         outletId={outlet.id}
