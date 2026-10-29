@@ -39,10 +39,11 @@ export default async function OrdersPage() {
       const result = await tx.execute<{ active: boolean }>(
         sql`SELECT app_private.kitchen_primary_workspace(${outlet.id}) AS active`
       );
-      return result.rows[0]?.active === true && await (async () => {
-        const manager = await tx.execute<{ allowed: boolean }>(sql`SELECT app_private.can_outlet(${outlet.id},\'outlet.manage\') AS allowed`);
-        return manager.rows[0]?.allowed === true;
-      })();
+      if (result.rows[0]?.active !== true) return false;
+      const manager = await tx.execute<{ allowed: boolean }>(
+        sql`SELECT app_private.can_outlet(${outlet.id}, 'outlet.manage') AS allowed`
+      );
+      return manager.rows[0]?.allowed === true;
     }
   ).catch(() => false);
   if (kitchenPrimary) redirect("/kitchen");
