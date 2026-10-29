@@ -324,49 +324,81 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
   });
   it("receives pending customer-menu orders in POS, accepts once, links one sale and lists history", async () => {
     const f = await ready();
-    await admin(async (_db,pool)=>applyEntitlement(pool,{
-      key:crypto.randomUUID(),organizationId:f.outlet.organizationId,operator:"pos-inbox-test",
-      reason:"Unified customer intake integration",action:"grant",capability:"ordering.new",
-      billingCurrency:"USD",startsAt:new Date(Date.now()-60000).toISOString(),
-      endsAt:new Date(Date.now()+3600000).toISOString(),
-    }));
+    await admin(async (_db, pool) =>
+      applyEntitlement(pool, {
+        key: crypto.randomUUID(),
+        organizationId: f.outlet.organizationId,
+        operator: "pos-inbox-test",
+        reason: "Unified customer intake integration",
+        action: "grant",
+        capability: "ordering.new",
+        billingCurrency: "USD",
+        startsAt: new Date(Date.now() - 60000).toISOString(),
+        endsAt: new Date(Date.now() + 3600000).toISOString(),
+      })
+    );
     const guest = await submitGuestOrder(f.outlet.publicId, {
-      clientSubmissionKey:crypto.randomUUID(),quotedTotalMinor:12500,
-      fulfillmentMode:"dine_in",items:[{dishId:"plate",quantity:1,selectedAddOns:[]}],
+      clientSubmissionKey: crypto.randomUUID(),
+      quotedTotalMinor: 12500,
+      fulfillmentMode: "dine_in",
+      items: [{ dishId: "plate", quantity: 1, selectedAddOns: [] }],
     });
-    const initial = await posIncomingOrders(f.actor,f.outlet.organizationId,f.outlet.id);
-    const pending = initial.orders.find(order=>order.orderId===guest.orderId);
-    expect(pending).toMatchObject({source:"guest_menu",status:"pending",version:1});
-    const input={key:crypto.randomUUID(),orderId:guest.orderId,expectedVersion:1};
-    const accepted=await posAcceptCustomerOrder(f.actor,f.outlet.organizationId,f.outlet.id,input);
+    const initial = await posIncomingOrders(f.actor, f.outlet.organizationId, f.outlet.id);
+    const pending = initial.orders.find((order) => order.orderId === guest.orderId);
+    expect(pending).toMatchObject({ source: "guest_menu", status: "pending", version: 1 });
+    const input = { key: crypto.randomUUID(), orderId: guest.orderId, expectedVersion: 1 };
+    const accepted = await posAcceptCustomerOrder(
+      f.actor,
+      f.outlet.organizationId,
+      f.outlet.id,
+      input
+    );
     expect(accepted.orderId).toBe(guest.orderId);
     expect(accepted.saleId).toBeTruthy();
-    const retry=await posAcceptCustomerOrder(f.actor,f.outlet.organizationId,f.outlet.id,input);
+    const retry = await posAcceptCustomerOrder(
+      f.actor,
+      f.outlet.organizationId,
+      f.outlet.id,
+      input
+    );
     expect(retry.saleId).toBe(accepted.saleId);
-    const after=await posIncomingOrders(f.actor,f.outlet.organizationId,f.outlet.id);
-    expect(after.orders.some(order=>order.orderId===guest.orderId)).toBe(false);
-    const register=await posOrderRegister(f.actor,f.outlet.organizationId,f.outlet.id,{
-      period:"all",source:"guest_menu",search:String(guest.orderNumber)
+    const after = await posIncomingOrders(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(after.orders.some((order) => order.orderId === guest.orderId)).toBe(false);
+    const register = await posOrderRegister(f.actor, f.outlet.organizationId, f.outlet.id, {
+      period: "all",
+      source: "guest_menu",
+      search: String(guest.orderNumber),
     });
-    expect(register.items.some(row=>row.orderId===guest.orderId)).toBe(true);
-    const recorded=await admin(async (_db,pool)=>pool.query(
-      "select o.status,o.intake_source,count(s.id)::int as sales from orders o left join pos_sales s on s.order_id=o.id where o.id=$1 group by o.id",
-      [guest.orderId]));
-    expect(recorded.rows[0]).toMatchObject({status:"accepted",intake_source:"guest_menu",sales:1});
+    expect(register.items.some((row) => row.orderId === guest.orderId)).toBe(true);
+    const recorded = await admin(async (_db, pool) =>
+      pool.query(
+        "select o.status,o.intake_source,count(s.id)::int as sales from orders o left join pos_sales s on s.order_id=o.id where o.id=$1 group by o.id",
+        [guest.orderId]
+      )
+    );
+    expect(recorded.rows[0]).toMatchObject({
+      status: "accepted",
+      intake_source: "guest_menu",
+      sales: 1,
+    });
   });
   it("counts staff-recorded paid sales once on the outlet-local day without fiscal activation", async () => {
-    const f=await ready();
-    const paid=await posSubmit(f.actor,f.outlet.organizationId,f.outlet.id,{
-      ...input(f.menuId),markAsPaid:true,paymentMethod:"cash" as const
+    const f = await ready();
+    const paid = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      ...input(f.menuId),
+      markAsPaid: true,
+      paymentMethod: "cash" as const,
     });
     expect(paid.status).toBe("accepted");
-    const kpis=await posDailyKpis(f.actor,f.outlet.organizationId,f.outlet.id);
+    const kpis = await posDailyKpis(f.actor, f.outlet.organizationId, f.outlet.id);
     expect(kpis.totalOrders).toBeGreaterThanOrEqual(1);
     expect(BigInt(kpis.totalSalesMinor)).toBeGreaterThanOrEqual(28000n);
-    const gate=await admin(async (_db,pool)=>pool.query(
-      "select count(*)::int as n from pos_finance_gates where outlet_id=$1 and payments_enabled=true",
-      [f.outlet.id]));
+    const gate = await admin(async (_db, pool) =>
+      pool.query(
+        "select count(*)::int as n from pos_finance_gates where outlet_id=$1 and payments_enabled=true",
+        [f.outlet.id]
+      )
+    );
     expect(gate.rows[0]?.n).toBe(0);
   });
-
 });

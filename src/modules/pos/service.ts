@@ -232,10 +232,13 @@ export type PosIncomingOrder = {
 };
 
 export async function posIncomingOrders(
-  actor: Actor, organizationId: string, outletId: string
+  actor: Actor,
+  organizationId: string,
+  outletId: string
 ): Promise<{ orders: PosIncomingOrder[]; overflow: boolean }> {
   await posContext(actor, organizationId, outletId);
-  const result = await posCall(actor, outletId, (run) => run(sql`
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`
     select o.id as "orderId",o.order_number as "orderNumber",o.version,
       o.intake_source as source,o.customer_name as "customerName",
       case when t.id is not null then coalesce(t.label,'Table '||t.table_number) else null end as "servicePoint",
@@ -252,47 +255,92 @@ export async function posIncomingOrders(
       and o.intake_source in ('guest_menu','online')
       and app_private.can_outlet(${outletId},'orders.read')
     order by o.created_at,o.id limit 51
-  `)) as { rows: PosIncomingOrder[] };
-  return { orders: result.rows.slice(0,50), overflow: result.rows.length>50 };
+  `)
+  )) as { rows: PosIncomingOrder[] };
+  return { orders: result.rows.slice(0, 50), overflow: result.rows.length > 50 };
 }
 
-
-export const posRegisterQuerySchema = z.object({
-  period: z.enum(["today","week","all"]).default("today"),
-  source: z.enum(["all","staff_pos","guest_menu","online","unknown"]).default("all"),
-  status: z.enum(["all","pending","accepted","preparing","ready","served",
-    "collected","cancelled","rejected","expired"]).default("all"),
-  payment: z.enum(["all","paid","unpaid","voided"]).default("all"),
-  search: z.string().trim().max(80).default(""),
-  cursor: z.string().max(400).optional(),
-}).strict();
+export const posRegisterQuerySchema = z
+  .object({
+    period: z.enum(["today", "week", "all"]).default("today"),
+    source: z.enum(["all", "staff_pos", "guest_menu", "online", "unknown"]).default("all"),
+    status: z
+      .enum([
+        "all",
+        "pending",
+        "accepted",
+        "preparing",
+        "ready",
+        "served",
+        "collected",
+        "cancelled",
+        "rejected",
+        "expired",
+      ])
+      .default("all"),
+    payment: z.enum(["all", "paid", "unpaid", "voided"]).default("all"),
+    search: z.string().trim().max(80).default(""),
+    cursor: z.string().max(400).optional(),
+  })
+  .strict();
 export type PosRegisterQuery = z.infer<typeof posRegisterQuerySchema>;
 export type PosRegisterRow = {
-  orderId:string;orderNumber:number;createdAt:string;source:string;
-  customerName:string|null;servicePoint:string|null;fulfillmentMode:string;
-  status:string;paymentStatus:string;paymentEvidence:string|null;
-  currency:string;totalMinor:string;saleId:string|null;
-  items:{name:string;quantity:number;variant:string|null;notes:string|null;totalMinor:number}[];
+  orderId: string;
+  orderNumber: number;
+  createdAt: string;
+  source: string;
+  customerName: string | null;
+  servicePoint: string | null;
+  fulfillmentMode: string;
+  status: string;
+  paymentStatus: string;
+  paymentEvidence: string | null;
+  currency: string;
+  totalMinor: string;
+  saleId: string | null;
+  items: {
+    name: string;
+    quantity: number;
+    variant: string | null;
+    notes: string | null;
+    totalMinor: number;
+  }[];
 };
-export type PosRegisterPage = {items:PosRegisterRow[];total:number;nextCursor:string|null};
+export type PosRegisterPage = { items: PosRegisterRow[]; total: number; nextCursor: string | null };
 
 export async function posOrderRegister(
- actor:Actor,organizationId:string,outletId:string,raw:unknown
-):Promise<PosRegisterPage>{
-  const q=posRegisterQuerySchema.parse(raw);
-  await posContext(actor,organizationId,outletId);
-  let cursorAt:string|null=null,cursorId:string|null=null;
-  if(q.cursor){
-    try{
-      const data=JSON.parse(Buffer.from(q.cursor,"base64url").toString("utf8")) as {at:string;id:string};
-      if(!data||typeof data.at!=="string"||!Number.isFinite(Date.parse(data.at)) ||
-         typeof data.id!=="string"||data.id.length>128||!data.id.length)
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
+): Promise<PosRegisterPage> {
+  const q = posRegisterQuerySchema.parse(raw);
+  await posContext(actor, organizationId, outletId);
+  let cursorAt: string | null = null,
+    cursorId: string | null = null;
+  if (q.cursor) {
+    try {
+      const data = JSON.parse(Buffer.from(q.cursor, "base64url").toString("utf8")) as {
+        at: string;
+        id: string;
+      };
+      if (
+        !data ||
+        typeof data.at !== "string" ||
+        !Number.isFinite(Date.parse(data.at)) ||
+        typeof data.id !== "string" ||
+        data.id.length > 128 ||
+        !data.id.length
+      )
         throw new Error("Malformed cursor");
-      cursorAt=new Date(data.at).toISOString();cursorId=data.id;
-    }catch{throw new ValidationError("Invalid register cursor");}
+      cursorAt = new Date(data.at).toISOString();
+      cursorId = data.id;
+    } catch {
+      throw new ValidationError("Invalid register cursor");
+    }
   }
-  const pattern="%"+q.search.replace(/[\\%_]/g,"\\export const posAcceptSchema")+"%";
-  const predicate=sql`o.restaurant_id=${outletId}
+  const pattern = "%" + q.search.replace(/[\\%_]/g, "\\export const posAcceptSchema") + "%";
+  const predicate = sql`o.restaurant_id=${outletId}
     and app_private.can_outlet(${outletId},'orders.read')
     and (${q.source}='all' or o.intake_source=${q.source})
     and (${q.status}='all' or o.status=${q.status})
@@ -307,8 +355,8 @@ export async function posOrderRegister(
       or t.label ilike ${pattern} escape '\\'
       or exists(select 1 from order_items i where i.restaurant_id=${outletId}
        and i.order_id=o.id and i.item_name ilike ${pattern} escape '\\'))`;
-  const rows=await posCall(actor,outletId,async run=>{
-    const [result,count]=await Promise.all([
+  const rows = await posCall(actor, outletId, async (run) => {
+    const [result, count] = await Promise.all([
       run(sql`select o.id as "orderId",o.order_number as "orderNumber",
         o.created_at as "createdAt",o.intake_source as source,
         o.customer_name as "customerName",
@@ -338,36 +386,49 @@ export async function posOrderRegister(
       run(sql`select count(*)::int as total from orders o
         join restaurants r on r.id=o.restaurant_id
         left join restaurant_tables t on t.id=o.table_id and t.restaurant_id=o.restaurant_id
-        where ${predicate}`)
+        where ${predicate}`),
     ]);
     return {
-      items:(result as {rows:PosRegisterRow[]}).rows,
-      total:(count as {rows:{total:number}[]}).rows[0]?.total??0,
+      items: (result as { rows: PosRegisterRow[] }).rows,
+      total: (count as { rows: { total: number }[] }).rows[0]?.total ?? 0,
     };
   });
-  const hasMore=rows.items.length>10;
-  const items=rows.items.slice(0,10);
-  const last=items.at(-1);
-  const nextCursor=hasMore&&last?Buffer.from(JSON.stringify({
-    at:new Date(last.createdAt).toISOString(),id:last.orderId
-  })).toString("base64url"):null;
-  return {items,total:rows.total,nextCursor};
+  const hasMore = rows.items.length > 10;
+  const items = rows.items.slice(0, 10);
+  const last = items.at(-1);
+  const nextCursor =
+    hasMore && last
+      ? Buffer.from(
+          JSON.stringify({
+            at: new Date(last.createdAt).toISOString(),
+            id: last.orderId,
+          })
+        ).toString("base64url")
+      : null;
+  return { items, total: rows.total, nextCursor };
 }
 
-export const posAcceptSchema=z.object({
-  key:z.string().uuid(),orderId:identity,expectedVersion:z.number().int().positive()
-}).strict();
+export const posAcceptSchema = z
+  .object({
+    key: z.string().uuid(),
+    orderId: identity,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
 
 export async function posAcceptCustomerOrder(
-  actor: Actor,organizationId:string,outletId:string,raw:unknown
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
 ): Promise<PosSaleResult> {
-  const input=posAcceptSchema.parse(raw);
-  await posContext(actor,organizationId,outletId);
-  const hash=digest(input);
-  return posCall(actor,outletId,async run=>{
-    const result=await run(sql`select app_private.pos_accept_customer_order(
+  const input = posAcceptSchema.parse(raw);
+  await posContext(actor, organizationId, outletId);
+  const hash = digest(input);
+  return posCall(actor, outletId, async (run) => {
+    const result = (await run(sql`select app_private.pos_accept_customer_order(
       ${outletId},${input.orderId},${input.expectedVersion},
-      ${input.key},${hash}) as data`) as {rows:{data:PosSaleResult}[]};
+      ${input.key},${hash}) as data`)) as { rows: { data: PosSaleResult }[] };
     return result.rows[0]!.data;
   });
 }
@@ -511,8 +572,12 @@ export async function posSubmit(
   const prior = await replay(actor, outletId, input.key, hash, "submit_order");
   if (prior) {
     const receipt = await posReceipt(actor, organizationId, outletId, prior.saleId);
+    const order = (await posCall(actor, outletId, (run) =>
+      run(sql`select status from orders where id=${prior.orderId} and restaurant_id=${outletId}`)
+    )) as { rows: { status: string }[] };
     return {
       ...prior,
+      status: order.rows[0]?.status ?? prior.status,
       paymentStatus: receipt.paymentStatus,
       paymentEvidence: receipt.paymentEvidence,
       paymentMethod: receipt.paymentMethod ?? undefined,

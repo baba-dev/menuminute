@@ -64,10 +64,13 @@ describe("POS A/C strict financial contracts", () => {
   });
   it("rejects stale or forged customer acceptance and unbounded register filters", () => {
     const key = "00000000-0000-4000-8000-000000000001";
-    expect(posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1 }).orderId)
-      .toBe("ord-one");
+    expect(posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1 }).orderId).toBe(
+      "ord-one"
+    );
     expect(() => posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 0 })).toThrow();
-    expect(() => posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1, paymentsEnabled: true })).toThrow();
+    expect(() =>
+      posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1, paymentsEnabled: true })
+    ).toThrow();
     expect(posRegisterQuerySchema.parse({}).period).toBe("today");
     expect(() => posRegisterQuerySchema.parse({ search: "x".repeat(81) })).toThrow();
     expect(() => posRegisterQuerySchema.parse({ source: "provider_verified" })).toThrow();

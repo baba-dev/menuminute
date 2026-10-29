@@ -4,7 +4,6 @@ import { admin, fixture } from "./helpers";
 import { commandMenu } from "../src/modules/menu-product/service";
 import { posConfigure, posContext, posSubmit } from "../src/modules/pos/service";
 import { financeRead, financeCommand } from "../src/modules/pos/finance";
-import { transitionOutletOrder } from "../src/modules/orders/service";
 import { getPool } from "../src/db";
 import { withActor } from "../src/modules/tenancy/service";
 
@@ -56,10 +55,7 @@ async function setup(mode: "non_registered" | "classified" = "non_registered", q
     tableId: null,
     expectedSubtotalMinor: String(28000 * quantity),
   });
-  await transitionOutletOrder(f.actor, f.outlet.id, sale.orderId, {
-    targetStatus: "accepted",
-    expectedVersion: 1,
-  });
+  // Point of Sale now dispatches the order on the same transaction as sale creation.
   async function cmd(action: string, data: Record<string, unknown>, key = crypto.randomUUID()) {
     return financeCommand(f.actor, f.outlet.organizationId, f.outlet.id, { action, key, data });
   }

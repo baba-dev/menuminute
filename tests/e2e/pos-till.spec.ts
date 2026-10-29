@@ -112,9 +112,13 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ember", "#ffc078");
   await expect(page.getByTestId("pos-till")).toHaveCSS("--pos-surface", "#28231e");
   await expect(
-    page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /Point of Sale/ })
+    page
+      .getByRole("navigation", { name: "POS workspaces" })
+      .getByRole("link", { name: /Point of Sale/ })
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("region", { name: "Point of Sale overview" })).toContainText("Published menus");
+  await expect(page.getByRole("region", { name: "Point of Sale overview" })).toContainText(
+    "Published menus"
+  );
   await page.getByLabel("Registered seller address").fill("A registered fixture address in India");
   await page.getByRole("button", { name: "Save seller details and enable POS" }).click();
   await expect(page.getByRole("heading", { name: "Published menu" })).toBeVisible();

@@ -2,7 +2,15 @@ import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
-import { posWorkspace, posSubmit, posAttachOrder, posRecentPage, posIncomingOrders, posAcceptCustomerOrder, posOrderRegister } from "@/modules/pos/service";
+import {
+  posWorkspace,
+  posSubmit,
+  posAttachOrder,
+  posRecentPage,
+  posIncomingOrders,
+  posAcceptCustomerOrder,
+  posOrderRegister,
+} from "@/modules/pos/service";
 
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
 async function observed_GET(req: Request, { params }: Params) {
@@ -11,13 +19,20 @@ async function observed_GET(req: Request, { params }: Params) {
     const { organizationId, outletId } = await params;
     const url = new URL(req.url);
     if (url.searchParams.get("view") === "register") {
-      return NextResponse.json(await posOrderRegister(actor,organizationId,outletId,
-        Object.fromEntries([...url.searchParams.entries()].filter(([key])=>key!=="view"))),
-        {headers:{"cache-control":"private, no-store"}});
+      return NextResponse.json(
+        await posOrderRegister(
+          actor,
+          organizationId,
+          outletId,
+          Object.fromEntries([...url.searchParams.entries()].filter(([key]) => key !== "view"))
+        ),
+        { headers: { "cache-control": "private, no-store" } }
+      );
     }
     if (url.searchParams.get("view") === "inbox") {
-      return NextResponse.json(await posIncomingOrders(actor,organizationId,outletId),
-        {headers:{"cache-control":"private, no-store"}});
+      return NextResponse.json(await posIncomingOrders(actor, organizationId, outletId), {
+        headers: { "cache-control": "private, no-store" },
+      });
     }
     if (url.searchParams.get("view") === "recent") {
       const raw = url.searchParams.get("page") ?? "0";
@@ -52,7 +67,7 @@ async function observed_POST(req: Request, { params }: Params) {
       body.action === "submit"
         ? await posSubmit(actor, organizationId, outletId, body.input)
         : body.action === "accept_customer"
-          ? await posAcceptCustomerOrder(actor,organizationId,outletId,body.input)
+          ? await posAcceptCustomerOrder(actor, organizationId, outletId, body.input)
           : await posAttachOrder(actor, organizationId, outletId, body.input);
     return NextResponse.json(result, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
