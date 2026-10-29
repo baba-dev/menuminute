@@ -94,7 +94,9 @@ test("explicit two-column splitting uploads private left and right sources", asy
   await page.getByLabel("Email address").fill(f.email);
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu/import");
+  await expect(page.getByRole("heading", { name: "Your menu. Digitized." })).toBeVisible();
   await page.getByRole("button", { name: "Create private draft" }).click();
   const photo = await sharp({
     create: { width: 640, height: 880, channels: 3, background: "white" },
