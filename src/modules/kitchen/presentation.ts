@@ -14,7 +14,7 @@ export function kitchenPulse(work: readonly KitchenWorkView[]) {
   };
 }
 export function stationGroups(work: readonly KitchenWorkView[], stationId: string | undefined) {
-  const relevant = work.filter((item) => item.stationId === stationId);
+  const relevant = stationId ? work.filter((item) => item.stationId === stationId) : [...work];
   const byAge = (a: KitchenWorkView, b: KitchenWorkView) =>
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
     a.orderNumber - b.orderNumber ||
@@ -32,4 +32,28 @@ export function outstandingDishes(work: readonly KitchenWorkView[]) {
     totals.set(item.dishName, (totals.get(item.dishName) ?? 0) + item.quantity);
   }
   return [...totals].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+/** Counters are based exclusively on the caller's permission-filtered snapshot.
+ * No station or tenant content is fetched from a broader source here. */
+export function stationOverview(
+  stations: readonly { id: string; name: string }[],
+  work: readonly KitchenWorkView[],
+  now: number | null
+) {
+  return stations.map((station) => {
+    const current = work.filter((item) => item.stationId === station.id);
+    const unfinished = current.filter((item) => item.status === "queued" || item.status === "preparing");
+    const oldest = unfinished.reduce<number | null>((value, item) => {
+      const timestamp = Date.parse(item.createdAt);
+      return Number.isFinite(timestamp) ? (value === null ? timestamp : Math.min(value, timestamp)) : value;
+    }, null);
+    return {
+      ...station,
+      queued: current.filter((item) => item.status === "queued").length,
+      preparing: current.filter((item) => item.status === "preparing").length,
+      completed: current.filter((item) => item.status === "complete").length,
+      oldestMinutes: now !== null && oldest !== null ? Math.max(0, Math.floor((now - oldest) / 60000)) : null,
+    };
+  });
 }
