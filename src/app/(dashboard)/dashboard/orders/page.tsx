@@ -36,19 +36,13 @@ export default async function OrdersPage() {
     outlet.id,
     "orders.read",
     async (tx) => {
-      const result = await tx.execute<{ active: boolean }>(sql`
-        SELECT COALESCE(k.enabled,false)
-          AND app_private.can_outlet(${outlet.id},'outlet.manage')
-          AND EXISTS(SELECT 1 FROM entitlement_grants g
-            WHERE g.organization_id=${outlet.organizationId}
-              AND g.capability='kitchen.new' AND g.revoked_at IS NULL
-              AND g.starts_at<=clock_timestamp() AND g.ends_at>clock_timestamp())
-          AND NOT EXISTS(SELECT 1 FROM kitchen_pilot_outlets p
-            WHERE p.outlet_id=${outlet.id} AND p.state='draining')
-          AS active
-        FROM kitchen_outlet_settings k WHERE k.outlet_id=${outlet.id}
-      `);
-      return result.rows[0]?.active === true;
+      const result = await tx.execute<{ active: boolean }>(
+        sql`SELECT app_private.kitchen_primary_workspace(${outlet.id}) AS active`
+      );
+      return result.rows[0]?.active === true && await (async () => {
+        const manager = await tx.execute<{ allowed: boolean }>(sql`SELECT app_private.can_outlet(${outlet.id},\'outlet.manage\') AS allowed`);
+        return manager.rows[0]?.allowed === true;
+      })();
     }
   ).catch(() => false);
   if (kitchenPrimary) redirect("/kitchen");
