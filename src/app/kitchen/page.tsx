@@ -46,8 +46,10 @@ export default async function KitchenPage() {
     );
   }
   const canManage = await kitchenCanManage(actor, outlet.id);
-  const kitchenOperational = canManage && await withOutlet(actor, outlet.id, "orders.read", async tx => {
-    const result = await tx.execute<{active:boolean}>(sql`
+  const kitchenOperational =
+    canManage &&
+    (await withOutlet(actor, outlet.id, "orders.read", async (tx) => {
+      const result = await tx.execute<{ active: boolean }>(sql`
       SELECT COALESCE(s.enabled,false) AND
         EXISTS(SELECT 1 FROM entitlement_grants e
           WHERE e.organization_id=${outlet.organizationId}
@@ -57,8 +59,8 @@ export default async function KitchenPage() {
           WHERE p.outlet_id=${outlet.id} AND p.state='draining')
       AS active FROM kitchen_outlet_settings s WHERE s.outlet_id=${outlet.id}
     `);
-    return result.rows[0]?.active === true;
-  });
+      return result.rows[0]?.active === true;
+    }));
   const dishList: Array<{ id: string; name: string }> = [];
   if (canManage) {
     const menus = (await listMenus(actor, outlet.id)).filter(
