@@ -179,7 +179,8 @@ it("activates only after reviewed route/staff readiness, drains new intake and c
   });
   const afterStart = await admin(async (_, pool) =>
     pool.query<{ status: string; version: number }>(
-      "SELECT status,version FROM orders WHERE id=$1", [acceptedOrder.orderId]
+      "SELECT status,version FROM orders WHERE id=$1",
+      [acceptedOrder.orderId]
     )
   );
   expect(afterStart.rows[0]).toMatchObject({ status: "preparing", version: 3 });
