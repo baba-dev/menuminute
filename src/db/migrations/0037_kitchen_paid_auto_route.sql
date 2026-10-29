@@ -194,3 +194,152 @@ END $fn$;
 REVOKE ALL ON FUNCTION app_private.kitchen_commercial_launch(text,text,text,text)
  FROM PUBLIC,menuminute_worker,menuminute_billing;
 GRANT EXECUTE ON FUNCTION app_private.kitchen_commercial_launch(text,text,text,text) TO menuminute_app;
+
+
+-- The billing writer receives only the already authorized function EXECUTE
+-- permission from migration 0034; no additional direct table privileges.
+CREATE OR REPLACE FUNCTION app_private.record_razorpay_charge(
+  p_event text,p_subscription text,p_provider_plan text,p_payment text,
+  p_start timestamptz,p_end timestamptz,p_provider_created timestamptz
+) RETURNS text LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE sub app_private.razorpay_subscriptions%ROWTYPE;
+        existing text; grant_id text:=gen_random_uuid()::text;
+        cap text;
+BEGIN
+  IF length(p_event) NOT BETWEEN 8 AND 128 OR length(p_payment) NOT BETWEEN 8 AND 128
+    OR p_start IS NULL OR p_end IS NULL OR p_end<=p_start
+    OR p_end>p_start+interval '40 days' OR p_end<=clock_timestamp()
+    OR p_provider_created IS NULL
+  THEN RAISE EXCEPTION 'Invalid captured subscription charge' USING ERRCODE='22023'; END IF;
+  SELECT * INTO sub FROM app_private.razorpay_subscriptions
+    WHERE subscription_id=p_subscription FOR UPDATE;
+  IF NOT FOUND OR sub.provider_plan_id<>p_provider_plan THEN
+    RAISE EXCEPTION 'Subscription is not eligible' USING ERRCODE='42501';
+  END IF;
+  SELECT c.grant_id INTO existing FROM app_private.razorpay_charges c
+    WHERE c.event_id=p_event OR c.payment_id=p_payment;
+  IF FOUND THEN RETURN existing; END IF;
+  IF sub.status IN ('cancelled','completed','expired','paused','halted') THEN
+    RAISE EXCEPTION 'Subscription is not eligible' USING ERRCODE='42501';
+  END IF;
+  IF sub.last_provider_event_at IS NOT NULL AND p_provider_created<sub.last_provider_event_at THEN
+    RAISE EXCEPTION 'Stale payment event' USING ERRCODE='22023';
+  END IF;
+  cap:=CASE sub.product_key WHEN 'ordering' THEN 'ordering.new' ELSE 'kitchen.new' END;
+  -- Only an operator-approved global Kitchen release allows provider-paid grants.
+  IF cap='kitchen.new' AND NOT app_private.kitchen_commerce_enabled() THEN
+    RAISE EXCEPTION 'Kitchen Pro paid release has not been approved' USING ERRCODE='42501';
+  END IF;
+  PERFORM 1 FROM organizations WHERE id=sub.organization_id AND is_active FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Organization unavailable' USING ERRCODE='42501'; END IF;
+  IF EXISTS(SELECT 1 FROM entitlement_grants e WHERE e.organization_id=sub.organization_id
+    AND e.capability=cap AND e.revoked_at IS NULL AND e.starts_at<p_end AND e.ends_at>p_start)
+  THEN RAISE EXCEPTION 'Overlapping subscription grant' USING ERRCODE='23505'; END IF;
+  INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
+  VALUES(grant_id,sub.organization_id,cap,'INR',p_start,p_end,'razorpay-webhook',
+    'Verified Razorpay subscription charge '||p_payment,gen_random_uuid()::text);
+  INSERT INTO app_private.razorpay_charges(event_id,subscription_id,payment_id,grant_id)
+    VALUES(p_event,p_subscription,p_payment,grant_id);
+  UPDATE app_private.razorpay_subscriptions SET status='active',current_start=p_start,
+    current_end=p_end,last_provider_event_at=p_provider_created,updated_at=clock_timestamp()
+    WHERE subscription_id=p_subscription;
+  IF cap='kitchen.new' THEN
+    -- A paid Kitchen Pro package includes ordering intake; this grant is only
+    -- minted from the *same verified charge*, not a guessed account plan.
+    IF NOT EXISTS (
+       SELECT 1 FROM entitlement_grants e WHERE e.organization_id=sub.organization_id
+        AND e.capability='ordering.new' AND e.revoked_at IS NULL
+        AND e.starts_at<=p_start AND e.ends_at>=p_end
+    ) THEN
+      INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,
+        starts_at,ends_at,operator,reason,request_key)
+      VALUES(gen_random_uuid()::text,sub.organization_id,'ordering.new','INR',p_start,p_end,
+        'razorpay-webhook','Kitchen Pro bundled ordering via verified charge '||p_payment,
+        gen_random_uuid()::text)
+      RETURNING id INTO existing;
+      INSERT INTO app_private.kitchen_paid_ordering_grants(kitchen_grant_id,ordering_grant_id)
+        VALUES(grant_id,existing);
+    END IF;
+    -- Ready outlets begin routing now. Unconfigured outlets remain on the
+    -- merchant board until their station wizard completes.
+    PERFORM app_private.kitchen_auto_paid_activate(r.id)
+      FROM restaurants r WHERE r.organization_id=sub.organization_id AND r.is_active;
+  END IF;
+  RETURN grant_id;
+END $$;
+
+CREATE FUNCTION app_private.kitchen_bundle_revoke() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+BEGIN
+ IF OLD.capability='kitchen.new' AND OLD.operator='razorpay-webhook'
+    AND OLD.revoked_at IS NULL AND NEW.revoked_at IS NOT NULL THEN
+   UPDATE entitlement_grants SET revoked_at=clock_timestamp()
+     WHERE id IN (
+       SELECT g.ordering_grant_id FROM app_private.kitchen_paid_ordering_grants g
+       WHERE g.kitchen_grant_id=OLD.id
+     ) AND revoked_at IS NULL;
+ END IF;
+ RETURN NULL;
+END $fn$;
+REVOKE ALL ON FUNCTION app_private.kitchen_bundle_revoke() FROM PUBLIC;
+CREATE TRIGGER kitchen_paid_bundle_revoke AFTER UPDATE OF revoked_at ON entitlement_grants
+ FOR EACH ROW EXECUTE FUNCTION app_private.kitchen_bundle_revoke();
+
+-- Merchant mode is the default when there is no current Kitchen entitlement,
+-- even if historic setup/unfinished work keeps the enabled flag true.
+CREATE OR REPLACE FUNCTION app_private.kitchen_accept_entitlement_check() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+DECLARE org text; outlet_state text;
+BEGIN
+ -- Serialize intake with the operator's active->draining transition.
+ SELECT state INTO outlet_state FROM kitchen_pilot_outlets
+ WHERE outlet_id=NEW.restaurant_id FOR SHARE;
+ IF outlet_state='draining' THEN
+   RAISE EXCEPTION 'Kitchen draining; new acceptance paused' USING ERRCODE='42501';
+ END IF;
+ IF COALESCE((SELECT enabled FROM kitchen_outlet_settings WHERE outlet_id=NEW.restaurant_id),false) THEN
+   IF outlet_state IS NOT NULL AND outlet_state<>'active'
+     AND EXISTS(SELECT 1 FROM entitlement_grants e
+       WHERE e.organization_id=(SELECT organization_id FROM restaurants WHERE id=NEW.restaurant_id)
+         AND e.capability='kitchen.new' AND e.revoked_at IS NULL
+         AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp()) THEN
+      RAISE EXCEPTION 'Kitchen activation state does not permit intake' USING ERRCODE='42501';
+   END IF;
+   SELECT organization_id INTO org FROM restaurants WHERE id=NEW.restaurant_id;
+   -- An expired/paused/refunded paid term returns NEW orders to merchant
+   -- processing. Previously accepted station work remains available to drain.
+   -- Work fan-out independently checks active Kitchen entitlement.
+   NULL;
+ END IF;
+ RETURN NEW;
+END $fn$;
+
+CREATE OR REPLACE FUNCTION app_private.kitchen_on_accept() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+ SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE item record; rt record; n integer; enabled boolean;
+BEGIN
+ IF NEW.status<>'accepted' OR OLD.status='accepted' THEN RETURN NEW; END IF;
+ SELECT s.enabled INTO enabled FROM kitchen_outlet_settings s WHERE s.outlet_id=NEW.restaurant_id;
+ IF NOT COALESCE(enabled,false) OR NOT EXISTS(
+   SELECT 1 FROM entitlement_grants e JOIN restaurants r ON r.organization_id=e.organization_id
+   WHERE r.id=NEW.restaurant_id AND e.capability='kitchen.new' AND e.revoked_at IS NULL
+   AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp()
+ ) THEN RETURN NEW; END IF;
+ FOR item IN SELECT * FROM order_items WHERE order_id=NEW.id LOOP
+   n:=0;
+   FOR rt IN SELECT r.station_id,r.rule_version FROM kitchen_routes r
+     JOIN kitchen_stations s ON s.id=r.station_id AND s.outlet_id=r.outlet_id AND s.active
+     WHERE r.outlet_id=NEW.restaurant_id AND r.dish_id=item.dish_id LOOP
+      INSERT INTO kitchen_work(id,outlet_id,order_id,order_item_id,station_id,rule_version)
+      VALUES('kw-'||gen_random_uuid()::text,NEW.restaurant_id,NEW.id,item.id,rt.station_id,rt.rule_version)
+      ON CONFLICT(order_item_id,station_id) DO NOTHING;
+      n:=n+1;
+   END LOOP;
+   IF n=0 THEN RAISE EXCEPTION 'Unrouted kitchen item; acceptance blocked' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ FOR item IN SELECT id FROM kitchen_work WHERE order_id=NEW.id LOOP
+   PERFORM app_private.kitchen_emit(NEW.restaurant_id,'work.created',item.id);
+ END LOOP;
+ RETURN NEW;
+END $$;
