@@ -132,7 +132,7 @@ export function KitchenBoard({
   menuDishes,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
-  const [selected, setSelected] = useState(canManage ? "all" : (initial.stations[0]?.id ?? ""));
+  const [selected, setSelected] = useState(canManage && initial.enabled ? "all" : (initial.stations[0]?.id ?? ""));
   const [connection, setConnection] = useState<Connection>("connecting");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -583,6 +583,7 @@ export function KitchenBoard({
               <button
                 type="button"
                 key={s.id}
+                aria-label={s.name}
                 aria-current={station?.id === s.id ? "page" : undefined}
                 onClick={() => setSelected(s.id)}
                 className={"kk-station-tab" + (station?.id === s.id ? " is-selected" : "")}
