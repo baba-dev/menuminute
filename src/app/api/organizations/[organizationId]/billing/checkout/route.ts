@@ -38,7 +38,14 @@ async function observed_POST(
         sql`SELECT app_private.entitlement_allowed(${organizationId},'ordering.new') AS ordering,
           app_private.entitlement_allowed(${organizationId},'kitchen.new') AS kitchen`
       );
-      return { subscriptions: existing.rows[0]?.subscriptions, grants: grants.rows[0] };
+      const launch = await tx.execute<{ ready: boolean }>(
+        sql`SELECT app_private.kitchen_commerce_enabled() AS ready`
+      );
+      return {
+        subscriptions: existing.rows[0]?.subscriptions,
+        grants: grants.rows[0],
+        kitchenLaunchApproved: launch.rows[0]?.ready === true,
+      };
     });
 
     const body: unknown = await req.json();
@@ -48,8 +55,14 @@ async function observed_POST(
       throw new ValidationError("Invalid plan. Choose 'ordering' or 'kitchen_pro'");
     }
 
-    if (plan === "kitchen_pro" && !env.RAZORPAY_KITCHEN_ENABLED)
-      throw new ValidationError("Kitchen Pro paid activation is not approved yet.");
+    if (
+      plan === "kitchen_pro" &&
+      (!env.RAZORPAY_KITCHEN_ENABLED || !current.kitchenLaunchApproved)
+    ) {
+      throw new ValidationError(
+        "Kitchen Pro checkout remains locked until the reviewed platform release is approved."
+      );
+    }
     const planId =
       plan === "kitchen_pro" ? env.RAZORPAY_PLAN_KITCHEN_ID : env.RAZORPAY_PLAN_ORDERING_ID;
     if (!planId) throw new ValidationError("Provider plan is not configured.");
