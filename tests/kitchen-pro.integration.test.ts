@@ -185,6 +185,49 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     );
     expect(state.rows[0]?.status).toBe("preparing");
   });
+  it("recovers a fully completed legacy accepted order only through the authorized expeditor", async () => {
+    const f = await setup();
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted", expectedVersion: 1,
+    });
+    // Model an older deployed Kitchen release: station work is complete, but
+    // the canonical order was stranded in 'accepted'. This fixture is isolated
+    // and deliberately bypasses the old work command to reproduce the defect.
+    await admin(async (_, pool) =>
+      pool.query("UPDATE kitchen_work SET status='complete',version=2 WHERE order_id=$1", [o.orderId])
+    );
+    const before = await kitchenExpoSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const stuck = before.orders.find((row) => row.id === o.orderId);
+    expect(stuck).toMatchObject({ status: "accepted", total: 2, done: 2, version: 2 });
+    await expect(
+      kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+        orderId: o.orderId, expectedVersion: 1, key: crypto.randomUUID(),
+      })
+    ).rejects.toThrow();
+    await kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+      orderId: o.orderId, expectedVersion: 2, key: crypto.randomUUID(),
+    });
+    const state = await admin(async (_, pool) =>
+      pool.query<{ status: string; version: number }>(
+        "SELECT status,version FROM orders WHERE id=$1", [o.orderId]
+      )
+    );
+    expect(state.rows[0]).toMatchObject({ status: "ready", version: 4 });
+    const events = await admin(async (_, pool) =>
+      pool.query<{ from_status: string; to_status: string }>(
+        "SELECT from_status,to_status FROM order_status_events WHERE order_id=$1 ORDER BY created_at",
+        [o.orderId]
+      )
+    );
+    expect(events.rows.some((row) => row.from_status === "accepted" && row.to_status === "preparing")).toBe(true);
+    expect(events.rows.some((row) => row.from_status === "preparing" && row.to_status === "ready")).toBe(true);
+    await expect(
+      kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+        orderId: o.orderId, expectedVersion: 2, key: crypto.randomUUID(),
+      })
+    ).rejects.toThrow();
+  });
   it("rejects cross-outlet scope, invalid cursors and free-form unauthorized station access", async () => {
     const f = await setup();
     const other = await fixture();
