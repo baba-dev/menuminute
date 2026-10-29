@@ -20,6 +20,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp A
  SELECT COALESCE((SELECT enabled FROM app_private.kitchen_commercial_release WHERE singleton),false)
 $fn$;
 REVOKE ALL ON FUNCTION app_private.kitchen_commerce_enabled() FROM PUBLIC,menuminute_worker;
+GRANT EXECUTE ON FUNCTION app_private.kitchen_commerce_enabled() TO menuminute_app;
 
 -- Bundled ordering grant is backed by the SAME verified Kitchen charge;
 -- no separate payment is fabricated. Historical existing ordering grants remain.
