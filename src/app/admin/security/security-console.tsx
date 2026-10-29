@@ -88,7 +88,7 @@ export function SecurityConsole({
 
       {message && (
         <div
-          className={`rounded-xl p-3 text-xs font-medium border ${
+          className={`rounded-xl border p-3 text-xs font-medium ${
             message.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950 dark:text-emerald-300"
               : "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950 dark:text-red-300"
@@ -107,7 +107,8 @@ export function SecurityConsole({
                 Platform Administrative Audit Trail
               </h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
-                Tamper-evident log of all operator interventions, grants, session revocations, and status edits.
+                Tamper-evident log of all operator interventions, grants, session revocations, and
+                status edits.
               </p>
             </div>
             <button
@@ -136,7 +137,10 @@ export function SecurityConsole({
                 <tbody className="divide-y divide-stone-200 font-sans text-xs dark:divide-stone-800">
                   {auditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-stone-500 dark:text-stone-400">
+                      <td
+                        colSpan={6}
+                        className="p-6 text-center text-stone-500 dark:text-stone-400"
+                      >
                         No admin actions recorded yet.
                       </td>
                     </tr>
@@ -148,10 +152,16 @@ export function SecurityConsole({
                           <td className="p-3 font-mono text-[11px] whitespace-nowrap text-stone-500 dark:text-stone-400">
                             {new Date(log.createdAt).toLocaleString()}
                           </td>
-                          <td className="p-3 font-mono text-stone-800 dark:text-stone-200">{log.actorEmail}</td>
-                          <td className="p-3 font-mono font-bold text-orange-600 dark:text-orange-400">{log.action}</td>
+                          <td className="p-3 font-mono text-stone-800 dark:text-stone-200">
+                            {log.actorEmail}
+                          </td>
+                          <td className="p-3 font-mono font-bold text-orange-600 dark:text-orange-400">
+                            {log.action}
+                          </td>
                           <td className="p-3">
-                            <span className="font-semibold text-stone-900 dark:text-stone-100">{log.targetType}</span>
+                            <span className="font-semibold text-stone-900 dark:text-stone-100">
+                              {log.targetType}
+                            </span>
                             {log.targetId && (
                               <span className="ml-1 font-mono text-[10px] text-stone-400 dark:text-stone-500">
                                 ({log.targetId.slice(0, 8)}...)
@@ -176,7 +186,9 @@ export function SecurityConsole({
                             </button>
                             {isExpanded && (
                               <div className="mt-2 max-w-sm overflow-x-auto rounded-xl border border-stone-200 bg-stone-50 p-3 text-left font-mono text-[10px] text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
-                                <pre className="whitespace-pre-wrap">{JSON.stringify(log.details, null, 2)}</pre>
+                                <pre className="whitespace-pre-wrap">
+                                  {JSON.stringify(log.details, null, 2)}
+                                </pre>
                               </div>
                             )}
                           </td>
@@ -196,7 +208,9 @@ export function SecurityConsole({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">Active Rate Limit Keys</h2>
+              <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
+                Active Rate Limit Keys
+              </h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
                 Throttled endpoints and client identifiers stored in PostgreSQL rate limits table.
               </p>
@@ -225,15 +239,22 @@ export function SecurityConsole({
                 <tbody className="divide-y divide-stone-200 font-mono text-xs dark:divide-stone-800">
                   {rateLimits.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-6 text-center font-sans text-stone-500 dark:text-stone-400">
+                      <td
+                        colSpan={4}
+                        className="p-6 text-center font-sans text-stone-500 dark:text-stone-400"
+                      >
                         No active rate limits recorded.
                       </td>
                     </tr>
                   ) : (
                     rateLimits.map((rl) => (
                       <tr key={rl.id}>
-                        <td className="p-3 font-semibold break-all text-orange-600 dark:text-orange-400">{rl.key}</td>
-                        <td className="p-3 tabular-nums font-bold text-stone-800 dark:text-stone-200">{rl.count}</td>
+                        <td className="p-3 font-semibold break-all text-orange-600 dark:text-orange-400">
+                          {rl.key}
+                        </td>
+                        <td className="p-3 font-bold text-stone-800 tabular-nums dark:text-stone-200">
+                          {rl.count}
+                        </td>
                         <td className="p-3 text-[11px] text-stone-500 dark:text-stone-400">
                           {new Date(Number(rl.lastRequest)).toLocaleString()}
                         </td>

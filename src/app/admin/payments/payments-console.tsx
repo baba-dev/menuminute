@@ -116,7 +116,7 @@ export function PaymentsConsole({
   return (
     <div className="space-y-6">
       {/* Tab Selectors */}
-      <div className="flex border-b border-stone-200 dark:border-stone-800 text-xs font-semibold">
+      <div className="flex border-b border-stone-200 text-xs font-semibold dark:border-stone-800">
         <button
           onClick={() => setActiveTab("entitlements")}
           className={`border-b-2 px-4 py-2.5 transition ${
@@ -187,7 +187,9 @@ export function PaymentsConsole({
       {activeTab === "plans" && (
         <div className="space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-stone-900 dark:text-white">Platform Subscription Tiers</h2>
+            <h2 className="text-sm font-bold text-stone-900 dark:text-white">
+              Platform Subscription Tiers
+            </h2>
             <p className="text-xs text-stone-500 dark:text-stone-400">
               Manage plans, monthly prices in minor units (paise/cents), and feature bundles.
             </p>
@@ -197,11 +199,11 @@ export function PaymentsConsole({
             {plans.map((p) => (
               <div
                 key={p.id}
-                className="flex flex-col justify-between rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5"
+                className="flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="rounded bg-stone-100 dark:bg-stone-800 px-2 py-0.5 font-mono text-[10px] text-stone-500 dark:text-stone-400 uppercase">
+                    <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-[10px] text-stone-500 uppercase dark:bg-stone-800 dark:text-stone-400">
                       {p.name}
                     </span>
                     <span
@@ -213,7 +215,9 @@ export function PaymentsConsole({
                     </span>
                   </div>
 
-                  <h3 className="mt-2 text-base font-bold text-stone-900 dark:text-white">{p.displayName}</h3>
+                  <h3 className="mt-2 text-base font-bold text-stone-900 dark:text-white">
+                    {p.displayName}
+                  </h3>
                   <div className="mt-1 flex items-baseline gap-1 text-2xl font-extrabold text-orange-400">
                     <span>₹{(p.monthlyPricePaise / 100).toFixed(0)}</span>
                     <span className="text-xs font-normal text-stone-500 dark:text-stone-400">
@@ -226,10 +230,10 @@ export function PaymentsConsole({
                   </p>
                 </div>
 
-                <div className="mt-5 border-t border-stone-200 dark:border-stone-800 pt-3">
+                <div className="mt-5 border-t border-stone-200 pt-3 dark:border-stone-800">
                   <button
                     onClick={() => setEditingPlan(p)}
-                    className="w-full rounded-lg bg-stone-100 dark:bg-stone-800 py-1.5 text-xs font-semibold text-stone-700 dark:text-stone-200 transition hover:bg-stone-200 dark:hover:bg-stone-700"
+                    className="w-full rounded-lg bg-stone-100 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
                   >
                     Edit Plan Settings
                   </button>
@@ -244,16 +248,18 @@ export function PaymentsConsole({
       {activeTab === "subscriptions" && (
         <div className="space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-stone-900 dark:text-white">Active Tenant Subscriptions</h2>
+            <h2 className="text-sm font-bold text-stone-900 dark:text-white">
+              Active Tenant Subscriptions
+            </h2>
             <p className="text-xs text-stone-500 dark:text-stone-400">
               Subscriptions assigned to restaurant outlets across organizations.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5">
+          <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-stone-700 dark:text-stone-300">
-                <thead className="border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-500 dark:text-stone-400 uppercase">
+                <thead className="border-b border-stone-200 bg-stone-50 text-[11px] font-semibold tracking-wider text-stone-500 uppercase dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-400">
                   <tr>
                     <th className="p-3">Restaurant Outlet</th>
                     <th className="p-3">Plan</th>
@@ -273,7 +279,9 @@ export function PaymentsConsole({
                     subscriptions.map((s) => (
                       <tr key={s.id} className="hover:bg-stone-800/40">
                         <td className="p-3">
-                          <div className="font-semibold text-stone-900 dark:text-white">{s.restaurantName}</div>
+                          <div className="font-semibold text-stone-900 dark:text-white">
+                            {s.restaurantName}
+                          </div>
                           <div className="font-mono text-[10px] text-stone-500">
                             {s.restaurantId}
                           </div>
@@ -314,7 +322,9 @@ export function PaymentsConsole({
       {activeTab === "analytics" && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-stone-900 dark:text-white">Multi-Currency Financial Overview</h2>
+            <h2 className="text-sm font-bold text-stone-900 dark:text-white">
+              Multi-Currency Financial Overview
+            </h2>
             <p className="text-xs text-stone-500 dark:text-stone-400">
               Orders transaction volume grouped strictly by local transaction currency (ADR 017
               invariant).
@@ -323,29 +333,33 @@ export function PaymentsConsole({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {financials.byCurrency.length === 0 ? (
-              <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 text-center text-stone-500 sm:col-span-2">
+              <div className="rounded-2xl border border-stone-200 bg-white p-6 text-center text-stone-500 sm:col-span-2 dark:border-stone-800 dark:bg-stone-900">
                 No orders recorded yet.
               </div>
             ) : (
               financials.byCurrency.map((fc) => (
                 <div
                   key={fc.currency}
-                  className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5"
+                  className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900"
                 >
-                  <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-2">
+                  <div className="flex items-center justify-between border-b border-stone-200 pb-2 dark:border-stone-800">
                     <span className="font-mono text-sm font-bold text-orange-400">
                       {fc.currency} Orders
                     </span>
                     <TrendingUp className="h-4 w-4 text-emerald-400" />
                   </div>
                   <div className="mt-4">
-                    <span className="text-xs text-stone-500 dark:text-stone-400">Gross Merchandise Value (GMV)</span>
+                    <span className="text-xs text-stone-500 dark:text-stone-400">
+                      Gross Merchandise Value (GMV)
+                    </span>
                     <div className="text-2xl font-extrabold text-stone-900 dark:text-white">
                       {(fc.totalMinor / 100).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{" "}
-                      <span className="text-xs font-normal text-stone-500 dark:text-stone-400">{fc.currency}</span>
+                      <span className="text-xs font-normal text-stone-500 dark:text-stone-400">
+                        {fc.currency}
+                      </span>
                     </div>
                     <div className="mt-2 text-xs text-stone-500 dark:text-stone-400">
                       Total Tickets: <strong className="text-stone-200">{fc.orderCount}</strong>
@@ -360,53 +374,68 @@ export function PaymentsConsole({
 
       {/* Edit Plan Modal */}
       {editingPlan && (
-        <AdminDialog title="Edit subscription plan" busy={savingPlan} onClose={() => setEditingPlan(null)} className="max-w-md p-6">
-            <h2 className="text-base font-bold text-stone-900 dark:text-white">Edit Plan: {editingPlan.displayName}</h2>
-            <form onSubmit={handleSavePlan} className="mt-4 space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-stone-700 dark:text-stone-300">Display Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editingPlan.displayName}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, displayName: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-2 text-stone-900 dark:text-white focus:outline-none"
-                />
-              </div>
+        <AdminDialog
+          title="Edit subscription plan"
+          busy={savingPlan}
+          onClose={() => setEditingPlan(null)}
+          className="max-w-md p-6"
+        >
+          <h2 className="text-base font-bold text-stone-900 dark:text-white">
+            Edit Plan: {editingPlan.displayName}
+          </h2>
+          <form onSubmit={handleSavePlan} className="mt-4 space-y-4 text-xs">
+            <div>
+              <label className="block font-semibold text-stone-700 dark:text-stone-300">
+                Display Name
+              </label>
+              <input
+                type="text"
+                required
+                value={editingPlan.displayName}
+                onChange={(e) => setEditingPlan({ ...editingPlan, displayName: e.target.value })}
+                className="mt-1 w-full rounded-lg border border-stone-200 bg-stone-50 p-2 text-stone-900 focus:outline-none dark:border-stone-800 dark:bg-stone-950 dark:text-white"
+              />
+            </div>
 
-              <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">Plan prices are read-only here. Price changes require a reviewed provider plan release.</p>
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+              Plan prices are read-only here. Price changes require a reviewed provider plan
+              release.
+            </p>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="planActive"
-                  checked={editingPlan.isActive}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, isActive: e.target.checked })}
-                  className="h-4 w-4 rounded border-stone-200 dark:border-stone-700 text-orange-600"
-                />
-                <label htmlFor="planActive" className="font-semibold text-stone-700 dark:text-stone-300">
-                  Plan is Active and Selectable
-                </label>
-              </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="planActive"
+                checked={editingPlan.isActive}
+                onChange={(e) => setEditingPlan({ ...editingPlan, isActive: e.target.checked })}
+                className="h-4 w-4 rounded border-stone-200 text-orange-600 dark:border-stone-700"
+              />
+              <label
+                htmlFor="planActive"
+                className="font-semibold text-stone-700 dark:text-stone-300"
+              >
+                Plan is Active and Selectable
+              </label>
+            </div>
 
-              <div className="mt-5 flex justify-end gap-2 border-t border-stone-200 dark:border-stone-800 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingPlan(null)}
-                  disabled={savingPlan}
-                  className="rounded-lg border border-stone-200 dark:border-stone-700 px-3 py-1.5 text-stone-700 dark:text-stone-300 hover:bg-stone-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingPlan}
-                  className="rounded-lg bg-orange-600 px-4 py-1.5 font-semibold text-white hover:bg-orange-500"
-                >
-                  {savingPlan ? "Saving…" : "Save Changes"}
-                </button>
-              </div>
-            </form>
+            <div className="mt-5 flex justify-end gap-2 border-t border-stone-200 pt-2 dark:border-stone-800">
+              <button
+                type="button"
+                onClick={() => setEditingPlan(null)}
+                disabled={savingPlan}
+                className="rounded-lg border border-stone-200 px-3 py-1.5 text-stone-700 hover:bg-stone-800 dark:border-stone-700 dark:text-stone-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingPlan}
+                className="rounded-lg bg-orange-600 px-4 py-1.5 font-semibold text-white hover:bg-orange-500"
+              >
+                {savingPlan ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </form>
         </AdminDialog>
       )}
     </div>
