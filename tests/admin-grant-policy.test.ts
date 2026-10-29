@@ -14,6 +14,8 @@ describe("grant operator rules", () => {
     expect(grantEndForPreset("first_user", start)?.toISOString()).toBe("2027-01-23T10:00:00.000Z");
     expect(grantEndForPreset("paid", start)?.toISOString()).toBe("2026-11-24T10:00:00.000Z");
     expect(grantEndForPreset("custom", start)).toBeNull();
+    expect(grantEndForPreset("permanent", start)?.toISOString()).toBe("9999-12-31T23:59:59.000Z");
+    expect(grantPresetDetails.permanent.description).toContain("revoke");
     expect(grantPresetDetails.paid.description).toContain("Verify payment");
   });
   it("differentiates revoked, expired, scheduled, expiring, and active", () => {
