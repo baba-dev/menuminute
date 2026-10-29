@@ -295,6 +295,13 @@
       "when": 1793286000002,
       "tag": "0041_reports_kitchen_read",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793286000003,
+      "tag": "0042_reports_query_indexes",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,30 @@ export const reportQuerySchema = z
     fulfillmentMode: z.enum(["all", "dine_in", "pickup"]).default("all"),
     tab: reportTabSchema.default("overview"),
   })
-  .strict();
+.strict()
+  .superRefine((value, ctx) => {
+    const isCalendarDate = (date: string | undefined): date is string => {
+      if (!date || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return false;
+      const timestamp = Date.parse(date);
+      return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === date;
+    };
+    if (value.from && !isCalendarDate(value.from)) {
+      ctx.addIssue({ code: "custom", message: "Invalid start date", path: ["from"] });
+    }
+    if (value.to && !isCalendarDate(value.to)) {
+      ctx.addIssue({ code: "custom", message: "Invalid end date", path: ["to"] });
+    }
+    if (value.range === "custom") {
+      if (!isCalendarDate(value.from) || !isCalendarDate(value.to)) {
+        ctx.addIssue({ code: "custom", message: "Custom dates are required", path: ["range"] });
+      } else {
+        const elapsed = (Date.parse(value.to) - Date.parse(value.from)) / 86400000;
+        if (elapsed < 0 || elapsed > 366) {
+          ctx.addIssue({ code: "custom", message: "Range must be 1–367 days", path: ["to"] });
+        }
+      }
+    }
+  });
 
 export type ReportQuery = z.infer<typeof reportQuerySchema>;
 

@@ -152,6 +152,9 @@ export async function getReportsWorkspace(
     const range = resolveDateRange(query, outlet.timezone);
     const timezone = outlet.timezone || "UTC";
 
+    const loadHourly = query.tab === "overview";
+    const loadMenu = query.tab === "overview" || query.tab === "menu" || query.tab === "z-report";
+
     // 2. Fetch Executive Summary & Baseline Comparison
     const [execCurrent, execBaseline, totalItemsRow] = await Promise.all([
       tx.execute<{
@@ -271,7 +274,7 @@ export async function getReportsWorkspace(
     };
 
     // 3. Hourly Trajectory (0..23)
-    const hourlyRows = await tx.execute<{
+    const hourlyRows = loadHourly ? await tx.execute<{
       hr: number;
       sales_minor: string;
       order_count: number;
@@ -288,10 +291,10 @@ export async function getReportsWorkspace(
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
-    `);
+    `) : { rows: [] as Array<{ hr: number; sales_minor: string; order_count: number }> };
 
     // Baseline hourly averages (from the past 14 days)
-    const benchmarkHourlyRows = await tx.execute<{
+    const benchmarkHourlyRows = loadHourly ? await tx.execute<{
       hr: number;
       avg_sales_minor: string;
     }>(sql`
@@ -306,7 +309,7 @@ export async function getReportsWorkspace(
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
-    `);
+    `) : { rows: [] as Array<{ hr: number; avg_sales_minor: string }> };
 
     const hourlyMap = new Map(hourlyRows.rows.map((r) => [r.hr, r]));
     const benchmarkMap = new Map(
@@ -328,7 +331,7 @@ export async function getReportsWorkspace(
     });
 
     // 4. Menu Engineering & Product Mix Matrix
-    const menuRaw = await tx.execute<{
+    const menuRaw = loadMenu ? await tx.execute<{
       dish_id: string;
       item_name: string;
       category_name: string | null;
@@ -354,7 +357,7 @@ export async function getReportsWorkspace(
       ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by oi.dish_id
       order by total_revenue desc
-    `);
+    `) : { rows: [] as Array<{ dish_id: string; item_name: string; category_name: string | null; unit_price: number; quantity_sold: number; total_revenue: string }> };
 
     const allDishes = menuRaw.rows.map((r) => ({
       dishId: r.dish_id,
