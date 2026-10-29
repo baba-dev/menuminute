@@ -1,4 +1,5 @@
-export type GrantPreset = "first_user" | "trial_7" | "trial_30" | "paid" | "custom";
+export type GrantPreset = "first_user" | "trial_7" | "trial_30" | "paid" | "custom" | "permanent";
+export const PERMANENT_ACCESS_END = "9999-12-31T23:59:59.000Z";
 export type GrantStatus = "revoked" | "expired" | "scheduled" | "expiring" | "active";
 export const grantPresetDetails: Record<
   GrantPreset,
@@ -21,11 +22,13 @@ export const grantPresetDetails: Record<
     description: "30-day manual billing window. Verify payment separately before granting.",
   },
   custom: { label: "Custom", days: null, description: "Choose an explicit start and end time." },
+  permanent: { label: "Permanent (revocable)", days: null, description: "No scheduled expiration. A superadmin can revoke access after disabling live outlets." },
 };
 export function localDateTimeInput(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 export function grantEndForPreset(preset: GrantPreset, start: Date): Date | null {
+  if (preset === "permanent") return new Date(PERMANENT_ACCESS_END);
   const days = grantPresetDetails[preset].days;
   return days === null ? null : new Date(start.getTime() + days * 86400000);
 }
