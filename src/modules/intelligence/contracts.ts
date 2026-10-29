@@ -44,11 +44,27 @@ export const inferenceRequest = z
     messages: z.array(message).min(1).max(48),
     tools: z.array(toolDefinition).max(8).default([]),
     capability: z.enum(["text", "tools"]).default("text"),
+    // Opt-in only: existing Ember tool calls remain unchanged.
+    responseFormat: z
+      .union([
+        z.object({ type: z.literal("json_object") }).strict(),
+        z.object({
+          type: z.literal("json_schema"),
+          json_schema: z.record(z.string(), z.unknown()),
+        }).strict(),
+      ])
+      .optional(),
     maxOutputTokens: z.number().int().min(1).max(4096).default(512),
     temperature: z.number().min(0).max(1).default(0.2),
   })
   .strict()
   .superRefine((value, ctx) => {
+    if (value.capability === "tools" && value.responseFormat)
+      ctx.addIssue({
+        code: "custom",
+        path: ["responseFormat"],
+        message: "Structured text output cannot accompany tool calls",
+      });
     if (value.capability === "tools" && !value.tools.length)
       ctx.addIssue({
         code: "custom",
