@@ -61,7 +61,10 @@ describe("The Chef's Pass read-only presentation", () => {
       make({ id: "two", stationId: "grill", status: "preparing" }),
       make({ id: "three", stationId: "stove", status: "complete" }),
     ];
-    const stations = [{ id: "grill", name: "Grill" }, { id: "stove", name: "Main Stove" }];
+    const stations = [
+      { id: "grill", name: "Grill" },
+      { id: "stove", name: "Main Stove" },
+    ];
     expect(stationOverview(stations, visible, Date.parse("2026-10-22T10:22:00Z"))).toMatchObject([
       { name: "Grill", queued: 1, preparing: 1, completed: 0, oldestMinutes: 22 },
       { name: "Main Stove", queued: 0, preparing: 0, completed: 1, oldestMinutes: null },
