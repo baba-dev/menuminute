@@ -2,7 +2,7 @@ import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
-import { posWorkspace, posSubmit, posAttachOrder, posRecentPage, posIncomingOrders, posAcceptCustomerOrder } from "@/modules/pos/service";
+import { posWorkspace, posSubmit, posAttachOrder, posRecentPage, posIncomingOrders, posAcceptCustomerOrder, posOrderRegister } from "@/modules/pos/service";
 
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
 async function observed_GET(req: Request, { params }: Params) {
@@ -10,6 +10,11 @@ async function observed_GET(req: Request, { params }: Params) {
     const actor = await requestActor(req);
     const { organizationId, outletId } = await params;
     const url = new URL(req.url);
+    if (url.searchParams.get("view") === "register") {
+      return NextResponse.json(await posOrderRegister(actor,organizationId,outletId,
+        Object.fromEntries([...url.searchParams.entries()].filter(([key])=>key!=="view"))),
+        {headers:{"cache-control":"private, no-store"}});
+    }
     if (url.searchParams.get("view") === "inbox") {
       return NextResponse.json(await posIncomingOrders(actor,organizationId,outletId),
         {headers:{"cache-control":"private, no-store"}});

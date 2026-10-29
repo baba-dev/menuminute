@@ -256,6 +256,104 @@ export async function posIncomingOrders(
   return { orders: result.rows.slice(0,50), overflow: result.rows.length>50 };
 }
 
+
+export const posRegisterQuerySchema = z.object({
+  period: z.enum(["today","week","all"]).default("today"),
+  source: z.enum(["all","staff_pos","guest_menu","online","unknown"]).default("all"),
+  status: z.enum(["all","pending","accepted","preparing","ready","served",
+    "collected","cancelled","rejected","expired"]).default("all"),
+  payment: z.enum(["all","paid","unpaid","voided"]).default("all"),
+  search: z.string().trim().max(80).default(""),
+  cursor: z.string().max(400).optional(),
+}).strict();
+export type PosRegisterQuery = z.infer<typeof posRegisterQuerySchema>;
+export type PosRegisterRow = {
+  orderId:string;orderNumber:number;createdAt:string;source:string;
+  customerName:string|null;servicePoint:string|null;fulfillmentMode:string;
+  status:string;paymentStatus:string;paymentEvidence:string|null;
+  currency:string;totalMinor:string;saleId:string|null;
+  items:{name:string;quantity:number;variant:string|null;notes:string|null;totalMinor:number}[];
+};
+export type PosRegisterPage = {items:PosRegisterRow[];total:number;nextCursor:string|null};
+
+export async function posOrderRegister(
+ actor:Actor,organizationId:string,outletId:string,raw:unknown
+):Promise<PosRegisterPage>{
+  const q=posRegisterQuerySchema.parse(raw);
+  await posContext(actor,organizationId,outletId);
+  let cursorAt:string|null=null,cursorId:string|null=null;
+  if(q.cursor){
+    try{
+      const data=JSON.parse(Buffer.from(q.cursor,"base64url").toString("utf8")) as {at:string;id:string};
+      if(!data||typeof data.at!=="string"||!Number.isFinite(Date.parse(data.at)) ||
+         typeof data.id!=="string"||data.id.length>128||!data.id.length)
+        throw new Error("Malformed cursor");
+      cursorAt=new Date(data.at).toISOString();cursorId=data.id;
+    }catch{throw new ValidationError("Invalid register cursor");}
+  }
+  const pattern="%"+q.search.replace(/[\\%_]/g,"\\export const posAcceptSchema")+"%";
+  const predicate=sql`o.restaurant_id=${outletId}
+    and app_private.can_outlet(${outletId},'orders.read')
+    and (${q.source}='all' or o.intake_source=${q.source})
+    and (${q.status}='all' or o.status=${q.status})
+    and (${q.payment}='all' or o.payment_status=${q.payment})
+    and (${q.period}='all'
+      or (${q.period}='today' and o.created_at>=
+        ((now() at time zone r.timezone)::date::timestamp at time zone r.timezone)
+        and o.created_at<(((now() at time zone r.timezone)::date+1)::timestamp at time zone r.timezone))
+      or (${q.period}='week' and o.created_at>=now()-interval '7 days'))
+    and (${q.search}='' or o.order_number::text ilike ${pattern} escape '\\'
+      or o.customer_name ilike ${pattern} escape '\\'
+      or t.label ilike ${pattern} escape '\\'
+      or exists(select 1 from order_items i where i.restaurant_id=${outletId}
+       and i.order_id=o.id and i.item_name ilike ${pattern} escape '\\'))`;
+  const rows=await posCall(actor,outletId,async run=>{
+    const [result,count]=await Promise.all([
+      run(sql`select o.id as "orderId",o.order_number as "orderNumber",
+        o.created_at as "createdAt",o.intake_source as source,
+        o.customer_name as "customerName",
+        case when t.id is not null then coalesce(t.label,'Table '||t.table_number) else null end as "servicePoint",
+        o.fulfillment_mode as "fulfillmentMode",o.status,o.payment_status as "paymentStatus",
+        case when a.sale_id is not null then 'staff_recorded'
+             when pt.sale_id is not null then 'finance_recorded' else null end as "paymentEvidence",
+        o.currency,coalesce(b.total_minor,o.total_minor)::text as "totalMinor",
+        s.id as "saleId",
+        coalesce((select jsonb_agg(jsonb_build_object(
+         'name',i.item_name,'quantity',i.quantity,'variant',i.variant_name,
+         'notes',i.notes,'totalMinor',i.total_minor) order by i.id)
+         from order_items i where i.restaurant_id=${outletId} and i.order_id=o.id),
+         '[]'::jsonb) as items
+       from orders o join restaurants r on r.id=o.restaurant_id
+       left join restaurant_tables t on t.id=o.table_id and t.restaurant_id=o.restaurant_id
+       left join pos_sales s on s.order_id=o.id and s.outlet_id=o.restaurant_id
+       left join pos_bills b on b.sale_id=s.id and b.outlet_id=o.restaurant_id
+       left join pos_staff_payment_attestations a on a.sale_id=s.id and a.outlet_id=o.restaurant_id
+       left join lateral (select pt.sale_id from pos_tenders pt where pt.outlet_id=o.restaurant_id
+         and pt.sale_id=s.id limit 1) pt on true
+       where ${predicate}
+       and (${cursorAt}::timestamptz is null or
+        o.created_at<${cursorAt}::timestamptz or
+        (o.created_at=${cursorAt}::timestamptz and o.id<${cursorId}))
+       order by o.created_at desc,o.id desc limit 11`),
+      run(sql`select count(*)::int as total from orders o
+        join restaurants r on r.id=o.restaurant_id
+        left join restaurant_tables t on t.id=o.table_id and t.restaurant_id=o.restaurant_id
+        where ${predicate}`)
+    ]);
+    return {
+      items:(result as {rows:PosRegisterRow[]}).rows,
+      total:(count as {rows:{total:number}[]}).rows[0]?.total??0,
+    };
+  });
+  const hasMore=rows.items.length>10;
+  const items=rows.items.slice(0,10);
+  const last=items.at(-1);
+  const nextCursor=hasMore&&last?Buffer.from(JSON.stringify({
+    at:new Date(last.createdAt).toISOString(),id:last.orderId
+  })).toString("base64url"):null;
+  return {items,total:rows.total,nextCursor};
+}
+
 export const posAcceptSchema=z.object({
   key:z.string().uuid(),orderId:identity,expectedVersion:z.number().int().positive()
 }).strict();

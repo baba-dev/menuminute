@@ -21,6 +21,7 @@ import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
 import { PosIncomingOrders } from "./pos-incoming-orders";
+import { PosOrderRegister } from "./pos-order-register";
 import {
   readTerminalReceiptSettings,
   saveTerminalReceiptSettings,
@@ -30,7 +31,6 @@ import {
   discardReservedWindow,
   type ReceiptPaper,
 } from "@/lib/pos/receipt-printing";
-import type { PosRecentPage } from "@/modules/pos/service";
 
 type Menu = PosWorkspace["menus"][number];
 type Dish = Menu["categories"][number]["items"][number];
@@ -108,7 +108,6 @@ export function TheTill({
   const [printFallback, setPrintFallback] = useState<string | null>(null);
   const [submitFeedback, setSubmitFeedback] = useState<"idle" | "success" | "error">("idle");
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [recentBusy, setRecentBusy] = useState(false);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
   const incomingOrderId = useSyncExternalStore(
@@ -177,28 +176,6 @@ export function TheTill({
     const fresh = await json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" }));
     setWorkspace(fresh);
     if (!fresh.menus.some((m) => m.id === selectedMenu)) setSelectedMenu(fresh.menus[0]?.id ?? "");
-  }
-  async function changeRecentPage(page: number) {
-    if (recentBusy || page < 0 || page > 1000) return;
-    setRecentBusy(true);
-    try {
-      const pagination = await json<PosRecentPage>(
-        await fetch(endpoint + "?view=recent&page=" + page, { cache: "no-store" })
-      );
-      setWorkspace((prev) => ({
-        ...prev,
-        recent: pagination.items,
-        recentPagination: {
-          page: pagination.page,
-          total: pagination.total,
-          hasMore: pagination.hasMore,
-        },
-      }));
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load draft register page.");
-    } finally {
-      setRecentBusy(false);
-    }
   }
   async function configure(event: FormEvent) {
     event.preventDefault();
@@ -977,63 +954,7 @@ export function TheTill({
           </div>
         )}
         {workspace.context.enabled && (
-          <section className="till-recent">
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">04 / DRAFT REGISTER</span>
-                <h2>Recently recorded</h2>
-              </div>
-              <ClipboardList size={20} />
-            </div>
-            {workspace.recent.map((sale) => (
-              <div className="till-existing-row" key={sale.saleId}>
-                <div>
-                  <strong>
-                    Order #{sale.orderNumber} ·{" "}
-                    {sale.origin === "staff" ? "Staff entry" : "Existing ticket"}
-                  </strong>
-                  <small>
-                    {sale.saleId} · {sale.status} · Payment{" "}
-                    {sale.paymentStatus === "paid" ? "Complete" : "Pending"}
-                  </small>
-                </div>
-                <div className="till-register-actions">
-                  <span>{money(sale.subtotalMinor, sale.currency)}</span>
-                  <Link
-                    href={"/dashboard/pos/receipts/" + encodeURIComponent(sale.saleId)}
-                    target="_blank"
-                    rel="noopener"
-                    aria-label={"Print order " + sale.orderNumber}
-                  >
-                    <Printer size={16} />
-                  </Link>
-                </div>
-              </div>
-            ))}
-            {!workspace.recent.length && <p className="till-empty">No orders on this page.</p>}
-            <nav className="till-pagination" aria-label="Draft register pages">
-              <span>
-                Page {workspace.recentPagination.page + 1} · {workspace.recentPagination.total}{" "}
-                recorded
-              </span>
-              <div>
-                <button
-                  type="button"
-                  disabled={recentBusy || workspace.recentPagination.page === 0}
-                  onClick={() => void changeRecentPage(workspace.recentPagination.page - 1)}
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  disabled={recentBusy || !workspace.recentPagination.hasMore}
-                  onClick={() => void changeRecentPage(workspace.recentPagination.page + 1)}
-                >
-                  Next
-                </button>
-              </div>
-            </nav>
-          </section>
+          <PosOrderRegister organizationId={organizationId} outletId={outletId} />
         )}
       </div>
     </main>
