@@ -493,6 +493,9 @@ export function LiveOrdersBoard({
             <button type="button" className="sc-hero-secondary" onClick={() => show("history")}>
               Order history <History size={16} aria-hidden="true" />
             </button>
+            <Link href="/kitchen" className="sc-hero-secondary">
+              Open Kitchen Pro <ChefHat size={16} aria-hidden="true" />
+            </Link>
           </div>
         </div>
         <span className="sc-hero-credit" aria-hidden="true">

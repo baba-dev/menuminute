@@ -4,8 +4,6 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { LiveOrdersBoard } from "./live-orders-board";
-import { withOutlet } from "@/modules/tenancy/service";
-import { sql } from "drizzle-orm";
 import "@/components/orders/service-counter.css";
 
 export const metadata: Metadata = {
@@ -29,24 +27,6 @@ export default async function OrdersPage() {
         </Link>
       </main>
     );
-  // Kitchen Pro is the primary intake workspace for ready, entitled outlets.
-  // Non-Kitchen outlets and roles without Kitchen privileges remain here.
-  const kitchenPrimary = await withOutlet(
-    { userId: session.user.id, sessionId: session.session.id },
-    outlet.id,
-    "orders.read",
-    async (tx) => {
-      const result = await tx.execute<{ active: boolean }>(
-        sql`SELECT app_private.kitchen_primary_workspace(${outlet.id}) AS active`
-      );
-      if (result.rows[0]?.active !== true) return false;
-      const manager = await tx.execute<{ allowed: boolean }>(
-        sql`SELECT app_private.can_outlet(${outlet.id}, 'outlet.manage') AS allowed`
-      );
-      return manager.rows[0]?.allowed === true;
-    }
-  ).catch(() => false);
-  if (kitchenPrimary) redirect("/kitchen");
   return (
     <LiveOrdersBoard
       key={outlet.id}

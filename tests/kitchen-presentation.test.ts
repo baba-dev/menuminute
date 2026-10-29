@@ -4,6 +4,7 @@ import {
   kitchenPulse,
   stationGroups,
   outstandingDishes,
+  stationOverview,
 } from "../src/modules/kitchen/presentation";
 const base: KitchenWorkView = {
   id: "one",
@@ -37,7 +38,7 @@ describe("The Chef's Pass read-only presentation", () => {
       queued: 1,
       preparing: 1,
       completed: 1,
-      activeOrders: 1,
+      activeOrders: 2,
     });
     expect(kitchenPulse([base]).activeOrders).toBe(1);
   });
@@ -54,6 +55,24 @@ describe("The Chef's Pass read-only presentation", () => {
     expect(groups.complete.map((item) => item.id)).toEqual(["done"]);
     expect(groups.preparing).toEqual([]);
   });
+  it("summarizes all authorized stations without leaking missing station details", () => {
+    const visible = [
+      make({ id: "one", stationId: "grill", status: "queued" }),
+      make({ id: "two", stationId: "grill", status: "preparing" }),
+      make({ id: "three", stationId: "stove", status: "complete" }),
+    ];
+    const stations = [
+      { id: "grill", name: "Grill" },
+      { id: "stove", name: "Main Stove" },
+    ];
+    expect(stationOverview(stations, visible, Date.parse("2026-10-22T10:22:00Z"))).toMatchObject([
+      { name: "Grill", queued: 1, preparing: 1, completed: 0, oldestMinutes: 22 },
+      { name: "Main Stove", queued: 0, preparing: 0, completed: 1, oldestMinutes: null },
+    ]);
+    expect(stationOverview(stations.slice(0, 1), visible, null)).toHaveLength(1);
+    expect(stationGroups(visible, undefined).queued.map((item) => item.id)).toEqual(["one"]);
+  });
+
   it("counts active quantities rather than completed or cancelled work", () => {
     expect(
       outstandingDishes([

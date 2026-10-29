@@ -162,6 +162,10 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
+  // Both operational desks remain accessible; active Kitchen Pro must not
+  // redirect merchant history, billing or collection back to the kitchen.
+  await page.goto("/dashboard/orders");
+  await expect(page).toHaveURL(new RegExp("/dashboard/orders"));
   await page.goto("/kitchen#expeditor");
   // A freshly enabled outlet deliberately opens the setup dialog after
   // hydration; isVisible() alone races with the scheduled first-run opening.
@@ -172,7 +176,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   const expo = page.getByRole("region", { name: "Expeditor" });
   await expect(expo.getByText("#1042")).toBeVisible();
   await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
-  await expect(expo.getByRole("button", { name: "Await all stations" })).toBeDisabled();
+  await expect(expo.getByRole("button", { name: "Waiting for remaining stations" })).toBeDisabled();
   for (const name of ["Grill", "Tandoor"]) {
     await page
       .getByRole("navigation", { name: "Kitchen stations" })
@@ -184,7 +188,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
     await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
   }
   await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
-  await expo.getByRole("button", { name: "Release Ready to guest" }).click();
+  await expo.getByRole("button", { name: "Release order as Ready" }).click();
   await expect(expo.getByText("#1042")).toHaveCount(0);
   const db = new Pool({ connectionString: url, max: 1 });
   try {
