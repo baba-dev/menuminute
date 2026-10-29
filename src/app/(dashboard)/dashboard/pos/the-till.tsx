@@ -362,12 +362,20 @@ export function TheTill({
       }
     } catch (e) {
       discardReservedWindow(reservedWindow);
-      feedback("error");
-      setMessage(
-        e instanceof Error
-          ? e.message
-          : "Order was not confirmed. Retry the same cart to recover it."
-      );
+      if (e instanceof TypeError) {
+        // A lost fetch response may be a successfully committed order.
+        setSubmitFeedback("idle");
+        setMessage(
+          "Connection interrupted. The order may have been recorded. Retry the unchanged cart to recover the same sale without duplicating it."
+        );
+      } else {
+        feedback("error");
+        setMessage(
+          e instanceof Error
+            ? e.message
+            : "Order was not confirmed. Retry the same cart to recover it."
+        );
+      }
     } finally {
       setBusy(false);
     }

@@ -303,7 +303,15 @@ export async function posSubmit(
     throw new ValidationError("Payment method requires Mark as Paid");
   const hash = digest(input);
   const prior = await replay(actor, outletId, input.key, hash, "submit_order");
-  if (prior) return prior;
+  if (prior) {
+    const receipt = await posReceipt(actor, organizationId, outletId, prior.saleId);
+    return {
+      ...prior,
+      paymentStatus: receipt.paymentStatus,
+      paymentEvidence: receipt.paymentEvidence,
+      paymentMethod: receipt.paymentMethod ?? undefined,
+    };
+  }
   const product = await catalog(context, outletId);
   if (
     product.outlet.fulfillmentModes &&

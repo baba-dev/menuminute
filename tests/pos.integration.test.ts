@@ -258,6 +258,8 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     const replay = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, payload);
     expect(replay.saleId).toBe(first.saleId);
     expect(replay.duplicate).toBe(true);
+    expect(replay.paymentStatus).toBe("complete");
+    expect(replay.paymentEvidence).toBe("staff_recorded");
     const records = await admin(async (_db, pool) =>
       pool.query(
         "select o.payment_status,s.amount_minor,s.method,s.currency from orders o join pos_staff_payment_attestations s on s.order_id=o.id where o.id=$1",
