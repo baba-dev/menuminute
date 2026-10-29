@@ -87,7 +87,7 @@ async function setup() {
   }
 }
 
-test("The Till is private and creates one unpaid canonical kitchen-bound draft order", async ({
+test("Point of Sale creates one canonical accepted staff order with one-tap entry", async ({
   page,
 }) => {
   test.setTimeout(120000);
@@ -99,7 +99,7 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/dashboard/pos");
-  await expect(page.getByRole("heading", { name: "Activate draft POS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Activate Point of Sale" })).toBeVisible();
   await expect(page.getByTestId("pos-till").locator(".pos-hero")).toBeVisible();
   // Both the HTML theme attributes and The Till's own palette must switch.
   if ((await page.locator("html").getAttribute("data-theme")) !== "dark") {
@@ -112,21 +112,23 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
   await expect(page.getByTestId("pos-till")).toHaveCSS("--till-ember", "#ffc078");
   await expect(page.getByTestId("pos-till")).toHaveCSS("--pos-surface", "#28231e");
   await expect(
-    page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /The Till/ })
+    page.getByRole("navigation", { name: "POS workspaces" }).getByRole("link", { name: /Point of Sale/ })
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("region", { name: "POS overview" })).toContainText("Published menus");
-  await page.getByText("POS DISABLED").waitFor();
+  await expect(page.getByRole("region", { name: "Point of Sale overview" })).toContainText("Published menus");
   await page.getByLabel("Registered seller address").fill("A registered fixture address in India");
-  await page.getByRole("button", { name: "Save identity and enable draft orders" }).click();
+  await page.getByRole("button", { name: "Save seller details and enable POS" }).click();
   await expect(page.getByRole("heading", { name: "Published menu" })).toBeVisible();
   await page.getByRole("button", { name: /Paneer Lunch/ }).click();
-  await expect(page.getByRole("dialog", { name: "Paneer Lunch" })).toBeVisible();
+  // A simple dish goes straight into the cart, optional add-ons use inline editor.
+  await expect(page.locator(".till-cartline")).toContainText("Paneer Lunch");
+  await page.getByRole("button", { name: "Customize Paneer Lunch" }).click();
+  await expect(page.getByRole("region", { name: "Paneer Lunch" })).toBeVisible();
   await page.getByLabel("Roti").check();
-  await page.getByRole("button", { name: /Add dish/ }).click();
+  await page.getByRole("button", { name: /Save options/ }).click();
   await expect(page.getByText("Pre-tax subtotal")).toBeVisible();
-  await page.getByRole("button", { name: /Send to Service Counter/ }).click();
-  await expect(page.getByRole("status")).toContainText("Recorded");
-  await expect(page.getByRole("status")).toContainText("not a receipt or tax invoice");
+  await page.getByRole("button", { name: /Place Order & Send/ }).click();
+  await expect(page.locator(".till-success")).toContainText("Dispatched");
+  await expect(page.locator(".till-success")).toContainText("not a receipt or tax invoice");
   const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
   try {
     const result = await pool.query(
@@ -134,7 +136,7 @@ test("The Till is private and creates one unpaid canonical kitchen-bound draft o
       [f.outlet]
     );
     expect(result.rows[0]).toMatchObject({
-      status: "pending",
+      status: "accepted",
       payment_status: "unpaid",
       total_minor: 13000,
       tax_state: "not_calculated",
