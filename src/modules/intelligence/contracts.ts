@@ -48,10 +48,12 @@ export const inferenceRequest = z
     responseFormat: z
       .union([
         z.object({ type: z.literal("json_object") }).strict(),
-        z.object({
-          type: z.literal("json_schema"),
-          json_schema: z.record(z.string(), z.unknown()),
-        }).strict(),
+        z
+          .object({
+            type: z.literal("json_schema"),
+            json_schema: z.record(z.string(), z.unknown()),
+          })
+          .strict(),
       ])
       .optional(),
     maxOutputTokens: z.number().int().min(1).max(4096).default(512),
