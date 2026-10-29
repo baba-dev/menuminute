@@ -35,8 +35,12 @@ CREATE FUNCTION app_private.kitchen_paid_subscription_active(p_org text) RETURNS
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
  SELECT app_private.kitchen_commerce_enabled() AND EXISTS(
    SELECT 1 FROM app_private.razorpay_subscriptions s
-   JOIN app_private.razorpay_charges c ON c.subscription_id=s.subscription_id
-   JOIN entitlement_grants e ON e.id=c.grant_id
+   JOIN entitlement_grants e ON e.organization_id=s.organization_id
+    AND e.id IN (
+      SELECT c.grant_id FROM app_private.razorpay_charges c WHERE c.subscription_id=s.subscription_id
+      UNION ALL
+      SELECT c.grant_id FROM app_private.razorpay_resume_grants c WHERE c.subscription_id=s.subscription_id
+    )
    JOIN organizations o ON o.id=s.organization_id AND o.is_active
    WHERE s.organization_id=p_org AND s.product_key='kitchen_pro'
      -- Cancelled/completed subscriptions retain their already-paid period.
@@ -430,3 +434,25 @@ BEGIN
   END IF;
   -- 'cancelled' and 'completed' retain already-paid access until the verified end.
 END $$;
+
+
+-- One scoped authority for the primary kitchen workspace. Never make the
+-- browser infer entitlement from unprivileged joins to internal billing tables.
+CREATE FUNCTION app_private.kitchen_primary_workspace(p_outlet text) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+ SELECT current_setting('app.outlet_id',true)=p_outlet
+ AND app_private.can_outlet(p_outlet,'orders.read')
+ AND COALESCE((SELECT k.enabled FROM kitchen_outlet_settings k WHERE k.outlet_id=p_outlet),false)
+ AND EXISTS(
+   SELECT 1 FROM restaurants r JOIN organizations o ON o.id=r.organization_id AND o.is_active
+   WHERE r.id=p_outlet AND r.is_active AND
+     EXISTS(SELECT 1 FROM entitlement_grants g
+       WHERE g.organization_id=r.organization_id AND g.capability='kitchen.new'
+         AND g.revoked_at IS NULL AND g.starts_at<=clock_timestamp()
+         AND g.ends_at>clock_timestamp())
+ )
+ AND NOT EXISTS(SELECT 1 FROM kitchen_pilot_outlets k
+   WHERE k.outlet_id=p_outlet AND k.state='draining')
+$fn$;
+REVOKE ALL ON FUNCTION app_private.kitchen_primary_workspace(text) FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.kitchen_primary_workspace(text) TO menuminute_app;
