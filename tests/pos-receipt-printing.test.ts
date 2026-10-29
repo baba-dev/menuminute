@@ -3,6 +3,8 @@ import {
   receiptHref,
   readTerminalReceiptSettings,
   saveTerminalReceiptSettings,
+  reserveReceiptWindow,
+  dispatchReceiptToWindow,
 } from "../src/lib/pos/receipt-printing";
 
 describe("receipt browser transport boundaries", () => {
@@ -41,4 +43,35 @@ describe("receipt browser transport boundaries", () => {
       Object.defineProperty(globalThis, "window", { configurable: true, value: oldWindow });
     }
   });
+  it("reserves a popup without interpreting text as HTML and severs the opener", () => {
+    const originalWindow = (globalThis as { window?: unknown }).window;
+    let readOrWriteDocument = false;
+    const child = {
+      opener: { privileged: true } as unknown,
+      closed: false,
+      get document() {
+        readOrWriteDocument = true;
+        throw new Error("Popup document must not be touched");
+      },
+      location: { replace: (href: string) => expect(href).toBe(receiptHref("sale-abc", "80", true)) },
+    };
+    try {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: { open: () => child },
+      });
+      expect(reserveReceiptWindow()).toBe(child);
+      expect(child.opener).toBeNull();
+      expect(readOrWriteDocument).toBe(false);
+      expect(dispatchReceiptToWindow(child as unknown as Window, receiptHref("sale-abc", "80", true))).toBe(true);
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: { open: () => { throw new Error("Popup blocked"); } },
+      });
+      expect(reserveReceiptWindow()).toBeNull();
+    } finally {
+      Object.defineProperty(globalThis, "window", { configurable: true, value: originalWindow });
+    }
+  });
+
 });

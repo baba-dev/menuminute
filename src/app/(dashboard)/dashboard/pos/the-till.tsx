@@ -348,12 +348,17 @@ export function TheTill({
       commandRef.current = null;
       feedback("success");
       if (printInvoice) {
-        const url = receiptHref(result.saleId, receiptPaper, true);
-        if (!dispatchReceiptToWindow(reservedWindow, url)) {
-          setPrintFallback(receiptHref(result.saleId, receiptPaper, false));
-          setMessage(
-            "Order recorded. Automatic print was blocked; open the receipt to print it manually."
-          );
+        try {
+          const url = receiptHref(result.saleId, receiptPaper, true);
+          if (!dispatchReceiptToWindow(reservedWindow, url)) {
+            setPrintFallback(receiptHref(result.saleId, receiptPaper, false));
+            setMessage(
+              "Order recorded. Automatic print was blocked; open the receipt to print it manually."
+            );
+          }
+        } catch {
+          discardReservedWindow(reservedWindow);
+          setMessage("Order recorded successfully, but receipt printing could not be opened.");
         }
       }
       try {

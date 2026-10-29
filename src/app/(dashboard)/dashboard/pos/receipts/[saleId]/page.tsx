@@ -45,6 +45,7 @@ export default async function ReceiptPage({
     redirect("/dashboard/pos/ledger/documents/" + encodeURIComponent(receipt.issuedDocumentId));
   const paper = paramsQuery.paper === "58" ? "58" : "80";
   const paid = receipt.paymentStatus === "complete";
+  const staffPaid = paid && receipt.paymentEvidence === "staff_recorded";
   return (
     <main className={"receipt-shell receipt-width-" + paper}>
       <header className="receipt-toolbar">
@@ -63,7 +64,13 @@ export default async function ReceiptPage({
         </header>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center">
-          <h2>{paid ? "STAFF-RECORDED PAYMENT RECEIPT" : "BILL — PAYMENT PENDING"}</h2>
+          <h2>
+            {staffPaid
+              ? "STAFF-RECORDED PAYMENT RECEIPT"
+              : paid
+                ? "BILL — PAYMENT COMPLETE"
+                : "BILL — PAYMENT PENDING"}
+          </h2>
           <strong>Order #{receipt.orderNumber}</strong>
         </div>
         <dl className="receipt-details">
@@ -120,7 +127,13 @@ export default async function ReceiptPage({
         </div>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center receipt-footer">
-          <strong>{paid ? "PAYMENT COMPLETE — STAFF RECORDED" : "PAYMENT PENDING"}</strong>
+          <strong>
+            {staffPaid
+              ? "PAYMENT COMPLETE — STAFF RECORDED"
+              : paid
+                ? "PAYMENT COMPLETE — SEE LEDGER"
+                : "PAYMENT PENDING"}
+          </strong>
           <p>
             Prices are pre-tax; taxes and fees have not been calculated. This operational bill is
             not a tax invoice, fiscal receipt or provider-verified payment confirmation.

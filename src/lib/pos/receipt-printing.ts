@@ -49,12 +49,16 @@ export function receiptHref(saleId: string, paper: ReceiptPaper, auto: boolean):
  * Returns null when popup policy blocks it; callers must offer an explicit link.
  */
 export function reserveReceiptWindow(): Window | null {
-  const child = window.open("about:blank", "_blank");
-  if (child) {
-    child.document.title = "Preparing MenuMinute receipt";
-    child.document.body.textContent = "Preparing your receipt…";
+  // A new about:blank window inherits the opener. Detach it immediately, and do
+  // not read, write or reinterpret HTML/text from the DOM of the popup.
+  try {
+    const child = window.open("about:blank", "_blank");
+    if (child) child.opener = null;
+    return child;
+  } catch {
+    // Browser policy may reject popups even during a trusted click.
+    return null;
   }
-  return child;
 }
 export function dispatchReceiptToWindow(child: Window | null, href: string): boolean {
   if (!child || child.closed) return false;
