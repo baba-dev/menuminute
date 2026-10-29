@@ -332,6 +332,8 @@ export function UsersConsole({
         )}
       </div>
 
+      {!selectedUser && actionMessage && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{actionMessage.text}</p>}
+
       {/* User Management Modal */}
       {selectedUser && (
         <AdminDialog title="Manage user account" onClose={() => setSelectedUser(null)} className="max-w-2xl p-6">

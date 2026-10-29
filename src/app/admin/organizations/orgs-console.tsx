@@ -93,6 +93,7 @@ export function OrgsConsole({
   } | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const [showSuspendPrompt, setShowSuspendPrompt] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,15 +119,17 @@ export function OrgsConsole({
     }
   }
 
-  async function handleToggleActive(isActive: boolean) {
-    if (!selectedOrg) return;
-    if (!suspendReason.trim() || suspendReason.trim().length < 5) {
+  async function handleToggleActive(isActive: boolean, reasonOverride?: string) {
+    if (!selectedOrg || actionBusy) return;
+    const submittedReason = (reasonOverride ?? suspendReason).trim();
+    if (submittedReason.length < 5) {
       setActionMessage({ text: "Please provide a valid reason (min 5 chars)", type: "error" });
       return;
     }
 
+    setActionBusy(true);
     try {
-      await onSetActive(selectedOrg.organization.id, isActive, suspendReason);
+      await onSetActive(selectedOrg.organization.id, isActive, submittedReason);
       setSelectedOrg({
         ...selectedOrg,
         organization: { ...selectedOrg.organization, isActive },
@@ -140,11 +143,14 @@ export function OrgsConsole({
       router.refresh();
     } catch (err: any) {
       setActionMessage({ text: err.message || "Action failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
   async function handleToggleMfa(mfaRequired: boolean) {
-    if (!selectedOrg) return;
+    if (!selectedOrg || actionBusy) return;
+    setActionBusy(true);
     try {
       await onSetMfaRequired(selectedOrg.organization.id, mfaRequired);
       setSelectedOrg({
@@ -155,6 +161,8 @@ export function OrgsConsole({
       router.refresh();
     } catch (err: any) {
       setActionMessage({ text: err.message || "MFA update failed", type: "error" });
+    } finally {
+      setActionBusy(false);
     }
   }
 
@@ -298,9 +306,11 @@ export function OrgsConsole({
         )}
       </div>
 
+      {!selectedOrg && actionMessage && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{actionMessage.text}</p>}
+
       {/* Organization Detail Modal */}
       {selectedOrg && (
-        <AdminDialog title="Manage organization" onClose={() => { setSelectedOrg(null); setShowSuspendPrompt(false); }} className="max-w-3xl p-6">
+        <AdminDialog title="Manage organization" busy={actionBusy} onClose={() => { setSelectedOrg(null); setShowSuspendPrompt(false); }} className="max-w-3xl p-6">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
               <div>
@@ -348,7 +358,8 @@ export function OrgsConsole({
                   {/* Toggle MFA policy */}
                   <button
                     type="button"
-                    onClick={() => handleToggleMfa(!selectedOrg.organization.mfaRequired)}
+                    onClick={() => void handleToggleMfa(!selectedOrg.organization.mfaRequired)}
+                    disabled={actionBusy}
                     className="flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-2xs hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
                   >
                     <Shield className="h-3.5 w-3.5 text-stone-500 dark:text-stone-400" />
@@ -364,6 +375,7 @@ export function OrgsConsole({
                     <button
                       type="button"
                       onClick={() => setShowSuspendPrompt(true)}
+                      disabled={actionBusy}
                       className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900/60"
                     >
                       Suspend Organization
@@ -372,8 +384,7 @@ export function OrgsConsole({
                     <button
                       type="button"
                       onClick={() => {
-                        setSuspendReason("Operator reactivation");
-                        handleToggleActive(true);
+                        void handleToggleActive(true, "Operator reactivation");
                       }}
                       className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-emerald-500"
                     >
@@ -399,7 +410,8 @@ export function OrgsConsole({
                   <div className="mt-2.5 flex gap-2">
                     <button
                       type="button"
-                      onClick={() => handleToggleActive(false)}
+                      onClick={() => void handleToggleActive(false)}
+                      disabled={actionBusy}
                       className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white shadow-2xs hover:bg-red-500"
                     >
                       Confirm Suspension
@@ -407,6 +419,7 @@ export function OrgsConsole({
                     <button
                       type="button"
                       onClick={() => setShowSuspendPrompt(false)}
+                      disabled={actionBusy}
                       className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
                     >
                       Cancel

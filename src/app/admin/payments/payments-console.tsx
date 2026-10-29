@@ -88,14 +88,15 @@ export function PaymentsConsole({
 
   // Edit Plan State
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [savingPlan, setSavingPlan] = useState(false);
 
   async function handleSavePlan(e: React.FormEvent) {
     e.preventDefault();
-    if (!editingPlan) return;
+    if (!editingPlan || savingPlan) return;
+    setSavingPlan(true);
     try {
       await onUpdatePlan(editingPlan.id, {
         displayName: editingPlan.displayName,
-        monthlyPricePaise: Number(editingPlan.monthlyPricePaise),
         isActive: editingPlan.isActive,
         sortOrder: Number(editingPlan.sortOrder),
       });
@@ -107,6 +108,8 @@ export function PaymentsConsole({
       router.refresh();
     } catch (err: any) {
       setMessage({ text: err.message || "Failed to update plan", type: "error" });
+    } finally {
+      setSavingPlan(false);
     }
   }
 
@@ -357,7 +360,7 @@ export function PaymentsConsole({
 
       {/* Edit Plan Modal */}
       {editingPlan && (
-        <AdminDialog title="Edit subscription plan" onClose={() => setEditingPlan(null)} className="max-w-md p-6">
+        <AdminDialog title="Edit subscription plan" busy={savingPlan} onClose={() => setEditingPlan(null)} className="max-w-md p-6">
             <h2 className="text-base font-bold text-white">Edit Plan: {editingPlan.displayName}</h2>
             <form onSubmit={handleSavePlan} className="mt-4 space-y-4 text-xs">
               <div>
@@ -372,22 +375,7 @@ export function PaymentsConsole({
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-300">
-                  Monthly Price (Minor Units / Paise)
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={editingPlan.monthlyPricePaise}
-                  onChange={(e) =>
-                    setEditingPlan({
-                      ...editingPlan,
-                      monthlyPricePaise: parseInt(e.target.value, 10) || 0,
-                    })
-                  }
-                  className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:outline-none"
-                />
-              </div>
+                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">Plan prices are read-only here. Price changes require a reviewed provider plan release.</p>
 
               <div className="flex items-center gap-2">
                 <input
@@ -406,15 +394,17 @@ export function PaymentsConsole({
                 <button
                   type="button"
                   onClick={() => setEditingPlan(null)}
+                  disabled={savingPlan}
                   className="rounded-lg border border-stone-700 px-3 py-1.5 text-stone-300 hover:bg-stone-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  disabled={savingPlan}
                   className="rounded-lg bg-orange-600 px-4 py-1.5 font-semibold text-white hover:bg-orange-500"
                 >
-                  Save Changes
+                  {savingPlan ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             </form>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowDown, FileText, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
 import type { AdminLogEntry, AdminLogResult } from "@/modules/admin/logs.service";
 
@@ -20,9 +20,11 @@ export function LogExplorer() {
   const [selected, setSelected] = useState<AdminLogEntry | null>(null);
   const [loading, setLoading] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const latestRequest = useRef(0);
 
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
+      const requestId = ++latestRequest.current;
       setLoading(true);
       setFailure(null);
       try {
@@ -38,12 +40,12 @@ export function LogExplorer() {
         });
         if (!response.ok) throw new Error("Log access unavailable (" + response.status + ")");
         const data = (await response.json()) as AdminLogResult;
-        if (!signal?.aborted) setResult(data);
+        if (!signal?.aborted && requestId === latestRequest.current) setResult(data);
       } catch (error) {
-        if (!signal?.aborted)
+        if (!signal?.aborted && requestId === latestRequest.current)
           setFailure(error instanceof Error ? error.message : "Unable to read logs");
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (!signal?.aborted && requestId === latestRequest.current) setLoading(false);
       }
     },
     [level, service, range, search, pageCursor]
@@ -53,7 +55,7 @@ export function LogExplorer() {
     const controller = new AbortController();
     const timer = setTimeout(() => {
       void refresh(controller.signal);
-    }, 0);
+    }, search ? 250 : 0);
     if (!live) {
       return () => {
         clearTimeout(timer);
