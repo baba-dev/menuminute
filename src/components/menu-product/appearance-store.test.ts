@@ -13,11 +13,17 @@ const mediaListeners = new Set<() => void>();
 beforeEach(() => {
   prefersDark = false;
   mediaListeners.clear();
-  vi.stubGlobal("matchMedia", vi.fn(() => ({
-    get matches() { return prefersDark; },
-    addEventListener: (_event: string, listener: () => void) => mediaListeners.add(listener),
-    removeEventListener: (_event: string, listener: () => void) => mediaListeners.delete(listener),
-  })));
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({
+      get matches() {
+        return prefersDark;
+      },
+      addEventListener: (_event: string, listener: () => void) => mediaListeners.add(listener),
+      removeEventListener: (_event: string, listener: () => void) =>
+        mediaListeners.delete(listener),
+    }))
+  );
   localStorage.clear();
   setAppearancePreference("system");
 });
@@ -56,7 +62,7 @@ describe("admin appearance contract", () => {
     const notify = vi.fn();
     const unsubscribe = subscribeToAppearance(notify);
     localStorage.setItem("menuminute.appearance", "dark");
-    window.dispatchEvent(new StorageEvent("storage", {key: "menuminute.appearance"}));
+    window.dispatchEvent(new StorageEvent("storage", { key: "menuminute.appearance" }));
     expect(getAppearancePreference()).toBe("dark");
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(notify).toHaveBeenCalled();

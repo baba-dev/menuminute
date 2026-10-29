@@ -257,8 +257,12 @@ export function UsersConsole({
                 users.map((u) => (
                   <tr key={u.id}>
                     <td className="p-3">
-                      <div className="font-semibold text-stone-900 dark:text-stone-100">{u.name}</div>
-                      <div className="font-mono text-[11px] text-stone-500 dark:text-stone-400">{u.email}</div>
+                      <div className="font-semibold text-stone-900 dark:text-stone-100">
+                        {u.name}
+                      </div>
+                      <div className="font-mono text-[11px] text-stone-500 dark:text-stone-400">
+                        {u.email}
+                      </div>
                     </td>
                     <td className="p-3">
                       {u.emailVerified ? (
@@ -277,7 +281,9 @@ export function UsersConsole({
                           <ShieldCheck className="h-3.5 w-3.5" /> Enrolled
                         </span>
                       ) : (
-                        <span className="text-[11px] text-stone-400 dark:text-stone-500">Disabled</span>
+                        <span className="text-[11px] text-stone-400 dark:text-stone-500">
+                          Disabled
+                        </span>
                       )}
                     </td>
                     <td className="p-3">
@@ -324,7 +330,7 @@ export function UsersConsole({
                   p.set("page", String(page - 1));
                   router.push(`/admin/users?${p.toString()}`);
                 }}
-                className="rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-stone-700 disabled:opacity-40 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
+                className="rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-stone-700 hover:bg-stone-50 disabled:opacity-40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
               >
                 Previous
               </button>
@@ -336,7 +342,7 @@ export function UsersConsole({
                   p.set("page", String(page + 1));
                   router.push(`/admin/users?${p.toString()}`);
                 }}
-                className="rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-stone-700 disabled:opacity-40 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
+                className="rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-stone-700 hover:bg-stone-50 disabled:opacity-40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
               >
                 Next
               </button>
@@ -345,174 +351,192 @@ export function UsersConsole({
         )}
       </div>
 
-      {!selectedUser && actionMessage && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{actionMessage.text}</p>}
+      {!selectedUser && actionMessage && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+        >
+          {actionMessage.text}
+        </p>
+      )}
 
       {/* User Management Modal */}
       {selectedUser && (
-        <AdminDialog title="Manage user account" busy={actionBusy} onClose={() => setSelectedUser(null)} className="max-w-2xl p-6">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
-                    {selectedUser.user.name}
-                  </h2>
-                  {selectedUser.user.isSuperAdmin && (
-                    <span className="admin-badge admin-badge-brand">
-                      Superadmin
-                    </span>
-                  )}
-                </div>
-                <p className="font-mono text-xs text-stone-500 dark:text-stone-400">{selectedUser.user.email}</p>
-                <p className="font-mono text-[10px] text-stone-400 dark:text-stone-500">ID: {selectedUser.user.id}</p>
+        <AdminDialog
+          title="Manage user account"
+          busy={actionBusy}
+          onClose={() => setSelectedUser(null)}
+          className="max-w-2xl p-6"
+        >
+          {/* Modal Header */}
+          <div className="flex items-start justify-between border-b border-stone-200 pb-4 dark:border-stone-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
+                  {selectedUser.user.name}
+                </h2>
+                {selectedUser.user.isSuperAdmin && (
+                  <span className="admin-badge admin-badge-brand">Superadmin</span>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedUser(null)}
-                className="rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-800 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <p className="font-mono text-xs text-stone-500 dark:text-stone-400">
+                {selectedUser.user.email}
+              </p>
+              <p className="font-mono text-[10px] text-stone-400 dark:text-stone-500">
+                ID: {selectedUser.user.id}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setSelectedUser(null)}
+              className="rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-800 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            {/* Notification message */}
-            {actionMessage && (
-              <div
-                className={`mt-4 rounded-lg p-3 text-xs font-medium ${
-                  actionMessage.type === "success"
-                    ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950 dark:text-emerald-300"
-                    : "border border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950 dark:text-red-300"
-                }`}
-              >
-                {actionMessage.text}
-              </div>
-            )}
+          {/* Notification message */}
+          {actionMessage && (
+            <div
+              className={`mt-4 rounded-lg p-3 text-xs font-medium ${
+                actionMessage.type === "success"
+                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950 dark:text-emerald-300"
+                  : "border border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950 dark:text-red-300"
+              }`}
+            >
+              {actionMessage.text}
+            </div>
+          )}
 
-            {/* User Details Tabs / Sections */}
-            <div className="mt-5 space-y-5 text-xs">
-              {/* Account Controls */}
-              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
-                <h3 className="text-[11px] font-bold tracking-wider text-stone-700 dark:text-stone-200 uppercase">
-                  Administrative Actions
-                </h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedUser.user.emailVerified ? (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleVerify(false)}
-                      className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-semibold text-amber-700 shadow-2xs hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-400 dark:hover:bg-stone-700"
-                    >
-                      Unverify Email
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleVerify(true)}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white shadow-2xs hover:bg-emerald-500"
-                    >
-                      Mark Email Verified
-                    </button>
-                  )}
-
+          {/* User Details Tabs / Sections */}
+          <div className="mt-5 space-y-5 text-xs">
+            {/* Account Controls */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
+              <h3 className="text-[11px] font-bold tracking-wider text-stone-700 uppercase dark:text-stone-200">
+                Administrative Actions
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedUser.user.emailVerified ? (
                   <button
                     type="button"
-                    onClick={handleRevokeSessions}
-                    className="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900/60"
+                    onClick={() => handleToggleVerify(false)}
+                    className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-semibold text-amber-700 shadow-2xs hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-400 dark:hover:bg-stone-700"
                   >
-                    <LogOut className="h-3.5 w-3.5" />
-                    <span>Revoke All Sessions ({selectedUser.sessions.length})</span>
+                    Unverify Email
                   </button>
-
-                  {selectedUser.twoFactor && (
-                    <button
-                      type="button"
-                      onClick={handleUnlock2FA}
-                      className="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60"
-                    >
-                      <Unlock className="h-3.5 w-3.5" />
-                      <span>Clear 2FA Lockout</span>
-                    </button>
-                  )}
-
-                  {selectedUser.user.isSuperAdmin ? (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSuperAdmin(false)}
-                      className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-semibold text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
-                    >
-                      Revoke Superadmin Role
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSuperAdmin(true)}
-                      className="flex items-center gap-1 rounded-lg bg-orange-600 px-3 py-1.5 font-semibold text-white shadow-2xs hover:bg-orange-500"
-                    >
-                      <ShieldAlert className="h-3.5 w-3.5" />
-                      <span>Promote to Superadmin</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Organization Memberships */}
-              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
-                <h3 className="text-[11px] font-bold tracking-wider text-stone-700 dark:text-stone-200 uppercase">
-                  Tenant Memberships ({selectedUser.memberships.length})
-                </h3>
-                {selectedUser.memberships.length === 0 ? (
-                  <p className="mt-2 text-stone-500 dark:text-stone-400">Not assigned to any organizations.</p>
                 ) : (
-                  <div className="mt-2 divide-y divide-stone-200 dark:divide-stone-800">
-                    {selectedUser.memberships.map((m) => (
-                      <div key={m.membershipId} className="flex items-center justify-between py-2">
-                        <div>
-                          <span className="font-semibold text-stone-900 dark:text-stone-100">{m.organizationName}</span>
-                          <span className="ml-2 font-mono text-[10px] text-stone-400 dark:text-stone-500">
-                            {m.organizationId}
-                          </span>
-                        </div>
-                        <span className="rounded-md border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 capitalize dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
-                          {m.role}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleVerify(true)}
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white shadow-2xs hover:bg-emerald-500"
+                  >
+                    Mark Email Verified
+                  </button>
                 )}
-              </div>
 
-              {/* Active Sessions */}
-              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
-                <h3 className="text-[11px] font-bold tracking-wider text-stone-700 dark:text-stone-200 uppercase">
-                  Active Sessions ({selectedUser.sessions.length})
-                </h3>
-                {selectedUser.sessions.length === 0 ? (
-                  <p className="mt-2 text-stone-500 dark:text-stone-400">No active login sessions.</p>
+                <button
+                  type="button"
+                  onClick={handleRevokeSessions}
+                  className="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900/60"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Revoke All Sessions ({selectedUser.sessions.length})</span>
+                </button>
+
+                {selectedUser.twoFactor && (
+                  <button
+                    type="button"
+                    onClick={handleUnlock2FA}
+                    className="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60"
+                  >
+                    <Unlock className="h-3.5 w-3.5" />
+                    <span>Clear 2FA Lockout</span>
+                  </button>
+                )}
+
+                {selectedUser.user.isSuperAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSuperAdmin(false)}
+                    className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-semibold text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+                  >
+                    Revoke Superadmin Role
+                  </button>
                 ) : (
-                  <div className="mt-2 space-y-2">
-                    {selectedUser.sessions.map((s) => (
-                      <div
-                        key={s.id}
-                        className="rounded-lg border border-stone-200 bg-white p-2.5 font-mono text-[11px] dark:border-stone-800 dark:bg-stone-900"
-                      >
-                        <div className="flex justify-between text-stone-700 dark:text-stone-300">
-                          <span>IP: {s.ipAddress || "Unknown"}</span>
-                          <span className="text-stone-400 dark:text-stone-500">
-                            Expires: {new Date(s.expiresAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div
-                          className="mt-1 truncate text-[10px] text-stone-500 dark:text-stone-400"
-                          title={s.userAgent || ""}
-                        >
-                          UA: {s.userAgent || "Unknown"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSuperAdmin(true)}
+                    className="flex items-center gap-1 rounded-lg bg-orange-600 px-3 py-1.5 font-semibold text-white shadow-2xs hover:bg-orange-500"
+                  >
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    <span>Promote to Superadmin</span>
+                  </button>
                 )}
               </div>
             </div>
+
+            {/* Organization Memberships */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
+              <h3 className="text-[11px] font-bold tracking-wider text-stone-700 uppercase dark:text-stone-200">
+                Tenant Memberships ({selectedUser.memberships.length})
+              </h3>
+              {selectedUser.memberships.length === 0 ? (
+                <p className="mt-2 text-stone-500 dark:text-stone-400">
+                  Not assigned to any organizations.
+                </p>
+              ) : (
+                <div className="mt-2 divide-y divide-stone-200 dark:divide-stone-800">
+                  {selectedUser.memberships.map((m) => (
+                    <div key={m.membershipId} className="flex items-center justify-between py-2">
+                      <div>
+                        <span className="font-semibold text-stone-900 dark:text-stone-100">
+                          {m.organizationName}
+                        </span>
+                        <span className="ml-2 font-mono text-[10px] text-stone-400 dark:text-stone-500">
+                          {m.organizationId}
+                        </span>
+                      </div>
+                      <span className="rounded-md border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 capitalize dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
+                        {m.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Active Sessions */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/60">
+              <h3 className="text-[11px] font-bold tracking-wider text-stone-700 uppercase dark:text-stone-200">
+                Active Sessions ({selectedUser.sessions.length})
+              </h3>
+              {selectedUser.sessions.length === 0 ? (
+                <p className="mt-2 text-stone-500 dark:text-stone-400">No active login sessions.</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {selectedUser.sessions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="rounded-lg border border-stone-200 bg-white p-2.5 font-mono text-[11px] dark:border-stone-800 dark:bg-stone-900"
+                    >
+                      <div className="flex justify-between text-stone-700 dark:text-stone-300">
+                        <span>IP: {s.ipAddress || "Unknown"}</span>
+                        <span className="text-stone-400 dark:text-stone-500">
+                          Expires: {new Date(s.expiresAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div
+                        className="mt-1 truncate text-[10px] text-stone-500 dark:text-stone-400"
+                        title={s.userAgent || ""}
+                      >
+                        UA: {s.userAgent || "Unknown"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </AdminDialog>
       )}
     </div>

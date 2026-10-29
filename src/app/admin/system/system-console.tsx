@@ -55,7 +55,7 @@ export function SystemConsole({
     <div className="space-y-4">
       {message && (
         <div
-          className={`flex items-center gap-2 rounded-xl p-3 text-xs font-medium border ${
+          className={`flex items-center gap-2 rounded-xl border p-3 text-xs font-medium ${
             message.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/60 dark:text-emerald-300"
               : "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-300"
@@ -101,7 +101,7 @@ export function SystemConsole({
             </p>
           </div>
         ) : (
-          <div className="mt-4 admin-table-container">
+          <div className="admin-table-container mt-4">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -116,7 +116,9 @@ export function SystemConsole({
               <tbody className="font-mono text-[11px]">
                 {failedEvents.map((evt) => (
                   <tr key={evt.id}>
-                    <td className="p-3 font-semibold text-orange-600 dark:text-orange-400">{evt.type}</td>
+                    <td className="p-3 font-semibold text-orange-600 dark:text-orange-400">
+                      {evt.type}
+                    </td>
                     <td className="p-3 font-sans text-stone-600 dark:text-stone-400">
                       {evt.organization_id.slice(0, 12)}...
                     </td>
