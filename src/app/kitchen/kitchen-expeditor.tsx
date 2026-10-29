@@ -1,9 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCheck, RefreshCw, ChefHat, AlertTriangle } from "lucide-react";
-import type { KitchenExpoSnapshot, KitchenExpoOrder } from "@/modules/kitchen/service";
-type Props = { base: string; enabled: boolean; cursor: number };
-export function KitchenExpeditor({ base, enabled, cursor }: Props) {
+import type { KitchenExpoSnapshot, KitchenExpoOrder, KitchenWorkView, KitchenSnapshot } from "@/modules/kitchen/service";
+type Props = { base: string; enabled: boolean; cursor: number;
+  work: KitchenWorkView[]; stations: KitchenSnapshot["stations"] };
+export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Props) {
   const [data, setData] = useState<KitchenExpoSnapshot>({ cursor: 0, overflow: false, orders: [] });
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
@@ -55,7 +56,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
       pending ||
       error ||
       !enabled ||
-      order.status !== "preparing" ||
+      !["preparing", "accepted"].includes(order.status) ||
       order.total === 0 ||
       order.done !== order.total
     )
@@ -97,8 +98,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
             <ChefHat aria-hidden="true" size={23} /> Expeditor · Order release
           </h3>
           <p className="text-sm text-stone-600 dark:text-stone-300">
-            A guest sees Ready only after every assigned station has completed its work and an
-            authorized expeditor releases it.
+            Kitchen tasks finish first. When every station is done, confirm the whole order is ready for pickup or serving.
           </p>
         </div>
         <button
@@ -156,6 +156,21 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
             <p className="mt-3 text-sm font-semibold tabular-nums">
               {order.done} / {order.total} station tasks complete
             </p>
+            <ul className="kk-expo-station-progress" aria-label={`Order ${order.orderNumber} station progress`}>
+              {stations.filter((station) => work.some((item) => item.orderId === order.id && item.stationId === station.id))
+                .map((station) => {
+                  const tasks = work.filter((item) => item.orderId === order.id && item.stationId === station.id);
+                  const done = tasks.filter((item) => item.status === "complete").length;
+                  return (
+                    <li key={station.id}>
+                      <span>{station.name}</span>
+                      <strong>{done === tasks.length ? "Complete" :
+                        tasks.some((item) => item.status === "preparing") ? "Cooking" : "Waiting"}</strong>
+                      <small>{done}/{tasks.length}</small>
+                    </li>
+                  );
+                })}
+            </ul>
             <div
               className="mt-2 h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800"
               role="progressbar"
@@ -175,7 +190,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
                 !enabled ||
                 !!error ||
                 !!pending ||
-                order.status !== "preparing" ||
+                !["preparing", "accepted"].includes(order.status) ||
                 order.total === 0 ||
                 order.done !== order.total
               }
@@ -185,11 +200,9 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
               <CheckCheck size={18} />{" "}
               {pending === order.id
                 ? "Confirming…"
-                : order.status === "accepted"
-                  ? "Merchant must start preparation"
-                  : order.done === order.total
-                    ? "Release Ready to guest"
-                    : "Await all stations"}
+                : order.done === order.total && order.total > 0
+                  ? "Release order as Ready"
+                  : order.status === "accepted" ? "Waiting for first station" : "Waiting for remaining stations"}
             </button>
           </article>
         ))}
