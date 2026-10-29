@@ -150,7 +150,7 @@ describe("Ember scoped persistence and read-only execution", () => {
                         {
                           id: "tool_1",
                           type: "function",
-                          function: { name: "orders.pulse", arguments: "{}" },
+                          function: { name: "orders_pulse", arguments: "{}" },
                         },
                       ],
                     },
