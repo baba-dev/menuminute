@@ -103,8 +103,10 @@ export function applyDishAutofill(
         replace || !culinary?.servingTemp ? suggestion.culinary.servingTemp : culinary.servingTemp,
       pairingDishIds: chooseArray(culinary?.pairingDishIds ?? [], pairingIds),
     },
-    nutrition: { ...(replace ? {} : nutrition), ...nextNutrition, verified: false },
-    safety: {
+    nutrition: !replace && nutrition?.verified
+      ? nutrition
+      : { ...(replace ? {} : nutrition), ...nextNutrition, verified: false },
+    safety: !replace && safety?.verified ? safety : {
       ingredients: chooseArray(safety?.ingredients ?? [], suggestion.safety.ingredients),
       allergens: chooseArray(safety?.allergens ?? [], suggestion.safety.allergens),
       crossContact: chooseText(safety?.crossContact, suggestion.safety.crossContact),
@@ -217,9 +219,9 @@ export function parseDishAutofillWithDiagnostics(raw: string): ParsedDishAutofil
   const obj = record(original);
   const direct = dishAutofillSuggestionSchema.safeParse(obj);
   if (direct.success) return { suggestion: direct.data, recovered: false };
-  const culinary = record(obj.culinary);
-  const nutrition = record(obj.nutrition);
-  const safety = record(obj.safety);
+  const culinary = record(obj.culinary ?? {});
+  const nutrition = record(obj.nutrition ?? {});
+  const safety = record(obj.safety ?? {});
   const numbers = ["calories", "proteinGrams", "carbsGrams", "fatGrams", "fiberGrams"] as const;
   const normalizedNumbers = Object.fromEntries(numbers.map((key) => [key, numberOrNull(nutrition[key])]));
   const result = {
