@@ -821,7 +821,13 @@ export function TheTill({
                     {sale.saleId} · {sale.status} · Payment {sale.paymentStatus === "paid" ? "Complete" : "Pending"}
                   </small>
                 </div>
-                <span>{money(sale.subtotalMinor, sale.currency)}</span>
+                <div className="till-register-actions">
+                  <span>{money(sale.subtotalMinor, sale.currency)}</span>
+                  <Link href={"/dashboard/pos/receipts/" + encodeURIComponent(sale.saleId)}
+                    target="_blank" rel="noopener" aria-label={"Print order " + sale.orderNumber}>
+                    <Printer size={16} />
+                  </Link>
+                </div>
               </div>
             ))}
             {!workspace.recent.length && <p className="till-empty">No orders on this page.</p>}

@@ -503,6 +503,14 @@ export function FinancialHub({
                   Source order: {selected.orderId}. All financial totals below are scoped to this
                   outlet and snapshot.
                 </p>
+                <div className="finance-flow">
+                  <Link href={"/dashboard/pos/receipts/" + encodeURIComponent(selected.saleId)}
+                    target="_blank" rel="noopener">
+                    <Printer size={15} /> Print or reprint order bill
+                  </Link>
+                  <p>Staff-recorded and unpaid bills use a non-fiscal thermal layout.
+                    An already-issued fiscal document opens its original immutable Ledger copy.</p>
+                </div>
                 {selected.bill ? (
                   <>
                     <div className="finance-bill-total">
