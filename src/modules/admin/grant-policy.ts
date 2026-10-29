@@ -37,6 +37,21 @@ export function grantEndForPreset(preset: GrantPreset, start: Date): Date | null
   const days = grantPresetDetails[preset].days;
   return days === null ? null : new Date(start.getTime() + days * 86400000);
 }
+/**
+ * Permanent Kitchen access uses the canonical UTC sentinel in the submitted
+ * payload; the year-9999 instant must never be round-tripped through an
+ * HTML datetime-local control (positive offsets can roll into year 10000).
+ */
+export function grantSubmissionEnd(
+  capability: "ordering.new" | "kitchen.new",
+  preset: GrantPreset,
+  localEndAt: string
+): Date {
+  return capability === "kitchen.new" && preset === "permanent"
+    ? new Date(PERMANENT_ACCESS_END)
+    : new Date(localEndAt);
+}
+
 export function grantStatus(
   grant: { startsAt: Date | string; endsAt: Date | string; revokedAt: Date | string | null },
   now = new Date()
