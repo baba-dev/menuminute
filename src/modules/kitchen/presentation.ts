@@ -43,17 +43,24 @@ export function stationOverview(
 ) {
   return stations.map((station) => {
     const current = work.filter((item) => item.stationId === station.id);
-    const unfinished = current.filter((item) => item.status === "queued" || item.status === "preparing");
+    const unfinished = current.filter(
+      (item) => item.status === "queued" || item.status === "preparing"
+    );
     const oldest = unfinished.reduce<number | null>((value, item) => {
       const timestamp = Date.parse(item.createdAt);
-      return Number.isFinite(timestamp) ? (value === null ? timestamp : Math.min(value, timestamp)) : value;
+      return Number.isFinite(timestamp)
+        ? value === null
+          ? timestamp
+          : Math.min(value, timestamp)
+        : value;
     }, null);
     return {
       ...station,
       queued: current.filter((item) => item.status === "queued").length,
       preparing: current.filter((item) => item.status === "preparing").length,
       completed: current.filter((item) => item.status === "complete").length,
-      oldestMinutes: now !== null && oldest !== null ? Math.max(0, Math.floor((now - oldest) / 60000)) : null,
+      oldestMinutes:
+        now !== null && oldest !== null ? Math.max(0, Math.floor((now - oldest) / 60000)) : null,
     };
   });
 }
