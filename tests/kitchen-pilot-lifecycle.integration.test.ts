@@ -170,15 +170,19 @@ it("activates only after reviewed route/staff readiness, drains new intake and c
   const snapshot = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
   const work = snapshot.work.find((w) => w.orderId === acceptedOrder.orderId);
   expect(work).toBeDefined();
-  await transitionOutletOrder(f.actor, f.outlet.id, acceptedOrder.orderId, {
-    targetStatus: "preparing",
-    expectedVersion: 2,
-  });
+  // Starting the very first station now atomically updates the canonical
+  // order status; there is no mandatory return trip to the merchant board.
   await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
     action: "start",
     workId: work!.id,
     expectedVersion: 0,
   });
+  const afterStart = await admin(async (_, pool) =>
+    pool.query<{ status: string; version: number }>(
+      "SELECT status,version FROM orders WHERE id=$1", [acceptedOrder.orderId]
+    )
+  );
+  expect(afterStart.rows[0]).toMatchObject({ status: "preparing", version: 3 });
   await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
     action: "complete",
     workId: work!.id,
