@@ -314,13 +314,13 @@ export async function posOrderRegister(
   outletId: string,
   raw: unknown
 ): Promise<PosRegisterPage> {
-  const q = posRegisterQuerySchema.parse(raw);
+  const query = posRegisterQuerySchema.parse(raw);
   await posContext(actor, organizationId, outletId);
-  let cursorAt: string | null = null,
-    cursorId: string | null = null;
-  if (q.cursor) {
+  let cursorAt: string | null = null;
+  let cursorId: string | null = null;
+  if (query.cursor) {
     try {
-      const data = JSON.parse(Buffer.from(q.cursor, "base64url").toString("utf8")) as {
+      const data = JSON.parse(Buffer.from(query.cursor, "base64url").toString("utf8")) as {
         at: string;
         id: string;
       };
@@ -330,16 +330,38 @@ export async function posOrderRegister(
         !Number.isFinite(Date.parse(data.at)) ||
         typeof data.id !== "string" ||
         data.id.length > 128 ||
-        !data.id.length
-      )
-        throw new Error("Malformed cursor");
+        !data.id
+      ) throw new Error("Malformed cursor");
       cursorAt = new Date(data.at).toISOString();
       cursorId = data.id;
-    } catch {
-      throw new ValidationError("Invalid register cursor");
-    }
+    } catch { throw new ValidationError("Invalid register cursor"); }
   }
-  const pattern = "%" + q.search.replace(/[\\%_]/g, "\\export const posAcceptSchema") + "%";
+  const filter = {
+    period: query.period,
+    source: query.source,
+    status: query.status,
+    payment: query.payment,
+    search: query.search,
+  };
+  const response = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_register_v2(
+      ${outletId},${JSON.stringify(filter)}::jsonb,${cursorAt}::timestamptz,${cursorId}) as data`)
+  )) as { rows: { data: { items: PosRegisterRow[]; total: number } }[] };
+  const value = response.rows[0]?.data;
+  if (!value) throw new ValidationError("Register query did not produce an authorized result");
+  const hasMore = value.items.length > 10;
+  const items = value.items.slice(0, 10);
+  const last = items.at(-1);
+  const nextCursor = hasMore && last
+    ? Buffer.from(JSON.stringify({
+        at: new Date(last.createdAt).toISOString(),
+        id: last.orderId,
+      })).toString("base64url")
+    : null;
+  return { items, total: value.total, nextCursor };
+}
+
+export const posAcceptSchema") + "%";
   const predicate = sql`o.restaurant_id=${outletId}
     and app_private.can_outlet(${outletId},'orders.read')
     and (${q.source}='all' or o.intake_source=${q.source})
@@ -438,34 +460,12 @@ export async function posDailyKpis(
   organizationId: string,
   outletId: string
 ): Promise<PosDailyKpis> {
-  const context = await posContext(actor, organizationId, outletId);
-  if (context.organizationId !== organizationId) throw new NotFoundError("Outlet");
-  const result = (await posCall(actor, outletId, (run) =>
-    run(sql`with local_day as (
-      select ((now() at time zone timezone)::date::timestamp at time zone timezone) as day_start,
-        (((now() at time zone timezone)::date + 1)::timestamp at time zone timezone) as day_end
-      from restaurants where id = ${outletId}
-    ), paid as (
-      select coalesce(sum(coalesce(b.total_minor,o.total_minor)::bigint),0) as amount
-      from orders o
-      cross join local_day d
-      left join pos_sales s on s.order_id=o.id and s.outlet_id=o.restaurant_id
-      left join pos_bills b on b.sale_id=s.id and b.outlet_id=o.restaurant_id
-      where o.restaurant_id=${outletId} and o.payment_status='paid'
-        and o.created_at>=d.day_start and o.created_at<d.day_end
-    ), refunds as (
-      select coalesce(sum(f.amount_minor),0) as amount
-      from pos_refunds f cross join local_day d
-      where f.outlet_id=${outletId} and f.created_at>=d.day_start
-        and f.created_at<d.day_end
-    )
-    select (select count(*)::int from orders o cross join local_day d
-      where o.restaurant_id=${outletId} and o.created_at>=d.day_start
-        and o.created_at<d.day_end) as "totalOrders",
-      ((select amount from paid)-(select amount from refunds))::text as "totalSalesMinor",
-      (select amount::text from refunds) as "refundedMinor"`)
-  )) as { rows: PosDailyKpis[] };
-  return result.rows[0] ?? { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" };
+  await posContext(actor, organizationId, outletId);
+  const response = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_daily_kpis_v2(${outletId}) as data`)
+  )) as { rows: { data: PosDailyKpis }[] };
+  return response.rows[0]?.data ??
+    { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" };
 }
 
 export async function posWorkspace(actor: Actor, organizationId: string, outletId: string) {
