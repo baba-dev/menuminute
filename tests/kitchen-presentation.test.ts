@@ -67,7 +67,7 @@ describe("The Chef's Pass read-only presentation", () => {
       { name: "Main Stove", queued: 0, preparing: 0, completed: 1, oldestMinutes: null },
     ]);
     expect(stationOverview(stations.slice(0, 1), visible, null)).toHaveLength(1);
-    expect(stationGroups(visible, undefined).queued.map((item) => item.id).toEqual(["one"]);
+    expect(stationGroups(visible, undefined).queued.map((item) => item.id)).toEqual(["one"]);
   });
 
   it("counts active quantities rather than completed or cancelled work", () => {
