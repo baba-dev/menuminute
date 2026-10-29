@@ -140,6 +140,8 @@ export type RefundAuditRow = {
 };
 
 export type TillReconciliationReport = {
+  /** Financial data may be hidden from operators without settlement privileges. */
+  available: boolean;
   currency: string;
   totalCollectedMinor: number;
   totalRefundedMinor: number;

@@ -170,12 +170,12 @@ export async function getReportsWorkspace(
           count(*)::int as total_orders,
           count(*) filter (where status in ('served','collected'))::int as completed_orders,
           count(*) filter (where status in ('cancelled','rejected','expired'))::int as cancelled_orders,
-          coalesce(sum(total_minor), 0)::bigint as gross_sales,
+          coalesce(sum(total_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as gross_sales,
           coalesce(sum(subtotal_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as net_sales,
           coalesce(sum(tax_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as tax_sales,
-          coalesce(sum(case when fulfillment_mode = 'dine_in' then total_minor else 0 end), 0)::bigint as dine_in_sales,
+          coalesce(sum(total_minor) filter (where fulfillment_mode = 'dine_in' and status not in ('cancelled','rejected','expired')), 0)::bigint as dine_in_sales,
           count(*) filter (where fulfillment_mode = 'dine_in')::int as dine_in_orders,
-          coalesce(sum(case when fulfillment_mode = 'pickup' then total_minor else 0 end), 0)::bigint as pickup_sales,
+          coalesce(sum(total_minor) filter (where fulfillment_mode = 'pickup' and status not in ('cancelled','rejected','expired')), 0)::bigint as pickup_sales,
           count(*) filter (where fulfillment_mode = 'pickup')::int as pickup_orders
         from orders
         where restaurant_id = ${outletId}
@@ -191,7 +191,7 @@ export async function getReportsWorkspace(
       }>(sql`
         select
           count(*)::int as total_orders,
-          coalesce(sum(total_minor), 0)::bigint as gross_sales,
+          coalesce(sum(total_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as gross_sales,
           coalesce(sum(subtotal_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as net_sales
         from orders
         where restaurant_id = ${outletId}
@@ -426,162 +426,84 @@ export async function getReportsWorkspace(
       categoryShares,
     };
 
-    // 5. Till & Shift Reconciliation
-    const tenderRows = await tx
-      .execute<{
-        method: string;
-        tender_count: number;
-        amount_minor: string;
-      }>(
-        sql`
-      select
-        method,
-        count(*)::int as tender_count,
-        coalesce(sum(amount_minor), 0)::bigint as amount_minor
-      from pos_tenders
-      where outlet_id = ${outletId}
-        and (created_at at time zone ${timezone})::date >= ${range.from}::date
-        and (created_at at time zone ${timezone})::date <= ${range.to}::date
-      group by method
-    `
-      )
-      .catch(() => ({ rows: [] }));
-
-    const shiftRows = await tx
-      .execute<{
-        id: string;
-        register_name: string;
-        cashier_name: string | null;
-        state: "open" | "closed";
-        opened_at: string;
-        closed_at: string | null;
-        opening_minor: string;
-        expected_minor: string | null;
-        counted_minor: string | null;
-      }>(
-        sql`
-      select
-        s.id,
-        s.register_name,
-        coalesce(u.name, 'Till Operator') as cashier_name,
-        s.state,
-        s.opened_at::text,
-        s.closed_at::text,
-        s.opening_minor::text,
-        s.expected_minor::text,
-        s.counted_minor::text
-      from pos_shifts s
-      left join users u on u.id = s.actor_id
-      where s.outlet_id = ${outletId}
-        and (s.opened_at at time zone ${timezone})::date >= ${range.from}::date
-        and (s.opened_at at time zone ${timezone})::date <= ${range.to}::date
-      order by s.opened_at desc
-      limit 25
-    `
-      )
-      .catch(() => ({ rows: [] }));
-
-    const refundRows = await tx
-      .execute<{
-        id: string;
-        order_id: string;
-        amount_minor: string;
-        reason: string;
-        actor_name: string | null;
-        created_at: string;
-      }>(
-        sql`
-      select
-        r.id,
-        r.sale_id as order_id,
-        r.amount_minor::text,
-        r.reason,
-        coalesce(u.name, 'Supervisor') as actor_name,
-        r.created_at::text
-      from pos_refunds r
-      left join users u on u.id = r.actor_id
-      where r.outlet_id = ${outletId}
-        and (r.created_at at time zone ${timezone})::date >= ${range.from}::date
-        and (r.created_at at time zone ${timezone})::date <= ${range.to}::date
-      order by r.created_at desc
-      limit 20
-    `
-      )
-      .catch(() => ({ rows: [] }));
-
+    // 5. Restricted POS financial projection. The runtime role cannot SELECT finance tables.
+    // Access denied is distinguishable from a legitimately empty register.
+    const projection = await tx.execute<{
+      result: {
+        available: boolean;
+        totalCollectedMinor?: string;
+        totalRefundedMinor?: string;
+        totalVarianceMinor?: string;
+        tenders?: Array<{ method: string; tenderCount: number; amountMinor: string }>;
+        shifts?: Array<{
+          shiftId: string; registerName: string; cashierName: string;
+          state: "open" | "closed"; openedAt: string; closedAt: string | null;
+          openingFloatMinor: string; expectedMinor: string | null;
+          countedMinor: string | null; cashTakenMinor: string; cashRefundMinor: string;
+        }>;
+        recentRefunds?: Array<{
+          id: string; orderId: string; amountMinor: string; reason: string;
+          actorName: string; createdAt: string;
+        }>;
+      };
+    }>(sql`select app_private.reports_finance_snapshot(
+      ${outletId},${range.from}::date,${range.to}::date
+    ) as result`);
+    const finance = projection.rows[0]?.result;
+    if (!finance) throw new Error("Finance reporting projection returned no result");
+    const toSafeMinor = (value: string | number | null | undefined): number => {
+      const numeric = Number(value ?? 0);
+      if (!Number.isSafeInteger(numeric)) throw new RangeError("Financial amount is outside safe integer precision");
+      return numeric;
+    };
+    const financialAccess = finance.available === true;
     const methodLabels: Record<string, string> = {
       cash: "Cash in Drawer",
-      card_external: "Card Terminal",
-      upi_external: "UPI / QR Code",
-      bank_external: "Bank Transfer",
-      stripe: "Online Checkout",
+      card_external: "Card Terminal (Staff Recorded)",
+      upi_external: "UPI / QR Code (Staff Recorded)",
+      bank_external: "Bank Transfer (Staff Recorded)",
     };
-
-    const totalTenderAmount = tenderRows.rows.reduce((acc, r) => acc + Number(r.amount_minor), 0);
-    const tenders: TenderSummary[] = tenderRows.rows.map((r) => {
-      const amount = Number(r.amount_minor);
+    const collected = financialAccess ? toSafeMinor(finance.totalCollectedMinor) : 0;
+    const refunded = financialAccess ? toSafeMinor(finance.totalRefundedMinor) : 0;
+    const tenderSource = financialAccess ? finance.tenders ?? [] : [];
+    const tenders: TenderSummary[] = tenderSource.map((t) => {
+      const amount = toSafeMinor(t.amountMinor);
       return {
-        method: r.method,
-        label: methodLabels[r.method] ?? r.method,
-        tenderCount: r.tender_count,
+        method: t.method,
+        label: methodLabels[t.method] ?? t.method,
+        tenderCount: t.tenderCount,
         amountMinor: amount,
-        percentage:
-          totalTenderAmount > 0 ? Number(((amount / totalTenderAmount) * 100).toFixed(1)) : 0,
+        percentage: collected > 0 ? Number(((amount / collected) * 100).toFixed(1)) : 0,
       };
     });
-
-    const shifts: ShiftReconciliationRow[] = shiftRows.rows.map((s) => {
-      const opening = Number(s.opening_minor);
-      const expected = s.expected_minor != null ? Number(s.expected_minor) : null;
-      const counted = s.counted_minor != null ? Number(s.counted_minor) : null;
-      const variance = expected != null && counted != null ? counted - expected : null;
-
+    const shifts: ShiftReconciliationRow[] = (financialAccess ? finance.shifts ?? [] : []).map((s) => {
+      const expected = s.expectedMinor === null ? null : toSafeMinor(s.expectedMinor);
+      const counted = s.countedMinor === null ? null : toSafeMinor(s.countedMinor);
       return {
-        shiftId: s.id,
-        registerName: s.register_name,
-        cashierName: s.cashier_name ?? "Operator",
-        state: s.state,
-        openedAt: s.opened_at,
-        closedAt: s.closed_at,
-        openingFloatMinor: opening,
-        cashTakenMinor: 0,
-        cashRefundMinor: 0,
-        expectedMinor: expected,
-        countedMinor: counted,
-        varianceMinor: variance,
+        shiftId: s.shiftId, registerName: s.registerName, cashierName: s.cashierName,
+        state: s.state, openedAt: s.openedAt, closedAt: s.closedAt,
+        openingFloatMinor: toSafeMinor(s.openingFloatMinor),
+        cashTakenMinor: toSafeMinor(s.cashTakenMinor),
+        cashRefundMinor: toSafeMinor(s.cashRefundMinor),
+        expectedMinor: expected, countedMinor: counted,
+        varianceMinor: expected !== null && counted !== null ? counted - expected : null,
       };
     });
-
-    const totalRefunded = refundRows.rows.reduce((acc, r) => acc + Number(r.amount_minor), 0);
-    const totalVariance = shifts.reduce((acc, s) => acc + (s.varianceMinor ?? 0), 0);
-
+    const recentRefunds = (financialAccess ? finance.recentRefunds ?? [] : []).map((r) => ({
+      id: r.id, orderId: r.orderId, amountMinor: toSafeMinor(r.amountMinor),
+      reason: r.reason, actorName: r.actorName, createdAt: r.createdAt,
+    }));
+    const totalRefunded = refunded;
     const tillReconciliation: TillReconciliationReport = {
+      available: financialAccess,
       currency: outlet.currency,
-      totalCollectedMinor: totalTenderAmount > 0 ? totalTenderAmount : curGross,
-      totalRefundedMinor: totalRefunded,
-      netCashFlowMinor: (totalTenderAmount > 0 ? totalTenderAmount : curGross) - totalRefunded,
-      totalVarianceMinor: totalVariance,
-      tenders:
-        tenders.length > 0
-          ? tenders
-          : [
-              {
-                method: "general",
-                label: "All Payment Methods",
-                tenderCount: curOrders,
-                amountMinor: curGross,
-                percentage: 100,
-              },
-            ],
+      totalCollectedMinor: collected,
+      totalRefundedMinor: refunded,
+      netCashFlowMinor: collected - refunded,
+      totalVarianceMinor: financialAccess ? toSafeMinor(finance.totalVarianceMinor) : 0,
+      tenders,
       shifts,
-      recentRefunds: refundRows.rows.map((r) => ({
-        id: r.id,
-        orderId: r.order_id,
-        amountMinor: Number(r.amount_minor),
-        reason: r.reason,
-        actorName: r.actor_name ?? "Staff",
-        createdAt: r.created_at,
-      })),
+      recentRefunds,
     };
 
     // 6. Kitchen Velocity & Prep SLAs
