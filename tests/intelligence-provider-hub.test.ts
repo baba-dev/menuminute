@@ -330,18 +330,31 @@ describe("server-only provider hub", () => {
     const hub = createProviderHub(configured(), fake);
     await hub.infer({
       messages: user,
-      responseFormat: { type: "json_schema", json_schema: {
-        type: "object", properties: { status: { type: "string" } },
-        required: ["status"], additionalProperties: false,
-      } },
+      responseFormat: {
+        type: "json_schema",
+        json_schema: {
+          type: "object",
+          properties: { status: { type: "string" } },
+          required: ["status"],
+          additionalProperties: false,
+        },
+      },
     });
     expect(requests[0]?.response_format).toMatchObject({ type: "json_schema" });
-    await hub.infer({ messages: user, provider: "nvidia", responseFormat: { type: "json_object" } });
-    expect(requests[1]?.response_format).toEqual({ type: "json_object" });
-    await expect(hub.infer({
-      messages: user, capability: "tools", tools: [tool],
+    await hub.infer({
+      messages: user,
+      provider: "nvidia",
       responseFormat: { type: "json_object" },
-    })).rejects.toMatchObject({ code: "invalid_request" });
+    });
+    expect(requests[1]?.response_format).toEqual({ type: "json_object" });
+    await expect(
+      hub.infer({
+        messages: user,
+        capability: "tools",
+        tools: [tool],
+        responseFormat: { type: "json_object" },
+      })
+    ).rejects.toMatchObject({ code: "invalid_request" });
     expect(requests).toHaveLength(2);
   });
 
