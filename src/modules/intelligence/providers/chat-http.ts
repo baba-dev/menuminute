@@ -212,6 +212,9 @@ export async function chatCompletion(
       messages: input.messages.map((message) => toWireMessage(message, model)),
       max_tokens: input.maxOutputTokens,
       temperature: input.temperature,
+      ...(input.responseFormat
+        ? { response_format: input.responseFormat }
+        : {}),
       ...(input.capability === "tools"
         ? {
             tools: input.tools.map((tool) => ({
