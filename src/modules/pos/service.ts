@@ -203,6 +203,52 @@ export async function posReceipt(
   )) as { rows: { data: PosReceipt }[] };
   return result.rows[0]!.data;
 }
+
+export type PosDailyKpis = {
+  totalSalesMinor: string;
+  totalOrders: number;
+  refundedMinor: string;
+};
+
+/** Local calendar day of the active outlet. One canonical order is counted once.
+ * Finance refunds are deducted once by immutable refund ID, not by visible page rows.
+ * This measures paid orders placed today rather than cash-flow settlement time.
+ */
+export async function posDailyKpis(
+  actor: Actor,
+  organizationId: string,
+  outletId: string
+): Promise<PosDailyKpis> {
+  const context = await posContext(actor, organizationId, outletId);
+  if (context.organizationId !== organizationId) throw new NotFoundError("Outlet");
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`with local_day as (
+      select ((now() at time zone timezone)::date::timestamp at time zone timezone) as day_start,
+        (((now() at time zone timezone)::date + 1)::timestamp at time zone timezone) as day_end
+      from restaurants where id = ${outletId}
+    ), paid as (
+      select coalesce(sum(coalesce(b.total_minor,o.total_minor)::bigint),0) as amount
+      from orders o
+      cross join local_day d
+      left join pos_sales s on s.order_id=o.id and s.outlet_id=o.restaurant_id
+      left join pos_bills b on b.sale_id=s.id and b.outlet_id=o.restaurant_id
+      where o.restaurant_id=${outletId} and o.payment_status='paid'
+        and o.created_at>=d.day_start and o.created_at<d.day_end
+    ), refunds as (
+      select coalesce(sum(f.amount_minor),0) as amount
+      from pos_refunds f cross join local_day d
+      where f.outlet_id=${outletId} and f.created_at>=d.day_start
+        and f.created_at<d.day_end
+    )
+    select (select count(*)::int from orders o cross join local_day d
+      where o.restaurant_id=${outletId} and o.created_at>=d.day_start
+        and o.created_at<d.day_end) as "totalOrders",
+      ((select amount from paid)-(select amount from refunds))::text as "totalSalesMinor",
+      (select amount::text from refunds) as "refundedMinor"`)
+  )) as { rows: PosDailyKpis[] };
+  return result.rows[0] ?? { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" };
+}
+
 export async function posWorkspace(actor: Actor, organizationId: string, outletId: string) {
   const context = await posContext(actor, organizationId, outletId);
   if (!context.enabled)
@@ -212,8 +258,9 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
       recent: [],
       recentPagination: { page: 0, total: 0, hasMore: false },
       attachable: [],
+      kpis: { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" } as PosDailyKpis,
     };
-  const [product, recentResult, attachableResult] = await Promise.all([
+  const [product, recentResult, attachableResult, kpis] = await Promise.all([
     catalog(context, outletId).catch((error: unknown) => {
       if (error instanceof ConflictError || error instanceof ValidationError) return null;
       throw error;
@@ -224,6 +271,7 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
     posCall(actor, outletId, (run) =>
       run(sql`select app_private.pos_attachable_orders(${outletId}) as data`)
     ),
+    posDailyKpis(actor, organizationId, outletId),
   ]);
   const recentPage = (recentResult as { rows: { data: PosRecentPage }[] }).rows[0]?.data ?? {
     items: [],
@@ -256,14 +304,14 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
     ).rows[0]?.data ?? [];
   // An enabled outlet may not yet have a published menu or active QR. Keep finance history
   // accessible rather than turning the entire private page into an error screen.
-  if (!product) return { context, menus: [], recent, recentPagination, attachable };
+  if (!product) return { context, menus: [], recent, recentPagination, attachable, kpis };
   const instant = new Date(product.now);
   const menus = product.menus.map((menu) => ({
     id: menu.id,
     revision: menu.revision,
     ...projectMenu(menu.document, product.outlet.timezone, instant, menu.overrides),
   }));
-  return { context, menus, recent, recentPagination, attachable };
+  return { context, menus, recent, recentPagination, attachable, kpis };
 }
 export async function posConfigure(
   actor: Actor,

@@ -154,6 +154,9 @@ export function TheTill({
   const attachKeys = useRef<Record<string, string>>({});
   const menu = workspace.menus.find((m) => m.id === selectedMenu) ?? workspace.menus[0];
   const currency = workspace.context.currency;
+  const foodItemsOnMenu = new Set(
+    workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items.map((i) => i.id)))
+  ).size;
   const dishes = useMemo(
     () =>
       menu?.categories
@@ -467,35 +470,35 @@ export function TheTill({
             )}
           </div>
         )}
-        <section className="pos-overview" aria-label="POS overview">
+        <section className="pos-overview" aria-label="Point of Sale overview">
           <div className="pos-section-header">
             <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
-            <small>Current outlet · Operational snapshot</small>
+            <small>Current outlet · Local business day</small>
           </div>
           <div className="pos-metrics">
             <div className="pos-metric">
               <ShoppingBasket aria-hidden="true" />
-              <span>Draft POS</span>
-              <strong>{workspace.context.enabled ? "Ready" : "Off"}</strong>
-              <small>Order recording only</small>
+              <span>Total Sales Today</span>
+              <strong>{money(workspace.kpis.totalSalesMinor, currency)}</strong>
+              <small>Paid orders placed today · Net of recorded refunds</small>
             </div>
             <div className="pos-metric">
               <BookOpenText aria-hidden="true" />
               <span>Published menus</span>
               <strong>{workspace.menus.length}</strong>
-              <small>Available in this workspace</small>
+              <small>Live menus in this outlet</small>
             </div>
             <div className="pos-metric">
-              <ClipboardCheck aria-hidden="true" />
-              <span>Eligible tickets</span>
-              <strong>{workspace.attachable.length}</strong>
-              <small>Unpaid orders available to link</small>
+              <Utensils aria-hidden="true" />
+              <span>Food Items on Menu</span>
+              <strong>{foodItemsOnMenu}</strong>
+              <small>Unique published dishes</small>
             </div>
             <div className="pos-metric">
               <ClipboardList aria-hidden="true" />
-              <span>Recent drafts</span>
-              <strong>{workspace.recent.length}</strong>
-              <small>Returned by the register</small>
+              <span>Total Orders Today</span>
+              <strong>{workspace.kpis.totalOrders}</strong>
+              <small>All channels · Including pending and cancelled</small>
             </div>
           </div>
         </section>
