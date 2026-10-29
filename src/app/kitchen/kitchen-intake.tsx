@@ -62,11 +62,13 @@ export function KitchenIntake({
 
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal).catch((err) => {
-      if (!controller.signal.aborted) {
-        setError(err instanceof Error ? err.message : "Sync failed.");
-        setSyncing(false);
-      }
+    const frame = window.requestAnimationFrame(() => {
+      void refresh(controller.signal).catch((err) => {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : "Sync failed.");
+          setSyncing(false);
+        }
+      });
     });
     const timer = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
@@ -78,6 +80,7 @@ export function KitchenIntake({
     return () => {
       controller.abort();
       window.clearInterval(timer);
+      window.cancelAnimationFrame(frame);
     };
   }, [refresh]);
 
