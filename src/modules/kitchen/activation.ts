@@ -144,17 +144,18 @@ export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand
       evidenceUrl: parsed.evidenceUrl,
       reason: parsed.reason,
     });
-    const result = parsed.action === "operator_activate"
-      ? await tx.execute<{ data: KitchenPilotStatus }>(
-        sql`SELECT app_private.kitchen_operator_activate(
+    const result =
+      parsed.action === "operator_activate"
+        ? await tx.execute<{ data: KitchenPilotStatus }>(
+            sql`SELECT app_private.kitchen_operator_activate(
           ${parsed.outletId}, ${payload}::jsonb, ${parsed.key}
         ) AS data`
-      )
-      : await tx.execute<{ data: KitchenPilotStatus }>(
-        sql`SELECT app_private.kitchen_pilot_command(
+          )
+        : await tx.execute<{ data: KitchenPilotStatus }>(
+            sql`SELECT app_private.kitchen_pilot_command(
           ${parsed.outletId}, ${parsed.action}, ${payload}::jsonb, ${parsed.key}
         ) AS data`
-      );
+          );
     if (!result.rows[0]) throw new Error("Pilot command returned no receipt");
     return result.rows[0].data;
   });
