@@ -11,3 +11,10 @@ Authenticated outlet editor + expected revision gate enqueue. One PostgreSQL tra
 Migration 0010 is append-only; old SQL and journal prefix remain immutable. Validate worker private media ACL, owner-only migration backup and ARM64 cutover separately. Do not enable on production with an unlicensed/trial key.
 
 References: https://docs.api.nvidia.com/nim/reference/llm-apis and https://docs.api.nvidia.com/nim/docs/product
+
+## Dense menus and partial results
+
+- The configured NVIDIA NIM **must** support chat-completions image_url content and the selected output-token limit. `NVIDIA_IMPORT_MAX_OUTPUT_TOKENS` defaults to 4096 (allowed 1024–8192); raise it only after checking the specific model limit. Invalid values stop extraction before provider transmission.
+- A user may explicitly split a photograph with two side-by-side columns into two private source photographs before upload. No automatic layout assumption is made; the source cap remains 12. Cropping cannot restore missing detail in very small images.
+- One HTTP 2xx response containing malformed or empty JSON can be skipped if a different source yielded a valid candidate. The bad source is recorded in `sourceWarnings`, and the editor must acknowledge missing pages before finalizing or applying the draft. A provider/transport error still terminates the job without silently retrying.
+- The editor's import detail endpoint reveals only the RLS-scoped, sanitized existing usage state/code; provider bodies, keys and private paths are never returned. Publishing remains separate from private draft application.

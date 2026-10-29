@@ -110,7 +110,22 @@ export async function importDetail(actor: Actor, outletId: string, rawId: string
           .from(menuImportReviews)
           .where(eq(menuImportReviews.importId, id))
       )[0] ?? null;
-    return { ...row, sources, candidate: latest, review };
+    // The existing usage table is protected by menu.write outlet RLS. Expose
+    // only bounded, sanitized diagnostics, never provider response bodies.
+    const engineResult = await tx.execute<{
+      state: string;
+      errorCode: string | null;
+      model: string;
+      requests: number;
+    }>(sql`select state, error_code as "errorCode", model, requests
+        from menu_import_ai_usage where import_id=${id} and outlet_id=${outletId} limit 1`);
+    return {
+      ...row,
+      sources,
+      candidate: latest,
+      review,
+      engineResult: engineResult.rows[0] ?? null,
+    };
   });
 }
 /** Only fully authorized editors may obtain private bytes; recheck after the storage read. */
