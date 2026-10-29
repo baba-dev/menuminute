@@ -104,7 +104,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               type="button"
               className="reports-hero-primary"
               aria-pressed={activeTab === "z-report"}
-            onClick={() => handleTabChange("z-report")}
+              onClick={() => handleTabChange("z-report")}
             >
               <Printer size={16} aria-hidden="true" /> View Daily Sales Summary
             </button>
@@ -122,7 +122,11 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <span className="reports-art-line" />
             <span className="reports-art-line reports-art-short" />
             <span className="reports-art-bars">
-              <i /><i /><i /><i /><i />
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
             </span>
             <span className="reports-art-foot">MENU MINUTE / REPORTS</span>
           </span>
@@ -330,7 +334,8 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 <div className="reports-panel-title">
                   <h2>Menu Performance Matrix</h2>
                   <p>
-                    Revenue-based classification of demand; profitability requires verified dish costs.
+                    Revenue-based classification of demand; profitability requires verified dish
+                    costs.
                   </p>
                 </div>
               </div>
@@ -381,7 +386,10 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
                   <h2>Shift & Register Reconciliation</h2>
-                  <p>Cashier float balancing and all-channel settlements; fulfillment filter does not apply to finance.</p>
+                  <p>
+                    Cashier float balancing and all-channel settlements; fulfillment filter does not
+                    apply to finance.
+                  </p>
                 </div>
               </div>
 

@@ -28,8 +28,8 @@ export function DateRangeBar({
     { id: "30d", label: "Last 30 Days" },
   ];
   const days = (Date.parse(to) - Date.parse(from)) / 86400000;
-  const valid = from.length === 10 && to.length === 10 &&
-    Number.isFinite(days) && days >= 0 && days <= 366;
+  const valid =
+    from.length === 10 && to.length === 10 && Number.isFinite(days) && days >= 0 && days <= 366;
 
   return (
     <div className="reports-filter-strip" aria-label="Report filters">
@@ -53,11 +53,19 @@ export function DateRangeBar({
         </label>
         <label>
           To
-          <input type="date" value={to} min={from || undefined}
-            onChange={(e) => setTo(e.target.value)} />
+          <input
+            type="date"
+            value={to}
+            min={from || undefined}
+            onChange={(e) => setTo(e.target.value)}
+          />
         </label>
-        <button type="button" className="reports-preset-btn"
-          disabled={!valid} onClick={() => onChange({ range: "custom", from, to })}>
+        <button
+          type="button"
+          className="reports-preset-btn"
+          disabled={!valid}
+          onClick={() => onChange({ range: "custom", from, to })}
+        >
           Apply dates
         </button>
       </div>
@@ -67,9 +75,13 @@ export function DateRangeBar({
         </span>
         <select
           value={query.fulfillmentMode}
-          disabled={query.tab === "till" || query.tab === "z-report"} onChange={(e) =>
+          disabled={query.tab === "till" || query.tab === "z-report"}
+          onChange={(e) =>
             onChange({ fulfillmentMode: e.target.value as "all" | "dine_in" | "pickup" })
-          } className="reports-mode-select" aria-label="Filter fulfillment channel">
+          }
+          className="reports-mode-select"
+          aria-label="Filter fulfillment channel"
+        >
           <option value="all">All Channels</option>
           <option value="dine_in">Dine-in Only</option>
           <option value="pickup">Pickup Only</option>

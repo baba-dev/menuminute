@@ -34,7 +34,9 @@ export function ZReportPreview({ report }: { report: DailyZReportData }) {
             {report.businessDate} · {report.reportNumber}
           </div>
           <div className="text-[10px] text-[var(--rep-muted)]">
-            Generated: {new Date(report.generatedAt).toLocaleString("en-GB", { timeZone: report.timezone })} ({report.timezone})
+            Generated:{" "}
+            {new Date(report.generatedAt).toLocaleString("en-GB", { timeZone: report.timezone })} (
+            {report.timezone})
           </div>
         </div>
 
@@ -57,11 +59,19 @@ export function ZReportPreview({ report }: { report: DailyZReportData }) {
           </div>
           <div className="z-receipt-line">
             <span>Discounts:</span>
-            <span>{report.discountsMinor === null ? "Not available" : formatMoney(report.discountsMinor, currency)}</span>
+            <span>
+              {report.discountsMinor === null
+                ? "Not available"
+                : formatMoney(report.discountsMinor, currency)}
+            </span>
           </div>
           <div className="z-receipt-line">
             <span>Refunds:</span>
-            <span>{report.refundsMinor === null ? "Restricted" : formatMoney(report.refundsMinor, currency)}</span>
+            <span>
+              {report.refundsMinor === null
+                ? "Restricted"
+                : formatMoney(report.refundsMinor, currency)}
+            </span>
           </div>
           <div className="z-receipt-line is-bold">
             <span>SALES BEFORE TAX (UNPAID INCLUDED):</span>
@@ -92,14 +102,15 @@ export function ZReportPreview({ report }: { report: DailyZReportData }) {
             ─── POS Recorded Tenders ───
           </div>
           {!report.financeAvailable && <p>Settlement access restricted.</p>}
-          {report.financeAvailable && report.tenders.map((tender) => (
-            <div key={tender.method} className="z-receipt-line">
-              <span>
-                {tender.label} ({tender.tenderCount}):
-              </span>
-              <span>{formatMoney(tender.amountMinor, currency)}</span>
-            </div>
-          ))}
+          {report.financeAvailable &&
+            report.tenders.map((tender) => (
+              <div key={tender.method} className="z-receipt-line">
+                <span>
+                  {tender.label} ({tender.tenderCount}):
+                </span>
+                <span>{formatMoney(tender.amountMinor, currency)}</span>
+              </div>
+            ))}
         </div>
 
         {/* Top 5 Dishes */}

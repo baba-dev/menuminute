@@ -141,27 +141,47 @@ describe("Menu Engineering Kasavana-Smith Matrix Classification", () => {
 
 describe("Reports security and truthfulness regressions", () => {
   it("validates real calendar dates and rejects reverse or excessive custom intervals", () => {
-    expect(reportQuerySchema.safeParse({
-      range: "custom", from: "2026-10-29", to: "2026-10-30",
-    }).success).toBe(true);
-    expect(reportQuerySchema.safeParse({
-      range: "custom", from: "2026-02-30", to: "2026-03-01",
-    }).success).toBe(false);
-    expect(reportQuerySchema.safeParse({
-      range: "custom", from: "2026-10-30", to: "2026-10-29",
-    }).success).toBe(false);
-    expect(reportQuerySchema.safeParse({
-      range: "custom", from: "2025-01-01", to: "2026-10-29",
-    }).success).toBe(false);
-    expect(reportQuerySchema.safeParse({
-      range: "custom", from: "2026-10-29",
-    }).success).toBe(false);
+    expect(
+      reportQuerySchema.safeParse({
+        range: "custom",
+        from: "2026-10-29",
+        to: "2026-10-30",
+      }).success
+    ).toBe(true);
+    expect(
+      reportQuerySchema.safeParse({
+        range: "custom",
+        from: "2026-02-30",
+        to: "2026-03-01",
+      }).success
+    ).toBe(false);
+    expect(
+      reportQuerySchema.safeParse({
+        range: "custom",
+        from: "2026-10-30",
+        to: "2026-10-29",
+      }).success
+    ).toBe(false);
+    expect(
+      reportQuerySchema.safeParse({
+        range: "custom",
+        from: "2025-01-01",
+        to: "2026-10-29",
+      }).success
+    ).toBe(false);
+    expect(
+      reportQuerySchema.safeParse({
+        range: "custom",
+        from: "2026-10-29",
+      }).success
+    ).toBe(false);
   });
 
   it("neutralizes spreadsheet formulas rather than merely quoting CSV fields", () => {
     for (const input of ["=HYPERLINK(1)", "+SUM(1,2)", "-1+2", "@SUM(A1)", "  =cmd"]) {
-      expect(escapeCsvCell(input).startsWith("'") ||
-        escapeCsvCell(input).startsWith('"\'')).toBe(true);
+      expect(escapeCsvCell(input).startsWith("'") || escapeCsvCell(input).startsWith("\"'")).toBe(
+        true
+      );
     }
     expect(escapeCsvCell("Plain dish")).toBe("Plain dish");
     expect(formatMoneyAmount(null, "INR")).toBe("");

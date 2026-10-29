@@ -248,7 +248,8 @@ export async function getReportsWorkspace(
     const baselineEligibleOrders = base.eligible_orders ?? 0;
     const baseAov = baselineEligibleOrders > 0 ? Math.round(baseGross / baselineEligibleOrders) : 0;
     const totalItems = totalItemsRow.rows[0]?.total_items ?? 0;
-    const avgItemsPerOrder = eligibleOrders > 0 ? Number((totalItems / eligibleOrders).toFixed(1)) : 0;
+    const avgItemsPerOrder =
+      eligibleOrders > 0 ? Number((totalItems / eligibleOrders).toFixed(1)) : 0;
 
     const executive: ExecutiveSummary = {
       currency: outlet.currency,
@@ -275,11 +276,12 @@ export async function getReportsWorkspace(
     };
 
     // 3. Hourly Trajectory (0..23)
-    const hourlyRows = loadHourly ? await tx.execute<{
-      hr: number;
-      sales_minor: string;
-      order_count: number;
-    }>(sql`
+    const hourlyRows = loadHourly
+      ? await tx.execute<{
+          hr: number;
+          sales_minor: string;
+          order_count: number;
+        }>(sql`
       select
         extract(hour from (created_at at time zone ${timezone}))::int as hr,
         coalesce(sum(total_minor), 0)::bigint as sales_minor,
@@ -292,13 +294,15 @@ export async function getReportsWorkspace(
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
-    `) : { rows: [] as Array<{ hr: number; sales_minor: string; order_count: number }> };
+    `)
+      : { rows: [] as Array<{ hr: number; sales_minor: string; order_count: number }> };
 
     // Baseline hourly averages (from the past 14 days)
-    const benchmarkHourlyRows = loadHourly ? await tx.execute<{
-      hr: number;
-      avg_sales_minor: string;
-    }>(sql`
+    const benchmarkHourlyRows = loadHourly
+      ? await tx.execute<{
+          hr: number;
+          avg_sales_minor: string;
+        }>(sql`
       select
         extract(hour from (created_at at time zone ${timezone}))::int as hr,
         coalesce(sum(total_minor) / 14, 0)::bigint as avg_sales_minor
@@ -310,7 +314,8 @@ export async function getReportsWorkspace(
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
-    `) : { rows: [] as Array<{ hr: number; avg_sales_minor: string }> };
+    `)
+      : { rows: [] as Array<{ hr: number; avg_sales_minor: string }> };
 
     const hourlyMap = new Map(hourlyRows.rows.map((r) => [r.hr, r]));
     const benchmarkMap = new Map(
@@ -318,7 +323,10 @@ export async function getReportsWorkspace(
     );
 
     // Convert selected multi-day period totals to average sales per calendar day.
-    const selectedDays = Math.max(1, Math.round((Date.parse(range.to) - Date.parse(range.from)) / 86400000) + 1);
+    const selectedDays = Math.max(
+      1,
+      Math.round((Date.parse(range.to) - Date.parse(range.from)) / 86400000) + 1
+    );
     const hourlyTrajectory: HourlyTrajectoryPoint[] = Array.from({ length: 24 }, (_, hour) => {
       const match = hourlyMap.get(hour);
       const benchmark = benchmarkMap.get(hour) ?? 0;
@@ -332,14 +340,15 @@ export async function getReportsWorkspace(
     });
 
     // 4. Menu Engineering & Product Mix Matrix
-    const menuRaw = loadMenu ? await tx.execute<{
-      dish_id: string;
-      item_name: string;
-      category_name: string | null;
-      unit_price: number;
-      quantity_sold: number;
-      total_revenue: string;
-    }>(sql`
+    const menuRaw = loadMenu
+      ? await tx.execute<{
+          dish_id: string;
+          item_name: string;
+          category_name: string | null;
+          unit_price: number;
+          quantity_sold: number;
+          total_revenue: string;
+        }>(sql`
       select
         oi.dish_id,
         max(oi.item_name) as item_name,
@@ -358,7 +367,17 @@ export async function getReportsWorkspace(
       ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by oi.dish_id
       order by total_revenue desc
-    `) : { rows: [] as Array<{ dish_id: string; item_name: string; category_name: string | null; unit_price: number; quantity_sold: number; total_revenue: string }> };
+    `)
+      : {
+          rows: [] as Array<{
+            dish_id: string;
+            item_name: string;
+            category_name: string | null;
+            unit_price: number;
+            quantity_sold: number;
+            total_revenue: string;
+          }>,
+        };
 
     const allDishes = menuRaw.rows.map((r) => ({
       dishId: r.dish_id,
@@ -392,7 +411,8 @@ export async function getReportsWorkspace(
           "Lower observed demand. Validate sample size and economics before menu changes.";
       }
 
-      if (totalMenuQty < 20) recommendation = "Limited sample: collect more orders before drawing conclusions.";
+      if (totalMenuQty < 20)
+        recommendation = "Limited sample: collect more orders before drawing conclusions.";
       return {
         ...d,
         popularitySharePct:
@@ -431,8 +451,10 @@ export async function getReportsWorkspace(
         puzzles: classifiedDishes.filter((d) => d.quadrant === "puzzle"),
         dogs: classifiedDishes.filter((d) => d.quadrant === "dog"),
       },
-      topSellers: [...classifiedDishes].sort((a,b) => b.quantitySold - a.quantitySold).slice(0,8),
-      underperformers: [...classifiedDishes].sort((a,b) => a.quantitySold - b.quantitySold).slice(0,6),
+      topSellers: [...classifiedDishes].sort((a, b) => b.quantitySold - a.quantitySold).slice(0, 8),
+      underperformers: [...classifiedDishes]
+        .sort((a, b) => a.quantitySold - b.quantitySold)
+        .slice(0, 6),
       categoryShares,
     };
 
@@ -446,14 +468,25 @@ export async function getReportsWorkspace(
         totalVarianceMinor?: string;
         tenders?: Array<{ method: string; tenderCount: number; amountMinor: string }>;
         shifts?: Array<{
-          shiftId: string; registerName: string; cashierName: string;
-          state: "open" | "closed"; openedAt: string; closedAt: string | null;
-          openingFloatMinor: string; expectedMinor: string | null;
-          countedMinor: string | null; cashTakenMinor: string; cashRefundMinor: string;
+          shiftId: string;
+          registerName: string;
+          cashierName: string;
+          state: "open" | "closed";
+          openedAt: string;
+          closedAt: string | null;
+          openingFloatMinor: string;
+          expectedMinor: string | null;
+          countedMinor: string | null;
+          cashTakenMinor: string;
+          cashRefundMinor: string;
         }>;
         recentRefunds?: Array<{
-          id: string; orderId: string; amountMinor: string; reason: string;
-          actorName: string; createdAt: string;
+          id: string;
+          orderId: string;
+          amountMinor: string;
+          reason: string;
+          actorName: string;
+          createdAt: string;
         }>;
       };
     }>(sql`select app_private.reports_finance_snapshot(
@@ -463,7 +496,8 @@ export async function getReportsWorkspace(
     if (!finance) throw new Error("Finance reporting projection returned no result");
     const toSafeMinor = (value: string | number | null | undefined): number => {
       const numeric = Number(value ?? 0);
-      if (!Number.isSafeInteger(numeric)) throw new RangeError("Financial amount is outside safe integer precision");
+      if (!Number.isSafeInteger(numeric))
+        throw new RangeError("Financial amount is outside safe integer precision");
       return numeric;
     };
     const financialAccess = finance.available === true;
@@ -475,7 +509,7 @@ export async function getReportsWorkspace(
     };
     const collected = financialAccess ? toSafeMinor(finance.totalCollectedMinor) : 0;
     const refunded = financialAccess ? toSafeMinor(finance.totalRefundedMinor) : 0;
-    const tenderSource = financialAccess ? finance.tenders ?? [] : [];
+    const tenderSource = financialAccess ? (finance.tenders ?? []) : [];
     const tenders: TenderSummary[] = tenderSource.map((t) => {
       const amount = toSafeMinor(t.amountMinor);
       return {
@@ -486,22 +520,33 @@ export async function getReportsWorkspace(
         percentage: collected > 0 ? Number(((amount / collected) * 100).toFixed(1)) : 0,
       };
     });
-    const shifts: ShiftReconciliationRow[] = (financialAccess ? finance.shifts ?? [] : []).map((s) => {
-      const expected = s.expectedMinor === null ? null : toSafeMinor(s.expectedMinor);
-      const counted = s.countedMinor === null ? null : toSafeMinor(s.countedMinor);
-      return {
-        shiftId: s.shiftId, registerName: s.registerName, cashierName: s.cashierName,
-        state: s.state, openedAt: s.openedAt, closedAt: s.closedAt,
-        openingFloatMinor: toSafeMinor(s.openingFloatMinor),
-        cashTakenMinor: toSafeMinor(s.cashTakenMinor),
-        cashRefundMinor: toSafeMinor(s.cashRefundMinor),
-        expectedMinor: expected, countedMinor: counted,
-        varianceMinor: expected !== null && counted !== null ? counted - expected : null,
-      };
-    });
-    const recentRefunds = (financialAccess ? finance.recentRefunds ?? [] : []).map((r) => ({
-      id: r.id, orderId: r.orderId, amountMinor: toSafeMinor(r.amountMinor),
-      reason: r.reason, actorName: r.actorName, createdAt: r.createdAt,
+    const shifts: ShiftReconciliationRow[] = (financialAccess ? (finance.shifts ?? []) : []).map(
+      (s) => {
+        const expected = s.expectedMinor === null ? null : toSafeMinor(s.expectedMinor);
+        const counted = s.countedMinor === null ? null : toSafeMinor(s.countedMinor);
+        return {
+          shiftId: s.shiftId,
+          registerName: s.registerName,
+          cashierName: s.cashierName,
+          state: s.state,
+          openedAt: s.openedAt,
+          closedAt: s.closedAt,
+          openingFloatMinor: toSafeMinor(s.openingFloatMinor),
+          cashTakenMinor: toSafeMinor(s.cashTakenMinor),
+          cashRefundMinor: toSafeMinor(s.cashRefundMinor),
+          expectedMinor: expected,
+          countedMinor: counted,
+          varianceMinor: expected !== null && counted !== null ? counted - expected : null,
+        };
+      }
+    );
+    const recentRefunds = (financialAccess ? (finance.recentRefunds ?? []) : []).map((r) => ({
+      id: r.id,
+      orderId: r.orderId,
+      amountMinor: toSafeMinor(r.amountMinor),
+      reason: r.reason,
+      actorName: r.actorName,
+      createdAt: r.createdAt,
     }));
     const totalRefunded = refunded;
     const tillReconciliation: TillReconciliationReport = {
@@ -520,17 +565,27 @@ export async function getReportsWorkspace(
     // Work duration is queue-to-completion, including waiting; not active cook time.
     const kitchenRows = await tx.execute<{
       result: {
-        available: boolean; totalTickets?: number;
+        available: boolean;
+        totalTickets?: number;
         summary?: {
-          work_units: number; avg_prep: number; median_prep: number;
-          fast_count: number; standard_count: number; delayed_count: number;
+          work_units: number;
+          avg_prep: number;
+          median_prep: number;
+          fast_count: number;
+          standard_count: number;
+          delayed_count: number;
         };
         stations?: Array<{
-          stationId: string; stationName: string;
-          ticketsHandled: number; avgPrepMinutes: number;
+          stationId: string;
+          stationName: string;
+          ticketsHandled: number;
+          avgPrepMinutes: number;
         }>;
         hourlyBottlenecks?: Array<{
-          hour: number; label: string; ticketCount: number; avgPrepMinutes: number;
+          hour: number;
+          label: string;
+          ticketCount: number;
+          avgPrepMinutes: number;
         }>;
       };
     }>(sql`select app_private.reports_kitchen_snapshot(
@@ -539,22 +594,27 @@ export async function getReportsWorkspace(
     const kitchen = kitchenRows.rows[0]?.result;
     if (!kitchen) throw new Error("Kitchen reporting projection returned no result");
     const kitchenAvailable = kitchen.available === true;
-    const workCount = kitchenAvailable ? kitchen.summary?.work_units ?? 0 : 0;
-    const fastCount = kitchenAvailable ? kitchen.summary?.fast_count ?? 0 : 0;
-    const standardCount = kitchenAvailable ? kitchen.summary?.standard_count ?? 0 : 0;
-    const delayedCount = kitchenAvailable ? kitchen.summary?.delayed_count ?? 0 : 0;
-    const share = (count: number) => workCount > 0 ? Number((count * 100 / workCount).toFixed(1)) : 0;
+    const workCount = kitchenAvailable ? (kitchen.summary?.work_units ?? 0) : 0;
+    const fastCount = kitchenAvailable ? (kitchen.summary?.fast_count ?? 0) : 0;
+    const standardCount = kitchenAvailable ? (kitchen.summary?.standard_count ?? 0) : 0;
+    const delayedCount = kitchenAvailable ? (kitchen.summary?.delayed_count ?? 0) : 0;
+    const share = (count: number) =>
+      workCount > 0 ? Number(((count * 100) / workCount).toFixed(1)) : 0;
     const kitchenVelocity: KitchenVelocityReport = {
       available: kitchenAvailable,
-      totalTickets: kitchenAvailable ? kitchen.totalTickets ?? 0 : 0,
+      totalTickets: kitchenAvailable ? (kitchen.totalTickets ?? 0) : 0,
       avgPrepMinutes: kitchenAvailable ? Number(kitchen.summary?.avg_prep ?? 0) : 0,
       medianPrepMinutes: kitchenAvailable ? Number(kitchen.summary?.median_prep ?? 0) : 0,
       sla: {
-        fastCount, standardCount, delayedCount,
-        fastPct: share(fastCount), standardPct: share(standardCount), delayedPct: share(delayedCount),
+        fastCount,
+        standardCount,
+        delayedCount,
+        fastPct: share(fastCount),
+        standardPct: share(standardCount),
+        delayedPct: share(delayedCount),
       },
-      stations: kitchenAvailable ? kitchen.stations ?? [] : [],
-      hourlyBottlenecks: kitchenAvailable ? kitchen.hourlyBottlenecks ?? [] : [],
+      stations: kitchenAvailable ? (kitchen.stations ?? []) : [],
+      hourlyBottlenecks: kitchenAvailable ? (kitchen.hourlyBottlenecks ?? []) : [],
     };
 
     // 7. Daily Z-Report
