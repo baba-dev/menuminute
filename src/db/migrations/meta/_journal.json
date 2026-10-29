@@ -253,6 +253,13 @@
       "when": 1793180000003,
       "tag": "0035_kitchen_owner_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793180000004,
+      "tag": "0036_kitchen_operator_access",
+      "breakpoints": true
     }
   ]
 }
