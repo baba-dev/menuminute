@@ -10,8 +10,8 @@ import "./pos.css";
 import "./pos-editorial.css";
 
 export const metadata: Metadata = {
-  title: "The Till | MenuMinute POS",
-  description: "Private restaurant point-of-sale and draft order workspace.",
+  title: "Point of Sale | MenuMinute POS",
+  description: "Private restaurant point-of-sale and unified order workspace.",
   robots: { index: false, follow: false },
 };
 

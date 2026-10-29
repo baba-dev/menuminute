@@ -6,11 +6,8 @@ import {
   ArrowRight,
   CheckCircle2,
   ClipboardList,
-  BookOpenText,
-  ClipboardCheck,
   Minus,
   Plus,
-  RefreshCcw,
   Search,
   Settings2,
   ShoppingBasket,
@@ -219,7 +216,7 @@ export function TheTill({
       await refresh();
       setEditingSettings(false);
       setMessage(
-        "The Till is enabled for unpaid, pre-tax order recording. No tax invoice or payment collection is enabled."
+        "Point of Sale order entry is enabled. Staff-recorded payments are available; fiscal documents require separate approval."
       );
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Unable to save settings.");
@@ -417,43 +414,17 @@ export function TheTill({
     <main className="till-page pos-editorial" data-testid="pos-till">
       <header className="till-heading pos-hero">
         <div>
-          <span className="till-eyebrow">MENUMINUTE / THE TILL</span>
+          <span className="till-eyebrow">MENUMINUTE / POINT OF SALE</span>
           <h1>Service, meet settlement.</h1>
           <p>
-            Record staff orders and link eligible tickets to a private draft sale. Payment and
-            fiscal issue are not enabled yet.
+            Every order, one counter. Create sales, manage incoming orders,
+            prepare bills and keep your restaurant moving.
           </p>
         </div>
         <div className="till-heading-actions">
-          <Link href="/dashboard/pos/ledger">
-            The Ledger <BookOpenText size={15} />
-          </Link>
-          <Link href="/dashboard/pos/closing">
-            Closing Desk <ClipboardCheck size={15} />
-          </Link>
           <Link href="/dashboard/orders">
             Service Counter <ArrowRight size={15} />
           </Link>
-          <Link href="/kitchen">
-            Kitchen <ArrowRight size={15} />
-          </Link>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            disabled={busy}
-            aria-label="Refresh Till"
-          >
-            <RefreshCcw size={17} />
-          </button>
-          {workspace.context.canConfigure && (
-            <button
-              type="button"
-              onClick={() => setEditingSettings(!editingSettings)}
-              aria-label="Seller settings"
-            >
-              <Settings2 size={17} />
-            </button>
-          )}
         </div>
         <span className="pos-hero-caption" aria-hidden="true">
           CRAFTED FOR THE COUNTER
@@ -461,6 +432,12 @@ export function TheTill({
       </header>
       <div className="pos-body">
         <PosNavigation active="till" />
+        {workspace.context.canConfigure && workspace.context.enabled && (
+          <button type="button" className="pos-seller-link"
+            onClick={() => setEditingSettings((value) => !value)}>
+            <Settings2 size={15} aria-hidden="true" /> Seller details
+          </button>
+        )}
         {incomingOrderId && (
           <div role="status" className="mb-4 rounded-xl border border-amber-500/50 p-4">
             {incomingOrder ? (
@@ -490,11 +467,6 @@ export function TheTill({
             )}
           </div>
         )}
-        <section className="till-status" aria-label="Financial status">
-          <span>OUTLET · {workspace.context.outletName}</span>
-          <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
-          <span>TAX NOT CALCULATED · NO PAYMENT CAPTURE · NO INVOICE ISSUANCE</span>
-        </section>
         <section className="pos-overview" aria-label="POS overview">
           <div className="pos-section-header">
             <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
@@ -557,7 +529,7 @@ export function TheTill({
           <form className="till-settings" onSubmit={(e) => void configure(e)}>
             <div>
               <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
-              <h2>Activate draft POS</h2>
+              <h2>Activate Point of Sale</h2>
               <p>
                 Record genuine merchant identity. Tax profiles and legally issued documents are
                 separately release-gated; selecting a status here is not tax certification.
@@ -604,7 +576,7 @@ export function TheTill({
               />
             </label>
             <button className="till-primary" type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Save identity and enable draft orders"}
+              {busy ? "Saving…" : "Save seller details and enable POS"}
             </button>
           </form>
         )}

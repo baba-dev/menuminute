@@ -5,8 +5,8 @@ const workspaces = [
   {
     key: "till",
     href: "/dashboard/pos",
-    title: "The Till",
-    description: "Record orders and build tickets",
+    title: "Point of Sale",
+    description: "Orders, cashier and billing",
     Icon: ShoppingBasket,
   },
   {
