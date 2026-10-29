@@ -730,3 +730,32 @@
   display: inline-block; border: 0; background: transparent; padding: 4px 0;
   color: #ae4b1a; font-size: 12px; text-decoration: underline; cursor: pointer;
 }
+
+/* Phase E — cashier-native live customer inbox. */
+.till-page.pos-editorial .pos-inbox { margin-top: 28px; display: grid; gap: 16px; }
+.till-page.pos-editorial .pos-inbox .till-sectionhead { align-items: start; }
+.till-page.pos-editorial .pos-inbox .till-sectionhead p { font-size: 13px; max-width: 540px; opacity: .72; }
+.till-page.pos-editorial .pos-inbox-tools { display: flex; align-items: center; gap: 8px; }
+.till-page.pos-editorial .pos-inbox-tools button { display: inline-flex; padding: 9px; border: 1px solid #e9c9ad; border-radius: 11px; }
+.till-page.pos-editorial .pos-inbox-count { color: #a74619; font-weight: 800; font-size: 12px; }
+.till-page.pos-editorial .pos-inbox-alert { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px; border:1px solid #e58b43; border-radius:16px; background:#fff4e6; color:#4a2b1e; }
+.till-page.pos-editorial .pos-inbox-alert div { flex:1; display:grid; gap:3px; min-width:150px; }
+.till-page.pos-editorial .pos-inbox-alert small { font-size:12px; opacity:.7; }
+.till-page.pos-editorial .pos-inbox-alert button:first-of-type,
+.till-page.pos-editorial .pos-inbox-foot button { border:0; border-radius:12px; padding:11px 14px; background:linear-gradient(105deg,#f56b1f,#c33310); color:white; font-weight:800; display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+.till-page.pos-editorial .pos-inbox-alert button:last-of-type { border:0; padding:8px; }
+.till-page.pos-editorial .pos-inbox-confirm { border:1px solid #91ad80; border-radius:12px; padding:12px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.till-page.pos-editorial .pos-inbox-confirm a { display:inline-flex; gap:5px; align-items:center; text-decoration:underline; }
+.till-page.pos-editorial .pos-inbox-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr)); gap:13px; }
+.till-page.pos-editorial .pos-inbox-order { border:1px solid #e8d5c1; border-radius:19px; padding:17px; display:grid; gap:15px; min-width:0; }
+.till-page.pos-editorial .pos-inbox-order-head,.till-page.pos-editorial .pos-inbox-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.till-page.pos-editorial .pos-inbox-order-head>div { display:grid; gap:6px; }
+.till-page.pos-editorial .pos-inbox-order-head small { font-size:12px; }
+.till-page.pos-editorial .pos-awaiting { color:#a74e12; font-size:11px; font-weight:800; }
+.till-page.pos-editorial .pos-inbox-items { display:grid; gap:6px; border-top:1px solid #ebd7c3; border-bottom:1px solid #ebd7c3; padding:12px 0; }
+.till-page.pos-editorial .pos-inbox-items>div { display:grid; gap:3px; font-size:13px; }
+.till-page.pos-editorial .pos-inbox-items small { opacity:.66; }
+.till-page.pos-editorial .pos-inbox-foot strong small { font-size:11px; font-weight:400; }
+.till-page.pos-editorial .pos-inbox button:disabled { opacity:.55; cursor:wait; }
+:root[data-theme="dark"] .till-page.pos-editorial .pos-inbox-alert { background:#412919; color:#ffe8c8; }
+@media(max-width:640px){.till-page.pos-editorial .pos-inbox-order-head {align-items:flex-start; flex-wrap:wrap;}}

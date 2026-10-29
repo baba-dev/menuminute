@@ -20,6 +20,7 @@ import {
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
+import { PosIncomingOrders } from "./pos-incoming-orders";
 import {
   readTerminalReceiptSettings,
   saveTerminalReceiptSettings,
@@ -556,12 +557,12 @@ export function TheTill({
           <div role="status" className="till-success">
             <CheckCircle2 size={20} />
             <div>
-              <strong>Recorded · Order #{success.orderNumber}</strong>
+              <strong>Dispatched · Order #{success.orderNumber}</strong>
               <p>
                 Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax ·
                 Payment{" "}
                 {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
-                The order was sent to Service Counter. This confirmation is not a receipt or tax
+                The order was accepted and sent to service. This confirmation is not a receipt or tax
                 invoice.
               </p>
             </div>
@@ -775,36 +776,11 @@ export function TheTill({
               {!dishes.length && (
                 <p className="till-empty">No dishes found. Publish a menu or adjust the search.</p>
               )}
-              <section className="till-existing">
-                <div className="till-sectionhead">
-                  <div>
-                    <span className="till-eyebrow">02 / EXISTING TICKETS</span>
-                    <h2>Link an order</h2>
-                  </div>
-                </div>
-                <p>
-                  Eligible accepted, preparing, ready and completed unpaid orders. Each order can be
-                  attached only once.
-                </p>
-                {workspace.attachable.map((o) => (
-                  <div className="till-existing-row" key={o.orderId}>
-                    <div>
-                      <strong>
-                        #{o.orderNumber} · {o.customerName || o.fulfillmentMode.replace("_", " ")}
-                      </strong>
-                      <small>
-                        {o.status} · {money(o.subtotalMinor, o.currency)}
-                      </small>
-                    </div>
-                    <button type="button" disabled={busy} onClick={() => void attach(o)}>
-                      Attach draft <ArrowRight size={15} />
-                    </button>
-                  </div>
-                ))}
-                {!workspace.attachable.length && (
-                  <p className="till-empty">No eligible unpaid tickets currently available.</p>
-                )}
-              </section>
+              <PosIncomingOrders
+                organizationId={organizationId}
+                outletId={outletId}
+                onUpdated={refresh}
+              />
             </section>
             <aside className="till-cart" aria-label="Staff order cart">
               <div className="till-sectionhead">
@@ -983,7 +959,7 @@ export function TheTill({
                     ? "Order Sent!"
                     : submitFeedback === "error"
                       ? "Could not send"
-                      : "Send to Service Counter"}{" "}
+                      : "Place Order & Send"}{" "}
                 <ArrowRight size={17} />
               </button>
               <button

@@ -288,6 +288,13 @@
       "when": 1793365200000,
       "tag": "0040_pos_unified_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793365200001,
+      "tag": "0041_pos_cashier_dispatch",
+      "breakpoints": true
     }
   ]
 }

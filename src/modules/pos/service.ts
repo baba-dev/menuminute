@@ -214,6 +214,66 @@ export type PosDailyKpis = {
  * Finance refunds are deducted once by immutable refund ID, not by visible page rows.
  * This measures paid orders placed today rather than cash-flow settlement time.
  */
+
+export type PosIncomingOrder = {
+  orderId: string;
+  orderNumber: number;
+  version: number;
+  source: "guest_menu" | "online";
+  customerName: string | null;
+  servicePoint: string | null;
+  fulfillmentMode: string;
+  createdAt: string;
+  currency: string;
+  subtotalMinor: string;
+  status: string;
+  paymentStatus: string;
+  items: { name: string; quantity: number; variant: string | null; notes: string | null }[];
+};
+
+export async function posIncomingOrders(
+  actor: Actor, organizationId: string, outletId: string
+): Promise<{ orders: PosIncomingOrder[]; overflow: boolean }> {
+  await posContext(actor, organizationId, outletId);
+  const result = await posCall(actor, outletId, (run) => run(sql`
+    select o.id as "orderId",o.order_number as "orderNumber",o.version,
+      o.intake_source as source,o.customer_name as "customerName",
+      case when t.id is not null then coalesce(t.label,'Table '||t.table_number) else null end as "servicePoint",
+      o.fulfillment_mode as "fulfillmentMode",o.created_at as "createdAt",
+      o.currency,o.subtotal_minor::text as "subtotalMinor",o.status,
+      o.payment_status as "paymentStatus",
+      coalesce((select jsonb_agg(jsonb_build_object(
+        'name',i.item_name,'quantity',i.quantity,'variant',i.variant_name,'notes',i.notes)
+        order by i.id) from order_items i where i.restaurant_id=${outletId}
+        and i.order_id=o.id),'[]'::jsonb) as items
+    from orders o left join restaurant_tables t on t.id=o.table_id
+      and t.restaurant_id=o.restaurant_id
+    where o.restaurant_id=${outletId} and o.status='pending'
+      and o.intake_source in ('guest_menu','online')
+      and app_private.can_outlet(${outletId},'orders.read')
+    order by o.created_at,o.id limit 51
+  `)) as { rows: PosIncomingOrder[] };
+  return { orders: result.rows.slice(0,50), overflow: result.rows.length>50 };
+}
+
+export const posAcceptSchema=z.object({
+  key:z.string().uuid(),orderId:identity,expectedVersion:z.number().int().positive()
+}).strict();
+
+export async function posAcceptCustomerOrder(
+  actor: Actor,organizationId:string,outletId:string,raw:unknown
+): Promise<PosSaleResult> {
+  const input=posAcceptSchema.parse(raw);
+  await posContext(actor,organizationId,outletId);
+  const hash=digest(input);
+  return posCall(actor,outletId,async run=>{
+    const result=await run(sql`select app_private.pos_accept_customer_order(
+      ${outletId},${input.orderId},${input.expectedVersion},
+      ${input.key},${hash}) as data`) as {rows:{data:PosSaleResult}[]};
+    return result.rows[0]!.data;
+  });
+}
+
 export async function posDailyKpis(
   actor: Actor,
   organizationId: string,
@@ -416,7 +476,7 @@ export async function posSubmit(
   };
   return posCall(actor, outletId, async (run) => {
     const r =
-      (await run(sql`select app_private.pos_submit_order_with_attestation(${outletId},${input.key},${hash},
+      (await run(sql`select app_private.pos_submit_and_dispatch(${outletId},${input.key},${hash},
       ${JSON.stringify(payload)}::jsonb) as data`)) as { rows: { data: PosSaleResult }[] };
     return r.rows[0]!.data;
   });
