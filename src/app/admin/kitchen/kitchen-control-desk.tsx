@@ -17,12 +17,13 @@ type Props = {
   onStatus: (outletId: string) => Promise<StatusResult>;
   onCommand: (input: PilotCommand) => Promise<StatusResult>;
 };
-type Action = "request" | "approve" | "activate" | "drain" | "finalize";
+type Action = "request" | "approve" | "activate" | "operator_activate" | "drain" | "finalize";
 
 const names: Record<Action, string> = {
   request: "Request pilot review",
   approve: "Approve independent review",
   activate: "Activate approved pilot",
+  operator_activate: "Activate operator-granted Kitchen",
   drain: "Stop new intake / drain",
   finalize: "Finish drain / disable",
 };
@@ -30,7 +31,7 @@ const stateCopy: Record<KitchenPilotStatus["state"], string> = {
   setup: "No pilot requested",
   requested: "Waiting for independent review",
   approved: "Pilot approved, awaiting activation",
-  active: "Pilot running",
+  active: "Kitchen processing active",
   draining: "Draining — finish existing tickets",
   disabled: "Disabled",
 };
@@ -174,7 +175,7 @@ export function KitchenControlDesk({
           ? ["approve", "request"]
           : status.state === "approved"
             ? ["activate", "request"]
-            : ["request"];
+            : ["operator_activate", "request"];
   const ready =
     status &&
     status.configurationReady &&
@@ -186,13 +187,19 @@ export function KitchenControlDesk({
     Boolean(status) &&
     (selectedAction === "activate"
       ? Boolean(ready && status?.state === "approved")
-      : selectedAction === "approve"
-        ? status?.state === "requested" && status.requestedBy !== operatorId
-        : selectedAction === "drain"
-          ? status?.state === "active"
-          : selectedAction === "finalize"
-            ? status?.state === "draining" && status.openKitchenOrders === 0
-            : status?.state !== "active" && status?.state !== "draining");
+      : selectedAction === "operator_activate"
+        ? Boolean(
+            ready &&
+            status?.kitchenEntitled &&
+            (status?.state === "setup" || status?.state === "disabled")
+          )
+        : selectedAction === "approve"
+          ? status?.state === "requested" && status.requestedBy !== operatorId
+          : selectedAction === "drain"
+            ? status?.state === "active"
+            : selectedAction === "finalize"
+              ? status?.state === "draining" && status.openKitchenOrders === 0
+              : status?.state !== "active" && status?.state !== "draining");
 
   return (
     <div className="space-y-6">
@@ -207,9 +214,10 @@ export function KitchenControlDesk({
           The Kitchen Control Desk
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-300">
-          Request a seven-day controlled outlet pilot. Separate superadmin review, live station
-          checks, release identity and a one-use password + authenticator confirmation are required.
-          Installing this feature never switches on customer kitchens automatically.
+          Enable a reviewed outlet using a seven-day trial or revocable permanent operator grant.
+          Single-superadmin operators may activate with their own documented attestation; existing
+          two-person pilot review is still available. Every activation checks the live release,
+          station readiness, entitlement and one-use password plus authenticator proof.
         </p>
       </header>
       <section className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
@@ -355,9 +363,11 @@ export function KitchenControlDesk({
               <h2 className="text-lg font-bold">3 · Reviewed operator action</h2>
             </div>
             <p className="mt-2 text-sm text-stone-400">
-              Requestor and approver must be different superadmins. Approval expires after 24 hours.
-              Only one reviewed outlet may be activated per command; no public Kitchen subscription
-              is unlocked.
+              A controlled pilot still requires two different superadmins and expires after 24
+              hours. For an owner-operated platform with exactly one enrolled superadmin, first
+              issue a seven-day or permanent Kitchen grant under Payments & Grants, then choose
+              &ldquo;Activate operator-granted Kitchen&rdquo; with actual QA/release evidence. No
+              paid subscription or public checkout is unlocked.
             </p>
             <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-4">
               <label className="block text-sm font-semibold">

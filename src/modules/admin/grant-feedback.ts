@@ -14,6 +14,15 @@ export function grantFailureMessage(error: unknown): string {
     if (message.includes("Confirm a recent privileged action")) {
       return "Confirm a privileged action with your password and authenticator at Account & Security, then retry this grant. Each confirmation works once and expires after five minutes.";
     }
+    if (message.includes("Overlapping Kitchen access exists")) {
+      return "An overlapping Kitchen Pro grant exists. Review or revoke that grant after disabling any active Kitchen outlets.";
+    }
+    if (message.includes("Drain and disable active Kitchen outlets")) {
+      return "Stop new intake, finish the Kitchen drain, and disable active outlets before revoking access.";
+    }
+    if (message.includes("Confirm a privileged action with password and authenticator")) {
+      return "Confirm your password and authenticator code for this Kitchen grant, then retry.";
+    }
     if (message.includes("Overlapping entitlement already exists")) {
       return "This organization already has an overlapping grant for that capability. Check the current grants before retrying.";
     }

@@ -5,6 +5,9 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { KitchenBoard } from "./kitchen-board";
+import { KitchenIntake } from "./kitchen-intake";
+import { withOutlet } from "@/modules/tenancy/service";
+import { sql } from "drizzle-orm";
 import { KitchenAvailabilityPanel } from "./kitchen-availability-panel";
 import { kitchenAvailableDishes } from "@/modules/hospitality/service";
 import { ForbiddenError } from "@/lib/errors";
@@ -43,6 +46,14 @@ export default async function KitchenPage() {
     );
   }
   const canManage = await kitchenCanManage(actor, outlet.id);
+  const kitchenOperational =
+    canManage &&
+    (await withOutlet(actor, outlet.id, "orders.read", async (tx) => {
+      const result = await tx.execute<{ active: boolean }>(
+        sql`SELECT app_private.kitchen_primary_workspace(${outlet.id}) AS active`
+      );
+      return result.rows[0]?.active === true;
+    }));
   const dishList: Array<{ id: string; name: string }> = [];
   if (canManage) {
     const menus = (await listMenus(actor, outlet.id)).filter(
@@ -88,6 +99,9 @@ export default async function KitchenPage() {
         organizationId={outlet.organizationId}
         outletId={outlet.id}
       />
+      {kitchenOperational && (
+        <KitchenIntake organizationId={outlet.organizationId} outletId={outlet.id} />
+      )}
       <KitchenBoard
         organizationId={outlet.organizationId}
         outletId={outlet.id}

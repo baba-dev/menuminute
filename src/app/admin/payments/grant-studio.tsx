@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   grantEndForPreset,
+  PERMANENT_ACCESS_END,
   grantOverlaps,
   grantPresetDetails,
   grantStatus,
@@ -62,6 +63,7 @@ interface GrantStudioProps {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }) => Promise<GrantActionResult>;
   onRenewGrant: (data: {
     grantId: string;
@@ -86,7 +88,9 @@ const statusNames: Record<GrantStatus, string> = {
   revoked: "Revoked",
 };
 const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  new Date(date).toISOString() === PERMANENT_ACCESS_END
+    ? "Never (revocable)"
+    : new Date(date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 const capabilityName = (capability: string) =>
   capability === "ordering.new" ? "Online Ordering" : "Kitchen Pro";
 
@@ -113,6 +117,7 @@ export function GrantStudio({
   const [targets, setTargets] = useState<GrantTarget[]>([]);
   const [searching, setSearching] = useState(false);
   const [preset, setPreset] = useState<GrantPreset>("trial_30");
+  const [capability, setCapability] = useState<"ordering.new" | "kitchen.new">("ordering.new");
   const [currency, setCurrency] = useState<"USD" | "INR">("INR");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
@@ -146,6 +151,7 @@ export function GrantStudio({
     setStartAt(localDateTimeInput(start));
     setEndAt(localDateTimeInput(grantEndForPreset("trial_30", start)!));
     setPreset("trial_30");
+    setCapability("ordering.new");
     setSelected(null);
     setSelectedGrants([]);
     setSelectionCount(0);
@@ -158,6 +164,14 @@ export function GrantStudio({
     setPassword("");
     setTotp("");
     setMode("issue");
+  }
+  function changeCapability(next: "ordering.new" | "kitchen.new") {
+    setCapability(next);
+    const nextPreset: GrantPreset = next === "kitchen.new" ? "trial_7" : "trial_30";
+    setPreset(nextPreset);
+    const end = grantEndForPreset(nextPreset, new Date(startAt));
+    if (end) setEndAt(localDateTimeInput(end));
+    setPaymentVerified(false);
   }
   function changePreset(next: GrantPreset) {
     setPreset(next);
@@ -285,16 +299,17 @@ export function GrantStudio({
         return;
       }
       issueStart = start.toISOString();
-      issueEnd = end.toISOString();
+      issueEnd =
+        capability === "kitchen.new" && preset === "permanent"
+          ? PERMANENT_ACCESS_END
+          : end.toISOString();
       const collides = selectedGrants.some(
         (grant) =>
-          grant.capability === "ordering.new" &&
+          grant.capability === capability &&
           grantOverlaps({ startsAt: issueStart, endsAt: issueEnd }, grant)
       );
       if (collides) {
-        setError(
-          "An overlapping Online Ordering grant already exists. Extend the existing grant instead."
-        );
+        setError("An overlapping access grant already exists. Revoke or finish that grant first.");
         return;
       }
     }
@@ -317,7 +332,8 @@ export function GrantStudio({
       if (mode === "issue" && selected) {
         result = await onIssueGrant({
           organizationId: selected.id,
-          capability: "ordering.new",
+          capability,
+          ...(capability === "kitchen.new" ? { term: preset as "trial_7" | "permanent" } : {}),
           billingCurrency: currency,
           startsAt: issueStart,
           endsAt: issueEnd,
@@ -338,7 +354,7 @@ export function GrantStudio({
       setTargetGrant(null);
       setNotice(
         mode === "issue"
-          ? "Online Ordering access granted. The change is audited."
+          ? `${capabilityName(capability)} access granted. Activate a ready outlet from the Kitchen Control Desk to start live tickets.`
           : mode === "renew"
             ? "A non-overlapping renewal has been scheduled and audited."
             : "Grant revoked. Existing accepted orders remain governed by their normal workflow."
@@ -411,7 +427,7 @@ export function GrantStudio({
     Number.isFinite(new Date(endAt).getTime()) &&
     selectedGrants.some(
       (grant) =>
-        grant.capability === "ordering.new" &&
+        grant.capability === capability &&
         grantOverlaps({ startsAt: startAt, endsAt: endAt }, grant)
     );
 
@@ -457,13 +473,14 @@ export function GrantStudio({
           <div className="flex items-center gap-3">
             <ChefHat className="text-amber-300" aria-hidden="true" />
             <h3 className="font-bold text-white">Kitchen Pro</h3>
-            <span className="rounded-full bg-amber-950 px-2 py-1 text-[10px] font-bold text-amber-200 uppercase">
-              Not yet available
+            <span className="rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-300 uppercase">
+              Operator grantable
             </span>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-stone-300">
-            Commercial activation is blocked in PostgreSQL and at the outlet flag until the release
-            gates are completed.
+            Grant seven-day trial or permanent, revocable Kitchen access. Live ticket routing
+            remains disabled until the specific outlet passes readiness and receives an
+            authenticated operator activation. Public paid checkout is not enabled.
           </p>
           <details className="mt-3 text-xs text-stone-300">
             <summary className="cursor-pointer font-semibold text-amber-200">
@@ -726,7 +743,7 @@ export function GrantStudio({
                 </p>
                 <h3 id="grant-dialog-title" className="mt-1 text-xl font-extrabold text-white">
                   {mode === "issue"
-                    ? "Grant Online Ordering access"
+                    ? "Grant organization feature access"
                     : mode === "renew"
                       ? "Extend access"
                       : "Revoke access"}
@@ -817,21 +834,40 @@ export function GrantStudio({
                 <div>
                   <p className="text-sm font-bold text-white">2. Choose a capability and preset</p>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-orange-700 bg-orange-950/30 p-3 text-xs">
-                      <UtensilsCrossed className="mb-2 text-orange-300" size={20} />
-                      <strong className="block text-sm text-white">Online Ordering</strong>
-                      <span className="text-emerald-300">Available for grants</span>
-                    </div>
-                    <div className="rounded-xl border border-stone-700 bg-stone-950/40 p-3 text-xs opacity-75">
-                      <ChefHat className="mb-2 text-amber-300" size={20} />
-                      <strong className="block text-sm text-white">Kitchen Pro</strong>
-                      <span className="text-amber-200">
-                        Not yet available · release gates pending
-                      </span>
-                    </div>
+                    {[
+                      {
+                        value: "ordering.new" as const,
+                        label: "Online Ordering",
+                        Icon: UtensilsCrossed,
+                      },
+                      { value: "kitchen.new" as const, label: "Kitchen Pro", Icon: ChefHat },
+                    ].map(({ value, label, Icon }) => (
+                      <button
+                        type="button"
+                        key={value}
+                        aria-pressed={capability === value}
+                        onClick={() => changeCapability(value)}
+                        className={`rounded-xl border p-3 text-left text-xs transition-colors ${
+                          capability === value
+                            ? "border-orange-500 bg-orange-950/40"
+                            : "border-stone-700 bg-stone-950/40 hover:border-stone-500"
+                        }`}
+                      >
+                        <Icon className="mb-2 text-orange-300" size={20} aria-hidden="true" />
+                        <strong className="block text-sm text-white">{label}</strong>
+                        <span className="text-emerald-300">
+                          {value === "kitchen.new"
+                            ? "Trial or permanent operator grant"
+                            : "Grantable"}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                    {(Object.keys(grantPresetDetails) as GrantPreset[]).map((key) => (
+                    {(capability === "kitchen.new"
+                      ? (["trial_7", "permanent"] as GrantPreset[])
+                      : (["first_user", "trial_7", "trial_30", "paid", "custom"] as GrantPreset[])
+                    ).map((key) => (
                       <button
                         type="button"
                         key={key}
@@ -850,6 +886,8 @@ export function GrantStudio({
                   </div>
                   <p className="mt-2 text-xs text-stone-400">
                     {grantPresetDetails[preset].description}
+                    {capability === "kitchen.new" &&
+                      " · An operator grant does not switch on stations until outlet activation."}
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -873,18 +911,25 @@ export function GrantStudio({
                       className="mt-1 block w-full min-w-0 rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
                     />
                   </label>
-                  <label className="text-xs font-semibold text-stone-300">
-                    Ends (your local time)
-                    <input
-                      type="datetime-local"
-                      value={endAt}
-                      onChange={(e) => {
-                        setEndAt(e.target.value);
-                        setPreset("custom");
-                      }}
-                      className="mt-1 block w-full min-w-0 rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
-                    />
-                  </label>
+                  {preset === "permanent" ? (
+                    <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 text-xs text-emerald-300">
+                      <strong className="block">No scheduled expiration</strong>
+                      Revocable access; disable active kitchen outlets before revocation.
+                    </div>
+                  ) : (
+                    <label className="text-xs font-semibold text-stone-300">
+                      Ends (your local time)
+                      <input
+                        type="datetime-local"
+                        value={endAt}
+                        onChange={(e) => {
+                          setEndAt(e.target.value);
+                          setPreset("custom");
+                        }}
+                        className="mt-1 block w-full min-w-0 rounded-lg border border-stone-700 bg-stone-950 p-3 text-white"
+                      />
+                    </label>
+                  )}
                 </div>
                 {preset === "paid" && (
                   <label className="flex items-start gap-2 rounded-lg border border-amber-800 bg-amber-950/30 p-3 text-xs text-amber-100">
@@ -909,8 +954,8 @@ export function GrantStudio({
                     role="alert"
                     className="rounded-lg border border-amber-800 bg-amber-950 p-3 text-xs text-amber-200"
                   >
-                    This organization already has overlapping Online Ordering access. Review history
-                    or schedule an extension rather than issuing a duplicate grant.
+                    This organization already has overlapping access for the selected capability.
+                    Resolve the existing grant before issuing another.
                   </p>
                 )}
               </div>

@@ -51,6 +51,7 @@ interface PaymentsConsoleProps {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }) => Promise<GrantActionResult>;
   onRevokeGrant: (grantId: string, reason: string) => Promise<GrantActionResult>;
   onRenewGrant: (data: {

@@ -37,6 +37,7 @@ export default async function AdminPaymentsPage() {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }): Promise<GrantActionResult> {
     "use server";
     // Authentication and Next.js redirects stay outside the recovery boundary.
