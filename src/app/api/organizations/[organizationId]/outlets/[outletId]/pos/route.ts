@@ -13,8 +13,13 @@ async function observed_GET(req: Request, { params }: Params) {
     if (url.searchParams.get("view") === "recent") {
       const raw = url.searchParams.get("page") ?? "0";
       if (!/^(0|[1-9][0-9]{0,3})$/.test(raw) || Number(raw) > 1000)
-        return NextResponse.json({ message: "Invalid register page" }, { status: 400, headers: { "cache-control": "private, no-store" } });
-      return NextResponse.json(await posRecentPage(actor, organizationId, outletId, Number(raw)), { headers: { "cache-control": "private, no-store" } });
+        return NextResponse.json(
+          { message: "Invalid register page" },
+          { status: 400, headers: { "cache-control": "private, no-store" } }
+        );
+      return NextResponse.json(await posRecentPage(actor, organizationId, outletId, Number(raw)), {
+        headers: { "cache-control": "private, no-store" },
+      });
     }
     return NextResponse.json(await posWorkspace(actor, organizationId, outletId), {
       headers: { "cache-control": "private, no-store" },

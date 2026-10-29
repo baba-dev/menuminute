@@ -44,8 +44,12 @@ describe("POS A/C strict financial contracts", () => {
     expect(() => posSubmissionSchema.parse({ ...valid, expectedSubtotalMinor: "-100" })).toThrow();
     expect(() => posSubmissionSchema.parse({ ...valid, paymentMethod: "cash" })).toThrow();
     expect(() => posSubmissionSchema.parse({ ...valid, markAsPaid: true })).toThrow();
-    expect(posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "cash" }).markAsPaid).toBe(true);
-    expect(() => posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "gateway_verified" })).toThrow();
+    expect(
+      posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "cash" }).markAsPaid
+    ).toBe(true);
+    expect(() =>
+      posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "gateway_verified" })
+    ).toThrow();
     expect(() =>
       posSubmissionSchema.parse({
         ...valid,

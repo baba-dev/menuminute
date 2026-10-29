@@ -14,9 +14,12 @@ export const metadata: Metadata = {
 };
 
 function money(minor: string, currency: string) {
-  const precision = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
-    .maximumFractionDigits ?? 2;
-  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(minor) / 10 ** precision);
+  const precision =
+    new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
+      .maximumFractionDigits ?? 2;
+  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(
+    Number(minor) / 10 ** precision
+  );
 }
 export default async function ReceiptPage({
   params,
@@ -38,7 +41,8 @@ export default async function ReceiptPage({
     saleId
   );
   // Legally issued documents must be reprinted from their immutable fiscal snapshot.
-  if (receipt.issuedDocumentId) redirect("/dashboard/pos/ledger/documents/" + encodeURIComponent(receipt.issuedDocumentId));
+  if (receipt.issuedDocumentId)
+    redirect("/dashboard/pos/ledger/documents/" + encodeURIComponent(receipt.issuedDocumentId));
   const paper = paramsQuery.paper === "58" ? "58" : "80";
   const paid = receipt.paymentStatus === "complete";
   return (
@@ -63,11 +67,36 @@ export default async function ReceiptPage({
           <strong>Order #{receipt.orderNumber}</strong>
         </div>
         <dl className="receipt-details">
-          <div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: outlet.timezone }).format(new Date(receipt.createdAt))}</dd></div>
-          <div><dt>Service</dt><dd>{receipt.fulfillmentMode === "dine_in" ? "Dine-in" : "Pickup"}</dd></div>
-          {receipt.customerName && <div><dt>Customer</dt><dd>{receipt.customerName}</dd></div>}
-          <div><dt>Payment</dt><dd className="receipt-payment-status">{paid ? "COMPLETE" : "PENDING"}</dd></div>
-          {receipt.paymentMethod && <div><dt>Recorded method</dt><dd>{receipt.paymentMethod.replace("_external", " (staff recorded)")}</dd></div>}
+          <div>
+            <dt>Date</dt>
+            <dd>
+              {new Intl.DateTimeFormat("en", {
+                dateStyle: "medium",
+                timeStyle: "short",
+                timeZone: outlet.timezone,
+              }).format(new Date(receipt.createdAt))}
+            </dd>
+          </div>
+          <div>
+            <dt>Service</dt>
+            <dd>{receipt.fulfillmentMode === "dine_in" ? "Dine-in" : "Pickup"}</dd>
+          </div>
+          {receipt.customerName && (
+            <div>
+              <dt>Customer</dt>
+              <dd>{receipt.customerName}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Payment</dt>
+            <dd className="receipt-payment-status">{paid ? "COMPLETE" : "PENDING"}</dd>
+          </div>
+          {receipt.paymentMethod && (
+            <div>
+              <dt>Recorded method</dt>
+              <dd>{receipt.paymentMethod.replace("_external", " (staff recorded)")}</dd>
+            </div>
+          )}
         </dl>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-lines">
@@ -76,7 +105,9 @@ export default async function ReceiptPage({
               <div>
                 <strong>{item.name}</strong>
                 {item.variant && <small>{item.variant}</small>}
-                <small>{item.quantity} × {money(item.unitMinor, receipt.currency)}</small>
+                <small>
+                  {item.quantity} × {money(item.unitMinor, receipt.currency)}
+                </small>
               </div>
               <span>{money(item.lineMinor, receipt.currency)}</span>
             </div>
@@ -90,7 +121,10 @@ export default async function ReceiptPage({
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center receipt-footer">
           <strong>{paid ? "PAYMENT COMPLETE — STAFF RECORDED" : "PAYMENT PENDING"}</strong>
-          <p>Prices are pre-tax; taxes and fees have not been calculated. This operational bill is not a tax invoice, fiscal receipt or provider-verified payment confirmation.</p>
+          <p>
+            Prices are pre-tax; taxes and fees have not been calculated. This operational bill is
+            not a tax invoice, fiscal receipt or provider-verified payment confirmation.
+          </p>
           <p>Thank you for visiting!</p>
           <p className="receipt-signature">Powered by MenuMinute</p>
         </div>

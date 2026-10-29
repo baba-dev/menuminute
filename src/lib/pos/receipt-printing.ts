@@ -24,7 +24,10 @@ export function readTerminalReceiptSettings(outletId: string): TerminalReceiptSe
   }
   return { ...defaultSettings };
 }
-export function saveTerminalReceiptSettings(outletId: string, settings: TerminalReceiptSettings): void {
+export function saveTerminalReceiptSettings(
+  outletId: string,
+  settings: TerminalReceiptSettings
+): void {
   try {
     window.localStorage.setItem(key(outletId), JSON.stringify(settings));
   } catch {
@@ -33,8 +36,13 @@ export function saveTerminalReceiptSettings(outletId: string, settings: Terminal
 }
 export function receiptHref(saleId: string, paper: ReceiptPaper, auto: boolean): string {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(saleId)) throw new Error("Invalid sale reference");
-  return "/dashboard/pos/receipts/" + encodeURIComponent(saleId) +
-    "?paper=" + paper + (auto ? "&auto=1" : "");
+  return (
+    "/dashboard/pos/receipts/" +
+    encodeURIComponent(saleId) +
+    "?paper=" +
+    paper +
+    (auto ? "&auto=1" : "")
+  );
 }
 /**
  * Reserve the popup during the actual click gesture, before the async submit.
@@ -58,5 +66,9 @@ export function dispatchReceiptToWindow(child: Window | null, href: string): boo
   }
 }
 export function discardReservedWindow(child: Window | null) {
-  try { if (child && !child.closed) child.close(); } catch { /* browser-managed */ }
+  try {
+    if (child && !child.closed) child.close();
+  } catch {
+    /* browser-managed */
+  }
 }

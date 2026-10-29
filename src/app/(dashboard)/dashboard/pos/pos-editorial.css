@@ -636,7 +636,9 @@
   color: #fff;
 }
 .till-page.pos-editorial .till-primary {
-  transition: background-color .18s ease, box-shadow .18s ease;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .till-page.pos-editorial .till-pagination {
   margin-top: 14px;
@@ -653,7 +655,10 @@
   font-size: 12px;
   font-weight: 650;
 }
-.till-page.pos-editorial .till-pagination div { display: flex; gap: 8px; }
+.till-page.pos-editorial .till-pagination div {
+  display: flex;
+  gap: 8px;
+}
 .till-page.pos-editorial .till-pagination button {
   border: 1px solid var(--pos-line);
   background: var(--pos-surface);
@@ -664,15 +669,32 @@
   font-size: 12px;
   font-weight: 700;
 }
-.till-page.pos-editorial .till-pagination button:disabled { opacity: .43; cursor: not-allowed; }
+.till-page.pos-editorial .till-pagination button:disabled {
+  opacity: 0.43;
+  cursor: not-allowed;
+}
 @media (max-width: 410px) {
-  .till-page.pos-editorial .till-receipt-option { gap: 8px; }
-  .till-page.pos-editorial .till-receipt-option-copy { gap: 7px; }
-  .till-page.pos-editorial .till-receipt-option-copy small { font-size: 10px; }
-  .till-page.pos-editorial .till-pagination { align-items: stretch; }
-  .till-page.pos-editorial .till-pagination div { width: 100%; }
-  .till-page.pos-editorial .till-pagination button { flex: 1; }
+  .till-page.pos-editorial .till-receipt-option {
+    gap: 8px;
+  }
+  .till-page.pos-editorial .till-receipt-option-copy {
+    gap: 7px;
+  }
+  .till-page.pos-editorial .till-receipt-option-copy small {
+    font-size: 10px;
+  }
+  .till-page.pos-editorial .till-pagination {
+    align-items: stretch;
+  }
+  .till-page.pos-editorial .till-pagination div {
+    width: 100%;
+  }
+  .till-page.pos-editorial .till-pagination button {
+    flex: 1;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .till-page.pos-editorial .till-primary { transition: none; }
+  .till-page.pos-editorial .till-primary {
+    transition: none;
+  }
 }

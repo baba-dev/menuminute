@@ -21,7 +21,15 @@ import {
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
-import { readTerminalReceiptSettings, saveTerminalReceiptSettings, reserveReceiptWindow, receiptHref, dispatchReceiptToWindow, discardReservedWindow, type ReceiptPaper } from "@/lib/pos/receipt-printing";
+import {
+  readTerminalReceiptSettings,
+  saveTerminalReceiptSettings,
+  reserveReceiptWindow,
+  receiptHref,
+  dispatchReceiptToWindow,
+  discardReservedWindow,
+  type ReceiptPaper,
+} from "@/lib/pos/receipt-printing";
 import type { PosRecentPage } from "@/modules/pos/service";
 
 type Menu = PosWorkspace["menus"][number];
@@ -91,7 +99,9 @@ export function TheTill({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [markAsPaid, setMarkAsPaid] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "upi_external" | "card_external" | "bank_external" | "other">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "upi_external" | "card_external" | "bank_external" | "other"
+  >("cash");
   const [printInvoice, setPrintInvoice] = useState(false);
   const [receiptPaper, setReceiptPaper] = useState<ReceiptPaper>("80");
   const [printFallback, setPrintFallback] = useState<string | null>(null);
@@ -122,11 +132,19 @@ export function TheTill({
     setPrintInvoice(settings.enabled);
     setReceiptPaper(settings.paper);
   }, [outletId]);
-  useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    },
+    []
+  );
   function feedback(next: "success" | "error") {
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     setSubmitFeedback(next);
-    feedbackTimer.current = setTimeout(() => { setSubmitFeedback("idle"); feedbackTimer.current = null; }, 1000);
+    feedbackTimer.current = setTimeout(() => {
+      setSubmitFeedback("idle");
+      feedbackTimer.current = null;
+    }, 1000);
   }
   function changePrint(enabled: boolean, paper: ReceiptPaper = receiptPaper) {
     setPrintInvoice(enabled);
@@ -157,11 +175,23 @@ export function TheTill({
     if (recentBusy || page < 0 || page > 1000) return;
     setRecentBusy(true);
     try {
-      const pagination = await json<PosRecentPage>(await fetch(endpoint + "?view=recent&page=" + page, { cache: "no-store" }));
-      setWorkspace((prev) => ({ ...prev, recent: pagination.items, recentPagination: { page: pagination.page, total: pagination.total, hasMore: pagination.hasMore } }));
+      const pagination = await json<PosRecentPage>(
+        await fetch(endpoint + "?view=recent&page=" + page, { cache: "no-store" })
+      );
+      setWorkspace((prev) => ({
+        ...prev,
+        recent: pagination.items,
+        recentPagination: {
+          page: pagination.page,
+          total: pagination.total,
+          hasMore: pagination.hasMore,
+        },
+      }));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to load draft register page.");
-    } finally { setRecentBusy(false); }
+    } finally {
+      setRecentBusy(false);
+    }
   }
   async function configure(event: FormEvent) {
     event.preventDefault();
@@ -299,7 +329,10 @@ export function TheTill({
         await fetch(endpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "submit", input: { ...payload, key: commandRef.current.key } }),
+          body: JSON.stringify({
+            action: "submit",
+            input: { ...payload, key: commandRef.current.key },
+          }),
         })
       );
       setSuccess(result);
@@ -315,15 +348,26 @@ export function TheTill({
         const url = receiptHref(result.saleId, receiptPaper, true);
         if (!dispatchReceiptToWindow(reservedWindow, url)) {
           setPrintFallback(receiptHref(result.saleId, receiptPaper, false));
-          setMessage("Order recorded. Automatic print was blocked; open the receipt to print it manually.");
+          setMessage(
+            "Order recorded. Automatic print was blocked; open the receipt to print it manually."
+          );
         }
       }
-      try { await refresh(); }
-      catch { setMessage("Order recorded successfully. Register refresh failed; reload this page to see the latest entries."); }
+      try {
+        await refresh();
+      } catch {
+        setMessage(
+          "Order recorded successfully. Register refresh failed; reload this page to see the latest entries."
+        );
+      }
     } catch (e) {
       discardReservedWindow(reservedWindow);
       feedback("error");
-      setMessage(e instanceof Error ? e.message : "Order was not confirmed. Retry the same cart to recover it.");
+      setMessage(
+        e instanceof Error
+          ? e.message
+          : "Order was not confirmed. Retry the same cart to recover it."
+      );
     } finally {
       setBusy(false);
     }
@@ -478,12 +522,18 @@ export function TheTill({
             <div>
               <strong>Recorded · Order #{success.orderNumber}</strong>
               <p>
-                Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax · Payment {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
+                Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax ·
+                Payment{" "}
+                {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
                 The order was sent to Service Counter. Printing does not issue a fiscal invoice.
               </p>
             </div>
             <Link href="/dashboard/orders">View orders</Link>
-            {printFallback && <Link href={printFallback} target="_blank" rel="noopener">Open receipt to print</Link>}
+            {printFallback && (
+              <Link href={printFallback} target="_blank" rel="noopener">
+                Open receipt to print
+              </Link>
+            )}
           </div>
         )}
         {editingSettings && workspace.context.canConfigure && (
@@ -748,16 +798,39 @@ export function TheTill({
                 <strong>{money(subtotal.toString(), currency)}</strong>
               </div>
               <p className="till-disclaimer">
-                Pre-tax operational subtotal. Staff-marked payments need no gateway. Printing does not issue a tax invoice.
+                Pre-tax operational subtotal. Staff-marked payments need no gateway. Printing does
+                not issue a tax invoice.
               </p>
               <div className="till-receipt-options" aria-label="Payment and invoice options">
                 <label className="till-receipt-option">
-                  <span className="till-receipt-option-copy"><Wallet size={17} /><span><strong>Mark as Paid</strong><small>Staff-recorded; no payment system required</small></span></span>
-                  <input type="checkbox" checked={markAsPaid} disabled={busy} onChange={(event) => { setMarkAsPaid(event.target.checked); commandRef.current = null; }} />
+                  <span className="till-receipt-option-copy">
+                    <Wallet size={17} />
+                    <span>
+                      <strong>Mark as Paid</strong>
+                      <small>Staff-recorded; no payment system required</small>
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={markAsPaid}
+                    disabled={busy}
+                    onChange={(event) => {
+                      setMarkAsPaid(event.target.checked);
+                      commandRef.current = null;
+                    }}
+                  />
                 </label>
                 {markAsPaid && (
-                  <label className="till-receipt-method">Payment method
-                    <select value={paymentMethod} disabled={busy} onChange={(event) => { setPaymentMethod(event.target.value as typeof paymentMethod); commandRef.current = null; }}>
+                  <label className="till-receipt-method">
+                    Payment method
+                    <select
+                      value={paymentMethod}
+                      disabled={busy}
+                      onChange={(event) => {
+                        setPaymentMethod(event.target.value as typeof paymentMethod);
+                        commandRef.current = null;
+                      }}
+                    >
                       <option value="cash">Cash</option>
                       <option value="upi_external">UPI (staff recorded)</option>
                       <option value="card_external">Card (staff recorded)</option>
@@ -767,12 +840,30 @@ export function TheTill({
                   </label>
                 )}
                 <label className="till-receipt-option">
-                  <span className="till-receipt-option-copy"><Printer size={17} /><span><strong>Print Invoice</strong><small>Payment: {markAsPaid ? "Complete" : "Pending"} · Provisional bill</small></span></span>
-                  <input type="checkbox" checked={printInvoice} disabled={busy} onChange={(event) => changePrint(event.target.checked)} />
+                  <span className="till-receipt-option-copy">
+                    <Printer size={17} />
+                    <span>
+                      <strong>Print Invoice</strong>
+                      <small>
+                        Payment: {markAsPaid ? "Complete" : "Pending"} · Provisional bill
+                      </small>
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={printInvoice}
+                    disabled={busy}
+                    onChange={(event) => changePrint(event.target.checked)}
+                  />
                 </label>
                 {printInvoice && (
-                  <label className="till-receipt-method">Thermal paper
-                    <select value={receiptPaper} disabled={busy} onChange={(event) => changePrint(true, event.target.value as ReceiptPaper)}>
+                  <label className="till-receipt-method">
+                    Thermal paper
+                    <select
+                      value={receiptPaper}
+                      disabled={busy}
+                      onChange={(event) => changePrint(true, event.target.value as ReceiptPaper)}
+                    >
                       <option value="80">80 mm</option>
                       <option value="58">58 mm</option>
                     </select>
@@ -785,7 +876,14 @@ export function TheTill({
                 disabled={!canCheckout}
                 onClick={() => void submit()}
               >
-                {busy ? "Recording…" : submitFeedback === "success" ? "Order Sent!" : submitFeedback === "error" ? "Could not send" : "Send to Service Counter"} <ArrowRight size={17} />
+                {busy
+                  ? "Recording…"
+                  : submitFeedback === "success"
+                    ? "Order Sent!"
+                    : submitFeedback === "error"
+                      ? "Could not send"
+                      : "Send to Service Counter"}{" "}
+                <ArrowRight size={17} />
               </button>
               <button
                 type="button"
@@ -818,13 +916,18 @@ export function TheTill({
                     {sale.origin === "staff" ? "Staff entry" : "Existing ticket"}
                   </strong>
                   <small>
-                    {sale.saleId} · {sale.status} · Payment {sale.paymentStatus === "paid" ? "Complete" : "Pending"}
+                    {sale.saleId} · {sale.status} · Payment{" "}
+                    {sale.paymentStatus === "paid" ? "Complete" : "Pending"}
                   </small>
                 </div>
                 <div className="till-register-actions">
                   <span>{money(sale.subtotalMinor, sale.currency)}</span>
-                  <Link href={"/dashboard/pos/receipts/" + encodeURIComponent(sale.saleId)}
-                    target="_blank" rel="noopener" aria-label={"Print order " + sale.orderNumber}>
+                  <Link
+                    href={"/dashboard/pos/receipts/" + encodeURIComponent(sale.saleId)}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={"Print order " + sale.orderNumber}
+                  >
                     <Printer size={16} />
                   </Link>
                 </div>
@@ -832,10 +935,25 @@ export function TheTill({
             ))}
             {!workspace.recent.length && <p className="till-empty">No orders on this page.</p>}
             <nav className="till-pagination" aria-label="Draft register pages">
-              <span>Page {workspace.recentPagination.page + 1} · {workspace.recentPagination.total} recorded</span>
+              <span>
+                Page {workspace.recentPagination.page + 1} · {workspace.recentPagination.total}{" "}
+                recorded
+              </span>
               <div>
-                <button type="button" disabled={recentBusy || workspace.recentPagination.page === 0} onClick={() => void changeRecentPage(workspace.recentPagination.page - 1)}>Previous</button>
-                <button type="button" disabled={recentBusy || !workspace.recentPagination.hasMore} onClick={() => void changeRecentPage(workspace.recentPagination.page + 1)}>Next</button>
+                <button
+                  type="button"
+                  disabled={recentBusy || workspace.recentPagination.page === 0}
+                  onClick={() => void changeRecentPage(workspace.recentPagination.page - 1)}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={recentBusy || !workspace.recentPagination.hasMore}
+                  onClick={() => void changeRecentPage(workspace.recentPagination.page + 1)}
+                >
+                  Next
+                </button>
               </div>
             </nav>
           </section>

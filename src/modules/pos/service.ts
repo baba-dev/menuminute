@@ -32,14 +32,21 @@ export const posSubmissionSchema = z
     notes: z.string().trim().max(500).default(""),
     expectedSubtotalMinor: minorText,
     markAsPaid: z.boolean().default(false),
-    paymentMethod: z.enum(["cash", "upi_external", "card_external", "bank_external", "other"]).nullable().default(null),
+    paymentMethod: z
+      .enum(["cash", "upi_external", "card_external", "bank_external", "other"])
+      .nullable()
+      .default(null),
   })
   .strict()
   .superRefine((input, ctx) => {
     if (input.markAsPaid && !input.paymentMethod)
       ctx.addIssue({ code: "custom", path: ["paymentMethod"], message: "Select a payment method" });
     if (!input.markAsPaid && input.paymentMethod)
-      ctx.addIssue({ code: "custom", path: ["paymentMethod"], message: "Payment method requires Mark as Paid" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["paymentMethod"],
+        message: "Payment method requires Mark as Paid",
+      });
   });
 export const posAttachSchema = z.object({ key, orderId: identity }).strict();
 
@@ -131,23 +138,81 @@ async function catalog(context: PosContext, outletId: string): Promise<PublicPro
     throw new ConflictError("The selected published menu is unavailable");
   return product;
 }
-export type PosRecentPage = { items: Array<{ saleId: string; orderId: string; orderNumber: number; origin: string; currency: string; subtotalMinor: string; status: string; paymentStatus: string; createdAt: string }>; page: number; total: number; hasMore: boolean };
-export async function posRecentPage(actor: Actor, organizationId: string, outletId: string, page: number): Promise<PosRecentPage> {
+export type PosRecentPage = {
+  items: Array<{
+    saleId: string;
+    orderId: string;
+    orderNumber: number;
+    origin: string;
+    currency: string;
+    subtotalMinor: string;
+    status: string;
+    paymentStatus: string;
+    createdAt: string;
+  }>;
+  page: number;
+  total: number;
+  hasMore: boolean;
+};
+export async function posRecentPage(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  page: number
+): Promise<PosRecentPage> {
   await posContext(actor, organizationId, outletId);
-  if (!Number.isInteger(page) || page < 0 || page > 1000) throw new ValidationError("Invalid register page");
-  const result = await posCall(actor, outletId, (run) => run(sql`select app_private.pos_recent_sales_page(${outletId},${page}) as data`)) as {rows:{data: PosRecentPage}[]};
+  if (!Number.isInteger(page) || page < 0 || page > 1000)
+    throw new ValidationError("Invalid register page");
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_recent_sales_page(${outletId},${page}) as data`)
+  )) as { rows: { data: PosRecentPage }[] };
   return result.rows[0]!.data;
 }
-export type PosReceipt = { saleId: string; orderNumber: number; createdAt: string; currency: string; subtotalMinor: string; paymentStatus: "pending" | "complete"; paymentEvidence: "staff_recorded" | "none"; paymentMethod: string | null; sellerName: string | null; sellerAddress: string | null; customerName: string | null; fulfillmentMode: string; issuedDocumentId: string | null; items: Array<{name:string;variant:string|null;quantity:number;unitMinor:string;lineMinor:string}>};
-export async function posReceipt(actor: Actor, organizationId: string, outletId: string, saleId: string): Promise<PosReceipt> {
+export type PosReceipt = {
+  saleId: string;
+  orderNumber: number;
+  createdAt: string;
+  currency: string;
+  subtotalMinor: string;
+  paymentStatus: "pending" | "complete";
+  paymentEvidence: "staff_recorded" | "none";
+  paymentMethod: string | null;
+  sellerName: string | null;
+  sellerAddress: string | null;
+  customerName: string | null;
+  fulfillmentMode: string;
+  issuedDocumentId: string | null;
+  items: Array<{
+    name: string;
+    variant: string | null;
+    quantity: number;
+    unitMinor: string;
+    lineMinor: string;
+  }>;
+};
+export async function posReceipt(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  saleId: string
+): Promise<PosReceipt> {
   identity.parse(saleId);
   await posContext(actor, organizationId, outletId);
-  const result = await posCall(actor, outletId, (run) => run(sql`select app_private.pos_receipt_data(${outletId},${saleId}) as data`)) as {rows:{data:PosReceipt}[]};
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_receipt_data(${outletId},${saleId}) as data`)
+  )) as { rows: { data: PosReceipt }[] };
   return result.rows[0]!.data;
 }
 export async function posWorkspace(actor: Actor, organizationId: string, outletId: string) {
   const context = await posContext(actor, organizationId, outletId);
-  if (!context.enabled) return { context, menus: [], recent: [], recentPagination: {page:0,total:0,hasMore:false}, attachable: [] };
+  if (!context.enabled)
+    return {
+      context,
+      menus: [],
+      recent: [],
+      recentPagination: { page: 0, total: 0, hasMore: false },
+      attachable: [],
+    };
   const [product, recentResult, attachableResult] = await Promise.all([
     catalog(context, outletId).catch((error: unknown) => {
       if (error instanceof ConflictError || error instanceof ValidationError) return null;
@@ -160,9 +225,18 @@ export async function posWorkspace(actor: Actor, organizationId: string, outletI
       run(sql`select app_private.pos_attachable_orders(${outletId}) as data`)
     ),
   ]);
-  const recentPage = (recentResult as {rows:{data:PosRecentPage}[]}).rows[0]?.data ?? {items:[],page:0,total:0,hasMore:false};
+  const recentPage = (recentResult as { rows: { data: PosRecentPage }[] }).rows[0]?.data ?? {
+    items: [],
+    page: 0,
+    total: 0,
+    hasMore: false,
+  };
   const recent = recentPage.items;
-  const recentPagination = {page:recentPage.page,total:recentPage.total,hasMore:recentPage.hasMore};
+  const recentPagination = {
+    page: recentPage.page,
+    total: recentPage.total,
+    hasMore: recentPage.hasMore,
+  };
   const attachable =
     (
       attachableResult as {
@@ -223,8 +297,10 @@ export async function posSubmit(
 ): Promise<PosSaleResult> {
   const input = posSubmissionSchema.parse(raw);
   const context = await posContext(actor, organizationId, outletId);
-  if (input.markAsPaid && !input.paymentMethod) throw new ValidationError("Choose a staff-recorded payment method");
-  if (!input.markAsPaid && input.paymentMethod) throw new ValidationError("Payment method requires Mark as Paid");
+  if (input.markAsPaid && !input.paymentMethod)
+    throw new ValidationError("Choose a staff-recorded payment method");
+  if (!input.markAsPaid && input.paymentMethod)
+    throw new ValidationError("Payment method requires Mark as Paid");
   const hash = digest(input);
   const prior = await replay(actor, outletId, input.key, hash, "submit_order");
   if (prior) return prior;
@@ -283,7 +359,8 @@ export async function posSubmit(
     paymentMethod: input.markAsPaid ? input.paymentMethod : null,
   };
   return posCall(actor, outletId, async (run) => {
-    const r = (await run(sql`select app_private.pos_submit_order_with_attestation(${outletId},${input.key},${hash},
+    const r =
+      (await run(sql`select app_private.pos_submit_order_with_attestation(${outletId},${input.key},${hash},
       ${JSON.stringify(payload)}::jsonb) as data`)) as { rows: { data: PosSaleResult }[] };
     return r.rows[0]!.data;
   });

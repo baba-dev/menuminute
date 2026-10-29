@@ -10,5 +10,9 @@ export function ReceiptPrintActions({ auto }: { auto: boolean }) {
     const id = window.setTimeout(() => window.print(), 300);
     return () => window.clearTimeout(id);
   }, [auto]);
-  return <button type="button" onClick={() => window.print()} className="receipt-print-button">Print / save PDF</button>;
+  return (
+    <button type="button" onClick={() => window.print()} className="receipt-print-button">
+      Print / save PDF
+    </button>
+  );
 }

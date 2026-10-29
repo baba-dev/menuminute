@@ -280,10 +280,15 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     expect(register.items[0]?.saleId).toBe(first.saleId);
     expect(register.items[0]?.paymentStatus).toBe("paid");
     await expect(
-      posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, { ...payload, paymentMethod: "upi_external" })
+      posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        ...payload,
+        paymentMethod: "upi_external",
+      })
     ).rejects.toMatchObject({ statusCode: 409 });
     const other = await fixture();
-    await expect(posReceipt(f.actor, other.outlet.organizationId, other.outlet.id, first.saleId)).rejects.toThrow();
+    await expect(
+      posReceipt(f.actor, other.outlet.organizationId, other.outlet.id, first.saleId)
+    ).rejects.toThrow();
   });
 
   it("keeps provisional unpaid bills separate from fiscal issue and paginates past 30", async () => {
@@ -305,12 +310,17 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     expect(second.items).toHaveLength(10);
     expect(fourth.items).toHaveLength(2);
     expect(fourth.hasMore).toBe(false);
-    expect(new Set([...first.items,...second.items,...fourth.items].map((item) => item.saleId)).size).toBe(22);
+    expect(
+      new Set([...first.items, ...second.items, ...fourth.items].map((item) => item.saleId)).size
+    ).toBe(22);
     const pending = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, refs[0]!);
     expect(pending.paymentStatus).toBe("pending");
     expect(pending.issuedDocumentId).toBe(null);
-    await expect(posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, -1)).rejects.toThrow();
-    await expect(posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 1001)).rejects.toThrow();
+    await expect(
+      posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, -1)
+    ).rejects.toThrow();
+    await expect(
+      posRecentPage(f.actor, f.outlet.organizationId, f.outlet.id, 1001)
+    ).rejects.toThrow();
   });
-
 });
