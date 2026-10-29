@@ -366,8 +366,8 @@ export function KitchenControlDesk({
               A controlled pilot still requires two different superadmins and expires after 24
               hours. For an owner-operated platform with exactly one enrolled superadmin, first
               issue a seven-day or permanent Kitchen grant under Payments & Grants, then choose
-              &ldquo;Activate operator-granted Kitchen&rdquo; with actual QA/release evidence. No paid
-              subscription or public checkout is unlocked.
+              &ldquo;Activate operator-granted Kitchen&rdquo; with actual QA/release evidence. No
+              paid subscription or public checkout is unlocked.
             </p>
             <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-4">
               <label className="block text-sm font-semibold">
