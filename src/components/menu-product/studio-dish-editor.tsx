@@ -470,7 +470,8 @@ export function StudioDishEditor({
                 type="button"
                 className="atelier-ai-apply"
                 disabled={
-                  !canWrite || generating ||
+                  !canWrite ||
+                  generating ||
                   proposal.name !== dish.name ||
                   proposal.description !== dish.description
                 }
