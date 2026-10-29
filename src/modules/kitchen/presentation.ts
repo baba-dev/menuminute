@@ -8,9 +8,7 @@ export function kitchenPulse(work: readonly KitchenWorkView[]) {
     queued: live.filter((item) => item.status === "queued").length,
     preparing: live.filter((item) => item.status === "preparing").length,
     completed: live.filter((item) => item.status === "complete").length,
-    activeOrders: new Set(
-      live.filter((item) => item.status !== "complete").map((item) => item.orderId)
-    ).size,
+    activeOrders: new Set(live.map((item) => item.orderId)).size,
   };
 }
 export function stationGroups(work: readonly KitchenWorkView[], stationId: string | undefined) {
