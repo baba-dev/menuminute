@@ -53,7 +53,9 @@ describe("receipt browser transport boundaries", () => {
         readOrWriteDocument = true;
         throw new Error("Popup document must not be touched");
       },
-      location: { replace: (href: string) => expect(href).toBe(receiptHref("sale-abc", "80", true)) },
+      location: {
+        replace: (href: string) => expect(href).toBe(receiptHref("sale-abc", "80", true)),
+      },
     };
     try {
       Object.defineProperty(globalThis, "window", {
@@ -63,15 +65,20 @@ describe("receipt browser transport boundaries", () => {
       expect(reserveReceiptWindow()).toBe(child);
       expect(child.opener).toBeNull();
       expect(readOrWriteDocument).toBe(false);
-      expect(dispatchReceiptToWindow(child as unknown as Window, receiptHref("sale-abc", "80", true))).toBe(true);
+      expect(
+        dispatchReceiptToWindow(child as unknown as Window, receiptHref("sale-abc", "80", true))
+      ).toBe(true);
       Object.defineProperty(globalThis, "window", {
         configurable: true,
-        value: { open: () => { throw new Error("Popup blocked"); } },
+        value: {
+          open: () => {
+            throw new Error("Popup blocked");
+          },
+        },
       });
       expect(reserveReceiptWindow()).toBeNull();
     } finally {
       Object.defineProperty(globalThis, "window", { configurable: true, value: originalWindow });
     }
   });
-
 });
