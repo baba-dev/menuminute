@@ -35,8 +35,8 @@ CREATE TRIGGER kitchen_operator_reset_to_pilot
 CREATE FUNCTION app_private.kitchen_operator_grant_revoke_guard() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
 BEGIN
- IF OLD.capability='kitchen.new' AND OLD.revoked_at IS NULL
-   AND NEW.revoked_at IS NOT NULL
+ IF OLD.capability='kitchen.new' AND OLD.operator <> 'razorpay-webhook'
+   AND OLD.revoked_at IS NULL AND NEW.revoked_at IS NOT NULL
    AND EXISTS(
      SELECT 1 FROM restaurants r JOIN kitchen_outlet_settings k ON k.outlet_id=r.id
      WHERE r.organization_id=OLD.organization_id AND k.enabled
