@@ -62,7 +62,7 @@ export function AdminNav() {
         );
       })}
 
-      <div className="pt-4 mt-2 border-t border-stone-200/80 dark:border-stone-800">
+      <div className="mt-2 border-t border-stone-200/80 pt-4 dark:border-stone-800">
         <Link
           href="/dashboard"
           className="admin-nav-link text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
