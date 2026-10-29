@@ -103,10 +103,10 @@ it("verified Kitchen charge grants bundled ordering and automatically activates 
       expect(activated.rows[0]?.enabled).toBe(true);
       // Configuration can become invalid after activation. Effective paid
       // readiness must fail closed until the route is restored.
-      await client.query(
-        "DELETE FROM kitchen_routes WHERE outlet_id=$1 AND dish_id=$2",
-        [f.outlet.id, "paid-dish"]
-      );
+      await client.query("DELETE FROM kitchen_routes WHERE outlet_id=$1 AND dish_id=$2", [
+        f.outlet.id,
+        "paid-dish",
+      ]);
       const deconfigured = await client.query<{ ready: boolean }>(
         "SELECT app_private.kitchen_commercial_ready($1) AS ready",
         [f.outlet.id]
