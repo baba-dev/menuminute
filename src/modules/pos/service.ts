@@ -331,10 +331,13 @@ export async function posOrderRegister(
         typeof data.id !== "string" ||
         data.id.length > 128 ||
         !data.id
-      ) throw new Error("Malformed cursor");
+      )
+        throw new Error("Malformed cursor");
       cursorAt = new Date(data.at).toISOString();
       cursorId = data.id;
-    } catch { throw new ValidationError("Invalid register cursor"); }
+    } catch {
+      throw new ValidationError("Invalid register cursor");
+    }
   }
   const filter = {
     period: query.period,
@@ -352,12 +355,15 @@ export async function posOrderRegister(
   const hasMore = value.items.length > 10;
   const items = value.items.slice(0, 10);
   const last = items.at(-1);
-  const nextCursor = hasMore && last
-    ? Buffer.from(JSON.stringify({
-        at: new Date(last.createdAt).toISOString(),
-        id: last.orderId,
-      })).toString("base64url")
-    : null;
+  const nextCursor =
+    hasMore && last
+      ? Buffer.from(
+          JSON.stringify({
+            at: new Date(last.createdAt).toISOString(),
+            id: last.orderId,
+          })
+        ).toString("base64url")
+      : null;
   return { items, total: value.total, nextCursor };
 }
 
@@ -395,8 +401,7 @@ export async function posDailyKpis(
   const response = (await posCall(actor, outletId, (run) =>
     run(sql`select app_private.pos_daily_kpis_v2(${outletId}) as data`)
   )) as { rows: { data: PosDailyKpis }[] };
-  return response.rows[0]?.data ??
-    { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" };
+  return response.rows[0]?.data ?? { totalSalesMinor: "0", totalOrders: 0, refundedMinor: "0" };
 }
 
 export async function posWorkspace(actor: Actor, organizationId: string, outletId: string) {
