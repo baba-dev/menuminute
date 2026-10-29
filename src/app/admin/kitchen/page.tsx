@@ -6,9 +6,12 @@ import {
   kitchenPilotFailureMessage,
   kitchenPilotStatus,
   kitchenRunningReleaseSha,
+  kitchenCommercialStatus,
+  kitchenCommercialLaunch,
   type PilotCommand,
 } from "@/modules/kitchen/activation";
 import { KitchenControlDesk } from "./kitchen-control-desk";
+import { KitchenCommercialLaunch } from "./kitchen-commercial-launch";
 
 export const metadata: Metadata = {
   title: "Kitchen Pro | Platform Control Desk",
@@ -17,7 +20,9 @@ export const metadata: Metadata = {
 
 export default async function KitchenControlDeskPage() {
   const admin = await verifySuperAdmin();
-  const runningSha = await kitchenRunningReleaseSha();
+  const [runningSha, commercialEnabled] = await Promise.all([
+    kitchenRunningReleaseSha(), kitchenCommercialStatus(admin)
+  ]);
   async function searchOutlets(term: string) {
     "use server";
     const actor = await verifySuperAdmin();
@@ -45,13 +50,37 @@ export default async function KitchenControlDeskPage() {
       return { ok: false as const, message: kitchenPilotFailureMessage(error) };
     }
   }
+  async function approveCommercialLaunch(input: {
+    releaseSha: string;
+    evidenceUrl: string;
+    reason: string;
+    key: string;
+  }) {
+    "use server";
+    const actor = await verifySuperAdmin();
+    try {
+      await kitchenCommercialLaunch(actor, input);
+      return { ok: true as const };
+    } catch {
+      return { ok: false as const,
+        message: "Release approval could not be confirmed. Verify deployed SHA, evidence, MFA, and existing launch state." };
+    }
+  }
+
   return (
-    <KitchenControlDesk
-      operatorId={admin.id}
-      runningSha={runningSha}
-      onSearch={searchOutlets}
-      onStatus={readStatus}
-      onCommand={changePilot}
-    />
+    <div className="space-y-6">
+      <KitchenCommercialLaunch
+        initialEnabled={commercialEnabled}
+        runningSha={runningSha}
+        onApprove={approveCommercialLaunch}
+      />
+      <KitchenControlDesk
+        operatorId={admin.id}
+        runningSha={runningSha}
+        onSearch={searchOutlets}
+        onStatus={readStatus}
+        onCommand={changePilot}
+      />
+    </div>
   );
 }
