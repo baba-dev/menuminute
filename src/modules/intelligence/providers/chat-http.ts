@@ -61,10 +61,22 @@ function endpoint(model: ProviderModel) {
   throw new IntelligenceError("not_configured");
 }
 
-/** Keep database/domain tool names unchanged; only the provider-facing Cloudflare wire
- * identifier uses an underscore. This is deterministic across both chat rounds. */
+/** NVIDIA and Cloudflare reject dotted function names. This reversible wire-only alias
+ * is used for definitions and replay, while authorization uses the original names. */
 function wireToolName(model: ProviderModel, name: string) {
-  return model.provider === "cloudflare" ? name.replaceAll(".", "_") : name;
+  return model.provider === "cloudflare" || model.provider === "nvidia"
+    ? name.replaceAll(".", "_")
+    : name;
+}
+
+/** The verified Nemotron tool-call profile is deliberately model-specific.
+ * Do not silently apply its token budget or reasoning settings to other NIMs. */
+function nvidiaNemotronToolProfile(model: ProviderModel, input: InferenceRequest) {
+  return (
+    model.provider === "nvidia" &&
+    model.model === "nvidia/nemotron-3.5-super-vl-120b-a12b" &&
+    (input.capability === "tools" || input.messages.some((message) => message.role === "tool"))
+  );
 }
 
 function allowedWireTools(model: ProviderModel, input: InferenceRequest) {
@@ -206,12 +218,17 @@ export async function chatCompletion(
   try {
     // Detect Cloudflare wire-name collisions before any paid provider call.
     allowedWireTools(model, input);
+    const nemotronTools = nvidiaNemotronToolProfile(model, input);
     const body = JSON.stringify({
       model: model.model,
       stream: false,
       messages: input.messages.map((message) => toWireMessage(message, model)),
-      max_tokens: input.maxOutputTokens,
+      max_tokens:
+        nemotronTools && input.capability === "tools"
+          ? Math.max(input.maxOutputTokens, 2048)
+          : input.maxOutputTokens,
       temperature: input.temperature,
+      ...(nemotronTools ? { reasoning_effort: "none" } : {}),
       ...(input.responseFormat ? { response_format: input.responseFormat } : {}),
       ...(input.capability === "tools"
         ? {
@@ -223,8 +240,9 @@ export async function chatCompletion(
                 parameters: tool.parameters,
               },
             })),
-            // Ember's first round must return facts from at least one tool.
-            tool_choice: "required",
+            // This Nemotron NIM has a verified two-round flow with automatic
+            // selection. Ember still rejects missing or unauthorized tool calls.
+            tool_choice: nemotronTools ? "auto" : "required",
           }
         : {}),
     });
