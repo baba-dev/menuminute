@@ -64,7 +64,10 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
   }
 
   function handleTabChange(tab: ReportTab) {
-    updateQuery({ tab });
+    updateQuery({
+      tab,
+      ...(tab === "till" || tab === "z-report" ? { fulfillmentMode: "all" as const } : {}),
+    });
   }
 
   const exportUrl = `/api/reports/export?range=${data.query.range}&fulfillmentMode=${data.query.fulfillmentMode}&tab=${activeTab}${

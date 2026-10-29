@@ -65,7 +65,9 @@ export function DateRangeBar({
         <span className="text-xs font-semibold text-[var(--rep-muted)]">
           <strong className="text-[var(--rep-ink)]">{dateLabel}</strong>
         </span>
-        <select value={query.fulfillmentMode} onChange={(e) =>
+        <select
+          value={query.fulfillmentMode}
+          disabled={query.tab === "till" || query.tab === "z-report"} onChange={(e) =>
             onChange({ fulfillmentMode: e.target.value as "all" | "dine_in" | "pickup" })
           } className="reports-mode-select" aria-label="Filter fulfillment channel">
           <option value="all">All Channels</option>

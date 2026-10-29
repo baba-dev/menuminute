@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { restaurants } from "@/db/schema";
 import { withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { calculateDelta, formatMoneyAmount, serializeCsv } from "./formatters";
@@ -653,7 +653,43 @@ export async function exportReportCsv(
     };
   }
 
+  if (tab === "kitchen") {
+    if (!data.kitchenVelocity.available) throw new ForbiddenError();
+    const headers = ["Station", "Completed Work Units", "Average Queue-to-Completion Minutes"];
+    const rows = data.kitchenVelocity.stations.map((station) => [
+      station.stationName,
+      station.ticketsHandled,
+      station.avgPrepMinutes,
+    ]);
+    return {
+      filename: `Kitchen-Work-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
+      content: serializeCsv(headers, rows),
+    };
+  }
+
+  if (tab === "z-report") {
+    const report = data.dailyZReport;
+    const headers = ["Metric", "Value"];
+    const rows: (string | number | null | undefined)[][] = [
+      ["Report status", "Provisional — not a fiscal closeout"],
+      ["Business period start", data.dateRange.from],
+      ["Business period end", data.dateRange.to],
+      ["Billed order value", formatMoneyAmount(report.grossSalesMinor, currency)],
+      ["Sales before tax", formatMoneyAmount(report.netSalesMinor, currency)],
+      ["Tax shown on orders", formatMoneyAmount(report.taxCollectedMinor, currency)],
+      ["Total order requests", report.orderCount],
+    ];
+    if (report.financeAvailable) {
+      rows.push(["POS recorded refunds", formatMoneyAmount(report.refundsMinor, currency)]);
+    }
+    return {
+      filename: `Provisional-Order-Summary-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
+      content: serializeCsv(headers, rows),
+    };
+  }
+
   if (tab === "till") {
+    if (!data.tillReconciliation.available) throw new ForbiddenError();
     const headers = [
       "Shift ID",
       "Register",
