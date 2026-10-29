@@ -19,6 +19,11 @@ afterEach(() => {
 
 describe("admin appearance and privileged workflows", () => {
   it("offers the explicit System preference", () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
     render(<AdminAppearanceControl />);
     const select = screen.getByRole("combobox", { name: "Appearance preference" });
     expect(screen.getByRole("option", { name: "System" })).toBeTruthy();

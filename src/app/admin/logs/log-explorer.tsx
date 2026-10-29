@@ -70,7 +70,7 @@ export function LogExplorer() {
       controller.abort();
       clearInterval(interval);
     };
-  }, [refresh, live]);
+  }, [refresh, live, search]);
 
   const resetCursor = () => setPageCursor(null);
 
