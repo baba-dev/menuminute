@@ -206,6 +206,7 @@ export async function issueEntitlementGrant(
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }
 ) {
   const start = new Date(data.startsAt);
@@ -224,6 +225,31 @@ export async function issueEntitlementGrant(
     throw new ValidationError("Invalid capability");
   if (data.billingCurrency !== "USD" && data.billingCurrency !== "INR")
     throw new ValidationError("Invalid billing currency");
+  if (data.capability === "kitchen.new") {
+    if (data.term !== "trial_7" && data.term !== "permanent")
+      throw new ValidationError("Select an approved Kitchen operator grant term");
+    if (data.term === "permanent" && end.toISOString() !== "9999-12-31T23:59:59.000Z")
+      throw new ValidationError("Permanent Kitchen grant end date mismatch");
+    if (data.term === "trial_7" && Math.abs(end.getTime() - start.getTime() - 7 * 86400000) > 60000)
+      throw new ValidationError("Kitchen trial must be seven days");
+    if (data.reason.trim().length < 10)
+      throw new ValidationError("Document a Kitchen grant justification of at least 10 characters");
+    return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (tx) => {
+      const payload = {
+        term: data.term,
+        billingCurrency: data.billingCurrency,
+        startsAt: start.toISOString(),
+        endsAt: end.toISOString(),
+        reason: data.reason.trim(),
+      };
+      const result = await tx.execute<{ data: { id: string; term: string } }>(
+        sql`SELECT app_private.kitchen_operator_grant(
+          ${data.organizationId}, ${JSON.stringify(payload)}::jsonb, ${crypto.randomUUID()}
+        ) AS data`
+      );
+      return result.rows[0]?.data;
+    });
+  }
   return runAdminCommand(actor, "entitlement.grant", data.organizationId, {
     ...data,
     reason: data.reason.trim(),
