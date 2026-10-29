@@ -288,6 +288,13 @@
       "when": 1793286000001,
       "tag": "0040_reports_finance_read",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793286000002,
+      "tag": "0041_reports_kitchen_read",
+      "breakpoints": true
     }
   ]
 }

@@ -171,6 +171,7 @@ export type SlaDistribution = {
 };
 
 export type KitchenVelocityReport = {
+  available: boolean;
   totalTickets: number;
   avgPrepMinutes: number;
   medianPrepMinutes: number;

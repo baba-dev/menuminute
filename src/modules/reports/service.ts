@@ -506,110 +506,45 @@ export async function getReportsWorkspace(
       recentRefunds,
     };
 
-    // 6. Kitchen Velocity & Prep SLAs
-    const kitchenRaw = await tx
-      .execute<{
-        station_id: string;
-        station_name: string | null;
-        prep_minutes: number;
-        hr: number;
-      }>(
-        sql`
-      select
-        kw.station_id,
-        coalesce(ks.name, 'Expediter') as station_name,
-        extract(epoch from (kw.updated_at - kw.created_at)) / 60.0 as prep_minutes,
-        extract(hour from (kw.created_at at time zone ${timezone}))::int as hr
-      from kitchen_work kw
-      left join kitchen_stations ks on ks.id = kw.station_id and ks.outlet_id = kw.outlet_id
-      where kw.outlet_id = ${outletId}
-        and kw.status = 'complete'
-        and (kw.created_at at time zone ${timezone})::date >= ${range.from}::date
-        and (kw.created_at at time zone ${timezone})::date <= ${range.to}::date
-    `
-      )
-      .catch(() => ({ rows: [] }));
-
-    let totalTickets = kitchenRaw.rows.length;
-    let prepTimes = kitchenRaw.rows.map((r) => r.prep_minutes).sort((a, b) => a - b);
-
-    // Fallback if kitchen_work is empty: derive times from order_status_events
-    if (totalTickets === 0) {
-      const eventFallback = await tx
-        .execute<{ prep_minutes: number; hr: number }>(
-          sql`
-        select
-          extract(epoch from (ready.created_at - prep.created_at)) / 60.0 as prep_minutes,
-          extract(hour from (prep.created_at at time zone ${timezone}))::int as hr
-        from order_status_events prep
-        join order_status_events ready on ready.order_id = prep.order_id and ready.restaurant_id = prep.restaurant_id
-        where prep.restaurant_id = ${outletId}
-          and prep.to_status in ('accepted', 'preparing')
-          and ready.to_status in ('ready', 'served', 'collected')
-          and ready.created_at > prep.created_at
-          and (prep.created_at at time zone ${timezone})::date >= ${range.from}::date
-          and (prep.created_at at time zone ${timezone})::date <= ${range.to}::date
-        limit 500
-      `
-        )
-        .catch(() => ({ rows: [] }));
-
-      totalTickets = eventFallback.rows.length;
-      prepTimes = eventFallback.rows.map((r) => r.prep_minutes).sort((a, b) => a - b);
-    }
-
-    const avgPrep =
-      totalTickets > 0
-        ? Number((prepTimes.reduce((a, b) => a + b, 0) / totalTickets).toFixed(1))
-        : 14.5;
-    const medianPrep =
-      totalTickets > 0 ? Number(prepTimes[Math.floor(prepTimes.length / 2)]!.toFixed(1)) : 13.0;
-
-    const fastCount = prepTimes.filter((t) => t < 12).length;
-    const standardCount = prepTimes.filter((t) => t >= 12 && t <= 22).length;
-    const delayedCount = prepTimes.filter((t) => t > 22).length;
-
+    // 6. Kitchen statistics are computed from completed work, never synthetic stations.
+    // Work duration is queue-to-completion, including waiting; not active cook time.
+    const kitchenRows = await tx.execute<{
+      result: {
+        available: boolean; totalTickets?: number;
+        summary?: {
+          work_units: number; avg_prep: number; median_prep: number;
+          fast_count: number; standard_count: number; delayed_count: number;
+        };
+        stations?: Array<{
+          stationId: string; stationName: string;
+          ticketsHandled: number; avgPrepMinutes: number;
+        }>;
+        hourlyBottlenecks?: Array<{
+          hour: number; label: string; ticketCount: number; avgPrepMinutes: number;
+        }>;
+      };
+    }>(sql`select app_private.reports_kitchen_snapshot(
+      ${outletId},${range.from}::date,${range.to}::date,${query.fulfillmentMode}
+    ) as result`);
+    const kitchen = kitchenRows.rows[0]?.result;
+    if (!kitchen) throw new Error("Kitchen reporting projection returned no result");
+    const kitchenAvailable = kitchen.available === true;
+    const workCount = kitchenAvailable ? kitchen.summary?.work_units ?? 0 : 0;
+    const fastCount = kitchenAvailable ? kitchen.summary?.fast_count ?? 0 : 0;
+    const standardCount = kitchenAvailable ? kitchen.summary?.standard_count ?? 0 : 0;
+    const delayedCount = kitchenAvailable ? kitchen.summary?.delayed_count ?? 0 : 0;
+    const share = (count: number) => workCount > 0 ? Number((count * 100 / workCount).toFixed(1)) : 0;
     const kitchenVelocity: KitchenVelocityReport = {
-      totalTickets,
-      avgPrepMinutes: avgPrep,
-      medianPrepMinutes: medianPrep,
+      available: kitchenAvailable,
+      totalTickets: kitchenAvailable ? kitchen.totalTickets ?? 0 : 0,
+      avgPrepMinutes: kitchenAvailable ? Number(kitchen.summary?.avg_prep ?? 0) : 0,
+      medianPrepMinutes: kitchenAvailable ? Number(kitchen.summary?.median_prep ?? 0) : 0,
       sla: {
-        fastCount,
-        standardCount,
-        delayedCount,
-        fastPct: totalTickets > 0 ? Number(((fastCount / totalTickets) * 100).toFixed(1)) : 68,
-        standardPct:
-          totalTickets > 0 ? Number(((standardCount / totalTickets) * 100).toFixed(1)) : 24,
-        delayedPct: totalTickets > 0 ? Number(((delayedCount / totalTickets) * 100).toFixed(1)) : 8,
+        fastCount, standardCount, delayedCount,
+        fastPct: share(fastCount), standardPct: share(standardCount), delayedPct: share(delayedCount),
       },
-      stations: [
-        {
-          stationId: "hot-line",
-          stationName: "Main Kitchen / Hot Line",
-          ticketsHandled: Math.max(1, Math.round(totalTickets * 0.6)),
-          avgPrepMinutes: avgPrep,
-        },
-        {
-          stationId: "cold-prep",
-          stationName: "Garde Manger & Cold Bar",
-          ticketsHandled: Math.max(1, Math.round(totalTickets * 0.25)),
-          avgPrepMinutes: Math.max(5, avgPrep - 4),
-        },
-        {
-          stationId: "beverage",
-          stationName: "Service Bar & Drinks",
-          ticketsHandled: Math.max(1, Math.round(totalTickets * 0.15)),
-          avgPrepMinutes: 4.2,
-        },
-      ],
-      hourlyBottlenecks: hourlyTrajectory
-        .filter((h) => h.orderCount > 0)
-        .map((h) => ({
-          hour: h.hour,
-          label: h.label,
-          ticketCount: h.orderCount,
-          avgPrepMinutes: Math.round(avgPrep + (h.orderCount > 10 ? 4 : -2)),
-        })),
+      stations: kitchenAvailable ? kitchen.stations ?? [] : [],
+      hourlyBottlenecks: kitchenAvailable ? kitchen.hourlyBottlenecks ?? [] : [],
     };
 
     // 7. Daily Z-Report
