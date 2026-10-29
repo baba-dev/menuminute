@@ -100,7 +100,7 @@ BEGIN
    o.status:='preparing';
  END IF;
  UPDATE orders SET status='ready',version=version+1,updated_at=clock_timestamp()
- WHERE id=o.id AND restaurant_id=p_outlet AND status='preparing' AND version=p_expected;
+ WHERE id=o.id AND restaurant_id=p_outlet AND status='preparing' AND version=o.version;
  IF NOT FOUND THEN RAISE EXCEPTION 'Stale order version' USING ERRCODE='40001'; END IF;
  INSERT INTO order_status_events(id,order_id,restaurant_id,from_status,to_status,status,note,actor_type,actor_id)
  VALUES(gen_random_uuid()::text,o.id,p_outlet,'preparing','ready','ready',
