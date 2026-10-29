@@ -53,7 +53,7 @@ describe("Reports Money & Value Formatters", () => {
 
   it("formats money amounts without currency symbol for CSV export", () => {
     expect(formatMoneyAmount(125000, "INR")).toBe("1,250.00");
-    expect(formatMoneyAmount(null, "INR")).toBe("0.00");
+    expect(formatMoneyAmount(null, "INR")).toBe("");
   });
 
   it("formats preparation duration in minutes", () => {
