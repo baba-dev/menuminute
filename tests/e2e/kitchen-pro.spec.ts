@@ -172,7 +172,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   const expo = page.getByRole("region", { name: "Expeditor" });
   await expect(expo.getByText("#1042")).toBeVisible();
   await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
-  await expect(expo.getByRole("button", { name: "Await all stations" })).toBeDisabled();
+  await expect(expo.getByRole("button", { name: "Waiting for remaining stations" })).toBeDisabled();
   for (const name of ["Grill", "Tandoor"]) {
     await page
       .getByRole("navigation", { name: "Kitchen stations" })
