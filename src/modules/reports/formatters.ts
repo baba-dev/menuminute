@@ -55,7 +55,7 @@ export function calculateDelta(current: number, baseline: number): ComparisonDel
   if (baseline <= 0) {
     return {
       absolutePaise: diff,
-      percentageChange: current > 0 ? 100 : null,
+      percentageChange: null,
       direction: diff > 0 ? "up" : diff < 0 ? "down" : "flat",
     };
   }

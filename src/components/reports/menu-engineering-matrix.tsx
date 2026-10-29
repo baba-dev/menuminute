@@ -17,7 +17,7 @@ export function MenuEngineeringMatrix({
   const quadrants = [
     {
       id: "star" as const,
-      name: "Stars (High Vol · High Rev)",
+      name: "Stars (High Volume · High Revenue)",
       items: report.quadrants.stars,
       className: "is-star",
       icon: <Star size={16} aria-hidden="true" />,
@@ -25,27 +25,27 @@ export function MenuEngineeringMatrix({
     },
     {
       id: "plowhorse" as const,
-      name: "Plowhorses (High Vol · Lower Rev)",
+      name: "Plowhorses (High Volume · Lower Revenue)",
       items: report.quadrants.plowhorses,
       className: "is-plowhorse",
       icon: <Sparkles size={16} aria-hidden="true" />,
-      tagline: "High volume favorites. Consider slight price tweaks or portion cost trimming.",
+      tagline: "Popular dishes; validate contribution costs before making price changes.",
     },
     {
       id: "puzzle" as const,
-      name: "Puzzles (Lower Vol · High Rev)",
+      name: "Puzzles (Lower Volume · High Revenue)",
       items: report.quadrants.puzzles,
       className: "is-puzzle",
       icon: <Info size={16} aria-hidden="true" />,
-      tagline: "High margin gems. Reposition on menu, feature as daily special, train waitstaff.",
+      tagline: "Higher revenue dishes with lower demand. Validate costs before claiming profit.",
     },
     {
       id: "dog" as const,
-      name: "Underperformers (Lower Vol · Lower Rev)",
+      name: "Underperformers (Lower Volume · Lower Revenue)",
       items: report.quadrants.dogs,
       className: "is-dog",
       icon: <TrendingDown size={16} aria-hidden="true" />,
-      tagline: "Low sales & contribution. Re-evaluate recipe or consider 86-ing / replacing.",
+      tagline: "Lower observed sales; confirm sample size before changing the menu.",
     },
   ];
 

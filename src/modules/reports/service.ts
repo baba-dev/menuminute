@@ -186,11 +186,13 @@ export async function getReportsWorkspace(
 
       tx.execute<{
         total_orders: number;
+        eligible_orders: number;
         gross_sales: string;
         net_sales: string;
       }>(sql`
         select
           count(*)::int as total_orders,
+          count(*) filter (where status not in ('cancelled','rejected','expired'))::int as eligible_orders,
           coalesce(sum(total_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as gross_sales,
           coalesce(sum(subtotal_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as net_sales
         from orders
@@ -206,6 +208,7 @@ export async function getReportsWorkspace(
         join orders o on o.id = oi.order_id and o.restaurant_id = oi.restaurant_id
         where oi.restaurant_id = ${outletId}
           and o.status not in ('cancelled','rejected','expired')
+          ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
           and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) >= ${range.from}::date
           and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) <= ${range.to}::date
       `),
@@ -225,6 +228,7 @@ export async function getReportsWorkspace(
     };
     const base = execBaseline.rows[0] ?? {
       total_orders: 0,
+      eligible_orders: 0,
       gross_sales: "0",
       net_sales: "0",
     };
@@ -235,10 +239,12 @@ export async function getReportsWorkspace(
     const baseNet = Number(base.net_sales);
     const curOrders = cur.total_orders;
     const baseOrders = base.total_orders;
-    const curAov = curOrders > 0 ? Math.round(curGross / curOrders) : 0;
-    const baseAov = baseOrders > 0 ? Math.round(baseGross / baseOrders) : 0;
+    const eligibleOrders = Math.max(0, curOrders - cur.cancelled_orders);
+    const curAov = eligibleOrders > 0 ? Math.round(curGross / eligibleOrders) : 0;
+    const baselineEligibleOrders = base.eligible_orders ?? 0;
+    const baseAov = baselineEligibleOrders > 0 ? Math.round(baseGross / baselineEligibleOrders) : 0;
     const totalItems = totalItemsRow.rows[0]?.total_items ?? 0;
-    const avgItemsPerOrder = curOrders > 0 ? Number((totalItems / curOrders).toFixed(1)) : 0;
+    const avgItemsPerOrder = eligibleOrders > 0 ? Number((totalItems / eligibleOrders).toFixed(1)) : 0;
 
     const executive: ExecutiveSummary = {
       currency: outlet.currency,
@@ -279,6 +285,7 @@ export async function getReportsWorkspace(
         and coalesce(business_date, (created_at at time zone ${timezone})::date) >= ${range.from}::date
         and coalesce(business_date, (created_at at time zone ${timezone})::date) <= ${range.to}::date
         and status not in ('cancelled','rejected','expired')
+        ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
     `);
@@ -296,6 +303,7 @@ export async function getReportsWorkspace(
         and (created_at at time zone ${timezone})::date >= (${range.from}::date - interval '14 days')::date
         and (created_at at time zone ${timezone})::date < ${range.from}::date
         and status not in ('cancelled','rejected','expired')
+        ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
       order by hr
     `);
@@ -305,13 +313,15 @@ export async function getReportsWorkspace(
       benchmarkHourlyRows.rows.map((r) => [r.hr, Number(r.avg_sales_minor)])
     );
 
+    // Convert selected multi-day period totals to average sales per calendar day.
+    const selectedDays = Math.max(1, Math.round((Date.parse(range.to) - Date.parse(range.from)) / 86400000) + 1);
     const hourlyTrajectory: HourlyTrajectoryPoint[] = Array.from({ length: 24 }, (_, hour) => {
       const match = hourlyMap.get(hour);
       const benchmark = benchmarkMap.get(hour) ?? 0;
       return {
         hour,
         label: `${String(hour).padStart(2, "0")}:00`,
-        salesMinor: match ? Number(match.sales_minor) : 0,
+        salesMinor: match ? Math.round(Number(match.sales_minor) / selectedDays) : 0,
         orderCount: match ? match.order_count : 0,
         benchmarkMinor: benchmark,
       };
@@ -328,9 +338,9 @@ export async function getReportsWorkspace(
     }>(sql`
       select
         oi.dish_id,
-        oi.item_name,
-        coalesce(c.name, 'Main Menu') as category_name,
-        coalesce(nullif(oi.unit_price_minor, 0), mi.price_paise, 0)::int as unit_price,
+        max(oi.item_name) as item_name,
+        coalesce(max(c.name), 'Main Menu') as category_name,
+        coalesce(round(sum(oi.total_minor)::numeric / nullif(sum(oi.quantity),0)),0)::int as unit_price,
         sum(oi.quantity)::int as quantity_sold,
         sum(oi.total_minor)::bigint as total_revenue
       from order_items oi
@@ -341,7 +351,8 @@ export async function getReportsWorkspace(
         and o.status not in ('cancelled','rejected','expired')
         and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) >= ${range.from}::date
         and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) <= ${range.to}::date
-      group by oi.dish_id, oi.item_name, c.name, mi.price_paise, oi.unit_price_minor
+      ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
+      group by oi.dish_id
       order by total_revenue desc
     `);
 
@@ -372,17 +383,18 @@ export async function getReportsWorkspace(
       } else if (isHighVolume && !isHighRevenue) {
         quadrant = "plowhorse";
         recommendation =
-          "Plowhorse: Popular volume driver. Consider slight price rise or portion cost optimization.";
+          "Plowhorse: Popular but lower revenue. Validate cost and margin before adjusting prices.";
       } else if (!isHighVolume && isHighRevenue) {
         quadrant = "puzzle";
         recommendation =
-          "Puzzle: High margin but low volume. Feature on specials board and train staff to upsell.";
+          "Puzzle: Higher revenue but lower volume. Test positioning; profit needs verified costs.";
       } else {
         quadrant = "dog";
         recommendation =
-          "Underperformer: Low sales and revenue. Re-evaluate recipe, rebrand, or consider 86-ing.";
+          "Lower observed demand. Validate sample size and economics before menu changes.";
       }
 
+      if (totalMenuQty < 20) recommendation = "Limited sample: collect more orders before drawing conclusions.";
       return {
         ...d,
         popularitySharePct:
@@ -421,8 +433,8 @@ export async function getReportsWorkspace(
         puzzles: classifiedDishes.filter((d) => d.quadrant === "puzzle"),
         dogs: classifiedDishes.filter((d) => d.quadrant === "dog"),
       },
-      topSellers: classifiedDishes.slice(0, 8),
-      underperformers: classifiedDishes.slice(-6).reverse(),
+      topSellers: [...classifiedDishes].sort((a,b) => b.quantitySold - a.quantitySold).slice(0,8),
+      underperformers: [...classifiedDishes].sort((a,b) => a.quantitySold - b.quantitySold).slice(0,6),
       categoryShares,
     };
 
