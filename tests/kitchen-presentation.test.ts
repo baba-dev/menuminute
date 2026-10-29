@@ -38,7 +38,7 @@ describe("The Chef's Pass read-only presentation", () => {
       queued: 1,
       preparing: 1,
       completed: 1,
-      activeOrders: 1,
+      activeOrders: 2,
     });
     expect(kitchenPulse([base]).activeOrders).toBe(1);
   });
