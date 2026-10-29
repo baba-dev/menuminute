@@ -32,7 +32,7 @@ REVOKE ALL ON app_private.kitchen_paid_ordering_grants
  FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
 
 CREATE FUNCTION app_private.kitchen_paid_subscription_active(p_org text) RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+LANGUAGE sql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
  SELECT app_private.kitchen_commerce_enabled() AND EXISTS(
    SELECT 1 FROM app_private.razorpay_subscriptions s
    JOIN entitlement_grants e ON e.organization_id=s.organization_id
@@ -55,7 +55,7 @@ REVOKE ALL ON FUNCTION app_private.kitchen_paid_subscription_active(text)
 -- Whole-outlet readiness; no superadmin session needed in a billing webhook.
 -- Unstaffed routed stations and missing published-dish routes fail closed.
 CREATE FUNCTION app_private.kitchen_commercial_ready(p_outlet text) RETURNS boolean
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
 DECLARE org text; published_count integer; missing integer;
 BEGIN
  SELECT r.organization_id INTO org FROM restaurants r
