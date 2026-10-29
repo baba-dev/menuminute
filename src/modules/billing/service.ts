@@ -33,11 +33,18 @@ export async function billingState(actor: Actor, organizationId: string) {
             sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
           )
         ).rows[0]?.subscriptions;
+    const commerce = await tx.execute<{ ready: boolean }>(
+      sql`SELECT app_private.kitchen_commerce_enabled() AS ready`
+    );
     return {
       freeMenu: true,
       isCommunityEdition: community,
       billingEnabled: !community && env.RAZORPAY_ENABLED,
-      kitchenCommerceEnabled: !community && env.RAZORPAY_ENABLED && env.RAZORPAY_KITCHEN_ENABLED,
+      kitchenCommerceEnabled:
+        !community &&
+        env.RAZORPAY_ENABLED &&
+        env.RAZORPAY_KITCHEN_ENABLED &&
+        commerce.rows[0]?.ready === true,
       subscriptions: Array.isArray(state) ? state : [],
       ...effective.rows[0]!,
       grants,
