@@ -36,9 +36,14 @@ export function PosIncomingOrders({
   const seen = useRef<Set<string> | null>(null);
   const sounding = useRef(false);
   useEffect(() => {
-    try {
-      setSound(localStorage.getItem("mm.pos.sound." + outletId) === "on");
-    } catch {}
+    const restore = window.setTimeout(() => {
+      try {
+        setSound(localStorage.getItem("mm.pos.sound." + outletId) === "on");
+      } catch {
+        /* Browser storage is optional. */
+      }
+    }, 0);
+    return () => window.clearTimeout(restore);
   }, [outletId]);
   useEffect(() => {
     sounding.current = sound;
@@ -69,7 +74,7 @@ export function PosIncomingOrders({
   );
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal);
+    const initial = window.setTimeout(() => void refresh(controller.signal), 0);
     const handle = () => {
       if (document.visibilityState === "visible") void refresh(controller.signal);
     };
@@ -78,6 +83,7 @@ export function PosIncomingOrders({
     window.addEventListener("online", handle);
     return () => {
       controller.abort();
+      window.clearTimeout(initial);
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", handle);
       window.removeEventListener("online", handle);

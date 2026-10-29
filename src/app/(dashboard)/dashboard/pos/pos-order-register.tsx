@@ -98,8 +98,11 @@ export function PosOrderRegister({
   );
   useEffect(() => {
     const controller = new AbortController();
-    void load(undefined, controller.signal);
-    return () => controller.abort();
+    const initial = window.setTimeout(() => void load(undefined, controller.signal), 0);
+    return () => {
+      controller.abort();
+      window.clearTimeout(initial);
+    };
   }, [load]);
   useEffect(() => {
     if (selected && !dialog.current?.open) dialog.current?.showModal();
