@@ -23,7 +23,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Format modified reporting code with repository Prettier
         run: |
-          pnpm exec prettier --write "src/modules/reports/**/*.{ts,tsx}" "src/components/reports/**/*.{ts,tsx}" "src/app/(dashboard)/dashboard/reports/**/*.{tsx,css}" "src/app/api/reports/**/*.{ts,tsx}" "src/app/(dashboard)/workspace-navigation.tsx" "tests/reports.test.ts" "src/db/migrations/meta/_journal.json"
+          pnpm exec prettier --write "src/modules/reports/**/*.{ts,tsx}" "src/components/reports/**/*.{ts,tsx}" "src/app/(dashboard)/dashboard/reports/page.tsx" "src/app/(dashboard)/dashboard/reports/reports.css" "src/app/(dashboard)/dashboard/reports/z-report/page.tsx" "src/app/api/reports/**/*.{ts,tsx}" "src/app/(dashboard)/workspace-navigation.tsx" "tests/reports.test.ts" "src/db/migrations/meta/_journal.json"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- src/modules/reports src/components/reports 'src/app/(dashboard)/dashboard/reports' src/app/api/reports 'src/app/(dashboard)/workspace-navigation.tsx' tests/reports.test.ts src/db/migrations/meta/_journal.json
