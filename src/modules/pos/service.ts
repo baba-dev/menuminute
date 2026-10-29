@@ -34,7 +34,13 @@ export const posSubmissionSchema = z
     markAsPaid: z.boolean().default(false),
     paymentMethod: z.enum(["cash", "upi_external", "card_external", "bank_external", "other"]).nullable().default(null),
   })
-  .strict();
+  .strict()
+  .superRefine((input, ctx) => {
+    if (input.markAsPaid && !input.paymentMethod)
+      ctx.addIssue({ code: "custom", path: ["paymentMethod"], message: "Select a payment method" });
+    if (!input.markAsPaid && input.paymentMethod)
+      ctx.addIssue({ code: "custom", path: ["paymentMethod"], message: "Payment method requires Mark as Paid" });
+  });
 export const posAttachSchema = z.object({ key, orderId: identity }).strict();
 
 export type PosContext = {
