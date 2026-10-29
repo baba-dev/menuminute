@@ -143,7 +143,10 @@ export function StudioDishEditor({
         }
       )
       .catch(() => {
-        if (!controller.signal.aborted) setProviders([]);
+        if (!controller.signal.aborted) {
+          setProviders([]);
+          setAiError("Could not load AI engines. Close and reopen the editor to retry.");
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setCheckingProviders(false);
@@ -168,7 +171,7 @@ export function StudioDishEditor({
     const initialName = dish.name;
     setGenerating(true);
     setAiError("");
-    setProposal(null);
+    // Keep the last reviewable proposal visible if regeneration fails.
     try {
       const response = await fetch("/api/catalog/dish-autofill", {
         method: "POST",
@@ -467,7 +470,7 @@ export function StudioDishEditor({
                 type="button"
                 className="atelier-ai-apply"
                 disabled={
-                  !canWrite ||
+                  !canWrite || generating ||
                   proposal.name !== dish.name ||
                   proposal.description !== dish.description
                 }
