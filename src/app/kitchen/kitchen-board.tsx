@@ -634,7 +634,7 @@ export function KitchenBoard({
             ))}
           </nav>
         )}
-        {allDay.length > 0 && (
+        {selected !== "all" && allDay.length > 0 && (
           <section aria-label="All-day outstanding preparation counts" className="kk-all-day">
             <h3 className="text-sm font-extrabold">All-day · Remaining to prepare</h3>
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
