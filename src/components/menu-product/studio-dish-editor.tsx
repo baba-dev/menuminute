@@ -88,7 +88,12 @@ export function StudioDishEditor({
   const [customFlavorInput, setCustomFlavorInput] = useState("");
   const [pairingSearch, setPairingSearch] = useState("");
   const [providers, setProviders] = useState<
-    { provider: "cloudflare" | "nvidia"; model: string }[]
+    {
+      provider: "cloudflare" | "nvidia";
+      model: string | null;
+      ready: boolean;
+      reason: string | null;
+    }[]
   >([]);
   const [selectedProvider, setSelectedProvider] = useState<"cloudflare" | "nvidia">("cloudflare");
   const [checkingProviders, setCheckingProviders] = useState(true);
@@ -98,6 +103,8 @@ export function StudioDishEditor({
     suggestion: DishAutofillSuggestion;
     model: string;
     name: string;
+    description: string;
+    recovered: boolean;
   } | null>(null);
   const [applyMode, setApplyMode] = useState<AutofillMode>("missing");
   const activeRequest = useRef<AbortController | null>(null);
@@ -114,16 +121,32 @@ export function StudioDishEditor({
         if (!response.ok) throw new Error("AI Autofill is unavailable for this menu.");
         return response.json();
       })
-      .then((body: { providers?: { provider: "cloudflare" | "nvidia"; model: string }[] }) => {
-        if (controller.signal.aborted) return;
-        const available = (body.providers ?? []).filter(
-          (p) => p.provider === "cloudflare" || p.provider === "nvidia"
-        );
-        setProviders(available);
-        setSelectedProvider(available[0]?.provider ?? "cloudflare");
-      })
+      .then(
+        (body: {
+          providers?: {
+            provider: "cloudflare" | "nvidia";
+            model: string | null;
+            ready: boolean;
+            reason: string | null;
+          }[];
+        }) => {
+          if (controller.signal.aborted) return;
+          const known = (body.providers ?? []).filter(
+            (p) => p.provider === "cloudflare" || p.provider === "nvidia"
+          );
+          setProviders(known);
+          setSelectedProvider(
+            known.find((p) => p.provider === "cloudflare" && p.ready)?.provider ??
+              known.find((p) => p.ready)?.provider ??
+              "cloudflare"
+          );
+        }
+      )
       .catch(() => {
-        if (!controller.signal.aborted) setProviders([]);
+        if (!controller.signal.aborted) {
+          setProviders([]);
+          setAiError("Could not load AI engines. Close and reopen the editor to retry.");
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setCheckingProviders(false);
@@ -135,14 +158,20 @@ export function StudioDishEditor({
   }, [dish.id, menuId, outletId]);
 
   async function generateSuggestion() {
-    if (generating || !canWrite || !dish.name.trim() || providers.length === 0) return;
+    if (
+      generating ||
+      !canWrite ||
+      !dish.name.trim() ||
+      !providers.some((p) => p.provider === selectedProvider && p.ready)
+    )
+      return;
     const controller = new AbortController();
     activeRequest.current?.abort();
     activeRequest.current = controller;
     const initialName = dish.name;
     setGenerating(true);
     setAiError("");
-    setProposal(null);
+    // Keep the last reviewable proposal visible if regeneration fails.
     try {
       const response = await fetch("/api/catalog/dish-autofill", {
         method: "POST",
@@ -161,10 +190,20 @@ export function StudioDishEditor({
       });
       const payload = await response.json();
       if (!response.ok) {
+        const invalid = Array.isArray(payload.invalidFields)
+          ? payload.invalidFields
+              .filter((v: unknown): v is string => typeof v === "string")
+              .slice(0, 6)
+          : [];
         throw new Error(
           response.status === 429
             ? "AI usage limit reached. Please try again later."
-            : (payload.message ?? "Could not generate the dish profile.")
+            : [
+                payload.message ?? "Could not generate the dish profile.",
+                invalid.length ? "Check: " + invalid.join(", ") : "",
+              ]
+                .filter(Boolean)
+                .join(" ")
         );
       }
       const suggestion = dishAutofillSuggestionSchema.parse(payload.suggestion);
@@ -173,6 +212,8 @@ export function StudioDishEditor({
           suggestion,
           model: String(payload.model ?? selectedProvider),
           name: initialName,
+          description: dish.description,
+          recovered: payload.recovered === true,
         });
         setApplyMode("missing");
       }
@@ -303,7 +344,9 @@ export function StudioDishEditor({
           <label className="atelier-ai-provider">
             AI engine
             <select
-              disabled={checkingProviders || generating || !providers.length || !canWrite}
+              disabled={
+                checkingProviders || generating || !providers.some((p) => p.ready) || !canWrite
+              }
               value={selectedProvider}
               onChange={(event) =>
                 setSelectedProvider(event.target.value as "cloudflare" | "nvidia")
@@ -312,8 +355,9 @@ export function StudioDishEditor({
             >
               {!providers.length && <option value="cloudflare">No AI provider enabled</option>}
               {providers.map((model) => (
-                <option key={model.provider} value={model.provider}>
+                <option key={model.provider} value={model.provider} disabled={!model.ready}>
                   {model.provider === "cloudflare" ? "Cloudflare Workers AI" : "NVIDIA NIM"}
+                  {model.ready ? "" : " — unavailable"}
                 </option>
               ))}
             </select>
@@ -322,7 +366,11 @@ export function StudioDishEditor({
             type="button"
             className="atelier-ai-generate"
             disabled={
-              !canWrite || checkingProviders || generating || !providers.length || !dish.name.trim()
+              !canWrite ||
+              checkingProviders ||
+              generating ||
+              !providers.some((p) => p.ready) ||
+              !dish.name.trim()
             }
             onClick={() => void generateSuggestion()}
           >
@@ -341,9 +389,16 @@ export function StudioDishEditor({
         <p className="atelier-ai-footnote">
           {checkingProviders
             ? "Checking configured AI engines…"
-            : providers.length
+            : providers.some((p) => p.ready)
               ? "Suggestions are editable and never published automatically."
-              : "Ask your administrator to enable Cloudflare or NVIDIA AI for this workspace."}
+              : "Ask your administrator to enable a supported AI engine."}
+          {providers
+            .filter((p) => !p.ready)
+            .map((p) => (
+              <span key={p.provider} style={{ display: "block" }}>
+                {p.provider === "nvidia" ? "NVIDIA NIM" : "Cloudflare"}: {p.reason ?? "Unavailable"}
+              </span>
+            ))}
         </p>
         {aiError && (
           <p className="atelier-ai-error" role="alert">
@@ -356,7 +411,10 @@ export function StudioDishEditor({
               <span>
                 <Sparkles size={15} aria-hidden="true" /> Generated proposal
               </span>
-              <small>{proposal.model}</small>
+              <small>
+                {proposal.model}
+                {proposal.recovered ? " · Safely normalized" : ""}
+              </small>
             </div>
             <p className="atelier-ai-proposed-description">{proposal.suggestion.description}</p>
             <div className="atelier-ai-preview-grid">
@@ -399,9 +457,9 @@ export function StudioDishEditor({
                 <option value="replace">Replace existing details</option>
               </select>
             </label>
-            {proposal.name !== dish.name && (
+            {(proposal.name !== dish.name || proposal.description !== dish.description) && (
               <p role="alert" className="atelier-ai-error">
-                Dish name changed; regenerate before applying.
+                Dish details changed; regenerate before applying.
               </p>
             )}
             <div className="atelier-ai-preview-actions">
@@ -411,7 +469,12 @@ export function StudioDishEditor({
               <button
                 type="button"
                 className="atelier-ai-apply"
-                disabled={!canWrite || proposal.name !== dish.name}
+                disabled={
+                  !canWrite ||
+                  generating ||
+                  proposal.name !== dish.name ||
+                  proposal.description !== dish.description
+                }
                 onClick={() => {
                   onUpdate(
                     applyDishAutofill(dish, proposal.suggestion, applyMode, companionDishes)

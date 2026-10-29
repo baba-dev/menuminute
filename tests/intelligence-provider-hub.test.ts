@@ -321,6 +321,43 @@ describe("server-only provider hub", () => {
     expect(badRequest).toHaveBeenCalledTimes(1);
   });
 
+  it("passes structured response mode only for opt-in text calls, never tool messages", async () => {
+    const requests: Array<Record<string, unknown>> = [];
+    const fake = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      requests.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return completion({ content: JSON.stringify({ status: "ok" }) });
+    }) as unknown as typeof fetch;
+    const hub = createProviderHub(configured(), fake);
+    await hub.infer({
+      messages: user,
+      responseFormat: {
+        type: "json_schema",
+        json_schema: {
+          type: "object",
+          properties: { status: { type: "string" } },
+          required: ["status"],
+          additionalProperties: false,
+        },
+      },
+    });
+    expect(requests[0]?.response_format).toMatchObject({ type: "json_schema" });
+    await hub.infer({
+      messages: user,
+      provider: "nvidia",
+      responseFormat: { type: "json_object" },
+    });
+    expect(requests[1]?.response_format).toEqual({ type: "json_object" });
+    await expect(
+      hub.infer({
+        messages: user,
+        capability: "tools",
+        tools: [tool],
+        responseFormat: { type: "json_object" },
+      })
+    ).rejects.toMatchObject({ code: "invalid_request" });
+    expect(requests).toHaveLength(2);
+  });
+
   it("validates prompt size, tools and pre-aborted signals before any network call", async () => {
     const fake = vi.fn() as unknown as typeof fetch;
     const hub = createProviderHub(configured(), fake);
