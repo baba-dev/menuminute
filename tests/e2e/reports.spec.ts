@@ -53,7 +53,9 @@ async function provisionReportsOutlet() {
   return { email, password };
 }
 
-test("Reports Atelier supports real server filters, export and narrow viewports", async ({ page }) => {
+test("Reports Atelier supports real server filters, export and narrow viewports", async ({
+  page,
+}) => {
   const credentials = await provisionReportsOutlet();
   await page.goto("/login");
   await page.getByLabel("Email address").fill(credentials.email);
