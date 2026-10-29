@@ -165,7 +165,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   // Both operational desks remain accessible; active Kitchen Pro must not
   // redirect merchant history, billing or collection back to the kitchen.
   await page.goto("/dashboard/orders");
-  await expect(page).toHaveURL(/dashboard\\/orders/);
+  await expect(page).toHaveURL(new RegExp("/dashboard/orders"));
   await page.goto("/kitchen#expeditor");
   // A freshly enabled outlet deliberately opens the setup dialog after
   // hydration; isVisible() alone races with the scheduled first-run opening.
