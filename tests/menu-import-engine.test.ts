@@ -11,6 +11,7 @@ import { createImport, addImportSource, importDetail } from "../src/modules/menu
 import {
   extractNvidiaCandidate,
   importEngineEnabled,
+  importOutputTokenBudget,
   NvidiaExtractionError,
 } from "../src/modules/menu-import/nvidia";
 import { processImport } from "../src/modules/menu-import/engine";
@@ -40,6 +41,12 @@ it("requires explicit production-entitlement gates", () => {
       NVIDIA_IMPORT_MODEL: "../ bad",
     })
   ).toBe(false);
+});
+it("bounds model-specific output budgets without user-controlled provider parameters", () => {
+  expect(importOutputTokenBudget({})).toBe(4096);
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "6144" })).toBe(6144);
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "99999" })).toBeNull();
+  expect(importOutputTokenBudget({ NVIDIA_IMPORT_MAX_OUTPUT_TOKENS: "bad" })).toBeNull();
 });
 it("maps synthetic NVIDIA page JSON into candidate v1 with exact private source provenance and currency minor units", async () => {
   const id = crypto.randomUUID(),
@@ -108,6 +115,117 @@ it("rejects untrusted provider output, never fabricating a recognized candidate"
       async () => new Response(JSON.stringify({ choices: [{ message: { content: "not json" } }] }))
     )
   ).rejects.toBeInstanceOf(NvidiaExtractionError);
+});
+it("accepts fenced JSON while leaving uncertain prices null", async () => {
+  const sourceId = crypto.randomUUID();
+  const out = await extractNvidiaCandidate(
+    {
+      importId: crypto.randomUUID(),
+      currency: "INR",
+      sources: [{ id: sourceId, pageIndex: 0, bytes: await picture() }],
+      model: "example/vision",
+      apiKey: "k",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  "\x60\x60\x60json\n" +
+                  JSON.stringify({
+                    categories: [{ name: "Snacks", items: [{ name: "Chowmein", price: "75" }] }],
+                  }) +
+                  "\n\x60\x60\x60",
+              },
+            },
+          ],
+        })
+      )
+  );
+  expect(out.candidate.categories[0]?.items[0]?.priceMinor).toMatchObject({
+    value: null,
+    review: "needs_attention",
+  });
+  expect(out.usage.requests).toBe(1);
+});
+it("retains good pages and records rejected ones without bypassing review", async () => {
+  const bad = crypto.randomUUID(),
+    good = crypto.randomUUID();
+  let calls = 0;
+  const out = await extractNvidiaCandidate(
+    {
+      importId: crypto.randomUUID(),
+      currency: "INR",
+      sources: [
+        { id: bad, pageIndex: 0, bytes: await picture() },
+        { id: good, pageIndex: 1, bytes: await picture() },
+      ],
+      model: "example/vision",
+      apiKey: "k",
+    },
+    async () => {
+      calls++;
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  calls === 1
+                    ? "{broken"
+                    : JSON.stringify({
+                        categories: [
+                          {
+                            name: "Meals",
+                            items: [
+                              {
+                                name: "Veg Burger",
+                                description: null,
+                                price: "75",
+                                uncertain: false,
+                              },
+                            ],
+                          },
+                        ],
+                      }),
+              },
+            },
+          ],
+          usage: { prompt_tokens: 50, completion_tokens: 50 },
+        })
+      );
+    }
+  );
+  expect(out.usage.requests).toBe(2);
+  expect(out.candidate.categories[0]?.items[0]?.name.value).toBe("Veg Burger");
+  expect(out.candidate.categories[0]?.items[0]?.priceMinor.value).toBe(7500);
+  expect(out.candidate.sourceWarnings).toEqual([
+    { sourceId: bad, reason: "invalid_provider_response" },
+  ]);
+});
+it("does not issue more billable pages following an unavailable provider", async () => {
+  let calls = 0;
+  await expect(
+    extractNvidiaCandidate(
+      {
+        importId: crypto.randomUUID(),
+        currency: "INR",
+        sources: [
+          { id: crypto.randomUUID(), pageIndex: 0, bytes: await picture() },
+          { id: crypto.randomUUID(), pageIndex: 1, bytes: await picture() },
+        ],
+        model: "example/vision",
+        apiKey: "k",
+      },
+      async () => {
+        calls++;
+        return new Response("upstream failure", { status: 503 });
+      }
+    )
+  ).rejects.toMatchObject({ code: "provider_unavailable" });
+  expect(calls).toBe(1);
 });
 it("durably queues, meters, and writes a review-only candidate using the restricted worker role", async () => {
   const base = await fs.mkdtemp(path.join(os.tmpdir(), "menu-nim-test-"));

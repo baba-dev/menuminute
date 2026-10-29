@@ -13,7 +13,7 @@ const sha = z.string().regex(/^[a-f0-9]{40}$/);
 export const pilotCommandSchema = z
   .object({
     outletId: id,
-    action: z.enum(["request", "approve", "activate", "drain", "finalize"]),
+    action: z.enum(["request", "approve", "activate", "operator_activate", "drain", "finalize"]),
     releaseSha: z.string().max(40).default(""),
     evidenceUrl: z.string().max(500).default(""),
     reason: z.string().trim().min(10).max(500),
@@ -21,7 +21,7 @@ export const pilotCommandSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    if (["request", "approve", "activate"].includes(value.action)) {
+    if (["request", "approve", "activate", "operator_activate"].includes(value.action)) {
       if (!sha.safeParse(value.releaseSha).success)
         ctx.addIssue({
           code: "custom",
@@ -30,7 +30,7 @@ export const pilotCommandSchema = z
         });
     }
     if (
-      ["request", "approve"].includes(value.action) &&
+      ["request", "approve", "operator_activate"].includes(value.action) &&
       !/^https:\/\/github\.com\/baba-dev\/menuminute\/(issues|pull)\/[0-9]+/.test(value.evidenceUrl)
     )
       ctx.addIssue({
@@ -132,25 +132,69 @@ export async function kitchenPilotStatus(actor: AdminActor, outletId: string) {
 /** One-use step-up, live superadmin and distinct reviewer are revalidated in PostgreSQL. */
 export async function kitchenPilotCommand(actor: AdminActor, input: PilotCommand) {
   const parsed = pilotCommandSchema.parse(input);
-  if (parsed.action === "activate") {
+  if (parsed.action === "activate" || parsed.action === "operator_activate") {
     const deployedSha = await kitchenRunningReleaseSha();
     if (!deployedSha || !sha.safeParse(deployedSha).success || deployedSha !== parsed.releaseSha) {
       throw new Error("The deployed release SHA does not match the reviewed candidate");
     }
   }
   return withActor(actorScope(actor), async (tx) => {
-    const result = await tx.execute<{ data: KitchenPilotStatus }>(
-      sql`SELECT app_private.kitchen_pilot_command(
-        ${parsed.outletId},${parsed.action},
-        ${JSON.stringify({
-          releaseSha: parsed.releaseSha,
-          evidenceUrl: parsed.evidenceUrl,
-          reason: parsed.reason,
-        })}::jsonb,${parsed.key}
-      ) AS data`
-    );
+    const payload = JSON.stringify({
+      releaseSha: parsed.releaseSha,
+      evidenceUrl: parsed.evidenceUrl,
+      reason: parsed.reason,
+    });
+    const result =
+      parsed.action === "operator_activate"
+        ? await tx.execute<{ data: KitchenPilotStatus }>(
+            sql`SELECT app_private.kitchen_operator_activate(
+          ${parsed.outletId}, ${payload}::jsonb, ${parsed.key}
+        ) AS data`
+          )
+        : await tx.execute<{ data: KitchenPilotStatus }>(
+            sql`SELECT app_private.kitchen_pilot_command(
+          ${parsed.outletId}, ${parsed.action}, ${payload}::jsonb, ${parsed.key}
+        ) AS data`
+          );
     if (!result.rows[0]) throw new Error("Pilot command returned no receipt");
     return result.rows[0].data;
+  });
+}
+
+export const commercialLaunchSchema = z
+  .object({
+    releaseSha: sha,
+    evidenceUrl: z
+      .string()
+      .max(500)
+      .regex(/^https:\/\/github\.com\/baba-dev\/menuminute\/(issues|pull)\/[0-9]+/),
+    reason: z.string().trim().min(20).max(500),
+    key: z.uuid(),
+  })
+  .strict();
+
+export async function kitchenCommercialStatus(actor: AdminActor) {
+  return withActor(actorScope(actor), async (tx) => {
+    const result = await tx.execute<{ enabled: boolean }>(
+      sql`SELECT app_private.kitchen_commerce_enabled() AS enabled`
+    );
+    return result.rows[0]?.enabled === true;
+  });
+}
+
+/** Global release approval occurs once, never during a customer's checkout. */
+export async function kitchenCommercialLaunch(actor: AdminActor, value: unknown) {
+  const input = commercialLaunchSchema.parse(value);
+  const running = await kitchenRunningReleaseSha();
+  if (!running || input.releaseSha !== running)
+    throw new Error("Deployed release SHA does not match");
+  return withActor(actorScope(actor), async (tx) => {
+    const result = await tx.execute<{ data: { enabled: boolean; releaseSha: string } }>(
+      sql`SELECT app_private.kitchen_commercial_launch(
+        ${input.releaseSha},${input.evidenceUrl},${input.reason},${input.key}
+      ) AS data`
+    );
+    return result.rows[0]?.data;
   });
 }
 
@@ -164,6 +208,10 @@ export function kitchenPilotFailureMessage(error: unknown) {
     const message = "message" in cause && typeof cause.message === "string" ? cause.message : "";
     if (/privileged action|password and authenticator/.test(message))
       return "Confirm your password and TOTP again; the single-use proof may have expired.";
+    if (/Independent reviewer is required/.test(message))
+      return "Another enrolled superadmin exists; use the independent-review pilot workflow.";
+    if (/Kitchen readiness and active operator grant/.test(message))
+      return "Grant Kitchen access and complete outlet readiness before activation.";
     if (/Separate operator|requested evidence/.test(message))
       return "Approval requires a second superadmin reviewing the exact request and evidence.";
     if (/configuration|outstanding work|drain/i.test(message))

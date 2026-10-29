@@ -51,6 +51,7 @@ interface PaymentsConsoleProps {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }) => Promise<GrantActionResult>;
   onRevokeGrant: (grantId: string, reason: string) => Promise<GrantActionResult>;
   onRenewGrant: (data: {
@@ -110,47 +111,43 @@ export function PaymentsConsole({
   return (
     <div className="space-y-6">
       {/* Tab Selectors */}
-      <div className="flex border-b border-stone-200 text-xs font-semibold dark:border-stone-800">
+      <div className="flex border-b border-stone-800 text-xs font-semibold">
         <button
-          type="button"
           onClick={() => setActiveTab("entitlements")}
           className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "entitlements"
-              ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-              : "border-transparent text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+              ? "border-orange-500 text-orange-400"
+              : "border-transparent text-stone-400 hover:text-stone-200"
           }`}
         >
           Operator Entitlements
         </button>
         <button
-          type="button"
           onClick={() => setActiveTab("plans")}
           className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "plans"
-              ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-              : "border-transparent text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+              ? "border-orange-500 text-orange-400"
+              : "border-transparent text-stone-400 hover:text-stone-200"
           }`}
         >
           Subscription Plans Catalog
         </button>
         <button
-          type="button"
           onClick={() => setActiveTab("subscriptions")}
           className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "subscriptions"
-              ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-              : "border-transparent text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+              ? "border-orange-500 text-orange-400"
+              : "border-transparent text-stone-400 hover:text-stone-200"
           }`}
         >
           Tenant Subscriptions
         </button>
         <button
-          type="button"
           onClick={() => setActiveTab("analytics")}
           className={`border-b-2 px-4 py-2.5 transition ${
             activeTab === "analytics"
-              ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-              : "border-transparent text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+              ? "border-orange-500 text-orange-400"
+              : "border-transparent text-stone-400 hover:text-stone-200"
           }`}
         >
           Financial Overview
@@ -159,10 +156,10 @@ export function PaymentsConsole({
 
       {message && (
         <div
-          className={`rounded-xl p-3 text-xs font-medium border ${
+          className={`rounded-lg p-3 text-xs font-medium ${
             message.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950 dark:text-emerald-300"
-              : "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950 dark:text-red-300"
+              ? "border border-emerald-800 bg-emerald-950 text-emerald-300"
+              : "border border-red-800 bg-red-950 text-red-300"
           }`}
         >
           {message.text}
@@ -185,10 +182,8 @@ export function PaymentsConsole({
       {activeTab === "plans" && (
         <div className="space-y-4">
           <div>
-            <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
-              Platform Subscription Tiers
-            </h2>
-            <p className="text-xs text-stone-500 dark:text-stone-400">
+            <h2 className="text-sm font-bold text-white">Platform Subscription Tiers</h2>
+            <p className="text-xs text-stone-400">
               Manage plans, monthly prices in minor units (paise/cents), and feature bundles.
             </p>
           </div>
@@ -197,40 +192,39 @@ export function PaymentsConsole({
             {plans.map((p) => (
               <div
                 key={p.id}
-                className="admin-card flex flex-col justify-between p-5"
+                className="flex flex-col justify-between rounded-2xl border border-stone-800 bg-stone-900 p-5"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="rounded-md bg-stone-100 px-2 py-0.5 font-mono text-[10px] text-stone-600 uppercase dark:bg-stone-800 dark:text-stone-400">
+                    <span className="rounded bg-stone-800 px-2 py-0.5 font-mono text-[10px] text-stone-400 uppercase">
                       {p.name}
                     </span>
                     <span
                       className={`text-[10px] font-bold ${
-                        p.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400 dark:text-stone-500"
+                        p.isActive ? "text-emerald-400" : "text-stone-500"
                       }`}
                     >
                       {p.isActive ? "Active" : "Archived"}
                     </span>
                   </div>
 
-                  <h3 className="font-display mt-2 text-base font-bold text-stone-900 dark:text-stone-100">{p.displayName}</h3>
-                  <div className="mt-1 flex items-baseline gap-1 text-2xl font-extrabold text-orange-600 dark:text-orange-400">
-                    <span className="tabular-nums">₹{(p.monthlyPricePaise / 100).toFixed(0)}</span>
-                    <span className="text-xs font-normal text-stone-500 dark:text-stone-400">
+                  <h3 className="mt-2 text-base font-bold text-white">{p.displayName}</h3>
+                  <div className="mt-1 flex items-baseline gap-1 text-2xl font-extrabold text-orange-400">
+                    <span>₹{(p.monthlyPricePaise / 100).toFixed(0)}</span>
+                    <span className="text-xs font-normal text-stone-400">
                       / month ({p.monthlyPricePaise.toLocaleString()} paise)
                     </span>
                   </div>
 
-                  <p className="mt-3 font-mono text-[11px] text-stone-500 dark:text-stone-400">
+                  <p className="mt-3 font-mono text-[11px] text-stone-400">
                     Features: {p.features || "All basic features"}
                   </p>
                 </div>
 
-                <div className="mt-5 border-t border-stone-200 pt-3 dark:border-stone-800">
+                <div className="mt-5 border-t border-stone-800 pt-3">
                   <button
-                    type="button"
                     onClick={() => setEditingPlan(p)}
-                    className="w-full rounded-lg border border-stone-300 bg-white py-1.5 text-xs font-semibold text-stone-700 shadow-2xs hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
+                    className="w-full rounded-lg bg-stone-800 py-1.5 text-xs font-semibold text-stone-200 transition hover:bg-stone-700"
                   >
                     Edit Plan Settings
                   </button>
@@ -245,18 +239,16 @@ export function PaymentsConsole({
       {activeTab === "subscriptions" && (
         <div className="space-y-4">
           <div>
-            <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
-              Active Tenant Subscriptions
-            </h2>
-            <p className="text-xs text-stone-500 dark:text-stone-400">
+            <h2 className="text-sm font-bold text-white">Active Tenant Subscriptions</h2>
+            <p className="text-xs text-stone-400">
               Subscriptions assigned to restaurant outlets across organizations.
             </p>
           </div>
 
-          <div className="admin-card p-5">
-            <div className="admin-table-container">
-              <table className="admin-table">
-                <thead>
+          <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-stone-300">
+                <thead className="border-b border-stone-800 bg-stone-950/50 text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                   <tr>
                     <th className="p-3">Restaurant Outlet</th>
                     <th className="p-3">Plan</th>
@@ -265,40 +257,40 @@ export function PaymentsConsole({
                     <th className="p-3">Period End</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200 font-sans text-xs dark:divide-stone-800">
+                <tbody className="divide-y divide-stone-800/60 font-sans text-xs">
                   {subscriptions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-6 text-center text-stone-500 dark:text-stone-400">
+                      <td colSpan={5} className="p-6 text-center text-stone-500">
                         No subscriptions found.
                       </td>
                     </tr>
                   ) : (
                     subscriptions.map((s) => (
-                      <tr key={s.id}>
+                      <tr key={s.id} className="hover:bg-stone-800/40">
                         <td className="p-3">
-                          <div className="font-semibold text-stone-900 dark:text-stone-100">{s.restaurantName}</div>
-                          <div className="font-mono text-[10px] text-stone-400 dark:text-stone-500">
+                          <div className="font-semibold text-white">{s.restaurantName}</div>
+                          <div className="font-mono text-[10px] text-stone-500">
                             {s.restaurantId}
                           </div>
                         </td>
-                        <td className="p-3 font-semibold text-purple-600 dark:text-purple-400">{s.planName}</td>
+                        <td className="p-3 font-semibold text-purple-400">{s.planName}</td>
                         <td className="p-3">
                           <span
-                            className={`admin-badge uppercase ${
+                            className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase ${
                               s.status === "active"
-                                ? "admin-badge-success"
-                                : "admin-badge-neutral"
+                                ? "border border-emerald-800 bg-emerald-950 text-emerald-400"
+                                : "bg-stone-800 text-stone-400"
                             }`}
                           >
                             {s.status}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-stone-500 dark:text-stone-400">
+                        <td className="p-3 font-mono text-[11px] text-stone-400">
                           {s.currentPeriodStart
                             ? new Date(s.currentPeriodStart).toLocaleDateString()
                             : "—"}
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-stone-500 dark:text-stone-400">
+                        <td className="p-3 font-mono text-[11px] text-stone-400">
                           {s.currentPeriodEnd
                             ? new Date(s.currentPeriodEnd).toLocaleDateString()
                             : "—"}
@@ -317,42 +309,41 @@ export function PaymentsConsole({
       {activeTab === "analytics" && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
-              Multi-Currency Financial Overview
-            </h2>
-            <p className="text-xs text-stone-500 dark:text-stone-400">
-              Orders transaction volume grouped strictly by local transaction currency (ADR 017 invariant).
+            <h2 className="text-sm font-bold text-white">Multi-Currency Financial Overview</h2>
+            <p className="text-xs text-stone-400">
+              Orders transaction volume grouped strictly by local transaction currency (ADR 017
+              invariant).
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {financials.byCurrency.length === 0 ? (
-              <div className="admin-card p-6 text-center text-stone-500 dark:text-stone-400 sm:col-span-2">
+              <div className="rounded-2xl border border-stone-800 bg-stone-900 p-6 text-center text-stone-500 sm:col-span-2">
                 No orders recorded yet.
               </div>
             ) : (
               financials.byCurrency.map((fc) => (
                 <div
                   key={fc.currency}
-                  className="admin-card p-5"
+                  className="rounded-2xl border border-stone-800 bg-stone-900 p-5"
                 >
-                  <div className="flex items-center justify-between border-b border-stone-200 pb-2 dark:border-stone-800">
-                    <span className="font-mono text-sm font-bold text-orange-600 dark:text-orange-400">
+                  <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                    <span className="font-mono text-sm font-bold text-orange-400">
                       {fc.currency} Orders
                     </span>
-                    <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <TrendingUp className="h-4 w-4 text-emerald-400" />
                   </div>
                   <div className="mt-4">
-                    <span className="text-xs text-stone-500 dark:text-stone-400">Gross Merchandise Value (GMV)</span>
-                    <div className="font-display text-2xl font-extrabold tabular-nums text-stone-900 dark:text-stone-100">
+                    <span className="text-xs text-stone-400">Gross Merchandise Value (GMV)</span>
+                    <div className="text-2xl font-extrabold text-white">
                       {(fc.totalMinor / 100).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{" "}
-                      <span className="text-xs font-normal text-stone-500 dark:text-stone-400">{fc.currency}</span>
+                      <span className="text-xs font-normal text-stone-400">{fc.currency}</span>
                     </div>
-                    <div className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-                      Total Tickets: <strong className="font-mono tabular-nums text-stone-800 dark:text-stone-200">{fc.orderCount}</strong>
+                    <div className="mt-2 text-xs text-stone-400">
+                      Total Tickets: <strong className="text-stone-200">{fc.orderCount}</strong>
                     </div>
                   </div>
                 </div>
@@ -364,28 +355,23 @@ export function PaymentsConsole({
 
       {/* Edit Plan Modal */}
       {editingPlan && (
-        <div className="admin-modal-backdrop" onClick={() => setEditingPlan(null)}>
-          <div
-            className="admin-modal-content max-w-md p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
-              Edit Plan: {editingPlan.displayName}
-            </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl border border-stone-700 bg-stone-900 p-6 shadow-2xl">
+            <h2 className="text-base font-bold text-white">Edit Plan: {editingPlan.displayName}</h2>
             <form onSubmit={handleSavePlan} className="mt-4 space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-stone-700 dark:text-stone-300">Display Name</label>
+                <label className="block font-semibold text-stone-300">Display Name</label>
                 <input
                   type="text"
                   required
                   value={editingPlan.displayName}
                   onChange={(e) => setEditingPlan({ ...editingPlan, displayName: e.target.value })}
-                  className="admin-input mt-1"
+                  className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-700 dark:text-stone-300">
+                <label className="block font-semibold text-stone-300">
                   Monthly Price (Minor Units / Paise)
                 </label>
                 <input
@@ -398,7 +384,7 @@ export function PaymentsConsole({
                       monthlyPricePaise: parseInt(e.target.value, 10) || 0,
                     })
                   }
-                  className="admin-input mt-1"
+                  className="mt-1 w-full rounded-lg border border-stone-800 bg-stone-950 p-2 text-white focus:outline-none"
                 />
               </div>
 
@@ -408,24 +394,24 @@ export function PaymentsConsole({
                   id="planActive"
                   checked={editingPlan.isActive}
                   onChange={(e) => setEditingPlan({ ...editingPlan, isActive: e.target.checked })}
-                  className="h-4 w-4 rounded border-stone-300 text-orange-600 accent-orange-600 dark:border-stone-700"
+                  className="h-4 w-4 rounded border-stone-700 text-orange-600"
                 />
-                <label htmlFor="planActive" className="font-semibold text-stone-700 dark:text-stone-300">
+                <label htmlFor="planActive" className="font-semibold text-stone-300">
                   Plan is Active and Selectable
                 </label>
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 border-t border-stone-200 pt-3 dark:border-stone-800">
+              <div className="mt-5 flex justify-end gap-2 border-t border-stone-800 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditingPlan(null)}
-                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                  className="rounded-lg border border-stone-700 px-3 py-1.5 text-stone-300 hover:bg-stone-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-orange-600 px-4 py-1.5 font-semibold text-white shadow-2xs hover:bg-orange-500"
+                  className="rounded-lg bg-orange-600 px-4 py-1.5 font-semibold text-white hover:bg-orange-500"
                 >
                   Save Changes
                 </button>

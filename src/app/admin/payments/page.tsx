@@ -37,13 +37,16 @@ export default async function AdminPaymentsPage() {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }): Promise<GrantActionResult> {
     "use server";
+    // Authentication and Next.js redirects stay outside the recovery boundary.
     const currentActor = await verifySuperAdmin();
     try {
       await issueEntitlementGrant(currentActor, data);
       return { ok: true };
     } catch (error) {
+      // Return only explicitly mapped, non-sensitive errors to production clients.
       return { ok: false, message: grantFailureMessage(error) };
     }
   }
@@ -107,11 +110,12 @@ export default async function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
-          Payments, Billing &amp; Entitlements
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          Payments, Billing & Entitlements
         </h1>
-        <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
-          Operator entitlement grants engine, SaaS plans catalog, and multi-currency revenue analytics.
+        <p className="text-xs text-stone-400">
+          Operator entitlement grants engine, SaaS plans catalog, and multi-currency revenue
+          analytics.
         </p>
       </div>
 

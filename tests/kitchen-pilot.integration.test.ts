@@ -23,6 +23,15 @@ const command = (outletId: string, action: string) => ({
 describe("Kitchen pilot command contracts", () => {
   it("validates outlet ids, review evidence, exact release identity and one-use keys", () => {
     expect(pilotCommandSchema.safeParse(command("valid-outlet", "request")).success).toBe(true);
+    expect(pilotCommandSchema.safeParse(command("valid-outlet", "operator_activate")).success).toBe(
+      true
+    );
+    expect(
+      pilotCommandSchema.safeParse({
+        ...command("valid-outlet", "operator_activate"),
+        evidenceUrl: "https://bad.invalid",
+      }).success
+    ).toBe(false);
     expect(
       pilotCommandSchema.safeParse({
         ...command("a", "request"),
