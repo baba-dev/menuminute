@@ -81,7 +81,8 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
   });
   it("fills missing fields without replacing existing merchant descriptions or nutrition", () => {
     const unverifiedDish = dishSchema.parse({
-      ...dish, nutrition: { calories: 500, verified: false },
+      ...dish,
+      nutrition: { calories: 500, verified: false },
       safety: { ingredients: ["Homemade paneer"], allergens: [], verified: false },
     });
     const patch = applyDishAutofill(unverifiedDish, candidate, "missing", companions);
@@ -101,12 +102,15 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
     expect(patch).not.toHaveProperty("archived");
   });
   it("requests the verified Cloudflare JSON schema and a provider-neutral JSON fallback", () => {
-    expect(dishAutofillResponseFormat("cloudflare", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"))
-      .toMatchObject({ type: "json_schema", json_schema: dishAutofillJsonSchema });
-    expect(dishAutofillResponseFormat("nvidia", "meta/llama-3.3-70b-instruct"))
-      .toEqual({ type: "json_object" });
-    expect(dishAutofillResponseFormat("cloudflare", "@cf/unknown/model"))
-      .toEqual({ type: "json_object" });
+    expect(
+      dishAutofillResponseFormat("cloudflare", "@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+    ).toMatchObject({ type: "json_schema", json_schema: dishAutofillJsonSchema });
+    expect(dishAutofillResponseFormat("nvidia", "meta/llama-3.3-70b-instruct")).toEqual({
+      type: "json_object",
+    });
+    expect(dishAutofillResponseFormat("cloudflare", "@cf/unknown/model")).toEqual({
+      type: "json_object",
+    });
   });
   it("repairs harmless model formatting with no second provider request", () => {
     const malformed = {
@@ -125,11 +129,13 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
     expect(result.suggestion.safety.crossContact).toBe("");
   });
   it("recovers missing harmless optional sections without claiming verified facts", () => {
-    const result = parseDishAutofillWithDiagnostics(JSON.stringify({
-      description: "A warm chickpea dish",
-      dietary: ["vegan"],
-      culinary: { spiceLevel: 2, flavorNotes: ["Herbal"], servingTemp: "hot" },
-    }));
+    const result = parseDishAutofillWithDiagnostics(
+      JSON.stringify({
+        description: "A warm chickpea dish",
+        dietary: ["vegan"],
+        culinary: { spiceLevel: 2, flavorNotes: ["Herbal"], servingTemp: "hot" },
+      })
+    );
     expect(result.suggestion.nutrition.calories).toBeNull();
     expect(result.suggestion.safety.allergens).toEqual([]);
   });
