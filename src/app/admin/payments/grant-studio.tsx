@@ -62,6 +62,7 @@ interface GrantStudioProps {
     startsAt: string;
     endsAt: string;
     reason: string;
+    term?: "trial_7" | "permanent";
   }) => Promise<GrantActionResult>;
   onRenewGrant: (data: {
     grantId: string;
