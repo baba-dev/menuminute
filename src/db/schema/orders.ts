@@ -79,6 +79,10 @@ export const orders = pgTable(
     // Closing instant deadline for automatic expiry of unaccepted pending orders
     expiresAt: timestamp("expires_at", { withTimezone: true }),
 
+    intakeSource: text("intake_source", { enum: ["unknown", "staff_pos", "guest_menu", "online"] })
+      .notNull()
+      .default("unknown"),
+
     // Sequence number per restaurant per day (e.g. #42)
     orderNumber: integer("order_number").notNull(),
     version: integer("version").notNull().default(1),
