@@ -22,7 +22,12 @@ export const grantPresetDetails: Record<
     description: "30-day manual billing window. Verify payment separately before granting.",
   },
   custom: { label: "Custom", days: null, description: "Choose an explicit start and end time." },
-  permanent: { label: "Permanent (revocable)", days: null, description: "No scheduled expiration. A superadmin can revoke access after disabling live outlets." },
+  permanent: {
+    label: "Permanent (revocable)",
+    days: null,
+    description:
+      "No scheduled expiration. A superadmin can revoke access after disabling live outlets.",
+  },
 };
 export function localDateTimeInput(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
