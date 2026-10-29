@@ -188,14 +188,18 @@ export function KitchenControlDesk({
     (selectedAction === "activate"
       ? Boolean(ready && status?.state === "approved")
       : selectedAction === "operator_activate"
-        ? Boolean(ready && status?.kitchenEntitled && (status?.state === "setup" || status?.state === "disabled"))
-      : selectedAction === "approve"
-        ? status?.state === "requested" && status.requestedBy !== operatorId
-        : selectedAction === "drain"
-          ? status?.state === "active"
-          : selectedAction === "finalize"
-            ? status?.state === "draining" && status.openKitchenOrders === 0
-            : status?.state !== "active" && status?.state !== "draining");
+        ? Boolean(
+            ready &&
+            status?.kitchenEntitled &&
+            (status?.state === "setup" || status?.state === "disabled")
+          )
+        : selectedAction === "approve"
+          ? status?.state === "requested" && status.requestedBy !== operatorId
+          : selectedAction === "drain"
+            ? status?.state === "active"
+            : selectedAction === "finalize"
+              ? status?.state === "draining" && status.openKitchenOrders === 0
+              : status?.state !== "active" && status?.state !== "draining");
 
   return (
     <div className="space-y-6">
@@ -211,9 +215,9 @@ export function KitchenControlDesk({
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-300">
           Enable a reviewed outlet using a seven-day trial or revocable permanent operator grant.
-          Single-superadmin operators may activate with their own documented attestation;
-          existing two-person pilot review is still available. Every activation checks the live
-          release, station readiness, entitlement and one-use password plus authenticator proof.
+          Single-superadmin operators may activate with their own documented attestation; existing
+          two-person pilot review is still available. Every activation checks the live release,
+          station readiness, entitlement and one-use password plus authenticator proof.
         </p>
       </header>
       <section className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
@@ -359,9 +363,9 @@ export function KitchenControlDesk({
               <h2 className="text-lg font-bold">3 · Reviewed operator action</h2>
             </div>
             <p className="mt-2 text-sm text-stone-400">
-              A controlled pilot still requires two different superadmins and expires after 24 hours.
-              For an owner-operated platform with exactly one enrolled superadmin, first issue
-              a seven-day or permanent Kitchen grant under Payments & Grants, then choose
+              A controlled pilot still requires two different superadmins and expires after 24
+              hours. For an owner-operated platform with exactly one enrolled superadmin, first
+              issue a seven-day or permanent Kitchen grant under Payments & Grants, then choose
               "Activate operator-granted Kitchen" with actual QA/release evidence. No paid
               subscription or public checkout is unlocked.
             </p>
