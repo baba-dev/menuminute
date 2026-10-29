@@ -267,6 +267,13 @@
       "when": 1793180000005,
       "tag": "0037_kitchen_paid_auto_route",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793180000006,
+      "tag": "0038_kitchen_live_service",
+      "breakpoints": true
     }
   ]
 }
