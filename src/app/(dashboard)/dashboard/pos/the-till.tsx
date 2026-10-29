@@ -11,6 +11,8 @@ import {
   Search,
   Settings2,
   ShoppingBasket,
+  BookOpenText,
+  Utensils,
   Printer,
   Wallet,
   X,
@@ -85,6 +87,7 @@ export function TheTill({
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [dish, setDish] = useState<Dish | null>(null);
+  const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [variant, setVariant] = useState("");
   const [groups, setGroups] = useState<Record<string, string[]>>({});
   const [customer, setCustomer] = useState("");
@@ -228,11 +231,49 @@ export function TheTill({
     }
   }
   function openDish(item: Dish) {
-    if (item.soldOut || !item.open) return;
+    if (item.soldOut || !item.open || busy) return;
+    const validVariants = item.variants.filter((v) => v.isAvailable);
+    const needsOptions = item.addOnGroups.some((g) => g.min > 0);
+    // Fast path: no mandatory configuration. Optional add-ons remain editable in ticket.
+    if (!needsOptions && (item.variants.length === 0 || validVariants.length === 1)) {
+      const singleVariant = item.variants.length ? validVariants[0] : undefined;
+      const line: Line = {
+        dishId: item.id,
+        variantId: singleVariant?.id ?? null,
+        groups: item.addOnGroups.map((g) => ({ groupId: g.id, optionIds: [] })),
+        quantity: 1,
+      };
+      setCart((previous) => {
+        const match = previous.find((c) => c.line.dishId === line.dishId &&
+          c.line.variantId === line.variantId &&
+          JSON.stringify(c.line.groups) === JSON.stringify(line.groups));
+        if (match) return previous.map((c) => c.id === match.id
+          ? { ...c, line: { ...c.line, quantity: Math.min(99, c.line.quantity + 1) } } : c);
+        if (previous.length >= 50) return previous;
+        return [...previous, {
+          id: crypto.randomUUID(), line, name: item.name,
+          variantName: singleVariant?.name ?? null,
+          unitMinor: singleVariant?.priceMinor ?? item.priceMinor,
+        }];
+      });
+      commandRef.current = null;
+      setMessage("");
+      return;
+    }
+    setEditingLineId(null);
     setDish(item);
     setVariant("");
     setGroups({});
     setMessage("");
+  }
+  function customizeCartLine(entry: CartLine) {
+    const item = workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items))
+      .find((candidate) => candidate.id === entry.line.dishId);
+    if (!item) return setMessage("This dish is no longer in the published menu.");
+    setDish(item);
+    setVariant(entry.line.variantId ?? "");
+    setGroups(Object.fromEntries(entry.line.groups.map((g) => [g.groupId, g.optionIds])));
+    setEditingLineId(entry.id);
   }
   function choose(groupId: string, optionId: string, maximum: number) {
     setGroups((old) => {
@@ -273,6 +314,9 @@ export function TheTill({
       quantity: 1,
     };
     setCart((prev) =>
+      editingLineId ? prev.map((entry) => entry.id === editingLineId
+        ? { ...entry, line: { ...line, quantity: entry.line.quantity },
+            name: dish.name, variantName: selectedVariant?.name ?? null, unitMinor } : entry) :
       prev.length >= 50
         ? prev
         : [
@@ -288,6 +332,7 @@ export function TheTill({
     );
     commandRef.current = null;
     setDish(null);
+    setEditingLineId(null);
     setMessage("");
   }
   function changeQty(id: string, delta: number) {
@@ -650,7 +695,7 @@ export function TheTill({
                     type="button"
                     key={item.id}
                     disabled={
-                      item.soldOut || !item.open || !menu?.open || busy || cart.length >= 50
+                      item.soldOut || !item.open || !menu?.open || busy
                     }
                     onClick={() => openDish(item)}
                     className="till-dish"
@@ -667,6 +712,66 @@ export function TheTill({
                   </button>
                 ))}
               </div>
+      {dish && (
+        <div className="till-inline-config" id="pos-dish-config">
+          <section
+            className="till-inline-config-panel"
+            role="region"
+            aria-labelledby="till-dish-title"
+          >
+            <div className="till-sectionhead">
+              <div>
+                <span className="till-eyebrow">CUSTOMIZE DISH</span>
+                <h2 id="till-dish-title">{dish.name}</h2>
+              </div>
+              <button type="button" onClick={() => { setDish(null); setEditingLineId(null); }} aria-label="Close dish chooser">
+                <X size={19} />
+              </button>
+            </div>
+            {dish.variants.length > 0 && (
+              <fieldset>
+                <legend>Choose a variant</legend>
+                {dish.variants.map((v) => (
+                  <label key={v.id} className="till-option">
+                    <input
+                      type="radio"
+                      name="dish-variant"
+                      value={v.id}
+                      checked={variant === v.id}
+                      disabled={!v.isAvailable}
+                      onChange={() => setVariant(v.id)}
+                    />
+                    {v.name}
+                    <span>{money(v.priceMinor, currency)}</span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            {dish.addOnGroups.map((g) => (
+              <fieldset key={g.id}>
+                <legend>
+                  {g.name} · choose {g.min}–{g.max}
+                </legend>
+                {g.options.map((o) => (
+                  <label key={o.id} className="till-option">
+                    <input
+                      type="checkbox"
+                      checked={(groups[g.id] ?? []).includes(o.id)}
+                      disabled={!o.isAvailable}
+                      onChange={() => choose(g.id, o.id, g.max)}
+                    />
+                    {o.name}
+                    <span>+{money(o.priceMinor, currency)}</span>
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+            <button type="button" className="till-primary" onClick={addDish}>
+              {editingLineId ? "Save options" : "Add dish"} <Plus size={16} />
+            </button>
+          </section>
+        </div>
+      )}
               {!dishes.length && (
                 <p className="till-empty">No dishes found. Publish a menu or adjust the search.</p>
               )}
@@ -752,6 +857,10 @@ export function TheTill({
                       <small>
                         {entry.variantName ?? "Regular"} · {money(entry.unitMinor, currency)} each
                       </small>
+                      <button type="button" className="pos-customize-line"
+                        onClick={() => customizeCartLine(entry)}
+                        aria-label={"Customize " + entry.name}>Edit options</button>
+
                     </div>
                     <div className="till-quantity">
                       <button
@@ -951,67 +1060,6 @@ export function TheTill({
           </section>
         )}
       </div>
-      {dish && (
-        <div className="till-modal-backdrop" role="presentation">
-          <section
-            className="till-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="till-dish-title"
-          >
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">CONFIGURE DISH</span>
-                <h2 id="till-dish-title">{dish.name}</h2>
-              </div>
-              <button type="button" onClick={() => setDish(null)} aria-label="Close dish chooser">
-                <X size={19} />
-              </button>
-            </div>
-            {dish.variants.length > 0 && (
-              <fieldset>
-                <legend>Choose a variant</legend>
-                {dish.variants.map((v) => (
-                  <label key={v.id} className="till-option">
-                    <input
-                      type="radio"
-                      name="dish-variant"
-                      value={v.id}
-                      checked={variant === v.id}
-                      disabled={!v.isAvailable}
-                      onChange={() => setVariant(v.id)}
-                    />
-                    {v.name}
-                    <span>{money(v.priceMinor, currency)}</span>
-                  </label>
-                ))}
-              </fieldset>
-            )}
-            {dish.addOnGroups.map((g) => (
-              <fieldset key={g.id}>
-                <legend>
-                  {g.name} · choose {g.min}–{g.max}
-                </legend>
-                {g.options.map((o) => (
-                  <label key={o.id} className="till-option">
-                    <input
-                      type="checkbox"
-                      checked={(groups[g.id] ?? []).includes(o.id)}
-                      disabled={!o.isAvailable}
-                      onChange={() => choose(g.id, o.id, g.max)}
-                    />
-                    {o.name}
-                    <span>+{money(o.priceMinor, currency)}</span>
-                  </label>
-                ))}
-              </fieldset>
-            ))}
-            <button type="button" className="till-primary" onClick={addDish}>
-              Add dish <Plus size={16} />
-            </button>
-          </section>
-        </div>
-      )}
     </main>
   );
 }

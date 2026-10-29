@@ -713,3 +713,20 @@
   background: transparent;
   cursor: pointer;
 }
+
+/* Phase D: customization belongs to the catalog, not a blocking full-screen dialog. */
+.till-page.pos-editorial .till-inline-config {
+  margin: 18px 0;
+  border: 1px solid #dfbe9f;
+  border-radius: 20px;
+  background: var(--pos-card, #fffaf3);
+  padding: clamp(14px, 2vw, 24px);
+}
+.till-page.pos-editorial .till-inline-config-panel { display: grid; gap: 14px; }
+.till-page.pos-editorial .till-inline-config fieldset {
+  border: 1px solid #e7d3c0; border-radius: 12px; padding: 12px;
+}
+.till-page.pos-editorial .pos-customize-line {
+  display: inline-block; border: 0; background: transparent; padding: 4px 0;
+  color: #ae4b1a; font-size: 12px; text-decoration: underline; cursor: pointer;
+}
