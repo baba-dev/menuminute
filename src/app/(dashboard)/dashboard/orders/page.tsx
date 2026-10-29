@@ -35,8 +35,8 @@ export default async function OrdersPage() {
     { userId: session.user.id, sessionId: session.session.id },
     outlet.id,
     "orders.read",
-    async tx => {
-      const result = await tx.execute<{active:boolean}>(sql`
+    async (tx) => {
+      const result = await tx.execute<{ active: boolean }>(sql`
         SELECT COALESCE(k.enabled,false)
           AND app_private.can_outlet(${outlet.id},'outlet.manage')
           AND EXISTS(SELECT 1 FROM entitlement_grants g
