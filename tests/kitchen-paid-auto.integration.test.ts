@@ -101,6 +101,21 @@ it("verified Kitchen charge grants bundled ordering and automatically activates 
         [f.outlet.id]
       );
       expect(activated.rows[0]?.enabled).toBe(true);
+      // Configuration can become invalid after activation. Effective paid
+      // readiness must fail closed until the route is restored.
+      await client.query(
+        "DELETE FROM kitchen_routes WHERE outlet_id=$1 AND dish_id=$2",
+        [f.outlet.id, "paid-dish"]
+      );
+      const deconfigured = await client.query<{ ready: boolean }>(
+        "SELECT app_private.kitchen_commercial_ready($1) AS ready",
+        [f.outlet.id]
+      );
+      expect(deconfigured.rows[0]?.ready).toBe(false);
+      await client.query(
+        "INSERT INTO kitchen_routes(outlet_id,dish_id,station_id) VALUES($1,$2,$3)",
+        [f.outlet.id, "paid-dish", station.stationId]
+      );
       // Paused billing revokes Kitchen and its provider-bundled ordering grant.
       await client.query("SELECT app_private.record_razorpay_status($1,$2,'paused',$3)", [
         "evt_" + crypto.randomUUID(),
