@@ -184,7 +184,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
     await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
   }
   await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
-  await expo.getByRole("button", { name: "Release Ready to guest" }).click();
+  await expo.getByRole("button", { name: "Release order as Ready" }).click();
   await expect(expo.getByText("#1042")).toHaveCount(0);
   const db = new Pool({ connectionString: url, max: 1 });
   try {
