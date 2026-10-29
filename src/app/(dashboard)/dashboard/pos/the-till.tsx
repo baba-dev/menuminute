@@ -89,6 +89,8 @@ export function TheTill({
   const [cart, setCart] = useState<CartLine[]>([]);
   const [dish, setDish] = useState<Dish | null>(null);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
+  const [mobileTicketOpen, setMobileTicketOpen] = useState(false);
+  const mobileTicketRef = useRef<HTMLElement>(null);
   const [variant, setVariant] = useState("");
   const [groups, setGroups] = useState<Record<string, string[]>>({});
   const [customer, setCustomer] = useState("");
@@ -110,6 +112,9 @@ export function TheTill({
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
+  useEffect(() => {
+    if (mobileTicketOpen) mobileTicketRef.current?.focus();
+  }, [mobileTicketOpen]);
   const incomingOrderId = useSyncExternalStore(
     subscribeUrl,
     () => {
@@ -363,6 +368,7 @@ export function TheTill({
       );
       setSuccess(result);
       setCart([]);
+      setMobileTicketOpen(false);
       setMarkAsPaid(false);
       setPaymentMethod("cash");
       setCustomer("");
@@ -607,7 +613,13 @@ export function TheTill({
           </form>
         )}
         {workspace.context.enabled && (
-          <div className="till-layout">
+          <div className={"till-layout" + (mobileTicketOpen ? " is-mobile-ticket-open" : "")}>
+            <button type="button" className="pos-mobile-ticket-toggle"
+              onClick={() => setMobileTicketOpen(true)}>
+              <ShoppingBasket size={19} aria-hidden="true"/>
+              View Ticket · {cart.reduce((count,entry)=>count+entry.line.quantity,0)} items
+              <strong>{money(subtotal.toString(),currency)}</strong>
+            </button>
             <section className="till-catalog" aria-label="Published menu">
               <div className="till-sectionhead">
                 <div>
@@ -759,11 +771,17 @@ export function TheTill({
                 onUpdated={refresh}
               />
             </section>
-            <aside className="till-cart" aria-label="Staff order cart">
+            <aside className="till-cart" aria-label="Staff order cart"
+              tabIndex={-1} ref={mobileTicketRef}
+              onKeyDown={(e) => { if (e.key === "Escape") setMobileTicketOpen(false); }}>
               <div className="till-sectionhead">
                 <div>
                   <span className="till-eyebrow">03 / ORDER PAD</span>
                   <h2>Current ticket</h2>
+                  <button className="pos-mobile-ticket-close" type="button"
+                    onClick={() => setMobileTicketOpen(false)} aria-label="Close ticket">
+                    <X size={19} />
+                  </button>
                 </div>
                 <ShoppingBasket size={22} />
               </div>

@@ -116,7 +116,8 @@ export function PosOrderRegister({organizationId,outletId}:{
     {nextCursor&&<button className="pos-register-more" disabled={busy}
       onClick={()=>void load(nextCursor)}>{busy?"Loading…":"Load more orders"}</button>}
     <dialog className="pos-order-detail" ref={dialog} onClose={()=>setSelected(null)}
-      aria-labelledby="pos-order-detail-title">
+      aria-labelledby="pos-order-detail-title"
+      onClick={event=>{if(event.target===dialog.current)dialog.current?.close();}}>
       {selected&&<div>
         <header><div><small>{sourceName(selected.source)}</small>
           <h2 id="pos-order-detail-title">Order #{selected.orderNumber}</h2>
