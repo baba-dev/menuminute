@@ -32,11 +32,11 @@ This release adds **operator-issued Kitchen Pro grants**, not automatic customer
 - Operator evidence URLs link to human sign-off; they are **not** automatically validated as proof of QA.
 - A merged PR does not by itself issue a grant or activate production. These are separate authorized operations in the running application.
 
-
 ## Verified paid Kitchen Pro — automatic, no platform admin per customer
 
 After one global, MFA-confirmed release authorization and configured Razorpay Kitchen
 plan (`RAZORPAY_KITCHEN_ENABLED=true` with matching verified provider plan ID):
+
 1. A customer subscribes to Kitchen Pro through organization billing.
 2. Only a validated Razorpay `subscription.charged` event may create a paid
    `kitchen.new` entitlement. The same captured payment also provides
