@@ -172,10 +172,8 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     const updated = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
     expect(updated.work.find((w) => w.id === first.id)?.status).toBe("complete");
     expect(updated.work.find((w) => w.id !== first.id)?.status).toBe("queued");
-    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
-      targetStatus: "preparing",
-      expectedVersion: 2,
-    });
+    // First station start already moved the canonical order to preparing.
+    // The merchant order board must not perform a second transition.
     await expect(
       transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
         targetStatus: "ready",
