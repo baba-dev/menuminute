@@ -7,8 +7,8 @@
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background-color: var(--color-background, #fafaf9);
-  color: var(--color-foreground, #1c1917);
+  background-color: var(--paper, #ffffff);
+  color: var(--ink, #171717);
   font-family: var(--font-sans);
 }
 
@@ -316,3 +316,8 @@
   border-color: var(--color-stone-800, #292524);
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);
 }
+
+/* Keep admin controls aligned with the app-wide resolved appearance. */
+.admin-shell { color-scheme: light; }
+:root[data-theme="dark"] .admin-shell { color-scheme: dark; }
+@media (max-width: 767px) { .admin-shell { min-width: 0; } }

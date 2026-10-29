@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ThemeControl } from "@/components/menu-product/theme-control";
+import { AdminAppearanceControl } from "./admin-appearance-control";
 import { Server, ShieldCheck, ChevronRight } from "lucide-react";
 
 interface AdminTopbarProps {
@@ -68,7 +68,7 @@ export function AdminTopbar({ actorName, actorEmail, isProd }: AdminTopbarProps)
         </div>
 
         {/* Global Light / Dark Toggle Switch */}
-        <ThemeControl />
+        <AdminAppearanceControl />
 
         {/* Superadmin Operator Chip */}
         <div

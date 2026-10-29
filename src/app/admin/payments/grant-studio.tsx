@@ -74,11 +74,11 @@ interface GrantStudioProps {
   onRevokeGrant: (id: string, reason: string) => Promise<GrantActionResult>;
 }
 const badgeClasses: Record<GrantStatus, string> = {
-  active: "border-emerald-700/70 bg-emerald-950 text-emerald-300",
-  expiring: "border-amber-700/70 bg-amber-950 text-amber-200",
-  scheduled: "border-sky-700/70 bg-sky-950 text-sky-200",
-  expired: "border-stone-700 bg-stone-800 text-stone-300",
-  revoked: "border-red-900 bg-red-950 text-red-300",
+  active: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700/70 dark:bg-emerald-950 dark:text-emerald-300",
+  expiring: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-700/70 dark:bg-amber-950 dark:text-amber-200",
+  scheduled: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-700/70 dark:bg-sky-950 dark:text-sky-200",
+  expired: "border-stone-200 bg-stone-100 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300",
+  revoked: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300",
 };
 const statusNames: Record<GrantStatus, string> = {
   active: "Active",
@@ -438,7 +438,7 @@ export function GrantStudio({
           <p className="text-xs font-bold tracking-[.18em] text-orange-400 uppercase">
             Operator access desk
           </p>
-          <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-white">
+          <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-stone-900 dark:text-white">
             Feature access & trials
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-400">
