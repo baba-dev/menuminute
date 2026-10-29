@@ -21,7 +21,8 @@ export const metadata: Metadata = {
 export default async function KitchenControlDeskPage() {
   const admin = await verifySuperAdmin();
   const [runningSha, commercialEnabled] = await Promise.all([
-    kitchenRunningReleaseSha(), kitchenCommercialStatus(admin)
+    kitchenRunningReleaseSha(),
+    kitchenCommercialStatus(admin),
   ]);
   async function searchOutlets(term: string) {
     "use server";
@@ -62,8 +63,11 @@ export default async function KitchenControlDeskPage() {
       await kitchenCommercialLaunch(actor, input);
       return { ok: true as const };
     } catch {
-      return { ok: false as const,
-        message: "Release approval could not be confirmed. Verify deployed SHA, evidence, MFA, and existing launch state." };
+      return {
+        ok: false as const,
+        message:
+          "Release approval could not be confirmed. Verify deployed SHA, evidence, MFA, and existing launch state.",
+      };
     }
   }
 
