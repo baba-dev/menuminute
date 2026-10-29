@@ -73,7 +73,7 @@ function Ticket({
       <p className="kk-ticket-meta">
         {work.fulfillmentMode === "pickup"
           ? "Pickup"
-          : work.tableLabel
+          : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
             ? "Table " + work.tableLabel
             : "Dine-in"}{" "}
         · {stationName}
