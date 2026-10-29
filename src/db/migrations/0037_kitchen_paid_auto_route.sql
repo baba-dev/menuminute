@@ -332,6 +332,13 @@ BEGIN
    WHERE r.id=NEW.restaurant_id AND e.capability='kitchen.new' AND e.revoked_at IS NULL
    AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp()
  ) THEN RETURN NEW; END IF;
+ -- Paid kitchens with changed station rosters or published menus return new
+ -- acceptances to merchant processing until configuration is healthy again.
+ -- Existing Kitchen work remains available for safe completion.
+ IF app_private.kitchen_paid_subscription_active(
+   (SELECT organization_id FROM restaurants WHERE id=NEW.restaurant_id)
+ ) AND NOT app_private.kitchen_commercial_ready(NEW.restaurant_id)
+ THEN RETURN NEW; END IF;
  FOR item IN SELECT * FROM order_items WHERE order_id=NEW.id LOOP
    n:=0;
    FOR rt IN SELECT r.station_id,r.rule_version FROM kitchen_routes r
@@ -453,6 +460,9 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp A
  )
  AND NOT EXISTS(SELECT 1 FROM kitchen_pilot_outlets k
    WHERE k.outlet_id=p_outlet AND k.state='draining')
+ AND (NOT app_private.kitchen_paid_subscription_active(
+       (SELECT organization_id FROM restaurants WHERE id=p_outlet))
+      OR app_private.kitchen_commercial_ready(p_outlet))
 $fn$;
 REVOKE ALL ON FUNCTION app_private.kitchen_primary_workspace(text) FROM PUBLIC,menuminute_worker,menuminute_billing;
 GRANT EXECUTE ON FUNCTION app_private.kitchen_primary_workspace(text) TO menuminute_app;
