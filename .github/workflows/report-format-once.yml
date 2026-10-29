@@ -1,0 +1,33 @@
+name: One-time Reports PR 222 formatting
+on:
+  push:
+    branches:
+      - feat/reports-and-insights-hub-20261029
+    paths:
+      - .github/workflows/report-format-once.yml
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - name: Format modified reporting code with repository Prettier
+        run: |
+          pnpm exec prettier --write "src/modules/reports/**/*.{ts,tsx}" "src/components/reports/**/*.{ts,tsx}" "src/app/(dashboard)/dashboard/reports/**/*.{tsx,css}" "src/app/api/reports/**/*.{ts,tsx}" "src/app/(dashboard)/workspace-navigation.tsx" "tests/reports.test.ts" "src/db/migrations/meta/_journal.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- src/modules/reports src/components/reports 'src/app/(dashboard)/dashboard/reports' src/app/api/reports 'src/app/(dashboard)/workspace-navigation.tsx' tests/reports.test.ts src/db/migrations/meta/_journal.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(reports): apply repository Prettier formatting'
+            git push origin HEAD:feat/reports-and-insights-hub-20261029
+          fi
