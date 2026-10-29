@@ -39,7 +39,8 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp A
    JOIN entitlement_grants e ON e.id=c.grant_id
    JOIN organizations o ON o.id=s.organization_id AND o.is_active
    WHERE s.organization_id=p_org AND s.product_key='kitchen_pro'
-     AND s.status='active' AND s.current_end>clock_timestamp()
+     -- Cancelled/completed subscriptions retain their already-paid period.
+     AND s.status IN ('active','cancelled','completed') AND s.current_end>clock_timestamp()
      AND e.capability='kitchen.new' AND e.revoked_at IS NULL
      AND e.starts_at<=clock_timestamp() AND e.ends_at>clock_timestamp()
  )
