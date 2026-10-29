@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReportQuery, ReportRange } from "@/modules/reports/contracts";
 
 export function DateRangeBar({
@@ -14,11 +14,6 @@ export function DateRangeBar({
 }) {
   const [from, setFrom] = useState(query.from ?? "");
   const [to, setTo] = useState(query.to ?? "");
-
-  useEffect(() => {
-    setFrom(query.from ?? "");
-    setTo(query.to ?? "");
-  }, [query.from, query.to]);
 
   const presets: { id: ReportRange; label: string }[] = [
     { id: "today", label: "Today" },

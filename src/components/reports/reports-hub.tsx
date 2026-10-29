@@ -137,7 +137,12 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
       {/* ─── Main Reports Content ─────────────────────────────────────────── */}
       <main className="reports-body">
         {/* Date Horizon & Channel Filter Strip */}
-        <DateRangeBar query={data.query} dateLabel={dateRange.label} onChange={updateQuery} />
+        <DateRangeBar
+          key={`${data.query.range}:${data.query.from ?? ""}:${data.query.to ?? ""}`}
+          query={data.query}
+          dateLabel={dateRange.label}
+          onChange={updateQuery}
+        />
 
         {/* Tab Navigation (Exact qr-tab-nav design) */}
         <nav className="reports-tab-nav" aria-label="Reports categories">

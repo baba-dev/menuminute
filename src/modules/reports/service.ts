@@ -489,9 +489,10 @@ export async function getReportsWorkspace(
           createdAt: string;
         }>;
       };
-    }>(sql`select app_private.reports_finance_snapshot(
-      ${outletId},${range.from}::date,${range.to}::date
-    ) as result`);
+    }>(sql`select case when ${query.tab} in ('till','z-report')
+      then app_private.reports_finance_snapshot(
+        ${outletId},${range.from}::date,${range.to}::date
+      ) else '{"available":false}'::jsonb end as result`);
     const finance = projection.rows[0]?.result;
     if (!finance) throw new Error("Finance reporting projection returned no result");
     const toSafeMinor = (value: string | number | null | undefined): number => {
@@ -588,9 +589,10 @@ export async function getReportsWorkspace(
           avgPrepMinutes: number;
         }>;
       };
-    }>(sql`select app_private.reports_kitchen_snapshot(
-      ${outletId},${range.from}::date,${range.to}::date,${query.fulfillmentMode}
-    ) as result`);
+    }>(sql`select case when ${query.tab} = 'kitchen'
+      then app_private.reports_kitchen_snapshot(
+        ${outletId},${range.from}::date,${range.to}::date,${query.fulfillmentMode}
+      ) else '{"available":false}'::jsonb end as result`);
     const kitchen = kitchenRows.rows[0]?.result;
     if (!kitchen) throw new Error("Kitchen reporting projection returned no result");
     const kitchenAvailable = kitchen.available === true;
