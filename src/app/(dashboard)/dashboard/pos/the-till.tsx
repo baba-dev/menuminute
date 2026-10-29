@@ -536,7 +536,7 @@ export function TheTill({
                 Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax ·
                 Payment{" "}
                 {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
-                The order was sent to Service Counter. Printing does not issue a fiscal invoice.
+                The order was sent to Service Counter. This confirmation is not a receipt or tax invoice.
               </p>
             </div>
             <Link href="/dashboard/orders">View orders</Link>
