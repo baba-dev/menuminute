@@ -31,3 +31,30 @@ This release adds **operator-issued Kitchen Pro grants**, not automatic customer
 - Test single-admin and two-admin denial paths, operator grant overlap/replay/revocation, explicit SHA binding, state transitions, ordered worker events, and cross-tenant denial.
 - Operator evidence URLs link to human sign-off; they are **not** automatically validated as proof of QA.
 - A merged PR does not by itself issue a grant or activate production. These are separate authorized operations in the running application.
+
+
+## Verified paid Kitchen Pro — automatic, no platform admin per customer
+
+After one global, MFA-confirmed release authorization and configured Razorpay Kitchen
+plan (`RAZORPAY_KITCHEN_ENABLED=true` with matching verified provider plan ID):
+1. A customer subscribes to Kitchen Pro through organization billing.
+2. Only a validated Razorpay `subscription.charged` event may create a paid
+   `kitchen.new` entitlement. The same captured payment also provides
+   `ordering.new` for the paid period if not already covered.
+3. The billing transaction enables Kitchen for every configured, staffed and
+   fully routed outlet of the organization. Incomplete outlets stay in merchant
+   ordering; station setup automatically rechecks readiness.
+4. Pending orders appear in the Kitchen intake and are accepted there.
+   The existing canonical acceptance transaction creates station work, or
+   rejects an unrouted acceptance. Other outlets use the merchant order board.
+5. Expiry/pause/refund stops new Kitchen work and makes the merchant
+   order board the fallback. Already accepted Kitchen work remains available
+   for safe completion. Webhook revocation cannot be blocked by the manual
+   grant drain guard.
+
+The global commercial release defaults OFF. A platform owner must once
+supply real QA evidence and authorization in Admin → Kitchen Control Desk;
+no per-restaurant staff approval is needed after this one-time signoff.
+The platform does not interpret a client-submitted plan name or browser
+checkout as payment proof. Never enable public subscription checkout before
+the real recovery, security, load and accessibility gates are satisfied.
