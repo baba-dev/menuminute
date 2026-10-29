@@ -16,6 +16,20 @@ ALTER TABLE kitchen_pilot_outlets ADD CONSTRAINT kitchen_pilot_review_integrity
 ALTER TABLE kitchen_pilot_outlets ADD CONSTRAINT kitchen_operator_state_integrity
   CHECK (activation_mode <> 'operator' OR state IN ('active','draining','disabled'));
 
+-- A previously disabled operator outlet may be requested as a traditional
+-- independently reviewed pilot later. Normalize back to pilot before the
+-- state constraint is checked; do not change any historical audit receipts.
+CREATE FUNCTION app_private.kitchen_operator_reset_to_pilot() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $fn$
+BEGIN
+ IF NEW.state='requested' THEN NEW.activation_mode:='pilot'; END IF;
+ RETURN NEW;
+END $fn$;
+REVOKE ALL ON FUNCTION app_private.kitchen_operator_reset_to_pilot() FROM PUBLIC;
+CREATE TRIGGER kitchen_operator_reset_to_pilot
+ BEFORE INSERT OR UPDATE ON kitchen_pilot_outlets
+ FOR EACH ROW EXECUTE FUNCTION app_private.kitchen_operator_reset_to_pilot();
+
 -- Deny revocation of an active Kitchen grant while any outlet has live intake.
 -- The operator must drain and finalize first; accepted tickets are never stranded.
 CREATE FUNCTION app_private.kitchen_operator_grant_revoke_guard() RETURNS trigger
