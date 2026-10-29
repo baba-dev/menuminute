@@ -38,7 +38,7 @@ const stateCopy: Record<KitchenPilotStatus["state"], string> = {
 
 function ReadinessLine({ label, passed, note }: { label: string; passed: boolean; note: string }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 dark:border-stone-800 py-3 text-sm">
+    <li className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 py-3 text-sm dark:border-stone-800">
       <span className="text-stone-200">{label}</span>
       <span className={passed ? "font-semibold text-emerald-300" : "font-semibold text-amber-300"}>
         {passed ? "Verified" : "Blocked"} · {note}
@@ -210,7 +210,7 @@ export function KitchenControlDesk({
             Platform admin / Kitchen Pro
           </span>
         </div>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-stone-900 sm:text-4xl dark:text-white">
           The Kitchen Control Desk
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-700 dark:text-stone-300">
@@ -220,7 +220,7 @@ export function KitchenControlDesk({
           station readiness, entitlement and one-use password plus authenticator proof.
         </p>
       </header>
-      <section className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5">
+      <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
         <h2 className="text-lg font-bold">1 · Find an outlet</h2>
         <form onSubmit={(e) => void handleSearch(e)} className="mt-3 flex flex-wrap gap-2">
           <label htmlFor="kitchen-outlet-search" className="sr-only">
@@ -233,7 +233,7 @@ export function KitchenControlDesk({
             placeholder="Search restaurant or organization"
             minLength={2}
             maxLength={80}
-            className="min-w-40 flex-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-900 dark:text-white"
+            className="min-w-40 flex-1 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
           />
           <button
             disabled={busy || term.trim().length < 2}
@@ -249,7 +249,10 @@ export function KitchenControlDesk({
             aria-label="Matching outlets"
           >
             {targets.map((target) => (
-              <li key={target.id} className="border-b border-stone-200 dark:border-stone-800 last:border-none">
+              <li
+                key={target.id}
+                className="border-b border-stone-200 last:border-none dark:border-stone-800"
+              >
                 <button
                   type="button"
                   onClick={() => void selectOutlet(target)}
@@ -257,7 +260,9 @@ export function KitchenControlDesk({
                   className="w-full p-3 text-left text-sm hover:bg-stone-800 disabled:opacity-50"
                 >
                   <strong className="block text-stone-900 dark:text-white">{target.name}</strong>
-                  <span className="text-stone-500 dark:text-stone-400">{target.organizationName}</span>
+                  <span className="text-stone-500 dark:text-stone-400">
+                    {target.organizationName}
+                  </span>
                 </button>
               </li>
             ))}
@@ -283,7 +288,7 @@ export function KitchenControlDesk({
       )}
       {status && (
         <>
-          <section className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5">
+          <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold">2 · Readiness & release identity</h2>
@@ -295,7 +300,7 @@ export function KitchenControlDesk({
                 type="button"
                 disabled={busy}
                 onClick={() => void refresh()}
-                className="inline-flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 px-4 py-2 text-xs font-bold hover:bg-stone-800 disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-4 py-2 text-xs font-bold hover:bg-stone-800 disabled:opacity-40 dark:border-stone-700"
               >
                 <RefreshCw size={14} /> Refresh
               </button>
@@ -357,7 +362,7 @@ export function KitchenControlDesk({
               </a>
             </div>
           </section>
-          <section className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5">
+          <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
             <div className="flex items-center gap-2">
               <ShieldCheck className="text-orange-700 dark:text-orange-300" size={20} />
               <h2 className="text-lg font-bold">3 · Reviewed operator action</h2>
@@ -373,7 +378,7 @@ export function KitchenControlDesk({
               <label className="block text-sm font-semibold">
                 Action
                 <select
-                  className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-stone-900 dark:text-white"
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                   value={selectedAction}
                   onChange={(e) => setAction(e.target.value as Action)}
                 >
@@ -392,7 +397,7 @@ export function KitchenControlDesk({
                   spellCheck={false}
                   placeholder="Exact 40-character Git SHA"
                   maxLength={40}
-                  className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 font-mono text-xs text-stone-900 dark:text-white"
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 font-mono text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                 />
               </label>
               <label className="block text-sm font-semibold">
@@ -403,7 +408,7 @@ export function KitchenControlDesk({
                   type="url"
                   maxLength={500}
                   placeholder="https://github.com/baba-dev/menuminute/issues/76"
-                  className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-900 dark:text-white"
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                 />
               </label>
               <label className="block text-sm font-semibold">
@@ -416,7 +421,7 @@ export function KitchenControlDesk({
                   minLength={10}
                   maxLength={500}
                   placeholder="Explain evidence reviewed and action justified"
-                  className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-900 dark:text-white"
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                 />
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -428,7 +433,7 @@ export function KitchenControlDesk({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-900 dark:text-white"
+                    className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                   />
                 </label>
                 <label className="block text-sm font-semibold">
@@ -441,7 +446,7 @@ export function KitchenControlDesk({
                     onChange={(e) => setTotp(e.target.value)}
                     required
                     maxLength={6}
-                    className="mt-2 w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-900 dark:text-white"
+                    className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
                   />
                 </label>
               </div>

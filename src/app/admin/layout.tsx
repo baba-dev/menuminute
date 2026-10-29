@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 alt="MenuMinute by BabaBuilds"
                 width={145}
                 height={35}
-                className="dark:hidden block h-7 w-auto"
+                className="block h-7 w-auto dark:hidden"
                 priority
               />
               <Image
@@ -41,11 +41,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 alt="MenuMinute by BabaBuilds"
                 width={145}
                 height={35}
-                className="hidden dark:block h-7 w-auto"
+                className="hidden h-7 w-auto dark:block"
                 priority
               />
             </div>
-            <span className="rounded-md bg-orange-100 dark:bg-orange-950/80 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-orange-700 dark:text-orange-400 uppercase border border-orange-200 dark:border-orange-800/80">
+            <span className="rounded-md border border-orange-200 bg-orange-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-orange-700 uppercase dark:border-orange-800/80 dark:bg-orange-950/80 dark:text-orange-400">
               Admin
             </span>
           </Link>
@@ -55,11 +55,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminNav />
 
         {/* Operator Profile Footer */}
-        <div className="border-t border-stone-200 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-950/70 p-3">
+        <div className="border-t border-stone-200 bg-stone-50/70 p-3 dark:border-stone-800 dark:bg-stone-950/70">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <p className="truncate text-xs font-semibold text-stone-800 dark:text-stone-200">
                   {actor.name}
                 </p>
@@ -95,7 +95,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         {/* Privileged Action Warning Banner (Hospitality Craft) */}
         <div
-          className="flex items-center gap-2 border-b border-amber-200/90 bg-amber-50/90 px-4 py-2 text-xs text-amber-900 sm:px-6 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200 transition-colors"
+          className="flex items-center gap-2 border-b border-amber-200/90 bg-amber-50/90 px-4 py-2 text-xs text-amber-900 transition-colors sm:px-6 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200"
           role="status"
         >
           <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -103,7 +103,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Privileged actions require step-up authentication.{" "}
             <Link
               href="/account/security"
-              className="font-semibold text-amber-950 dark:text-amber-300 underline underline-offset-2 hover:opacity-80"
+              className="font-semibold text-amber-950 underline underline-offset-2 hover:opacity-80 dark:text-amber-300"
             >
               Confirm a privileged action
             </Link>{" "}

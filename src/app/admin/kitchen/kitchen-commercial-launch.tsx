@@ -57,10 +57,12 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
   }
 
   return (
-    <section className="rounded-2xl border border-orange-200 dark:border-orange-900/40 bg-white dark:bg-stone-900 p-5">
+    <section className="rounded-2xl border border-orange-200 bg-white p-5 dark:border-orange-900/40 dark:bg-stone-900">
       <div className="flex items-center gap-3">
         <ChefHat size={22} className="text-orange-700 dark:text-orange-300" aria-hidden="true" />
-        <h2 className="text-lg font-bold text-stone-900 dark:text-white">Automatic paid Kitchen Pro</h2>
+        <h2 className="text-lg font-bold text-stone-900 dark:text-white">
+          Automatic paid Kitchen Pro
+        </h2>
         <span
           className={`rounded-full px-2 py-1 text-xs ${
             enabled ? "bg-emerald-950 text-emerald-300" : "bg-amber-950 text-amber-200"
@@ -89,7 +91,7 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
               value={evidenceUrl}
               placeholder="https://github.com/baba-dev/menuminute/issues/76"
               onChange={(e) => setEvidenceUrl(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 p-3 text-sm text-stone-900 dark:text-white"
+              className="mt-2 w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
             />
           </label>
           <label className="block text-sm font-semibold text-stone-900 dark:text-white">
@@ -102,7 +104,7 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Describe independent test results, restore verification and planned monitoring."
-              className="mt-2 w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 p-3 text-sm text-stone-900 dark:text-white"
+              className="mt-2 w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -114,7 +116,7 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 p-3 text-stone-900 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
               />
             </label>
             <label className="text-xs text-stone-700 dark:text-stone-300">
@@ -127,7 +129,7 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
                 autoComplete="one-time-code"
                 value={totp}
                 onChange={(e) => setTotp(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 p-3 text-stone-900 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-white"
               />
             </label>
           </div>
@@ -147,7 +149,7 @@ export function KitchenCommercialLaunch({ initialEnabled, runningSha, onApprove 
         </p>
       )}
       <a
-        className="mt-3 inline-flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300 underline"
+        className="mt-3 inline-flex items-center gap-2 text-xs text-orange-700 underline dark:text-orange-300"
         href="https://github.com/baba-dev/menuminute/issues/76"
         target="_blank"
         rel="noopener noreferrer"

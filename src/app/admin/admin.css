@@ -26,7 +26,9 @@
   flex-direction: column;
   border-right: 1px solid var(--color-border, #e7e5e4);
   background-color: var(--color-card, #ffffff);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 @media (min-width: 768px) {
@@ -115,7 +117,9 @@
   border: 1px solid var(--color-border, #e7e5e4);
   background-color: var(--color-card, #ffffff);
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 :root[data-theme="dark"] .admin-card,
@@ -134,7 +138,9 @@
   color: var(--color-stone-900, #1c1917);
   padding: 0.5rem 0.75rem;
   font-size: 0.8125rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .admin-input:focus {
@@ -308,7 +314,9 @@
   border-radius: 1.25rem;
   border: 1px solid var(--color-border, #e7e5e4);
   background-color: var(--color-card, #ffffff);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 :root[data-theme="dark"] .admin-modal-content,
@@ -319,6 +327,14 @@
 }
 
 /* Keep admin controls aligned with the app-wide resolved appearance. */
-.admin-shell { color-scheme: light; }
-:root[data-theme="dark"] .admin-shell { color-scheme: dark; }
-@media (max-width: 767px) { .admin-shell { min-width: 0; } }
+.admin-shell {
+  color-scheme: light;
+}
+:root[data-theme="dark"] .admin-shell {
+  color-scheme: dark;
+}
+@media (max-width: 767px) {
+  .admin-shell {
+    min-width: 0;
+  }
+}
