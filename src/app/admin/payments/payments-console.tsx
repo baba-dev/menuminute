@@ -229,7 +229,7 @@ export function PaymentsConsole({
                 <div className="mt-5 border-t border-stone-200 dark:border-stone-800 pt-3">
                   <button
                     onClick={() => setEditingPlan(p)}
-                    className="w-full rounded-lg bg-stone-100 dark:bg-stone-800 py-1.5 text-xs font-semibold text-stone-200 transition hover:bg-stone-700"
+                    className="w-full rounded-lg bg-stone-100 dark:bg-stone-800 py-1.5 text-xs font-semibold text-stone-700 dark:text-stone-200 transition hover:bg-stone-200 dark:hover:bg-stone-700"
                   >
                     Edit Plan Settings
                   </button>
@@ -374,8 +374,7 @@ export function PaymentsConsole({
                 />
               </div>
 
-              <div>
-                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">Plan prices are read-only here. Price changes require a reviewed provider plan release.</p>
+              <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">Plan prices are read-only here. Price changes require a reviewed provider plan release.</p>
 
               <div className="flex items-center gap-2">
                 <input
