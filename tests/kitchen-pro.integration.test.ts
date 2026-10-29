@@ -464,7 +464,7 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     });
     await transitionOutletOrder(f.actor, f.outlet.id, order.orderId, {
       targetStatus: "cancelled",
-      expectedVersion: 2,
+      expectedVersion: 3,
     });
     const state = await admin(async (_, pool) =>
       pool.query<{ status: string }>(
