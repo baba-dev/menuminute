@@ -28,6 +28,8 @@ describe("POS A/C strict financial contracts", () => {
     });
     expect(parsed.selection.lines[0]?.dishId).toBe("plate");
     expect(parsed.customerName).toBe("");
+    expect(parsed.markAsPaid).toBe(false);
+    expect(parsed.paymentMethod).toBe(null);
     expect("taxMinor" in parsed).toBe(false);
   });
   it("rejects bad keys, negative money, unknown financial fields and quantity overflow", () => {
@@ -41,6 +43,13 @@ describe("POS A/C strict financial contracts", () => {
     expect(() => posSubmissionSchema.parse({ ...valid, key: "not-uuid" })).toThrow();
     expect(() => posSubmissionSchema.parse({ ...valid, expectedSubtotalMinor: "-100" })).toThrow();
     expect(() => posSubmissionSchema.parse({ ...valid, paymentMethod: "cash" })).toThrow();
+    expect(() => posSubmissionSchema.parse({ ...valid, markAsPaid: true })).toThrow();
+    expect(
+      posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "cash" }).markAsPaid
+    ).toBe(true);
+    expect(() =>
+      posSubmissionSchema.parse({ ...valid, markAsPaid: true, paymentMethod: "gateway_verified" })
+    ).toThrow();
     expect(() =>
       posSubmissionSchema.parse({
         ...valid,
