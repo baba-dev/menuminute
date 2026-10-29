@@ -2,13 +2,20 @@ import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestActor, errorResponse } from "@/lib/request-context";
-import { posWorkspace, posSubmit, posAttachOrder } from "@/modules/pos/service";
+import { posWorkspace, posSubmit, posAttachOrder, posRecentPage } from "@/modules/pos/service";
 
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
 async function observed_GET(req: Request, { params }: Params) {
   try {
     const actor = await requestActor(req);
     const { organizationId, outletId } = await params;
+    const url = new URL(req.url);
+    if (url.searchParams.get("view") === "recent") {
+      const raw = url.searchParams.get("page") ?? "0";
+      if (!/^(0|[1-9][0-9]{0,3})$/.test(raw) || Number(raw) > 1000)
+        return NextResponse.json({ message: "Invalid register page" }, { status: 400, headers: { "cache-control": "private, no-store" } });
+      return NextResponse.json(await posRecentPage(actor, organizationId, outletId, Number(raw)), { headers: { "cache-control": "private, no-store" } });
+    }
     return NextResponse.json(await posWorkspace(actor, organizationId, outletId), {
       headers: { "cache-control": "private, no-store" },
     });
