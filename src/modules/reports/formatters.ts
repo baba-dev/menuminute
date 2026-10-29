@@ -86,7 +86,7 @@ export function escapeCsvCell(cell: unknown): string {
   if (cell == null) return "";
   const raw = String(cell);
   // Spreadsheet applications can execute untrusted formulas even in correctly quoted CSV.
-  const str = /^\\s*[=+@-]/u.test(raw) ? "'" + raw : raw;
+  const str = /^\s*[=+@-]/u.test(raw) ? "'" + raw : raw;
   if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
     return `"${str.replace(/"/g, '""')}"`;
   }

@@ -20,10 +20,10 @@ export const reportQuerySchema = z
     fulfillmentMode: z.enum(["all", "dine_in", "pickup"]).default("all"),
     tab: reportTabSchema.default("overview"),
   })
-.strict()
+  .strict()
   .superRefine((value, ctx) => {
     const isCalendarDate = (date: string | undefined): date is string => {
-      if (!date || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return false;
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
       const timestamp = Date.parse(date);
       return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === date;
     };

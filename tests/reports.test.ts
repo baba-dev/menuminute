@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { reportQuerySchema, type MenuEngineeringQuadrant } from "@/modules/reports/contracts";
+import { classifyMenuDish } from "@/modules/reports/menu-classification";
 import {
   calculateDelta,
   currencyDecimals,
@@ -87,7 +88,7 @@ describe("Period-over-Period Delta Calculation", () => {
   it("handles zero baseline safely", () => {
     const delta = calculateDelta(50, 0);
     expect(delta.direction).toBe("up");
-    expect(delta.percentageChange).toBe(100);
+    expect(delta.percentageChange).toBeNull();
   });
 });
 
@@ -135,5 +136,41 @@ describe("Menu Engineering Kasavana-Smith Matrix Classification", () => {
     expect(classify(90, 8000, avgQty, avgRev)).toBe("plowhorse");
     expect(classify(20, 20000, avgQty, avgRev)).toBe("puzzle");
     expect(classify(15, 4000, avgQty, avgRev)).toBe("dog");
+  });
+});
+
+describe("Reports security and truthfulness regressions", () => {
+  it("validates real calendar dates and rejects reverse or excessive custom intervals", () => {
+    expect(reportQuerySchema.safeParse({
+      range: "custom", from: "2026-10-29", to: "2026-10-30",
+    }).success).toBe(true);
+    expect(reportQuerySchema.safeParse({
+      range: "custom", from: "2026-02-30", to: "2026-03-01",
+    }).success).toBe(false);
+    expect(reportQuerySchema.safeParse({
+      range: "custom", from: "2026-10-30", to: "2026-10-29",
+    }).success).toBe(false);
+    expect(reportQuerySchema.safeParse({
+      range: "custom", from: "2025-01-01", to: "2026-10-29",
+    }).success).toBe(false);
+    expect(reportQuerySchema.safeParse({
+      range: "custom", from: "2026-10-29",
+    }).success).toBe(false);
+  });
+
+  it("neutralizes spreadsheet formulas rather than merely quoting CSV fields", () => {
+    for (const input of ["=HYPERLINK(1)", "+SUM(1,2)", "-1+2", "@SUM(A1)", "  =cmd"]) {
+      expect(escapeCsvCell(input).startsWith("'") ||
+        escapeCsvCell(input).startsWith('"\'')).toBe(true);
+    }
+    expect(escapeCsvCell("Plain dish")).toBe("Plain dish");
+    expect(formatMoneyAmount(null, "INR")).toBe("");
+  });
+
+  it("classifies actual production revenue/popularity helper", () => {
+    expect(classifyMenuDish(80, 25000, 50, 15000)).toBe("star");
+    expect(classifyMenuDish(90, 8000, 50, 15000)).toBe("plowhorse");
+    expect(classifyMenuDish(20, 20000, 50, 15000)).toBe("puzzle");
+    expect(classifyMenuDish(15, 4000, 50, 15000)).toBe("dog");
   });
 });

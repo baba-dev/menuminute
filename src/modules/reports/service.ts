@@ -3,6 +3,7 @@ import { NotFoundError } from "@/lib/errors";
 import { restaurants } from "@/db/schema";
 import { withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { calculateDelta, formatMoneyAmount, serializeCsv } from "./formatters";
+import { classifyMenuDish } from "./menu-classification";
 import type {
   DailyZReportData,
   ExecutiveSummary,
@@ -374,25 +375,19 @@ export async function getReportsWorkspace(
     const avgRev = allDishes.length > 0 ? totalMenuRev / allDishes.length : 0;
 
     const classifiedDishes: MenuEngineeringItem[] = allDishes.map((d) => {
-      const isHighVolume = d.quantitySold >= avgQty;
-      const isHighRevenue = d.totalRevenueMinor >= avgRev;
-      let quadrant: "star" | "plowhorse" | "puzzle" | "dog";
+      const quadrant = classifyMenuDish(d.quantitySold, d.totalRevenueMinor, avgQty, avgRev);
       let recommendation: string;
 
-      if (isHighVolume && isHighRevenue) {
-        quadrant = "star";
+      if (quadrant === "star") {
         recommendation =
           "Star performer: High volume & revenue. Protect quality and highlight prominently.";
-      } else if (isHighVolume && !isHighRevenue) {
-        quadrant = "plowhorse";
+      } else if (quadrant === "plowhorse") {
         recommendation =
           "Plowhorse: Popular but lower revenue. Validate cost and margin before adjusting prices.";
-      } else if (!isHighVolume && isHighRevenue) {
-        quadrant = "puzzle";
+      } else if (quadrant === "puzzle") {
         recommendation =
           "Puzzle: Higher revenue but lower volume. Test positioning; profit needs verified costs.";
       } else {
-        quadrant = "dog";
         recommendation =
           "Lower observed demand. Validate sample size and economics before menu changes.";
       }
