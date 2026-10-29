@@ -345,3 +345,88 @@ BEGIN
  END LOOP;
  RETURN NEW;
 END $$;
+
+
+CREATE OR REPLACE FUNCTION app_private.record_razorpay_status(
+  p_event text,p_subscription text,p_status text,p_provider_created timestamptz
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE sub app_private.razorpay_subscriptions%ROWTYPE;
+        existing_grant_id text;
+BEGIN
+  IF p_status NOT IN ('pending','active','paused','halted','cancelled','completed','expired')
+    OR length(p_event) NOT BETWEEN 8 AND 128 OR p_provider_created IS NULL
+  THEN RAISE EXCEPTION 'Invalid provider status' USING ERRCODE='22023'; END IF;
+  SELECT * INTO sub FROM app_private.razorpay_subscriptions
+    WHERE subscription_id=p_subscription FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Unknown provider subscription' USING ERRCODE='22023'; END IF;
+  IF EXISTS(SELECT 1 FROM app_private.razorpay_status_events WHERE event_id=p_event) THEN RETURN; END IF;
+  IF sub.last_provider_event_at IS NOT NULL AND p_provider_created<sub.last_provider_event_at THEN RETURN; END IF;
+  INSERT INTO app_private.razorpay_status_events(event_id,subscription_id,status)
+    VALUES(p_event,p_subscription,p_status);
+  UPDATE app_private.razorpay_subscriptions SET status=p_status,
+    last_provider_event_at=p_provider_created,updated_at=clock_timestamp()
+    WHERE subscription_id=p_subscription;
+  IF p_status IN ('paused','halted','expired') THEN
+    UPDATE entitlement_grants SET revoked_at=clock_timestamp()
+    WHERE id IN (
+      SELECT c.grant_id FROM app_private.razorpay_charges c WHERE c.subscription_id=p_subscription
+      UNION
+      SELECT r.grant_id FROM app_private.razorpay_resume_grants r WHERE r.subscription_id=p_subscription
+    ) AND revoked_at IS NULL AND ends_at>clock_timestamp();
+  ELSIF p_status='active' AND sub.current_end>clock_timestamp()
+    AND EXISTS(
+      SELECT 1 FROM app_private.razorpay_charges charge
+      JOIN entitlement_grants paid ON paid.id=charge.grant_id
+      WHERE charge.subscription_id=p_subscription AND paid.ends_at=sub.current_end
+        AND NOT EXISTS(
+          SELECT 1 FROM app_private.razorpay_refund_events refunded
+          WHERE refunded.payment_id=charge.payment_id
+        )
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM entitlement_grants g WHERE g.revoked_at IS NULL
+      AND g.organization_id=sub.organization_id
+      AND g.capability=(CASE WHEN sub.product_key='ordering' THEN 'ordering.new' ELSE 'kitchen.new' END)
+      AND g.ends_at>clock_timestamp()
+    )
+  THEN
+    -- A signed resumption restores only the REMAINDER of a previously paid period.
+    -- It never creates unpaid future access and does not depend on payment notes.
+    INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
+    VALUES(gen_random_uuid()::text,sub.organization_id,
+      CASE WHEN sub.product_key='ordering' THEN 'ordering.new' ELSE 'kitchen.new' END,
+      'INR',clock_timestamp(),sub.current_end,'razorpay-webhook',
+      'Provider-resumed paid subscription '||p_subscription,gen_random_uuid()::text)
+    RETURNING id INTO existing_grant_id;
+    INSERT INTO app_private.razorpay_resume_grants(event_id,subscription_id,grant_id)
+      VALUES(p_event,p_subscription,existing_grant_id);
+    IF sub.product_key='kitchen_pro' AND app_private.kitchen_commerce_enabled() THEN
+      IF NOT EXISTS (
+        SELECT 1 FROM entitlement_grants e
+        WHERE e.organization_id=sub.organization_id AND e.capability='ordering.new'
+          AND e.revoked_at IS NULL
+          AND e.starts_at<=clock_timestamp() AND e.ends_at>=sub.current_end
+      ) THEN
+        INSERT INTO entitlement_grants(id,organization_id,capability,billing_currency,
+          starts_at,ends_at,operator,reason,request_key)
+        VALUES(gen_random_uuid()::text,sub.organization_id,'ordering.new','INR',
+          clock_timestamp(),sub.current_end,'razorpay-webhook',
+          'Kitchen Pro bundled ordering restored for verified paid period',
+          gen_random_uuid()::text)
+        RETURNING id INTO existing_grant_id;
+        INSERT INTO app_private.kitchen_paid_ordering_grants(kitchen_grant_id,ordering_grant_id)
+        VALUES((SELECT grant_id FROM app_private.razorpay_resume_grants
+          WHERE event_id=p_event),existing_grant_id);
+      END IF;
+    END IF;
+  END IF;
+  -- A recovered, fully paid Kitchen subscription can resume operation without
+  -- staff asking the platform owner; readiness is still checked on each outlet.
+  IF sub.product_key='kitchen_pro' AND p_status='active'
+     AND app_private.kitchen_commerce_enabled() THEN
+    PERFORM app_private.kitchen_auto_paid_activate(r.id)
+      FROM restaurants r WHERE r.organization_id=sub.organization_id AND r.is_active;
+  END IF;
+  -- 'cancelled' and 'completed' retain already-paid access until the verified end.
+END $;
