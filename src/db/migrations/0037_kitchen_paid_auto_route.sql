@@ -429,4 +429,4 @@ BEGIN
       FROM restaurants r WHERE r.organization_id=sub.organization_id AND r.is_active;
   END IF;
   -- 'cancelled' and 'completed' retain already-paid access until the verified end.
-END $;
+END $$;
