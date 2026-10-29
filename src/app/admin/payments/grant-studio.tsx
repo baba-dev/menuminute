@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   grantEndForPreset,
+  grantSubmissionEnd,
   PERMANENT_ACCESS_END,
   grantOverlaps,
   grantPresetDetails,
@@ -181,14 +182,17 @@ export function GrantStudio({
   function changePreset(next: GrantPreset) {
     setPreset(next);
     const end = grantEndForPreset(next, new Date(startAt));
-    if (end) setEndAt(localDateTimeInput(end));
+    // A permanent term has no user-editable local end date. Its UTC
+    // sentinel is assigned on submission, not to an HTML date control.
+    if (next !== "permanent" && end) setEndAt(localDateTimeInput(end));
     setPaymentVerified(false);
   }
   function changeStart(next: string) {
     setStartAt(next);
     const start = new Date(next);
     const end = grantEndForPreset(preset, start);
-    if (end && Number.isFinite(end.getTime())) setEndAt(localDateTimeInput(end));
+    if (preset !== "permanent" && end && Number.isFinite(end.getTime()))
+      setEndAt(localDateTimeInput(end));
   }
   async function searchOrganizations(event: FormEvent) {
     event.preventDefault();
@@ -289,7 +293,7 @@ export function GrantStudio({
         return;
       }
       const start = new Date(startAt);
-      const end = new Date(endAt);
+      const end = grantSubmissionEnd(capability, preset, endAt);
       if (
         !Number.isFinite(start.getTime()) ||
         !Number.isFinite(end.getTime()) ||
@@ -304,10 +308,7 @@ export function GrantStudio({
         return;
       }
       issueStart = start.toISOString();
-      issueEnd =
-        capability === "kitchen.new" && preset === "permanent"
-          ? PERMANENT_ACCESS_END
-          : end.toISOString();
+      issueEnd = end.toISOString();
       const collides = selectedGrants.some(
         (grant) =>
           grant.capability === capability &&
