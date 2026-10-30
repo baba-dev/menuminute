@@ -103,7 +103,11 @@ export async function runReadOnlyTurn(
       { role: "system", content: systemPrompt },
       ...previous.flatMap((row): InferenceMessage[] => [
         { role: "user", content: minimizeProviderPrompt(row.prompt).slice(0, 1200) },
-        { role: "assistant", content: minimizeProviderPrompt(row.answer ?? "").slice(0, 1500), toolCalls: [] },
+        {
+          role: "assistant",
+          content: minimizeProviderPrompt(row.answer ?? "").slice(0, 1500),
+          toolCalls: [],
+        },
       ]),
       { role: "user", content: minimizeProviderPrompt(turn.prompt) },
     ];
