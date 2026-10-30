@@ -515,7 +515,7 @@ export function FinancialHub({
                   Export loaded rows CSV
                 </button>
               </div>
-              <div className="finance-scroll">
+              <div className="finance-scroll finance-register-table">
                 <table className="finance-table">
                   <thead>
                     <tr>
