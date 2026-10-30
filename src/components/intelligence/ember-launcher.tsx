@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   ArrowRight,
   BookOpen,
@@ -424,7 +425,7 @@ export function EmberLauncher({
         <Sparkles size={20} aria-hidden="true" />
         <span>Ask Ember</span>
       </button>
-      {open && (
+      {open && createPortal(
         <div className="mm-ember-layer">
           <button
             type="button"
@@ -829,7 +830,8 @@ export function EmberLauncher({
               </p>
             </div>
           </section>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

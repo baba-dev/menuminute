@@ -150,7 +150,7 @@ export function EmberRichAnswer({ text }: { text: string | null }) {
   if (!text?.trim() || isInternalAssistantPayload(text))
     return (
       <p role="status">
-        I couldn't prepare a reliable answer to that question. No changes were made. Please ask
+        I could not prepare a reliable answer to that question. No changes were made. Please ask
         again.
       </p>
     );
