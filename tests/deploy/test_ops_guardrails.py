@@ -21,6 +21,7 @@ def load(name, filename):
 restore = load("restore_drill", "isolated-restore-drill.py")
 watchdog = load("backup_watchdog", "backup-watchdog.py")
 erp = load("erp_sampling", "erp-coexistence.py")
+nightly = load("nightly_backup", "nightly-backup.py")
 NOW = dt.datetime(2026, 10, 30, 12, 0, tzinfo=dt.timezone.utc)
 
 
@@ -112,6 +113,59 @@ class CoexistenceTests(unittest.TestCase):
         result = erp.summary([rec, rec], "quiet-baseline")
         self.assertEqual(result["erp"]["failed_http_probes"], 2)
         self.assertEqual(result["host"]["min_root_free_gib"], 20)
+
+
+class NightlyBackupTests(unittest.TestCase):
+    def test_nightly_backup_uses_fixed_local_peer_authenticated_postgres_identity(self):
+        command = nightly.postgres_env()
+        self.assertIn("PGHOST=/var/run/postgresql", command)
+        self.assertIn("PGPORT=5432", command)
+        self.assertIn("PGUSER=postgres", command)
+        self.assertIn("PGDATABASE=menuminute", command)
+        self.assertEqual(command[:5], ["runuser", "-u", "postgres", "--", "env"])
+
+    def test_nightly_snapshot_requires_new_id_and_both_source_roots(self):
+        initial = [{"id": "a" * 64}]
+        current = initial + [{
+            "id": "b" * 64,
+            "paths": ["/var/backups/menuminute/.nightly.example",
+                      "/var/lib/menuminute/media"],
+            "tags": ["menuminute-nightly", "menuminute-release-" + "c" * 40],
+        }]
+        self.assertEqual(nightly.exact_new_snapshot(
+            initial, current, Path("/var/backups/menuminute/.nightly.example")), "b" * 64)
+        with self.assertRaises(nightly.BackupGateError):
+            nightly.exact_new_snapshot(initial, [
+                {"id": "b" * 64,
+                 "paths": ["/var/lib/menuminute/media"],
+                 "tags": ["menuminute-nightly"]}], Path("/var/backups/menuminute/.nightly.example"))
+        with self.assertRaises(nightly.BackupGateError):
+            nightly.exact_new_snapshot(initial, initial, Path("/var/backups/menuminute/.nightly.example"))
+
+    def test_nightly_restic_does_not_inherit_database_credentials(self):
+        with patch.dict(nightly.os.environ, {
+            "MIGRATION_DATABASE_URL": "secret",
+            "DATABASE_URL": "secret",
+            "PGPASSWORD": "secret",
+            "RESTIC_CACHE_DIR": "/tmp/restic-cache-fixture",
+        }):
+            env = nightly.restic_env()
+        self.assertNotIn("MIGRATION_DATABASE_URL", env)
+        self.assertNotIn("DATABASE_URL", env)
+        self.assertNotIn("PGPASSWORD", env)
+        self.assertEqual(env["RESTIC_CACHE_DIR"], "/tmp/restic-cache-fixture")
+
+    def test_nightly_refuses_insecure_or_linked_wrapper_and_private_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate = Path(folder) / "wrapper"
+            candidate.write_text("#!/bin/sh\n")
+            with patch.object(nightly, "WRAPPER", candidate):
+                with self.assertRaises(nightly.BackupGateError):
+                    nightly.private_file(candidate, executable=True)
+            link = Path(folder) / "link"
+            link.symlink_to(candidate)
+            with self.assertRaises(nightly.BackupGateError):
+                nightly.private_file(link, executable=True)
 
 
 if __name__ == "__main__":
