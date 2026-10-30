@@ -69,9 +69,16 @@ describe("Ember scoped persistence and read-only execution", () => {
     await expect(
       beginTurn(scope, conversation.id, { key: uuid(), prompt: "Another request" })
     ).rejects.toThrow();
-    const attempt = await reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model", testSpend);
+    const attempt = await reserveAttempt(
+      scope,
+      started.turn,
+      1,
+      "nvidia",
+      "reviewed/model",
+      testSpend
+    );
     await expect(
-      reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model")
+      reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model", testSpend)
     ).rejects.toThrow();
     await settleAttempt(scope, attempt, null);
     await finishTurn(scope, started.turn.id, "There is no settled revenue in this view.", []);
@@ -243,7 +250,11 @@ describe("Ember scoped persistence and read-only execution", () => {
     const other = await fixture();
     await expect(
       settleAttempt(
-        { actor: other.actor, organizationId: other.outlet.organizationId, outletId: other.outlet.id },
+        {
+          actor: other.actor,
+          organizationId: other.outlet.organizationId,
+          outletId: other.outlet.id,
+        },
         attempt.value,
         null
       )
@@ -271,8 +282,20 @@ describe("Ember scoped persistence and read-only execution", () => {
         [[attempt.value, next]]
       );
       expect(attempts.rows).toMatchObject([
-        { status: "completed", reserved_micro_usd: "15", billed_micro_usd: "2", input_tokens: 1, output_tokens: 1 },
-        { status: "uncertain", reserved_micro_usd: "15", billed_micro_usd: null, input_tokens: null, output_tokens: null },
+        {
+          status: "completed",
+          reserved_micro_usd: "15",
+          billed_micro_usd: "2",
+          input_tokens: 1,
+          output_tokens: 1,
+        },
+        {
+          status: "uncertain",
+          reserved_micro_usd: "15",
+          billed_micro_usd: null,
+          input_tokens: null,
+          output_tokens: null,
+        },
       ]);
     });
   });
