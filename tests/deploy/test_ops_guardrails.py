@@ -23,6 +23,7 @@ restore = load("restore_drill", "isolated-restore-drill.py")
 watchdog = load("backup_watchdog", "backup-watchdog.py")
 erp = load("erp_sampling", "erp-coexistence.py")
 nightly = load("nightly_backup", "nightly-backup.py")
+pos_release = load("pos_release_gate", "pos-finance-release-check.py")
 NOW = dt.datetime(2026, 10, 30, 12, 0, tzinfo=dt.timezone.utc)
 
 
@@ -195,6 +196,61 @@ class NightlyBackupTests(unittest.TestCase):
             link.symlink_to(candidate)
             with self.assertRaises(nightly.BackupGateError):
                 nightly.private_file(link, executable=True)
+
+
+
+class PosReleaseGateTests(unittest.TestCase):
+    SHA = "b" * 40
+
+    @classmethod
+    def observed(cls):
+        return {
+            "currentReleaseSha": cls.SHA,
+            "erpHttpStatus": 200,
+            "posHttpStatus": 200,
+            "webActive": True,
+            "workerActive": True,
+            "rootFreeBytes": 30 * 1024 ** 3,
+            "gates": {
+                "gateRowCount": 0,
+                "paymentsEnabled": 0,
+                "documentsEnabled": 0,
+                "fiscalApproved": 0,
+                "providerEnabled": 0,
+            },
+            "guard": {"enabledInvoiceGuard": True, "registeredInvoiceRows": 0},
+        }
+
+    def test_exact_deployed_sha_and_closed_finance_gates(self):
+        self.assertEqual(pos_release.check_results(
+            self.observed(), self.SHA, True), [])
+        wrong = dict(self.observed(), currentReleaseSha="a" * 40)
+        self.assertIn("deployed_release_sha_mismatch",
+                      pos_release.check_results(wrong, self.SHA, True))
+
+    def test_erp_down_low_disk_and_absent_invoice_trigger_all_block(self):
+        broken = dict(self.observed(),
+                      erpHttpStatus=503,
+                      rootFreeBytes=2 * 1024 ** 3,
+                      guard={"enabledInvoiceGuard": False, "registeredInvoiceRows": 0})
+        failures = pos_release.check_results(broken, self.SHA, True)
+        self.assertIn("erp_unhealthy", failures)
+        self.assertIn("erp_shared_root_free_space_low", failures)
+        self.assertIn("jurisdiction_invoice_insert_guard_missing", failures)
+
+    def test_any_live_gate_is_visible_and_cannot_pass_closed_gate(self):
+        active = self.observed()
+        active["gates"]["fiscalApproved"] = 1
+        self.assertIn("live_finance_gates_are_enabled",
+                      pos_release.check_results(active, self.SHA, True))
+        self.assertNotIn("live_finance_gates_are_enabled",
+                         pos_release.check_results(active, self.SHA, False))
+
+    def test_missing_db_inventory_fails_without_claiming_success(self):
+        absent = dict(self.observed(), gates=None, guard=None)
+        failures = pos_release.check_results(absent, self.SHA, False)
+        self.assertIn("gate_inventory_unavailable", failures)
+        self.assertIn("jurisdiction_invoice_insert_guard_missing", failures)
 
 
 if __name__ == "__main__":
