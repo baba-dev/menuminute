@@ -85,6 +85,16 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return body as T;
 }
+type AvailabilityIntent = { dishQuery: string; soldOut: boolean };
+function availabilityIntent(text: string): AvailabilityIntent | null {
+  const command = text.trim();
+  // Only explicit human commands can start the confirmation composer.
+  const match = /^(?:please\s+)?(?:mark|set|make)\s+(.{2,100}?)\s+(?:as\s+)?(sold\s+out|unavailable|available|in\s+stock)[.!?]?$/i.exec(command);
+  if (!match) return null;
+  const dishQuery = match[1]!.trim();
+  if (!dishQuery || /[<>]/.test(dishQuery)) return null;
+  return { dishQuery, soldOut: /^(sold|unavailable)/i.test(match[2]!) };
+}
 function evidenceLabel(source: unknown) {
   switch (source) {
     case "orders.servicePulse":
@@ -301,13 +311,26 @@ export function EmberLauncher({
       setStatus("");
     }
   };
-  const fetchOptions = async () => {
+  const fetchOptions = async (intent?: AvailabilityIntent) => {
     setActionOpen(true);
     setError("");
     try {
       const rows = await api<Choice[]>("/api/assistant/availability?" + qs);
       setOptions(rows);
-      if (!menuId && rows[0]) setMenuId(rows[0].id);
+      if (intent) {
+        setDesiredSoldOut(intent.soldOut);
+        const matches = rows.flatMap((menu) => menu.items
+          .filter((item) => item.name.toLocaleLowerCase().includes(intent.dishQuery.toLocaleLowerCase()))
+          .map((item) => ({ menu, item })));
+        // Only prefill an unambiguous live item; multiple menus require user choice.
+        if (matches.length === 1) {
+          setMenuId(matches[0]!.menu.id);
+          setDishId(matches[0]!.item.id);
+        } else {
+          setMenuId(rows[0]?.id ?? "");
+          setDishId("");
+        }
+      } else if (!menuId && rows[0]) setMenuId(rows[0].id);
     } catch (e) {
       setError(message(e));
     }
@@ -527,8 +550,9 @@ export function EmberLauncher({
                   <div className="mm-ember-suggestions">
                     {[
                       "How is my order queue looking?",
-                      "Show recent completed orders",
-                      "Summarize my menus",
+                      "How much did my orders total this week?",
+                      "Do I sell Chole Bhature?",
+                      "Show my recent menu imports",
                     ].map((question) => (
                       <button key={question} type="button" onClick={() => setPrompt(question)}>
                         {question}
@@ -560,6 +584,18 @@ export function EmberLauncher({
                       </p>
                     ) : (
                       <EmberRichAnswer text={t.answer} />
+                    )}
+                    {caps?.actionsEnabled && availabilityIntent(t.prompt) && (
+                      <button
+                        type="button"
+                        className="mm-ember-navigate"
+                        disabled={busy}
+                        onClick={() => void fetchOptions(availabilityIntent(t.prompt) ?? undefined)}
+                      >
+                        <ShieldCheck size={15} aria-hidden="true" />
+                        Prepare availability change
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </button>
                     )}
                     {Array.isArray(t.evidence) && t.evidence.length > 0 && (
                       <details className="mm-ember-evidence">
