@@ -146,6 +146,14 @@ test("mobile bounds, keyboard trap, Escape, reduced-motion and restored focus", 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
+  await page.setViewportSize({ width: 390, height: 800 });
+  const topbar = await page.locator(".mm-dashboard-topbar").boundingBox();
+  const entry = await launcher.boundingBox();
+  expect(topbar).not.toBeNull();
+  expect(entry).not.toBeNull();
+  expect(await launcher.evaluate((element) => getComputedStyle(element).position)).toBe("static");
+  expect(entry!.y).toBeGreaterThanOrEqual(topbar!.y);
+  expect(entry!.y + entry!.height).toBeLessThanOrEqual(topbar!.y + topbar!.height);
 });
 test("explicit action acknowledgement, authoritative persistence and reload recovery", async ({
   page,
