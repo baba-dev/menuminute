@@ -342,7 +342,7 @@
 }
 @media (max-width: 520px) {
 
-  .finance-scroll:has(.finance-table) {
+  .finance-register-table {
     display: none;
   }
   .finance-mobile-register {
