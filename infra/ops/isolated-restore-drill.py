@@ -94,7 +94,7 @@ def identifier(value):
 
 def row_digest(env):
     inventory = sql(env, """
-        SELECT n.nspname || E'\\t' || c.relname FROM pg_class c
+        SELECT n.nspname || E'\t' || c.relname FROM pg_class c
         JOIN pg_namespace n ON n.oid=c.relnamespace
         WHERE c.relkind IN ('r','p') AND NOT c.relispartition
         AND n.nspname NOT IN ('pg_catalog','information_schema')
