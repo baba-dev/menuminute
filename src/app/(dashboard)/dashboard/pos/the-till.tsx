@@ -743,7 +743,12 @@ export function TheTill({
                 ))}
               </div>
               {dish && (
-                <div className="till-inline-config" id="pos-dish-config" ref={inlineConfigRef} tabIndex={-1}>
+                <div
+                  className="till-inline-config"
+                  id="pos-dish-config"
+                  ref={inlineConfigRef}
+                  tabIndex={-1}
+                >
                   <section
                     className="till-inline-config-panel"
                     role="region"
