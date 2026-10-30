@@ -1,0 +1,35 @@
+[Unit]
+Description=MenuMinute protected nightly PostgreSQL 17 and private-media backup
+Documentation=https://github.com/baba-dev/menuminute/blob/main/docs/operations/restore-and-erp-evidence.md
+Wants=network-online.target
+After=network-online.target
+ConditionPathIsExecutable=/usr/local/sbin/menuminute-nightly-backup
+ConditionPathIsExecutable=/usr/local/sbin/menuminute-restic
+ConditionPathIsDirectory=/var/lib/menuminute/media
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/local/sbin/menuminute-nightly-backup
+TimeoutStartSec=90min
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUWeight=20
+IOWeight=30
+MemoryHigh=768M
+MemoryMax=1536M
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/menuminute
+Environment=RESTIC_CACHE_DIR=/var/backups/menuminute/restic-cache
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+# Do not use NoNewPrivileges or PrivateUsers: an isolated root backup command
+# must invoke the local postgres OS user for forced-RLS-safe peer-auth dumps.
+# No cron-like success illusion: only a verified NEW off-host Restic ID exits 0.
