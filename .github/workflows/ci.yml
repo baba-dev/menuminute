@@ -79,6 +79,9 @@ jobs:
       - name: Validate unattended migration deployment policy
         run: python3 tests/deploy/migration-policy.py
 
+      - name: Verify operator readiness and recovery guardrails (offline)
+        run: python3 -m unittest discover -s tests/deploy -p 'test_*.py' -v
+
       - name: Lint source code (ESLint)
         run: pnpm lint
 
