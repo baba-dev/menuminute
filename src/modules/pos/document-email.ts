@@ -38,7 +38,7 @@ const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim().slice(0
 function money(minorUnits: string, currency: string): string {
   try {
     const options = { style: "currency" as const, currency, currencyDisplay: "code" as const };
-    const digits = new Intl.NumberFormat("en-US", options).resolvedOptions().maximumFractionDigits;
+    const digits = new Intl.NumberFormat("en-US", options).resolvedOptions().maximumFractionDigits ?? 2;
     return new Intl.NumberFormat("en-US", {
       ...options,
       minimumFractionDigits: digits,
