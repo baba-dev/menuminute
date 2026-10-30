@@ -176,7 +176,6 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
 });
 
-
 test("POS merchant Ledger and Closing Desk stay usable at 390px", async ({ page }) => {
   test.setTimeout(120000);
   const f = await setup();
@@ -205,6 +204,8 @@ test("POS merchant Ledger and Closing Desk stay usable at 390px", async ({ page 
   await expect(page.getByText(/All currently reachable sale pages scanned/)).toBeVisible();
   await expect(page.getByText(/1 sales inspected/)).toBeVisible();
   await page.goto("/dashboard/reports?tab=till");
-  await expect(page.getByRole("heading", { name: "Cashier evidence & unassigned cash" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cashier evidence & unassigned cash" })
+  ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

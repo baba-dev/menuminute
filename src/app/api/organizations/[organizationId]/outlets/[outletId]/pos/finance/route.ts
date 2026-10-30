@@ -14,10 +14,16 @@ async function observed_GET(req: Request, { params }: Params) {
     const cursorAt = url.searchParams.get("cursorAt");
     const cursorId = url.searchParams.get("cursorId");
     const cursorView = view === "reconcile_page" || view === "ledger_page";
-    const data = await financeRead(actor, organizationId, outletId,
+    const data = await financeRead(
+      actor,
+      organizationId,
+      outletId,
       cursorView
         ? { view, ...(cursorAt ? { cursorAt } : {}), ...(cursorId ? { cursorId } : {}) }
-        : id ? { view, id } : { view });
+        : id
+          ? { view, id }
+          : { view }
+    );
     return NextResponse.json(data, {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
     });

@@ -391,8 +391,8 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 <div className="reports-panel-title">
                   <h2>Cashier evidence & unassigned cash</h2>
                   <p>
-                    A staff entry acknowledges collection; it is not gateway confirmation.
-                    Money received and money refunded are grouped by their own transaction dates.
+                    A staff entry acknowledges collection; it is not gateway confirmation. Money
+                    received and money refunded are grouped by their own transaction dates.
                   </p>
                 </div>
               </div>
@@ -417,9 +417,9 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 </div>
               </dl>
               <p role="note" className="mt-4 text-sm">
-                Staff-recorded cash has no register/shift assignment. It is excluded from
-                the expected cash of individual shifts until a separate, audited attribution
-                workflow is implemented. These figures are not bank reconciliation.
+                Staff-recorded cash has no register/shift assignment. It is excluded from the
+                expected cash of individual shifts until a separate, audited attribution workflow is
+                implemented. These figures are not bank reconciliation.
               </p>
             </section>
 

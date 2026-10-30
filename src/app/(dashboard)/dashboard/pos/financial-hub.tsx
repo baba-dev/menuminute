@@ -203,13 +203,14 @@ export function FinancialHub({
     if (reconciliationBusy || (!reset && !reconciliation?.hasMore)) return;
     setReconciliationBusy(true);
     try {
-      const cursor = reset || !reconciliation?.nextCursorAt || !reconciliation.nextCursorId
-        ? undefined
-        : { at: reconciliation.nextCursorAt, id: reconciliation.nextCursorId };
+      const cursor =
+        reset || !reconciliation?.nextCursorAt || !reconciliation.nextCursorId
+          ? undefined
+          : { at: reconciliation.nextCursorAt, id: reconciliation.nextCursorId };
       const page = await get<ReconciliationPage>("reconcile_page", undefined, cursor);
       setReconciliation((previous) => ({
-        scannedCount: (reset ? 0 : previous?.scannedCount ?? 0) + page.scannedCount,
-        anomalies: [...(reset ? [] : previous?.anomalies ?? []), ...page.anomalies],
+        scannedCount: (reset ? 0 : (previous?.scannedCount ?? 0)) + page.scannedCount,
+        anomalies: [...(reset ? [] : (previous?.anomalies ?? [])), ...page.anomalies],
         hasMore: page.hasMore,
         nextCursorAt: page.nextCursorAt,
         nextCursorId: page.nextCursorId,
@@ -255,19 +256,19 @@ export function FinancialHub({
           ? "Full staff payment correction recorded. Any external refund was attested by staff; no gateway transfer or fiscal credit was initiated."
           : action === "tender"
             ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
-          : action === "refund"
-            ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
-            : action === "partial_refund"
-              ? result.state === "pending" || result.state === "pending_confirmation"
-                ? "Provider refund is pending confirmation. The credit remains reserved and is not shown as complete."
-                : "Line-level credit recorded with an immutable linked credit document."
-              : action === "deliver_document"
-                ? result.state === "sent"
-                  ? "Private document delivery confirmed by the configured mail transport."
-                  : "Document delivery is not confirmed. Reconcile its recorded state before retrying."
-                : action === "issue"
-                  ? "Immutable document issued. Print or save from The Ledger."
-                  : "Saved: " + JSON.stringify(result)
+            : action === "refund"
+              ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
+              : action === "partial_refund"
+                ? result.state === "pending" || result.state === "pending_confirmation"
+                  ? "Provider refund is pending confirmation. The credit remains reserved and is not shown as complete."
+                  : "Line-level credit recorded with an immutable linked credit document."
+                : action === "deliver_document"
+                  ? result.state === "sent"
+                    ? "Private document delivery confirmed by the configured mail transport."
+                    : "Document delivery is not confirmed. Reconcile its recorded state before retrying."
+                  : action === "issue"
+                    ? "Immutable document issued. Print or save from The Ledger."
+                    : "Saved: " + JSON.stringify(result)
       );
       return result;
     } catch (error) {
@@ -322,9 +323,7 @@ export function FinancialHub({
         l.documentNumber ?? "",
       ]),
     ];
-    const csv = lines
-      .map((row) => row.map(escapeCsvCell).join(","))
-      .join("\r\n");
+    const csv = lines.map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -556,10 +555,22 @@ export function FinancialHub({
                       <small>{new Date(entry.createdAt).toLocaleString()}</small>
                     </div>
                     <dl>
-                      <div><dt>Pre-tax subtotal</dt><dd>{money(entry.subtotalMinor, entry.currency)}</dd></div>
-                      <div><dt>Frozen bill</dt><dd>{money(entry.totalMinor, entry.currency)}</dd></div>
-                      <div><dt>Recorded</dt><dd>{money(entry.paidMinor, entry.currency)}</dd></div>
-                      <div><dt>Refunded</dt><dd>{money(entry.refundedMinor, entry.currency)}</dd></div>
+                      <div>
+                        <dt>Pre-tax subtotal</dt>
+                        <dd>{money(entry.subtotalMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Frozen bill</dt>
+                        <dd>{money(entry.totalMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded</dt>
+                        <dd>{money(entry.paidMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Refunded</dt>
+                        <dd>{money(entry.refundedMinor, entry.currency)}</dd>
+                      </div>
                     </dl>
                     <button type="button" onClick={() => void selectSale(entry.saleId)}>
                       View financial details <ArrowRight size={14} />
@@ -569,10 +580,16 @@ export function FinancialHub({
               </div>
               {ledgerMore && (
                 <div className="finance-register-more">
-                  <button type="button" disabled={ledgerBusy} onClick={() => void loadOlderLedger()}>
+                  <button
+                    type="button"
+                    disabled={ledgerBusy}
+                    onClick={() => void loadOlderLedger()}
+                  >
                     {ledgerBusy ? "Loading older sales…" : "Load older sales"}
                   </button>
-                  <small>Export includes loaded rows only; this is not a full-history export.</small>
+                  <small>
+                    Export includes loaded rows only; this is not a full-history export.
+                  </small>
                 </div>
               )}
               {!ledger.length && (
@@ -1298,7 +1315,8 @@ export function FinancialHub({
               <p>
                 Read-only cursor-based scan of all POS sales, including staff-attested payments,
                 finance tenders, refunds and provider uncertainty. Each page checks up to 100 sales.
-                Continue until the scan reports complete; an unfinished scan is never a clean result.
+                Continue until the scan reports complete; an unfinished scan is never a clean
+                result.
               </p>
               <button
                 type="button"
@@ -1315,8 +1333,8 @@ export function FinancialHub({
                       : "All currently reachable sale pages scanned"}
                   </strong>
                   <p>
-                    {reconciliation.scannedCount} sales inspected ·
-                    {reconciliation.anomalies.length} potential anomalies.
+                    {reconciliation.scannedCount} sales inspected ·{reconciliation.anomalies.length}{" "}
+                    potential anomalies.
                     {reconciliation.hasMore
                       ? " Older sales remain unchecked."
                       : " No more pages returned."}
@@ -1340,8 +1358,8 @@ export function FinancialHub({
                     </button>
                   )}
                   <small>
-                    Scans are live read-only ledger checks, not a transaction snapshot,
-                    bank reconciliation or fiscal audit certification.
+                    Scans are live read-only ledger checks, not a transaction snapshot, bank
+                    reconciliation or fiscal audit certification.
                   </small>
                 </div>
               )}

@@ -602,7 +602,6 @@ describe("POS #142 B/D shared settlement and manager corrections", () => {
   });
 });
 
-
 describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
   it("scans every sale with bounded non-overlapping cursor pages", async () => {
     const f = await setup();
@@ -610,25 +609,34 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
       await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
         key: crypto.randomUUID(),
         selection: {
-          menuId: f.menuId, expectedRevision: 2,
+          menuId: f.menuId,
+          expectedRevision: 2,
           lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
         },
-        fulfillmentMode: "dine_in", tableId: null, expectedSubtotalMinor: "28000",
+        fulfillmentMode: "dine_in",
+        tableId: null,
+        expectedSubtotalMinor: "28000",
       });
     }
     async function page(mode: "ledger" | "reconcile", at: string | null, id: string | null) {
       return withActor(f.actor, async (tx) => {
         await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
-        const query = mode === "ledger"
-          ? sql`select app_private.pos_ledger_page(${f.outlet.id},
+        const query =
+          mode === "ledger"
+            ? sql`select app_private.pos_ledger_page(${f.outlet.id},
             ${at}::timestamptz,${id},2) as data`
-          : sql`select app_private.pos_reconciliation_page(${f.outlet.id},
+            : sql`select app_private.pos_reconciliation_page(${f.outlet.id},
             ${at}::timestamptz,${id},2) as data`;
-        const r = await tx.execute<{data: {
-          items?: Array<{saleId:string}>; scannedCount?:number;
-          hasMore:boolean;nextCursorAt:string|null;nextCursorId:string|null;
-          anomalies?: Array<{reason:string}>;
-        }}>(query);
+        const r = await tx.execute<{
+          data: {
+            items?: Array<{ saleId: string }>;
+            scannedCount?: number;
+            hasMore: boolean;
+            nextCursorAt: string | null;
+            nextCursorId: string | null;
+            anomalies?: Array<{ reason: string }>;
+          };
+        }>(query);
         return r.rows[0]!.data;
       });
     }
@@ -639,7 +647,7 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
       const seen = new Set<string>();
       for (let iteration = 0; iteration < 5; iteration++) {
         const part = await page(mode, at, id);
-        total += mode === "ledger" ? part.items?.length ?? 0 : part.scannedCount ?? 0;
+        total += mode === "ledger" ? (part.items?.length ?? 0) : (part.scannedCount ?? 0);
         if (mode === "ledger") {
           for (const item of part.items ?? []) {
             expect(seen.has(item.saleId)).toBe(false);
@@ -658,31 +666,42 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
 
   it("reconciles Reports with staff-attested sales and corrections without a shift", async () => {
     const f = await setup("non_registered", 1, true);
-    const query = reportQuerySchema.parse({tab:"till"});
+    const query = reportQuerySchema.parse({ tab: "till" });
     const before = await getReportsWorkspace(f.actor, f.outlet.id, query);
     expect(before.tillReconciliation).toMatchObject({
-      available:true,totalCollectedMinor:28000,totalRefundedMinor:0,
-      staffCollectedMinor:28000,unassignedNetCashMinor:28000,
-      bankReconciliationVerified:false,
+      available: true,
+      totalCollectedMinor: 28000,
+      totalRefundedMinor: 0,
+      staffCollectedMinor: 28000,
+      unassignedNetCashMinor: 28000,
+      bankReconciliationVerified: false,
     });
     await f.cmd("staff_refund", {
-      saleId:f.sale.saleId,reason:"Cash refunded to customer",externalRefundAttested:false
+      saleId: f.sale.saleId,
+      reason: "Cash refunded to customer",
+      externalRefundAttested: false,
     });
     const after = await getReportsWorkspace(f.actor, f.outlet.id, query);
     expect(after.tillReconciliation).toMatchObject({
-      totalCollectedMinor:28000,totalRefundedMinor:28000,
-      staffRefundedMinor:28000,unassignedNetCashMinor:0,netCashFlowMinor:0,
+      totalCollectedMinor: 28000,
+      totalRefundedMinor: 28000,
+      staffRefundedMinor: 28000,
+      unassignedNetCashMinor: 0,
+      netCashFlowMinor: 0,
     });
     const exported = await exportReportCsv(f.actor, f.outlet.id, "till", query);
     expect(exported.content).toContain("staff_attested_collections");
     expect(exported.content).toContain("staff_attested_refunds");
     expect(exported.content).toContain("unassigned_net_cash_not_in_drawers");
     expect(exported.content).toContain("Not bank reconciled");
-    const ledger = await f.view("ledger") as unknown as Array<{
-      saleId:string;paidMinor:string;refundedMinor:string
+    const ledger = (await f.view("ledger")) as unknown as Array<{
+      saleId: string;
+      paidMinor: string;
+      refundedMinor: string;
     }>;
-    expect(ledger.find((x)=>x.saleId===f.sale.saleId)).toMatchObject({
-      paidMinor:"28000",refundedMinor:"28000"
+    expect(ledger.find((x) => x.saleId === f.sale.saleId)).toMatchObject({
+      paidMinor: "28000",
+      refundedMinor: "28000",
     });
   });
 });

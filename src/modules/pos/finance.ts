@@ -300,10 +300,20 @@ const queryTypes = z.discriminatedUnion("view", [
   z.object({ view: z.literal("ledger") }).strict(),
   z.object({ view: z.literal("shifts") }).strict(),
   z.object({ view: z.literal("reconcile") }).strict(),
-  z.object({ view: z.literal("reconcile_page"), cursorAt: z.iso.datetime({ offset: true }).optional(), cursorId: id.optional() })
+  z
+    .object({
+      view: z.literal("reconcile_page"),
+      cursorAt: z.iso.datetime({ offset: true }).optional(),
+      cursorId: id.optional(),
+    })
     .strict()
     .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
-  z.object({ view: z.literal("ledger_page"), cursorAt: z.iso.datetime({ offset: true }).optional(), cursorId: id.optional() })
+  z
+    .object({
+      view: z.literal("ledger_page"),
+      cursorAt: z.iso.datetime({ offset: true }).optional(),
+      cursorId: id.optional(),
+    })
     .strict()
     .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
   z.object({ view: z.literal("sale"), id }).strict(),

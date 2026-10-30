@@ -770,9 +770,18 @@ export async function exportReportCsv(
     // A rectangular CSV separates settlement facts and shift rows.
     // All money is formatted in the outlet currency; no gateway proof implied.
     const headers = [
-      "Record Type", "Reference", "Register", "Cashier / Evidence",
-      "Status", "Opened At", "Closed At", "Opening Float",
-      "Expected Cash", "Counted Cash", "Variance", "Amount",
+      "Record Type",
+      "Reference",
+      "Register",
+      "Cashier / Evidence",
+      "Status",
+      "Opened At",
+      "Closed At",
+      "Opening Float",
+      "Expected Cash",
+      "Counted Cash",
+      "Variance",
+      "Amount",
     ];
     const summary = [
       ["total_recorded_collections", till.totalCollectedMinor],
@@ -783,17 +792,32 @@ export async function exportReportCsv(
     ] as const;
     const rows = [
       ...summary.map(([kind, value]) => [
-        "summary", kind, "", "Staff-recorded is not provider-confirmed",
-        "Not bank reconciled", "", "", "", "", "", "",
+        "summary",
+        kind,
+        "",
+        "Staff-recorded is not provider-confirmed",
+        "Not bank reconciled",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         formatMoneyAmount(value, currency),
       ]),
       ...till.shifts.map((shift) => [
-        "shift", shift.shiftId, shift.registerName, shift.cashierName,
-        shift.state, shift.openedAt, shift.closedAt ?? "Active",
+        "shift",
+        shift.shiftId,
+        shift.registerName,
+        shift.cashierName,
+        shift.state,
+        shift.openedAt,
+        shift.closedAt ?? "Active",
         formatMoneyAmount(shift.openingFloatMinor, currency),
         formatMoneyAmount(shift.expectedMinor, currency),
         formatMoneyAmount(shift.countedMinor, currency),
-        formatMoneyAmount(shift.varianceMinor, currency), "",
+        formatMoneyAmount(shift.varianceMinor, currency),
+        "",
       ]),
     ];
     return {
