@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { WorkspaceTopbar } from "./workspace-topbar";
+import { RouteFocus, WORKSPACE_MAIN_ID, WorkspaceSkipLink } from "./workspace-a11y";
 import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import { ForbiddenError } from "@/lib/errors";
 import {
@@ -25,6 +26,7 @@ import {
   getRestaurantsByUserId,
 } from "@/modules/restaurants/service";
 import "./workspace.css";
+import "./workspace-delight.css";
 import { env } from "@/lib/config/env";
 import { EmberLauncher } from "@/components/intelligence/ember-launcher";
 
@@ -93,8 +95,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="mm-workspace-shell">
+      <WorkspaceSkipLink />
+      <RouteFocus />
       <SessionContinuity />
-      <aside className="mm-workspace-sidebar">
+      <aside className="mm-workspace-sidebar" aria-label="Workspace sidebar">
         <div className="mm-workspace-brand">
           <Link href="/" aria-label="MenuMinute homepage" className="mm-workspace-brand-link">
             <Image
@@ -159,7 +163,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </form>
         </div>
       </aside>
-      <main id="workspace-main" className="mm-workspace-main">
+      <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
         <WorkspaceTopbar userName={name} publicHref={publicHref} previewError={previewError} />
         {children}
       </main>

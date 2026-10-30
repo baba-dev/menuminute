@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   ChefHat,
+  Clock3,
   FilePenLine,
   Globe2,
   Layers3,
@@ -40,6 +41,16 @@ import { ForbiddenError } from "@/lib/errors";
 import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
 import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
 import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
+import { env } from "@/lib/config/env";
+import {
+  defaultDashboardLayout,
+  resolveDashboardLayout,
+  type DashboardLayout,
+  type DashboardWidgetId,
+} from "@/modules/dashboard/layout";
+import { readDashboardLayout } from "@/modules/dashboard/layout-preference";
+import { DashboardLayoutEditor } from "./dashboard-layout-editor";
+import { ShiftSummaryDialog } from "./shift-summary-dialog";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -76,6 +87,18 @@ export default async function DashboardPage() {
       </div>
     );
   }
+
+  // A layout is a presentation hint. If it cannot be read, show the default overview.
+  const layout: DashboardLayout = await readDashboardLayout(actor.userId).catch(
+    (error: unknown) => {
+      console.error("[dashboard] Layout preference unavailable", {
+        kind: error instanceof Error ? error.name : "unknown",
+      });
+      return defaultDashboardLayout;
+    }
+  );
+  const visibleWidgets = resolveDashboardLayout(layout).filter((widget) => !widget.hidden);
+  const isVisible = (id: DashboardWidgetId) => visibleWidgets.some((widget) => widget.id === id);
 
   // Only canonical, outlet-scoped rows and the immutable guest-facing projection
   // contribute to these values. Unsaved editor state is deliberately excluded.
@@ -193,9 +216,10 @@ export default async function DashboardPage() {
       ];
 
   const servicePeriod = getServicePeriodText(outletHour(outlet.timezone));
-  const floorTables = await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(
-    () => null
-  );
+  // Hidden widgets do not load their data.
+  const floorTables = isVisible("floor")
+    ? await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null)
+    : null;
   const canManageAvailability = publicProjection
     ? await withOutlet(actor, outlet.id, "menu.write", async () => true).catch((error: unknown) => {
         if (error instanceof ForbiddenError) return false;
@@ -231,6 +255,226 @@ export default async function DashboardPage() {
       )
     : null;
 
+  const widgetNodes: Record<DashboardWidgetId, ReactNode> = {
+    kpis: (
+      <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
+        <div className="mm-dashboard-section-heading">
+          <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
+            At a glance
+          </h2>
+          <span className="mm-dashboard-data-note">Published menu data · Current outlet</span>
+        </div>
+        <div className="mm-dashboard-kpis">
+          {kpis.map(({ label, value, detail, explanation, Icon, ...rest }) => (
+            <div className="mm-dashboard-kpi" key={label}>
+              <div className="mm-dashboard-kpi-top">
+                <span className="mm-dashboard-kpi-icon">
+                  <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
+                </span>
+                <span className="mm-dashboard-kpi-label">{label}</span>
+                <DashboardTooltip label={label}>{explanation}</DashboardTooltip>
+              </div>
+              <strong
+                className={
+                  "mm-dashboard-kpi-value" +
+                  ("positive" in rest && rest.positive ? " is-positive" : "")
+                }
+              >
+                {typeof value === "number" ? new Intl.NumberFormat("en").format(value) : value}
+              </strong>
+              <span className="mm-dashboard-kpi-detail">{detail}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    ),
+    priorities: (
+      <section className="mm-dashboard-priorities" aria-labelledby="mm-priorities-title">
+        <div className="mm-dashboard-priorities-head">
+          <div>
+            <span className="mm-dashboard-eyebrow">Your next move</span>
+            <h2 id="mm-priorities-title">Today’s priorities</h2>
+            <p>A few quick actions to keep {outlet.name} fresh, accurate and guest-ready.</p>
+            <p className="mm-dashboard-chef-note">
+              Chef’s note ·{" "}
+              {stats.hasPublicMenu
+                ? stats.publishedDishCount + " published dishes. Check availability before service."
+                : "Your first guest-facing menu is waiting to be published."}
+            </p>
+          </div>
+          <Image
+            src={artwork + "priorities-illustration.webp"}
+            alt=""
+            width={156}
+            height={112}
+            className="mm-dashboard-priorities-art"
+          />
+        </div>
+        <ol className="mm-dashboard-priority-list">
+          {priorities.map((item, index) => (
+            <li className="mm-dashboard-priority" key={item.title}>
+              <span className="mm-dashboard-priority-number" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="mm-dashboard-priority-copy">
+                <strong>{item.title}</strong>
+                <span>{item.detail}</span>
+              </div>
+              <Link href={item.href} className="mm-dashboard-priority-action">
+                {item.action} <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ol>
+        <Link href="/dashboard/menu" className="mm-dashboard-publish">
+          <span className="mm-dashboard-publish-icon">
+            <FilePenLine size={22} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>
+              {stats.draftCount > 0
+                ? "Review & publish changes"
+                : stats.hasPublicMenu
+                  ? "Keep your menu fresh"
+                  : "Create & publish your menu"}
+            </strong>
+            <small>
+              {stats.draftCount > 0
+                ? stats.draftCount +
+                  (stats.draftCount === 1 ? " menu has" : " menus have") +
+                  " unpublished changes."
+                : stats.hasPublicMenu
+                  ? "Your current release is live. Edit whenever you need."
+                  : "Create your first guest-facing release."}
+            </small>
+          </span>
+          <ArrowRight className="mm-dashboard-publish-arrow" size={22} aria-hidden="true" />
+        </Link>
+      </section>
+    ),
+    dispatch: (
+      <Suspense
+        fallback={
+          <section className="mm-dashboard-operations" role="status">
+            <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
+            <h2>What needs attention now</h2>
+            <p>Checking this outlet’s latest order activity…</p>
+          </section>
+        }
+      >
+        <ServicePulseSection
+          userId={actor.userId}
+          outletId={outlet.id}
+          organizationId={outlet.organizationId}
+          timezone={outlet.timezone}
+        />
+      </Suspense>
+    ),
+    health: (
+      <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
+        <div className="mm-dashboard-health-head">
+          <div>
+            <span className="mm-dashboard-eyebrow">{outlet.name}</span>
+            <h2 id="mm-health-title">Outlet health &amp; publishing status</h2>
+            <p>
+              {stats.hasPublicMenu
+                ? "Your current menu is available to guests."
+                : "Finish publishing to make your menu available to guests."}
+            </p>
+          </div>
+          <Image
+            src={artwork + "outlet-health-illustration.webp"}
+            alt=""
+            width={86}
+            height={103}
+            className="mm-dashboard-health-art"
+          />
+        </div>
+        <dl className="mm-dashboard-health-rows">
+          <div className="mm-dashboard-health-row">
+            <BookOpen size={20} aria-hidden="true" />
+            <div>
+              <dt>Menu publish status</dt>
+              <dd>
+                {stats.hasPublicMenu
+                  ? "A committed public release is available"
+                  : "No public release available yet"}
+              </dd>
+            </div>
+            <HealthBadge good={stats.hasPublicMenu} goodLabel="Live" otherLabel="Pending" />
+          </div>
+          <div className="mm-dashboard-health-row">
+            <QrCode size={20} aria-hidden="true" />
+            <div>
+              <dt>QR codes</dt>
+              <dd>
+                {stats.activeQrCount +
+                  (stats.activeQrCount === 1
+                    ? " active permanent link"
+                    : " active permanent links")}
+              </dd>
+            </div>
+            <HealthBadge
+              good={stats.activeQrCount > 0}
+              goodLabel="Active"
+              otherLabel="None active"
+            />
+          </div>
+          <div className="mm-dashboard-health-row">
+            <Globe2 size={20} aria-hidden="true" />
+            <div>
+              <dt>Menu visibility</dt>
+              <dd>
+                {stats.hasPublicMenu
+                  ? "Accessible through your active menu link"
+                  : "Private until publication"}
+              </dd>
+            </div>
+            <HealthBadge good={stats.hasPublicMenu} goodLabel="Public" otherLabel="Private" />
+          </div>
+          <div className="mm-dashboard-health-row mm-dashboard-health-row--progress">
+            <CheckCircle2 size={20} aria-hidden="true" />
+            <div>
+              <dt>
+                Menu launch setup{" "}
+                <DashboardTooltip label="Setup completion">
+                  Outlet configured, menu created, public release and active QR code. This does not
+                  measure ordering, staff or payment readiness. Each verified step counts equally.
+                </DashboardTooltip>
+              </dt>
+              <dd>
+                {setup.completed} of {setup.total} essentials completed
+              </dd>
+              <progress
+                max={setup.total}
+                value={setup.completed}
+                aria-label="Outlet setup progress"
+              />
+            </div>
+            <strong>{setup.percent}%</strong>
+          </div>
+        </dl>
+        <div className="mm-dashboard-setup-foot">
+          <span>
+            <Check size={15} aria-hidden="true" />{" "}
+            {setup.checks.filter((check) => check.complete).length} verified steps
+          </span>
+          <Link href="/dashboard/settings">
+            Outlet settings <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+    ),
+    floor: <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />,
+    serviceRequests: (
+      <ServiceRequestsPanel
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        timezone={outlet.timezone}
+      />
+    ),
+  };
+
   return (
     <div className="mm-dashboard product" data-testid="editorial-dashboard">
       <header className="mm-dashboard-hero">
@@ -262,239 +506,51 @@ export default async function DashboardPage() {
               items={availabilityItems}
               canManage={canManageAvailability}
             />
+            {env.AI_ASSISTANT_READ_ONLY_ENABLED && (
+              <ShiftSummaryDialog
+                key={"shift-" + outlet.id}
+                organizationId={outlet.organizationId}
+                outletId={outlet.id}
+                outletName={outlet.name}
+                timezone={outlet.timezone}
+              />
+            )}
           </div>
         </div>
       </header>
 
       <div className="mm-dashboard-body">
-        <section className="mm-dashboard-glance" aria-labelledby="mm-glance-title">
-          <div className="mm-dashboard-section-heading">
-            <h2 id="mm-glance-title" className="mm-dashboard-eyebrow">
-              At a glance
-            </h2>
-            <span className="mm-dashboard-data-note">Published menu data · Current outlet</span>
-          </div>
-          <div className="mm-dashboard-kpis">
-            {kpis.map(({ label, value, detail, explanation, Icon, ...rest }) => (
-              <div className="mm-dashboard-kpi" key={label}>
-                <div className="mm-dashboard-kpi-top">
-                  <span className="mm-dashboard-kpi-icon">
-                    <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
-                  </span>
-                  <span className="mm-dashboard-kpi-label">{label}</span>
-                  <DashboardTooltip label={label}>{explanation}</DashboardTooltip>
-                </div>
-                <strong
-                  className={
-                    "mm-dashboard-kpi-value" +
-                    ("positive" in rest && rest.positive ? " is-positive" : "")
-                  }
-                >
-                  {typeof value === "number" ? new Intl.NumberFormat("en").format(value) : value}
-                </strong>
-                <span className="mm-dashboard-kpi-detail">{detail}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="mm-dashboard-lower">
-          <section className="mm-dashboard-priorities" aria-labelledby="mm-priorities-title">
-            <div className="mm-dashboard-priorities-head">
-              <div>
-                <span className="mm-dashboard-eyebrow">Your next move</span>
-                <h2 id="mm-priorities-title">Today’s priorities</h2>
-                <p>A few quick actions to keep {outlet.name} fresh, accurate and guest-ready.</p>
-                <p className="mm-dashboard-chef-note">
-                  Chef’s note ·{" "}
-                  {stats.hasPublicMenu
-                    ? stats.publishedDishCount +
-                      " published dishes. Check availability before service."
-                    : "Your first guest-facing menu is waiting to be published."}
-                </p>
-              </div>
-              <Image
-                src={artwork + "priorities-illustration.webp"}
-                alt=""
-                width={156}
-                height={112}
-                className="mm-dashboard-priorities-art"
-              />
+        <DashboardLayoutEditor
+          initialLayout={layout}
+          presentWidgets={visibleWidgets.map((widget) => widget.id)}
+        />
+        <div className="mm-widget-grid">
+          {visibleWidgets.map((widget) => (
+            <div key={widget.id} className="mm-widget" data-widget={widget.id}>
+              {widgetNodes[widget.id]}
             </div>
-            <ol className="mm-dashboard-priority-list">
-              {priorities.map((item, index) => (
-                <li className="mm-dashboard-priority" key={item.title}>
-                  <span className="mm-dashboard-priority-number" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div className="mm-dashboard-priority-copy">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <Link href={item.href} className="mm-dashboard-priority-action">
-                    {item.action} <ArrowRight size={16} aria-hidden="true" />
-                  </Link>
-                </li>
-              ))}
-            </ol>
-            <Link href="/dashboard/menu" className="mm-dashboard-publish">
-              <span className="mm-dashboard-publish-icon">
-                <FilePenLine size={22} aria-hidden="true" />
-              </span>
-              <span>
-                <strong>
-                  {stats.draftCount > 0
-                    ? "Review & publish changes"
-                    : stats.hasPublicMenu
-                      ? "Keep your menu fresh"
-                      : "Create & publish your menu"}
-                </strong>
-                <small>
-                  {stats.draftCount > 0
-                    ? stats.draftCount +
-                      (stats.draftCount === 1 ? " menu has" : " menus have") +
-                      " unpublished changes."
-                    : stats.hasPublicMenu
-                      ? "Your current release is live. Edit whenever you need."
-                      : "Create your first guest-facing release."}
-                </small>
-              </span>
-              <ArrowRight className="mm-dashboard-publish-arrow" size={22} aria-hidden="true" />
-            </Link>
-          </section>
-
-          <Suspense
-            fallback={
-              <section className="mm-dashboard-operations" role="status">
-                <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
-                <h2>What needs attention now</h2>
-                <p>Checking this outlet’s latest order activity…</p>
-              </section>
-            }
-          >
-            <ServicePulseSection
-              userId={actor.userId}
-              outletId={outlet.id}
-              organizationId={outlet.organizationId}
-              timezone={outlet.timezone}
-            />
-          </Suspense>
-
-          <section className="mm-dashboard-health" aria-labelledby="mm-health-title">
-            <div className="mm-dashboard-health-head">
-              <div>
-                <span className="mm-dashboard-eyebrow">{outlet.name}</span>
-                <h2 id="mm-health-title">Outlet health &amp; publishing status</h2>
-                <p>
-                  {stats.hasPublicMenu
-                    ? "Your current menu is available to guests."
-                    : "Finish publishing to make your menu available to guests."}
-                </p>
-              </div>
-              <Image
-                src={artwork + "outlet-health-illustration.webp"}
-                alt=""
-                width={86}
-                height={103}
-                className="mm-dashboard-health-art"
-              />
-            </div>
-            <dl className="mm-dashboard-health-rows">
-              <div className="mm-dashboard-health-row">
-                <BookOpen size={20} aria-hidden="true" />
-                <div>
-                  <dt>Menu publish status</dt>
-                  <dd>
-                    {stats.hasPublicMenu
-                      ? "A committed public release is available"
-                      : "No public release available yet"}
-                  </dd>
-                </div>
-                <span
-                  className={"mm-dashboard-health-badge" + (stats.hasPublicMenu ? " is-good" : "")}
-                >
-                  {stats.hasPublicMenu ? "Live" : "Pending"}
-                </span>
-              </div>
-              <div className="mm-dashboard-health-row">
-                <QrCode size={20} aria-hidden="true" />
-                <div>
-                  <dt>QR codes</dt>
-                  <dd>
-                    {stats.activeQrCount +
-                      (stats.activeQrCount === 1
-                        ? " active permanent link"
-                        : " active permanent links")}
-                  </dd>
-                </div>
-                <span
-                  className={
-                    "mm-dashboard-health-badge" + (stats.activeQrCount > 0 ? " is-good" : "")
-                  }
-                >
-                  {stats.activeQrCount > 0 ? "Active" : "None active"}
-                </span>
-              </div>
-              <div className="mm-dashboard-health-row">
-                <Globe2 size={20} aria-hidden="true" />
-                <div>
-                  <dt>Menu visibility</dt>
-                  <dd>
-                    {stats.hasPublicMenu
-                      ? "Accessible through your active menu link"
-                      : "Private until publication"}
-                  </dd>
-                </div>
-                <span
-                  className={"mm-dashboard-health-badge" + (stats.hasPublicMenu ? " is-good" : "")}
-                >
-                  {stats.hasPublicMenu ? "Public" : "Private"}
-                </span>
-              </div>
-              <div className="mm-dashboard-health-row mm-dashboard-health-row--progress">
-                <CheckCircle2 size={20} aria-hidden="true" />
-                <div>
-                  <dt>
-                    Menu launch setup{" "}
-                    <DashboardTooltip label="Setup completion">
-                      Outlet configured, menu created, public release and active QR code. This does
-                      not measure ordering, staff or payment readiness. Each verified step counts
-                      equally.
-                    </DashboardTooltip>
-                  </dt>
-                  <dd>
-                    {setup.completed} of {setup.total} essentials completed
-                  </dd>
-                  <progress
-                    max={setup.total}
-                    value={setup.completed}
-                    aria-label="Outlet setup progress"
-                  />
-                </div>
-                <strong>{setup.percent}%</strong>
-              </div>
-            </dl>
-            <div className="mm-dashboard-setup-foot">
-              <span>
-                <Check size={15} aria-hidden="true" />{" "}
-                {setup.checks.filter((check) => check.complete).length} verified steps
-              </span>
-              <Link href="/dashboard/settings">
-                Outlet settings <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
-          </section>
+          ))}
         </div>
-        <section className="mm-dashboard-operations-bottom" aria-label="Restaurant operations">
-          <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />
-          <ServiceRequestsPanel
-            organizationId={outlet.organizationId}
-            outletId={outlet.id}
-            timezone={outlet.timezone}
-          />
-        </section>
       </div>
     </div>
+  );
+}
+
+/** Status is carried by an icon and a word as well as colour. */
+function HealthBadge({
+  good,
+  goodLabel,
+  otherLabel,
+}: {
+  good: boolean;
+  goodLabel: string;
+  otherLabel: string;
+}) {
+  return (
+    <span className={"mm-dashboard-health-badge" + (good ? " is-good" : "")}>
+      {good ? <Check size={13} aria-hidden="true" /> : <Clock3 size={13} aria-hidden="true" />}
+      <span className="mm-badge-text">{good ? goodLabel : otherLabel}</span>
+    </span>
   );
 }
 
