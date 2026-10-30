@@ -1,0 +1,526 @@
+/* Dashboard delight and polish. Tokens come from menu-product.css / workspace.css only. */
+
+/* ── Skip link and focus ───────────────────────────────────────────── */
+.mm-skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 18px;
+  border: 2px solid var(--ink);
+  border-radius: 100px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.mm-skip-link:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+  transform: translateY(0);
+}
+
+.mm-workspace-main:focus,
+.mm-workspace-main h1:focus {
+  outline: none;
+}
+
+.mm-workspace-main h1:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 6px;
+}
+
+.mm-workspace-nav-link:focus-visible,
+.mm-workspace-logout:focus-visible,
+.mm-workspace-profile-link:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 2px;
+}
+
+/* ── Static skeletons (single delayed fade-in, never a looping shimmer) ── */
+.mm-skeleton,
+.mm-skeleton-card {
+  animation: mm-skeleton-in 160ms ease-out 180ms both;
+}
+
+.mm-skeleton {
+  display: block;
+  min-height: 8px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ink) 11%, transparent);
+}
+
+.mm-skeleton-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--editorial-line, var(--decorative));
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.mm-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(16px, 2.2vw, 28px);
+  padding: 24px clamp(18px, 2.8vw, 42px) 48px;
+}
+
+.mm-skeleton-grid > * {
+  grid-column: span 6;
+}
+
+.mm-skeleton-grid > .mm-skeleton-ticket {
+  grid-column: span 4;
+}
+
+.mm-skeleton-grid > .is-wide {
+  grid-column: 1 / -1;
+}
+
+.mm-skeleton-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mm-skeleton-page {
+  display: grid;
+  gap: 18px;
+  padding: 24px clamp(18px, 2.8vw, 42px) 48px;
+}
+
+@keyframes mm-skeleton-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Widget grid: default order reproduces the original overview ─────── */
+.mm-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(22px, 3vw, 36px) clamp(16px, 2.2vw, 28px);
+  padding-top: 24px;
+}
+
+.mm-widget {
+  grid-column: span 6;
+  min-width: 0;
+}
+
+.mm-widget[data-widget="kpis"],
+.mm-widget[data-widget="health"] {
+  grid-column: 1 / -1;
+}
+
+.mm-widget > section {
+  margin: 0;
+}
+
+.mm-widget[data-pinned="true"] {
+  position: relative;
+}
+
+.mm-widget-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 1160px) {
+  .mm-widget {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Customize layout ───────────────────────────────────────────────── */
+.mm-layout-editor {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--editorial-line, var(--decorative));
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.mm-layout-editor h2 {
+  margin: 0;
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 22px;
+}
+
+.mm-layout-editor p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mm-layout-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mm-layout-row {
+  display: flex;
+  min-height: 56px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--editorial-line, var(--decorative));
+  border-radius: 12px;
+  background: var(--editorial-soft, var(--panel));
+}
+
+.mm-layout-row[data-hidden="true"] {
+  border-style: dashed;
+}
+
+.mm-layout-row-name {
+  display: flex;
+  min-width: 140px;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.mm-layout-row-state {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mm-layout-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mm-icon-button {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mm-icon-button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.mm-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.mm-icon-button:focus-visible,
+.mm-layout-toggle:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 2px;
+}
+
+.mm-layout-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mm-layout-save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mm-dashboard-hero-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* ── Status chips: colour is always paired with an icon and a word ──── */
+.mm-status {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mm-status[data-tone="good"] {
+  background: #ebf2db;
+  color: #265a2a;
+}
+
+.mm-status[data-tone="warn"] {
+  background: #fff1cf;
+  color: #7a4a00;
+}
+
+.mm-status[data-tone="bad"] {
+  background: #fde7e4;
+  color: #8f1d12;
+}
+
+:root[data-theme="dark"] .mm-status[data-tone="good"] {
+  background: #31452e;
+  color: #c7f2b8;
+}
+
+:root[data-theme="dark"] .mm-status[data-tone="warn"] {
+  background: #4a3a14;
+  color: #ffe08a;
+}
+
+:root[data-theme="dark"] .mm-status[data-tone="bad"] {
+  background: #4d2a26;
+  color: #ffc9c2;
+}
+
+/* ── Milestone: Ink Ticket (treatment B) ────────────────────────────── */
+.mm-ink-ticket {
+  position: fixed;
+  z-index: 30;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: calc(216px + 24px);
+  display: grid;
+  width: min(380px, calc(100vw - 32px));
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 4px 14px;
+  padding: 16px 14px 16px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 5px 5px 0 var(--ink);
+  color: var(--ink);
+  animation: mm-ticket-in 200ms ease-out both;
+}
+
+.mm-ink-ticket-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  grid-row: span 2;
+  border-radius: 50%;
+  background: var(--mm-gradient);
+  color: var(--mm-gradient-ink);
+}
+
+.mm-ink-ticket strong {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.mm-ink-ticket p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mm-ink-ticket-close {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* One focal gesture per viewport: the ticket quiets the hero's decorative note. */
+.mm-dashboard[data-milestone-open="true"] .mm-dashboard-chef-note {
+  display: none;
+}
+
+@keyframes mm-ticket-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Shift summary dialog (Service Card, treatment A) ───────────────── */
+.mm-shift-overlay {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+}
+
+.mm-shift-card {
+  position: fixed;
+  z-index: 61;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(680px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  gap: 14px;
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  color: var(--ink);
+  transform: translate(-50%, -50%);
+}
+
+.mm-shift-card h2 {
+  margin: 0;
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 24px;
+}
+
+.mm-shift-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mm-shift-card textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.mm-shift-card textarea:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 2px;
+}
+
+.mm-shift-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff1cf;
+  color: #7a4a00;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:root[data-theme="dark"] .mm-shift-banner {
+  background: #4a3a14;
+  color: #ffe08a;
+}
+
+.mm-shift-evidence {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  list-style: none;
+}
+
+.mm-shift-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .mm-ink-ticket {
+    left: 16px;
+    bottom: max(88px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 640px) {
+  .mm-skeleton-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mm-skeleton-grid > * {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-skeleton,
+  .mm-skeleton-card,
+  .mm-ink-ticket {
+    animation: none;
+  }
+
+  .mm-skip-link {
+    transition: none;
+  }
+}
+
+/* Health badges now carry an icon; the legacy dot would duplicate it. */
+.mm-dashboard-health-badge {
+  gap: 5px;
+}
+
+.mm-dashboard-health-badge.is-good::before {
+  content: none;
+}
+
+.mm-dashboard-body > .mm-dashboard-hero-tools {
+  justify-content: flex-end;
+  margin: 0 0 -8px;
+}

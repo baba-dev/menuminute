@@ -3,8 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { RefreshCw } from "lucide-react";
+import { Lock, RefreshCw, TriangleAlert } from "lucide-react";
 import type { DashboardPulseSnapshot } from "@/modules/menu-product/dashboard-optional-pulse";
+import { MilestoneTicket } from "@/components/dashboard/milestone-ticket";
+import {
+  crossedMilestone,
+  hasSeenMilestone,
+  markMilestoneSeen,
+  milestoneStorageKey,
+  outletLocalDate,
+  type Milestone,
+} from "@/modules/dashboard/milestones";
 
 const REFRESH_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 8_000;
@@ -42,6 +51,56 @@ export function DashboardServicePulse({
   const [refreshing, setRefreshing] = useState(false);
   const running = useRef(false);
   const controller = useRef<AbortController | null>(null);
+  const [milestone, setMilestone] = useState<Milestone | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  // Seeded from the server render so loading the page above a threshold never replays it.
+  const lastCompleted = useRef<number | null>(
+    initial.state === "ready" ? initial.data.completedToday : null
+  );
+  const lastPending = useRef<number | null>(
+    initial.state === "ready" ? initial.data.pending : null
+  );
+  const seenThisSession = useRef(new Set<string>());
+
+  const observeReady = useCallback(
+    (data: { completedToday: number; pending: number }, checkedAt: string) => {
+      const crossed = crossedMilestone(lastCompleted.current, data.completedToday);
+      lastCompleted.current = data.completedToday;
+      if (crossed) {
+        let storage: Storage | null = null;
+        try {
+          storage = window.localStorage;
+        } catch {
+          storage = null;
+        }
+        const key = milestoneStorageKey(outletId, outletLocalDate(checkedAt, timezone), crossed.id);
+        if (!hasSeenMilestone(storage, key, seenThisSession.current)) {
+          markMilestoneSeen(storage, key, seenThisSession.current);
+          setMilestone(crossed);
+        }
+      }
+      // Announce only a meaningful change (new orders waiting), never each 30 s refresh.
+      if (lastPending.current !== null && data.pending > lastPending.current) {
+        setAnnouncement(
+          data.pending === 1
+            ? "1 order is awaiting acceptance."
+            : data.pending + " orders are awaiting acceptance."
+        );
+      }
+      lastPending.current = data.pending;
+    },
+    [outletId, timezone]
+  );
+
+  // One focal gesture per viewport: while a ticket is open the hero's decorative note rests.
+  const rootRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = rootRef.current?.closest<HTMLElement>(".mm-dashboard");
+    if (!root) return;
+    if (milestone) root.setAttribute("data-milestone-open", "true");
+    else root.removeAttribute("data-milestone-open");
+    return () => root.removeAttribute("data-milestone-open");
+  }, [milestone]);
 
   const refresh = useCallback(async () => {
     if (running.current || document.visibilityState !== "visible" || !navigator.onLine) return;
@@ -88,6 +147,12 @@ export function DashboardServicePulse({
           throw new Error("Invalid service activity counters");
         }
       }
+      if (responseBody.state === "ready") {
+        observeReady(
+          responseBody.data as { completedToday: number; pending: number },
+          responseBody.checkedAt
+        );
+      }
       setSnapshot({
         state: responseBody.state,
         data:
@@ -106,7 +171,7 @@ export function DashboardServicePulse({
       running.current = false;
       setRefreshing(false);
     }
-  }, [outletId]);
+  }, [outletId, observeReady]);
 
   useEffect(() => {
     const onResume = () => {
@@ -126,7 +191,11 @@ export function DashboardServicePulse({
   }, [refresh]);
 
   return (
-    <section className="mm-dashboard-operations" aria-labelledby="mm-operations-title">
+    <section
+      ref={rootRef}
+      className="mm-dashboard-operations"
+      aria-labelledby="mm-operations-title"
+    >
       <div className="mm-dashboard-operations-heading">
         <div className="mm-dashboard-service-heading">
           <div>
@@ -154,7 +223,7 @@ export function DashboardServicePulse({
       </div>
       {snapshot.state === "ready" ? (
         <>
-          <p className="mm-dashboard-operations-freshness" role="status">
+          <p className="mm-dashboard-operations-freshness">
             Snapshot updated at {timeLabel(snapshot.checkedAt, timezone)} · Refreshes every 30
             seconds while this tab is active
           </p>
@@ -177,6 +246,11 @@ export function DashboardServicePulse({
       ) : (
         <div className="mm-dashboard-operations-notice" role="status">
           <strong>
+            {snapshot.state === "restricted" ? (
+              <Lock size={16} aria-hidden="true" />
+            ) : (
+              <TriangleAlert size={16} aria-hidden="true" />
+            )}{" "}
             {snapshot.state === "restricted"
               ? "Order activity access required"
               : "Order activity temporarily unavailable"}
@@ -188,6 +262,10 @@ export function DashboardServicePulse({
           </p>
         </div>
       )}
+      <p className="sr-only" role="status" aria-live="polite">
+        {announcement}
+      </p>
+      {milestone && <MilestoneTicket milestone={milestone} onDismiss={() => setMilestone(null)} />}
       <div className="mm-dashboard-service-footer">
         <Link href="/dashboard/orders">View all orders &rarr;</Link>
         {snapshot.state !== "restricted" && (

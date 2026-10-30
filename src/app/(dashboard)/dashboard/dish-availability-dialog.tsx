@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, ChefHat, LoaderCircle, Search, UtensilsCrossed, X } from "lucide-react";
+import { Check, ChefHat, LoaderCircle, RotateCw, Search, UtensilsCrossed, X } from "lucide-react";
+import { NonRetryableError } from "@/lib/optimistic-commit";
+import { useOptimisticCommit } from "@/lib/use-optimistic-commit";
 import { resolveCurrentStock, type AvailabilityMenuDetail } from "./availability-contract";
 
 export type AvailabilityDish = {
@@ -35,19 +37,23 @@ export function DishAvailabilityDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmedChanges, setConfirmedChanges] = useState<Record<string, boolean>>({});
+  // The intended state is shown immediately as "Saving…"; it is never treated as success.
+  const [pendingChanges, setPendingChanges] = useState<Record<string, boolean>>({});
+  const { run, pending } = useOptimisticCommit();
+  const busy = pending[0] ?? null;
   const dishes = useMemo(
     () =>
-      items?.map((dish) => ({
-        ...dish,
-        soldOut: confirmedChanges[dish.menuId + ":" + dish.id] ?? dish.soldOut,
-      })) ?? null,
-    [items, confirmedChanges]
+      items?.map((dish) => {
+        const key = dish.menuId + ":" + dish.id;
+        return { ...dish, soldOut: pendingChanges[key] ?? confirmedChanges[key] ?? dish.soldOut };
+      }) ?? null,
+    [items, confirmedChanges, pendingChanges]
   );
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "available" | "sold-out">("all");
   const [menu, setMenu] = useState("all");
-  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [retry, setRetry] = useState<(() => void) | null>(null);
   const [notice, setNotice] = useState("");
 
   const menus = useMemo(() => {
@@ -83,53 +89,65 @@ export function DishAvailabilityDialog({
   async function toggle(dish: AvailabilityDish) {
     if (!canManage || busy || dish.menuId === "legacy") return;
     const key = dish.menuId + ":" + dish.id;
-    setBusy(key);
     setError("");
     setNotice("");
-    try {
-      const path = "/api/catalog/" + encodeURIComponent(dish.menuId);
-      const read = await fetch(path, { cache: "no-store", credentials: "same-origin" });
-      if (!read.ok) throw new Error("Could not check the latest dish status. Refresh and retry.");
-      const detail = (await read.json()) as AvailabilityMenuDetail;
-      if (detail.canWrite !== true) throw new Error("Your account cannot change this menu.");
-      if (!Number.isInteger(detail.revision)) throw new Error("Menu revision unavailable.");
-      const current = resolveCurrentStock(detail, dish, outletId);
-      if (current.soldOut !== dish.soldOut) {
+    setRetry(null);
+    const without = (record: Record<string, boolean>) =>
+      Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key));
+    await run<boolean>(key, {
+      apply: () => setPendingChanges((previous) => ({ ...previous, [key]: !dish.soldOut })),
+      rollback: () => setPendingChanges(without),
+      commit: async () => {
+        const path = "/api/catalog/" + encodeURIComponent(dish.menuId);
+        const read = await fetch(path, { cache: "no-store", credentials: "same-origin" });
+        if (!read.ok) throw new Error("Could not check the latest dish status. Refresh and retry.");
+        const detail = (await read.json()) as AvailabilityMenuDetail;
+        if (detail.canWrite !== true)
+          throw new NonRetryableError("Your account cannot change this menu.");
+        if (!Number.isInteger(detail.revision)) throw new Error("Menu revision unavailable.");
+        const current = resolveCurrentStock(detail, dish, outletId);
+        if (current.soldOut !== dish.soldOut) {
+          router.refresh();
+          throw new NonRetryableError(
+            "Another staff member changed this dish. Refresh and try again."
+          );
+        }
+        const soldOut = !current.soldOut;
+        const write = await fetch(path, {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            key: crypto.randomUUID(),
+            expectedRevision: detail.revision,
+            action: "override",
+            data: {
+              outletId,
+              dishId: dish.id,
+              priceMinor: current.priceMinor,
+              soldOut,
+            },
+          }),
+        });
+        if (!write.ok) {
+          throw write.status === 409
+            ? new NonRetryableError("The menu changed while saving. Refresh and retry.")
+            : new Error("Availability could not be saved. Your menu was not changed.");
+        }
+        return soldOut;
+      },
+      onSuccess: (soldOut) => {
+        setConfirmedChanges((previous) => ({ ...previous, [key]: soldOut }));
+        setPendingChanges(without);
+        setNotice(dish.name + (soldOut ? " marked sold out." : " restored as available."));
         router.refresh();
-        throw new Error("Another staff member changed this dish. Refresh and try again.");
-      }
-      const soldOut = !current.soldOut;
-      const write = await fetch(path, {
-        method: "PATCH",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          key: crypto.randomUUID(),
-          expectedRevision: detail.revision,
-          action: "override",
-          data: {
-            outletId,
-            dishId: dish.id,
-            priceMinor: current.priceMinor,
-            soldOut,
-          },
-        }),
-      });
-      if (!write.ok) {
-        throw new Error(
-          write.status === 409
-            ? "The menu changed while saving. Refresh and retry."
-            : "Availability could not be saved. Your menu was not changed."
-        );
-      }
-      setConfirmedChanges((previous) => ({ ...previous, [key]: soldOut }));
-      setNotice(dish.name + (soldOut ? " marked sold out." : " restored as available."));
-      router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Availability update failed.");
-    } finally {
-      setBusy(null);
-    }
+      },
+      failureTitle: "Couldn’t update " + dish.name,
+      onFailure: ({ message, retry: again }) => {
+        setError(message + " The dish is back to its previous status.");
+        setRetry(again ? () => again : null);
+      },
+    });
   }
 
   return (
@@ -140,11 +158,13 @@ export function DishAvailabilityDialog({
         setOpen(next);
         if (next) {
           setConfirmedChanges({});
+          setPendingChanges({});
           setQuery("");
           setFilter("all");
           setMenu("all");
           setError("");
           setNotice("");
+          setRetry(null);
           router.refresh();
         }
       }}
@@ -248,6 +268,11 @@ export function DishAvailabilityDialog({
               className={"mm-availability-feedback" + (error ? " is-error" : "")}
             >
               {error || notice}
+              {error && retry && (
+                <button type="button" className="mm-icon-button" onClick={retry}>
+                  <RotateCw size={15} aria-hidden="true" /> Retry
+                </button>
+              )}
             </div>
           )}
           <div className="mm-availability-scroll">
@@ -303,12 +328,17 @@ export function DishAvailabilityDialog({
                       className={"mm-availability-dish" + (dish.soldOut ? " is-sold-out" : "")}
                       disabled={!canManage || busy !== null || dish.menuId === "legacy"}
                       onClick={() => void toggle(dish)}
+                      // While pending, the name must not claim the final state: "Restore" /
+                      // "Mark sold out" appear only once the server has acknowledged.
                       aria-label={
-                        (dish.soldOut ? "Restore " : "Mark sold out ") +
-                        dish.name +
-                        " in " +
-                        dish.menuName
+                        updating
+                          ? "Saving " + dish.name + " in " + dish.menuName
+                          : (dish.soldOut ? "Restore " : "Mark sold out ") +
+                            dish.name +
+                            " in " +
+                            dish.menuName
                       }
+                      aria-busy={updating}
                       aria-pressed={dish.soldOut}
                     >
                       <span className="mm-availability-photo">
