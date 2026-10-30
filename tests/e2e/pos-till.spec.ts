@@ -123,12 +123,21 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await page.getByRole("button", { name: "Save seller details and enable POS" }).click();
   await expect(page.getByRole("heading", { name: "Published menu" })).toBeVisible();
   await page.getByRole("button", { name: /Paneer Lunch/ }).click();
+  // The mobile order pad is a bottom sheet; open it before selecting cart actions.
+  const mobileTicket = page.getByRole("button", { name: /View Ticket/ });
+  const usesMobileSheet = await mobileTicket.isVisible();
+  if (usesMobileSheet) await mobileTicket.click();
   // A simple dish goes straight into the cart, optional add-ons use inline editor.
   await expect(page.locator(".till-cartline")).toContainText("Paneer Lunch");
   await page.getByRole("button", { name: "Customize Paneer Lunch" }).click();
   await expect(page.getByRole("region", { name: "Paneer Lunch" })).toBeVisible();
   await page.getByLabel("Roti").check();
   await page.getByRole("button", { name: /Save options/ }).click();
+  // The editor lives in the catalogue; reopen the ticket for mobile checkout.
+  if (usesMobileSheet) {
+    await expect(mobileTicket).toBeVisible();
+    await mobileTicket.click();
+  }
   await expect(page.getByText("Pre-tax subtotal")).toBeVisible();
   await page.getByRole("button", { name: /Place Order & Send/ }).click();
   await expect(page.locator(".till-success")).toContainText("Dispatched");

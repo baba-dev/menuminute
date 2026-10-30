@@ -91,6 +91,7 @@ export function TheTill({
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [mobileTicketOpen, setMobileTicketOpen] = useState(false);
   const mobileTicketRef = useRef<HTMLElement>(null);
+  const inlineConfigRef = useRef<HTMLDivElement>(null);
   const [variant, setVariant] = useState("");
   const [groups, setGroups] = useState<Record<string, string[]>>({});
   const [customer, setCustomer] = useState("");
@@ -115,6 +116,18 @@ export function TheTill({
   useEffect(() => {
     if (mobileTicketOpen) mobileTicketRef.current?.focus();
   }, [mobileTicketOpen]);
+  useEffect(() => {
+    if (!dish || mobileTicketOpen) return;
+    // Editing from the mobile ticket closes the sheet; focus the inline editor.
+    const frame = window.requestAnimationFrame(() => {
+      inlineConfigRef.current?.scrollIntoView({
+        block: "center",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+      inlineConfigRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [dish, mobileTicketOpen]);
   const incomingOrderId = useSyncExternalStore(
     subscribeUrl,
     () => {
@@ -270,6 +283,7 @@ export function TheTill({
     setVariant(entry.line.variantId ?? "");
     setGroups(Object.fromEntries(entry.line.groups.map((g) => [g.groupId, g.optionIds])));
     setEditingLineId(entry.id);
+    setMobileTicketOpen(false);
   }
   function choose(groupId: string, optionId: string, maximum: number) {
     setGroups((old) => {
@@ -729,7 +743,7 @@ export function TheTill({
                 ))}
               </div>
               {dish && (
-                <div className="till-inline-config" id="pos-dish-config">
+                <div className="till-inline-config" id="pos-dish-config" ref={inlineConfigRef} tabIndex={-1}>
                   <section
                     className="till-inline-config-panel"
                     role="region"
