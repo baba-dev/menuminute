@@ -155,6 +155,18 @@ class NightlyBackupTests(unittest.TestCase):
         self.assertNotIn("PGPASSWORD", env)
         self.assertEqual(env["RESTIC_CACHE_DIR"], "/tmp/restic-cache-fixture")
 
+    def test_nightly_staging_refuses_to_consume_shared_erp_disk_reserve(self):
+        from types import SimpleNamespace
+        with patch.object(nightly, "command", return_value=str(25 * 1024 ** 3)):
+            with patch.object(nightly.shutil, "disk_usage",
+                              return_value=SimpleNamespace(free=31 * 1024 ** 3)):
+                with self.assertRaises(nightly.BackupGateError):
+                    nightly.ensure_disk_headroom()
+        with patch.object(nightly, "command", return_value=str(2 * 1024 ** 3)):
+            with patch.object(nightly.shutil, "disk_usage",
+                              return_value=SimpleNamespace(free=31 * 1024 ** 3)):
+                nightly.ensure_disk_headroom()
+
     def test_nightly_refuses_insecure_or_linked_wrapper_and_private_files(self):
         with tempfile.TemporaryDirectory() as folder:
             candidate = Path(folder) / "wrapper"
