@@ -19,10 +19,12 @@ export function WorkspaceTopbar({
   userName,
   publicHref,
   previewError = false,
+  assistantAction,
 }: {
   userName: string;
   publicHref: string | null;
   previewError?: boolean;
+  assistantAction?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const label =
@@ -67,6 +69,7 @@ export function WorkspaceTopbar({
             {previewError ? "Public menu temporarily unavailable" : "Public menu unavailable"}
           </span>
         )}
+        {assistantAction}
         <ThemeControl />
         <Link
           href="/account"

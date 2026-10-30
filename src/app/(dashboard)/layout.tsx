@@ -160,17 +160,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
       <main id="workspace-main" className="mm-workspace-main">
-        <WorkspaceTopbar userName={name} publicHref={publicHref} previewError={previewError} />
+        <WorkspaceTopbar
+          userName={name}
+          publicHref={publicHref}
+          previewError={previewError}
+          assistantAction={
+            restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED ? (
+              <EmberLauncher
+                key={restaurant.id}
+                organizationId={restaurant.organizationId}
+                outletId={restaurant.id}
+                outletName={restaurant.name}
+              />
+            ) : null
+          }
+        />
         {children}
       </main>
-      {restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED && (
-        <EmberLauncher
-          key={restaurant.id}
-          organizationId={restaurant.organizationId}
-          outletId={restaurant.id}
-          outletName={restaurant.name}
-        />
-      )}
     </div>
   );
 }

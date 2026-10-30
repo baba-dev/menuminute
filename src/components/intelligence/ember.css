@@ -576,10 +576,25 @@
 .mm-ember-table-scroll tbody tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 700px) {
+  /* Mobile launch is an in-flow topbar / kitchen action: never obscure page controls. */
   .mm-ember-launch {
-    right: 14px;
-    bottom: max(15px, env(safe-area-inset-bottom));
-    padding: 12px 15px;
+    position: static;
+    display: inline-flex;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex: 0 0 40px;
+    margin: 10px 14px;
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  .mm-dashboard-top-actions .mm-ember-launch {
+    margin: 0;
+  }
+  .mm-ember-launch span {
+    display: none;
   }
   .mm-ember-drawer {
     width: 100%;
@@ -598,6 +613,11 @@
   }
   .mm-ember-footer {
     padding: 12px 14px max(12px, env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 400px) {
+  .mm-dashboard-top-actions .mm-dashboard-preview {
+    max-width: 118px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
