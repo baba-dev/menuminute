@@ -7,7 +7,7 @@ import { financeRead, financeCommand } from "../src/modules/pos/finance";
 import { getPool } from "../src/db";
 import { withActor } from "../src/modules/tenancy/service";
 import { reportQuerySchema } from "../src/modules/reports/contracts";
-import { getReportsWorkspace } from "../src/modules/reports/service";
+import { getReportsWorkspace, exportReportCsv } from "../src/modules/reports/service";
 
 async function setup(
   mode: "non_registered" | "classified" = "non_registered",
@@ -673,6 +673,11 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
       totalCollectedMinor:28000,totalRefundedMinor:28000,
       staffRefundedMinor:28000,unassignedNetCashMinor:0,netCashFlowMinor:0,
     });
+    const exported = await exportReportCsv(f.actor, f.outlet.id, "till", query);
+    expect(exported.content).toContain("staff_attested_collections");
+    expect(exported.content).toContain("staff_attested_refunds");
+    expect(exported.content).toContain("unassigned_net_cash_not_in_drawers");
+    expect(exported.content).toContain("Not bank reconciled");
     const ledger = await f.view("ledger") as unknown as Array<{
       saleId:string;paidMinor:string;refundedMinor:string
     }>;
