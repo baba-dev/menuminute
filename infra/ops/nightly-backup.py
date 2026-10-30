@@ -125,6 +125,20 @@ def verify_postgres():
         raise BackupGateError("backup identity is not the local menuminute PostgreSQL superuser")
 
 
+def ensure_disk_headroom():
+    # The ERP shares the root volume. Refuse to stage an unbounded pg_dump
+    # unless available space covers the database footprint plus 10 GiB reserve.
+    size = command(postgres_env() + [
+        "psql", "-XAt", "-w", "-c", "SELECT pg_database_size(current_database())"
+    ], timeout=30)
+    if not size or not size.strip().isdigit():
+        raise BackupGateError("PostgreSQL size cannot be measured")
+    db_bytes = int(size.strip())
+    free_bytes = shutil.disk_usage(BACKUP_ROOT).free
+    if free_bytes < db_bytes + 10 * 1024 ** 3:
+        raise BackupGateError("shared ERP disk reserve is insufficient for staged PostgreSQL dump")
+
+
 def restic_env():
     result = os.environ.copy()
     for name in ("DATABASE_URL", "MIGRATION_DATABASE_URL", "WORKER_DATABASE_URL",
@@ -198,6 +212,7 @@ def create_backup():
         except BlockingIOError as error:
             raise BackupGateError("another nightly backup is still running") from error
         verify_postgres()
+        ensure_disk_headroom()
         before = remote_snapshots()
         started = dt.datetime.now(UTC)
         with tempfile.TemporaryDirectory(prefix=".nightly.", dir=BACKUP_ROOT) as temporary:
