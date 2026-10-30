@@ -174,7 +174,8 @@ export type PosReceipt = {
   createdAt: string;
   currency: string;
   subtotalMinor: string;
-  paymentStatus: "pending" | "complete";
+  paymentStatus: "pending" | "complete" | "refunded";
+  refundRecorded: boolean;
   paymentEvidence: "staff_recorded" | "none";
   paymentMethod: string | null;
   sellerName: string | null;
@@ -199,7 +200,7 @@ export async function posReceipt(
   identity.parse(saleId);
   await posContext(actor, organizationId, outletId);
   const result = (await posCall(actor, outletId, (run) =>
-    run(sql`select app_private.pos_receipt_data(${outletId},${saleId}) as data`)
+    run(sql`select app_private.pos_receipt_data_v2(${outletId},${saleId}) as data`)
   )) as { rows: { data: PosReceipt }[] };
   return result.rows[0]!.data;
 }
