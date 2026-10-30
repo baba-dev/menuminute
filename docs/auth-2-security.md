@@ -22,8 +22,11 @@ Set `TURNSTILE_SECRET_KEY` in the private web environment; inject matching
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` **at build time**. Test the real challenge on the public
 hostname; do not enable just one half. Better Auth handles server validation on signup.
 Application auth budgets use Redis, hashed normalized email plus a proxy-overwritten
-X-Real-IP; preserve the existing Better Auth DB limits and restrict origin access to
-trusted Cloudflare/Nginx proxy addresses. Never trust an arbitrary forwarded client IP.
+X-Real-IP. Sign-in has a short email-plus-source budget, an aggregate source cap, and a
+high email-only distributed-abuse backstop; traffic rejected by the first two does not
+consume the victim-wide budget. Password-reset and verification requests retain their
+strict per-email limits. Preserve the existing Better Auth DB limits and restrict origin
+access to trusted Cloudflare/Nginx proxy addresses. Never trust an arbitrary forwarded client IP.
 No provider secrets or MFA QR/backup values may be logged or placed in source.
 
 CSP intentionally permits Next.js/theme inline bootstrapping; base-uri, frame, object and
