@@ -330,6 +330,13 @@
       "when": 1793365200003,
       "tag": "0046_pos_settlement_projection",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793365200004,
+      "tag": "0047_pos_staff_refund_correction",
+      "breakpoints": true
     }
   ]
 }
