@@ -9,6 +9,7 @@ The canonical `orders` row owns kitchen/fulfillment status. `pos_sales` owns the
 A single **outlet-scoped, protected read projection** joins the staff and finance worlds without copying or moving historical money, and never treats staff-recorded card/UPI/bank entries as provider-confirmed receipts. Deny direct authenticated table reads; use the established `app_private.pos_access` permission check and scoped `SECURITY DEFINER` functions. Historical finance read/print must remain accessible when new collections are disabled.
 
 Payment states are independent:
+
 - `unpaid`, `partial`, `paid`, `refunded`: computed allocation status based on known source records, not an assertion of bank settlement
 - `staff_recorded` vs `provider_confirmed`: evidence strength, never implicitly upgraded
 - `frozen_bill` vs `pre_tax_draft`: tax/legal meaning; no cross-basis arithmetic claims
