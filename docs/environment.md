@@ -72,10 +72,11 @@ PUBLIC_MEDIA_RATE_LIMIT_MAX defaults to 180 requests per signed client per
 requests across clients for the same window. Both use cache Redis, with
 atomic reservations. Do not put secrets in NEXT_PUBLIC_ variables.
 
-**Production prerequisite:** /api/public-media/ must receive the same authenticated
-Nginx edge attestation already used by public orders. Add the isolated location
-from infra/nginx/menuminute.conf.example to the reviewed Food vhost; ensure
-trusted Cloudflare real_ip ranges are active, the app only listens on loopback,
-and the root-only edge secret agrees with ORDER_EDGE_SHARED_SECRET in web.env.
-Without a valid signed client identity, image delivery deliberately fails closed
-with 503. Do not roll out this release before confirming live image requests.
+**Production prerequisite:** /api/public-media/ and /api/public-menu/ must receive
+the same authenticated Nginx edge attestation already used by public orders. Add
+the isolated locations from infra/nginx/menuminute.conf.example to the reviewed
+Food vhost; ensure trusted Cloudflare real_ip ranges are active, the app only
+listens on loopback, and the root-only edge secret agrees with
+ORDER_EDGE_SHARED_SECRET in web.env. Without a valid signed client identity,
+image delivery and public-menu reads deliberately fail closed with 503. Do not
+roll out this release before confirming live image and menu requests.

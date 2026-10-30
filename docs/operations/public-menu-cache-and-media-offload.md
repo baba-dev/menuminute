@@ -54,8 +54,8 @@ Host operator steps (preserve ERP vhost, certificates and all existing rules):
 
 1. Review `infra/nginx/menuminute.conf.example`. Add its **internal-only**
    `/_menuminute_media_internal/` location inside the existing Food HTTPS
-   server. Preserve the existing public-media proxy and public-orders edge
-   attestation. Confirm local `MEDIA_ROOT=/var/lib/menuminute/media`.
+   server. Preserve the existing public-media proxy plus public-orders and
+   public-menu edge attestation. Confirm local `MEDIA_ROOT=/var/lib/menuminute/media`.
 2. Ensure Nginx's worker has read/traverse permissions only for the media
    derivative directory tree; keep original uploads restricted. Do not expose
    the media root as a separate public document root.
