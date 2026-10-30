@@ -9,6 +9,7 @@ const configured = (extra: Record<string, string> = {}) =>
     DATABASE_URL: "postgresql://localhost/menuminute_test",
     AUTH_SECRET: "test-only-secret-with-at-least-32-characters",
     EMAIL_PROVIDER: "test",
+    AUTH_ALLOW_TEST_EMAIL: "true",
     REDIS_QUEUE_URL: "redis://127.0.0.1:6379",
     REDIS_CACHE_URL: "redis://127.0.0.1:6380",
     MEDIA_STORAGE: "local",
