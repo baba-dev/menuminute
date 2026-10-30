@@ -766,30 +766,36 @@ export async function exportReportCsv(
 
   if (tab === "till") {
     if (!data.tillReconciliation.available) throw new ForbiddenError();
+    const till = data.tillReconciliation;
+    // A rectangular CSV separates settlement facts and shift rows.
+    // All money is formatted in the outlet currency; no gateway proof implied.
     const headers = [
-      "Shift ID",
-      "Register",
-      "Cashier",
-      "Status",
-      "Opened At",
-      "Closed At",
-      "Opening Float",
-      "Expected Cash",
-      "Counted Cash",
-      "Variance",
+      "Record Type", "Reference", "Register", "Cashier / Evidence",
+      "Status", "Opened At", "Closed At", "Opening Float",
+      "Expected Cash", "Counted Cash", "Variance", "Amount",
     ];
-    const rows = data.tillReconciliation.shifts.map((s) => [
-      s.shiftId,
-      s.registerName,
-      s.cashierName,
-      s.state,
-      s.openedAt,
-      s.closedAt ?? "Active",
-      formatMoneyAmount(s.openingFloatMinor, currency),
-      formatMoneyAmount(s.expectedMinor, currency),
-      formatMoneyAmount(s.countedMinor, currency),
-      formatMoneyAmount(s.varianceMinor, currency),
-    ]);
+    const summary = [
+      ["total_recorded_collections", till.totalCollectedMinor],
+      ["staff_attested_collections", till.staffCollectedMinor],
+      ["total_recorded_refunds", till.totalRefundedMinor],
+      ["staff_attested_refunds", till.staffRefundedMinor],
+      ["unassigned_net_cash_not_in_drawers", till.unassignedNetCashMinor],
+    ] as const;
+    const rows = [
+      ...summary.map(([kind, value]) => [
+        "summary", kind, "", "Staff-recorded is not provider-confirmed",
+        "Not bank reconciled", "", "", "", "", "", "",
+        formatMoneyAmount(value, currency),
+      ]),
+      ...till.shifts.map((shift) => [
+        "shift", shift.shiftId, shift.registerName, shift.cashierName,
+        shift.state, shift.openedAt, shift.closedAt ?? "Active",
+        formatMoneyAmount(shift.openingFloatMinor, currency),
+        formatMoneyAmount(shift.expectedMinor, currency),
+        formatMoneyAmount(shift.countedMinor, currency),
+        formatMoneyAmount(shift.varianceMinor, currency), "",
+      ]),
+    ];
     return {
       filename: `Till-Reconciliation-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
       content: serializeCsv(headers, rows),
