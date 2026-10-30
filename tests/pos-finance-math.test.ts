@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { allocateDiscount, checkedMinor, decimalToMinor, genericTax, validateTender } from "../src/lib/pos/finance-math";
+import {
+  allocateDiscount,
+  checkedMinor,
+  decimalToMinor,
+  genericTax,
+  validateTender,
+} from "../src/lib/pos/finance-math";
 
 describe("POS #142 C: exact finance arithmetic without fiscal activation", () => {
   it("honors zero, two and three ISO currency exponents", () => {
@@ -20,26 +26,50 @@ describe("POS #142 C: exact finance arithmetic without fiscal activation", () =>
   });
 
   it("uses exact cash change and never treats external references as provider captures", () => {
-    expect(validateTender({
-      method: "cash", amountMinor: "700", tenderedMinor: "1000", reference: null
-    })).toEqual({ changeMinor: "300" });
-    expect(validateTender({
-      method: "upi_external", amountMinor: "700", tenderedMinor: "700", reference: "UPI-TEST-ONLY"
-    })).toEqual({ changeMinor: "0" });
-    expect(() => validateTender({
-      method: "upi_external", amountMinor: "700", tenderedMinor: "1000", reference: "ABC"
-    })).toThrow();
-    expect(() => validateTender({
-      method: "card_external", amountMinor: "700", tenderedMinor: "700", reference: null
-    })).toThrow();
+    expect(
+      validateTender({
+        method: "cash",
+        amountMinor: "700",
+        tenderedMinor: "1000",
+        reference: null,
+      })
+    ).toEqual({ changeMinor: "300" });
+    expect(
+      validateTender({
+        method: "upi_external",
+        amountMinor: "700",
+        tenderedMinor: "700",
+        reference: "UPI-TEST-ONLY",
+      })
+    ).toEqual({ changeMinor: "0" });
+    expect(() =>
+      validateTender({
+        method: "upi_external",
+        amountMinor: "700",
+        tenderedMinor: "1000",
+        reference: "ABC",
+      })
+    ).toThrow();
+    expect(() =>
+      validateTender({
+        method: "card_external",
+        amountMinor: "700",
+        tenderedMinor: "700",
+        reference: null,
+      })
+    ).toThrow();
   });
 
   it("uses deterministic half-up tax without claiming the tax profile is lawful", () => {
     expect(genericTax("10000", 500, false)).toEqual({
-      baseMinor: "10000", taxMinor: "500", totalMinor: "10500"
+      baseMinor: "10000",
+      taxMinor: "500",
+      totalMinor: "10500",
     });
     expect(genericTax("10500", 500, true)).toEqual({
-      baseMinor: "10000", taxMinor: "500", totalMinor: "10500"
+      baseMinor: "10000",
+      taxMinor: "500",
+      totalMinor: "10500",
     });
     expect(genericTax("1", 5000, false).taxMinor).toBe("1");
     expect(() => genericTax("2147483647", 10000, false)).toThrow();
