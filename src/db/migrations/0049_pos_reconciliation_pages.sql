@@ -114,4 +114,4 @@ GRANT EXECUTE ON FUNCTION app_private.pos_reconciliation_page(text,timestamptz,t
   TO menuminute_app;
 
 CREATE INDEX IF NOT EXISTS pos_staff_attest_outlet_date
-  ON pos_staff_payment_attestations(outlet_id,created_at,id);
+  ON pos_staff_payment_attestations(outlet_id,created_at,sale_id);
