@@ -1062,12 +1062,16 @@ export function FinancialHub({
                       disabled={
                         !finance.documentsEnabled ||
                         !finance.canIssue ||
+                        selected.bill.taxMode !== "non_registered" ||
                         busy ||
                         selected.documents.some((d) => d.kind !== "credit_note")
                       }
                       onClick={() => void command("issue", { saleId: selected.saleId })}
                     >
-                      <FileText size={17} /> Issue document when fully paid
+                      <FileText size={17} />
+                      {selected.bill.taxMode === "non_registered"
+                        ? "Issue non-fiscal receipt when fully paid"
+                        : "Registered invoicing unavailable — adapter not installed"}
                     </button>
                     <label>
                       Full-sale reversal reason
