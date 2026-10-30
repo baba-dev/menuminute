@@ -79,7 +79,7 @@ export type PosSaleResult = {
   status: string;
   taxAndFeesCalculated: false;
   duplicate: boolean;
-  paymentStatus?: "pending" | "complete";
+  paymentStatus?: "pending" | "complete" | "refunded";
   paymentEvidence?: "none" | "staff_recorded";
   paymentMethod?: string;
 };
