@@ -87,7 +87,11 @@ test("organization and outlet management, scoped roles, billing and suspension r
   test.setTimeout(90_000);
   const f = await seed();
   await login(page, f.email, f.password);
-  await page.getByRole("link", { name: "Organization & access" }).click();
+  const organizationLink = page.getByRole("link", { name: "Organization & access" });
+  // On a phone the sidebar is replaced by the bottom bar; this page lives under More there.
+  if (!(await organizationLink.isVisible()))
+    await page.getByRole("button", { name: "More" }).click();
+  await organizationLink.click();
   await expect(page.getByRole("heading", { name: "Organization management" })).toBeVisible();
   await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
   const rename = page

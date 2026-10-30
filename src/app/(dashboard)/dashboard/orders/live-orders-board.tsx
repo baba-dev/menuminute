@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { playKitchenBell } from "@/lib/sound-effects";
+import { useSoundPreference } from "@/lib/use-sound-preference";
 import { ServicePulseRail, Ticket, RailEmpty } from "@/components/orders/ticket";
 import type {
   Activity,
@@ -121,12 +122,17 @@ export function LiveOrdersBoard({
   outletName,
   currency,
   timezone,
+  initialQuery,
+  initialTab,
 }: {
   organizationId: string;
   outletId: string;
   outletName: string;
   currency: string;
   timezone: string;
+  /** Deep link from the command palette: pre-fill the search and optionally open History. */
+  initialQuery?: string;
+  initialTab?: Tab;
 }) {
   const base =
     "/api/organizations/" +
@@ -137,11 +143,11 @@ export function LiveOrdersBoard({
   const [orders, setOrders] = useState<MerchantOrder[]>([]);
   const [pulse, setPulse] = useState<ServicePulse | null>(null);
   const [overflow, setOverflow] = useState(false);
-  const [tab, setTab] = useState<Tab>("active");
+  const [tab, setTab] = useState<Tab>(initialTab ?? "active");
   const [rail, setRail] = useState<Rail>("all");
   const [mode, setMode] = useState("all");
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
+  const [debounced, setDebounced] = useState(initialQuery ?? "");
   const [historyStatus, setHistoryStatus] = useState("all");
   const [payment, setPayment] = useState("all");
   const [from, setFrom] = useState("");
@@ -166,7 +172,9 @@ export function LiveOrdersBoard({
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [lastPulseSync, setLastPulseSync] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
-  const [sound, setSound] = useState(false);
+  // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
+  const { preference: soundPreference, setEnabled: setSound } = useSoundPreference();
+  const sound = soundPreference.enabled;
   const soundRef = useRef(false);
   const previousPending = useRef<Set<string> | null>(null);
   const refreshController = useRef<AbortController | null>(null);
@@ -175,14 +183,9 @@ export function LiveOrdersBoard({
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    const restore = window.setTimeout(
-      () => setSound(window.localStorage.getItem("menuminute.orders.sound") === "enabled"),
-      0
-    );
     const tick = window.setTimeout(() => setNow(Date.now()), 0);
     const id = window.setInterval(() => setNow(Date.now()), 30000);
     return () => {
-      window.clearTimeout(restore);
       window.clearTimeout(tick);
       window.clearInterval(id);
     };
@@ -596,10 +599,6 @@ export function LiveOrdersBoard({
                 onClick={() => {
                   const next = !sound;
                   setSound(next);
-                  window.localStorage.setItem(
-                    "menuminute.orders.sound",
-                    next ? "enabled" : "muted"
-                  );
                   if (next) {
                     try {
                       playKitchenBell("orders");

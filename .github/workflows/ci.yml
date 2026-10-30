@@ -282,7 +282,7 @@ jobs:
       - run: pnpm build:worker
       - run: pnpm exec playwright install --with-deps chromium
       - name: Exercise real Ember drawer, availability confirmation and outlet isolation
-        run: pnpm exec playwright test tests/e2e/ember.spec.ts tests/e2e/shift-summary.spec.ts
+        run: pnpm exec playwright test tests/e2e/ember.spec.ts tests/e2e/shift-summary.spec.ts tests/e2e/shell-ember.spec.ts
       - name: Summarize Phase 5 Ember-enabled browser evidence at exact SHA
         run: node scripts/qa/phase5-browser-evidence.mjs test-results/phase5-browser-report.json test-results/phase5-browser-summary.json "$GITHUB_SHA" ember-browser
       - name: Retain synthetic Ember browser acceptance evidence

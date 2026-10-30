@@ -17,7 +17,11 @@ export function WorkspaceSkipLink() {
 /**
  * After a client-side navigation, move focus to the new page heading so keyboard and
  * screen-reader users land in the content instead of staying on the sidebar link.
- * Skipped for the initial render so a normal page load keeps the browser's own focus.
+ *
+ * Many pages stream in behind a loading state that has its own heading, and the real heading
+ * replaces it a moment later. The heading is therefore followed while the page settles, but
+ * only for as long as the person has not moved focus themselves. Skipped for the initial
+ * render so a normal page load keeps the browser's own focus.
  */
 export function RouteFocus() {
   const pathname = usePathname();
@@ -27,10 +31,32 @@ export function RouteFocus() {
     previous.current = pathname;
     const main = document.getElementById(WORKSPACE_MAIN_ID);
     if (!main) return;
-    const heading = main.querySelector<HTMLElement>("h1");
-    const target = heading ?? main;
-    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
-    target.focus({ preventScroll: false });
+    let focused: HTMLElement | null = null;
+    const focusHeading = () => {
+      const target = main.querySelector<HTMLElement>("h1") ?? main;
+      if (target === focused && target.isConnected) return;
+      if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: false });
+      focused = target;
+    };
+    focusHeading();
+    const observer = new MutationObserver(() => {
+      const active = document.activeElement;
+      const untouched =
+        !active || active === document.body || active === main || active === focused;
+      if (!untouched) {
+        observer.disconnect();
+        return;
+      }
+      const heading = main.querySelector<HTMLElement>("h1");
+      if (heading && heading !== focused) focusHeading();
+    });
+    observer.observe(main, { childList: true, subtree: true });
+    const stop = window.setTimeout(() => observer.disconnect(), 5_000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(stop);
+    };
   }, [pathname]);
   return null;
 }

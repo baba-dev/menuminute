@@ -21,6 +21,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
+import { useSoundPreference } from "@/lib/use-sound-preference";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
@@ -145,7 +146,9 @@ export function KitchenBoard({
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
-  const [sound, setSound] = useState(false);
+  // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
+  const { preference: soundPreference, setEnabled: setSound } = useSoundPreference();
+  const sound = soundPreference.enabled;
   const [showSettings, setShowSettings] = useState(false);
   const [mobileLane, setMobileLane] = useState<"all" | "queued" | "preparing" | "complete">("all");
   const [reassignWork, setReassignWork] = useState("");
@@ -154,6 +157,9 @@ export function KitchenBoard({
   const seen = useRef(new Set(initial.work.map((w) => w.id)));
   const cursorRef = useRef(initial.cursor);
   const soundRef = useRef(false);
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
   const inflight = useRef(new Set<string>());
   const revoked = useRef(false);
   const stream = useRef<EventSource | null>(null);
@@ -199,11 +205,6 @@ export function KitchenBoard({
   useEffect(() => {
     const initial = requestAnimationFrame(() => {
       setNow(Date.now());
-      try {
-        const saved = localStorage.getItem("menuminute.kitchen.sound") === "true";
-        soundRef.current = saved;
-        setSound(saved);
-      } catch {}
     });
     const clock = setInterval(() => setNow(Date.now()), 15000);
     return () => {
@@ -406,9 +407,6 @@ export function KitchenBoard({
               className="kk-tool"
               onClick={() => {
                 const enabled = !sound;
-                try {
-                  localStorage.setItem("menuminute.kitchen.sound", String(enabled));
-                } catch {}
                 soundRef.current = enabled;
                 if (enabled) {
                   try {

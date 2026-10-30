@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MilestoneTicket } from "../src/components/dashboard/milestone-ticket";
 import { orderMilestones } from "../src/modules/dashboard/milestones";
 import { LoadingRegion, Skeleton, SkeletonCard } from "../src/components/ui/skeleton";
@@ -57,6 +57,65 @@ describe("skip link and route focus", () => {
       </>
     );
     expect(screen.getByRole("heading", { name: "Orders" })).toHaveFocus();
+  });
+});
+
+describe("route focus follows a heading that is replaced while the page loads", () => {
+  const page = (heading: string) => (
+    <>
+      <RouteFocus />
+      <main id="workspace-main">
+        <h1>{heading}</h1>
+      </main>
+    </>
+  );
+
+  it("moves to the real heading when a loading heading is swapped out", async () => {
+    const { rerender } = render(page("Overview"));
+    pathname = "/dashboard/settings";
+    rerender(page("Preparing your settings…"));
+    expect(screen.getByRole("heading", { name: "Preparing your settings…" })).toHaveFocus();
+    // Suspense replaces the loading element with the real page.
+    rerender(
+      <>
+        <RouteFocus />
+        <main id="workspace-main">
+          <section>
+            <h1>Outlet settings</h1>
+          </section>
+        </main>
+      </>
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Outlet settings" })).toHaveFocus()
+    );
+  });
+
+  it("does not steal focus back once the person has moved it", async () => {
+    const { rerender } = render(page("Overview"));
+    pathname = "/dashboard/orders";
+    rerender(
+      <>
+        <RouteFocus />
+        <main id="workspace-main">
+          <h1>Loading orders…</h1>
+          <input aria-label="Search" />
+        </main>
+      </>
+    );
+    const input = screen.getByLabelText("Search");
+    input.focus();
+    rerender(
+      <>
+        <RouteFocus />
+        <main id="workspace-main">
+          <h1>Orders</h1>
+          <input aria-label="Search" />
+        </main>
+      </>
+    );
+    await act(async () => undefined);
+    expect(screen.getByLabelText("Search")).toHaveFocus();
   });
 });
 

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Bell, Check, Printer, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
 import { playKitchenBell } from "@/lib/sound-effects";
+import { useSoundPreference } from "@/lib/use-sound-preference";
 import type { PosIncomingOrder, PosSaleResult } from "@/modules/pos/service";
 
 type Inbox = { orders: PosIncomingOrder[]; overflow: boolean };
@@ -30,21 +31,13 @@ export function PosIncomingOrders({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
-  const [sound, setSound] = useState(false);
+  // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
+  const { preference: soundPreference, setEnabled: setSound } = useSoundPreference();
+  const sound = soundPreference.enabled;
   const [lastAccepted, setLastAccepted] = useState<{ order: number; saleId: string } | null>(null);
   const keys = useRef<Map<string, string>>(new Map());
   const seen = useRef<Set<string> | null>(null);
   const sounding = useRef(false);
-  useEffect(() => {
-    const restore = window.setTimeout(() => {
-      try {
-        setSound(localStorage.getItem("mm.pos.sound." + outletId) === "on");
-      } catch {
-        /* Browser storage is optional. */
-      }
-    }, 0);
-    return () => window.clearTimeout(restore);
-  }, [outletId]);
   useEffect(() => {
     sounding.current = sound;
   }, [sound]);
@@ -141,9 +134,6 @@ export function PosIncomingOrders({
             onClick={() => {
               const next = !sound;
               setSound(next);
-              try {
-                localStorage.setItem("mm.pos.sound." + outletId, next ? "on" : "off");
-              } catch {}
             }}
           >
             {sound ? <Volume2 size={17} /> : <VolumeX size={17} />}

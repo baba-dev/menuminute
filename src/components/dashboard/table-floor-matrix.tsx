@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,10 +10,17 @@ import type { FloorTable } from "@/modules/hospitality/floor-matrix";
 export function TableFloorMatrix({
   tables,
   currency,
+  focusTableId,
 }: {
   tables: FloorTable[] | null;
   currency: string;
+  /** Highlights and scrolls to one table (for example from the command palette). */
+  focusTableId?: string;
 }) {
+  const focusedRow = useRef<HTMLLIElement | null>(null);
+  useEffect(() => {
+    focusedRow.current?.scrollIntoView?.({ block: "center" });
+  }, [focusTableId, tables]);
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "active" | "unpaid">("all");
   const [refreshing, startRefresh] = useTransition();
@@ -122,7 +129,14 @@ export function TableFloorMatrix({
           </div>
           <ul className="mm-ops-items">
             {rows.map((table) => (
-              <li className="mm-ops-item" key={table.id}>
+              <li
+                className="mm-ops-item"
+                key={table.id}
+                id={"table-" + table.id}
+                ref={table.id === focusTableId ? focusedRow : undefined}
+                data-focused={table.id === focusTableId ? "true" : undefined}
+                aria-current={table.id === focusTableId ? "true" : undefined}
+              >
                 <strong>Table {table.tableNumber}</strong>
                 <span>
                   {table.unpaidOrders > 0

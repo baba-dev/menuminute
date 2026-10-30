@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
@@ -27,6 +31,11 @@ export default async function OrdersPage() {
         </Link>
       </main>
     );
+  const params = await searchParams;
+  // Deep links come from the command palette. Anything unexpected is simply ignored.
+  const rawQuery = typeof params["q"] === "string" ? params["q"].trim().slice(0, 80) : "";
+  const initialQuery = /^[\p{L}\p{N}#._ -]*$/u.test(rawQuery) ? rawQuery : "";
+  const initialTab = params["tab"] === "history" ? ("history" as const) : undefined;
   return (
     <LiveOrdersBoard
       key={outlet.id}
@@ -35,6 +44,8 @@ export default async function OrdersPage() {
       outletName={outlet.name}
       currency={outlet.currency}
       timezone={outlet.timezone}
+      initialQuery={initialQuery}
+      initialTab={initialTab}
     />
   );
 }

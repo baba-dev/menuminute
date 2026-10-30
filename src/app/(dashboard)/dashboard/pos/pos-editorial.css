@@ -1117,7 +1117,7 @@
     position: fixed;
     z-index: 70;
     left: 16px;
-    bottom: 16px;
+    bottom: calc(16px + var(--mm-bottom-bar, 0px));
     width: min(calc(100vw - 158px), 400px);
     min-height: 54px;
     align-items: center;

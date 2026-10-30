@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { playKitchenBell } from "@/lib/sound-effects";
+import { useSoundPreference } from "@/lib/use-sound-preference";
 
 type PendingOrder = {
   id: string;
@@ -64,11 +65,16 @@ export function KitchenIntake({
   const [error, setError] = useState("");
   const [syncing, setSyncing] = useState(true);
   const [inboxOpen, setInboxOpen] = useState(false);
-  const [sound, setSound] = useState(false);
+  // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
+  const { preference: soundPreference, setEnabled: setSound } = useSoundPreference();
+  const sound = soundPreference.enabled;
   const [now, setNow] = useState<number | null>(null);
   const previous = useRef(new Set<string>());
   const initialized = useRef(false);
   const soundEnabled = useRef(false);
+  useEffect(() => {
+    soundEnabled.current = sound;
+  }, [sound]);
   const latestRequest = useRef(0);
   const active = useRef(true);
   const refresh = useCallback(
@@ -113,13 +119,6 @@ export function KitchenIntake({
     const controller = new AbortController();
     const frame = window.requestAnimationFrame(() => {
       setNow(Date.now());
-      try {
-        const saved = localStorage.getItem("menuminute.kitchen.intake.sound") === "true";
-        soundEnabled.current = saved;
-        setSound(saved);
-      } catch {
-        /* optional browser preference */
-      }
       void refresh(controller.signal).catch((cause) => {
         if (!controller.signal.aborted) {
           setError(cause instanceof Error ? cause.message : "Intake unavailable.");
@@ -264,9 +263,6 @@ export function KitchenIntake({
               const enabled = !sound;
               soundEnabled.current = enabled;
               setSound(enabled);
-              try {
-                localStorage.setItem("menuminute.kitchen.intake.sound", String(enabled));
-              } catch {}
               if (enabled) {
                 try {
                   playKitchenBell("orders");
