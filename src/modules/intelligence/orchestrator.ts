@@ -1,6 +1,7 @@
 import { env } from "@/lib/config/env";
 import { ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
+import { selectQuestionTools } from "./tool-selection";
 import {
   createProviderHub,
   IntelligenceError,
@@ -80,7 +81,7 @@ export async function runReadOnlyTurn(
   try {
     await assertAssistantScope(scope);
     stage = "authorize_tools";
-    const definitions = await authorizedToolDefinitions(scope);
+    const definitions = selectQuestionTools(await authorizedToolDefinitions(scope), turn.prompt);
     if (!definitions.length) throw new ValidationError("No authorized read-only tools");
     stage = "select_provider";
     const model = preferred(hub);

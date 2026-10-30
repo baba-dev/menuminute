@@ -4,6 +4,7 @@ import { availableNow } from "@/modules/menu-product/contracts";
 import { listImports } from "@/modules/menu-import/service";
 import { dashboardQrRows } from "@/modules/menu-product/dashboard-data";
 import { getReportsWorkspace } from "@/modules/reports/service";
+import { reportQuerySchema } from "@/modules/reports/contracts";
 import { withOutletRead } from "@/modules/tenancy/service";
 import type { ToolContext } from "./read-tools";
 
@@ -31,12 +32,13 @@ export async function merchantReport(context: ToolContext, range: ReportPeriod) 
   if (!outlet || outlet.organizationId !== context.organizationId)
     throw new Error("Outlet unavailable");
   const selected = range === "week" ? weekWindow(outlet.timezone) : null;
-  const report = await getReportsWorkspace(context.actor, context.outletId, {
-    range: selected ? "custom" : range,
-    ...(selected ?? {}),
-    fulfillmentMode: "all",
-    tab: "z-report",
-  });
+  const report = await getReportsWorkspace(context.actor, context.outletId,
+    reportQuerySchema.parse({
+      range: selected ? "custom" : range,
+      ...(selected ?? {}),
+      fulfillmentMode: "all",
+      tab: "z-report",
+    }));
   const till = report.tillReconciliation;
   return {
     source: "reports.getReportsWorkspace",
