@@ -337,6 +337,13 @@
       "when": 1793365200004,
       "tag": "0047_pos_staff_refund_correction",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793365200005,
+      "tag": "0048_pos_ledger_staff_parity",
+      "breakpoints": true
     }
   ]
 }
