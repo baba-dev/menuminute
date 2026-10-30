@@ -486,6 +486,17 @@ describe("POS #142 B/D shared settlement and manager corrections", () => {
     const f = await setup("non_registered", 1, true);
     expect(await f.view("context")).toMatchObject({ paymentsEnabled: false });
     const before = (await f.view("settlement", f.sale.saleId)) as Record<string, unknown>;
+    const ledgerBefore = (await f.view("ledger")) as Array<{
+      saleId: string;
+      paidMinor: string;
+      refundedMinor: string;
+      paymentEvidence: string;
+    }>;
+    expect(ledgerBefore.find((row) => row.saleId === f.sale.saleId)).toMatchObject({
+      paidMinor: "28000",
+      refundedMinor: "0",
+      paymentEvidence: "staff_recorded",
+    });
     expect(before).toMatchObject({
       state: "paid",
       staffAttestedMinor: "28000",
@@ -513,6 +524,17 @@ describe("POS #142 B/D shared settlement and manager corrections", () => {
       f.cmd("staff_refund", { ...data, reason: "Changed reason for prior key" }, key)
     ).rejects.toMatchObject({ statusCode: 409 });
     const after = (await f.view("settlement", f.sale.saleId)) as Record<string, unknown>;
+    const ledgerAfter = (await f.view("ledger")) as Array<{
+      saleId: string;
+      paidMinor: string;
+      refundedMinor: string;
+      staffRefunded: boolean;
+    }>;
+    expect(ledgerAfter.find((row) => row.saleId === f.sale.saleId)).toMatchObject({
+      paidMinor: "28000",
+      refundedMinor: "28000",
+      staffRefunded: true,
+    });
     expect(after).toMatchObject({
       state: "refunded",
       staffAttestedMinor: "28000",
