@@ -7,7 +7,12 @@ import { financeRead, financeCommand } from "../src/modules/pos/finance";
 import { getPool } from "../src/db";
 import { withActor } from "../src/modules/tenancy/service";
 
-async function setup(mode: "non_registered" | "classified" = "non_registered", quantity = 1, staffPaid = false, paymentMethod: "cash" | "upi_external" = "cash") {
+async function setup(
+  mode: "non_registered" | "classified" = "non_registered",
+  quantity = 1,
+  staffPaid = false,
+  paymentMethod: "cash" | "upi_external" = "cash"
+) {
   const f = await fixture();
   const menuId = crypto.randomUUID();
   await commandMenu(f.actor, f.outlet.id, menuId, {
@@ -453,18 +458,26 @@ describe("POS D–G real PostgreSQL finance integration", () => {
   });
 });
 
-
 describe("POS #142 B/D shared settlement and manager corrections", () => {
   it("shows unpaid draft as distinct from provider-confirmed finance", async () => {
     const f = await setup();
     const detail = (await f.view("settlement", f.sale.saleId)) as {
-      basis: string; state: string; expectedMinor: string; staffAttestedMinor: string;
-      providerConfirmedMinor: string; financeTenderMinor: string; refundMinor: string;
+      basis: string;
+      state: string;
+      expectedMinor: string;
+      staffAttestedMinor: string;
+      providerConfirmedMinor: string;
+      financeTenderMinor: string;
+      refundMinor: string;
     };
     expect(detail).toMatchObject({
-      basis: "pre_tax_draft", state: "unpaid", expectedMinor: "28000",
-      staffAttestedMinor: "0", providerConfirmedMinor: "0",
-      financeTenderMinor: "0", refundMinor: "0",
+      basis: "pre_tax_draft",
+      state: "unpaid",
+      expectedMinor: "28000",
+      staffAttestedMinor: "0",
+      providerConfirmedMinor: "0",
+      financeTenderMinor: "0",
+      refundMinor: "0",
     });
     await expect(getPool().query("select * from pos_staff_refunds")).rejects.toThrow();
   });
@@ -474,56 +487,92 @@ describe("POS #142 B/D shared settlement and manager corrections", () => {
     expect(await f.view("context")).toMatchObject({ paymentsEnabled: false });
     const before = (await f.view("settlement", f.sale.saleId)) as Record<string, unknown>;
     expect(before).toMatchObject({
-      state: "paid", staffAttestedMinor: "28000", providerConfirmedMinor: "0",
-      cashCollectedMinor: "28000", refundMinor: "0", recordedNetMinor: "28000",
+      state: "paid",
+      staffAttestedMinor: "28000",
+      providerConfirmedMinor: "0",
+      cashCollectedMinor: "28000",
+      refundMinor: "0",
+      recordedNetMinor: "28000",
     });
-    const data = { saleId: f.sale.saleId, reason: "Wrong customer payment", externalRefundAttested: false };
+    const data = {
+      saleId: f.sale.saleId,
+      reason: "Wrong customer payment",
+      externalRefundAttested: false,
+    };
     const key = crypto.randomUUID();
     const first = await f.cmd("staff_refund", data, key);
     const again = await f.cmd("staff_refund", data, key);
-    expect(first).toMatchObject({ state: "staff_refunded", amountMinor: "28000", duplicate: false });
+    expect(first).toMatchObject({
+      state: "staff_refunded",
+      amountMinor: "28000",
+      duplicate: false,
+    });
     expect(again).toMatchObject({ state: "staff_refunded", amountMinor: "28000", duplicate: true });
     await expect(f.cmd("staff_refund", data)).rejects.toMatchObject({ statusCode: 409 });
-    await expect(f.cmd("staff_refund", { ...data, reason: "Changed reason for prior key" }, key))
-      .rejects.toMatchObject({ statusCode: 409 });
+    await expect(
+      f.cmd("staff_refund", { ...data, reason: "Changed reason for prior key" }, key)
+    ).rejects.toMatchObject({ statusCode: 409 });
     const after = (await f.view("settlement", f.sale.saleId)) as Record<string, unknown>;
     expect(after).toMatchObject({
-      state: "refunded", staffAttestedMinor: "28000",
-      staffRefundMinor: "28000", refundMinor: "28000", recordedNetMinor: "0",
-      cashRefundMinor: "28000", orderPaymentStatus: "voided",
+      state: "refunded",
+      staffAttestedMinor: "28000",
+      staffRefundMinor: "28000",
+      refundMinor: "28000",
+      recordedNetMinor: "0",
+      cashRefundMinor: "28000",
+      orderPaymentStatus: "voided",
     });
     const receipt = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, f.sale.saleId);
     expect(receipt).toMatchObject({ paymentStatus: "refunded", refundRecorded: true });
     const rows = await admin(async (_db, pool) =>
-      pool.query("select count(*)::int as count from pos_staff_refunds where sale_id=$1", [f.sale.saleId])
+      pool.query("select count(*)::int as count from pos_staff_refunds where sale_id=$1", [
+        f.sale.saleId,
+      ])
     );
     expect(rows.rows[0]?.count).toBe(1);
   });
 
   it("requires an explicit external refund attestation and rejects wrong outlet", async () => {
     const f = await setup("non_registered", 1, true, "upi_external");
-    const data = { saleId: f.sale.saleId, reason: "External UPI was returned", externalRefundAttested: false };
+    const data = {
+      saleId: f.sale.saleId,
+      reason: "External UPI was returned",
+      externalRefundAttested: false,
+    };
     await expect(f.cmd("staff_refund", data)).rejects.toMatchObject({ statusCode: 400 });
     const other = await fixture();
-    await expect(financeRead(f.actor, other.outlet.organizationId, other.outlet.id,
-      { view: "settlement", id: f.sale.saleId })).rejects.toThrow();
+    await expect(
+      financeRead(f.actor, other.outlet.organizationId, other.outlet.id, {
+        view: "settlement",
+        id: f.sale.saleId,
+      })
+    ).rejects.toThrow();
     const corrected = await f.cmd("staff_refund", { ...data, externalRefundAttested: true });
     expect(corrected).toMatchObject({ state: "staff_refunded", amountMinor: "28000" });
     const after = (await f.view("settlement", f.sale.saleId)) as Record<string, unknown>;
     expect(after).toMatchObject({
-      state: "refunded", cashRefundMinor: "0", staffMethod: "upi_external"
+      state: "refunded",
+      cashRefundMinor: "0",
+      staffMethod: "upi_external",
     });
   });
 
   it("serializes two separate refund attempts to exactly one compensation", async () => {
     const f = await setup("non_registered", 1, true);
-    const data = { saleId: f.sale.saleId, reason: "Duplicate register correction", externalRefundAttested: false };
+    const data = {
+      saleId: f.sale.saleId,
+      reason: "Duplicate register correction",
+      externalRefundAttested: false,
+    };
     const attempts = await Promise.allSettled([
-      f.cmd("staff_refund", data), f.cmd("staff_refund", data)
+      f.cmd("staff_refund", data),
+      f.cmd("staff_refund", data),
     ]);
     expect(attempts.filter((x) => x.status === "fulfilled")).toHaveLength(1);
     const rows = await admin(async (_db, pool) =>
-      pool.query("select count(*)::int as count from pos_staff_refunds where sale_id=$1", [f.sale.saleId])
+      pool.query("select count(*)::int as count from pos_staff_refunds where sale_id=$1", [
+        f.sale.saleId,
+      ])
     );
     expect(rows.rows[0]?.count).toBe(1);
   });
