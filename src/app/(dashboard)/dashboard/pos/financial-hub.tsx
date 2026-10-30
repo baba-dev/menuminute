@@ -20,8 +20,8 @@ import type {
   LedgerRow,
   ShiftRow,
   SettlementDetail,
-  type FinanceCursorPage,
-  type ReconciliationPage,
+  FinanceCursorPage,
+  ReconciliationPage,
 } from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
