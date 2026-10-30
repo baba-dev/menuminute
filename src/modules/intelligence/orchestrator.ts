@@ -3,6 +3,7 @@ import { ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
 import { selectQuestionTools } from "./tool-selection";
 import { groundedMerchantAnswer } from "./grounded-answer";
+import { minimizeProviderPrompt } from "./privacy";
 import {
   createProviderHub,
   IntelligenceError,
@@ -89,7 +90,7 @@ export async function runReadOnlyTurn(
     const provider = model.provider as ProviderId;
     const messages: InferenceMessage[] = [
       { role: "system", content: systemPrompt },
-      { role: "user", content: turn.prompt },
+      { role: "user", content: minimizeProviderPrompt(turn.prompt) },
     ];
     const invoke = async (round: 1 | 2, capability: "tools" | "text") => {
       // The DB has a hard UNIQUE(turn_id, round) constraint; replays never resend.
