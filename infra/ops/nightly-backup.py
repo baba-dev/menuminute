@@ -179,6 +179,26 @@ def exact_new_snapshot(before, after, stage):
     return snapshot_id
 
 
+def verify_snapshot_payload(snapshot_id, stage):
+    # Restic ls with the exact small staging path avoids enumerating all media
+    # and detects a wrapper exclusion that only stores an empty root directory.
+    raw = command([str(WRAPPER), "ls", "--json", snapshot_id, str(stage)],
+                  env=restic_env(), timeout=300)
+    stored_paths = set()
+    for line in (raw or "").splitlines():
+        try:
+            entry = json.loads(line)
+        except ValueError as error:
+            raise BackupGateError("Restic payload listing is malformed") from error
+        if entry.get("struct_type") == "node" and entry.get("type") == "file":
+            stored_paths.add(entry.get("path"))
+    needed = {str(stage / "database.dump"), str(stage / "backup-manifest.json"),
+              str(stage / "config" / "web.env"),
+              str(stage / "config" / "worker.env")}
+    if not needed.issubset(stored_paths):
+        raise BackupGateError("new encrypted snapshot is missing required SQL/config files")
+
+
 def dump_database(stage):
     dest = stage / "database.dump"
     with dest.open("xb") as output:
@@ -244,6 +264,7 @@ def create_backup():
                      "--tag", "menuminute-release-" + current_sha,
                      str(stage), str(MEDIA)], env=restic_env(), timeout=3600)
             snapshot_id = exact_new_snapshot(before, remote_snapshots(), stage)
+            verify_snapshot_payload(snapshot_id, stage)
             duration = round((dt.datetime.now(UTC) - started).total_seconds(), 1)
         # Only a successful verified off-host snapshot is reported as success.
         return {"status": "pass", "backup_kind": "nightly-sql-media",
