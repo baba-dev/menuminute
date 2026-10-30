@@ -30,6 +30,24 @@ location ^~ /api/auth/ {
 # Apply the existing /api/public-orders attestation location unchanged,
 # including the root-only /etc/menuminute/nginx-order-edge-secret.conf include.
 
+# Public menu reads use the same proxy-attested source reservation as guest
+# order tracking. The proxy must overwrite both private headers; never forward
+# client-supplied values. This reference block does not replace the live vhost.
+location ^~ /api/public-menu/ {
+    include /etc/menuminute/nginx-order-edge-secret.conf;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Client-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
+    proxy_read_timeout 30s;
+    client_max_body_size 16k;
+    add_header Cache-Control "private, no-store" always;
+}
+
 # Internal-only bytes transport: NEVER expose this location to clients.
 # Before enabling, verify MEDIA_ROOT=/var/lib/menuminute/media and access
 # for the Nginx worker user/group. No regex/globs or public filesystem mapping.
