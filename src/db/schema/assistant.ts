@@ -9,6 +9,9 @@ import {
   index,
   foreignKey,
   uuid,
+  bigint,
+  date,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { restaurants } from "./restaurants";
 import { users } from "./users";
@@ -95,6 +98,11 @@ export const assistantAttempts = pgTable(
       .default("started"),
     inputTokens: integer("input_tokens"),
     outputTokens: integer("output_tokens"),
+    budgetDay: date("budget_day"),
+    reservedMicroUsd: bigint("reserved_micro_usd", { mode: "number" }),
+    billedMicroUsd: bigint("billed_micro_usd", { mode: "number" }),
+    inputPriceMicroUsdMtok: bigint("input_price_micro_usd_mtok", { mode: "number" }),
+    outputPriceMicroUsdMtok: bigint("output_price_micro_usd_mtok", { mode: "number" }),
     createdAt: time("created_at").notNull().defaultNow(),
     settledAt: time("settled_at"),
   },
@@ -112,4 +120,19 @@ export const assistantAttempts = pgTable(
     unique("assistant_attempt_round").on(t.turnId, t.round),
     index("assistant_attempts_tenant_window").on(t.organizationId, t.createdAt),
   ]
+);
+
+/** Private per-organization, per-model UTC-day monetary admission ledger.
+ * No SELECT or UPDATE grants to web/worker; only app_private scoped functions. */
+export const assistantModelDailyBudget = pgTable(
+  "assistant_model_daily_budget",
+  {
+    organizationId: text("organization_id").notNull(),
+    day: date("day").notNull(),
+    provider: text("provider", { enum: ["nvidia", "cloudflare"] }).notNull(),
+    model: text("model").notNull(),
+    accountedMicroUsd: bigint("accounted_micro_usd", { mode: "number" }).notNull(),
+    dailyCapMicroUsd: bigint("daily_cap_micro_usd", { mode: "number" }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.organizationId, t.day, t.provider, t.model] })]
 );
