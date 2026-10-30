@@ -71,7 +71,7 @@ export function formatFinancialDocumentEmail(input: {
       ...heading,
       "",
       "A complete document snapshot could not be formatted for email.",
-      "Open the authorized private Ledger to view the original record.",
+      "Please contact the restaurant for a verified copy of the original record.",
       "This message is not proof of bank settlement or government fiscal registration.",
     ].join("\n");
   }

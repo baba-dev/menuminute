@@ -54,5 +54,7 @@ describe("private financial document email", () => {
     });
     expect(text).toContain("could not be formatted");
     expect(text).not.toContain("Total billed");
+    expect(text).toContain("contact the restaurant");
+    expect(text).not.toContain("private Ledger");
   });
 });
