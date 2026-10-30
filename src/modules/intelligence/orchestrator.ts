@@ -1,4 +1,5 @@
-import { env } from "@/lib/config/env";
+import { env, type Env } from "@/lib/config/env";
+import { assistantSpendPolicy } from "./spend";
 import { ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
 import { selectQuestionTools } from "./tool-selection";
@@ -77,7 +78,8 @@ export async function runReadOnlyTurn(
   turn: StoredTurn,
   hub: ProviderHub = createProviderHub(env),
   execute: typeof executeReadTool = executeReadTool,
-  enabled = env.AI_ASSISTANT_READ_ONLY_ENABLED
+  enabled = env.AI_ASSISTANT_READ_ONLY_ENABLED,
+  pricingConfig: Env = env
 ): Promise<AssistantRun> {
   if (!enabled) throw new IntelligenceError("disabled");
   let stage = "scope";
@@ -114,7 +116,19 @@ export async function runReadOnlyTurn(
     const invoke = async (round: 1 | 2, capability: "tools" | "text") => {
       // The DB has a hard UNIQUE(turn_id, round) constraint; replays never resend.
       stage = "reserve_round_" + round;
-      const attemptId = await reserveAttempt(scope, turn, round, provider, model.model);
+      const maxOutputTokens = round === 1 ? 600 : 1024;
+      const pricedTools = capability === "tools" ? definitions : [];
+      // Resolve pricing and reserve worst-case spend BEFORE provider transmission.
+      // No price, a changed exact model or an exhausted cap means no paid call.
+      const policy = assistantSpendPolicy(
+        pricingConfig,
+        provider,
+        model.model,
+        messages,
+        pricedTools,
+        maxOutputTokens
+      );
+      const attemptId = await reserveAttempt(scope, turn, round, provider, model.model, policy);
       let result: InferenceResult;
       try {
         stage = "provider_round_" + round;
@@ -124,7 +138,7 @@ export async function runReadOnlyTurn(
           messages,
           tools: capability === "tools" ? definitions : [],
           temperature: 0,
-          maxOutputTokens: round === 1 ? 600 : 1024,
+          maxOutputTokens,
         });
       } catch (error) {
         stage = "settle_failed_round_" + round;
