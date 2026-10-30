@@ -705,3 +705,44 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
     });
   });
 });
+
+
+describe("POS #142 E: protected fiscal diagnostic does not issue registered invoices", () => {
+  it("shows missing jurisdiction/IRP requirements on the real frozen bill", async () => {
+    const f = await setup("classified");
+    await operatorGate(f.outlet.id, f.outlet.organizationId, true);
+    const quote = await f.view("preview", f.sale.saleId) as {
+      totalMinor: string; taxProfileRevision: number;
+    };
+    await f.cmd("freeze", {
+      saleId: f.sale.saleId,
+      expectedTotalMinor: quote.totalMinor,
+      expectedTaxRevision: quote.taxProfileRevision,
+      customer: { name: "Test buyer", address: "Test delivery address" },
+    });
+    const readiness = await f.view("fiscal_readiness", f.sale.saleId) as unknown as {
+      statutoryIssuanceAllowed: boolean; failedCount: number;
+      checks: Array<{id:string;satisfied:boolean}>;
+    };
+    expect(readiness.statutoryIssuanceAllowed).toBe(false);
+    expect(readiness.failedCount).toBeGreaterThan(0);
+    expect(readiness.checks.find((v) => v.id === "external")?.satisfied).toBe(false);
+    await expect(f.cmd("issue", { saleId: f.sale.saleId })).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    const rows = await admin(async (_db, pool) =>
+      pool.query("select count(*)::int as n from pos_documents where outlet_id=$1 and kind='invoice'",
+        [f.outlet.id])
+    );
+    expect(rows.rows[0]?.n).toBe(0);
+  });
+
+  it("cannot read another merchant's fiscal bill or issue invoice through SQL grants", async () => {
+    const f = await setup("classified");
+    const another = await fixture();
+    await expect(financeRead(another.actor, f.outlet.organizationId, f.outlet.id, {
+      view: "fiscal_readiness", id: f.sale.saleId,
+    })).rejects.toThrow();
+    await expect(getPool().query("select * from pos_documents")).rejects.toThrow();
+  });
+});
