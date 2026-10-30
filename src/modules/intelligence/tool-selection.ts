@@ -20,7 +20,7 @@ export function selectQuestionTools<T extends { name: string }>(
   if (/\b(table|dine.in|dining)\b/.test(q)) add("tables.pulse");
   if (/\b(draft|published|menus|menu summary)\b/.test(q)) add("menu.summary");
   const order = priorities.length
-    ? [...priorities, "orders.pulse", "menu.summary"]
+    ? priorities
     : ["orders.pulse", "menu.summary", "reports.summary", "menu.findDish",
         "kitchen.pulse", "orders.history", "tables.pulse", "qr.pulse"];
   return order

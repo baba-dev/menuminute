@@ -2,6 +2,7 @@ import { env } from "@/lib/config/env";
 import { ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
 import { selectQuestionTools } from "./tool-selection";
+import { groundedMerchantAnswer } from "./grounded-answer";
 import {
   createProviderHub,
   IntelligenceError,
@@ -139,6 +140,12 @@ export async function runReadOnlyTurn(
       if (serialized.length > 12000) throw new ValidationError("Tool result too large");
       evidence.push(item);
       messages.push({ role: "tool", toolCallId: call.id, content: serialized });
+    }
+    const directAnswer = groundedMerchantAnswer(turn.prompt, evidence);
+    if (directAnswer) {
+      stage = "persist_grounded_answer";
+      await finishTurn(scope, turn.id, directAnswer, evidence);
+      return { turnId: turn.id, status: "completed", answer: directAnswer, evidence };
     }
     const final = await invoke(2, "text");
     stage = "validate_round_2";
