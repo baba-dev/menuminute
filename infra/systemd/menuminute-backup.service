@@ -3,8 +3,8 @@ Description=MenuMinute protected nightly PostgreSQL 17 and private-media backup
 Documentation=https://github.com/baba-dev/menuminute/blob/main/docs/operations/restore-and-erp-evidence.md
 Wants=network-online.target
 After=network-online.target
-ConditionPathIsExecutable=/usr/local/sbin/menuminute-nightly-backup
-ConditionPathIsExecutable=/usr/local/sbin/menuminute-restic
+ConditionFileIsExecutable=/usr/local/sbin/menuminute-nightly-backup
+ConditionFileIsExecutable=/usr/local/sbin/menuminute-restic
 ConditionPathIsDirectory=/var/lib/menuminute/media
 
 [Service]
