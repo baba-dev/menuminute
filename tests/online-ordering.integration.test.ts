@@ -67,7 +67,7 @@ async function publishedOutlet(entitled = true) {
       });
     });
   }
-  return f;
+  return { ...f, menuId };
 }
 
 function submission(key = crypto.randomUUID()) {
@@ -154,6 +154,65 @@ describe("Core online ordering restricted-role integration", () => {
       ])
     );
     expect(rows.rowCount).toBe(1);
+  });
+
+  it("rejects a stale guest quote after a published price change without writing an order", async () => {
+    const f = await publishedOutlet();
+    const original = submission();
+    await commandMenu(f.actor, f.outlet.id, f.menuId, {
+      key: crypto.randomUUID(),
+      expectedRevision: 2,
+      action: "save",
+      data: {
+        document: {
+          name: "Updated order test menu",
+          currency: f.outlet.currency,
+          categories: [
+            {
+              id: "food",
+              name: "Food",
+              items: [
+                {
+                  id: "plate",
+                  name: "Paneer Plate",
+                  priceMinor: 14500,
+                  addOnGroups: [
+                    {
+                      id: "extras",
+                      name: "Extras",
+                      min: 0,
+                      max: 1,
+                      options: [{ id: "bread", name: "Bread", priceMinor: 1500 }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+    await commandMenu(f.actor, f.outlet.id, f.menuId, {
+      key: crypto.randomUUID(),
+      expectedRevision: 3,
+      action: "publish",
+      data: {},
+    });
+    await expect(submitGuestOrder(f.outlet.publicId, original)).rejects.toMatchObject({
+      statusCode: 409,
+    });
+    const ghost = await admin(async (_, pool) =>
+      pool.query<{ count: number }>(
+        "select count(*)::int as count from orders where restaurant_id=$1 and client_submission_key=$2",
+        [f.outlet.id, original.clientSubmissionKey]
+      )
+    );
+    expect(ghost.rows[0]?.count).toBe(0);
+    const accepted = await submitGuestOrder(f.outlet.publicId, {
+      ...submission(),
+      quotedTotalMinor: 16000,
+    });
+    expect(accepted.totalMinor).toBe(16000);
   });
 
   it("enforces pricing, add-ons, staff state/version transitions and separates finance permission", async () => {

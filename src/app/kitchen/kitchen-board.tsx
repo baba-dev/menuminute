@@ -166,6 +166,15 @@ export function KitchenBoard({
     setSnapshot(data);
     setLastSync(new Date());
     setConnection("live");
+    // A confirmed resync clears only transport errors. Never hide an uncertain
+    // staff command merely because a later snapshot was successfully fetched.
+    setError((previous) =>
+      /^(?:Error: )?(?:Kitchen connection interrupted|Unable to reconcile kitchen tickets)/.test(
+        previous
+      )
+        ? ""
+        : previous
+    );
     if (soundRef.current && newcomers.length) {
       try {
         playKitchenBell("kitchen");
