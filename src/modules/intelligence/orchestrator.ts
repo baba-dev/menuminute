@@ -19,6 +19,7 @@ import {
   settleAttempt,
   finishTurn,
   failTurn,
+  conversationHistory,
   type Scope,
   type StoredTurn,
 } from "./store";
@@ -88,8 +89,17 @@ export async function runReadOnlyTurn(
     stage = "select_provider";
     const model = preferred(hub);
     const provider = model.provider as ProviderId;
+    const history = await conversationHistory(scope, turn.conversationId);
+    const previous = history.turns
+      .filter((row) => row.id !== turn.id && row.status === "completed" &&
+        Boolean(row.answer) && !isInternalAssistantPayload(row.answer ?? ""))
+      .slice(-3);
     const messages: InferenceMessage[] = [
       { role: "system", content: systemPrompt },
+      ...previous.flatMap((row): InferenceMessage[] => [
+        { role: "user", content: minimizeProviderPrompt(row.prompt).slice(0, 1200) },
+        { role: "assistant", content: minimizeProviderPrompt(row.answer ?? "").slice(0, 1500) },
+      ]),
       { role: "user", content: minimizeProviderPrompt(turn.prompt) },
     ];
     const invoke = async (round: 1 | 2, capability: "tools" | "text") => {

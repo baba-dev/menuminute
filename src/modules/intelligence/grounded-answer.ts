@@ -58,7 +58,7 @@ export function groundedMerchantAnswer(prompt: string, evidence: MerchantEvidenc
     return lines.join("\n");
   }
   if (item.tool === "reports.summary" &&
-      /\b(sale|revenue|earnings?|income|turnover|orders? total|best.sell|top.sell)\b/i.test(prompt)) {
+      /\b(sales?|revenue|earnings?|income|turnover|orders? total|best.sell|top.sell)\b/i.test(prompt)) {
     const parsed = report.safeParse(item.data);
     if (!parsed.success) return null;
     const d = parsed.data, amount = money(d.orderValueMinor, d.currency);
