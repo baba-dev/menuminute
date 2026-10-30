@@ -140,6 +140,7 @@ export function FinancialHub({
   const [refundLines, setRefundLines] = useState<Record<string, string>>({});
   const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
+  const saleSelectionSequence = useRef(0);
   const [reconciliation, setReconciliation] = useState<{
     scannedCount: number;
     hasMore: boolean;
@@ -224,15 +225,28 @@ export function FinancialHub({
     }
   }
   async function selectSale(id: string) {
-    const [detail, projection, fiscal] = await Promise.all([
-      get<Detail>("sale", id),
-      get<SettlementDetail>("settlement", id),
-      finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
-    ]);
-    setSelected(detail);
-    setSettlement(projection);
-    setFiscalReadiness(fiscal);
+    const request = ++saleSelectionSequence.current;
+    // A finance correction requires fresh, sale-specific user acknowledgement.
+    setStaffCorrectionReason("");
+    setStaffCorrectionConfirmed(false);
+    setSelected(null);
+    setSettlement(null);
+    setFiscalReadiness(null);
     setPreview(null);
+    try {
+      const [detail, projection, fiscal] = await Promise.all([
+        get<Detail>("sale", id),
+        get<SettlementDetail>("settlement", id),
+        finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
+      ]);
+      if (request !== saleSelectionSequence.current) return;
+      setSelected(detail);
+      setSettlement(projection);
+      setFiscalReadiness(fiscal);
+    } catch (error) {
+      if (request === saleSelectionSequence.current)
+        setNotice(error instanceof Error ? error.message : "Unable to read sale details");
+    }
   }
   async function command(action: string, data: Record<string, unknown>) {
     if (busy) return null;
@@ -612,10 +626,13 @@ export function FinancialHub({
                   <button
                     type="button"
                     onClick={() => {
+                      ++saleSelectionSequence.current;
                       setSelected(null);
                       setSettlement(null);
                       setFiscalReadiness(null);
                       setPreview(null);
+                      setStaffCorrectionReason("");
+                      setStaffCorrectionConfirmed(false);
                     }}
                   >
                     Close
