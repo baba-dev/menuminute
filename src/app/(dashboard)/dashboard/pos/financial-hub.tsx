@@ -185,7 +185,7 @@ export function FinancialHub({
     try {
       const last = ledger[ledger.length - 1]!;
       const page = await get<FinanceCursorPage<LedgerRow>>("ledger_page", undefined, {
-        at: new Date(last.createdAt).toISOString(),
+        at: last.createdAt,
         id: last.saleId,
       });
       setLedger((previous) => {
