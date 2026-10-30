@@ -13,6 +13,7 @@ import {
 } from "./stripe";
 import { getPool } from "@/db";
 import { sendTransactionalEmail } from "@/lib/email";
+import { validateTender } from "@/lib/pos/finance-math";
 
 const key = z.string().uuid();
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -428,15 +429,11 @@ export async function financeCommand(
       throw new ValidationError("Duplicate dish tax classification.");
   }
   if (cmd.action === "tender") {
-    if (BigInt(cmd.data.tenderedMinor) < BigInt(cmd.data.amountMinor))
-      throw new ValidationError("Tendered amount cannot be below applied amount.");
-    if (
-      cmd.data.method !== "cash" &&
-      (cmd.data.amountMinor !== cmd.data.tenderedMinor ||
-        !cmd.data.reference ||
-        cmd.data.reference.length < 3)
-    )
-      throw new ValidationError("External tender requires staff reference and exact allocation.");
+    try {
+      validateTender(cmd.data);
+    } catch {
+      throw new ValidationError("Tender amount, change or external reference is invalid.");
+    }
   }
   const payload = { action: cmd.action, data: cmd.data };
   const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
