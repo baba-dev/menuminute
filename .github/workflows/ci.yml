@@ -81,6 +81,8 @@ jobs:
 
       - name: Verify operator readiness and recovery guardrails (offline)
         run: python3 -m unittest discover -s tests/deploy -p 'test_*.py' -v
+      - name: Verify browser-evidence integrity and immutable SHA contract (offline)
+        run: node --test scripts/qa/phase5-browser-evidence.test.mjs infra/load/kitchen-contract.test.mjs
 
       - name: Lint source code (ESLint)
         run: pnpm lint
@@ -199,6 +201,16 @@ jobs:
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - name: Summarize Phase 5 production browser evidence at exact SHA
+        run: node scripts/qa/phase5-browser-evidence.mjs test-results/phase5-browser-report.json test-results/phase5-browser-summary.json "$GITHUB_SHA" production-browser
+      - name: Retain synthetic browser acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: phase5-browser-evidence-production-${{ github.sha }}
+          path: test-results/phase5-browser-summary.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Package exact tested ARM64 build
         if: success()
         run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
@@ -271,6 +283,16 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Exercise real Ember drawer, availability confirmation and outlet isolation
         run: pnpm exec playwright test tests/e2e/ember.spec.ts
+      - name: Summarize Phase 5 Ember-enabled browser evidence at exact SHA
+        run: node scripts/qa/phase5-browser-evidence.mjs test-results/phase5-browser-report.json test-results/phase5-browser-summary.json "$GITHUB_SHA" ember-browser
+      - name: Retain synthetic Ember browser acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: phase5-browser-evidence-ember-${{ github.sha }}
+          path: test-results/phase5-browser-summary.json
+          if-no-files-found: warn
+          retention-days: 14
       - if: failure()
         continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
