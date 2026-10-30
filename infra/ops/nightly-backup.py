@@ -134,7 +134,8 @@ def ensure_disk_headroom():
     if not size or not size.strip().isdigit():
         raise BackupGateError("PostgreSQL size cannot be measured")
     db_bytes = int(size.strip())
-    free_bytes = shutil.disk_usage(BACKUP_ROOT).free
+    free_bytes = min(shutil.disk_usage(BACKUP_ROOT).free,
+                     shutil.disk_usage("/").free)
     if free_bytes < db_bytes + 10 * 1024 ** 3:
         raise BackupGateError("shared ERP disk reserve is insufficient for staged PostgreSQL dump")
 
