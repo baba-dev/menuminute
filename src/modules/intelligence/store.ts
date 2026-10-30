@@ -4,7 +4,8 @@ import { z } from "zod";
 import type { Transaction } from "@/db";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
-import type { InferenceResult, ProviderId } from "./contracts";
+import { IntelligenceError, type InferenceResult, type ProviderId } from "./contracts";
+import type { SpendPolicy } from "./spend";
 const uuid = z.string().uuid();
 const entity = z
   .string()
@@ -155,9 +156,17 @@ export async function reserveAttempt(
   turn: StoredTurn,
   round: 1 | 2,
   provider: ProviderId,
-  model: string
+  model: string,
+  policy: SpendPolicy
 ) {
   if (!model || model.length > 128) throw new ValidationError("Invalid model");
+  if (
+    Object.values(policy).some(
+      (value) => !Number.isSafeInteger(value) || value < 1 || value > 1_000_000_000
+    ) ||
+    policy.reservationMicroUsd > policy.dailyCapMicroUsd
+  )
+    throw new ValidationError("Invalid monetary limit");
   return scoped(s, async (tx) => {
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtextextended(${"ai-org:" + s.organizationId},0))`
@@ -172,21 +181,39 @@ export async function reserveAttempt(
     );
     if (!budget.rows[0]?.allowed)
       throw new ForbiddenError("Daily organization inference limit reached");
+    const spend = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.ai_reserve_model_spend(
+        ${s.organizationId},${s.outletId},${s.actor.userId},${provider},${model},
+        ${policy.reservationMicroUsd}::bigint,${policy.dailyCapMicroUsd}::bigint
+      ) as allowed`
+    );
+    if (!spend.rows[0]?.allowed) throw new IntelligenceError("quota_exhausted");
     const aid = randomUUID();
-    await tx.execute(sql`insert into assistant_attempts (id,turn_id,conversation_id,organization_id,outlet_id,user_id,round,provider,model)
-   values (${aid},${turn.id},${turn.conversationId},${s.organizationId},${s.outletId},${s.actor.userId},${round},${provider},${model})`);
+    await tx.execute(sql`insert into assistant_attempts (
+      id,turn_id,conversation_id,organization_id,outlet_id,user_id,round,provider,model,
+      budget_day,reserved_micro_usd,input_price_micro_usd_mtok,output_price_micro_usd_mtok
+    ) values (
+      ${aid},${turn.id},${turn.conversationId},${s.organizationId},${s.outletId},
+      ${s.actor.userId},${round},${provider},${model},(now() at time zone 'UTC')::date,
+      ${policy.reservationMicroUsd}::bigint,${policy.inputPriceMicroUsdMtok}::bigint,
+      ${policy.outputPriceMicroUsdMtok}::bigint
+    )`);
     return aid;
   });
 }
 export async function settleAttempt(s: Scope, aid: string, result: InferenceResult | null) {
   uuid.parse(aid);
   await scoped(s, async (tx) => {
-    const r =
-      await tx.execute(sql`update assistant_attempts set status=${result ? "completed" : "uncertain"},
-   input_tokens=${result?.usage.inputTokens ?? null},output_tokens=${result?.usage.outputTokens ?? null},settled_at=now()
-   where id=${aid} and status='started' and organization_id=${s.organizationId}
-   and outlet_id=${s.outletId} and user_id=${s.actor.userId} returning id`);
-    if (r.rows.length !== 1) throw new ConflictError("Attempt already settled");
+    // One security-definer transaction reconciles the private model ledger and
+    // settles the attempt. Failed/unknown usage remains conservatively reserved.
+    const r = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.ai_settle_model_spend(
+        ${s.organizationId},${s.outletId},${s.actor.userId},${aid},
+        ${result !== null},${result?.usage.inputTokens ?? null}::integer,
+        ${result?.usage.outputTokens ?? null}::integer
+      ) as allowed`
+    );
+    if (!r.rows[0]?.allowed) throw new ConflictError("Attempt already settled or inaccessible");
   });
 }
 export async function finishTurn(s: Scope, id: string, answer: string, evidence: unknown) {

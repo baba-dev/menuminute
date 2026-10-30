@@ -22,6 +22,12 @@ import { parseEnv } from "../src/lib/config/env";
 import { withActor } from "../src/modules/tenancy/service";
 import { sql } from "drizzle-orm";
 const uuid = () => crypto.randomUUID();
+const testSpend = {
+  reservationMicroUsd: 15,
+  dailyCapMicroUsd: 18,
+  inputPriceMicroUsdMtok: 1_000_000,
+  outputPriceMicroUsdMtok: 1_000_000,
+};
 describe("Ember scoped persistence and read-only execution", () => {
   it("keeps conversations and attempts private, idempotent, bounded and durable", async () => {
     const first = await fixture(),
@@ -63,9 +69,16 @@ describe("Ember scoped persistence and read-only execution", () => {
     await expect(
       beginTurn(scope, conversation.id, { key: uuid(), prompt: "Another request" })
     ).rejects.toThrow();
-    const attempt = await reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model");
+    const attempt = await reserveAttempt(
+      scope,
+      started.turn,
+      1,
+      "nvidia",
+      "reviewed/model",
+      testSpend
+    );
     await expect(
-      reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model")
+      reserveAttempt(scope, started.turn, 1, "nvidia", "reviewed/model", testSpend)
     ).rejects.toThrow();
     await settleAttempt(scope, attempt, null);
     await finishTurn(scope, started.turn.id, "There is no settled revenue in this view.", []);
@@ -187,9 +200,12 @@ describe("Ember scoped persistence and read-only execution", () => {
       AI_NVIDIA_MODEL: "reviewed/model",
       AI_NVIDIA_TOOLS_VERIFIED: "true",
       AI_CLOUDFLARE_ENABLED: "false",
+      AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK: "1000000",
+      AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK: "1000000",
+      AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD: "50000",
     });
     const hub = createProviderHub(config, fake);
-    const result = await runReadOnlyTurn(scope, start.turn, hub, executeReadTool, true);
+    const result = await runReadOnlyTurn(scope, start.turn, hub, executeReadTool, true, config);
     expect(result.status).toBe("completed");
     expect(result.evidence?.[0]).toMatchObject({
       tool: "orders.pulse",
@@ -210,6 +226,80 @@ describe("Ember scoped persistence and read-only execution", () => {
       ]);
     });
   });
+  it("serializes daily per-model monetary admissions across conversations and releases only measured usage", async () => {
+    const first = await fixture();
+    const scope = {
+      actor: first.actor,
+      organizationId: first.outlet.organizationId,
+      outletId: first.outlet.id,
+    };
+    const c1 = await createConversation(scope, uuid());
+    const c2 = await createConversation(scope, uuid());
+    const t1 = await beginTurn(scope, c1.id, { key: uuid(), prompt: "First charged question" });
+    const t2 = await beginTurn(scope, c2.id, { key: uuid(), prompt: "Second charged question" });
+    const raced = await Promise.allSettled([
+      reserveAttempt(scope, t1.turn, 1, "nvidia", "reviewed/model", testSpend),
+      reserveAttempt(scope, t2.turn, 1, "nvidia", "reviewed/model", testSpend),
+    ]);
+    expect(raced.filter((v) => v.status === "fulfilled")).toHaveLength(1);
+    expect(raced.filter((v) => v.status === "rejected")).toHaveLength(1);
+    const admitted = raced.findIndex((v) => v.status === "fulfilled");
+    const attempt = raced[admitted] as PromiseFulfilledResult<string>;
+    const otherTurn = admitted === 0 ? t2.turn : t1.turn;
+
+    const other = await fixture();
+    await expect(
+      settleAttempt(
+        {
+          actor: other.actor,
+          organizationId: other.outlet.organizationId,
+          outletId: other.outlet.id,
+        },
+        attempt.value,
+        null
+      )
+    ).rejects.toThrow();
+
+    await settleAttempt(scope, attempt.value, {
+      provider: "nvidia",
+      model: "reviewed/model",
+      content: "Measured response",
+      toolCalls: [],
+      finishReason: "stop",
+      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+    });
+    await expect(settleAttempt(scope, attempt.value, null)).rejects.toThrow();
+    const next = await reserveAttempt(scope, otherTurn, 1, "nvidia", "reviewed/model", testSpend);
+    await settleAttempt(scope, next, null);
+    await admin(async (_db, pool) => {
+      const ledger = await pool.query(
+        "select accounted_micro_usd,daily_cap_micro_usd from assistant_model_daily_budget where organization_id=$1 and provider='nvidia' and model='reviewed/model'",
+        [scope.organizationId]
+      );
+      expect(ledger.rows).toMatchObject([{ accounted_micro_usd: "17", daily_cap_micro_usd: "18" }]);
+      const attempts = await pool.query(
+        "select status,reserved_micro_usd,billed_micro_usd,input_tokens,output_tokens from assistant_attempts where id=any($1::text[]) order by status",
+        [[attempt.value, next]]
+      );
+      expect(attempts.rows).toMatchObject([
+        {
+          status: "completed",
+          reserved_micro_usd: "15",
+          billed_micro_usd: "2",
+          input_tokens: 1,
+          output_tokens: 1,
+        },
+        {
+          status: "uncertain",
+          reserved_micro_usd: "15",
+          billed_micro_usd: null,
+          input_tokens: null,
+          output_tokens: null,
+        },
+      ]);
+    });
+  });
+
   it("exposes only the approved read tools and rejects oversized request bodies", async () => {
     expect(toolDefinitions().map((t) => t.name)).toEqual([
       "orders.pulse",

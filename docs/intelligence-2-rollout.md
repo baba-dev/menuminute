@@ -58,10 +58,19 @@ unimplemented extension. This boundary is intentional pending job review, proven
 - Safe deterministic answers avoid a second inference request for validated, narrow
   menu and reports questions. Unknown or partial evidence never becomes a fabricated sale,
   ingredient, allergy claim or dish.
-- Not yet approved for commercial production: **real provider-specific per-token pricing,
-  organization monetary ceilings, retention/deletion service, consent/data-processing review**.
-  Raw prompt/evidence history currently persists; obtain a reviewed retention design
-  and independent redaction/security review **before activating commercial assistants**.
+- #230 adds **opt-in, explicit per-model pricing and durable monetary admission** for read-only
+  Ember, requiring three private settings per enabled provider (operator-verified rates
+  and daily cap). A PostgreSQL organization/model/UTC-day ledger serializes competing
+  attempts, reserves for each possible provider invocation and reconciles actual
+  provider-reported input/output token counts. Missing usage, network errors and
+  uncertain delivery retain the full reservation; no failed call is silently refunded.
+  This is a conservative request admission guard, not provider invoicing, live pricing
+  verification or a guarantee against provider-side hidden charges.
+- Still unapproved for commercial production: **model pricing schedules, operator spend
+  caps and entitlements must be checked against the actual provider agreement**, plus
+  retention/deletion service and merchant consent/data-processing review.
+  Raw prompt/evidence history currently persists; obtain an independent redaction and
+  security review **before activating commercial assistants**.
 - Never enable `AI_ASSISTANT_ACTIONS_ENABLED` solely because read-only inference works.
 
 ## Phase G — validation matrix
@@ -95,3 +104,36 @@ A merged PR does not enable inference or deploy a paid provider. Before rollout:
 Broad conversational follow-ups, export, long-running autonomous assistant workflows,
 provider-cost ledger, deletion/retention operator, and independent production/financial
 acceptance remain OPEN. Do not close #152 on the strength of this PR alone.
+
+## #230 model-specific budget configuration (read-only Ember, disabled by default)
+
+Migration `0055_assistant_model_spend` adds nullable historical attempt accounting,
+a private organization/model/UTC-day ledger, and narrowly granted scope-checked
+reservation and settlement functions. Existing rows are unchanged; no financial,
+tax, customer, payment, menu or publication state is touched. This migration must
+be evaluated under the existing guarded deployment policy before changing runtime flags.
+
+For each **enabled, verified, exact model**, the operator supplies the following
+private environment values. All six have no default; leave them unset until rates,
+entitlements and provider usage shapes are explicitly reviewed.
+
+| Provider                                    | Input micro-USD / million tokens          | Output micro-USD / million tokens          | Organization/model UTC-day limit (micro-USD) |
+| ------------------------------------------- | ----------------------------------------- | ------------------------------------------ | -------------------------------------------- |
+| NVIDIA model from `AI_NVIDIA_MODEL`         | `AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK`     | `AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK`     | `AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD`         |
+| Cloudflare model from `AI_CLOUDFLARE_MODEL` | `AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD`     |
+
+Values are positive safe integers up to one billion; a micro-USD is one millionth
+of a USD. Enter **actual approved rates**, not example placeholders. No call is sent
+if pricing for the selected exact model is absent, or the conservative reservation
+would exceed the cap. Rates are snapshotted per attempt: settled actual charges
+use the provider's usage fields, not a later price edit. An unknown/failed/timeout
+response keeps the full reservation, and there is no provider failover.
+
+Do not infer billed totals from this ledger: provider cache discounts, hidden
+reasoning usage, rounding and invoiced charges must be reconciled independently.
+An unexpected provider token count above the reserved bound is accounted at full
+reported cost and blocks subsequent admissions even if it overshoots the limit.
+Without independently verified production models and tariffs, leave
+`AI_ASSISTANT_READ_ONLY_ENABLED=false` and `AI_ASSISTANT_ACTIONS_ENABLED=false`.
+Do not close issue #230 until privacy, provider canary, operator and security gates
+are independently satisfied.
