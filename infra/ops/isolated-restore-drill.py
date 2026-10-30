@@ -68,11 +68,11 @@ def preflight(env, expected_dir, dump):
         raise ValueError("disposable target is not PostgreSQL 17")
     if name != env["PGDATABASE"] or os.path.realpath(directory) != expected_dir:
         raise ValueError("target database/cluster does not match explicitly approved disposable cluster")
+    if dump.is_symlink() or not dump.is_file() or dump.stat().st_size == 0:
+        raise ValueError("expected regular, nonempty dump file")
     listing = checked(["pg_restore", "--list", str(dump)], timeout=120)
     if "onboarding_progress" not in listing:
         raise ValueError("custom-format dump does not contain onboarding_progress")
-    if dump.is_symlink() or not dump.is_file() or dump.stat().st_size == 0:
-        raise ValueError("expected regular, nonempty dump file")
     return {"postgres_version": int(version), "target_database": name,
             "cluster_identity_verified": True, "dump_contains_onboarding_progress": True}
 
@@ -142,6 +142,7 @@ def media_inventory(path):
     digest = hashlib.sha256()
     count, total = 0, 0
     for directory, directories, files in os.walk(root, followlinks=False):
+        directories.sort()
         for name in directories:
             if (Path(directory) / name).is_symlink():
                 raise ValueError("symlinked media directory is not safe restore evidence")
