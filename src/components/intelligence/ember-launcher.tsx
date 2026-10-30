@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { navigation, routesForEvidence, type RouteId } from "@/modules/intelligence/navigation";
+import { EmberRichAnswer } from "./ember-rich-answer";
 import "./ember.css";
 
 type StoredTurn = {
@@ -83,6 +84,17 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message);
   }
   return body as T;
+}
+function evidenceLabel(source: unknown) {
+  switch (source) {
+    case "orders.servicePulse": return "Current orders";
+    case "orders.listServiceHistory": return "Order history";
+    case "kitchen.kitchenSnapshot": return "Kitchen queue";
+    case "menu.listMenus": return "Menu Studio drafts";
+    case "hospitality.floorMatrix": return "Dining table activity";
+    case "pos.draftRegister": return "Point of Sale drafts";
+    default: return "Restaurant records";
+  }
 }
 function message(error: unknown) {
   return error instanceof Error ? error.message : "The request could not be completed.";
@@ -540,17 +552,17 @@ export function EmberLauncher({
                         business action was taken.
                       </p>
                     ) : (
-                      <p>{t.answer}</p>
+                      <EmberRichAnswer text={t.answer} />
                     )}
                     {Array.isArray(t.evidence) && t.evidence.length > 0 && (
                       <details className="mm-ember-evidence">
                         <summary>
-                          <BookOpen size={14} /> Sources &amp; captured data
+                          <BookOpen size={14} /> Where this information came from
                         </summary>
                         {t.evidence.map((e, i) =>
                           typeof e === "object" && e !== null && "source" in e ? (
                             <div key={i}>
-                              <strong>{String(e.source)}</strong>
+                              <strong>{evidenceLabel(e.source)}</strong>
                               <small>
                                 {"capturedAt" in e
                                   ? new Date(String(e.capturedAt)).toLocaleString()
