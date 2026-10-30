@@ -6,6 +6,8 @@ import { posConfigure, posContext, posSubmit, posReceipt } from "../src/modules/
 import { financeRead, financeCommand } from "../src/modules/pos/finance";
 import { getPool } from "../src/db";
 import { withActor } from "../src/modules/tenancy/service";
+import { reportQuerySchema } from "../src/modules/reports/contracts";
+import { getReportsWorkspace } from "../src/modules/reports/service";
 
 async function setup(
   mode: "non_registered" | "classified" = "non_registered",
@@ -68,7 +70,7 @@ async function setup(
   async function view(view: string, id?: string) {
     return financeRead(f.actor, f.outlet.organizationId, f.outlet.id, id ? { view, id } : { view });
   }
-  return { ...f, sale, cmd, view };
+  return { ...f, menuId, sale, cmd, view };
 }
 async function operatorGate(
   outletId: string,
@@ -597,5 +599,85 @@ describe("POS #142 B/D shared settlement and manager corrections", () => {
       ])
     );
     expect(rows.rows[0]?.count).toBe(1);
+  });
+});
+
+
+describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
+  it("scans every sale with bounded non-overlapping cursor pages", async () => {
+    const f = await setup();
+    for (let i = 0; i < 4; i++) {
+      await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        key: crypto.randomUUID(),
+        selection: {
+          menuId: f.menuId, expectedRevision: 2,
+          lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
+        },
+        fulfillmentMode: "dine_in", tableId: null, expectedSubtotalMinor: "28000",
+      });
+    }
+    async function page(mode: "ledger" | "reconcile", at: string | null, id: string | null) {
+      return withActor(f.actor, async (tx) => {
+        await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
+        const query = mode === "ledger"
+          ? sql`select app_private.pos_ledger_page(${f.outlet.id},
+            ${at}::timestamptz,${id},2) as data`
+          : sql`select app_private.pos_reconciliation_page(${f.outlet.id},
+            ${at}::timestamptz,${id},2) as data`;
+        const r = await tx.execute<{data: {
+          items?: Array<{saleId:string}>; scannedCount?:number;
+          hasMore:boolean;nextCursorAt:string|null;nextCursorId:string|null;
+          anomalies?: Array<{reason:string}>;
+        }}>(query);
+        return r.rows[0]!.data;
+      });
+    }
+    for (const mode of ["ledger", "reconcile"] as const) {
+      let at: string | null = null;
+      let id: string | null = null;
+      let total = 0;
+      const seen = new Set<string>();
+      for (let iteration = 0; iteration < 5; iteration++) {
+        const part = await page(mode, at, id);
+        total += mode === "ledger" ? part.items?.length ?? 0 : part.scannedCount ?? 0;
+        if (mode === "ledger") {
+          for (const item of part.items ?? []) {
+            expect(seen.has(item.saleId)).toBe(false);
+            seen.add(item.saleId);
+          }
+        } else expect(part.anomalies).toEqual([]);
+        if (!part.hasMore) break;
+        expect(part.nextCursorAt).toBeTruthy();
+        at = part.nextCursorAt;
+        id = part.nextCursorId;
+      }
+      expect(total).toBe(5);
+    }
+    await expect(getPool().query("select * from pos_staff_refunds")).rejects.toThrow();
+  });
+
+  it("reconciles Reports with staff-attested sales and corrections without a shift", async () => {
+    const f = await setup("non_registered", 1, true);
+    const query = reportQuerySchema.parse({tab:"till"});
+    const before = await getReportsWorkspace(f.actor, f.outlet.id, query);
+    expect(before.tillReconciliation).toMatchObject({
+      available:true,totalCollectedMinor:28000,totalRefundedMinor:0,
+      staffCollectedMinor:28000,unassignedNetCashMinor:28000,
+      bankReconciliationVerified:false,
+    });
+    await f.cmd("staff_refund", {
+      saleId:f.sale.saleId,reason:"Cash refunded to customer",externalRefundAttested:false
+    });
+    const after = await getReportsWorkspace(f.actor, f.outlet.id, query);
+    expect(after.tillReconciliation).toMatchObject({
+      totalCollectedMinor:28000,totalRefundedMinor:28000,
+      staffRefundedMinor:28000,unassignedNetCashMinor:0,netCashFlowMinor:0,
+    });
+    const ledger = await f.view("ledger") as unknown as Array<{
+      saleId:string;paidMinor:string;refundedMinor:string
+    }>;
+    expect(ledger.find((x)=>x.saleId===f.sale.saleId)).toMatchObject({
+      paidMinor:"28000",refundedMinor:"28000"
+    });
   });
 });
