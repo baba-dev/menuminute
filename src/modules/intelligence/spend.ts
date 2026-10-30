@@ -17,7 +17,8 @@ function charge(input: number, output: number, inputPrice: number, outputPrice: 
   return Number(
     (BigInt(input) * BigInt(inputPrice) +
       BigInt(output) * BigInt(outputPrice) +
-      MICRO_PER_MILLION - 1n) /
+      MICRO_PER_MILLION -
+      1n) /
       MICRO_PER_MILLION
   );
 }
@@ -64,9 +65,7 @@ export function assistantSpendPolicy(
   const inputLimit = Buffer.byteLength(serialized, "utf8") + 4096;
   if (inputLimit > 1_000_000) throw new IntelligenceError("invalid_request");
   const outputLimit =
-    nvidia &&
-    model === "nvidia/nemotron-3.5-super-vl-120b-a12b" &&
-    tools.length > 0
+    nvidia && model === "nvidia/nemotron-3.5-super-vl-120b-a12b" && tools.length > 0
       ? Math.max(requestedOutputTokens, 2048)
       : requestedOutputTokens;
   // A nonzero reservation also caps explicitly priced sub-micro-USD requests.
