@@ -42,7 +42,9 @@ describe("Ember exact-model monetary admission", () => {
 
   it("fails closed on missing, malformed or mismatched prices and model identifiers", () => {
     const p = configured();
-    expect(() => assistantSpendPolicy(p, "cloudflare", "@cf/reviewed/model", messages, [], 512)).toThrow();
+    expect(() =>
+      assistantSpendPolicy(p, "cloudflare", "@cf/reviewed/model", messages, [], 512)
+    ).toThrow();
     expect(() => assistantSpendPolicy(p, "nvidia", "different/model", messages, [], 512)).toThrow();
     expect(() =>
       assistantSpendPolicy(
@@ -80,7 +82,14 @@ describe("Ember exact-model monetary admission", () => {
     const input = Buffer.byteLength(JSON.stringify({ messages, tools }), "utf8") + 4096;
     expect(policy.reservationMicroUsd).toBe(input + 4096);
     expect(() =>
-      assistantSpendPolicy(config, "nvidia", "nvidia/nemotron-3.5-super-vl-120b-a12b", messages, tools, 9999)
+      assistantSpendPolicy(
+        config,
+        "nvidia",
+        "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        messages,
+        tools,
+        9999
+      )
     ).toThrow();
   });
 });
