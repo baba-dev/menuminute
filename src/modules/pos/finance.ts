@@ -376,7 +376,7 @@ export async function financeRead(
       return run<LedgerRow[]>(
         actor,
         outletId,
-        sql`select app_private.pos_ledger(${outletId}) as result`
+        sql`select app_private.pos_ledger_v2(${outletId}) as result`
       );
     case "shifts":
       return run<ShiftRow[]>(
