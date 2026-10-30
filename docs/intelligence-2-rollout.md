@@ -117,10 +117,10 @@ For each **enabled, verified, exact model**, the operator supplies the following
 private environment values. All six have no default; leave them unset until rates,
 entitlements and provider usage shapes are explicitly reviewed.
 
-| Provider | Input micro-USD / million tokens | Output micro-USD / million tokens | Organization/model UTC-day limit (micro-USD) |
-| --- | --- | --- | --- |
-| NVIDIA model from `AI_NVIDIA_MODEL` | `AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK` | `AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK` | `AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD` |
-| Cloudflare model from `AI_CLOUDFLARE_MODEL` | `AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD` |
+| Provider                                    | Input micro-USD / million tokens          | Output micro-USD / million tokens          | Organization/model UTC-day limit (micro-USD) |
+| ------------------------------------------- | ----------------------------------------- | ------------------------------------------ | -------------------------------------------- |
+| NVIDIA model from `AI_NVIDIA_MODEL`         | `AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK`     | `AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK`     | `AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD`         |
+| Cloudflare model from `AI_CLOUDFLARE_MODEL` | `AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK` | `AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD`     |
 
 Values are positive safe integers up to one billion; a micro-USD is one millionth
 of a USD. Enter **actual approved rates**, not example placeholders. No call is sent
