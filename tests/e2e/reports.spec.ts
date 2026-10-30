@@ -65,7 +65,7 @@ test("Reports Atelier supports real server filters, export and narrow viewports"
   await page.goto("/dashboard/reports");
   await expect(page.getByTestId("reports-hub")).toBeVisible();
   await expect(page.getByRole("heading", { name: /story behind/i })).toBeVisible();
-  await expect(page.getByText("Reports Test Kitchen")).toBeVisible();
+  await expect(page.getByTestId("reports-hub").getByText("Reports Test Kitchen")).toBeVisible();
 
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
