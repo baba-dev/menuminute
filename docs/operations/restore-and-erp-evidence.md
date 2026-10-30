@@ -42,7 +42,7 @@ python3 infra/ops/backup-watchdog.py --synthetic-failure
 # Expected failure exit status 1, no service or backup change.
 ```
 
-Capture *actual alert delivery and acknowledgement* on an off-host recipient plus a missing-heartbeat/unreachable-host test. The probe intentionally never claims that a notification was delivered; its success is only local evidence.
+Capture _actual alert delivery and acknowledgement_ on an off-host recipient plus a missing-heartbeat/unreachable-host test. The probe intentionally never claims that a notification was delivered; its success is only local evidence.
 
 ## B. PostgreSQL 17 + media isolated restore (#131)
 
@@ -92,15 +92,15 @@ Observe ERP HTTP status both before and after, application/service identity, exa
 
 ## Acceptance ledger — keep both issues OPEN until executed
 
-| Gate | Actual required evidence | Current state |
-| --- | --- | --- |
-| #131 snapshot | Identity, dates, dump digest, source SHA, matching media | Not run |
-| #131 recovery | Separate PG17 cluster, successful restore, forced RLS, non-owner role test, row/media and app-reference reconciliation | Not run |
-| #131 recovery objective | Full measured elapsed recovery, RPO/RTO assessment, SQL/media consistency gap | Not run |
-| #49 backup | Nightly installed/enabled, successful completion, current off-host snapshots, retention/integrity | Not run |
-| #49 external alert | Independently monitored host loss and confirmed recipient delivery of a synthetic failure | Not run |
-| #49 coexistence | Actual ERP before/after and representative p95/error/CPU/RAM/I/O/PG/Redis measurements vs approved limits | Not run |
-| #49 additional | Real merchant/media/QR smoke (#47); signed edge failure modes and optional log-collector review | Not run |
+| Gate                    | Actual required evidence                                                                                               | Current state |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------- |
+| #131 snapshot           | Identity, dates, dump digest, source SHA, matching media                                                               | Not run       |
+| #131 recovery           | Separate PG17 cluster, successful restore, forced RLS, non-owner role test, row/media and app-reference reconciliation | Not run       |
+| #131 recovery objective | Full measured elapsed recovery, RPO/RTO assessment, SQL/media consistency gap                                          | Not run       |
+| #49 backup              | Nightly installed/enabled, successful completion, current off-host snapshots, retention/integrity                      | Not run       |
+| #49 external alert      | Independently monitored host loss and confirmed recipient delivery of a synthetic failure                              | Not run       |
+| #49 coexistence         | Actual ERP before/after and representative p95/error/CPU/RAM/I/O/PG/Redis measurements vs approved limits              | Not run       |
+| #49 additional          | Real merchant/media/QR smoke (#47); signed edge failure modes and optional log-collector review                        | Not run       |
 
 Attach dated **redacted** operator evidence, actual deployed SHA, observed values, reviewer and explicit pass/fail as comments on [#131](https://github.com/baba-dev/menuminute/issues/131) and [#49](https://github.com/baba-dev/menuminute/issues/49). A merged PR, source tests and tool output without operator testing cannot close either issue.
 
