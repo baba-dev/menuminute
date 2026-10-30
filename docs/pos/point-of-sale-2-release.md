@@ -27,7 +27,7 @@ The order register reads canonical orders (including those not yet associated wi
 ## QA and release criteria
 
 - Run formatter, ESLint, strict TypeScript, isolated PostgreSQL and Redis integration, Playwright and ARM64 production build on the exact PR head.
-- Validate A/B migrations `0040` / `0041` with the journal and deployed checksums; never modify prior applied migration files.
+- Validate A/B migrations `0043` / `0044` with the journal and deployed checksums; never modify prior applied migration files.
 - Concurrency: same-key staff submit, two cashiers accepting one QR order, stale-version conflict, denied permissions, wrong outlet, failed kitchen routing, blocked popup, lost HTTP response and retry.
 - Observe order.created/order.status_changed outbox backlog and Kitchen Pro station routing. Review payment and receipt evidence before release. Use safe progressive deployment; never delete financial history on rollback.
 - Test responsive light/dark at 360/390/768/1024/1440/1920, keyboard focus, screen readers, reduced motion and device printing. No production ERP changes.

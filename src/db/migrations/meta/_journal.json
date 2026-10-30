@@ -285,22 +285,43 @@
     {
       "idx": 40,
       "version": "7",
-      "when": 1793365200000,
-      "tag": "0040_pos_unified_intake",
+      "when": 1793286000001,
+      "tag": "0040_reports_finance_read",
       "breakpoints": true
     },
     {
       "idx": 41,
       "version": "7",
-      "when": 1793365200001,
-      "tag": "0041_pos_cashier_dispatch",
+      "when": 1793286000002,
+      "tag": "0041_reports_kitchen_read",
       "breakpoints": true
     },
     {
       "idx": 42,
       "version": "7",
+      "when": 1793286000003,
+      "tag": "0042_reports_query_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1793365200000,
+      "tag": "0043_pos_unified_intake",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793365200001,
+      "tag": "0044_pos_cashier_dispatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
       "when": 1793365200002,
-      "tag": "0042_pos_authorized_reporting",
+      "tag": "0045_pos_authorized_reporting",
       "breakpoints": true
     }
   ]
