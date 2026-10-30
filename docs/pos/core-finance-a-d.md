@@ -20,6 +20,8 @@ Refunds do **not** modify the original attestation, tender or issued document. F
 
 `app_private.pos_settlement_detail(outlet_id,sale_id)` is a protected private read with explicit outlet scoping. It exposes the sale basis, separate staff/finance totals, money collected vs refunded, cash attributions and evidence quality; never claims a bank reconciliation or legal tax calculation. Access to another organization's sale returns a denied/missing result without customer rows.
 
+The additive `0048_pos_ledger_staff_parity` migration switches Ledger's bounded recent-sales projection to staff attestation + finance tender amounts and both recorded refund sources. Legacy `pos_ledger` remains callable for backward compatibility. This is a 60-sale **recent register**, not a full-history accounting reconciliation.
+
 ## C — Verified integer accounting
 
 Use strict positive integer minor-unit strings, fail on overflow/nonintegral inputs and enforce exact cash change vs noncash tendered equals applied. Define deterministic amount allocation, proportional discount apportionment and tax half-up arithmetic in pure functions with independent fixtures for 0/2/3 currency exponents. Tax math is **not** regulatory classification approval and does not change the current SQL `pos_preview` or authorize statutory invoices. Discounts are a tested internal calculation primitive, not a newly enabled POS discount capability.
