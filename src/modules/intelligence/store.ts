@@ -187,8 +187,7 @@ export async function reserveAttempt(
         ${policy.reservationMicroUsd}::bigint,${policy.dailyCapMicroUsd}::bigint
       ) as allowed`
     );
-    if (!spend.rows[0]?.allowed)
-      throw new IntelligenceError("quota_exhausted");
+    if (!spend.rows[0]?.allowed) throw new IntelligenceError("quota_exhausted");
     const aid = randomUUID();
     await tx.execute(sql`insert into assistant_attempts (
       id,turn_id,conversation_id,organization_id,outlet_id,user_id,round,provider,model,
