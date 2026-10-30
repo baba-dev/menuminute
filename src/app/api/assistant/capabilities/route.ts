@@ -33,6 +33,10 @@ async function observed_GET(req: Request) {
           menuRead: tools.some((t) => t.name === "menu.summary"),
           ordersRead: tools.some((t) => t.name === "orders.pulse"),
           menuWrite,
+          reportsRead: tools.some((t) => t.name === "reports.summary"),
+          kitchenRead: tools.some((t) => t.name === "kitchen.pulse"),
+          posRead: tools.some((t) => t.name === "finance.pulse"),
+          importRead: tools.some((t) => t.name === "imports.pulse"),
         }),
       },
       { headers: { "cache-control": "private, no-store" } }

@@ -379,6 +379,13 @@
       "when": 1793365200010,
       "tag": "0053_pos_reconciliation_refund_parity",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793365200011,
+      "tag": "0054_dashboard_layout_preference",
+      "breakpoints": true
     }
   ]
 }

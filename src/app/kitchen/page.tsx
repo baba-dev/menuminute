@@ -94,6 +94,13 @@ export default async function KitchenPage() {
   }
   return (
     <>
+      {showEmber && (
+        <EmberLauncher
+          organizationId={outlet.organizationId}
+          outletId={outlet.id}
+          outletName={outlet.name}
+        />
+      )}
       <KitchenAvailabilityPanel
         dishes={availability}
         organizationId={outlet.organizationId}
@@ -110,13 +117,6 @@ export default async function KitchenPage() {
         canManage={canManage}
         menuDishes={dishList}
       />
-      {showEmber && (
-        <EmberLauncher
-          organizationId={outlet.organizationId}
-          outletId={outlet.id}
-          outletName={outlet.name}
-        />
-      )}
     </>
   );
 }

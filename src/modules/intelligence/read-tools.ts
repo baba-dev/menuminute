@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  merchantReport,
+  merchantFindDish,
+  merchantImports,
+  merchantQr,
+  reportPeriods,
+} from "./merchant-tools";
 import { sql } from "drizzle-orm";
 import { servicePulse, listServiceHistory, historyQuerySchema } from "@/modules/orders/workspace";
 import { kitchenSnapshot } from "@/modules/kitchen/service";
@@ -184,6 +191,49 @@ export const readTools = [
       };
     },
   },
+  {
+    name: "reports.summary",
+    description:
+      "Read verified outlet-scoped report metrics and top-selling dishes for today, yesterday, this calendar week, seven days, thirty days or this month. Order values are not paid revenue; label operator-recorded payments separately.",
+    parameters: {
+      type: "object",
+      properties: { range: { type: "string", enum: [...reportPeriods] } },
+      required: ["range"],
+      additionalProperties: false,
+    },
+    schema: z.object({ range: z.enum(reportPeriods) }).strict(),
+    run: async (context: ToolContext, args: { range: (typeof reportPeriods)[number] }) =>
+      merchantReport(context, args.range),
+  },
+  {
+    name: "menu.findDish",
+    description:
+      "Search published outlet menu dishes by part of a dish name; answer whether the restaurant offers the item and show actual availability. Never use draft counts as proof that a dish is sold.",
+    parameters: {
+      type: "object",
+      properties: { query: { type: "string", minLength: 2, maxLength: 80 } },
+      required: ["query"],
+      additionalProperties: false,
+    },
+    schema: z.object({ query: z.string().trim().min(2).max(80) }).strict(),
+    run: async (context: ToolContext, args: { query: string }) =>
+      merchantFindDish(context, args.query),
+  },
+  {
+    name: "imports.pulse",
+    description:
+      "Read the latest private menu-import statuses for the selected outlet; no publication or editing.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantImports(context),
+  },
+  {
+    name: "qr.pulse",
+    description: "Count active and total saved QR codes for the selected outlet, not QR scans.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantQr(context),
+  },
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
 export function toolDefinitions() {
@@ -193,16 +243,26 @@ export function toolDefinitions() {
 export async function authorizedToolDefinitions(context: ToolContext) {
   const access = await withActor(context.actor, async (tx) => {
     await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
-    const response = await tx.execute<{ menu: boolean; orders: boolean; billing: boolean }>(
+    const response = await tx.execute<{
+      menu: boolean;
+      orders: boolean;
+      billing: boolean;
+      menuWrite: boolean;
+    }>(
       sql`select app_private.can_outlet(${context.outletId},'menu.read') as menu,
         app_private.can_outlet(${context.outletId},'orders.read') as orders,
-        app_private.can_outlet(${context.outletId},'billing.manage') as billing`
+        app_private.can_outlet(${context.outletId},'billing.manage') as billing,
+        app_private.can_outlet(${context.outletId},'menu.write') as "menuWrite"`
     );
     return response.rows[0];
   });
   return toolDefinitions().filter((definition) => {
-    if (definition.name === "menu.summary") return access?.menu === true;
+    if (["menu.summary", "menu.findDish", "qr.pulse"].includes(definition.name))
+      return access?.menu === true;
+    if (definition.name === "imports.pulse")
+      return access?.menu === true && access?.menuWrite === true;
     if (definition.name === "finance.pulse") return access?.billing === true;
+    if (definition.name === "reports.summary") return access?.orders === true;
     return access?.orders === true;
   });
 }
@@ -226,6 +286,16 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "finance.pulse":
       empty.parse(untrusted);
       return readTools[5].run(context);
+    case "reports.summary":
+      return readTools[6].run(context, readTools[6].schema.parse(untrusted));
+    case "menu.findDish":
+      return readTools[7].run(context, readTools[7].schema.parse(untrusted));
+    case "imports.pulse":
+      empty.parse(untrusted);
+      return readTools[8].run(context);
+    case "qr.pulse":
+      empty.parse(untrusted);
+      return readTools[9].run(context);
     default:
       throw new Error("Unknown read-only tool");
   }
