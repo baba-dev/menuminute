@@ -287,9 +287,32 @@ const queryTypes = z.discriminatedUnion("view", [
   z.object({ view: z.literal("shifts") }).strict(),
   z.object({ view: z.literal("reconcile") }).strict(),
   z.object({ view: z.literal("sale"), id }).strict(),
+  z.object({ view: z.literal("settlement"), id }).strict(),
   z.object({ view: z.literal("document"), id }).strict(),
   z.object({ view: z.literal("preview"), id }).strict(),
 ]);
+export type SettlementDetail = {
+  saleId: string;
+  orderId: string;
+  currency: string;
+  basis: "pre_tax_draft" | "frozen_bill";
+  expectedMinor: string;
+  staffAttestedMinor: string;
+  staffMethod: string | null;
+  financeTenderMinor: string;
+  providerConfirmedMinor: string;
+  cashCollectedMinor: string;
+  refundMinor: string;
+  cashRefundMinor: string;
+  recordedNetMinor: string;
+  unallocatedOriginalMinor: string;
+  state: "unpaid" | "partial" | "paid" | "refunded" | "partially_refunded";
+  orderPaymentStatus: string;
+  staffEvidenceIsProviderConfirmed: false;
+  providerReconciliationVerified: false;
+  taxOrFiscalApprovalInferred: false;
+};
+
 export type FinanceView = z.infer<typeof queryTypes>;
 function dbError(error: unknown): never {
   const e = error instanceof Error && error.cause ? error.cause : error;
@@ -356,6 +379,12 @@ export async function financeRead(
         partial: boolean;
         anomalies: { saleId: string; reason: string }[];
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
+    case "settlement":
+      return run<SettlementDetail>(
+        actor,
+        outletId,
+        sql`select app_private.pos_settlement_detail(${outletId},${input.id}) as result`
+      );
     case "sale":
       return run<Detail>(
         actor,
