@@ -120,6 +120,19 @@ const commands = z.discriminatedUnion("action", [
     .strict(),
   z
     .object({
+      action: z.literal("staff_refund"),
+      key,
+      data: z
+        .object({
+          saleId: id,
+          reason,
+          externalRefundAttested: z.boolean(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
       action: z.literal("provider_checkout"),
       key,
       data: z.object({ saleId: id }).strict(),
@@ -415,6 +428,17 @@ export async function financeCommand(
 ): Promise<Record<string, unknown>> {
   const cmd = commands.parse(raw);
   await posContext(actor, organizationId, outletId);
+  if (cmd.action === "staff_refund") {
+    const payload = { action: cmd.action, data: cmd.data };
+    const hash = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+    return run<Record<string, unknown>>(
+      actor,
+      outletId,
+      sql`select app_private.pos_staff_refund(
+        ${outletId},${cmd.key},${hash},${cmd.data.saleId},
+        ${cmd.data.reason},${cmd.data.externalRefundAttested}) as result`
+    );
+  }
   if (cmd.action === "provider_checkout")
     return providerCheckout(actor, outletId, cmd.key, cmd.data.saleId);
   if (cmd.action === "partial_refund") return partialRefund(actor, outletId, cmd.key, cmd.data);
