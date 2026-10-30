@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
 import { escapeCsvCell } from "@/modules/reports/formatters";
+import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
 import { PosNavigation } from "./pos-navigation";
 import type {
   Detail,
@@ -104,6 +105,7 @@ export function FinancialHub({
     [shifts, setShifts] = useState(initialShifts);
   const [selected, setSelected] = useState<Detail | null>(null),
     [settlement, setSettlement] = useState<SettlementDetail | null>(null),
+    [fiscalReadiness, setFiscalReadiness] = useState<FiscalReadiness | null>(null),
     [staffCorrectionReason, setStaffCorrectionReason] = useState(""),
     [staffCorrectionConfirmed, setStaffCorrectionConfirmed] = useState(false),
     [preview, setPreview] = useState<Preview | null>(null);
@@ -222,12 +224,16 @@ export function FinancialHub({
     }
   }
   async function selectSale(id: string) {
-    const [detail, projection] = await Promise.all([
+    const [detail, projection, fiscal] = await Promise.all([
       get<Detail>("sale", id),
       get<SettlementDetail>("settlement", id),
+      finance.canIssue
+        ? get<FiscalReadiness>("fiscal_readiness", id)
+        : Promise.resolve(null),
     ]);
     setSelected(detail);
     setSettlement(projection);
+    setFiscalReadiness(fiscal);
     setPreview(null);
   }
   async function command(action: string, data: Record<string, unknown>) {
@@ -610,6 +616,7 @@ export function FinancialHub({
                     onClick={() => {
                       setSelected(null);
                       setSettlement(null);
+                      setFiscalReadiness(null);
                       setPreview(null);
                     }}
                   >
@@ -722,6 +729,34 @@ export function FinancialHub({
                         </form>
                       )}
                   </div>
+                )}
+                {fiscalReadiness && (
+                  <section className="finance-flow finance-fiscal-readiness"
+                    aria-label="Registered invoice readiness">
+                    <h3>Registered invoice readiness — review only</h3>
+                    <p>
+                      {fiscalReadiness.notice} Registered invoices remain blocked even when
+                      a seller or operator has supplied an approval flag.
+                    </p>
+                    <p>
+                      <strong>{fiscalReadiness.failedCount} requirements outstanding</strong>
+                      {" · "}Jurisdiction: {fiscalReadiness.supportedDiagnosticCountry ?? "Requires adapter"}
+                    </p>
+                    <ul className="finance-fiscal-checks">
+                      {fiscalReadiness.checks.map((check) => (
+                        <li key={check.id}>
+                          <span aria-label={check.satisfied ? "Requirement present" : "Requirement missing"}>
+                            {check.satisfied ? "✓" : "!"}
+                          </span>
+                          <div>
+                            <strong>{check.label}</strong>
+                            <small>{check.explanation}</small>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <small>No IRP registration, statutory serial, or tax credit document is created.</small>
+                  </section>
                 )}
                 {selected.bill ? (
                   <>
