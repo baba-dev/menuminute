@@ -128,6 +128,10 @@ describe("Ember scoped persistence and read-only execution", () => {
       "menu.summary",
       "tables.pulse",
       "finance.pulse",
+      "reports.summary",
+      "menu.findDish",
+      "imports.pulse",
+      "qr.pulse",
     ]);
     const convo = await createConversation(scope, uuid());
     const start = await beginTurn(scope, convo.id, {
@@ -214,6 +218,10 @@ describe("Ember scoped persistence and read-only execution", () => {
       "menu.summary",
       "tables.pulse",
       "finance.pulse",
+      "reports.summary",
+      "menu.findDish",
+      "imports.pulse",
+      "qr.pulse",
     ]);
     expect(toolDefinitions().every((t) => !/(write|delete|sql|fetch|refund)/.test(t.name))).toBe(
       true
