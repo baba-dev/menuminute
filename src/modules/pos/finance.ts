@@ -300,11 +300,41 @@ const queryTypes = z.discriminatedUnion("view", [
   z.object({ view: z.literal("ledger") }).strict(),
   z.object({ view: z.literal("shifts") }).strict(),
   z.object({ view: z.literal("reconcile") }).strict(),
+  z.object({ view: z.literal("reconcile_page"), cursorAt: z.iso.datetime({ offset: true }).optional(), cursorId: id.optional() })
+    .strict()
+    .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
+  z.object({ view: z.literal("ledger_page"), cursorAt: z.iso.datetime({ offset: true }).optional(), cursorId: id.optional() })
+    .strict()
+    .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
   z.object({ view: z.literal("sale"), id }).strict(),
   z.object({ view: z.literal("settlement"), id }).strict(),
   z.object({ view: z.literal("document"), id }).strict(),
   z.object({ view: z.literal("preview"), id }).strict(),
 ]);
+
+export type FinanceCursorPage<T> = {
+  items: T[];
+  pageCount: number;
+  hasMore: boolean;
+  nextCursorAt: string | null;
+  nextCursorId: string | null;
+  isFullHistoryExport: false;
+};
+
+export type ReconciliationPage = {
+  outletId: string;
+  checkedAt: string;
+  scannedCount: number;
+  pageLimit: number;
+  hasMore: boolean;
+  nextCursorAt: string | null;
+  nextCursorId: string | null;
+  anomalies: Array<{ saleId: string; reason: string }>;
+  complete: boolean;
+  scope: "local_ledger_invariants_only";
+  bankReconciliationVerified: false;
+};
+
 export type SettlementDetail = {
   saleId: string;
   orderId: string;
@@ -372,6 +402,22 @@ export async function financeRead(
         )),
         providerConfigured: env.POS_STRIPE_ENABLED,
       };
+    case "ledger_page":
+      return run<FinanceCursorPage<LedgerRow>>(
+        actor,
+        outletId,
+        sql`select app_private.pos_ledger_page(
+          ${outletId},${input.cursorAt ?? null}::timestamptz,
+          ${input.cursorId ?? null},50) as result`
+      );
+    case "reconcile_page":
+      return run<ReconciliationPage>(
+        actor,
+        outletId,
+        sql`select app_private.pos_reconciliation_page(
+          ${outletId},${input.cursorAt ?? null}::timestamptz,
+          ${input.cursorId ?? null},100) as result`
+      );
     case "ledger":
       return run<LedgerRow[]>(
         actor,
