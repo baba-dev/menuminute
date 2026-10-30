@@ -97,8 +97,8 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
-            Permanent QR menus are free. AI import and paid ordering or Kitchen Pro features
-            become available only after the required provider, entitlement and rollout approvals.
+            Permanent QR menus are free. AI import and paid ordering or Kitchen Pro features become
+            available only after the required provider, entitlement and rollout approvals.
           </p>
         </div>
 
@@ -204,8 +204,8 @@ export default function PricingPage() {
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
                 Prefer to run your own infrastructure? MenuMinute is open source under the MIT
                 License. Community Edition is for single-user deployments. Ordering and KDS remain
-                subject to runtime and safety gates; AI requires configured provider credentials
-                and appropriate commercial rights.
+                subject to runtime and safety gates; AI requires configured provider credentials and
+                appropriate commercial rights.
               </p>
             </div>
             <a

@@ -232,7 +232,10 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
                   <h2>Hourly Order Value & Trajectory</h2>
-                  <p>Eligible order value (including unpaid) compared with the previous 14-day average.</p>
+                  <p>
+                    Eligible order value (including unpaid) compared with the previous 14-day
+                    average.
+                  </p>
                 </div>
                 <div className="reports-panel-legend">
                   <span>

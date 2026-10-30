@@ -4,7 +4,7 @@ Status: **implemented controls plus remaining verification requirements**. This 
 
 ## Current implementation (source-backed)
 
-- **Authentication:** [src/lib/auth.ts](../src/lib/auth.ts) uses Better Auth with the Drizzle PostgreSQL database adapter, persisted revocable sessions, verified email, CSRF/origin checks and optional user TOTP. Ordinary user MFA is *not* required; privileged action step-up policies are separately scoped.
+- **Authentication:** [src/lib/auth.ts](../src/lib/auth.ts) uses Better Auth with the Drizzle PostgreSQL database adapter, persisted revocable sessions, verified email, CSRF/origin checks and optional user TOTP. Ordinary user MFA is _not_ required; privileged action step-up policies are separately scoped.
 - **Tenancy:** [src/modules/tenancy/service.ts](../src/modules/tenancy/service.ts) sets transaction-local actor/session/outlet context and verifies outlet permissions through private SQL functions. PostgreSQL RLS and scoped SQL functions enforce tenant boundaries; UI guards alone must never authorize a write.
 - **Outlet selection:** [src/modules/restaurants/service.ts](../src/modules/restaurants/service.ts) resolves only the authenticated user's tenant-visible, active outlets. There is no unauthenticated default/demo tenant fallback for private access.
 - **Public ordering:** [src/app/api/public-orders/route.ts](../src/app/api/public-orders/route.ts) verifies origin, enforces a bounded JSON body and an edge-provided identity authenticated by a shared secret. [src/modules/orders/rate-limit.ts](../src/modules/orders/rate-limit.ts) uses Redis-backed limits; requests fail closed without verified proxy identity.
@@ -17,7 +17,7 @@ Status: **implemented controls plus remaining verification requirements**. This 
 2. **RLS and revocation:** independently test horizontal and vertical tenant access, pooled connection context leakage, role revocation on existing kitchen SSE streams and restored database permissions. Automated coverage exists but is not a substitute for independent review.
 3. **Live edge configuration:** verify Cloudflare -> Nginx overwrites private identity headers and that public-media/order abuse throttles behave as intended during Redis failure. Signed application checks do not prove installed reverse-proxy configuration.
 4. **Privacy and retention:** define, implement and independently assess conversation/data retention, verified erasure, provider disclosure/consent and backup lifecycle before broad commercial AI access.
-5. **Restore and host recovery:** verify backups on an independent host, scheduler/alerts, RLS-granted restoration and media/database consistency. [#49](https://github.com/baba-dev/menuminute/issues/49) and [#131](https://github.com/baba-dev/menuminute/issues/131) were closed as *risk accepted*, not as proven restoration.
+5. **Restore and host recovery:** verify backups on an independent host, scheduler/alerts, RLS-granted restoration and media/database consistency. [#49](https://github.com/baba-dev/menuminute/issues/49) and [#131](https://github.com/baba-dev/menuminute/issues/131) were closed as _risk accepted_, not as proven restoration.
 6. **Resilience and capacity:** record 25-owner / 50-outlet mixed load with kitchen streams and recovery on both Redis instances, while measuring the shared ERP. [#76](https://github.com/baba-dev/menuminute/issues/76) and [#77](https://github.com/baba-dev/menuminute/issues/77) remain open.
 
 ## Evidence standard

@@ -10,8 +10,7 @@ import "./reports.css";
 
 export const metadata: Metadata = {
   title: "Reports & Insights | MenuMinute",
-  description:
-    "Recorded order value, menu performance, cashier settlements and kitchen SLAs.",
+  description: "Recorded order value, menu performance, cashier settlements and kitchen SLAs.",
   robots: { index: false, follow: false },
 };
 

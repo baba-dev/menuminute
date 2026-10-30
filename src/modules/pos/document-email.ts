@@ -34,7 +34,11 @@ const snapshotSchema = z
   .passthrough();
 
 // Use only the immutable document snapshot, never the current mutable menu.
-const clean = (value: string) => value.replace(/[\r\n\t]+/g, " ").trim().slice(0, 500);
+const clean = (value: string) =>
+  value
+    .replace(/[\r\n\t]+/g, " ")
+    .trim()
+    .slice(0, 500);
 function money(minorUnits: string, currency: string): string {
   try {
     const options = { style: "currency" as const, currency, currencyDisplay: "code" as const };

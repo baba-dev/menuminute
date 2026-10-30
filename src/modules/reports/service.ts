@@ -827,7 +827,13 @@ export async function exportReportCsv(
   }
 
   // Default: Executive Sales Summary by Hour
-  const headers = ["Hour", "Time", "Recorded Order Value", "Orders Count", "Historical Order Value Average"];
+  const headers = [
+    "Hour",
+    "Time",
+    "Recorded Order Value",
+    "Orders Count",
+    "Historical Order Value Average",
+  ];
   const rows = data.hourlyTrajectory.map((h) => [
     h.hour,
     h.label,

@@ -23,10 +23,9 @@ test("public pricing advertises the reviewed INR catalog without unsupported int
     "href",
     "/register"
   );
-  await expect(page.getByRole("link", { name: "Create an account for Kitchen Pro" })).toHaveAttribute(
-    "href",
-    "/register"
-  );
+  await expect(
+    page.getByRole("link", { name: "Create an account for Kitchen Pro" })
+  ).toHaveAttribute("href", "/register");
   await expect(page.getByText(/under the MIT License/)).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/\$19\/mo|\$39\/mo|₹149/);
 });
