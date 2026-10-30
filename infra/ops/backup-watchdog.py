@@ -10,6 +10,7 @@ import datetime as dt
 import json
 import os
 import subprocess
+import stat
 import sys
 
 UTC = dt.timezone.utc
@@ -105,8 +106,11 @@ def main():
         return 1
     try:
         wrapper = os.path.realpath(args.restic_wrapper)
-        if not os.path.isabs(args.restic_wrapper) or not os.path.isfile(wrapper):
-            raise RuntimeError("restic wrapper missing")
+        if args.restic_wrapper != "/usr/local/sbin/menuminute-restic" or wrapper != args.restic_wrapper:
+            raise RuntimeError("only the reviewed absolute restic wrapper is allowed")
+        info = os.stat(wrapper)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+            raise RuntimeError("restic wrapper must be regular, root-owned and not writable by other users")
         snapshot_text = run_checked([wrapper, "snapshots", "--json"], timeout=90)
         snapshots = json.loads(snapshot_text)
         if not isinstance(snapshots, list):
