@@ -174,7 +174,7 @@ test("a service milestone shows once per day and never replays", async ({ page }
   await expect(page.getByTestId("milestone-ticket")).toHaveCount(0);
 });
 
-test("status is never colour alone and the shift summary stays off without Ember", async ({
+test("status is never colour alone and the shift summary follows the Ember flag", async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -182,7 +182,10 @@ test("status is never colour alone and the shift summary stays off without Ember
   const badge = page.locator(".mm-dashboard-health-badge").first();
   await expect(badge).toContainText(/Live|Pending/);
   await expect(badge.locator("svg")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Shift summary" })).toHaveCount(0);
+  // Flag-gated: absent (not merely disabled) unless the Ember-enabled fixture is running.
+  await expect(page.getByRole("button", { name: "Shift summary" })).toHaveCount(
+    process.env["AI_ASSISTANT_READ_ONLY_ENABLED"] === "true" ? 1 : 0
+  );
 });
 
 test("the editor fits a phone without horizontal scrolling", async ({ page }) => {

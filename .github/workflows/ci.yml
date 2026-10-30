@@ -270,7 +270,7 @@ jobs:
       - run: pnpm build:worker
       - run: pnpm exec playwright install --with-deps chromium
       - name: Exercise real Ember drawer, availability confirmation and outlet isolation
-        run: pnpm exec playwright test tests/e2e/ember.spec.ts
+        run: pnpm exec playwright test tests/e2e/ember.spec.ts tests/e2e/shift-summary.spec.ts
       - if: failure()
         continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

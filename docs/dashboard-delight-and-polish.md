@@ -78,6 +78,8 @@ Status: **implemented in one PR; plan and as-built notes below.** Scope is the s
 - DOM order follows the layout on the server, so tab order and reading order match what sighted users see. CSS `order` is used only to make optimistic edits instant before the server re-renders.
 - The pulse's freshness line no longer carries `role="status"`; a separate polite region announces only when the awaiting-acceptance count rises.
 - Revenue milestones remain deferred (see decisions above).
+- Ember selects tools by keyword (`tool-selection.ts`, from Ember Intelligence 2.0). The shift-summary prompt is worded so only the orders, kitchen and dining-table tools are shortlisted: no sales words (these pull in the reports tool), no "draft" or "menu", no "food" or "dish", and no merchant-chosen text. `tests/dashboard-shift-summary.test.ts` runs the prompt through the real router so a future wording change that pulls in other tools fails the test.
+- The Ember-enabled CI lane now also runs `tests/e2e/shift-summary.spec.ts` (one-line change to `.github/workflows/ci.yml`). The model is stubbed at the two assistant endpoints there; the spec verifies the page behaviour, not model output.
 
 ## Files (expected)
 

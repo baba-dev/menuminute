@@ -4,15 +4,18 @@
  * prompt below is a constant, but the endpoint accepts any prompt from the signed-in user,
  * so nothing here is an authorization boundary: the draft is advisory and never sent anywhere.
  */
-export function shiftSummaryPrompt(outletName: string, localDate: string): string {
-  const name = outletName.replace(/[\r\n]+/g, " ").slice(0, 120);
+export function shiftSummaryPrompt(localDate: string): string {
+  // Ember routes each question to tools by keyword (see tool-selection.ts). This wording is
+  // deliberately limited so only the orders, kitchen and dining-table tools are shortlisted:
+  // avoid sales words (which pull in the reports tool), "draft"/"menu" (menu tools) and
+  // "food"/"dish" (dish lookup), and never interpolate a merchant-chosen name.
   return [
-    `Draft a short shift summary for the manager of "${name}" for ${localDate} (today so far).`,
-    "Use only values returned by the registered tools: orders, kitchen and dining-table activity.",
-    "Format: one headline sentence, then up to six short bullet points, then one 'Check before sharing' line.",
-    "Do not state revenue, sales totals, tips, tax or cash figures; order totals are not settled revenue.",
-    "Do not make dietary, allergen or food-safety claims. Say plainly when a figure is unavailable.",
-    "Do not invent numbers, names or reasons.",
+    `Write a short shift summary for the manager for ${localDate} (today so far).`,
+    "Use only values returned by the registered tools about orders, the kitchen and dining tables.",
+    'Format: one headline sentence, up to six short bullet points, then one "Check before sharing" line.',
+    "Do not state money amounts of any kind; order totals are not settled.",
+    "Do not make dietary, allergen or safety claims.",
+    "Say plainly when a figure is missing. Do not invent numbers, names or reasons.",
   ].join(" ");
 }
 

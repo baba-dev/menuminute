@@ -85,7 +85,7 @@ export function ShiftSummaryDialog({
       const localDate = outletLocalDate(new Date(), timezone);
       const run = await post<Run>(
         "/api/assistant/conversations/" + encodeURIComponent(conversation.id) + "/turns",
-        { ...scope, prompt: shiftSummaryPrompt(outletName, localDate), key: keys.current.turn }
+        { ...scope, prompt: shiftSummaryPrompt(localDate), key: keys.current.turn }
       );
       if (run.status !== "completed" || !run.answer?.trim()) {
         setError("Ember could not verify a summary. No business change occurred.");
