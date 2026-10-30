@@ -103,6 +103,8 @@ class CoexistenceTests(unittest.TestCase):
     def test_erp_failure_is_visible(self):
         rec = {"observed_at_utc": "2026-10-30T12:00:00Z", "host_cpu_pct": 23.5,
                "memory_available_mib": 8000, "root_free_gib": 20,
+               "disk_read_mib_per_s": 0.5, "disk_write_mib_per_s": 0.25,
+               "pg_redis_rss_mib": {"postgres": 240.0, "redis": 80.0},
                "erp": {"status": None, "latency_ms": 5000},
                "menuminute": {"status": 200, "latency_ms": 40},
                "units": {u: {"memory_mib": 60, "tasks": 4}
