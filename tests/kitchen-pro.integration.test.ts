@@ -185,6 +185,120 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     );
     expect(state.rows[0]?.status).toBe("preparing");
   });
+  it("serializes competing station writes and requires the expeditor to release exactly once", async () => {
+    const f = await setup();
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted",
+      expectedVersion: 1,
+    });
+    const board = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(board.work).toHaveLength(2);
+    const [first, second] = board.work;
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+
+    // Two different requests racing on the same initial station version are not
+    // duplicates. One must commit and the other must observe a version conflict.
+    const attempts = await Promise.allSettled(
+      [crypto.randomUUID(), crypto.randomUUID()].map((key) =>
+        kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+          workId: first!.id,
+          action: "start",
+          expectedVersion: 0,
+          key,
+        })
+      )
+    );
+    expect(attempts.filter((a) => a.status === "fulfilled")).toHaveLength(1);
+    expect(attempts.filter((a) => a.status === "rejected")).toHaveLength(1);
+    const startedFirst = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(startedFirst.work.find((w) => w.id === first!.id)).toMatchObject({
+      status: "preparing",
+      version: 1,
+    });
+    expect(startedFirst.work.find((w) => w.id === second!.id)).toMatchObject({
+      status: "queued",
+      version: 0,
+    });
+
+    const finishedFirst = await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+      workId: first!.id,
+      action: "complete",
+      expectedVersion: 1,
+      key: crypto.randomUUID(),
+    });
+    expect(finishedFirst.status).toBe("complete");
+
+    const version = await admin(async (_, pool) => {
+      const r = await pool.query<{ version: number; status: string }>(
+        "select version,status from orders where id=$1",
+        [o.orderId]
+      );
+      return r.rows[0]!;
+    });
+    expect(version.status).toBe("preparing");
+    await expect(
+      kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+        orderId: o.orderId,
+        expectedVersion: version.version,
+        key: crypto.randomUUID(),
+      })
+    ).rejects.toMatchObject({ statusCode: 409 });
+
+    const startedSecond = await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+      workId: second!.id,
+      action: "start",
+      expectedVersion: 0,
+      key: crypto.randomUUID(),
+    });
+    await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+      workId: second!.id,
+      action: "complete",
+      expectedVersion: startedSecond.version,
+      key: crypto.randomUUID(),
+    });
+
+    // Two distinct expeditor requests cannot both release the order, while a
+    // same-key replay must return the authoritative already committed outcome.
+    const keys = [crypto.randomUUID(), crypto.randomUUID()];
+    const results = await Promise.allSettled(
+      keys.map((key) =>
+        kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+          orderId: o.orderId,
+          expectedVersion: version.version,
+          key,
+        })
+      )
+    );
+    const succeeded = results.filter((x) => x.status === "fulfilled");
+    expect(succeeded).toHaveLength(1);
+    expect(results.filter((x) => x.status === "rejected")).toHaveLength(1);
+    const winningKey = keys[results.findIndex((x) => x.status === "fulfilled")]!;
+    expect(
+      await kitchenExpoRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+        orderId: o.orderId,
+        expectedVersion: version.version,
+        key: winningKey,
+      })
+    ).toEqual((succeeded[0] as PromiseFulfilledResult<unknown>).value);
+
+    const records = await admin(async (_, pool) =>
+      pool.query<{ status: string; payment_status: string; ready_events: string }>(
+        `select o.status, o.payment_status,
+          (select count(*)::text from order_status_events e
+           where e.order_id=o.id and e.to_status='ready') as ready_events
+         from orders o where o.id=$1`,
+        [o.orderId]
+      )
+    );
+    expect(records.rows[0]).toMatchObject({
+      status: "ready",
+      payment_status: "unpaid",
+      ready_events: "1",
+    });
+  });
+
   it("recovers a fully completed legacy accepted order only through the authorized expeditor", async () => {
     const f = await setup();
     const o = await place(f);

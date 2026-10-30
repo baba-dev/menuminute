@@ -201,6 +201,58 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   }
 });
 
+test("Kitchen Pro recovers a failed snapshot without losing its keyboard-accessible service view", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.context().clearPermissions();
+
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/kitchen");
+  const introduction = page.getByRole("dialog", { name: "Build your kitchen, beautifully." });
+  await expect(introduction).toBeVisible({ timeout: 15000 });
+  await introduction.getByRole("button", { name: "Close kitchen setup" }).click();
+  await expect(introduction).toHaveCount(0);
+
+  const sync = page.getByRole("button", { name: "Sync", exact: true });
+  await expect(sync).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
+    "aria-pressed",
+    "false"
+  );
+  const kitchenSnapshotRoute = /\/api\/organizations\/[^/]+\/outlets\/[^/]+\/kitchen(?:\?.*)?$/;
+  await page.route(kitchenSnapshotRoute, async (route) => {
+    if (route.request().method() === "GET")
+      await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+    else await route.continue();
+  });
+
+  await sync.focus();
+  await expect(sync).toBeFocused();
+  await page.keyboard.press("Enter");
+  const transportError = page.getByRole("alert").filter({
+    hasText: /Unable to reconcile kitchen tickets/,
+  });
+  await expect(transportError).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.unroute(kitchenSnapshotRoute);
+  await sync.click();
+  await expect(transportError).toHaveCount(0, { timeout: 15000 });
+  await expect(page.getByRole("status").filter({ hasText: /Connected/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
+    "aria-pressed",
+    "false"
+  );
+});
+
 test("Kitchen SSE enforces a distributed session limit and revokes only after access is removed", async ({
   page,
 }) => {
