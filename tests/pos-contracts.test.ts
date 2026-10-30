@@ -3,6 +3,8 @@ import {
   posAttachSchema,
   posSubmissionSchema,
   sellerSettingsSchema,
+  posAcceptSchema,
+  posRegisterQuerySchema,
 } from "../src/modules/pos/service";
 
 describe("POS A/C strict financial contracts", () => {
@@ -59,6 +61,19 @@ describe("POS A/C strict financial contracts", () => {
     expect(() =>
       posAttachSchema.parse({ key: valid.key, orderId: "ord-123", status: "paid" })
     ).toThrow();
+  });
+  it("rejects stale or forged customer acceptance and unbounded register filters", () => {
+    const key = "00000000-0000-4000-8000-000000000001";
+    expect(posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1 }).orderId).toBe(
+      "ord-one"
+    );
+    expect(() => posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 0 })).toThrow();
+    expect(() =>
+      posAcceptSchema.parse({ key, orderId: "ord-one", expectedVersion: 1, paymentsEnabled: true })
+    ).toThrow();
+    expect(posRegisterQuerySchema.parse({}).period).toBe("today");
+    expect(() => posRegisterQuerySchema.parse({ search: "x".repeat(81) })).toThrow();
+    expect(() => posRegisterQuerySchema.parse({ source: "provider_verified" })).toThrow();
   });
   it("requires real seller identity before opt-in without asserting tax registration", () => {
     const profile = {

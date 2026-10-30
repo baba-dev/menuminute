@@ -6,14 +6,13 @@ import {
   ArrowRight,
   CheckCircle2,
   ClipboardList,
-  BookOpenText,
-  ClipboardCheck,
   Minus,
   Plus,
-  RefreshCcw,
   Search,
   Settings2,
   ShoppingBasket,
+  BookOpenText,
+  Utensils,
   Printer,
   Wallet,
   X,
@@ -21,6 +20,8 @@ import {
 import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
+import { PosIncomingOrders } from "./pos-incoming-orders";
+import { PosOrderRegister } from "./pos-order-register";
 import {
   readTerminalReceiptSettings,
   saveTerminalReceiptSettings,
@@ -30,7 +31,6 @@ import {
   discardReservedWindow,
   type ReceiptPaper,
 } from "@/lib/pos/receipt-printing";
-import type { PosRecentPage } from "@/modules/pos/service";
 
 type Menu = PosWorkspace["menus"][number];
 type Dish = Menu["categories"][number]["items"][number];
@@ -88,6 +88,10 @@ export function TheTill({
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [dish, setDish] = useState<Dish | null>(null);
+  const [editingLineId, setEditingLineId] = useState<string | null>(null);
+  const [mobileTicketOpen, setMobileTicketOpen] = useState(false);
+  const mobileTicketRef = useRef<HTMLElement>(null);
+  const inlineConfigRef = useRef<HTMLDivElement>(null);
   const [variant, setVariant] = useState("");
   const [groups, setGroups] = useState<Record<string, string[]>>({});
   const [customer, setCustomer] = useState("");
@@ -107,9 +111,23 @@ export function TheTill({
   const [printFallback, setPrintFallback] = useState<string | null>(null);
   const [submitFeedback, setSubmitFeedback] = useState<"idle" | "success" | "error">("idle");
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [recentBusy, setRecentBusy] = useState(false);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
+  useEffect(() => {
+    if (mobileTicketOpen) mobileTicketRef.current?.focus();
+  }, [mobileTicketOpen]);
+  useEffect(() => {
+    if (!dish || mobileTicketOpen) return;
+    // Editing from the mobile ticket closes the sheet; focus the inline editor.
+    const frame = window.requestAnimationFrame(() => {
+      inlineConfigRef.current?.scrollIntoView({
+        block: "center",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+      inlineConfigRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [dish, mobileTicketOpen]);
   const incomingOrderId = useSyncExternalStore(
     subscribeUrl,
     () => {
@@ -157,6 +175,9 @@ export function TheTill({
   const attachKeys = useRef<Record<string, string>>({});
   const menu = workspace.menus.find((m) => m.id === selectedMenu) ?? workspace.menus[0];
   const currency = workspace.context.currency;
+  const foodItemsOnMenu = new Set(
+    workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items.map((i) => i.id)))
+  ).size;
   const dishes = useMemo(
     () =>
       menu?.categories
@@ -173,28 +194,6 @@ export function TheTill({
     const fresh = await json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" }));
     setWorkspace(fresh);
     if (!fresh.menus.some((m) => m.id === selectedMenu)) setSelectedMenu(fresh.menus[0]?.id ?? "");
-  }
-  async function changeRecentPage(page: number) {
-    if (recentBusy || page < 0 || page > 1000) return;
-    setRecentBusy(true);
-    try {
-      const pagination = await json<PosRecentPage>(
-        await fetch(endpoint + "?view=recent&page=" + page, { cache: "no-store" })
-      );
-      setWorkspace((prev) => ({
-        ...prev,
-        recent: pagination.items,
-        recentPagination: {
-          page: pagination.page,
-          total: pagination.total,
-          hasMore: pagination.hasMore,
-        },
-      }));
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load draft register page.");
-    } finally {
-      setRecentBusy(false);
-    }
   }
   async function configure(event: FormEvent) {
     event.preventDefault();
@@ -219,7 +218,7 @@ export function TheTill({
       await refresh();
       setEditingSettings(false);
       setMessage(
-        "The Till is enabled for unpaid, pre-tax order recording. No tax invoice or payment collection is enabled."
+        "Point of Sale order entry is enabled. Staff-recorded payments are available; fiscal documents require separate approval."
       );
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Unable to save settings.");
@@ -228,11 +227,63 @@ export function TheTill({
     }
   }
   function openDish(item: Dish) {
-    if (item.soldOut || !item.open) return;
+    if (item.soldOut || !item.open || busy) return;
+    const validVariants = item.variants.filter((v) => v.isAvailable);
+    const needsOptions = item.addOnGroups.some((g) => g.min > 0);
+    // Fast path: no mandatory configuration. Optional add-ons remain editable in ticket.
+    if (!needsOptions && (item.variants.length === 0 || validVariants.length === 1)) {
+      const singleVariant = item.variants.length ? validVariants[0] : undefined;
+      const line: Line = {
+        dishId: item.id,
+        variantId: singleVariant?.id ?? null,
+        groups: item.addOnGroups.map((g) => ({ groupId: g.id, optionIds: [] })),
+        quantity: 1,
+      };
+      setCart((previous) => {
+        const match = previous.find(
+          (c) =>
+            c.line.dishId === line.dishId &&
+            c.line.variantId === line.variantId &&
+            JSON.stringify(c.line.groups) === JSON.stringify(line.groups)
+        );
+        if (match)
+          return previous.map((c) =>
+            c.id === match.id
+              ? { ...c, line: { ...c.line, quantity: Math.min(99, c.line.quantity + 1) } }
+              : c
+          );
+        if (previous.length >= 50) return previous;
+        return [
+          ...previous,
+          {
+            id: crypto.randomUUID(),
+            line,
+            name: item.name,
+            variantName: singleVariant?.name ?? null,
+            unitMinor: singleVariant?.priceMinor ?? item.priceMinor,
+          },
+        ];
+      });
+      commandRef.current = null;
+      setMessage("");
+      return;
+    }
+    setEditingLineId(null);
     setDish(item);
     setVariant("");
     setGroups({});
     setMessage("");
+  }
+  function customizeCartLine(entry: CartLine) {
+    const item = workspace.menus
+      .flatMap((m) => m.categories.flatMap((c) => c.items))
+      .find((candidate) => candidate.id === entry.line.dishId);
+    if (!item) return setMessage("This dish is no longer in the published menu.");
+    setDish(item);
+    setVariant(entry.line.variantId ?? "");
+    setGroups(Object.fromEntries(entry.line.groups.map((g) => [g.groupId, g.optionIds])));
+    setEditingLineId(entry.id);
+    setMobileTicketOpen(false);
   }
   function choose(groupId: string, optionId: string, maximum: number) {
     setGroups((old) => {
@@ -273,21 +324,34 @@ export function TheTill({
       quantity: 1,
     };
     setCart((prev) =>
-      prev.length >= 50
-        ? prev
-        : [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              line,
-              name: dish.name,
-              variantName: selectedVariant?.name ?? null,
-              unitMinor,
-            },
-          ]
+      editingLineId
+        ? prev.map((entry) =>
+            entry.id === editingLineId
+              ? {
+                  ...entry,
+                  line: { ...line, quantity: entry.line.quantity },
+                  name: dish.name,
+                  variantName: selectedVariant?.name ?? null,
+                  unitMinor,
+                }
+              : entry
+          )
+        : prev.length >= 50
+          ? prev
+          : [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                line,
+                name: dish.name,
+                variantName: selectedVariant?.name ?? null,
+                unitMinor,
+              },
+            ]
     );
     commandRef.current = null;
     setDish(null);
+    setEditingLineId(null);
     setMessage("");
   }
   function changeQty(id: string, delta: number) {
@@ -340,6 +404,7 @@ export function TheTill({
       );
       setSuccess(result);
       setCart([]);
+      setMobileTicketOpen(false);
       setMarkAsPaid(false);
       setPaymentMethod("cash");
       setCustomer("");
@@ -417,43 +482,17 @@ export function TheTill({
     <main className="till-page pos-editorial" data-testid="pos-till">
       <header className="till-heading pos-hero">
         <div>
-          <span className="till-eyebrow">MENUMINUTE / THE TILL</span>
+          <span className="till-eyebrow">MENUMINUTE / POINT OF SALE</span>
           <h1>Service, meet settlement.</h1>
           <p>
-            Record staff orders and link eligible tickets to a private draft sale. Payment and
-            fiscal issue are not enabled yet.
+            Every order, one counter. Create sales, manage incoming orders, prepare bills and keep
+            your restaurant moving.
           </p>
         </div>
         <div className="till-heading-actions">
-          <Link href="/dashboard/pos/ledger">
-            The Ledger <BookOpenText size={15} />
-          </Link>
-          <Link href="/dashboard/pos/closing">
-            Closing Desk <ClipboardCheck size={15} />
-          </Link>
           <Link href="/dashboard/orders">
             Service Counter <ArrowRight size={15} />
           </Link>
-          <Link href="/kitchen">
-            Kitchen <ArrowRight size={15} />
-          </Link>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            disabled={busy}
-            aria-label="Refresh Till"
-          >
-            <RefreshCcw size={17} />
-          </button>
-          {workspace.context.canConfigure && (
-            <button
-              type="button"
-              onClick={() => setEditingSettings(!editingSettings)}
-              aria-label="Seller settings"
-            >
-              <Settings2 size={17} />
-            </button>
-          )}
         </div>
         <span className="pos-hero-caption" aria-hidden="true">
           CRAFTED FOR THE COUNTER
@@ -461,6 +500,15 @@ export function TheTill({
       </header>
       <div className="pos-body">
         <PosNavigation active="till" />
+        {workspace.context.canConfigure && workspace.context.enabled && (
+          <button
+            type="button"
+            className="pos-seller-link"
+            onClick={() => setEditingSettings((value) => !value)}
+          >
+            <Settings2 size={15} aria-hidden="true" /> Seller details
+          </button>
+        )}
         {incomingOrderId && (
           <div role="status" className="mb-4 rounded-xl border border-amber-500/50 p-4">
             {incomingOrder ? (
@@ -490,40 +538,35 @@ export function TheTill({
             )}
           </div>
         )}
-        <section className="till-status" aria-label="Financial status">
-          <span>OUTLET · {workspace.context.outletName}</span>
-          <strong>{workspace.context.enabled ? "DRAFT POS ACTIVE" : "POS DISABLED"}</strong>
-          <span>TAX NOT CALCULATED · NO PAYMENT CAPTURE · NO INVOICE ISSUANCE</span>
-        </section>
-        <section className="pos-overview" aria-label="POS overview">
+        <section className="pos-overview" aria-label="Point of Sale overview">
           <div className="pos-section-header">
             <span className="till-eyebrow">THE COUNTER AT A GLANCE</span>
-            <small>Current outlet · Operational snapshot</small>
+            <small>Current outlet · Local business day</small>
           </div>
           <div className="pos-metrics">
             <div className="pos-metric">
               <ShoppingBasket aria-hidden="true" />
-              <span>Draft POS</span>
-              <strong>{workspace.context.enabled ? "Ready" : "Off"}</strong>
-              <small>Order recording only</small>
+              <span>Total Sales Today</span>
+              <strong>{money(workspace.kpis.totalSalesMinor, currency)}</strong>
+              <small>Paid orders placed today · Net of recorded refunds</small>
             </div>
             <div className="pos-metric">
               <BookOpenText aria-hidden="true" />
               <span>Published menus</span>
               <strong>{workspace.menus.length}</strong>
-              <small>Available in this workspace</small>
+              <small>Live menus in this outlet</small>
             </div>
             <div className="pos-metric">
-              <ClipboardCheck aria-hidden="true" />
-              <span>Eligible tickets</span>
-              <strong>{workspace.attachable.length}</strong>
-              <small>Unpaid orders available to link</small>
+              <Utensils aria-hidden="true" />
+              <span>Food Items on Menu</span>
+              <strong>{foodItemsOnMenu}</strong>
+              <small>Unique published dishes</small>
             </div>
             <div className="pos-metric">
               <ClipboardList aria-hidden="true" />
-              <span>Recent drafts</span>
-              <strong>{workspace.recent.length}</strong>
-              <small>Returned by the register</small>
+              <span>Total Orders Today</span>
+              <strong>{workspace.kpis.totalOrders}</strong>
+              <small>All channels · Including pending and cancelled</small>
             </div>
           </div>
         </section>
@@ -536,13 +579,13 @@ export function TheTill({
           <div role="status" className="till-success">
             <CheckCircle2 size={20} />
             <div>
-              <strong>Recorded · Order #{success.orderNumber}</strong>
+              <strong>Dispatched · Order #{success.orderNumber}</strong>
               <p>
                 Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax ·
                 Payment{" "}
                 {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
-                The order was sent to Service Counter. This confirmation is not a receipt or tax
-                invoice.
+                The order was accepted and sent to service. This confirmation is not a receipt or
+                tax invoice.
               </p>
             </div>
             <Link href="/dashboard/orders">View orders</Link>
@@ -557,7 +600,7 @@ export function TheTill({
           <form className="till-settings" onSubmit={(e) => void configure(e)}>
             <div>
               <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
-              <h2>Activate draft POS</h2>
+              <h2>Activate Point of Sale</h2>
               <p>
                 Record genuine merchant identity. Tax profiles and legally issued documents are
                 separately release-gated; selecting a status here is not tax certification.
@@ -604,12 +647,21 @@ export function TheTill({
               />
             </label>
             <button className="till-primary" type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Save identity and enable draft orders"}
+              {busy ? "Saving…" : "Save seller details and enable POS"}
             </button>
           </form>
         )}
         {workspace.context.enabled && (
-          <div className="till-layout">
+          <div className={"till-layout" + (mobileTicketOpen ? " is-mobile-ticket-open" : "")}>
+            <button
+              type="button"
+              className="pos-mobile-ticket-toggle"
+              onClick={() => setMobileTicketOpen(true)}
+            >
+              <ShoppingBasket size={19} aria-hidden="true" />
+              View Ticket · {cart.reduce((count, entry) => count + entry.line.quantity, 0)} items
+              <strong>{money(subtotal.toString(), currency)}</strong>
+            </button>
             <section className="till-catalog" aria-label="Published menu">
               <div className="till-sectionhead">
                 <div>
@@ -674,9 +726,7 @@ export function TheTill({
                   <button
                     type="button"
                     key={item.id}
-                    disabled={
-                      item.soldOut || !item.open || !menu?.open || busy || cart.length >= 50
-                    }
+                    disabled={item.soldOut || !item.open || !menu?.open || busy}
                     onClick={() => openDish(item)}
                     className="till-dish"
                   >
@@ -692,45 +742,108 @@ export function TheTill({
                   </button>
                 ))}
               </div>
+              {dish && (
+                <div
+                  className="till-inline-config"
+                  id="pos-dish-config"
+                  ref={inlineConfigRef}
+                  tabIndex={-1}
+                >
+                  <section
+                    className="till-inline-config-panel"
+                    role="region"
+                    aria-labelledby="till-dish-title"
+                  >
+                    <div className="till-sectionhead">
+                      <div>
+                        <span className="till-eyebrow">CUSTOMIZE DISH</span>
+                        <h2 id="till-dish-title">{dish.name}</h2>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDish(null);
+                          setEditingLineId(null);
+                        }}
+                        aria-label="Close dish chooser"
+                      >
+                        <X size={19} />
+                      </button>
+                    </div>
+                    {dish.variants.length > 0 && (
+                      <fieldset>
+                        <legend>Choose a variant</legend>
+                        {dish.variants.map((v) => (
+                          <label key={v.id} className="till-option">
+                            <input
+                              type="radio"
+                              name="dish-variant"
+                              value={v.id}
+                              checked={variant === v.id}
+                              disabled={!v.isAvailable}
+                              onChange={() => setVariant(v.id)}
+                            />
+                            {v.name}
+                            <span>{money(v.priceMinor, currency)}</span>
+                          </label>
+                        ))}
+                      </fieldset>
+                    )}
+                    {dish.addOnGroups.map((g) => (
+                      <fieldset key={g.id}>
+                        <legend>
+                          {g.name} · choose {g.min}–{g.max}
+                        </legend>
+                        {g.options.map((o) => (
+                          <label key={o.id} className="till-option">
+                            <input
+                              type="checkbox"
+                              checked={(groups[g.id] ?? []).includes(o.id)}
+                              disabled={!o.isAvailable}
+                              onChange={() => choose(g.id, o.id, g.max)}
+                            />
+                            {o.name}
+                            <span>+{money(o.priceMinor, currency)}</span>
+                          </label>
+                        ))}
+                      </fieldset>
+                    ))}
+                    <button type="button" className="till-primary" onClick={addDish}>
+                      {editingLineId ? "Save options" : "Add dish"} <Plus size={16} />
+                    </button>
+                  </section>
+                </div>
+              )}
               {!dishes.length && (
                 <p className="till-empty">No dishes found. Publish a menu or adjust the search.</p>
               )}
-              <section className="till-existing">
-                <div className="till-sectionhead">
-                  <div>
-                    <span className="till-eyebrow">02 / EXISTING TICKETS</span>
-                    <h2>Link an order</h2>
-                  </div>
-                </div>
-                <p>
-                  Eligible accepted, preparing, ready and completed unpaid orders. Each order can be
-                  attached only once.
-                </p>
-                {workspace.attachable.map((o) => (
-                  <div className="till-existing-row" key={o.orderId}>
-                    <div>
-                      <strong>
-                        #{o.orderNumber} · {o.customerName || o.fulfillmentMode.replace("_", " ")}
-                      </strong>
-                      <small>
-                        {o.status} · {money(o.subtotalMinor, o.currency)}
-                      </small>
-                    </div>
-                    <button type="button" disabled={busy} onClick={() => void attach(o)}>
-                      Attach draft <ArrowRight size={15} />
-                    </button>
-                  </div>
-                ))}
-                {!workspace.attachable.length && (
-                  <p className="till-empty">No eligible unpaid tickets currently available.</p>
-                )}
-              </section>
+              <PosIncomingOrders
+                organizationId={organizationId}
+                outletId={outletId}
+                onUpdated={refresh}
+              />
             </section>
-            <aside className="till-cart" aria-label="Staff order cart">
+            <aside
+              className="till-cart"
+              aria-label="Staff order cart"
+              tabIndex={-1}
+              ref={mobileTicketRef}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setMobileTicketOpen(false);
+              }}
+            >
               <div className="till-sectionhead">
                 <div>
                   <span className="till-eyebrow">03 / ORDER PAD</span>
                   <h2>Current ticket</h2>
+                  <button
+                    className="pos-mobile-ticket-close"
+                    type="button"
+                    onClick={() => setMobileTicketOpen(false)}
+                    aria-label="Close ticket"
+                  >
+                    <X size={19} />
+                  </button>
                 </div>
                 <ShoppingBasket size={22} />
               </div>
@@ -777,6 +890,14 @@ export function TheTill({
                       <small>
                         {entry.variantName ?? "Regular"} · {money(entry.unitMinor, currency)} each
                       </small>
+                      <button
+                        type="button"
+                        className="pos-customize-line"
+                        onClick={() => customizeCartLine(entry)}
+                        aria-label={"Customize " + entry.name}
+                      >
+                        Edit options
+                      </button>
                     </div>
                     <div className="till-quantity">
                       <button
@@ -899,7 +1020,7 @@ export function TheTill({
                     ? "Order Sent!"
                     : submitFeedback === "error"
                       ? "Could not send"
-                      : "Send to Service Counter"}{" "}
+                      : "Place Order & Send"}{" "}
                 <ArrowRight size={17} />
               </button>
               <button
@@ -917,126 +1038,9 @@ export function TheTill({
           </div>
         )}
         {workspace.context.enabled && (
-          <section className="till-recent">
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">04 / DRAFT REGISTER</span>
-                <h2>Recently recorded</h2>
-              </div>
-              <ClipboardList size={20} />
-            </div>
-            {workspace.recent.map((sale) => (
-              <div className="till-existing-row" key={sale.saleId}>
-                <div>
-                  <strong>
-                    Order #{sale.orderNumber} ·{" "}
-                    {sale.origin === "staff" ? "Staff entry" : "Existing ticket"}
-                  </strong>
-                  <small>
-                    {sale.saleId} · {sale.status} · Payment{" "}
-                    {sale.paymentStatus === "paid" ? "Complete" : "Pending"}
-                  </small>
-                </div>
-                <div className="till-register-actions">
-                  <span>{money(sale.subtotalMinor, sale.currency)}</span>
-                  <Link
-                    href={"/dashboard/pos/receipts/" + encodeURIComponent(sale.saleId)}
-                    target="_blank"
-                    rel="noopener"
-                    aria-label={"Print order " + sale.orderNumber}
-                  >
-                    <Printer size={16} />
-                  </Link>
-                </div>
-              </div>
-            ))}
-            {!workspace.recent.length && <p className="till-empty">No orders on this page.</p>}
-            <nav className="till-pagination" aria-label="Draft register pages">
-              <span>
-                Page {workspace.recentPagination.page + 1} · {workspace.recentPagination.total}{" "}
-                recorded
-              </span>
-              <div>
-                <button
-                  type="button"
-                  disabled={recentBusy || workspace.recentPagination.page === 0}
-                  onClick={() => void changeRecentPage(workspace.recentPagination.page - 1)}
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  disabled={recentBusy || !workspace.recentPagination.hasMore}
-                  onClick={() => void changeRecentPage(workspace.recentPagination.page + 1)}
-                >
-                  Next
-                </button>
-              </div>
-            </nav>
-          </section>
+          <PosOrderRegister organizationId={organizationId} outletId={outletId} />
         )}
       </div>
-      {dish && (
-        <div className="till-modal-backdrop" role="presentation">
-          <section
-            className="till-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="till-dish-title"
-          >
-            <div className="till-sectionhead">
-              <div>
-                <span className="till-eyebrow">CONFIGURE DISH</span>
-                <h2 id="till-dish-title">{dish.name}</h2>
-              </div>
-              <button type="button" onClick={() => setDish(null)} aria-label="Close dish chooser">
-                <X size={19} />
-              </button>
-            </div>
-            {dish.variants.length > 0 && (
-              <fieldset>
-                <legend>Choose a variant</legend>
-                {dish.variants.map((v) => (
-                  <label key={v.id} className="till-option">
-                    <input
-                      type="radio"
-                      name="dish-variant"
-                      value={v.id}
-                      checked={variant === v.id}
-                      disabled={!v.isAvailable}
-                      onChange={() => setVariant(v.id)}
-                    />
-                    {v.name}
-                    <span>{money(v.priceMinor, currency)}</span>
-                  </label>
-                ))}
-              </fieldset>
-            )}
-            {dish.addOnGroups.map((g) => (
-              <fieldset key={g.id}>
-                <legend>
-                  {g.name} · choose {g.min}–{g.max}
-                </legend>
-                {g.options.map((o) => (
-                  <label key={o.id} className="till-option">
-                    <input
-                      type="checkbox"
-                      checked={(groups[g.id] ?? []).includes(o.id)}
-                      disabled={!o.isAvailable}
-                      onChange={() => choose(g.id, o.id, g.max)}
-                    />
-                    {o.name}
-                    <span>+{money(o.priceMinor, currency)}</span>
-                  </label>
-                ))}
-              </fieldset>
-            ))}
-            <button type="button" className="till-primary" onClick={addDish}>
-              Add dish <Plus size={16} />
-            </button>
-          </section>
-        </div>
-      )}
     </main>
   );
 }

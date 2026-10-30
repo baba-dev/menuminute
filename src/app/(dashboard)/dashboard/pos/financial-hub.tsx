@@ -274,7 +274,7 @@ export function FinancialHub({
         </div>
         <div className="till-heading-actions">
           <Link href="/dashboard/pos">
-            The Till <ArrowRight size={15} />
+            Point of Sale <ArrowRight size={15} />
           </Link>
           <Link href="/dashboard/pos/ledger">
             The Ledger <BookOpenText size={15} />
@@ -478,7 +478,7 @@ export function FinancialHub({
               </div>
               {!ledger.length && (
                 <p className="till-empty">
-                  No sale records yet. Start with a published-menu order in The Till.
+                  No sale records yet. Start with a published-menu order in Point of Sale.
                 </p>
               )}
             </section>
