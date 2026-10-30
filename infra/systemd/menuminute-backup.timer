@@ -1,0 +1,14 @@
+[Unit]
+Description=MenuMinute encrypted SQL + media nightly recovery snapshot
+Documentation=https://github.com/baba-dev/menuminute/blob/main/docs/operations/restore-and-erp-evidence.md
+
+[Timer]
+Unit=menuminute-backup.service
+OnCalendar=*-*-* 02:45:00 Asia/Kolkata
+RandomizedDelaySec=15min
+AccuracySec=1min
+Persistent=true
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target
