@@ -70,9 +70,9 @@ export default async function ReceiptPage({
               ? "STAFF PAYMENT REFUNDED — CORRECTION"
               : staffPaid
                 ? "STAFF-RECORDED PAYMENT RECEIPT"
-              : paid
-                ? "BILL — PAYMENT COMPLETE"
-                : "BILL — PAYMENT PENDING"}
+                : paid
+                  ? "BILL — PAYMENT COMPLETE"
+                  : "BILL — PAYMENT PENDING"}
           </h2>
           <strong>Order #{receipt.orderNumber}</strong>
         </div>
@@ -99,7 +99,9 @@ export default async function ReceiptPage({
           )}
           <div>
             <dt>Payment</dt>
-            <dd className="receipt-payment-status">{refunded ? "REFUNDED" : paid ? "COMPLETE" : "PENDING"}</dd>
+            <dd className="receipt-payment-status">
+              {refunded ? "REFUNDED" : paid ? "COMPLETE" : "PENDING"}
+            </dd>
           </div>
           {receipt.paymentMethod && (
             <div>
@@ -135,9 +137,9 @@ export default async function ReceiptPage({
               ? "ORIGINAL STAFF PAYMENT REFUNDED — NON-FISCAL CORRECTION"
               : staffPaid
                 ? "PAYMENT COMPLETE — STAFF RECORDED"
-              : paid
-                ? "PAYMENT COMPLETE — SEE LEDGER"
-                : "PAYMENT PENDING"}
+                : paid
+                  ? "PAYMENT COMPLETE — SEE LEDGER"
+                  : "PAYMENT PENDING"}
           </strong>
           <p>
             Prices are pre-tax; taxes and fees have not been calculated. This operational bill is
