@@ -96,12 +96,19 @@ def cgroup_stats(unit):
             "cpu_ns": number("CPUUsageNSec"), "tasks": number("TasksCurrent")}
 
 
+class NoExternalRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        return None
+
+
 def probe(url):
     started = time.monotonic()
     try:
         # Hardcoded loopback endpoints: the operator cannot direct this at a public host.
         request = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
-        with urllib.request.urlopen(request, timeout=5) as response:
+        # Ignore proxy env and never follow a redirect away from loopback.
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoExternalRedirect())
+        with opener.open(request, timeout=5) as response:
             status = response.status
             # Never print or persist application response bodies.
             response.read(64)
