@@ -195,8 +195,10 @@ export function FinancialHub({
       if (action === "freeze") setPreview(null);
       await refresh();
       setNotice(
-        action === "tender"
-          ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
+        action === "staff_refund"
+          ? "Full staff payment correction recorded. Any external refund was attested by staff; no gateway transfer or fiscal credit was initiated."
+          : action === "tender"
+            ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
           : action === "refund"
             ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
             : action === "partial_refund"
@@ -558,6 +560,7 @@ export function FinancialHub({
                     </p>
                     {settlement.staffAttestedMinor !== "0" &&
                       settlement.refundMinor === "0" &&
+                      settlement.basis === "pre_tax_draft" &&
                       finance.canRefund && (
                         <form
                           onSubmit={(event) => {
