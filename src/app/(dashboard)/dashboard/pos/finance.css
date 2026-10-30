@@ -282,6 +282,43 @@
   gap: 15px;
   align-items: end;
 }
+.finance-fiscal-readiness {
+  background: color-mix(in srgb, var(--till-paper) 92%, var(--till-ember));
+  border: 1px solid var(--till-line);
+  border-radius: 14px;
+  padding: clamp(14px, 2vw, 22px);
+}
+.finance-fiscal-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 255px), 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.finance-fiscal-checks li {
+  display: flex;
+  gap: 10px;
+  border: 1px solid var(--till-line);
+  border-radius: 12px;
+  padding: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.finance-fiscal-checks li > span {
+  font-weight: 900;
+  color: var(--till-ember);
+}
+.finance-fiscal-checks strong,
+.finance-fiscal-checks small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.finance-fiscal-checks small {
+  opacity: 0.74;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
 .finance-page :focus-visible {
   outline: 3px solid var(--till-ember);
   outline-offset: 2px;
