@@ -27,6 +27,48 @@ def cpu_jiffies():
     return sum(values), sum(values[index] for index in (3, 4))
 
 
+def root_block_io():
+    """Root filesystem device block I/O counters, when sysfs exposes them."""
+    device = os.stat("/").st_dev
+    path = "/sys/dev/block/" + str(os.major(device)) + ":" + str(os.minor(device)) + "/stat"
+    try:
+        with open(path, encoding="ascii") as stream:
+            counters = [int(value) for value in stream.read().split()]
+        return counters[2] * 512, counters[6] * 512
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def service_process_rss_mib():
+    """Approximate PG/Redis RSS by executable name, not arguments or credentials.
+
+    Per-process RSS can double-count shared memory; it is a trend only.
+    """
+    totals = {"postgres": 0, "redis": 0}
+    try:
+        entries = os.listdir("/proc")
+    except OSError:
+        return {name: None for name in totals}
+    for entry in entries:
+        if not entry.isdigit():
+            continue
+        try:
+            with open("/proc/" + entry + "/comm", encoding="ascii") as stream:
+                command = stream.read().strip()
+            name = "postgres" if command == "postgres" else (
+                "redis" if command in ("redis-server", "redis") else None)
+            if name is None:
+                continue
+            with open("/proc/" + entry + "/status", encoding="ascii") as stream:
+                for line in stream:
+                    if line.startswith("VmRSS:"):
+                        totals[name] += int(line.split()[1])
+                        break
+        except (OSError, ValueError):
+            continue
+    return {name: round(kib / 1024, 1) for name, kib in totals.items()}
+
+
 def memory_available_mib():
     with open("/proc/meminfo", encoding="ascii") as stream:
         for line in stream:
@@ -88,6 +130,8 @@ def summary(samples, label):
     failures = lambda values: sum(not isinstance(x["status"], int) or x["status"] < 200 or x["status"] >= 400
                                   for x in values)
     cpu = [x["host_cpu_pct"] for x in samples if x["host_cpu_pct"] is not None]
+    io_read = [x["disk_read_mib_per_s"] for x in samples if x["disk_read_mib_per_s"] is not None]
+    io_write = [x["disk_write_mib_per_s"] for x in samples if x["disk_write_mib_per_s"] is not None]
     return {
         "label": label, "sample_count": len(samples),
         "observed_from_utc": samples[0]["observed_at_utc"],
@@ -97,7 +141,15 @@ def summary(samples, label):
         "host": {"avg_cpu_pct": round(sum(cpu) / len(cpu), 1) if cpu else None,
                  "max_cpu_pct": max(cpu) if cpu else None,
                  "min_memory_available_mib": min(x["memory_available_mib"] for x in samples),
-                 "min_root_free_gib": min(x["root_free_gib"] for x in samples)},
+                 "min_root_free_gib": min(x["root_free_gib"] for x in samples),
+                 "peak_root_read_mib_per_s": max(io_read) if io_read else None,
+                 "peak_root_write_mib_per_s": max(io_write) if io_write else None,
+                 "peak_pg_rss_mib_approx": max((x["pg_redis_rss_mib"]["postgres"] for x in samples
+                                                if x["pg_redis_rss_mib"]["postgres"] is not None),
+                                               default=None),
+                 "peak_redis_rss_mib_approx": max((x["pg_redis_rss_mib"]["redis"] for x in samples
+                                                   if x["pg_redis_rss_mib"]["redis"] is not None),
+                                                  default=None)},
         "systemd": {u: {"peak_memory_mib": max((x["units"][u]["memory_mib"] for x in samples
                                                  if x["units"][u]["memory_mib"] is not None), default=None),
                          "peak_tasks": max((x["units"][u]["tasks"] for x in samples
@@ -110,17 +162,27 @@ def summary(samples, label):
 def collect(samples, interval, label):
     output = []
     previous = cpu_jiffies()
+    previous_io = root_block_io()
     for index in range(samples):
         time.sleep(interval)
         present = cpu_jiffies()
         total, idle = present[0] - previous[0], present[1] - previous[1]
         previous = present
         load = round(100 * (total - idle) / total, 1) if total > 0 else None
+        present_io = root_block_io()
+        read_rate = write_rate = None
+        if previous_io is not None and present_io is not None:
+            read_rate = round(max(0, present_io[0] - previous_io[0]) / interval / 1048576, 3)
+            write_rate = round(max(0, present_io[1] - previous_io[1]) / interval / 1048576, 3)
+        previous_io = present_io
         rec = {
             "observed_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
             "host_cpu_pct": load,
             "memory_available_mib": memory_available_mib(),
             "root_free_gib": round(shutil.disk_usage("/").free / (1024 ** 3), 2),
+            "disk_read_mib_per_s": read_rate,
+            "disk_write_mib_per_s": write_rate,
+            "pg_redis_rss_mib": service_process_rss_mib(),
             "erp": probe("http://127.0.0.1:3000/"),
             "menuminute": probe("http://127.0.0.1:3100/api/health/ready"),
             "units": {u: cgroup_stats(u) for u in
