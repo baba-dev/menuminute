@@ -54,7 +54,7 @@ If a merchant has already authorized existing POS finance gates, omit \`--requir
 4. Operator preflight; if it fails, stop and diagnose. Confirm no registered invoice issuance has been enabled by the new code.
 5. For a **separately authorized internal non-fiscal pilot**, test one staff-paid order, one partial/mixed tender, one same-key replay, one refund/credit and one cash-drawer variance. Verify Ledger, Reports and CSV agree and that staff cash is not silently attributed to shifts.
 6. Confirm external provider and fiscal integration remain off unless **separately approved**. Observe audit/outbox, gateway uncertainty, snapshot continuity, payment/read-only reporting, ERP health, CPU/disk/memory, reconciliation anomalies, document reprint access.
-7. On unexpected behavior: stop *new gated financial actions* via authorized operator mechanism while keeping historical documents/receipts readable. Never delete posted financial records, roll back immutable migrations destructively, or issue a duplicate invoice sequence. Preserve full incident evidence in the audit trail.
+7. On unexpected behavior: stop _new gated financial actions_ via authorized operator mechanism while keeping historical documents/receipts readable. Never delete posted financial records, roll back immutable migrations destructively, or issue a duplicate invoice sequence. Preserve full incident evidence in the audit trail.
 
 **Approval records required:** exact merge/release SHA, CI URL, two reviewer sign-offs, issue owner acceptance, legal/tax evidence by jurisdiction (if applicable), canary results, load p95/ERP co-location observations, deferred restore risk, independent alert delivery status and explicit feature-gate decisions.
 

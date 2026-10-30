@@ -17,11 +17,16 @@ const packet = {
     name: "Fixture Buyer",
     taxRegistration: "08ABCDE1234F1Z5",
   },
-  lines: [{
-    classification: "996331",
-    placeOfSupplyStateCode: "08",
-    taxComponents: [{ kind: "CGST", amountMinor: "90" }, { kind: "SGST", amountMinor: "90" }],
-  }],
+  lines: [
+    {
+      classification: "996331",
+      placeOfSupplyStateCode: "08",
+      taxComponents: [
+        { kind: "CGST", amountMinor: "90" },
+        { kind: "SGST", amountMinor: "90" },
+      ],
+    },
+  ],
   billFrozen: true,
   billCurrency: "INR",
   billTaxMode: "classified",
@@ -51,7 +56,8 @@ describe("POS E: no statutory issuance from generic billing or readiness evidenc
 
   it("does not equate generic classified tax with a GST component breakdown", () => {
     const result = assessFiscalReadiness({
-      ...packet, lines: [{ classification: "FOOD", rateBps: 500 }],
+      ...packet,
+      lines: [{ classification: "FOOD", rateBps: 500 }],
       customer: {},
       totalMinor: "1100",
     });
@@ -64,7 +70,9 @@ describe("POS E: no statutory issuance from generic billing or readiness evidenc
     expect(() => assessFiscalReadiness({ ...packet, externalAdapterInstalled: true })).toThrow();
     expect(() => assessFiscalReadiness({ ...packet, statutoryIssuanceAllowed: true })).toThrow();
     const unsupported = assessFiscalReadiness({
-      ...packet, country: "OM", sellerCountry: "OM",
+      ...packet,
+      country: "OM",
+      sellerCountry: "OM",
     });
     expect(unsupported.supportedDiagnosticCountry).toBeNull();
     expect(unsupported.statutoryIssuanceAllowed).toBe(false);

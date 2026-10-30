@@ -227,9 +227,7 @@ export function FinancialHub({
     const [detail, projection, fiscal] = await Promise.all([
       get<Detail>("sale", id),
       get<SettlementDetail>("settlement", id),
-      finance.canIssue
-        ? get<FiscalReadiness>("fiscal_readiness", id)
-        : Promise.resolve(null),
+      finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
     ]);
     setSelected(detail);
     setSettlement(projection);
@@ -731,21 +729,28 @@ export function FinancialHub({
                   </div>
                 )}
                 {fiscalReadiness && (
-                  <section className="finance-flow finance-fiscal-readiness"
-                    aria-label="Registered invoice readiness">
+                  <section
+                    className="finance-flow finance-fiscal-readiness"
+                    aria-label="Registered invoice readiness"
+                  >
                     <h3>Registered invoice readiness — review only</h3>
                     <p>
-                      {fiscalReadiness.notice} Registered invoices remain blocked even when
-                      a seller or operator has supplied an approval flag.
+                      {fiscalReadiness.notice} Registered invoices remain blocked even when a seller
+                      or operator has supplied an approval flag.
                     </p>
                     <p>
                       <strong>{fiscalReadiness.failedCount} requirements outstanding</strong>
-                      {" · "}Jurisdiction: {fiscalReadiness.supportedDiagnosticCountry ?? "Requires adapter"}
+                      {" · "}Jurisdiction:{" "}
+                      {fiscalReadiness.supportedDiagnosticCountry ?? "Requires adapter"}
                     </p>
                     <ul className="finance-fiscal-checks">
                       {fiscalReadiness.checks.map((check) => (
                         <li key={check.id}>
-                          <span aria-label={check.satisfied ? "Requirement present" : "Requirement missing"}>
+                          <span
+                            aria-label={
+                              check.satisfied ? "Requirement present" : "Requirement missing"
+                            }
+                          >
                             {check.satisfied ? "✓" : "!"}
                           </span>
                           <div>
@@ -755,7 +760,9 @@ export function FinancialHub({
                         </li>
                       ))}
                     </ul>
-                    <small>No IRP registration, statutory serial, or tax credit document is created.</small>
+                    <small>
+                      No IRP registration, statutory serial, or tax credit document is created.
+                    </small>
                   </section>
                 )}
                 {selected.bill ? (

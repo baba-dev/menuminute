@@ -198,9 +198,11 @@ test("POS merchant Ledger and Closing Desk stay usable at 390px", async ({ page 
   await expect(page.locator(".finance-mobile-sale")).toHaveCount(1);
   await page.getByRole("button", { name: /View financial details/ }).click();
   await expect(page.getByLabel("Verified internal payment evidence")).toBeVisible();
-  await expect(page.getByRole("heading", {
-    name: "Registered invoice readiness — review only",
-  })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Registered invoice readiness — review only",
+    })
+  ).toBeVisible();
   await expect(page.getByText(/No IRP registration, statutory serial/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.goto("/dashboard/pos/closing");

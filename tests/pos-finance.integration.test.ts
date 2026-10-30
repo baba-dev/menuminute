@@ -706,7 +706,6 @@ describe("POS #142 F/G merchant reporting and paged reconciliation", () => {
   });
 });
 
-
 describe("POS #142 E: protected fiscal diagnostic does not issue registered invoices", () => {
   it("shows missing jurisdiction/IRP requirements on the real frozen bill", async () => {
     const f = await setup("classified");
@@ -718,8 +717,9 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
       taxLabel: "Review-only GST fixture",
       classes: [{ dishId: "plate", classification: "EXAMPLE", rateBps: 500 }],
     });
-    const quote = await f.view("preview", f.sale.saleId) as {
-      totalMinor: string; taxProfileRevision: number;
+    const quote = (await f.view("preview", f.sale.saleId)) as {
+      totalMinor: string;
+      taxProfileRevision: number;
     };
     await f.cmd("freeze", {
       saleId: f.sale.saleId,
@@ -727,10 +727,10 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
       expectedTaxRevision: quote.taxProfileRevision,
       customer: { name: "Test buyer", address: "Test delivery address" },
     });
-    const shift = await f.cmd("open_shift", {
+    const shift = (await f.cmd("open_shift", {
       registerName: "fiscal fixture",
       openingMinor: "0",
-    }) as { shiftId: string };
+    })) as { shiftId: string };
     await f.cmd("tender", {
       saleId: f.sale.saleId,
       shiftId: shift.shiftId,
@@ -739,9 +739,10 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
       tenderedMinor: quote.totalMinor,
       reference: null,
     });
-    const readiness = await f.view("fiscal_readiness", f.sale.saleId) as unknown as {
-      statutoryIssuanceAllowed: boolean; failedCount: number;
-      checks: Array<{id:string;satisfied:boolean}>;
+    const readiness = (await f.view("fiscal_readiness", f.sale.saleId)) as unknown as {
+      statutoryIssuanceAllowed: boolean;
+      failedCount: number;
+      checks: Array<{ id: string; satisfied: boolean }>;
     };
     expect(readiness.statutoryIssuanceAllowed).toBe(false);
     expect(readiness.failedCount).toBeGreaterThan(0);
@@ -750,8 +751,10 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
       statusCode: 403,
     });
     const rows = await admin(async (_db, pool) =>
-      pool.query("select count(*)::int as n from pos_documents where outlet_id=$1 and kind='invoice'",
-        [f.outlet.id])
+      pool.query(
+        "select count(*)::int as n from pos_documents where outlet_id=$1 and kind='invoice'",
+        [f.outlet.id]
+      )
     );
     expect(rows.rows[0]?.n).toBe(0);
   });
@@ -759,32 +762,36 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
   it("cannot read another merchant's fiscal bill or issue invoice through SQL grants", async () => {
     const f = await setup("classified");
     const another = await fixture();
-    await expect(financeRead(another.actor, f.outlet.organizationId, f.outlet.id, {
-      view: "fiscal_readiness", id: f.sale.saleId,
-    })).rejects.toThrow();
+    await expect(
+      financeRead(another.actor, f.outlet.organizationId, f.outlet.id, {
+        view: "fiscal_readiness",
+        id: f.sale.saleId,
+      })
+    ).rejects.toThrow();
     await expect(getPool().query("select * from pos_documents")).rejects.toThrow();
   });
 });
 
-
 describe("POS #142 I: bounded read-only finance smoke load", () => {
   it("completes concurrent authorized finance reads without unbounded source scans", async () => {
     const f = await setup();
-    const samples = await Promise.all(Array.from({ length: 8 }, async () => {
-      const started = performance.now();
-      const [ledger, reconciliation, fiscal] = await Promise.all([
-        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
-          { view: "ledger_page" }),
-        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
-          { view: "reconcile_page" }),
-        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
-          { view: "fiscal_readiness", id: f.sale.saleId }),
-      ]);
-      expect(ledger).toMatchObject({ pageCount: 1, hasMore: false });
-      expect(reconciliation).toMatchObject({ scannedCount: 1, complete: true });
-      expect(fiscal).toMatchObject({ statutoryIssuanceAllowed: false });
-      return performance.now() - started;
-    }));
+    const samples = await Promise.all(
+      Array.from({ length: 8 }, async () => {
+        const started = performance.now();
+        const [ledger, reconciliation, fiscal] = await Promise.all([
+          financeRead(f.actor, f.outlet.organizationId, f.outlet.id, { view: "ledger_page" }),
+          financeRead(f.actor, f.outlet.organizationId, f.outlet.id, { view: "reconcile_page" }),
+          financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
+            view: "fiscal_readiness",
+            id: f.sale.saleId,
+          }),
+        ]);
+        expect(ledger).toMatchObject({ pageCount: 1, hasMore: false });
+        expect(reconciliation).toMatchObject({ scannedCount: 1, complete: true });
+        expect(fiscal).toMatchObject({ statutoryIssuanceAllowed: false });
+        return performance.now() - started;
+      })
+    );
     const ordered = [...samples].sort((a, b) => a - b);
     const p95Milliseconds = ordered[Math.ceil(ordered.length * 0.95) - 1]!;
     // CI smoke guard only; not a production p95/SLO or representative load test.

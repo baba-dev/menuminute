@@ -453,7 +453,8 @@ export async function financeRead(
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
     case "fiscal_readiness": {
       const rawPacket = await run<unknown>(
-        actor, outletId,
+        actor,
+        outletId,
         sql`select app_private.pos_fiscal_readiness(${outletId},${input.id}) as result`
       );
       return assessFiscalReadiness(rawPacket);
