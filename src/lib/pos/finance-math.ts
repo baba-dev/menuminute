@@ -21,7 +21,10 @@ export function decimalToMinor(value: string, currency: string): string {
   const [whole, fraction = ""] = value.split(".");
   if (fraction.length > exponent) throw new Error("Fractional minor units");
   return checkedMinor(
-    (BigInt(whole!) * 10n ** BigInt(exponent) + BigInt(fraction.padEnd(exponent, "0") || "0")).toString()
+    (
+      BigInt(whole!) * 10n ** BigInt(exponent) +
+      BigInt(fraction.padEnd(exponent, "0") || "0")
+    ).toString()
   ).toString();
 }
 
@@ -41,8 +44,12 @@ export function validateTender(input: AllocationInput): { changeMinor: string } 
     if (input.reference !== null) throw new Error("Cash cannot carry an external reference");
     return { changeMinor: (tendered - applied).toString() };
   }
-  if (tendered !== applied || !input.reference || input.reference.trim().length < 3 ||
-      input.reference.length > 80)
+  if (
+    tendered !== applied ||
+    !input.reference ||
+    input.reference.trim().length < 3 ||
+    input.reference.length > 80
+  )
     throw new Error("External tender requires matching amount and reference");
   return { changeMinor: "0" };
 }
@@ -74,7 +81,8 @@ export function allocateDiscount(subtotalsMinor: string[], discountMinor: string
   if (subtotal === 0n || discount > subtotal) throw new Error("Discount exceeds subtotal");
   const floors = subtotals.map((v) => (v * discount) / subtotal);
   const remainders = subtotals.map((v, index) => ({
-    index, remainder: (v * discount) % subtotal,
+    index,
+    remainder: (v * discount) % subtotal,
   }));
   let spare = discount - floors.reduce((sum, v) => sum + v, 0n);
   remainders.sort((a, b) =>
