@@ -175,3 +175,43 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   ).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
 });
+
+test("POS merchant Ledger and Closing Desk stay usable at 390px", async ({ page }) => {
+  test.setTimeout(120000);
+  const f = await setup();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.goto("/dashboard/pos");
+  await page.getByLabel("Registered seller address").fill("Accessible fixture address");
+  await page.getByRole("button", { name: "Save seller details and enable POS" }).click();
+  await page.getByRole("button", { name: /Paneer Lunch/ }).click();
+  const ticket = page.getByRole("button", { name: /View Ticket/ });
+  if (await ticket.isVisible()) await ticket.click();
+  await page.getByRole("button", { name: /Place Order & Send/ }).click();
+  await expect(page.locator(".till-success")).toBeVisible();
+  await page.goto("/dashboard/pos/ledger");
+  await expect(page.locator(".finance-mobile-register")).toBeVisible();
+  await expect(page.locator(".finance-mobile-sale")).toHaveCount(1);
+  await page.getByRole("button", { name: /View financial details/ }).click();
+  await expect(page.getByLabel("Verified internal payment evidence")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Registered invoice readiness — review only",
+    })
+  ).toBeVisible();
+  await expect(page.getByText(/No IRP registration, statutory serial/)).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto("/dashboard/pos/closing");
+  await page.getByRole("button", { name: "Start new consistency scan" }).click();
+  await expect(page.getByText(/All currently reachable sale pages scanned/)).toBeVisible();
+  await expect(page.getByText(/1 sales inspected/)).toBeVisible();
+  await page.goto("/dashboard/reports?tab=till");
+  await expect(
+    page.getByRole("heading", { name: "Cashier evidence & unassigned cash" })
+  ).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

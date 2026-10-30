@@ -168,6 +168,11 @@ export type TillReconciliationReport = {
   currency: string;
   totalCollectedMinor: number;
   totalRefundedMinor: number;
+  staffCollectedMinor: number;
+  staffRefundedMinor: number;
+  /** Cashier-attested cash not attached to an actual shift. Not a drawer count. */
+  unassignedNetCashMinor: number;
+  bankReconciliationVerified: false;
   netCashFlowMinor: number;
   totalVarianceMinor: number;
   tenders: TenderSummary[];

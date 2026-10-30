@@ -12,8 +12,18 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
+import { escapeCsvCell } from "@/modules/reports/formatters";
+import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
 import { PosNavigation } from "./pos-navigation";
-import type { Detail, FinanceContext, LedgerRow, ShiftRow } from "@/modules/pos/finance";
+import type {
+  Detail,
+  FinanceContext,
+  LedgerRow,
+  ShiftRow,
+  SettlementDetail,
+  FinanceCursorPage,
+  ReconciliationPage,
+} from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
 type Preview = {
@@ -94,6 +104,10 @@ export function FinancialHub({
     [ledger, setLedger] = useState(initialLedger),
     [shifts, setShifts] = useState(initialShifts);
   const [selected, setSelected] = useState<Detail | null>(null),
+    [settlement, setSettlement] = useState<SettlementDetail | null>(null),
+    [fiscalReadiness, setFiscalReadiness] = useState<FiscalReadiness | null>(null),
+    [staffCorrectionReason, setStaffCorrectionReason] = useState(""),
+    [staffCorrectionConfirmed, setStaffCorrectionConfirmed] = useState(false),
     [preview, setPreview] = useState<Preview | null>(null);
   const [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
@@ -126,22 +140,34 @@ export function FinancialHub({
   const [refundLines, setRefundLines] = useState<Record<string, string>>({});
   const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
+  const saleSelectionSequence = useRef(0);
   const [reconciliation, setReconciliation] = useState<{
-    checkedAt: string;
-    scanLimit: number;
     scannedCount: number;
-    partial: boolean;
+    hasMore: boolean;
+    nextCursorAt: string | null;
+    nextCursorId: string | null;
     anomalies: { saleId: string; reason: string }[];
   } | null>(null);
+  const [reconciliationBusy, setReconciliationBusy] = useState(false);
+  const [ledgerMore, setLedgerMore] = useState(initialLedger.length >= 60);
+  const [ledgerBusy, setLedgerBusy] = useState(false);
   const activeShift =
     shifts.find((s) => s.state === "open" && s.id === shiftId) ??
     shifts.find((s) => s.state === "open");
   const dishes = workspace.menus
     .flatMap((m) => m.categories.flatMap((c) => c.items))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i);
-  async function get<T>(view: string, id?: string): Promise<T> {
+  async function get<T>(
+    view: string,
+    id?: string,
+    cursor?: { at: string; id: string }
+  ): Promise<T> {
     const qs = new URLSearchParams({ view });
     if (id) qs.set("id", id);
+    if (cursor) {
+      qs.set("cursorAt", cursor.at);
+      qs.set("cursorId", cursor.id);
+    }
     return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
   }
   async function refresh() {
@@ -152,12 +178,75 @@ export function FinancialHub({
     ]);
     setFinance(f);
     setLedger(l);
+    setLedgerMore(l.length >= 60);
     setShifts(s);
     if (selected) await selectSale(selected.saleId);
   }
+  async function loadOlderLedger() {
+    if (ledgerBusy || !ledgerMore || ledger.length === 0) return;
+    setLedgerBusy(true);
+    try {
+      const last = ledger[ledger.length - 1]!;
+      const page = await get<FinanceCursorPage<LedgerRow>>("ledger_page", undefined, {
+        at: last.createdAt,
+        id: last.saleId,
+      });
+      setLedger((previous) => {
+        const known = new Set(previous.map((entry) => entry.saleId));
+        return [...previous, ...page.items.filter((entry) => !known.has(entry.saleId))];
+      });
+      setLedgerMore(page.hasMore);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Ledger pagination failed");
+    } finally {
+      setLedgerBusy(false);
+    }
+  }
+  async function scanReconciliation(reset: boolean) {
+    if (reconciliationBusy || (!reset && !reconciliation?.hasMore)) return;
+    setReconciliationBusy(true);
+    try {
+      const cursor =
+        reset || !reconciliation?.nextCursorAt || !reconciliation.nextCursorId
+          ? undefined
+          : { at: reconciliation.nextCursorAt, id: reconciliation.nextCursorId };
+      const page = await get<ReconciliationPage>("reconcile_page", undefined, cursor);
+      setReconciliation((previous) => ({
+        scannedCount: (reset ? 0 : (previous?.scannedCount ?? 0)) + page.scannedCount,
+        anomalies: [...(reset ? [] : (previous?.anomalies ?? [])), ...page.anomalies],
+        hasMore: page.hasMore,
+        nextCursorAt: page.nextCursorAt,
+        nextCursorId: page.nextCursorId,
+      }));
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to read reconciliation page");
+    } finally {
+      setReconciliationBusy(false);
+    }
+  }
   async function selectSale(id: string) {
-    setSelected(await get<Detail>("sale", id));
+    const request = ++saleSelectionSequence.current;
+    // A finance correction requires fresh, sale-specific user acknowledgement.
+    setStaffCorrectionReason("");
+    setStaffCorrectionConfirmed(false);
+    setSelected(null);
+    setSettlement(null);
+    setFiscalReadiness(null);
     setPreview(null);
+    try {
+      const [detail, projection, fiscal] = await Promise.all([
+        get<Detail>("sale", id),
+        get<SettlementDetail>("settlement", id),
+        finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
+      ]);
+      if (request !== saleSelectionSequence.current) return;
+      setSelected(detail);
+      setSettlement(projection);
+      setFiscalReadiness(fiscal);
+    } catch (error) {
+      if (request === saleSelectionSequence.current)
+        setNotice(error instanceof Error ? error.message : "Unable to read sale details");
+    }
   }
   async function command(action: string, data: Record<string, unknown>) {
     if (busy) return null;
@@ -181,21 +270,23 @@ export function FinancialHub({
       if (action === "freeze") setPreview(null);
       await refresh();
       setNotice(
-        action === "tender"
-          ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
-          : action === "refund"
-            ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
-            : action === "partial_refund"
-              ? result.state === "pending" || result.state === "pending_confirmation"
-                ? "Provider refund is pending confirmation. The credit remains reserved and is not shown as complete."
-                : "Line-level credit recorded with an immutable linked credit document."
-              : action === "deliver_document"
-                ? result.state === "sent"
-                  ? "Private document delivery confirmed by the configured mail transport."
-                  : "Document delivery is not confirmed. Reconcile its recorded state before retrying."
-                : action === "issue"
-                  ? "Immutable document issued. Print or save from The Ledger."
-                  : "Saved: " + JSON.stringify(result)
+        action === "staff_refund"
+          ? "Full staff payment correction recorded. Any external refund was attested by staff; no gateway transfer or fiscal credit was initiated."
+          : action === "tender"
+            ? "Staff-recorded tender saved. This is not provider-confirmed gateway settlement."
+            : action === "refund"
+              ? "Full-sale reversal and linked credit document recorded. External provider refunds are not initiated by MenuMinute."
+              : action === "partial_refund"
+                ? result.state === "pending" || result.state === "pending_confirmation"
+                  ? "Provider refund is pending confirmation. The credit remains reserved and is not shown as complete."
+                  : "Line-level credit recorded with an immutable linked credit document."
+                : action === "deliver_document"
+                  ? result.state === "sent"
+                    ? "Private document delivery confirmed by the configured mail transport."
+                    : "Document delivery is not confirmed. Reconcile its recorded state before retrying."
+                  : action === "issue"
+                    ? "Immutable document issued. Print or save from The Ledger."
+                    : "Saved: " + JSON.stringify(result)
       );
       return result;
     } catch (error) {
@@ -250,9 +341,7 @@ export function FinancialHub({
         l.documentNumber ?? "",
       ]),
     ];
-    const csv = lines
-      .map((row) => row.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(","))
-      .join("\r\n");
+    const csv = lines.map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -318,7 +407,7 @@ export function FinancialHub({
           <>
             <div className="finance-summary">
               <div>
-                <span>Recorded sales (recent 60)</span>
+                <span>Sales loaded for review</span>
                 <strong>{ledger.length}</strong>
               </div>
               <div>
@@ -437,13 +526,13 @@ export function FinancialHub({
               <div className="till-sectionhead">
                 <div>
                   <span className="till-eyebrow">01 / PRIVATE REGISTER</span>
-                  <h2>Recent sales</h2>
+                  <h2>Private sale register</h2>
                 </div>
                 <button type="button" onClick={exportCsv}>
-                  Export visible CSV
+                  Export loaded rows CSV
                 </button>
               </div>
-              <div className="finance-scroll">
+              <div className="finance-scroll finance-register-table">
                 <table className="finance-table">
                   <thead>
                     <tr>
@@ -476,6 +565,51 @@ export function FinancialHub({
                   </tbody>
                 </table>
               </div>
+              <div className="finance-mobile-register" aria-label="Sales on small screens">
+                {ledger.map((entry) => (
+                  <article className="finance-mobile-sale" key={entry.saleId}>
+                    <div>
+                      <strong>Order {entry.orderId.slice(0, 12)}</strong>
+                      <small>{new Date(entry.createdAt).toLocaleString()}</small>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>Pre-tax subtotal</dt>
+                        <dd>{money(entry.subtotalMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Frozen bill</dt>
+                        <dd>{money(entry.totalMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded</dt>
+                        <dd>{money(entry.paidMinor, entry.currency)}</dd>
+                      </div>
+                      <div>
+                        <dt>Refunded</dt>
+                        <dd>{money(entry.refundedMinor, entry.currency)}</dd>
+                      </div>
+                    </dl>
+                    <button type="button" onClick={() => void selectSale(entry.saleId)}>
+                      View financial details <ArrowRight size={14} />
+                    </button>
+                  </article>
+                ))}
+              </div>
+              {ledgerMore && (
+                <div className="finance-register-more">
+                  <button
+                    type="button"
+                    disabled={ledgerBusy}
+                    onClick={() => void loadOlderLedger()}
+                  >
+                    {ledgerBusy ? "Loading older sales…" : "Load older sales"}
+                  </button>
+                  <small>
+                    Export includes loaded rows only; this is not a full-history export.
+                  </small>
+                </div>
+              )}
               {!ledger.length && (
                 <p className="till-empty">
                   No sale records yet. Start with a published-menu order in Point of Sale.
@@ -492,8 +626,13 @@ export function FinancialHub({
                   <button
                     type="button"
                     onClick={() => {
+                      ++saleSelectionSequence.current;
                       setSelected(null);
+                      setSettlement(null);
+                      setFiscalReadiness(null);
                       setPreview(null);
+                      setStaffCorrectionReason("");
+                      setStaffCorrectionConfirmed(false);
                     }}
                   >
                     Close
@@ -516,6 +655,133 @@ export function FinancialHub({
                     already-issued fiscal document opens its original immutable Ledger copy.
                   </p>
                 </div>
+                {settlement && (
+                  <div className="finance-flow" aria-label="Verified internal payment evidence">
+                    <h3>Recorded settlement</h3>
+                    <p>
+                      {settlement.basis === "pre_tax_draft"
+                        ? "Pre-tax operational amount; no fiscal total was calculated."
+                        : "Frozen bill; statutory approval is independent."}
+                    </p>
+                    <p>
+                      Staff-attested:{" "}
+                      <strong>{money(settlement.staffAttestedMinor, currency)}</strong>
+                      {" · "}Finance tenders:{" "}
+                      <strong>{money(settlement.financeTenderMinor, currency)}</strong>
+                      {" · "}Provider-confirmed:{" "}
+                      <strong>{money(settlement.providerConfirmedMinor, currency)}</strong>
+                    </p>
+                    <p>
+                      Recorded refunds: <strong>{money(settlement.refundMinor, currency)}</strong>
+                      {" · "}Net recorded:{" "}
+                      <strong>{money(settlement.recordedNetMinor, currency)}</strong>
+                    </p>
+                    <p>
+                      <strong>{settlement.state.replaceAll("_", " ")}</strong> · Staff entries are
+                      not proof of gateway settlement or bank reconciliation.
+                    </p>
+                    {settlement.staffAttestedMinor !== "0" &&
+                      settlement.refundMinor === "0" &&
+                      settlement.basis === "pre_tax_draft" &&
+                      finance.canRefund && (
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            if (
+                              !window.confirm(
+                                "Record a full staff-attested refund? This cannot be undone and does not transfer funds."
+                              )
+                            )
+                              return;
+                            void command("staff_refund", {
+                              saleId: selected.saleId,
+                              reason: staffCorrectionReason.trim(),
+                              externalRefundAttested:
+                                settlement.staffMethod !== "cash"
+                                  ? staffCorrectionConfirmed
+                                  : false,
+                            });
+                          }}
+                        >
+                          <h3>Full staff payment correction</h3>
+                          <p>
+                            Only record a refund already returned to the customer. This does not
+                            issue a tax credit or send money through a gateway.
+                          </p>
+                          <label>
+                            Correction reason
+                            <input
+                              required
+                              minLength={5}
+                              maxLength={200}
+                              value={staffCorrectionReason}
+                              onChange={(event) => setStaffCorrectionReason(event.target.value)}
+                            />
+                          </label>
+                          {settlement.staffMethod !== "cash" && (
+                            <label>
+                              <input
+                                type="checkbox"
+                                required
+                                checked={staffCorrectionConfirmed}
+                                onChange={(event) =>
+                                  setStaffCorrectionConfirmed(event.target.checked)
+                                }
+                              />
+                              I confirm the external refund has already been completed.
+                            </label>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={
+                              busy ||
+                              staffCorrectionReason.trim().length < 5 ||
+                              (settlement.staffMethod !== "cash" && !staffCorrectionConfirmed)
+                            }
+                          >
+                            Record full correction
+                          </button>
+                        </form>
+                      )}
+                  </div>
+                )}
+                {fiscalReadiness && (
+                  <section
+                    className="finance-flow finance-fiscal-readiness"
+                    aria-label="Registered invoice readiness"
+                  >
+                    <h3>Registered invoice readiness — review only</h3>
+                    <p>
+                      {fiscalReadiness.notice} Registered invoices remain blocked even when a seller
+                      or operator has supplied an approval flag.
+                    </p>
+                    <p>
+                      <strong>{fiscalReadiness.failedCount} requirements outstanding</strong>
+                      {" · "}Jurisdiction:{" "}
+                      {fiscalReadiness.supportedDiagnosticCountry ?? "Requires adapter"}
+                    </p>
+                    <ul className="finance-fiscal-checks">
+                      {fiscalReadiness.checks.map((check) => (
+                        <li key={check.id}>
+                          <span
+                            aria-label={
+                              check.satisfied ? "Requirement present" : "Requirement missing"
+                            }
+                          >
+                            {check.satisfied ? "✓" : "!"}
+                          </span>
+                          <div>
+                            <strong>{check.label}</strong>
+                            <small>{check.explanation}</small>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <small>
+                      No IRP registration, statutory serial, or tax credit document is created.
+                    </small>
+                  </section>
+                )}
                 {selected.bill ? (
                   <>
                     <div className="finance-bill-total">
@@ -796,12 +1062,16 @@ export function FinancialHub({
                       disabled={
                         !finance.documentsEnabled ||
                         !finance.canIssue ||
+                        selected.bill.taxMode !== "non_registered" ||
                         busy ||
                         selected.documents.some((d) => d.kind !== "credit_note")
                       }
                       onClick={() => void command("issue", { saleId: selected.saleId })}
                     >
-                      <FileText size={17} /> Issue document when fully paid
+                      <FileText size={17} />
+                      {selected.bill.taxMode === "non_registered"
+                        ? "Issue non-fiscal receipt when fully paid"
+                        : "Registered invoicing unavailable — adapter not installed"}
                     </button>
                     <label>
                       Full-sale reversal reason
@@ -1106,34 +1376,55 @@ export function FinancialHub({
               <span className="till-eyebrow">04 / INVARIANT MONITOR</span>
               <h2>Ledger reconciliation</h2>
               <p>
-                Read-only bounded scan for overcollection, over-refund, line-total mismatch and
-                order-paid disagreement.
+                Read-only cursor-based scan of all POS sales, including staff-attested payments,
+                finance tenders, refunds and provider uncertainty. Each page checks up to 100 sales.
+                Continue until the scan reports complete; an unfinished scan is never a clean
+                result.
               </p>
               <button
                 type="button"
-                disabled={!finance.canIssue || busy}
-                onClick={async () => {
-                  try {
-                    setReconciliation(await get("reconcile"));
-                  } catch (e) {
-                    setNotice(e instanceof Error ? e.message : "Unable to reconcile");
-                  }
-                }}
+                disabled={!finance.canIssue || reconciliationBusy}
+                onClick={() => void scanReconciliation(true)}
               >
-                Run current consistency scan
+                {reconciliationBusy ? "Checking…" : "Start new consistency scan"}
               </button>
               {reconciliation && (
-                <p role="status">
-                  {reconciliation.anomalies.length
-                    ? reconciliation.anomalies.map((a) => a.saleId + " · " + a.reason).join("; ")
-                    : "No invariant mismatch detected in the inspected bills."}{" "}
-                  Inspected {reconciliation.scannedCount} recent bills (limit{" "}
-                  {reconciliation.scanLimit}).
-                  {reconciliation.partial
-                    ? " Older records are not included; request full historical reconciliation separately."
-                    : " All currently recorded bills were included."}{" "}
-                  This is not bank reconciliation or compliance certification.
-                </p>
+                <div className="finance-reconciliation" role="status" aria-live="polite">
+                  <strong>
+                    {reconciliation.hasMore
+                      ? "Partial coverage — continue scanning"
+                      : "All currently reachable sale pages scanned"}
+                  </strong>
+                  <p>
+                    {reconciliation.scannedCount} sales inspected ·{reconciliation.anomalies.length}{" "}
+                    potential anomalies.
+                    {reconciliation.hasMore
+                      ? " Older sales remain unchecked."
+                      : " No more pages returned."}
+                  </p>
+                  {reconciliation.anomalies.length > 0 && (
+                    <ul className="finance-anomalies">
+                      {reconciliation.anomalies.map((a, index) => (
+                        <li key={a.saleId + "-" + a.reason + "-" + index}>
+                          {a.saleId} · {a.reason.replaceAll("_", " ")}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {reconciliation.hasMore && (
+                    <button
+                      type="button"
+                      disabled={reconciliationBusy}
+                      onClick={() => void scanReconciliation(false)}
+                    >
+                      {reconciliationBusy ? "Checking…" : "Check next 100 sales"}
+                    </button>
+                  )}
+                  <small>
+                    Scans are live read-only ledger checks, not a transaction snapshot, bank
+                    reconciliation or fiscal audit certification.
+                  </small>
+                </div>
               )}
             </section>
           </>

@@ -198,17 +198,17 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             {/* KPI Metrics Strip */}
             <div className="reports-kpis-grid">
               <KpiMetricCard
-                label="Billed Sales"
+                label="Recorded Order Value"
                 value={formatMoney(executive.grossSalesMinor, currency)}
                 delta={executive.deltas.grossSales}
                 subtext="Eligible orders · includes unpaid"
                 icon={<DollarSign size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Sales Before Tax"
+                label="Order Subtotal"
                 value={formatMoney(executive.netSalesMinor, currency)}
                 delta={executive.deltas.netSales}
-                subtext="Before payment and refunds"
+                subtext="Before payment and refunds; not collected revenue"
                 icon={<TrendingUp size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
@@ -361,9 +361,9 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
           <div>
             <div className="reports-kpis-grid">
               <KpiMetricCard
-                label="POS Tenders Recorded"
+                label="Recorded Collections"
                 value={formatMoney(tillReconciliation.totalCollectedMinor, currency)}
-                subtext="Across all tenders"
+                subtext="Staff attestations + finance tenders"
                 icon={<DollarSign size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
@@ -375,16 +375,53 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <KpiMetricCard
                 label="Net POS Collections"
                 value={formatMoney(tillReconciliation.netCashFlowMinor, currency)}
-                subtext="Recorded tenders less refunds"
+                subtext="Recorded collections less corrections"
                 icon={<ShieldCheck size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
                 label="Cash Variance"
                 value={formatMoney(tillReconciliation.totalVarianceMinor, currency)}
-                subtext="Counted vs Expected float"
+                subtext="Drawer-only variance, not bank settlement"
                 icon={<Receipt size={18} aria-hidden="true" />}
               />
             </div>
+
+            <section className="reports-panel" aria-label="Cashier evidence reconciliation">
+              <div className="reports-panel-head">
+                <div className="reports-panel-title">
+                  <h2>Cashier evidence & unassigned cash</h2>
+                  <p>
+                    A staff entry acknowledges collection; it is not gateway confirmation. Money
+                    received and money refunded are grouped by their own transaction dates.
+                  </p>
+                </div>
+              </div>
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <dt>Cashier-attested collections</dt>
+                  <dd className="text-xl font-extrabold">
+                    {formatMoney(tillReconciliation.staffCollectedMinor, currency)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cashier-attested refunds</dt>
+                  <dd className="text-xl font-extrabold">
+                    {formatMoney(tillReconciliation.staffRefundedMinor, currency)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cash not attributed to a shift (net)</dt>
+                  <dd className="text-xl font-extrabold">
+                    {formatMoney(tillReconciliation.unassignedNetCashMinor, currency)}
+                  </dd>
+                </div>
+              </dl>
+              <p role="note" className="mt-4 text-sm">
+                Staff-recorded cash has no register/shift assignment. It is excluded from the
+                expected cash of individual shifts until a separate, audited attribution workflow is
+                implemented. These figures are not bank reconciliation.
+              </p>
+            </section>
 
             {/* Shift Logs Table */}
             <div className="reports-panel">

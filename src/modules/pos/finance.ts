@@ -13,6 +13,8 @@ import {
 } from "./stripe";
 import { getPool } from "@/db";
 import { sendTransactionalEmail } from "@/lib/email";
+import { validateTender } from "@/lib/pos/finance-math";
+import { assessFiscalReadiness } from "./fiscal-readiness";
 
 const key = z.string().uuid();
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -114,6 +116,19 @@ const commands = z.discriminatedUnion("action", [
       key,
       data: z
         .object({ saleId: id, shiftId: id, reason, externalRefundAttested: z.boolean() })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("staff_refund"),
+      key,
+      data: z
+        .object({
+          saleId: id,
+          reason,
+          externalRefundAttested: z.boolean(),
+        })
         .strict(),
     })
     .strict(),
@@ -286,10 +301,74 @@ const queryTypes = z.discriminatedUnion("view", [
   z.object({ view: z.literal("ledger") }).strict(),
   z.object({ view: z.literal("shifts") }).strict(),
   z.object({ view: z.literal("reconcile") }).strict(),
+  z
+    .object({
+      view: z.literal("reconcile_page"),
+      cursorAt: z.iso.datetime({ offset: true }).optional(),
+      cursorId: id.optional(),
+    })
+    .strict()
+    .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
+  z
+    .object({
+      view: z.literal("ledger_page"),
+      cursorAt: z.iso.datetime({ offset: true }).optional(),
+      cursorId: id.optional(),
+    })
+    .strict()
+    .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
   z.object({ view: z.literal("sale"), id }).strict(),
+  z.object({ view: z.literal("settlement"), id }).strict(),
+  z.object({ view: z.literal("fiscal_readiness"), id }).strict(),
   z.object({ view: z.literal("document"), id }).strict(),
   z.object({ view: z.literal("preview"), id }).strict(),
 ]);
+
+export type FinanceCursorPage<T> = {
+  items: T[];
+  pageCount: number;
+  hasMore: boolean;
+  nextCursorAt: string | null;
+  nextCursorId: string | null;
+  isFullHistoryExport: false;
+};
+
+export type ReconciliationPage = {
+  outletId: string;
+  checkedAt: string;
+  scannedCount: number;
+  pageLimit: number;
+  hasMore: boolean;
+  nextCursorAt: string | null;
+  nextCursorId: string | null;
+  anomalies: Array<{ saleId: string; reason: string }>;
+  complete: boolean;
+  scope: "local_ledger_invariants_only";
+  bankReconciliationVerified: false;
+};
+
+export type SettlementDetail = {
+  saleId: string;
+  orderId: string;
+  currency: string;
+  basis: "pre_tax_draft" | "frozen_bill";
+  expectedMinor: string;
+  staffAttestedMinor: string;
+  staffMethod: string | null;
+  financeTenderMinor: string;
+  providerConfirmedMinor: string;
+  cashCollectedMinor: string;
+  refundMinor: string;
+  cashRefundMinor: string;
+  recordedNetMinor: string;
+  unallocatedOriginalMinor: string;
+  state: "unpaid" | "partial" | "paid" | "refunded" | "partially_refunded";
+  orderPaymentStatus: string;
+  staffEvidenceIsProviderConfirmed: false;
+  providerReconciliationVerified: false;
+  taxOrFiscalApprovalInferred: false;
+};
+
 export type FinanceView = z.infer<typeof queryTypes>;
 function dbError(error: unknown): never {
   const e = error instanceof Error && error.cause ? error.cause : error;
@@ -335,11 +414,27 @@ export async function financeRead(
         )),
         providerConfigured: env.POS_STRIPE_ENABLED,
       };
+    case "ledger_page":
+      return run<FinanceCursorPage<LedgerRow>>(
+        actor,
+        outletId,
+        sql`select app_private.pos_ledger_page(
+          ${outletId},${input.cursorAt ?? null}::timestamptz,
+          ${input.cursorId ?? null},50) as result`
+      );
+    case "reconcile_page":
+      return run<ReconciliationPage>(
+        actor,
+        outletId,
+        sql`select app_private.pos_reconciliation_page(
+          ${outletId},${input.cursorAt ?? null}::timestamptz,
+          ${input.cursorId ?? null},100) as result`
+      );
     case "ledger":
       return run<LedgerRow[]>(
         actor,
         outletId,
-        sql`select app_private.pos_ledger(${outletId}) as result`
+        sql`select app_private.pos_ledger_v2(${outletId}) as result`
       );
     case "shifts":
       return run<ShiftRow[]>(
@@ -356,6 +451,20 @@ export async function financeRead(
         partial: boolean;
         anomalies: { saleId: string; reason: string }[];
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
+    case "fiscal_readiness": {
+      const rawPacket = await run<unknown>(
+        actor,
+        outletId,
+        sql`select app_private.pos_fiscal_readiness(${outletId},${input.id}) as result`
+      );
+      return assessFiscalReadiness(rawPacket);
+    }
+    case "settlement":
+      return run<SettlementDetail>(
+        actor,
+        outletId,
+        sql`select app_private.pos_settlement_detail(${outletId},${input.id}) as result`
+      );
     case "sale":
       return run<Detail>(
         actor,
@@ -385,6 +494,17 @@ export async function financeCommand(
 ): Promise<Record<string, unknown>> {
   const cmd = commands.parse(raw);
   await posContext(actor, organizationId, outletId);
+  if (cmd.action === "staff_refund") {
+    const payload = { action: cmd.action, data: cmd.data };
+    const hash = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+    return run<Record<string, unknown>>(
+      actor,
+      outletId,
+      sql`select app_private.pos_staff_refund(
+        ${outletId},${cmd.key},${hash},${cmd.data.saleId},
+        ${cmd.data.reason},${cmd.data.externalRefundAttested}) as result`
+    );
+  }
   if (cmd.action === "provider_checkout")
     return providerCheckout(actor, outletId, cmd.key, cmd.data.saleId);
   if (cmd.action === "partial_refund") return partialRefund(actor, outletId, cmd.key, cmd.data);
@@ -399,15 +519,11 @@ export async function financeCommand(
       throw new ValidationError("Duplicate dish tax classification.");
   }
   if (cmd.action === "tender") {
-    if (BigInt(cmd.data.tenderedMinor) < BigInt(cmd.data.amountMinor))
-      throw new ValidationError("Tendered amount cannot be below applied amount.");
-    if (
-      cmd.data.method !== "cash" &&
-      (cmd.data.amountMinor !== cmd.data.tenderedMinor ||
-        !cmd.data.reference ||
-        cmd.data.reference.length < 3)
-    )
-      throw new ValidationError("External tender requires staff reference and exact allocation.");
+    try {
+      validateTender(cmd.data);
+    } catch {
+      throw new ValidationError("Tender amount, change or external reference is invalid.");
+    }
   }
   const payload = { action: cmd.action, data: cmd.data };
   const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex");

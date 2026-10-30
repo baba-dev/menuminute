@@ -45,6 +45,7 @@ export default async function ReceiptPage({
     redirect("/dashboard/pos/ledger/documents/" + encodeURIComponent(receipt.issuedDocumentId));
   const paper = paramsQuery.paper === "58" ? "58" : "80";
   const paid = receipt.paymentStatus === "complete";
+  const refunded = receipt.paymentStatus === "refunded";
   const staffPaid = paid && receipt.paymentEvidence === "staff_recorded";
   return (
     <main className={"receipt-shell receipt-width-" + paper}>
@@ -65,11 +66,13 @@ export default async function ReceiptPage({
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center">
           <h2>
-            {staffPaid
-              ? "STAFF-RECORDED PAYMENT RECEIPT"
-              : paid
-                ? "BILL — PAYMENT COMPLETE"
-                : "BILL — PAYMENT PENDING"}
+            {refunded
+              ? "STAFF PAYMENT REFUNDED — CORRECTION"
+              : staffPaid
+                ? "STAFF-RECORDED PAYMENT RECEIPT"
+                : paid
+                  ? "BILL — PAYMENT COMPLETE"
+                  : "BILL — PAYMENT PENDING"}
           </h2>
           <strong>Order #{receipt.orderNumber}</strong>
         </div>
@@ -96,7 +99,9 @@ export default async function ReceiptPage({
           )}
           <div>
             <dt>Payment</dt>
-            <dd className="receipt-payment-status">{paid ? "COMPLETE" : "PENDING"}</dd>
+            <dd className="receipt-payment-status">
+              {refunded ? "REFUNDED" : paid ? "COMPLETE" : "PENDING"}
+            </dd>
           </div>
           {receipt.paymentMethod && (
             <div>
@@ -128,11 +133,13 @@ export default async function ReceiptPage({
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center receipt-footer">
           <strong>
-            {staffPaid
-              ? "PAYMENT COMPLETE — STAFF RECORDED"
-              : paid
-                ? "PAYMENT COMPLETE — SEE LEDGER"
-                : "PAYMENT PENDING"}
+            {refunded
+              ? "ORIGINAL STAFF PAYMENT REFUNDED — NON-FISCAL CORRECTION"
+              : staffPaid
+                ? "PAYMENT COMPLETE — STAFF RECORDED"
+                : paid
+                  ? "PAYMENT COMPLETE — SEE LEDGER"
+                  : "PAYMENT PENDING"}
           </strong>
           <p>
             Prices are pre-tax; taxes and fees have not been calculated. This operational bill is

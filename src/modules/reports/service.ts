@@ -464,6 +464,11 @@ export async function getReportsWorkspace(
       result: {
         available: boolean;
         totalCollectedMinor?: string;
+        staffCollectedMinor?: string;
+        staffRefundedMinor?: string;
+        financeCollectedMinor?: string;
+        unassignedNetCashMinor?: string;
+        bankReconciliationVerified?: boolean;
         totalRefundedMinor?: string;
         totalVarianceMinor?: string;
         tenders?: Array<{ method: string; tenderCount: number; amountMinor: string }>;
@@ -490,7 +495,7 @@ export async function getReportsWorkspace(
         }>;
       };
     }>(sql`select case when ${query.tab} in ('till','z-report')
-      then app_private.reports_finance_snapshot(
+      then app_private.reports_finance_snapshot_v2(
         ${outletId},${range.from}::date,${range.to}::date
       ) else '{"available":false}'::jsonb end as result`);
     const finance = projection.rows[0]?.result;
@@ -507,6 +512,11 @@ export async function getReportsWorkspace(
       card_external: "Card Terminal (Staff Recorded)",
       upi_external: "UPI / QR Code (Staff Recorded)",
       bank_external: "Bank Transfer (Staff Recorded)",
+      staff_cash: "Cash (no shift assigned)",
+      staff_upi_external: "UPI / QR (Cashier Attested)",
+      staff_card_external: "Card Terminal (Cashier Attested)",
+      staff_bank_external: "Bank Transfer (Cashier Attested)",
+      staff_other: "Other (Cashier Attested)",
     };
     const collected = financialAccess ? toSafeMinor(finance.totalCollectedMinor) : 0;
     const refunded = financialAccess ? toSafeMinor(finance.totalRefundedMinor) : 0;
@@ -555,6 +565,10 @@ export async function getReportsWorkspace(
       currency: outlet.currency,
       totalCollectedMinor: collected,
       totalRefundedMinor: refunded,
+      staffCollectedMinor: financialAccess ? toSafeMinor(finance.staffCollectedMinor) : 0,
+      staffRefundedMinor: financialAccess ? toSafeMinor(finance.staffRefundedMinor) : 0,
+      unassignedNetCashMinor: financialAccess ? toSafeMinor(finance.unassignedNetCashMinor) : 0,
+      bankReconciliationVerified: false,
       netCashFlowMinor: collected - refunded,
       totalVarianceMinor: financialAccess ? toSafeMinor(finance.totalVarianceMinor) : 0,
       tenders,
@@ -752,10 +766,14 @@ export async function exportReportCsv(
 
   if (tab === "till") {
     if (!data.tillReconciliation.available) throw new ForbiddenError();
+    const till = data.tillReconciliation;
+    // A rectangular CSV separates settlement facts and shift rows.
+    // All money is formatted in the outlet currency; no gateway proof implied.
     const headers = [
-      "Shift ID",
+      "Record Type",
+      "Reference",
       "Register",
-      "Cashier",
+      "Cashier / Evidence",
       "Status",
       "Opened At",
       "Closed At",
@@ -763,19 +781,45 @@ export async function exportReportCsv(
       "Expected Cash",
       "Counted Cash",
       "Variance",
+      "Amount",
     ];
-    const rows = data.tillReconciliation.shifts.map((s) => [
-      s.shiftId,
-      s.registerName,
-      s.cashierName,
-      s.state,
-      s.openedAt,
-      s.closedAt ?? "Active",
-      formatMoneyAmount(s.openingFloatMinor, currency),
-      formatMoneyAmount(s.expectedMinor, currency),
-      formatMoneyAmount(s.countedMinor, currency),
-      formatMoneyAmount(s.varianceMinor, currency),
-    ]);
+    const summary = [
+      ["total_recorded_collections", till.totalCollectedMinor],
+      ["staff_attested_collections", till.staffCollectedMinor],
+      ["total_recorded_refunds", till.totalRefundedMinor],
+      ["staff_attested_refunds", till.staffRefundedMinor],
+      ["unassigned_net_cash_not_in_drawers", till.unassignedNetCashMinor],
+    ] as const;
+    const rows = [
+      ...summary.map(([kind, value]) => [
+        "summary",
+        kind,
+        "",
+        "Staff-recorded is not provider-confirmed",
+        "Not bank reconciled",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        formatMoneyAmount(value, currency),
+      ]),
+      ...till.shifts.map((shift) => [
+        "shift",
+        shift.shiftId,
+        shift.registerName,
+        shift.cashierName,
+        shift.state,
+        shift.openedAt,
+        shift.closedAt ?? "Active",
+        formatMoneyAmount(shift.openingFloatMinor, currency),
+        formatMoneyAmount(shift.expectedMinor, currency),
+        formatMoneyAmount(shift.countedMinor, currency),
+        formatMoneyAmount(shift.varianceMinor, currency),
+        "",
+      ]),
+    ];
     return {
       filename: `Till-Reconciliation-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
       content: serializeCsv(headers, rows),
