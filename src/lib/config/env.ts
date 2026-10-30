@@ -70,6 +70,14 @@ export const envSchema = z
     AI_CLOUDFLARE_ENABLED: strictBoolean.default(false),
     AI_CLOUDFLARE_MODEL: z.string().max(128).optional(),
     AI_CLOUDFLARE_TOOLS_VERIFIED: strictBoolean.default(false),
+    // Operator-approved exact-model pricing in micro-USD per million tokens.
+    // No defaults: Ember refuses inference until these rates and ceilings are set.
+    AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+    AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+    AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+    AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+    AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+    AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
     POS_STRIPE_ENABLED: strictBoolean.default(false),
     POS_STRIPE_SECRET_KEY: z
       .string()
