@@ -2,6 +2,7 @@
 """Regression tests for the #131/#49 operator tooling. No VPS access needed."""
 import datetime as dt
 import importlib.util
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -154,6 +155,22 @@ class NightlyBackupTests(unittest.TestCase):
         self.assertNotIn("DATABASE_URL", env)
         self.assertNotIn("PGPASSWORD", env)
         self.assertEqual(env["RESTIC_CACHE_DIR"], "/tmp/restic-cache-fixture")
+
+    def test_nightly_payload_listing_proves_dump_and_both_private_env_files(self):
+        root = Path("/var/backups/menuminute/.nightly.fixture")
+        expected = [str(root / "database.dump"), str(root / "backup-manifest.json"),
+                    str(root / "config" / "web.env"), str(root / "config" / "worker.env")]
+        listing = "\n".join(json.dumps({
+            "struct_type": "node", "type": "file", "path": path
+        }) for path in expected)
+        with patch.object(nightly, "command", return_value=listing):
+            nightly.verify_snapshot_payload("a" * 64, root)
+        listing_missing_database = "\n".join(json.dumps({
+            "struct_type": "node", "type": "file", "path": path
+        }) for path in expected[1:])
+        with patch.object(nightly, "command", return_value=listing_missing_database):
+            with self.assertRaises(nightly.BackupGateError):
+                nightly.verify_snapshot_payload("a" * 64, root)
 
     def test_nightly_staging_refuses_to_consume_shared_erp_disk_reserve(self):
         from types import SimpleNamespace
