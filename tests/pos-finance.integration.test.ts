@@ -235,6 +235,15 @@ describe("POS D–G real PostgreSQL finance integration", () => {
     };
     expect(reconciliation.anomalies).toEqual([]);
     expect(reconciliation).toMatchObject({ scanLimit: 500, scannedCount: 1, partial: false });
+    // The full finance refund legitimately voids the canonical payment; the new
+    // paged auditor must not report the historic "paid" state as required.
+    const fullRefundPage = (await f.view("reconcile_page")) as {
+      complete: boolean;
+      anomalies: Array<{ saleId: string; reason: string }>;
+    };
+    expect(fullRefundPage.complete).toBe(true);
+    expect(fullRefundPage.anomalies).toEqual([]);
+
     const docs = await admin(async (_db, pool) =>
       pool.query(
         "select kind,document_number,source_document_id from pos_documents where sale_id=$1 order by issued_at",
