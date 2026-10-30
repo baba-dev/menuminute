@@ -13,6 +13,7 @@ const labels: Record<string, string> = {
   "/dashboard/settings": "Settings",
   "/dashboard/pos": "Point of Sale",
   "/dashboard/organization": "Organization",
+  "/dashboard/reports": "Reports & Insights",
 };
 export function WorkspaceTopbar({
   userName,

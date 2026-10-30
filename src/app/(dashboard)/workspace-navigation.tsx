@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   ReceiptText,
   UtensilsCrossed,
+  BarChart3,
 } from "lucide-react";
 
 const links = [
@@ -19,8 +20,14 @@ const links = [
   { href: "/dashboard/menu", label: "Menu Studio", Icon: UtensilsCrossed },
   { href: "/dashboard/qr-codes", label: "QR codes", Icon: QrCode },
   { href: "/dashboard/orders", label: "Orders", Icon: ShoppingBag, capability: "ordering" },
-  { href: "/dashboard/pos", label: "The Till", Icon: ReceiptText },
+  { href: "/dashboard/pos", label: "Point of Sale", Icon: ReceiptText },
   { href: "/kitchen", label: "Kitchen", Icon: ChefHat, capability: "kitchen" },
+  {
+    href: "/dashboard/reports",
+    label: "Reports & Insights",
+    Icon: BarChart3,
+    capability: "ordering",
+  },
   {
     href: "/dashboard/organization",
     label: "Organization & access",
