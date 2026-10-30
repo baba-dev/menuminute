@@ -765,3 +765,29 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
     await expect(getPool().query("select * from pos_documents")).rejects.toThrow();
   });
 });
+
+
+describe("POS #142 I: bounded read-only finance smoke load", () => {
+  it("completes concurrent authorized finance reads without unbounded source scans", async () => {
+    const f = await setup();
+    const samples = await Promise.all(Array.from({ length: 8 }, async () => {
+      const started = performance.now();
+      const [ledger, reconciliation, fiscal] = await Promise.all([
+        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
+          { view: "ledger_page" }),
+        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
+          { view: "reconcile_page" }),
+        financeRead(f.actor, f.outlet.organizationId, f.outlet.id,
+          { view: "fiscal_readiness", id: f.sale.saleId }),
+      ]);
+      expect(ledger).toMatchObject({ pageCount: 1, hasMore: false });
+      expect(reconciliation).toMatchObject({ scannedCount: 1, complete: true });
+      expect(fiscal).toMatchObject({ statutoryIssuanceAllowed: false });
+      return performance.now() - started;
+    }));
+    const ordered = [...samples].sort((a, b) => a - b);
+    const p95Milliseconds = ordered[Math.ceil(ordered.length * 0.95) - 1]!;
+    // CI smoke guard only; not a production p95/SLO or representative load test.
+    expect(p95Milliseconds).toBeLessThan(15000);
+  });
+});
