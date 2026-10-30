@@ -464,6 +464,11 @@ export async function getReportsWorkspace(
       result: {
         available: boolean;
         totalCollectedMinor?: string;
+        staffCollectedMinor?: string;
+        staffRefundedMinor?: string;
+        financeCollectedMinor?: string;
+        unassignedNetCashMinor?: string;
+        bankReconciliationVerified?: boolean;
         totalRefundedMinor?: string;
         totalVarianceMinor?: string;
         tenders?: Array<{ method: string; tenderCount: number; amountMinor: string }>;
@@ -490,7 +495,7 @@ export async function getReportsWorkspace(
         }>;
       };
     }>(sql`select case when ${query.tab} in ('till','z-report')
-      then app_private.reports_finance_snapshot(
+      then app_private.reports_finance_snapshot_v2(
         ${outletId},${range.from}::date,${range.to}::date
       ) else '{"available":false}'::jsonb end as result`);
     const finance = projection.rows[0]?.result;
@@ -507,6 +512,11 @@ export async function getReportsWorkspace(
       card_external: "Card Terminal (Staff Recorded)",
       upi_external: "UPI / QR Code (Staff Recorded)",
       bank_external: "Bank Transfer (Staff Recorded)",
+      staff_cash: "Cash (no shift assigned)",
+      staff_upi_external: "UPI / QR (Cashier Attested)",
+      staff_card_external: "Card Terminal (Cashier Attested)",
+      staff_bank_external: "Bank Transfer (Cashier Attested)",
+      staff_other: "Other (Cashier Attested)",
     };
     const collected = financialAccess ? toSafeMinor(finance.totalCollectedMinor) : 0;
     const refunded = financialAccess ? toSafeMinor(finance.totalRefundedMinor) : 0;
@@ -555,6 +565,10 @@ export async function getReportsWorkspace(
       currency: outlet.currency,
       totalCollectedMinor: collected,
       totalRefundedMinor: refunded,
+      staffCollectedMinor: financialAccess ? toSafeMinor(finance.staffCollectedMinor) : 0,
+      staffRefundedMinor: financialAccess ? toSafeMinor(finance.staffRefundedMinor) : 0,
+      unassignedNetCashMinor: financialAccess ? toSafeMinor(finance.unassignedNetCashMinor) : 0,
+      bankReconciliationVerified: false,
       netCashFlowMinor: collected - refunded,
       totalVarianceMinor: financialAccess ? toSafeMinor(finance.totalVarianceMinor) : 0,
       tenders,
