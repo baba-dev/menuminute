@@ -198,17 +198,17 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             {/* KPI Metrics Strip */}
             <div className="reports-kpis-grid">
               <KpiMetricCard
-                label="Billed Sales"
+                label="Recorded Order Value"
                 value={formatMoney(executive.grossSalesMinor, currency)}
                 delta={executive.deltas.grossSales}
                 subtext="Eligible orders · includes unpaid"
                 icon={<DollarSign size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Sales Before Tax"
+                label="Order Subtotal"
                 value={formatMoney(executive.netSalesMinor, currency)}
                 delta={executive.deltas.netSales}
-                subtext="Before payment and refunds"
+                subtext="Before payment and refunds; not collected revenue"
                 icon={<TrendingUp size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
