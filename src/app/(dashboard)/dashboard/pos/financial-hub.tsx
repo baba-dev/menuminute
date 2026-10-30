@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
+import { escapeCsvCell } from "@/modules/reports/formatters";
 import { PosNavigation } from "./pos-navigation";
 import type {
   Detail,
@@ -19,6 +20,8 @@ import type {
   LedgerRow,
   ShiftRow,
   SettlementDetail,
+  type FinanceCursorPage,
+  type ReconciliationPage,
 } from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
@@ -136,21 +139,32 @@ export function FinancialHub({
   const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
   const [reconciliation, setReconciliation] = useState<{
-    checkedAt: string;
-    scanLimit: number;
     scannedCount: number;
-    partial: boolean;
+    hasMore: boolean;
+    nextCursorAt: string | null;
+    nextCursorId: string | null;
     anomalies: { saleId: string; reason: string }[];
   } | null>(null);
+  const [reconciliationBusy, setReconciliationBusy] = useState(false);
+  const [ledgerMore, setLedgerMore] = useState(initialLedger.length >= 60);
+  const [ledgerBusy, setLedgerBusy] = useState(false);
   const activeShift =
     shifts.find((s) => s.state === "open" && s.id === shiftId) ??
     shifts.find((s) => s.state === "open");
   const dishes = workspace.menus
     .flatMap((m) => m.categories.flatMap((c) => c.items))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i);
-  async function get<T>(view: string, id?: string): Promise<T> {
+  async function get<T>(
+    view: string,
+    id?: string,
+    cursor?: { at: string; id: string }
+  ): Promise<T> {
     const qs = new URLSearchParams({ view });
     if (id) qs.set("id", id);
+    if (cursor) {
+      qs.set("cursorAt", cursor.at);
+      qs.set("cursorId", cursor.id);
+    }
     return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
   }
   async function refresh() {
@@ -161,8 +175,50 @@ export function FinancialHub({
     ]);
     setFinance(f);
     setLedger(l);
+    setLedgerMore(l.length >= 60);
     setShifts(s);
     if (selected) await selectSale(selected.saleId);
+  }
+  async function loadOlderLedger() {
+    if (ledgerBusy || !ledgerMore || ledger.length === 0) return;
+    setLedgerBusy(true);
+    try {
+      const last = ledger[ledger.length - 1]!;
+      const page = await get<FinanceCursorPage<LedgerRow>>("ledger_page", undefined, {
+        at: new Date(last.createdAt).toISOString(),
+        id: last.saleId,
+      });
+      setLedger((previous) => {
+        const known = new Set(previous.map((entry) => entry.saleId));
+        return [...previous, ...page.items.filter((entry) => !known.has(entry.saleId))];
+      });
+      setLedgerMore(page.hasMore);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Ledger pagination failed");
+    } finally {
+      setLedgerBusy(false);
+    }
+  }
+  async function scanReconciliation(reset: boolean) {
+    if (reconciliationBusy || (!reset && !reconciliation?.hasMore)) return;
+    setReconciliationBusy(true);
+    try {
+      const cursor = reset || !reconciliation?.nextCursorAt || !reconciliation.nextCursorId
+        ? undefined
+        : { at: reconciliation.nextCursorAt, id: reconciliation.nextCursorId };
+      const page = await get<ReconciliationPage>("reconcile_page", undefined, cursor);
+      setReconciliation((previous) => ({
+        scannedCount: (reset ? 0 : previous?.scannedCount ?? 0) + page.scannedCount,
+        anomalies: [...(reset ? [] : previous?.anomalies ?? []), ...page.anomalies],
+        hasMore: page.hasMore,
+        nextCursorAt: page.nextCursorAt,
+        nextCursorId: page.nextCursorId,
+      }));
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to read reconciliation page");
+    } finally {
+      setReconciliationBusy(false);
+    }
   }
   async function selectSale(id: string) {
     const [detail, projection] = await Promise.all([
@@ -267,7 +323,7 @@ export function FinancialHub({
       ]),
     ];
     const csv = lines
-      .map((row) => row.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(","))
+      .map((row) => row.map(escapeCsvCell).join(","))
       .join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -334,7 +390,7 @@ export function FinancialHub({
           <>
             <div className="finance-summary">
               <div>
-                <span>Recorded sales (recent 60)</span>
+                <span>Sales loaded for review</span>
                 <strong>{ledger.length}</strong>
               </div>
               <div>
@@ -453,10 +509,10 @@ export function FinancialHub({
               <div className="till-sectionhead">
                 <div>
                   <span className="till-eyebrow">01 / PRIVATE REGISTER</span>
-                  <h2>Recent sales</h2>
+                  <h2>Private sale register</h2>
                 </div>
                 <button type="button" onClick={exportCsv}>
-                  Export visible CSV
+                  Export loaded rows CSV
                 </button>
               </div>
               <div className="finance-scroll">
@@ -492,6 +548,33 @@ export function FinancialHub({
                   </tbody>
                 </table>
               </div>
+              <div className="finance-mobile-register" aria-label="Sales on small screens">
+                {ledger.map((entry) => (
+                  <article className="finance-mobile-sale" key={entry.saleId}>
+                    <div>
+                      <strong>Order {entry.orderId.slice(0, 12)}</strong>
+                      <small>{new Date(entry.createdAt).toLocaleString()}</small>
+                    </div>
+                    <dl>
+                      <div><dt>Pre-tax subtotal</dt><dd>{money(entry.subtotalMinor, entry.currency)}</dd></div>
+                      <div><dt>Frozen bill</dt><dd>{money(entry.totalMinor, entry.currency)}</dd></div>
+                      <div><dt>Recorded</dt><dd>{money(entry.paidMinor, entry.currency)}</dd></div>
+                      <div><dt>Refunded</dt><dd>{money(entry.refundedMinor, entry.currency)}</dd></div>
+                    </dl>
+                    <button type="button" onClick={() => void selectSale(entry.saleId)}>
+                      View financial details <ArrowRight size={14} />
+                    </button>
+                  </article>
+                ))}
+              </div>
+              {ledgerMore && (
+                <div className="finance-register-more">
+                  <button type="button" disabled={ledgerBusy} onClick={() => void loadOlderLedger()}>
+                    {ledgerBusy ? "Loading older sales…" : "Load older sales"}
+                  </button>
+                  <small>Export includes loaded rows only; this is not a full-history export.</small>
+                </div>
+              )}
               {!ledger.length && (
                 <p className="till-empty">
                   No sale records yet. Start with a published-menu order in Point of Sale.
@@ -1213,34 +1296,54 @@ export function FinancialHub({
               <span className="till-eyebrow">04 / INVARIANT MONITOR</span>
               <h2>Ledger reconciliation</h2>
               <p>
-                Read-only bounded scan for overcollection, over-refund, line-total mismatch and
-                order-paid disagreement.
+                Read-only cursor-based scan of all POS sales, including staff-attested payments,
+                finance tenders, refunds and provider uncertainty. Each page checks up to 100 sales.
+                Continue until the scan reports complete; an unfinished scan is never a clean result.
               </p>
               <button
                 type="button"
-                disabled={!finance.canIssue || busy}
-                onClick={async () => {
-                  try {
-                    setReconciliation(await get("reconcile"));
-                  } catch (e) {
-                    setNotice(e instanceof Error ? e.message : "Unable to reconcile");
-                  }
-                }}
+                disabled={!finance.canIssue || reconciliationBusy}
+                onClick={() => void scanReconciliation(true)}
               >
-                Run current consistency scan
+                {reconciliationBusy ? "Checking…" : "Start new consistency scan"}
               </button>
               {reconciliation && (
-                <p role="status">
-                  {reconciliation.anomalies.length
-                    ? reconciliation.anomalies.map((a) => a.saleId + " · " + a.reason).join("; ")
-                    : "No invariant mismatch detected in the inspected bills."}{" "}
-                  Inspected {reconciliation.scannedCount} recent bills (limit{" "}
-                  {reconciliation.scanLimit}).
-                  {reconciliation.partial
-                    ? " Older records are not included; request full historical reconciliation separately."
-                    : " All currently recorded bills were included."}{" "}
-                  This is not bank reconciliation or compliance certification.
-                </p>
+                <div className="finance-reconciliation" role="status" aria-live="polite">
+                  <strong>
+                    {reconciliation.hasMore
+                      ? "Partial coverage — continue scanning"
+                      : "All currently reachable sale pages scanned"}
+                  </strong>
+                  <p>
+                    {reconciliation.scannedCount} sales inspected ·
+                    {reconciliation.anomalies.length} potential anomalies.
+                    {reconciliation.hasMore
+                      ? " Older sales remain unchecked."
+                      : " No more pages returned."}
+                  </p>
+                  {reconciliation.anomalies.length > 0 && (
+                    <ul className="finance-anomalies">
+                      {reconciliation.anomalies.map((a, index) => (
+                        <li key={a.saleId + "-" + a.reason + "-" + index}>
+                          {a.saleId} · {a.reason.replaceAll("_", " ")}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {reconciliation.hasMore && (
+                    <button
+                      type="button"
+                      disabled={reconciliationBusy}
+                      onClick={() => void scanReconciliation(false)}
+                    >
+                      {reconciliationBusy ? "Checking…" : "Check next 100 sales"}
+                    </button>
+                  )}
+                  <small>
+                    Scans are live read-only ledger checks, not a transaction snapshot,
+                    bank reconciliation or fiscal audit certification.
+                  </small>
+                </div>
               )}
             </section>
           </>
