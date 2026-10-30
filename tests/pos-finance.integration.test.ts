@@ -711,6 +711,13 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
   it("shows missing jurisdiction/IRP requirements on the real frozen bill", async () => {
     const f = await setup("classified");
     await operatorGate(f.outlet.id, f.outlet.organizationId, true);
+    await f.cmd("profile", {
+      expectedRevision: 0,
+      mode: "classified",
+      inclusive: false,
+      taxLabel: "Review-only GST fixture",
+      classes: [{ dishId: "plate", classification: "EXAMPLE", rateBps: 500 }],
+    });
     const quote = await f.view("preview", f.sale.saleId) as {
       totalMinor: string; taxProfileRevision: number;
     };
@@ -719,6 +726,18 @@ describe("POS #142 E: protected fiscal diagnostic does not issue registered invo
       expectedTotalMinor: quote.totalMinor,
       expectedTaxRevision: quote.taxProfileRevision,
       customer: { name: "Test buyer", address: "Test delivery address" },
+    });
+    const shift = await f.cmd("open_shift", {
+      registerName: "fiscal fixture",
+      openingMinor: "0",
+    }) as { shiftId: string };
+    await f.cmd("tender", {
+      saleId: f.sale.saleId,
+      shiftId: shift.shiftId,
+      method: "cash",
+      amountMinor: quote.totalMinor,
+      tenderedMinor: quote.totalMinor,
+      reference: null,
     });
     const readiness = await f.view("fiscal_readiness", f.sale.saleId) as unknown as {
       statutoryIssuanceAllowed: boolean; failedCount: number;
