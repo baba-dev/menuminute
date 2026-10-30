@@ -87,13 +87,20 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 function evidenceLabel(source: unknown) {
   switch (source) {
-    case "orders.servicePulse": return "Current orders";
-    case "orders.listServiceHistory": return "Order history";
-    case "kitchen.kitchenSnapshot": return "Kitchen queue";
-    case "menu.listMenus": return "Menu Studio drafts";
-    case "hospitality.floorMatrix": return "Dining table activity";
-    case "pos.draftRegister": return "Point of Sale drafts";
-    default: return "Restaurant records";
+    case "orders.servicePulse":
+      return "Current orders";
+    case "orders.listServiceHistory":
+      return "Order history";
+    case "kitchen.kitchenSnapshot":
+      return "Kitchen queue";
+    case "menu.listMenus":
+      return "Menu Studio drafts";
+    case "hospitality.floorMatrix":
+      return "Dining table activity";
+    case "pos.draftRegister":
+      return "Point of Sale drafts";
+    default:
+      return "Restaurant records";
   }
 }
 function message(error: unknown) {

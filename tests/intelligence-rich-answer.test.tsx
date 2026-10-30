@@ -5,7 +5,11 @@ import { EmberRichAnswer } from "../src/components/intelligence/ember-rich-answe
 describe("Ember safe rich answer", () => {
   it("renders text, emphasis, headings, lists and accessible tables", () => {
     const result = renderToStaticMarkup(
-      <EmberRichAnswer text={"## Your orders\n\n**2 orders** waiting.\n\n- One ready\n- One cooking\n\n| Dish | Qty |\n| --- | --- |\n| Chole | 2 |"} />
+      <EmberRichAnswer
+        text={
+          "## Your orders\n\n**2 orders** waiting.\n\n- One ready\n- One cooking\n\n| Dish | Qty |\n| --- | --- |\n| Chole | 2 |"
+        }
+      />
     );
     expect(result).toContain("<h4>");
     expect(result).toContain("<strong>2 orders</strong>");

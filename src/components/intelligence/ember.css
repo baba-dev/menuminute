@@ -516,9 +516,15 @@
   display: grid;
   gap: 6px;
 }
-.mm-ember-rich-answer ul { list-style: disc; }
-.mm-ember-rich-answer ol { list-style: decimal; }
-.mm-ember-rich-answer strong { font-weight: 800; }
+.mm-ember-rich-answer ul {
+  list-style: disc;
+}
+.mm-ember-rich-answer ol {
+  list-style: decimal;
+}
+.mm-ember-rich-answer strong {
+  font-weight: 800;
+}
 .mm-ember-rich-answer blockquote {
   border-left: 3px solid #d5862b;
   padding: 7px 12px;
@@ -542,7 +548,10 @@
   font-size: 12px;
   white-space: pre;
 }
-.mm-ember-rich-answer pre code { padding: 0; background: transparent; }
+.mm-ember-rich-answer pre code {
+  padding: 0;
+  background: transparent;
+}
 .mm-ember-table-scroll {
   max-width: 100%;
   overflow-x: auto;
@@ -573,7 +582,9 @@
   background: #d5862b18;
   font-weight: 800;
 }
-.mm-ember-table-scroll tbody tr:last-child td { border-bottom: 0; }
+.mm-ember-table-scroll tbody tr:last-child td {
+  border-bottom: 0;
+}
 
 @media (max-width: 700px) {
   /* Mobile launch is an in-flow topbar / kitchen action: never obscure page controls. */
