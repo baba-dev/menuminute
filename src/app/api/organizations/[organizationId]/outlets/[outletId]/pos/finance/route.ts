@@ -11,7 +11,13 @@ async function observed_GET(req: Request, { params }: Params) {
     const url = new URL(req.url);
     const view = url.searchParams.get("view");
     const id = url.searchParams.get("id");
-    const data = await financeRead(actor, organizationId, outletId, id ? { view, id } : { view });
+    const cursorAt = url.searchParams.get("cursorAt");
+    const cursorId = url.searchParams.get("cursorId");
+    const cursorView = view === "reconcile_page" || view === "ledger_page";
+    const data = await financeRead(actor, organizationId, outletId,
+      cursorView
+        ? { view, ...(cursorAt ? { cursorAt } : {}), ...(cursorId ? { cursorId } : {}) }
+        : id ? { view, id } : { view });
     return NextResponse.json(data, {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
     });
