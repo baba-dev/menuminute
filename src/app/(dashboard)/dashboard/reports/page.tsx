@@ -11,7 +11,7 @@ import "./reports.css";
 export const metadata: Metadata = {
   title: "Reports & Insights | MenuMinute",
   description:
-    "Executive sales pulse, menu engineering matrix, till settlements, and kitchen SLAs.",
+    "Recorded order value, menu performance, cashier settlements and kitchen SLAs.",
   robots: { index: false, follow: false },
 };
 

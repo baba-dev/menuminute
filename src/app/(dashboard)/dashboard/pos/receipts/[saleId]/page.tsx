@@ -50,7 +50,7 @@ export default async function ReceiptPage({
   return (
     <main className={"receipt-shell receipt-width-" + paper}>
       <header className="receipt-toolbar">
-        <Link href="/dashboard/pos">← The Till</Link>
+        <Link href="/dashboard/pos">← Point of Sale</Link>
         <div>
           <strong>Receipt Atelier</strong>
           <p>Local browser printing · non-fiscal order record</p>
