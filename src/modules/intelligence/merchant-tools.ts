@@ -15,7 +15,9 @@ export type ReportPeriod = (typeof reportPeriods)[number];
 export function weekWindow(timezone: string, instant = new Date()) {
   const date = new Intl.DateTimeFormat("en-GB", {
     timeZone: timezone,
-    year: "numeric", month: "2-digit", day: "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   }).formatToParts(instant);
   const value = (type: string) => date.find((p) => p.type === type)?.value;
   const today = `${value("year")}-${value("month")}-${value("day")}`;
@@ -32,13 +34,16 @@ export async function merchantReport(context: ToolContext, range: ReportPeriod) 
   if (!outlet || outlet.organizationId !== context.organizationId)
     throw new Error("Outlet unavailable");
   const selected = range === "week" ? weekWindow(outlet.timezone) : null;
-  const report = await getReportsWorkspace(context.actor, context.outletId,
+  const report = await getReportsWorkspace(
+    context.actor,
+    context.outletId,
     reportQuerySchema.parse({
       range: selected ? "custom" : range,
       ...(selected ?? {}),
       fulfillmentMode: "all",
       tab: "z-report",
-    }));
+    })
+  );
   const till = report.tillReconciliation;
   return {
     source: "reports.getReportsWorkspace",
@@ -53,17 +58,21 @@ export async function merchantReport(context: ToolContext, range: ReportPeriod) 
       cancelledOrderCount: report.executive.cancelledOrders,
       averageOrderValueMinor: report.executive.avgOrderValueMinor,
       paymentEvidenceAvailable: till.available,
-      ...(till.available ? {
-        operatorRecordedCollectedMinor: till.totalCollectedMinor,
-        operatorRecordedRefundedMinor: till.totalRefundedMinor,
-        operatorRecordedNetMinor: till.netCashFlowMinor,
-        bankReconciliationVerified: false,
-      } : {}),
+      ...(till.available
+        ? {
+            operatorRecordedCollectedMinor: till.totalCollectedMinor,
+            operatorRecordedRefundedMinor: till.totalRefundedMinor,
+            operatorRecordedNetMinor: till.netCashFlowMinor,
+            bankReconciliationVerified: false,
+          }
+        : {}),
       topSellingDishes: report.menuEngineering.topSellers.slice(0, 5).map((x) => ({
-        dish: x.name, quantity: x.quantitySold,
+        dish: x.name,
+        quantity: x.quantitySold,
         orderValueMinor: x.totalRevenueMinor,
       })),
-      limitation: "Orders are not bank-verified revenue; staff attestations are not provider confirmations.",
+      limitation:
+        "Orders are not bank-verified revenue; staff attestations are not provider confirmations.",
     },
   };
 }
@@ -79,12 +88,18 @@ export async function merchantFindDish(context: ToolContext, rawQuery: string) {
     throw new Error("Outlet unavailable");
   await withOutletRead(context.actor, context.outletId, "menu.read", async () => true);
   const query = rawQuery.trim().toLocaleLowerCase();
-  const menus = (await listMenus(context.actor, context.outletId))
-    .filter((m) => !m.archived && m.publishedRevision !== null);
+  const menus = (await listMenus(context.actor, context.outletId)).filter(
+    (m) => !m.archived && m.publishedRevision !== null
+  );
   const limited = menus.length > 12;
   const matches: Array<{
-    dish: string; menu: string; category: string; soldOut: boolean;
-    availableNow: boolean; currency: string; priceMinor: number;
+    dish: string;
+    menu: string;
+    category: string;
+    soldOut: boolean;
+    availableNow: boolean;
+    currency: string;
+    priceMinor: number;
   }> = [];
   for (const row of menus.slice(0, 12)) {
     const detail = await menuDetail(context.actor, row.id);
@@ -97,14 +112,19 @@ export async function merchantFindDish(context: ToolContext, rawQuery: string) {
       for (const dish of category.items) {
         if (dish.archived || !dish.name.toLocaleLowerCase().includes(query)) continue;
         const override = overrides.find((o) => o.dishId === dish.id);
-        const soldOut = (override?.soldOut ?? dish.soldOut) ||
+        const soldOut =
+          (override?.soldOut ?? dish.soldOut) ||
           (dish.variants.length > 0 && dish.variants.every((v) => !v.isAvailable)) ||
           dish.addOnGroups.some((g) => g.options.filter((v) => v.isAvailable).length < g.min);
         matches.push({
-          dish: dish.name, menu: published.name, category: category.name,
-          soldOut, availableNow: menuOpen && !soldOut &&
-            availableNow(dish.schedule, outlet.timezone, new Date()),
-          currency: published.currency, priceMinor: override?.priceMinor ?? dish.priceMinor,
+          dish: dish.name,
+          menu: published.name,
+          category: category.name,
+          soldOut,
+          availableNow:
+            menuOpen && !soldOut && availableNow(dish.schedule, outlet.timezone, new Date()),
+          currency: published.currency,
+          priceMinor: override?.priceMinor ?? dish.priceMinor,
         });
         if (matches.length >= 10) break;
       }
@@ -115,7 +135,8 @@ export async function merchantFindDish(context: ToolContext, rawQuery: string) {
   return {
     source: "menu.publishedRelease",
     data: {
-      query: rawQuery, matches,
+      query: rawQuery,
+      matches,
       truncated: limited || matches.length >= 10,
       definitiveNotFound: !limited && matches.length === 0,
       checkedPublishedMenus: Math.min(menus.length, 12),
@@ -130,7 +151,9 @@ export async function merchantImports(context: ToolContext) {
     source: "menuImport.listImports",
     data: {
       imports: rows.slice(0, 8).map((x) => ({
-        status: x.status, createdAt: x.createdAt, updatedAt: x.updatedAt,
+        status: x.status,
+        createdAt: x.createdAt,
+        updatedAt: x.updatedAt,
         hasTargetMenu: Boolean(x.targetMenuId),
       })),
       truncated: rows.length > 8,

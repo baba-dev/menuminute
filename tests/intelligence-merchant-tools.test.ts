@@ -18,6 +18,7 @@ describe("Ember merchant intelligence routing and business dates", () => {
   });
   it("selects private import and QR summary tools without arbitrary output", () => {
     expect(selectQuestionTools(names, "Any failed menu imports?")[0]?.name).toBe("imports.pulse");
+    expect(selectQuestionTools(names, "Any failed menu import?")[0]?.name).toBe("imports.pulse");
     expect(selectQuestionTools(names, "How many QR codes?")[0]?.name).toBe("qr.pulse");
     expect(selectQuestionTools(names, "Help me")[0]?.name).toBe("orders.pulse");
   });
@@ -33,6 +34,8 @@ describe("Ember merchant intelligence routing and business dates", () => {
   });
   it("rejects unknown calls without running any business service", async () => {
     const fake = { actor: { userId: "x" }, organizationId: "other", outletId: "outlet" };
-    await expect(executeReadTool(fake, "arbitrary.http", {})).rejects.toThrow("Unknown read-only tool");
+    await expect(executeReadTool(fake, "arbitrary.http", {})).rejects.toThrow(
+      "Unknown read-only tool"
+    );
   });
 });

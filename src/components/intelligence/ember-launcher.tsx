@@ -90,7 +90,10 @@ type AvailabilityIntent = { dishQuery: string; soldOut: boolean };
 function availabilityIntent(text: string): AvailabilityIntent | null {
   const command = text.trim();
   // Only explicit human commands can start the confirmation composer.
-  const match = /^(?:please\s+)?(?:mark|set|make)\s+(.{2,100}?)\s+(?:as\s+)?(sold\s+out|unavailable|available|in\s+stock)[.!?]?$/i.exec(command);
+  const match =
+    /^(?:please\s+)?(?:mark|set|make)\s+(.{2,100}?)\s+(?:as\s+)?(sold\s+out|unavailable|available|in\s+stock)[.!?]?$/i.exec(
+      command
+    );
   if (!match) return null;
   const dishQuery = match[1]!.trim();
   if (!dishQuery || /[<>]/.test(dishQuery)) return null;
@@ -320,9 +323,13 @@ export function EmberLauncher({
       setOptions(rows);
       if (intent) {
         setDesiredSoldOut(intent.soldOut);
-        const matches = rows.flatMap((menu) => menu.items
-          .filter((item) => item.name.toLocaleLowerCase().includes(intent.dishQuery.toLocaleLowerCase()))
-          .map((item) => ({ menu, item })));
+        const matches = rows.flatMap((menu) =>
+          menu.items
+            .filter((item) =>
+              item.name.toLocaleLowerCase().includes(intent.dishQuery.toLocaleLowerCase())
+            )
+            .map((item) => ({ menu, item }))
+        );
         // Only prefill an unambiguous live item; multiple menus require user choice.
         if (matches.length === 1) {
           setMenuId(matches[0]!.menu.id);
@@ -425,414 +432,423 @@ export function EmberLauncher({
         <Sparkles size={20} aria-hidden="true" />
         <span>Ask Ember</span>
       </button>
-      {open && createPortal(
-        <div className="mm-ember-layer">
-          <button
-            type="button"
-            aria-label="Close Ember"
-            className="mm-ember-backdrop"
-            onClick={() => setOpen(false)}
-          />
-          <section
-            className="mm-ember-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="mm-ember-title"
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.stopPropagation();
-                setOpen(false);
-                return;
-              }
-              if (event.key !== "Tab") return;
-              const nodes = Array.from(
-                event.currentTarget.querySelectorAll<HTMLElement>(
-                  "button:not([disabled]),a[href],textarea:not([disabled]),input:not([disabled]),select:not([disabled])"
-                )
-              ).filter((n) => n.getClientRects().length > 0);
-              if (!nodes.length) return;
-              const first = nodes[0]!,
-                last = nodes[nodes.length - 1]!;
-              if (event.shiftKey && document.activeElement === first) {
-                event.preventDefault();
-                last.focus();
-              } else if (!event.shiftKey && document.activeElement === last) {
-                event.preventDefault();
-                first.focus();
-              }
-            }}
-          >
-            <header className="mm-ember-head">
-              <div className="mm-ember-mark" aria-hidden="true">
-                <Sparkles size={21} />
-              </div>
-              <div className="mm-ember-head-copy">
-                <span className="mm-ember-overline">MENUMINUTE INTELLIGENCE</span>
-                <h2 id="mm-ember-title">
-                  Ember <span>· your service companion</span>
-                </h2>
-                <p title={outletName}>For {outletName}</p>
-              </div>
-              <button
-                type="button"
-                className="mm-ember-icon"
-                ref={closeRef}
-                aria-label="Close assistant"
-                onClick={() => setOpen(false)}
-              >
-                <X size={21} />
-              </button>
-            </header>
-            <div className="mm-ember-toolbar">
-              <button type="button" onClick={() => void openNew()} disabled={busy}>
-                <Plus size={16} /> New chat
-              </button>
-              <button
-                type="button"
-                aria-expanded={historyOpen}
-                onClick={() => setHistoryOpen((v) => !v)}
-              >
-                <Clock3 size={16} /> History <ChevronDown size={13} />
-              </button>
-              {caps?.actionsEnabled && (
+      {open &&
+        createPortal(
+          <div className="mm-ember-layer">
+            <button
+              type="button"
+              aria-label="Close Ember"
+              className="mm-ember-backdrop"
+              onClick={() => setOpen(false)}
+            />
+            <section
+              className="mm-ember-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mm-ember-title"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.stopPropagation();
+                  setOpen(false);
+                  return;
+                }
+                if (event.key !== "Tab") return;
+                const nodes = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    "button:not([disabled]),a[href],textarea:not([disabled]),input:not([disabled]),select:not([disabled])"
+                  )
+                ).filter((n) => n.getClientRects().length > 0);
+                if (!nodes.length) return;
+                const first = nodes[0]!,
+                  last = nodes[nodes.length - 1]!;
+                if (event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }}
+            >
+              <header className="mm-ember-head">
+                <div className="mm-ember-mark" aria-hidden="true">
+                  <Sparkles size={21} />
+                </div>
+                <div className="mm-ember-head-copy">
+                  <span className="mm-ember-overline">MENUMINUTE INTELLIGENCE</span>
+                  <h2 id="mm-ember-title">
+                    Ember <span>· your service companion</span>
+                  </h2>
+                  <p title={outletName}>For {outletName}</p>
+                </div>
                 <button
                   type="button"
-                  aria-expanded={actionOpen}
-                  onClick={() => void fetchOptions()}
-                  disabled={busy || !conversationId}
+                  className="mm-ember-icon"
+                  ref={closeRef}
+                  aria-label="Close assistant"
+                  onClick={() => setOpen(false)}
                 >
-                  <ShieldCheck size={16} /> Actions
+                  <X size={21} />
                 </button>
-              )}
-            </div>
-            {historyOpen && (
-              <nav aria-label="Ember conversation history" className="mm-ember-history">
-                {conversations.length === 0 ? (
-                  <p>No conversations yet.</p>
-                ) : (
-                  conversations.map((c) => (
-                    <button
-                      type="button"
-                      key={c.id}
-                      aria-current={c.id === conversationId ? "true" : undefined}
-                      onClick={() => {
-                        currentId.current = c.id;
-                        setConversationId(c.id);
-                        setPendingPoll(0);
-                        setHistoryOpen(false);
-                        setError("");
-                      }}
-                    >
-                      {new Date(c.updatedAt).toLocaleString()} <ArrowRight size={14} />
-                    </button>
-                  ))
+              </header>
+              <div className="mm-ember-toolbar">
+                <button type="button" onClick={() => void openNew()} disabled={busy}>
+                  <Plus size={16} /> New chat
+                </button>
+                <button
+                  type="button"
+                  aria-expanded={historyOpen}
+                  onClick={() => setHistoryOpen((v) => !v)}
+                >
+                  <Clock3 size={16} /> History <ChevronDown size={13} />
+                </button>
+                {caps?.actionsEnabled && (
+                  <button
+                    type="button"
+                    aria-expanded={actionOpen}
+                    onClick={() => void fetchOptions()}
+                    disabled={busy || !conversationId}
+                  >
+                    <ShieldCheck size={16} /> Actions
+                  </button>
                 )}
-              </nav>
-            )}
-            <div
-              className="mm-ember-feed"
-              ref={feedRef}
-              role="log"
-              aria-label="Conversation"
-              aria-live="polite"
-              aria-relevant="additions"
-            >
-              {!turns.length && !proposals.length && (
-                <div className="mm-ember-welcome">
-                  <div className="mm-ember-welcome-mark">
-                    <Sparkles size={29} />
-                  </div>
-                  <span className="mm-ember-overline">A BETTER VIEW OF YOUR DAY</span>
-                  <h3>Clarity, served warm.</h3>
-                  <p>
-                    Ask about your orders, published menu, or kitchen activity. Ember uses your
-                    current outlet permissions and labels its sources.
-                  </p>
-                  <div className="mm-ember-suggestions">
-                    {[
-                      "How is my order queue looking?",
-                      "How much did my orders total this week?",
-                      "Do I sell Chole Bhature?",
-                      "Show my recent menu imports",
-                    ].map((question) => (
-                      <button key={question} type="button" onClick={() => setPrompt(question)}>
-                        {question}
-                        <ArrowRight size={14} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {turns.map((t) => (
-                <article key={t.id} className="mm-ember-exchange">
-                  <div className="mm-ember-human">
-                    <span>You</span>
-                    <p>{t.prompt}</p>
-                  </div>
-                  <div className="mm-ember-answer">
-                    <span>
-                      <Sparkles size={15} /> Ember
-                    </span>
-                    {t.status === "processing" ? (
-                      <p>
-                        <LoaderCircle size={16} className="mm-ember-spin" /> Checking authorized
-                        sources…
-                      </p>
-                    ) : t.status === "failed" ? (
-                      <p role="status">
-                        Unable to verify this answer ({t.errorCode ?? "processing_failed"}). No
-                        business action was taken.
-                      </p>
-                    ) : (
-                      <EmberRichAnswer text={t.answer} />
-                    )}
-                    {caps?.actionsEnabled && availabilityIntent(t.prompt) && (
+              </div>
+              {historyOpen && (
+                <nav aria-label="Ember conversation history" className="mm-ember-history">
+                  {conversations.length === 0 ? (
+                    <p>No conversations yet.</p>
+                  ) : (
+                    conversations.map((c) => (
                       <button
                         type="button"
-                        className="mm-ember-navigate"
-                        disabled={busy}
-                        onClick={() => void fetchOptions(availabilityIntent(t.prompt) ?? undefined)}
+                        key={c.id}
+                        aria-current={c.id === conversationId ? "true" : undefined}
+                        onClick={() => {
+                          currentId.current = c.id;
+                          setConversationId(c.id);
+                          setPendingPoll(0);
+                          setHistoryOpen(false);
+                          setError("");
+                        }}
                       >
-                        <ShieldCheck size={15} aria-hidden="true" />
-                        Prepare availability change
-                        <ArrowRight size={14} aria-hidden="true" />
+                        {new Date(c.updatedAt).toLocaleString()} <ArrowRight size={14} />
                       </button>
-                    )}
-                    {Array.isArray(t.evidence) && t.evidence.length > 0 && (
-                      <details className="mm-ember-evidence">
-                        <summary>
-                          <BookOpen size={14} /> Where this information came from
-                        </summary>
-                        {t.evidence.map((e, i) =>
-                          typeof e === "object" && e !== null && "source" in e ? (
-                            <div key={i}>
-                              <strong>{evidenceLabel(e.source)}</strong>
-                              <small>
-                                {"capturedAt" in e
-                                  ? new Date(String(e.capturedAt)).toLocaleString()
-                                  : "Current scoped snapshot"}
-                              </small>
-                              <p>
-                                {e.source === "orders.listServiceHistory"
-                                  ? "Order amounts are snapshots, not payments."
-                                  : e.source === "menu.listMenus"
-                                    ? "Draft counts are not guest publication."
-                                    : "Visible outlet data only."}
-                              </p>
-                            </div>
-                          ) : null
-                        )}
-                      </details>
-                    )}
-                    {caps &&
-                      routesForEvidence(
-                        t.evidence,
-                        caps.navigation.map((n) => n.id)
-                      ).map((link) => (
-                        <button
-                          className="mm-ember-navigate"
-                          key={link.id}
-                          type="button"
-                          onClick={() => {
-                            setOpen(false);
-                            router.push(navigation[link.id].href);
-                          }}
-                        >
-                          {link.label}
+                    ))
+                  )}
+                </nav>
+              )}
+              <div
+                className="mm-ember-feed"
+                ref={feedRef}
+                role="log"
+                aria-label="Conversation"
+                aria-live="polite"
+                aria-relevant="additions"
+              >
+                {!turns.length && !proposals.length && (
+                  <div className="mm-ember-welcome">
+                    <div className="mm-ember-welcome-mark">
+                      <Sparkles size={29} />
+                    </div>
+                    <span className="mm-ember-overline">A BETTER VIEW OF YOUR DAY</span>
+                    <h3>Clarity, served warm.</h3>
+                    <p>
+                      Ask about your orders, published menu, or kitchen activity. Ember uses your
+                      current outlet permissions and labels its sources.
+                    </p>
+                    <div className="mm-ember-suggestions">
+                      {[
+                        "How is my order queue looking?",
+                        "How much did my orders total this week?",
+                        "Do I sell Chole Bhature?",
+                        "Show my recent menu imports",
+                      ].map((question) => (
+                        <button key={question} type="button" onClick={() => setPrompt(question)}>
+                          {question}
                           <ArrowRight size={14} />
                         </button>
                       ))}
-                  </div>
-                </article>
-              ))}
-              {actionOpen && caps?.actionsEnabled && (
-                <section
-                  className="mm-ember-action-editor"
-                  aria-label="Prepare availability proposal"
-                >
-                  <div className="mm-ember-section-head">
-                    <div>
-                      <span className="mm-ember-overline">REVIEW BEFORE CHANGE</span>
-                      <h3>Dish availability</h3>
                     </div>
+                  </div>
+                )}
+                {turns.map((t) => (
+                  <article key={t.id} className="mm-ember-exchange">
+                    <div className="mm-ember-human">
+                      <span>You</span>
+                      <p>{t.prompt}</p>
+                    </div>
+                    <div className="mm-ember-answer">
+                      <span>
+                        <Sparkles size={15} /> Ember
+                      </span>
+                      {t.status === "processing" ? (
+                        <p>
+                          <LoaderCircle size={16} className="mm-ember-spin" /> Checking authorized
+                          sources…
+                        </p>
+                      ) : t.status === "failed" ? (
+                        <p role="status">
+                          Unable to verify this answer ({t.errorCode ?? "processing_failed"}). No
+                          business action was taken.
+                        </p>
+                      ) : (
+                        <EmberRichAnswer text={t.answer} />
+                      )}
+                      {caps?.actionsEnabled && availabilityIntent(t.prompt) && (
+                        <button
+                          type="button"
+                          className="mm-ember-navigate"
+                          disabled={busy}
+                          onClick={() =>
+                            void fetchOptions(availabilityIntent(t.prompt) ?? undefined)
+                          }
+                        >
+                          <ShieldCheck size={15} aria-hidden="true" />
+                          Prepare availability change
+                          <ArrowRight size={14} aria-hidden="true" />
+                        </button>
+                      )}
+                      {Array.isArray(t.evidence) && t.evidence.length > 0 && (
+                        <details className="mm-ember-evidence">
+                          <summary>
+                            <BookOpen size={14} /> Where this information came from
+                          </summary>
+                          {t.evidence.map((e, i) =>
+                            typeof e === "object" && e !== null && "source" in e ? (
+                              <div key={i}>
+                                <strong>{evidenceLabel(e.source)}</strong>
+                                <small>
+                                  {"capturedAt" in e
+                                    ? new Date(String(e.capturedAt)).toLocaleString()
+                                    : "Current scoped snapshot"}
+                                </small>
+                                <p>
+                                  {e.source === "orders.listServiceHistory"
+                                    ? "Order amounts are snapshots, not payments."
+                                    : e.source === "menu.listMenus"
+                                      ? "Draft counts are not guest publication."
+                                      : "Visible outlet data only."}
+                                </p>
+                              </div>
+                            ) : null
+                          )}
+                        </details>
+                      )}
+                      {caps &&
+                        routesForEvidence(
+                          t.evidence,
+                          caps.navigation.map((n) => n.id)
+                        ).map((link) => (
+                          <button
+                            className="mm-ember-navigate"
+                            key={link.id}
+                            type="button"
+                            onClick={() => {
+                              setOpen(false);
+                              router.push(navigation[link.id].href);
+                            }}
+                          >
+                            {link.label}
+                            <ArrowRight size={14} />
+                          </button>
+                        ))}
+                    </div>
+                  </article>
+                ))}
+                {actionOpen && caps?.actionsEnabled && (
+                  <section
+                    className="mm-ember-action-editor"
+                    aria-label="Prepare availability proposal"
+                  >
+                    <div className="mm-ember-section-head">
+                      <div>
+                        <span className="mm-ember-overline">REVIEW BEFORE CHANGE</span>
+                        <h3>Dish availability</h3>
+                      </div>
+                      <button
+                        type="button"
+                        className="mm-ember-icon"
+                        aria-label="Close action editor"
+                        onClick={() => setActionOpen(false)}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <p>
+                      Only one dish in a published, assigned menu. Ember cannot publish or perform
+                      financial actions.
+                    </p>
+                    <label>
+                      Published menu
+                      <select
+                        value={menuId}
+                        onChange={(e) => {
+                          setMenuId(e.target.value);
+                          setDishId("");
+                        }}
+                      >
+                        <option value="">Select menu</option>
+                        {options.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Dish
+                      <select
+                        value={dishId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          setDishId(id);
+                          const dish = currentMenu?.items.find((i) => i.id === id);
+                          if (dish) setDesiredSoldOut(!dish.soldOut);
+                        }}
+                      >
+                        <option value="">Select dish</option>
+                        {currentMenu?.items.map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {i.category} · {i.name}
+                            {i.soldOut ? " · Sold out" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {currentDish && (
+                      <div className="mm-ember-state">
+                        <span>
+                          Current: <b>{currentDish.soldOut ? "Sold out" : "Available"}</b>
+                        </span>
+                        <span>
+                          Proposed: <b>{desiredSoldOut ? "Sold out" : "Available"}</b>
+                        </span>
+                      </div>
+                    )}
                     <button
                       type="button"
-                      className="mm-ember-icon"
-                      aria-label="Close action editor"
-                      onClick={() => setActionOpen(false)}
+                      className="mm-ember-primary"
+                      disabled={busy || !currentDish || currentDish.soldOut === desiredSoldOut}
+                      onClick={() => void propose()}
                     >
-                      <X size={16} />
+                      Create review proposal <ArrowRight size={16} />
                     </button>
-                  </div>
-                  <p>
-                    Only one dish in a published, assigned menu. Ember cannot publish or perform
-                    financial actions.
-                  </p>
-                  <label>
-                    Published menu
-                    <select
-                      value={menuId}
-                      onChange={(e) => {
-                        setMenuId(e.target.value);
-                        setDishId("");
-                      }}
-                    >
-                      <option value="">Select menu</option>
-                      {options.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Dish
-                    <select
-                      value={dishId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setDishId(id);
-                        const dish = currentMenu?.items.find((i) => i.id === id);
-                        if (dish) setDesiredSoldOut(!dish.soldOut);
-                      }}
-                    >
-                      <option value="">Select dish</option>
-                      {currentMenu?.items.map((i) => (
-                        <option key={i.id} value={i.id}>
-                          {i.category} · {i.name}
-                          {i.soldOut ? " · Sold out" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  {currentDish && (
+                  </section>
+                )}
+                {proposals.map((p) => (
+                  <section
+                    key={p.id}
+                    className="mm-ember-proposal"
+                    aria-label="Availability action proposal"
+                  >
+                    <span className="mm-ember-overline">
+                      ACTION ·{" "}
+                      {p.status === "pending"
+                        ? "AWAITING YOUR CONFIRMATION"
+                        : p.status.toUpperCase()}
+                    </span>
+                    <h3>{p.dishName}</h3>
+                    <p>{p.menuName} · this outlet only</p>
                     <div className="mm-ember-state">
                       <span>
-                        Current: <b>{currentDish.soldOut ? "Sold out" : "Available"}</b>
+                        Before: <b>{p.beforeSoldOut ? "Sold out" : "Available"}</b>
                       </span>
                       <span>
-                        Proposed: <b>{desiredSoldOut ? "Sold out" : "Available"}</b>
+                        After: <b>{p.desiredSoldOut ? "Sold out" : "Available"}</b>
                       </span>
                     </div>
-                  )}
-                  <button
-                    type="button"
-                    className="mm-ember-primary"
-                    disabled={busy || !currentDish || currentDish.soldOut === desiredSoldOut}
-                    onClick={() => void propose()}
-                  >
-                    Create review proposal <ArrowRight size={16} />
+                    <small>
+                      Revision {p.expectedRevision} · Expires{" "}
+                      {new Date(p.expiresAt).toLocaleTimeString()}
+                    </small>
+                    {p.status === "pending" && new Date(p.expiresAt).getTime() > now ? (
+                      <>
+                        <label className="mm-ember-ack">
+                          <input
+                            type="checkbox"
+                            checked={acknowledged === p.id}
+                            onChange={(e) => setAcknowledged(e.target.checked ? p.id : null)}
+                          />{" "}
+                          I have reviewed this exact change.
+                        </label>
+                        <div className="mm-ember-decision">
+                          <button
+                            type="button"
+                            disabled={busy || acknowledged !== p.id}
+                            onClick={() => void decide(p, "confirm")}
+                            className="mm-ember-primary"
+                          >
+                            <Check size={15} /> Confirm change
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void decide(p, "reject")}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </>
+                    ) : p.status === "pending" ? (
+                      <p>Expired. Create a fresh proposal.</p>
+                    ) : (
+                      <p role="status">
+                        {p.status === "confirmed"
+                          ? "Confirmed in the current menu revision."
+                          : p.status === "stale"
+                            ? "Menu changed. No action was applied."
+                            : "Rejected. No change was made."}
+                      </p>
+                    )}
+                  </section>
+                ))}
+              </div>
+              <div className="mm-ember-footer">
+                {error && (
+                  <p className="mm-ember-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                {status && (
+                  <p className="mm-ember-note" role="status">
+                    {status}
+                  </p>
+                )}
+                <form onSubmit={send}>
+                  <label htmlFor="mm-ember-prompt" className="sr-only">
+                    Ask Ember
+                  </label>
+                  <textarea
+                    id="mm-ember-prompt"
+                    maxLength={4000}
+                    rows={2}
+                    value={prompt}
+                    disabled={busy}
+                    placeholder="Ask about this outlet…"
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                        e.preventDefault();
+                        e.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                  />
+                  <button type="submit" disabled={busy || !prompt.trim()} aria-label="Send message">
+                    {busy ? (
+                      <LoaderCircle size={18} className="mm-ember-spin" />
+                    ) : (
+                      <Send size={18} />
+                    )}
                   </button>
-                </section>
-              )}
-              {proposals.map((p) => (
-                <section
-                  key={p.id}
-                  className="mm-ember-proposal"
-                  aria-label="Availability action proposal"
-                >
-                  <span className="mm-ember-overline">
-                    ACTION ·{" "}
-                    {p.status === "pending" ? "AWAITING YOUR CONFIRMATION" : p.status.toUpperCase()}
-                  </span>
-                  <h3>{p.dishName}</h3>
-                  <p>{p.menuName} · this outlet only</p>
-                  <div className="mm-ember-state">
-                    <span>
-                      Before: <b>{p.beforeSoldOut ? "Sold out" : "Available"}</b>
-                    </span>
-                    <span>
-                      After: <b>{p.desiredSoldOut ? "Sold out" : "Available"}</b>
-                    </span>
-                  </div>
-                  <small>
-                    Revision {p.expectedRevision} · Expires{" "}
-                    {new Date(p.expiresAt).toLocaleTimeString()}
-                  </small>
-                  {p.status === "pending" && new Date(p.expiresAt).getTime() > now ? (
-                    <>
-                      <label className="mm-ember-ack">
-                        <input
-                          type="checkbox"
-                          checked={acknowledged === p.id}
-                          onChange={(e) => setAcknowledged(e.target.checked ? p.id : null)}
-                        />{" "}
-                        I have reviewed this exact change.
-                      </label>
-                      <div className="mm-ember-decision">
-                        <button
-                          type="button"
-                          disabled={busy || acknowledged !== p.id}
-                          onClick={() => void decide(p, "confirm")}
-                          className="mm-ember-primary"
-                        >
-                          <Check size={15} /> Confirm change
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void decide(p, "reject")}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </>
-                  ) : p.status === "pending" ? (
-                    <p>Expired. Create a fresh proposal.</p>
-                  ) : (
-                    <p role="status">
-                      {p.status === "confirmed"
-                        ? "Confirmed in the current menu revision."
-                        : p.status === "stale"
-                          ? "Menu changed. No action was applied."
-                          : "Rejected. No change was made."}
-                    </p>
-                  )}
-                </section>
-              ))}
-            </div>
-            <div className="mm-ember-footer">
-              {error && (
-                <p className="mm-ember-error" role="alert">
-                  {error}
+                </form>
+                <p>
+                  <ShieldCheck size={12} /> Read-only answers. Changes require your confirmation.
                 </p>
-              )}
-              {status && (
-                <p className="mm-ember-note" role="status">
-                  {status}
-                </p>
-              )}
-              <form onSubmit={send}>
-                <label htmlFor="mm-ember-prompt" className="sr-only">
-                  Ask Ember
-                </label>
-                <textarea
-                  id="mm-ember-prompt"
-                  maxLength={4000}
-                  rows={2}
-                  value={prompt}
-                  disabled={busy}
-                  placeholder="Ask about this outlet…"
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                      e.preventDefault();
-                      e.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                />
-                <button type="submit" disabled={busy || !prompt.trim()} aria-label="Send message">
-                  {busy ? <LoaderCircle size={18} className="mm-ember-spin" /> : <Send size={18} />}
-                </button>
-              </form>
-              <p>
-                <ShieldCheck size={12} /> Read-only answers. Changes require your confirmation.
-              </p>
-            </div>
-          </section>
-        </div>,
-        document.body
-      )}
+              </div>
+            </section>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

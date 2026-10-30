@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { merchantReport, merchantFindDish, merchantImports, merchantQr, reportPeriods } from "./merchant-tools";
+import {
+  merchantReport,
+  merchantFindDish,
+  merchantImports,
+  merchantQr,
+  reportPeriods,
+} from "./merchant-tools";
 import { sql } from "drizzle-orm";
 import { servicePulse, listServiceHistory, historyQuerySchema } from "@/modules/orders/workspace";
 import { kitchenSnapshot } from "@/modules/kitchen/service";
@@ -187,21 +193,36 @@ export const readTools = [
   },
   {
     name: "reports.summary",
-    description: "Read verified outlet-scoped report metrics and top-selling dishes for today, yesterday, this calendar week, seven days, thirty days or this month. Order values are not paid revenue; label operator-recorded payments separately.",
-    parameters: { type: "object", properties: { range: { type: "string", enum: [...reportPeriods] } }, required: ["range"], additionalProperties: false },
+    description:
+      "Read verified outlet-scoped report metrics and top-selling dishes for today, yesterday, this calendar week, seven days, thirty days or this month. Order values are not paid revenue; label operator-recorded payments separately.",
+    parameters: {
+      type: "object",
+      properties: { range: { type: "string", enum: [...reportPeriods] } },
+      required: ["range"],
+      additionalProperties: false,
+    },
     schema: z.object({ range: z.enum(reportPeriods) }).strict(),
-    run: async (context: ToolContext, args: { range: (typeof reportPeriods)[number] }) => merchantReport(context, args.range),
+    run: async (context: ToolContext, args: { range: (typeof reportPeriods)[number] }) =>
+      merchantReport(context, args.range),
   },
   {
     name: "menu.findDish",
-    description: "Search published outlet menu dishes by part of a dish name; answer whether the restaurant offers the item and show actual availability. Never use draft counts as proof that a dish is sold.",
-    parameters: { type: "object", properties: { query: { type: "string", minLength: 2, maxLength: 80 } }, required: ["query"], additionalProperties: false },
+    description:
+      "Search published outlet menu dishes by part of a dish name; answer whether the restaurant offers the item and show actual availability. Never use draft counts as proof that a dish is sold.",
+    parameters: {
+      type: "object",
+      properties: { query: { type: "string", minLength: 2, maxLength: 80 } },
+      required: ["query"],
+      additionalProperties: false,
+    },
     schema: z.object({ query: z.string().trim().min(2).max(80) }).strict(),
-    run: async (context: ToolContext, args: { query: string }) => merchantFindDish(context, args.query),
+    run: async (context: ToolContext, args: { query: string }) =>
+      merchantFindDish(context, args.query),
   },
   {
     name: "imports.pulse",
-    description: "Read the latest private menu-import statuses for the selected outlet; no publication or editing.",
+    description:
+      "Read the latest private menu-import statuses for the selected outlet; no publication or editing.",
     parameters: { type: "object", properties: {}, additionalProperties: false },
     schema: empty,
     run: async (context: ToolContext) => merchantImports(context),
@@ -222,7 +243,12 @@ export function toolDefinitions() {
 export async function authorizedToolDefinitions(context: ToolContext) {
   const access = await withActor(context.actor, async (tx) => {
     await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
-    const response = await tx.execute<{ menu: boolean; orders: boolean; billing: boolean; menuWrite: boolean }>(
+    const response = await tx.execute<{
+      menu: boolean;
+      orders: boolean;
+      billing: boolean;
+      menuWrite: boolean;
+    }>(
       sql`select app_private.can_outlet(${context.outletId},'menu.read') as menu,
         app_private.can_outlet(${context.outletId},'orders.read') as orders,
         app_private.can_outlet(${context.outletId},'billing.manage') as billing,
@@ -233,7 +259,8 @@ export async function authorizedToolDefinitions(context: ToolContext) {
   return toolDefinitions().filter((definition) => {
     if (["menu.summary", "menu.findDish", "qr.pulse"].includes(definition.name))
       return access?.menu === true;
-    if (definition.name === "imports.pulse") return access?.menu === true && access?.menuWrite === true;
+    if (definition.name === "imports.pulse")
+      return access?.menu === true && access?.menuWrite === true;
     if (definition.name === "finance.pulse") return access?.billing === true;
     if (definition.name === "reports.summary") return access?.orders === true;
     return access?.orders === true;

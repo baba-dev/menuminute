@@ -91,14 +91,19 @@ export async function runReadOnlyTurn(
     const provider = model.provider as ProviderId;
     const history = await conversationHistory(scope, turn.conversationId);
     const previous = history.turns
-      .filter((row) => row.id !== turn.id && row.status === "completed" &&
-        Boolean(row.answer) && !isInternalAssistantPayload(row.answer ?? ""))
+      .filter(
+        (row) =>
+          row.id !== turn.id &&
+          row.status === "completed" &&
+          Boolean(row.answer) &&
+          !isInternalAssistantPayload(row.answer ?? "")
+      )
       .slice(-3);
     const messages: InferenceMessage[] = [
       { role: "system", content: systemPrompt },
       ...previous.flatMap((row): InferenceMessage[] => [
         { role: "user", content: minimizeProviderPrompt(row.prompt).slice(0, 1200) },
-        { role: "assistant", content: minimizeProviderPrompt(row.answer ?? "").slice(0, 1500) },
+        { role: "assistant", content: minimizeProviderPrompt(row.answer ?? "").slice(0, 1500), toolCalls: [] },
       ]),
       { role: "user", content: minimizeProviderPrompt(turn.prompt) },
     ];
