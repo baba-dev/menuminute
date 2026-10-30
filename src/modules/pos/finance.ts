@@ -14,6 +14,7 @@ import {
 import { getPool } from "@/db";
 import { sendTransactionalEmail } from "@/lib/email";
 import { validateTender } from "@/lib/pos/finance-math";
+import { assessFiscalReadiness } from "./fiscal-readiness";
 
 const key = z.string().uuid();
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -318,6 +319,7 @@ const queryTypes = z.discriminatedUnion("view", [
     .refine((v) => Boolean(v.cursorAt) === Boolean(v.cursorId), "Both cursor values required"),
   z.object({ view: z.literal("sale"), id }).strict(),
   z.object({ view: z.literal("settlement"), id }).strict(),
+  z.object({ view: z.literal("fiscal_readiness"), id }).strict(),
   z.object({ view: z.literal("document"), id }).strict(),
   z.object({ view: z.literal("preview"), id }).strict(),
 ]);
@@ -449,6 +451,13 @@ export async function financeRead(
         partial: boolean;
         anomalies: { saleId: string; reason: string }[];
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
+    case "fiscal_readiness": {
+      const rawPacket = await run<unknown>(
+        actor, outletId,
+        sql`select app_private.pos_fiscal_readiness(${outletId},${input.id}) as result`
+      );
+      return assessFiscalReadiness(rawPacket);
+    }
     case "settlement":
       return run<SettlementDetail>(
         actor,
