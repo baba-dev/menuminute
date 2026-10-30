@@ -11,8 +11,8 @@ export function isInternalAssistantPayload(value: string): boolean {
   const text = value.trim();
   if (!text) return false;
   const unfenced = text
-    .replace(/^\`\`\`(?:json|javascript|js)?\s*\n?/i, "")
-    .replace(/\n?\`\`\`\s*$/, "")
+    .replace(/^```(?:json|javascript|js)?\s*\n?/i, "")
+    .replace(/\n?```\s*$/, "")
     .trim();
   if (!(unfenced.startsWith("{") || unfenced.startsWith("["))) return false;
   try {

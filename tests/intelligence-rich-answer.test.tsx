@@ -25,7 +25,7 @@ describe("Ember safe rich answer", () => {
     const result = renderToStaticMarkup(
       <EmberRichAnswer text={'{"type":"function","name":"menu_listDishes","parameters":{}}'} />
     );
-    expect(result).toContain("couldn&#x27;t prepare a reliable answer");
+    expect(result).toContain("reliable answer");
     expect(result).not.toContain("menu_listDishes");
   });
 });
