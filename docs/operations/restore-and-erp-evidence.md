@@ -9,6 +9,48 @@
 - Restic R2 is encrypted **backup**, not live media. A PostgreSQL dump plus a filesystem media traversal are not an atomic common SQL/media snapshot. Evidence must explicitly report any inconsistency, RPO/RTO uncertainties and missing objects.
 - Logs and issue comments must not contain backup secrets, raw paths to customer files, customer data, DB rows, private environment files, URLs embedding credentials or SQL connection strings. No automated release, backup timer, notifier or fiscal/payment activation is installed by this source PR.
 
+## A0. Operator-reviewed nightly backup installation — NEW SOURCE ONLY
+
+The owner-supplied VPS audit on **30 October 2026** showed:
+
+- Both active release links point to SHA `880ab86fe1173eeb9f1e9af49ffd93f783953f77`.
+- The root-only Restic wrapper exists at mode 0700; 37 snapshots are visible. The newest five snapshot roots include private media but have no nightly tag. Their database-dump payloads and exact consistency were not yet inspected.
+- `menuminute-backup.service` and `menuminute-backup.timer` are both `LoadState=not-found`: **there is no installed systemd nightly backup** (other cron mechanisms were not investigated). A nonexistent service reporting `Result=success` is not execution evidence.
+- ERP and MenuMinute each return HTTP 200; 31 GB root disk and 21 GiB available RAM are point-in-time observations, **not** shared-load acceptance.
+
+The root-controlled [nightly-backup.py](../../infra/ops/nightly-backup.py) and [systemd templates](../../infra/systemd/) are the source implementation. The job makes a full PostgreSQL **17** custom-format dump via the local postgres OS superuser/peer authentication to bypass FORCED RLS *for backup only*, validates `pg_restore --list` and required `onboarding_progress`, captures both private root-controlled web/worker environments and the matching application release identity, then sends the dump and local private media to the *already configured* encrypted Restic repository. A constant `menuminute-nightly` tag distinguishes these backups from migration-triggered backups. It requires a **new** snapshot ID with both payload roots before reporting success. Temporary dump and environment copies are deleted from the local staging directory on exit; the encrypted off-host snapshot is retained. The script does not change any SQL rows, media bytes, ERP processes, application releases or existing snapshots. It deliberately **does not prune Restic snapshots**; approve retention only after recovery has been tested.
+
+**Installation is a separate, privileged operator action, not a consequence of merging the PR.** Review/pin an exact signed/trusted source revision and verify the installed file digests. Copy from a vetted repository checkout on the VPS, or transfer copies from a trusted administration machine. Avoid executing remote pipeline scripts or installing from an unreviewed moving branch.
+
+```bash
+# Only after code review, full green CI, and an authorized operator decision.
+# These source paths must be from the exact reviewed commit.
+sudo install -d -o root -g root -m 0700 /var/backups/menuminute
+sudo install -o root -g root -m 0700 infra/ops/nightly-backup.py \
+  /usr/local/sbin/menuminute-nightly-backup
+sudo install -o root -g root -m 0644 infra/systemd/menuminute-backup.service \
+  /etc/systemd/system/menuminute-backup.service
+sudo install -o root -g root -m 0644 infra/systemd/menuminute-backup.timer \
+  /etc/systemd/system/menuminute-backup.timer
+sudo systemd-analyze verify /etc/systemd/system/menuminute-backup.service \
+  /etc/systemd/system/menuminute-backup.timer
+sudo /usr/local/sbin/menuminute-nightly-backup --check
+# Only if all preflight checks pass and external backup cost is approved:
+sudo systemctl daemon-reload
+sudo systemctl start menuminute-backup.service
+sudo systemctl show menuminute-backup.service \
+  -p Result -p ExecMainStatus -p ExecMainExitTimestamp
+# Check NEW tagged snapshot and media + SQL payload from an operator account.
+sudo /usr/local/sbin/menuminute-restic snapshots --json --tag menuminute-nightly
+# Activate the independent schedule only after the first verified off-host run.
+sudo systemctl enable --now menuminute-backup.timer
+sudo systemctl list-timers --all menuminute-backup.timer
+```
+
+Installed timer defaults to **02:45 Asia/Kolkata**, up to 15 minutes randomized delay, with `Persistent=true` after missed schedules. It is independent of CI and deployment. The unit constrains memory, CPU and I/O but must be tested against the exact installed Restic wrapper (including its cache and credentials) and root-only PostgreSQL socket permissions. **Never downgrade any installed backup security to make this test pass**; audit the failure and revise the source.
+
+A successful nightly run is **not yet a restore drill, an atomic SQL/media recovery point, an externally delivered alert, or a measured ERP capacity sign-off**. If a backup fails, keep both issues open and investigate privately; do not hide the job failure by treating a last-known snapshot as current success.
+
 ## A. Nightly backup and off-host alert (#49)
 
 The authorized operator collects a dated, redacted transcript on the production VPS:
