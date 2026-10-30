@@ -42,7 +42,8 @@ const clean = (value: string) =>
 function money(minorUnits: string, currency: string): string {
   try {
     const options = { style: "currency" as const, currency, currencyDisplay: "code" as const };
-    const digits = new Intl.NumberFormat("en-US", options).resolvedOptions().maximumFractionDigits ?? 2;
+    const digits =
+      new Intl.NumberFormat("en-US", options).resolvedOptions().maximumFractionDigits ?? 2;
     return new Intl.NumberFormat("en-US", {
       ...options,
       minimumFractionDigits: digits,
