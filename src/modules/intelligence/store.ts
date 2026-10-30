@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Transaction } from "@/db";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
-import type { InferenceResult, ProviderId } from "./contracts";
+import { IntelligenceError, type InferenceResult, type ProviderId } from "./contracts";
 import type { SpendPolicy } from "./spend";
 const uuid = z.string().uuid();
 const entity = z
@@ -188,7 +188,7 @@ export async function reserveAttempt(
       ) as allowed`
     );
     if (!spend.rows[0]?.allowed)
-      throw new ForbiddenError("Daily model inference monetary ceiling reached");
+      throw new IntelligenceError("quota_exhausted");
     const aid = randomUUID();
     await tx.execute(sql`insert into assistant_attempts (
       id,turn_id,conversation_id,organization_id,outlet_id,user_id,round,provider,model,
