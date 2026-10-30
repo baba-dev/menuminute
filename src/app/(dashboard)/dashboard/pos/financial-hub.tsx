@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { PosWorkspace } from "@/modules/pos/service";
 import { PosNavigation } from "./pos-navigation";
-import type { Detail, FinanceContext, LedgerRow, ShiftRow } from "@/modules/pos/finance";
+import type { Detail, FinanceContext, LedgerRow, ShiftRow, SettlementDetail } from "@/modules/pos/finance";
 
 type Mode = "ledger" | "closing";
 type Preview = {
@@ -94,6 +94,9 @@ export function FinancialHub({
     [ledger, setLedger] = useState(initialLedger),
     [shifts, setShifts] = useState(initialShifts);
   const [selected, setSelected] = useState<Detail | null>(null),
+    [settlement, setSettlement] = useState<SettlementDetail | null>(null),
+    [staffCorrectionReason, setStaffCorrectionReason] = useState(""),
+    [staffCorrectionConfirmed, setStaffCorrectionConfirmed] = useState(false),
     [preview, setPreview] = useState<Preview | null>(null);
   const [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
@@ -156,7 +159,12 @@ export function FinancialHub({
     if (selected) await selectSale(selected.saleId);
   }
   async function selectSale(id: string) {
-    setSelected(await get<Detail>("sale", id));
+    const [detail, projection] = await Promise.all([
+      get<Detail>("sale", id),
+      get<SettlementDetail>("settlement", id),
+    ]);
+    setSelected(detail);
+    setSettlement(projection);
     setPreview(null);
   }
   async function command(action: string, data: Record<string, unknown>) {
@@ -493,6 +501,7 @@ export function FinancialHub({
                     type="button"
                     onClick={() => {
                       setSelected(null);
+                      setSettlement(null);
                       setPreview(null);
                     }}
                   >
@@ -516,6 +525,78 @@ export function FinancialHub({
                     already-issued fiscal document opens its original immutable Ledger copy.
                   </p>
                 </div>
+                {settlement && (
+                  <div className="finance-flow" aria-label="Verified internal payment evidence">
+                    <h3>Recorded settlement</h3>
+                    <p>
+                      {settlement.basis === "pre_tax_draft"
+                        ? "Pre-tax operational amount; no fiscal total was calculated."
+                        : "Frozen bill; statutory approval is independent."}
+                    </p>
+                    <p>
+                      Staff-attested: <strong>{money(settlement.staffAttestedMinor, currency)}</strong>
+                      {" · "}Finance tenders: <strong>{money(settlement.financeTenderMinor, currency)}</strong>
+                      {" · "}Provider-confirmed: <strong>{money(settlement.providerConfirmedMinor, currency)}</strong>
+                    </p>
+                    <p>
+                      Recorded refunds: <strong>{money(settlement.refundMinor, currency)}</strong>
+                      {" · "}Net recorded: <strong>{money(settlement.recordedNetMinor, currency)}</strong>
+                    </p>
+                    <p>
+                      <strong>{settlement.state.replaceAll("_", " ")}</strong> · Staff entries
+                      are not proof of gateway settlement or bank reconciliation.
+                    </p>
+                    {settlement.staffAttestedMinor !== "0" &&
+                      settlement.refundMinor === "0" &&
+                      finance.canRefund && (
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            if (!window.confirm(
+                              "Record a full staff-attested refund? This cannot be undone and does not transfer funds."
+                            )) return;
+                            void command("staff_refund", {
+                              saleId: selected.saleId,
+                              reason: staffCorrectionReason.trim(),
+                              externalRefundAttested: settlement.staffMethod !== "cash"
+                                ? staffCorrectionConfirmed : false,
+                            });
+                          }}
+                        >
+                          <h3>Full staff payment correction</h3>
+                          <p>
+                            Only record a refund already returned to the customer.
+                            This does not issue a tax credit or send money through a gateway.
+                          </p>
+                          <label>
+                            Correction reason
+                            <input
+                              required
+                              minLength={5}
+                              maxLength={200}
+                              value={staffCorrectionReason}
+                              onChange={(event) => setStaffCorrectionReason(event.target.value)}
+                            />
+                          </label>
+                          {settlement.staffMethod !== "cash" && (
+                            <label>
+                              <input
+                                type="checkbox"
+                                required
+                                checked={staffCorrectionConfirmed}
+                                onChange={(event) => setStaffCorrectionConfirmed(event.target.checked)}
+                              />
+                              I confirm the external refund has already been completed.
+                            </label>
+                          )}
+                          <button type="submit" disabled={busy || staffCorrectionReason.trim().length < 5 ||
+                            (settlement.staffMethod !== "cash" && !staffCorrectionConfirmed)}>
+                            Record full correction
+                          </button>
+                        </form>
+                      )}
+                  </div>
+                )}
                 {selected.bill ? (
                   <>
                     <div className="finance-bill-total">
