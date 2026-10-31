@@ -101,7 +101,7 @@ export const envSchema = z
       (value) => (value === "" ? undefined : value),
       z
         .string()
-        .regex(/^mailto:[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/)
+        .regex(/^mailto:[^@\s]+@[^@\s]+\.[^@\s]+$/)
         .optional()
     ),
     // Ember provider hub: independent activation from the existing review-only import engine.
