@@ -49,7 +49,13 @@ export default async function SettingsPage() {
     if (!(error instanceof ForbiddenError)) throw error;
   }
   return (
-    <OutletAtelier
+    <>
+      <div style={{ padding: "1rem", display: "flex", justifyContent: "flex-end" }}>
+        <Link href="/dashboard/settings/device" className="os-action os-action-primary">
+          Device &amp; app settings →
+        </Link>
+      </div>
+      <OutletAtelier
       key={outlet.id}
       organizationId={outlet.organizationId}
       outletId={outlet.id}
@@ -69,6 +75,7 @@ export default async function SettingsPage() {
       initial={editableOutletProfile(outlet)}
       canManage={canManage}
       billing={billing}
-    />
+      />
+    </>
   );
 }
