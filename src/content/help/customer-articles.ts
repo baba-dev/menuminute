@@ -254,7 +254,7 @@ export const customerArticles: HelpArticle[] = [
       "Tap the floating cart button at the bottom of the screen to open your cart drawer.",
       "Review your dishes, portion quantities, and selected modifiers.",
       "Verify your table number (if dining in) or choose your pickup time.",
-      "Tap 'Submit Order' to send your ticket directly to the restaurant.",
+      "Tap 'Submit Order' to send your request to the restaurant. Staff may need to accept it before preparation begins.",
       "Keep the tracking screen open to follow your meal's preparation in real time.",
     ],
     visualMockup: {
@@ -267,8 +267,8 @@ export const customerArticles: HelpArticle[] = [
         id: "dine-in-orders",
         title: "1. Dine-In Orders (At Your Table)",
         content: [
-          "When you scan a tabletop QR code, your table number is automatically filled in for you. There is no need to search for your table number or walk up to a counter.",
-          "When you submit your order, the restaurant staff and kitchen receive an immediate notification with your exact table number.",
+          "A table-specific QR identifies your table for the restaurant. Confirm that the displayed table is correct before submitting.",
+          "Your order is sent to the restaurant for review. The kitchen receives work according to the restaurant's acceptance and kitchen settings.",
         ],
       },
       {
@@ -354,7 +354,7 @@ export const customerArticles: HelpArticle[] = [
         callout: {
           type: "delight",
           title: "Discreet & Attentive",
-          text: "Servers receive your table number and exact request on their floor tablets, so they arrive prepared with what you need.",
+          text: "If your restaurant has enabled guest service requests, staff can see the request and table information in their service view.",
         },
       },
     ],
@@ -362,7 +362,7 @@ export const customerArticles: HelpArticle[] = [
       {
         question: "What if I accidentally close the browser tab?",
         answer:
-          "Don't worry! Simply scan your table QR code again. Your active order tracking page will automatically reappear.",
+          "Scan the table QR again to reopen the menu. If your order tracking link is no longer visible, ask restaurant staff to check your order.",
       },
     ],
     relatedArticleSlugs: ["placing-orders", "offline-menu-and-pwa"],
@@ -376,7 +376,7 @@ export const customerArticles: HelpArticle[] = [
     subtitle:
       "Browse the menu smoothly even in basement dining rooms with spotty cellular reception.",
     summary:
-      "Restaurants with thick stone walls or underground dining areas sometimes have poor cellular reception. MenuMinute automatically caches the menu on your phone so you can continue browsing dishes and photos without interruption.",
+      "Restaurants with thick stone walls or underground dining areas sometimes have poor cellular reception. MenuMinute can save eligible public menu pages for later viewing. Offline availability depends on what your browser has already cached, and some photos or details may be missing.",
     readTimeMinutes: 3,
     difficulty: "Quick 2-min Guide",
     lastUpdated: "2026-10-31",
@@ -395,9 +395,9 @@ export const customerArticles: HelpArticle[] = [
         "Cached menus keep dishes and photos readable even in underground cellars with zero mobile reception.",
     },
     quickSteps: [
-      "Once you open the menu, it is automatically saved to your phone's temporary offline cache.",
-      "If Wi-Fi or cellular drops, a small 'Offline Mode' badge appears, but you can continue browsing all categories and dishes.",
-      "When connection returns, the menu automatically syncs with the latest updates.",
+      "A previously opened public menu may be available from your browser's saved pages. Offline access is not guaranteed on every device.",
+      "If your connection drops, try reopening a menu you have visited. Some content may not load until your connection returns.",
+      "Reconnect and refresh your menu to check for the latest changes.",
       "Optional: Tap 'Add to Home Screen' in your browser menu for one-tap access next time you visit.",
     ],
     visualMockup: {
@@ -410,13 +410,13 @@ export const customerArticles: HelpArticle[] = [
         id: "how-offline-works",
         title: "1. How Safe Offline Browsing Works",
         content: [
-          "MenuMinute uses modern Progressive Web App (PWA) technology. The moment you load a restaurant's menu, your browser securely caches the current dish catalog and images.",
+          "MenuMinute can keep some previously visited public pages available offline. It cannot promise that every dish, image or current availability status is saved.",
           "If your mobile network drops while deciding between pasta or steak, you will not get a frustrating error screen—you can keep reading descriptions and browsing photos seamlessly.",
         ],
         callout: {
           type: "hospitality",
           title: "Submitting Orders Offline",
-          text: "To submit a new order or call your server, a brief internet connection is needed. If offline, the app will politely ask you to connect before submitting.",
+          text: "You need a working connection to submit an order or service request. If offline, the app will politely ask you to connect before submitting.",
         },
       },
       {

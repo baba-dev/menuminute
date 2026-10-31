@@ -26,7 +26,7 @@ export const allFaqs: HelpFaqItem[] = [
     category: "QR Codes & Tables",
     question: "Do I have to re-print table QR stickers when I change a price or add dishes?",
     answer:
-      "Never! MenuMinute QR codes are permanent. When you update dishes or publish changes in Menu Studio, phones scanning your existing table stickers immediately load the newest menu.",
+      "Usually no. Updating a published menu does not change its saved QR destination. If you delete or replace the QR connection, you may need a new print.",
   },
   {
     category: "QR Codes & Tables",
@@ -52,7 +52,7 @@ export const allFaqs: HelpFaqItem[] = [
     category: "Menu & Food",
     question: "How does the 86 Board work?",
     answer:
-      "The 86 Board on your Live Orders screen lets you mark any dish 'Sold Out' with a single click. The dish instantly displays a subtle sold-out banner on all customer phones, preventing disappointed guests.",
+      "Use the dish availability controls to mark an item sold out. Guests opening or refreshing the live menu can then see that it is unavailable.",
   },
   {
     category: "Menu & Food",
@@ -72,7 +72,7 @@ export const allFaqs: HelpFaqItem[] = [
     category: "Hardware & Kitchen",
     question: "Can I connect a thermal receipt printer?",
     answer:
-      "Yes. MenuMinute supports standard thermal receipt printing (80mm and 58mm ESC/POS) directly from your browser's print dialog via USB, Bluetooth, or Wi-Fi.",
+      "MenuMinute offers 80 mm and 58 mm print layouts. Printing uses the browser's print dialog, so compatibility and setup depend on your printer, operating system and connection.",
   },
 
   // Guest Experience
@@ -86,12 +86,18 @@ export const allFaqs: HelpFaqItem[] = [
     category: "Diner & Guest Experience",
     question: "What happens if a customer has poor mobile reception in our restaurant?",
     answer:
-      "MenuMinute is built with Progressive Web App (PWA) offline technology. Once the menu is opened, it stays cached on the guest's phone, allowing them to browse all categories and photos even if cellular Wi-Fi drops.",
+      "Eligible public menu pages may be saved by the browser after a visit. Saved images and menu availability cannot be guaranteed; guests need a connection to submit orders.",
   },
   {
     category: "Diner & Guest Experience",
     question: "Can customers call the waiter from their phone?",
     answer:
-      "Yes! If enabled for your tables, guests can tap the 'Call Waiter' or 'Request Bill' buttons on their screen. The alert appears instantly on your front-of-house dashboard and table floor matrix.",
+      "When the restaurant enables table assistance, guests can send a waiter or bill request. Staff can review the request from their service workspace when connected.",
+  },
+  {
+    category: "Point of Sale",
+    question: "Does Mark as Paid charge a customer's card?",
+    answer:
+      "No. Mark as Paid records that staff received payment outside MenuMinute. It does not charge a card, confirm bank settlement, or issue a tax-approved invoice.",
   },
 ];

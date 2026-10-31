@@ -214,7 +214,7 @@ export const ownerArticles: HelpArticle[] = [
         title: "4. The Safety of Draft vs Published Menus",
         content: [
           "In MenuMinute, your edits are saved as a private Draft first. Think of this as your private chef notebook: you can tweak prices, prepare seasonal dishes, or adjust descriptions during service without altering what active diners see on their phones.",
-          "When you are ready, simply click 'Publish Changes'. Within seconds, every phone scanning your tables loads the fresh update seamlessly!",
+          "When you are ready, simply click 'Publish Changes'. Guests opening or refreshing your menu will see the published changes when their connection is available.",
         ],
       },
     ],
@@ -222,7 +222,7 @@ export const ownerArticles: HelpArticle[] = [
       {
         question: "If I change a price or add a dish, do I have to re-print my QR codes?",
         answer:
-          "Never! Your QR codes are permanent. When you publish an update in Menu Studio, phones scanning your existing QR codes immediately display the newest version.",
+          "Usually not. A QR for an active menu connection continues to work after menu updates; allow for normal network and browser refresh times.",
       },
       {
         question: "Can I temporarily hide a dish that is out of ingredients?",
@@ -253,12 +253,12 @@ export const ownerArticles: HelpArticle[] = [
     heroImage: {
       src: "/brand/preview/production-asset-preview.webp",
       alt: "AI Menu Import scanning workflow",
-      caption: "Transform paper menus and designer PDFs into organized digital items in seconds.",
+      caption: "Review extracted menu items before adding them to your private draft.",
     },
     quickSteps: [
       "Navigate to Menu Studio and click 'Import Menu'.",
       "Upload high-quality photos or a PDF of your existing paper menu.",
-      "Wait 10–20 seconds while the intelligent scanner parses your categories and items.",
+      "Wait for the import to finish. Larger or harder-to-read menus may take longer.",
       "Review the parsed items in the visual side-by-side editor.",
       "Accept and merge the items into your draft menu with one click.",
     ],
@@ -341,7 +341,7 @@ export const ownerArticles: HelpArticle[] = [
     quickSteps: [
       "Open 'QR Codes' from your dashboard sidebar.",
       "Select your QR type: Table-Specific (e.g. Table 1, Table 2) or General Entrance.",
-      "Pick your brand theme (Classic Slate, Warm Terracotta, Modern Dark).",
+      "Choose a print design, QR color and typography using the available QR Studio controls.",
       "Preview the standee layout on screen.",
       "Click 'Download Print Sheet' (PDF or high-res PNG) and print for your tables.",
     ],
@@ -355,8 +355,8 @@ export const ownerArticles: HelpArticle[] = [
         id: "why-permanent-qr",
         title: "1. Why MenuMinute QR Codes are Permanent",
         content: [
-          "Traditional QR generators break whenever you change your menu or web link. MenuMinute QR codes are permanent. Each table receives a durable identifier that points securely to your live menu.",
-          "You can change dishes, update prices, alter your logo, or redesign your entire catalog—your printed table stickers never need to be replaced!",
+          "A MenuMinute QR points to a saved menu connection, rather than a fixed list of dishes. Updating the menu does not change the QR while that connection remains active.",
+          "Menu changes do not require a new QR print while the same QR destination remains active. Replacing or deleting a table QR may require a new print.",
         ],
       },
       {
@@ -381,7 +381,7 @@ export const ownerArticles: HelpArticle[] = [
           {
             stepNumber: 3,
             title: "Export Print Sheet",
-            description: "Generate an A4 or Letter multi-sticker grid ready for standard printers.",
+            description: "Preview your print layout and choose an available export format before printing.",
           },
         ],
         callout: {
@@ -441,7 +441,7 @@ export const ownerArticles: HelpArticle[] = [
       "Select your kitchen station (e.g., Grill, Fryer, Salad & Cold, Bar, or All).",
       "Watch new orders arrive with an audible chime and clean ticket cards.",
       "Check item modifiers, special guest notes, and real-time elapsed prep timers.",
-      "Tap 'Start Prep' when cooking starts, then tap 'Ready' to alert the service staff.",
+      "Start preparation for your station, then mark its tasks complete. The expeditor releases the full order when all stations finish.",
     ],
     visualMockup: {
       type: "kds-ticket",
@@ -473,7 +473,7 @@ export const ownerArticles: HelpArticle[] = [
           "Green (< 10 minutes): Fresh ticket, normal prep window.",
           "Amber (10–20 minutes): Approaching target prep threshold.",
           "Red (> 20 minutes): Priority order needing immediate line attention.",
-          "When all items on a ticket are plated, a single tap marks the order 'Ready', automatically notifying front-of-house servers for delivery to the table.",
+          "Each station marks its own work complete. Once all assigned stations finish, an authorized expeditor checks the whole order and releases it as Ready.",
         ],
       },
     ],
@@ -550,7 +550,7 @@ export const ownerArticles: HelpArticle[] = [
         title: "2. The 86 Board (Sold Out Management)",
         content: [
           "Ran out of fresh salmon or the daily soup special? Don't make servers apologize at tables after diners order.",
-          "Head to the 86 Board panel right on your orders screen. A single toggle switch disables the dish across all digital menus immediately. Diners scanning QR codes will see the dish grayed out with a polite 'Sold Out for Today' label.",
+          "Head to the 86 Board panel right on your orders screen. Marking a dish sold out updates its availability in the public menu; an already-open guest page may need to refresh. Diners scanning QR codes will see the dish grayed out with a polite 'Sold Out for Today' label.",
         ],
         callout: {
           type: "hospitality",
@@ -660,9 +660,9 @@ export const ownerArticles: HelpArticle[] = [
     category: "Billing & POS",
     title: "Point of Sale (POS) & Payment Recording",
     subtitle:
-      "Attach guest tickets to tables, record cash and card tenders, and print receipts and shift closing reports.",
+      "Prepare counter orders, optionally mark a payment as received, and print a provisional customer invoice. Formal financial documents require separate approval.",
     summary:
-      "Keep your daily financials organized. Use the POS Draft Register to review table tickets, record payments (cash, card, UPI, or external card terminal), and print customer receipts and daily Z-reports.",
+      "Use Point of Sale to record orders and optionally note a payment received by staff. These records do not themselves capture card payments or prove bank settlement.",
     readTimeMinutes: 5,
     difficulty: "Comprehensive",
     lastUpdated: "2026-10-31",
@@ -685,9 +685,9 @@ export const ownerArticles: HelpArticle[] = [
     quickSteps: [
       "Open 'POS' from the dashboard sidebar.",
       "View all attachable guest tickets and open table orders.",
-      "Select a table ticket and choose your payment method (Cash, Card Terminal, or Other).",
-      "Record the payment to settle the balance and close the ticket.",
-      "Click 'Print Receipt' for standard 80mm or 58mm thermal printers.",
+      "Add published dishes to a new counter order, or open an eligible existing ticket. Choose a payment method only if staff actually received payment.",
+      "Use 'Mark as Paid' when you have actually received payment. This is a staff record, not an automatic card charge or bank confirmation.",
+      "Choose 'Print Invoice' and select the paper width (80 mm or 58 mm), then use your browser's print dialog.",
       "Generate the end-of-day Z-Report when closing your shift.",
     ],
     visualMockup: {
@@ -710,14 +710,14 @@ export const ownerArticles: HelpArticle[] = [
         id: "receipts-and-zreport",
         title: "2. Printing Thermal Receipts & Z-Reports",
         content: [
-          "MenuMinute includes built-in styling for standard thermal receipt printers (ESC/POS, 80mm, and 58mm paper sizes).",
+          "MenuMinute provides print-friendly invoice layouts for 80 mm and 58 mm paper. Your browser, printer and drivers must support the chosen setup.",
           "Receipts cleanly list your restaurant name, table number, itemized dishes with modifiers, tax details, and warm thank-you message.",
           "At the end of your business day, generate the Z-Report (`/dashboard/reports/z-report`) for an immutable snapshot of all closed transactions.",
         ],
         callout: {
           type: "hospitality",
           title: "Printer Setup Simplicity",
-          text: "Most Bluetooth or USB thermal printers work directly through your browser's native Print dialog with zero driver installations required.",
+          text: "Printer setup depends on your device, browser and printer. Install or configure the printer using its manufacturer's instructions before printing a sample.",
         },
       },
     ],
@@ -866,7 +866,7 @@ export const ownerArticles: HelpArticle[] = [
         callout: {
           type: "delight",
           title: "Truthful & Grounded",
-          text: "Ember never invents numbers or guesses prices. If data is not available, Ember tells you honestly.",
+          text: "Ember is designed to use verified information where available, but may still make mistakes. Check important prices, payments and operating decisions in your dashboard.",
         },
       },
       {
@@ -889,7 +889,7 @@ export const ownerArticles: HelpArticle[] = [
       {
         question: "Is Ember trained on other restaurants' data?",
         answer:
-          "Never. Your restaurant data is strictly isolated to your own outlet and is never used to train public AI models.",
+          "Restaurant information is restricted by your account and outlet permissions. See the Privacy Policy for how configured AI providers handle submitted information.",
       },
     ],
     dashboardLink: {
