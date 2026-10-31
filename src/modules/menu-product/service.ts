@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { conciergeEnabledForOutlet, conciergeNvidiaReady } from "./concierge-feature";
 import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
@@ -317,6 +318,7 @@ export type PublicProduct = {
   };
   point: string | null;
   catalogFingerprint: string;
+  conciergeEnabled?: boolean;
   now: string;
   locale?: string | null;
   availableLocales?: string[];
@@ -343,7 +345,7 @@ export const publicProduct = cache(
         "select app_private.public_menu_cache_token_active($1,$2) as active",
         [token, cached.fence.outletId]
       );
-      if (live.rows[0]?.active) return cached.data;
+      if (live.rows[0]?.active) return { ...cached.data, conciergeEnabled: conciergeEnabledForOutlet(cached.data.outlet.id) && conciergeNvidiaReady() };
       return null;
     }
 
@@ -383,6 +385,7 @@ export const publicProduct = cache(
       data.locale = locale && data.availableLocales.includes(locale) ? locale : null;
     }
     if (!data) return null;
+    data.conciergeEnabled = conciergeEnabledForOutlet(data.outlet.id) && conciergeNvidiaReady();
     if (!data.outlet.versioned) {
       const legacy = await getPublicMenu(token);
       if (!legacy) return null;
