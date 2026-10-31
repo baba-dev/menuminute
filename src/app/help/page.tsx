@@ -88,7 +88,7 @@ export default function HelpCenterPage() {
                   Kitchen Pro
                 </span>
                 <span className="rounded-lg border border-stone-200/80 bg-white px-2.5 py-1 shadow-xs dark:border-stone-800 dark:bg-stone-800">
-                  86 Board
+                  Dish Availability
                 </span>
                 <span className="rounded-lg border border-stone-200/80 bg-white px-2.5 py-1 shadow-xs dark:border-stone-800 dark:bg-stone-800">
                   POS Receipts

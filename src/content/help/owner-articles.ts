@@ -227,7 +227,7 @@ export const ownerArticles: HelpArticle[] = [
       {
         question: "Can I temporarily hide a dish that is out of ingredients?",
         answer:
-          "Yes! Use the 86 Board on your Live Orders page or toggle availability right inside Menu Studio to mark any dish 'Sold Out' instantly.",
+          "Open Dish Availability from your restaurant dashboard, then select the item you need to mark sold out. You can restore it when it is available again.",
       },
     ],
     dashboardLink: {
@@ -415,11 +415,11 @@ export const ownerArticles: HelpArticle[] = [
     slug: "kitchen-display-system",
     audience: "owner",
     category: "Kitchen Operations",
-    title: "Kitchen Pro: Real-Time Kitchen Display System (KDS)",
+    title: "Kitchen Pro: Managing Kitchen Orders",
     subtitle:
       "Streamline your kitchen ticket workflow, reduce wait times, and eliminate messy paper order slips.",
     summary:
-      "Kitchen Pro is a paperless Kitchen Display System that organizes incoming tickets on any tablet or screen in your kitchen. Track prep times, filter tickets by cook station, and bump orders when ready.",
+      "Kitchen Pro shows incoming kitchen work for each assigned station. Staff complete their own tasks, and an authorized expeditor checks and releases the whole order when all stations finish.",
     readTimeMinutes: 6,
     difficulty: "Comprehensive",
     lastUpdated: "2026-10-31",
@@ -434,7 +434,7 @@ export const ownerArticles: HelpArticle[] = [
     ],
     heroImage: {
       src: "/brand/orders/service-counter/ticket-stack.webp",
-      alt: "Kitchen Pro KDS display workflow",
+      alt: "Kitchen Pro order preparation workflow",
       caption: "Paperless station tickets with preparation timers and instant order bumping.",
     },
     quickSteps: [
@@ -446,8 +446,8 @@ export const ownerArticles: HelpArticle[] = [
     ],
     visualMockup: {
       type: "kds-ticket",
-      caption: "Kitchen tickets feature high-contrast timers, item lists, and stage bump buttons.",
-      altText: "KDS ticket mockup showing order number, station, timer, and bump button",
+      caption: "Illustration of a kitchen order, its preparation status, and station actions.",
+      altText: "Illustrative kitchen order showing its number, station, and status",
     },
     sections: [
       {
@@ -480,7 +480,7 @@ export const ownerArticles: HelpArticle[] = [
     ],
     faqs: [
       {
-        question: "Can multiple kitchen staff view and bump tickets at the same time?",
+        question: "Can staff at different kitchen stations work on an order at the same time?",
         answer:
           "Yes! Kitchen Pro synchronizes across all screens in real time. If the grill chef finishes their burger and bumps it, the expeditor screen updates immediately.",
       },
@@ -501,11 +501,11 @@ export const ownerArticles: HelpArticle[] = [
     slug: "live-orders-and-service",
     audience: "owner",
     category: "Front of House",
-    title: "Live Orders, Service Counter & The 86 Board",
+    title: "Service Counter, Guest Requests & Sold-Out Dishes",
     subtitle:
-      "Accept customer dine-in orders, manage waiter call requests, and toggle sold-out dishes in one click.",
+      "Review incoming orders, check requests from guests and keep dish availability current.",
     summary:
-      "Manage all incoming front-of-house activity from a single dashboard screen. Acknowledge pending dine-in and pickup tickets, attend to guest waiter calls, and instantly mark dishes sold out on the 86 Board.",
+      "Use Service Counter to review and accept incoming orders. Use Dish Availability on your restaurant dashboard to mark an item sold out or restore it.",
     readTimeMinutes: 5,
     difficulty: "Beginner Friendly",
     lastUpdated: "2026-10-31",
@@ -522,20 +522,20 @@ export const ownerArticles: HelpArticle[] = [
       src: "/brand/orders/service-counter/hero-desktop-light.webp",
       alt: "Live service counter and front of house ordering",
       caption:
-        "Accept orders, attend to guest requests, and manage 86 sold-out items from one calm screen.",
+        "The Service Counter shows incoming orders. Dish Availability is a separate control on the restaurant dashboard.",
     },
     quickSteps: [
-      "Open 'Live Orders' to see tickets sorted by newest arrival.",
-      "Click 'Accept Order' to confirm a dine-in ticket and send it to the kitchen.",
-      "Check the 'Service Requests' panel for guest calls (e.g. 'Table 7 requests water').",
-      "Use the '86 Board' switch next to any dish to instantly mark it Sold Out.",
+      "Open Service Counter to review new orders.",
+      "Accept an incoming order once your restaurant can prepare it.",
+      "Check guest service requests in your restaurant overview.",
+      "Open Dish Availability from your dashboard and choose a dish to mark sold out.",
       "Mark tickets 'Served' (dine-in) or 'Collected' (pickup) upon delivery.",
     ],
     visualMockup: {
       type: "eight-six-board",
       caption:
-        "The 86 Board lets you toggle item availability with a single tap during rush hours.",
-      altText: "86 Board showing dishes with instant toggle switches for availability",
+        "An example of how you can mark a dish sold out or restore its availability.",
+      altText: "Illustration of available and sold-out dishes",
     },
     sections: [
       {
@@ -548,10 +548,10 @@ export const ownerArticles: HelpArticle[] = [
       },
       {
         id: "eighty-six-board",
-        title: "2. The 86 Board (Sold Out Management)",
+        title: "2. Marking a Dish Sold Out",
         content: [
           "Ran out of fresh salmon or the daily soup special? Don't make servers apologize at tables after diners order.",
-          "Head to the 86 Board panel right on your orders screen. Marking a dish sold out updates its availability in the public menu; an already-open guest page may need to refresh. Diners scanning QR codes will see the dish grayed out with a polite 'Sold Out for Today' label.",
+          "On your restaurant dashboard, open Dish Availability and select the dish. Mark it sold out and wait for the confirmation before closing the panel. Guests opening or refreshing your live menu can then see the item is unavailable.",
         ],
         callout: {
           type: "hospitality",
@@ -689,7 +689,7 @@ export const ownerArticles: HelpArticle[] = [
       "Add published dishes to a new counter order, or open an eligible existing ticket. Choose a payment method only if staff actually received payment.",
       "Use 'Mark as Paid' when you have actually received payment. This is a staff record, not an automatic card charge or bank confirmation.",
       "Choose 'Print Invoice' and select the paper width (80 mm or 58 mm), then use your browser's print dialog.",
-      "Generate the end-of-day Z-Report when closing your shift.",
+      "Open Reports & Insights to review the daily recorded totals; reconcile them against payments received.",
     ],
     visualMockup: {
       type: "cart-drawer",
@@ -709,11 +709,11 @@ export const ownerArticles: HelpArticle[] = [
       },
       {
         id: "receipts-and-zreport",
-        title: "2. Printing Thermal Receipts & Z-Reports",
+        title: "2. Printing Invoices and Reviewing Daily Reports",
         content: [
           "MenuMinute provides print-friendly invoice layouts for 80 mm and 58 mm paper. Your browser, printer and drivers must support the chosen setup.",
           "Receipts cleanly list your restaurant name, table number, itemized dishes with modifiers, tax details, and warm thank-you message.",
-          "At the end of your business day, generate the Z-Report (`/dashboard/reports/z-report`) for an immutable snapshot of all closed transactions.",
+          "The Daily Z-Report is available under Reports & Insights. It summarizes recorded activity and does not, by itself, certify taxes or verify a bank settlement.",
         ],
         callout: {
           type: "hospitality",
@@ -877,7 +877,7 @@ export const ownerArticles: HelpArticle[] = [
           "Keep your restaurant secure by giving staff members only the access they need:",
           "Owner: Full access to billing, settings, reports, menus, and staff invites.",
           "Manager: Access to menu editing, orders, kitchen display, floor matrix, and reports.",
-          "Kitchen Staff: Direct access to Kitchen Pro display and 86 Board.",
+          "Kitchen staff can use their assigned Kitchen Pro stations when permitted. Dish Availability uses separate access permissions.",
           "Service / Waiter: Access to Floor Matrix, Live Orders, and service calls.",
         ],
       },

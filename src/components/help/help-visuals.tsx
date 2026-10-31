@@ -231,8 +231,8 @@ function EightSixBoardVisual() {
   return (
     <div className="mx-auto max-w-sm rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="mb-3 flex items-center justify-between border-b border-stone-100 pb-2 dark:border-stone-800">
-        <h4 className="font-bold text-stone-900 dark:text-stone-100">86 Board (Availability)</h4>
-        <span className="text-xs text-stone-600">1-Click Live Sync</span>
+        <h4 className="font-bold text-stone-900 dark:text-stone-100">Dish Availability</h4>
+        <span className="text-xs text-stone-600">Illustration</span>
       </div>
       <div className="space-y-3 text-xs">
         <div className="flex items-center justify-between rounded-lg bg-stone-50 p-2.5 dark:bg-stone-800/50">
@@ -249,7 +249,7 @@ function EightSixBoardVisual() {
             <p className="font-semibold text-stone-500 line-through dark:text-stone-400">
               Fresh Atlantic Salmon
             </p>
-            <span className="text-[11px] font-semibold text-rose-600">Sold out for today (86)</span>
+            <span className="text-[11px] font-semibold text-rose-600">Sold out</span>
           </div>
           <ToggleLeft className="size-6 text-stone-600" />
         </div>

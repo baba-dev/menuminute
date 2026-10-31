@@ -12,7 +12,7 @@ export const allFaqs: HelpFaqItem[] = [
     category: "General & Pricing",
     question: "How does MenuMinute make money if the basic plan is free?",
     answer:
-      "We offer optional advanced capabilities for busy restaurants, such as Kitchen Pro KDS displays, AI photo menu scanning, multi-outlet management, and priority support. You can choose to upgrade whenever your restaurant grows.",
+      "We offer optional advanced capabilities for busy restaurants, such as Kitchen Pro kitchen screens, AI photo menu scanning, multi-outlet management, and priority support. You can choose to upgrade whenever your restaurant grows.",
   },
   {
     category: "General & Pricing",
@@ -50,7 +50,7 @@ export const allFaqs: HelpFaqItem[] = [
   },
   {
     category: "Menu & Food",
-    question: "How does the 86 Board work?",
+    question: "How do I mark a dish sold out?",
     answer:
       "Use the dish availability controls to mark an item sold out. Guests opening or refreshing the live menu can then see that it is unavailable.",
   },
@@ -64,7 +64,7 @@ export const allFaqs: HelpFaqItem[] = [
   // Kitchen & Hardware
   {
     category: "Hardware & Kitchen",
-    question: "What devices do I need for Kitchen Pro (KDS)?",
+    question: "What devices do I need for Kitchen Pro?",
     answer:
       "Any standard tablet or screen with a web browser works! Most restaurants use standard 10-inch Android tablets or iPads mounted with a protective cover near the cook line or expo pass.",
   },

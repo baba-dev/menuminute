@@ -11,7 +11,7 @@ import { PublicFooter } from "@/components/marketing/footer/public-footer";
 export const metadata: Metadata = {
   title: "Restaurant Owner & Staff Guides — MenuMinute Help Center",
   description:
-    "Comprehensive, user-friendly guides for restaurant operators: Menu Studio, QR tabletop press, Kitchen Pro KDS, 86 Board, POS, and daily reports.",
+    "Comprehensive, user-friendly guides for restaurant operators: Menu Studio, QR tabletop press, Kitchen Pro, Dish Availability, Point of Sale, and daily reports.",
   openGraph: {
     title: "MenuMinute Guides for Restaurant Owners & Staff",
     description: "Step-by-step guides covering every page and operational tool in MenuMinute.",
