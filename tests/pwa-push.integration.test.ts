@@ -39,7 +39,12 @@ describe("PWA H: restricted PostgreSQL push delivery", () => {
         `insert into outbox_events(id,organization_id,outlet_id,type,
          schema_version,aggregate_version,payload)
          values($1,$2,$3,'order.created',1,1,$4::jsonb)`,
-        [eventId, f.outlet.organizationId, f.outlet.id, JSON.stringify({ orderId: crypto.randomUUID() })]
+        [
+          eventId,
+          f.outlet.organizationId,
+          f.outlet.id,
+          JSON.stringify({ orderId: crypto.randomUUID() }),
+        ]
       );
       const queued = await pool.query<{ status: string }>(
         "select status from pwa_push_deliveries where event_id=$1",
