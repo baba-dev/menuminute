@@ -37,7 +37,8 @@
     "media:verify:qr": "node scripts/verify-qr-studio-media.mjs",
     "media:verify:orders": "node scripts/prepare-orders-media.mjs && node scripts/verify-orders-media.mjs",
     "media:verify:docs": "node scripts/verify-docs-media.mjs",
-    "docs:capture": "node scripts/demo/capture-docs.mjs"
+    "docs:capture": "node scripts/demo/capture-docs.mjs",
+    "help:verify": "tsx scripts/test-help-registry.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.7",

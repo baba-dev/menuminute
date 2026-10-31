@@ -84,10 +84,16 @@ test("layout choices persist across reloads and hidden widgets are not rendered"
   await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByTestId("editorial-dashboard")).toBeVisible();
-  await expect(page.locator('.mm-widget[data-widget="floor"]')).toHaveCount(0);
-  // DOM order, not just CSS order, follows the layout so tab and reading order match.
-  await expect(page.locator(".mm-widget").first()).toHaveAttribute("data-widget", "health");
+  const activeWorkspace = page.locator("#workspace-main");
+  const dashboard = activeWorkspace.getByTestId("editorial-dashboard");
+  // App Router can retain an inactive route tree during transitions. Verify
+  // exactly one active dashboard rather than matching offscreen cached trees.
+  await expect(dashboard).toHaveCount(1);
+  await expect(dashboard).toBeVisible();
+  await expect(page.locator('[data-testid="editorial-dashboard"]:visible')).toHaveCount(1);
+  await expect(dashboard.locator('.mm-widget[data-widget="floor"]')).toHaveCount(0);
+  // DOM order, not just CSS order, follows the saved layout for keyboard users.
+  await expect(dashboard.locator(".mm-widget").first()).toHaveAttribute("data-widget", "health");
 
   const stored = await page.evaluate(async () => {
     const response = await fetch("/api/account/dashboard-layout", { credentials: "same-origin" });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { searchHelpArticles } from "@/content/help";
 import {
   merchantReport,
   merchantFindDish,
@@ -29,6 +30,46 @@ const history = z
     page: z.number().int().min(0).max(2).default(0),
   })
   .strict();
+// Defined once so execution never depends on its position in a registry.
+const helpSearchTool = {
+  name: "help.search",
+  description:
+    "Search authoritative MenuMinute how-to guides, setup instructions, and feature explanations for restaurant owners, kitchen staff, and diners.",
+  parameters: {
+    type: "object",
+    properties: {
+      query: {
+        type: "string",
+        minLength: 2,
+        maxLength: 80,
+        description:
+          "Feature or topic to look up (e.g. 'mark sold out', 'print QR', 'menu studio', 'kitchen display', 'table tabs')",
+      },
+    },
+    required: ["query"],
+    additionalProperties: false,
+  },
+  schema: z.object({ query: z.string().trim().min(2).max(80) }).strict(),
+  run: async (_context: ToolContext, args: { query: string }) => {
+    const results = searchHelpArticles(args.query);
+    return {
+      source: "help.knowledgeBase",
+      data: {
+        query: args.query,
+        matches: results.slice(0, 3).map((r) => ({
+          title: r.article.title,
+          slug: r.article.slug,
+          audience: r.article.audience,
+          category: r.article.category,
+          summary: r.article.summary,
+          quickSteps: r.article.quickSteps.slice(0, 4),
+          dashboardLink: r.article.dashboardLink,
+        })),
+      },
+    };
+  },
+};
+
 export const readTools = [
   {
     name: "orders.pulse",
@@ -234,6 +275,7 @@ export const readTools = [
     schema: empty,
     run: async (context: ToolContext) => merchantQr(context),
   },
+  helpSearchTool,
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
 export function toolDefinitions() {
@@ -257,6 +299,7 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     return response.rows[0];
   });
   return toolDefinitions().filter((definition) => {
+    if (definition.name === "help.search") return true;
     if (["menu.summary", "menu.findDish", "qr.pulse"].includes(definition.name))
       return access?.menu === true;
     if (definition.name === "imports.pulse")
@@ -296,6 +339,8 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "qr.pulse":
       empty.parse(untrusted);
       return readTools[9].run(context);
+    case "help.search":
+      return helpSearchTool.run(context, helpSearchTool.schema.parse(untrusted));
     default:
       throw new Error("Unknown read-only tool");
   }

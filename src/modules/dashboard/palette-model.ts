@@ -157,6 +157,16 @@ export function buildStaticEntries(flags: PaletteFlags): PaletteEntry[] {
     "devices",
     "profile",
   ]);
+  page("help-guides", "Help & Guides", "/help/owner", "search", [
+    "help",
+    "docs",
+    "documentation",
+    "support",
+    "how to",
+    "guide",
+    "faq",
+    "tutorial",
+  ]);
 
   const action = (
     id: string,

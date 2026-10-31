@@ -43,6 +43,26 @@ const report = z
   })
   .passthrough();
 
+const helpDataSchema = z.object({
+  query: z.string(),
+  matches: z.array(
+    z.object({
+      title: z.string(),
+      slug: z.string(),
+      audience: z.enum(["owner", "customer", "both"]),
+      category: z.string(),
+      summary: z.string(),
+      quickSteps: z.array(z.string()),
+      dashboardLink: z
+        .object({
+          label: z.string(),
+          href: z.string(),
+        })
+        .optional(),
+    })
+  ),
+});
+
 /** Escape untrusted menu names as Markdown data, not instructions. */
 const safe = (s: string) =>
   s
@@ -166,6 +186,44 @@ export function groundedMerchantAnswer(
         );
     }
     lines.push("", "*Order totals are not the same as verified paid revenue.*");
+    return lines.join("\n");
+  }
+  if (item.tool === "help.search") {
+    const parsed = helpDataSchema.safeParse(item.data);
+    if (!parsed.success) return null;
+    const d = parsed.data;
+    if (!d.matches.length) {
+      return (
+        "I couldn't find an exact guide matching **" +
+        safe(d.query) +
+        "**. You can browse all [Restaurant Owner Guides](/help/owner) or explore the [Help Center FAQ](/help/faq)."
+      );
+    }
+    const top = d.matches[0];
+    if (!top) return null;
+    const lines = [
+      "### " + safe(top.title),
+      safe(top.summary),
+      "",
+      "**Step-by-step instructions:**",
+      ...top.quickSteps.map((step, idx) => `${idx + 1}. ${safe(step)}`),
+    ];
+    const actions: string[] = [];
+    if (top.dashboardLink) {
+      actions.push(`[${safe(top.dashboardLink.label)}](${top.dashboardLink.href})`);
+    }
+    actions.push(`[Read Illustrated Guide](/help/${top.audience}/${top.slug})`);
+    lines.push("", actions.join(" • "));
+    if (d.matches.length > 1) {
+      lines.push(
+        "",
+        "*Also related:* " +
+          d.matches
+            .slice(1)
+            .map((m) => `[${safe(m.title)}](/help/${m.audience}/${m.slug})`)
+            .join(", ")
+      );
+    }
     return lines.join("\n");
   }
   return null;

@@ -51,6 +51,9 @@ export default async function HomePage() {
               <Link href="/demo" className="food-orbit-hero__nav-link text-sm font-medium">
                 Demo
               </Link>
+              <Link href="/help" className="food-orbit-hero__nav-link text-sm font-medium">
+                Guides
+              </Link>
               <HomeAuthActions />
               <ThemeControl />
             </div>

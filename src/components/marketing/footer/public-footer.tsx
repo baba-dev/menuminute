@@ -27,8 +27,8 @@ const groups = [
   {
     title: "Resources",
     links: [
-      { label: "Help centre", href: "/docs" },
-      { label: "FAQs", href: "/faq", soon: true },
+      { label: "Help centre", href: "/help" },
+      { label: "FAQs", href: "/help/faq" },
       { label: "Guides", href: "/docs" },
       { label: "Integrations", href: "/integrations", soon: true },
       { label: "System status", href: "/status", soon: true },
