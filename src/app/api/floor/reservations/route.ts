@@ -14,7 +14,7 @@ async function observed_GET(req: Request) {
     const { actor, restaurant } = await requestContext(req);
     const url = new URL(req.url);
     const dateParam = url.searchParams.get("date");
-    const targetDate = dateParam ? new Date(dateParam) : new Date();
+    const targetDate = dateParam ? z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(dateParam) : undefined;
     const rows = await getReservations(actor, restaurant.id, targetDate);
     return NextResponse.json(rows);
   } catch (e) {

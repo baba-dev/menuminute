@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import {
@@ -194,109 +194,100 @@ export async function deleteTable(actor: Actor, outletId: string, tableId: strin
   });
 }
 
-/**
- * Retrieves reservations for an outlet on a given day.
- */
+/** Reservations are fetched for the outlet's business day, never the server's day. */
 export async function getReservations(
-  actor: Actor,
-  outletId: string,
-  date: Date = new Date()
+  actor: Actor, outletId: string, localDate?: string
 ): Promise<ReservationItem[]> {
+  if (localDate && !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) throw new ValidationError("Invalid booking date");
   return withOutletRead(actor, outletId, "orders.read", async (tx) => {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const rows = await tx
-      .select()
-      .from(diningReservations)
-      .where(
-        and(
-          eq(diningReservations.outletId, outletId),
-          gte(diningReservations.reservationTime, startOfDay),
-          lte(diningReservations.reservationTime, endOfDay)
-        )
-      )
-      .orderBy(diningReservations.reservationTime);
-
-    return rows.map((r: DiningReservation) => ({
-      id: r.id,
-      outletId: r.outletId,
-      tableId: r.tableId,
-      guestName: r.guestName,
-      guestPhone: r.guestPhone,
-      guestEmail: r.guestEmail,
-      partySize: r.partySize,
-      reservationTime: r.reservationTime.toISOString(),
-      durationMinutes: r.durationMinutes,
-      status: r.status as ReservationItem["status"],
-      notes: r.notes,
-      createdAt: r.createdAt.toISOString(),
-    }));
+    const window = await tx.execute<{ start: Date; finish: Date }>(sql`
+      select (coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date)::timestamp
+        at time zone timezone) as start,
+        ((coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date) + 1)::timestamp
+        at time zone timezone) as finish
+      from restaurants where id=${outletId}`);
+    const start = window.rows[0]?.start;
+    const finish = window.rows[0]?.finish;
+    if (!start || !finish) throw new NotFoundError("Outlet");
+    const rows = await tx.select().from(diningReservations).where(and(
+      eq(diningReservations.outletId, outletId),
+      gte(diningReservations.reservationTime, start),
+      sql`${diningReservations.reservationTime} < ${finish}`
+    )).orderBy(diningReservations.reservationTime);
+    return rows.map(toReservationItem);
   });
 }
+function toReservationItem(r: DiningReservation): ReservationItem {
+  return {
+    id: r.id, outletId: r.outletId, tableId: r.tableId,
+    guestName: r.guestName, guestPhone: r.guestPhone, guestEmail: r.guestEmail,
+    partySize: r.partySize, reservationTime: r.reservationTime.toISOString(),
+    durationMinutes: r.durationMinutes, status: r.status as ReservationItem["status"],
+    notes: r.notes, createdAt: r.createdAt.toISOString()
+  };
+}
 
-/**
- * Creates a new reservation.
- */
+/** The table-row lock serializes bookings for the same table. */
 export async function createReservation(
-  actor: Actor,
-  outletId: string,
-  input: CreateReservationInput
+  actor: Actor, outletId: string, input: CreateReservationInput
 ): Promise<ReservationItem> {
+  if (!input.tableId) throw new ValidationError("Select a table before confirming a booking.");
   return withOutlet(actor, outletId, "orders.accept", async (tx) => {
+    const time = new Date(input.reservationTime);
+    if (!Number.isFinite(time.getTime()) || time.getTime() < Date.now() - 5 * 60_000)
+      throw new ValidationError("Select a future reservation time.");
+    const physical = await tx.execute<{ capacity: number | null }>(sql`
+      select capacity from restaurant_tables
+      where id=${input.tableId} and restaurant_id=${outletId} and is_active FOR UPDATE`);
+    if (!physical.rows[0]) throw new ValidationError("Select an active table in this outlet.");
+    if (input.partySize > (physical.rows[0].capacity ?? 0))
+      throw new ValidationError("Party exceeds the seating capacity of this table.");
+    const overlap = await tx.execute<{ booked: boolean }>(sql`
+      select exists(select 1 from dining_reservations
+        where outlet_id=${outletId} and table_id=${input.tableId}
+          and status in ('confirmed','seated')
+          and reservation_time < (${time}::timestamptz + (${input.durationMinutes} * interval '1 minute'))
+          and (reservation_time + (duration_minutes * interval '1 minute')) > ${time}::timestamptz
+      ) as booked`);
+    if (overlap.rows[0]?.booked) throw new ConflictError("This table is already booked for the selected time.");
     const id = crypto.randomUUID();
-    const resTime = new Date(input.reservationTime);
-
-    await tx.insert(diningReservations).values({
-      id,
-      outletId,
-      tableId: input.tableId || null,
-      guestName: input.guestName,
-      guestPhone: input.guestPhone || null,
-      guestEmail: input.guestEmail || null,
-      partySize: input.partySize,
-      reservationTime: resTime,
-      durationMinutes: input.durationMinutes || 90,
-      status: "confirmed",
-      notes: input.notes || null,
-    });
-
-    return {
-      id,
-      outletId,
-      tableId: input.tableId || null,
-      guestName: input.guestName,
-      guestPhone: input.guestPhone || null,
-      guestEmail: input.guestEmail || null,
-      partySize: input.partySize,
-      reservationTime: resTime.toISOString(),
-      durationMinutes: input.durationMinutes || 90,
-      status: "confirmed",
-      notes: input.notes || null,
-      createdAt: new Date().toISOString(),
-    };
+    const [created] = await tx.insert(diningReservations).values({
+      id, outletId, tableId: input.tableId, guestName: input.guestName,
+      guestPhone: input.guestPhone ?? null, guestEmail: input.guestEmail ?? null,
+      partySize: input.partySize, reservationTime: time,
+      durationMinutes: input.durationMinutes, status: "confirmed", notes: input.notes ?? null
+    }).returning();
+    await tx.execute(sql`
+      insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id)
+      values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.created','reservation',${id})`);
+    return toReservationItem(created!);
   });
 }
 
-/**
- * Updates a reservation status (e.g. seated, completed, cancelled).
- */
+/** Allowed transitions form a one-way operator lifecycle, with audit evidence. */
 export async function updateReservationStatus(
-  actor: Actor,
-  outletId: string,
-  reservationId: string,
+  actor: Actor, outletId: string, reservationId: string,
   status: "confirmed" | "seated" | "completed" | "cancelled" | "no_show"
 ): Promise<void> {
   return withOutlet(actor, outletId, "orders.accept", async (tx) => {
-    await tx
-      .update(diningReservations)
-      .set({ status })
-      .where(
-        and(eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId))
-      );
+    const [current] = await tx.select().from(diningReservations).where(and(
+      eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId)
+    )).for("update").limit(1);
+    if (!current) throw new NotFoundError("Reservation");
+    if (current.status === status) return;
+    const allowed: Record<string, string[]> = {
+      confirmed: ["seated", "cancelled", "no_show"], seated: ["completed"],
+      completed: [], cancelled: [], no_show: []
+    };
+    if (!allowed[current.status]?.includes(status))
+      throw new ConflictError("This reservation cannot move to the requested status.");
+    await tx.update(diningReservations).set({ status }).where(and(
+      eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId)
+    ));
+    await tx.execute(sql`
+      insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id,before,after)
+      values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.status.changed',
+        'reservation',${reservationId},${current.status},${status})`);
   });
 }
 

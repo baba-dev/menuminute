@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, CalendarPlus, AlertTriangle } from "lucide-react";
 import type { VisualTable, CreateReservationInput } from "@/modules/hospitality/floor-contracts";
 import { useHaptics } from "@/lib/use-haptics";
@@ -38,9 +38,21 @@ export function ReservationDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (open) {
+      setTableId(selectedTable?.id ?? tables[0]?.id ?? "");
+      setPartySize(selectedTable?.capacity ?? 2);
+      setGuestName("");
+      setGuestPhone("");
+      setGuestEmail("");
+      setNotes("");
+      setError("");
+    }
+  }, [open, selectedTable?.id, selectedTable?.capacity, tables]);
+
   if (!open) return null;
 
-  const currentTable = tables.find((t) => t.id === tableId) ?? selectedTable;
+  const currentTable = tables.find((t) => t.id === tableId) ?? null;
   const isOverCapacity = currentTable && partySize > currentTable.capacity;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +64,8 @@ export function ReservationDialog({
     setBusy(true);
     setError("");
     try {
+      if (!currentTable) throw new Error("Select an active table.");
+      if (partySize > currentTable.capacity) throw new Error("Party exceeds the seating capacity of the table.");
       await onSubmit({
         tableId: tableId || null,
         guestName: guestName.trim(),
