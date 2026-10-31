@@ -153,6 +153,36 @@ describe("PWA H: push service safety and signing", () => {
     expect(blanks.PWA_PUSH_VAPID_PUBLIC_KEY).toBeUndefined();
   });
 
+  it("accepts a real mailto contact with an approved push outlet and VAPID keys", () => {
+    const pair = keys();
+    const config = parseEnv({
+      ...process.env,
+      PWA_PUSH_ENABLED: "true",
+      PWA_PUSH_OUTLET_IDS: "outlet-A",
+      PWA_PUSH_VAPID_PUBLIC_KEY: pair.publicKey,
+      PWA_PUSH_VAPID_PRIVATE_KEY: pair.privateKey,
+      PWA_PUSH_VAPID_SUBJECT: "mailto:admin@bababuilds.com",
+    });
+    expect(config.PWA_PUSH_ENABLED).toBe(true);
+    expect(config.PWA_PUSH_OUTLET_IDS).toEqual(["outlet-A"]);
+    expect(config.PWA_PUSH_VAPID_SUBJECT).toBe("mailto:admin@bababuilds.com");
+  });
+
+  it.each([
+    "mailto:invalid",
+    "https://bababuilds.com",
+    "mailto:admin@bababuilds com",
+    "mailto:admin@bababuilds.com extra",
+  ])("rejects an invalid VAPID contact subject: %s", (subject) => {
+    expect(() =>
+      parseEnv({
+        ...process.env,
+        PWA_PUSH_ENABLED: "false",
+        PWA_PUSH_VAPID_SUBJECT: subject,
+      })
+    ).toThrow(/PWA_PUSH_VAPID_SUBJECT/);
+  });
+
   it("keeps database and worker boundaries visible for migration/security review", async () => {
     const sql = await readFile(
       new URL("../src/db/migrations/0058_pwa_push.sql", import.meta.url),
