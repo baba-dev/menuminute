@@ -315,7 +315,6 @@ export default async function OwnerArticlePage({ params }: PageProps) {
               </section>
             )}
           </article>
-
         </div>
       </main>
 

@@ -270,7 +270,6 @@ export default async function CustomerArticlePage({ params }: PageProps) {
               </section>
             )}
           </article>
-
         </div>
       </main>
 
