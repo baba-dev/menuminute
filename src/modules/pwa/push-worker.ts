@@ -17,7 +17,9 @@ type PushSettings = {
  * The isolated worker deliberately has WORKER_DATABASE_URL, not DATABASE_URL,
  * APP_URL or AUTH_SECRET. Never import the web env parser into this bundle.
  */
-export function parsePushWorkerSettings(source: Readonly<Record<string, string | undefined>>): PushSettings | null {
+export function parsePushWorkerSettings(
+  source: Readonly<Record<string, string | undefined>>
+): PushSettings | null {
   const flag = source["PWA_PUSH_ENABLED"] ?? "false";
   if (flag === "false") return null;
   if (flag !== "true") throw new Error("PWA_PUSH_ENABLED must be true or false");
