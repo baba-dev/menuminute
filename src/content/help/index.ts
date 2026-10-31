@@ -41,83 +41,107 @@ export interface SearchResult {
   snippet: string;
 }
 
-/** Fast, zero-dependency client/server search across articles */
-export function searchHelpArticles(query: string, audience?: Audience): SearchResult[] {
-  const clean = query.trim().toLowerCase();
-  if (!clean || clean.length < 2) return [];
-
-  const candidates = audience ? getArticlesByAudience(audience) : allArticles;
-  const results: SearchResult[] = [];
-
-  for (const article of candidates) {
-    // 1. Match title
-    if (article.title.toLowerCase().includes(clean)) {
-      results.push({
-        article,
-        matchedField: "title",
-        snippet: article.summary,
-      });
-      continue;
-    }
-
-    // 2. Match keywords
-    if (article.keywords.some((k) => k.toLowerCase().includes(clean))) {
-      results.push({
-        article,
-        matchedField: "keyword",
-        snippet: article.summary,
-      });
-      continue;
-    }
-
-    // 3. Match quick steps
-    const stepMatch = article.quickSteps.find((step) => step.toLowerCase().includes(clean));
-    if (stepMatch) {
-      results.push({
-        article,
-        matchedField: "quickStep",
-        snippet: stepMatch,
-      });
-      continue;
-    }
-
-    // 4. Match summary or subtitle
-    if (
-      article.summary.toLowerCase().includes(clean) ||
-      article.subtitle.toLowerCase().includes(clean)
-    ) {
-      results.push({
-        article,
-        matchedField: "summary",
-        snippet: article.summary,
-      });
-      continue;
-    }
-
-    // 5. Match FAQs
-    const faqMatch = article.faqs.find(
-      (f) => f.question.toLowerCase().includes(clean) || f.answer.toLowerCase().includes(clean)
-    );
-    if (faqMatch) {
-      results.push({
-        article,
-        matchedField: "faq",
-        snippet: `Q: ${faqMatch.question}`,
-      });
-    }
+// Search is shared by the public Help Center and Ember. It does not call a model,
+// store searches, or depend on the visitor's account.
+const stopWords = new Set([
+  "how", "do", "does", "did", "i", "my", "me", "you", "your", "the", "a", "an",
+  "to", "for", "with", "of", "can", "could", "is", "are", "what", "where", "in",
+  "and", "on", "from", "this", "that", "please", "our", "it", "we", "get",
+]);
+const aliases: Record<string, string[]> = {
+  qr: ["qr", "code", "sticker", "scan"],
+  scan: ["scan", "qr", "camera"],
+  print: ["print", "printing", "download", "sticker", "sheet"],
+  sold: ["sold", "unavailable", "availability", "86"],
+  unavailable: ["unavailable", "sold", "86"],
+  internet: ["internet", "offline", "network", "connection"],
+  disconnected: ["disconnected", "offline", "network", "outage"],
+  stopped: ["stopped", "outage", "offline", "lost"],
+  bill: ["bill", "receipt", "payment", "pay"],
+  paid: ["paid", "payment", "recording"],
+  cashier: ["cashier", "pos", "counter"],
+  kitchen: ["kitchen", "kds", "cook", "station"],
+  staff: ["staff", "team", "roles", "invite"],
+  waiter: ["waiter", "server", "service"],
+  dishes: ["dishes", "dish", "food", "items"],
+  dish: ["dish", "dishes", "item"],
+  edit: ["edit", "editing", "change", "update"],
+  restaurant: ["restaurant", "outlet", "workspace"],
+  another: ["another", "multiple", "outlet"],
+};
+function normalized(value: string): string {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function tokens(query: string): string[] {
+  return Array.from(new Set(normalized(query.slice(0, 200)).split(" ")
+    .filter((t) => t.length > 1 && !stopWords.has(t)))).slice(0, 16);
+}
+function wordMatch(haystack: Set<string>, token: string): boolean {
+  const variants = aliases[token] ?? [token];
+  return variants.some((v) => haystack.has(v) || [...haystack].some(
+    (word) => word.length > 4 && v.length > 4 &&
+      (word.startsWith(v) || v.startsWith(word)) &&
+      Math.abs(word.length - v.length) <= 4
+  ));
+}
+function scoreFields(query: string, fields: Array<{ text: string; weight: number }>): number {
+  const words = tokens(query);
+  if (!words.length) return 0;
+  const indexed = fields.map(({ text, weight }) => ({
+    value: normalized(text),
+    words: new Set(normalized(text).split(" ")),
+    weight,
+  }));
+  let score = 0;
+  let matched = 0;
+  for (const word of words) {
+    const best = Math.max(0, ...indexed.map((f) => wordMatch(f.words, word) ? f.weight : 0));
+    if (best) { matched++; score += best; }
   }
-
-  return results;
+  // Reject results that only happen to mention one unrelated word.
+  if (matched < Math.max(1, Math.ceil(words.length / 2))) return 0;
+  const phrase = normalized(query);
+  if (phrase.length >= 4 && indexed.some((f) => f.value.includes(phrase))) score += 8;
+  return score * (matched / words.length);
+}
+function articleFields(a: HelpArticle): Array<{ text: string; weight: number }> {
+  return [
+    { text: a.title, weight: 9 },
+    { text: a.category, weight: 6 },
+    { text: a.keywords.join(" "), weight: 8 },
+    { text: a.summary + " " + a.subtitle, weight: 5 },
+    { text: a.quickSteps.join(" "), weight: 4 },
+    { text: a.sections.map((s) => s.title + " " + s.content.join(" ")).join(" "), weight: 3 },
+    { text: a.faqs.map((f) => f.question + " " + f.answer).join(" "), weight: 2 },
+  ];
+}
+export function searchHelpArticles(query: string, audience?: Audience): SearchResult[] {
+  if (!tokens(query).length) return [];
+  return (audience ? getArticlesByAudience(audience) : allArticles)
+    .map((article) => ({ article, score: scoreFields(query, articleFields(article)) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.article.title.localeCompare(b.article.title))
+    .slice(0, 12)
+    .map(({ article }): SearchResult => ({
+      article,
+      matchedField: "title",
+      snippet: article.summary,
+    }));
 }
 
-/** Search FAQs directly */
 export function searchFaqs(query: string): HelpFaqItem[] {
-  const clean = query.trim().toLowerCase();
-  if (!clean) return allFaqs;
-  return allFaqs.filter(
-    (f) =>
-      f.question.toLowerCase().includes(clean) ||
-      f.answer.toLowerCase().includes(clean) ||
-      (f.category && f.category.toLowerCase().includes(clean))
-  );
+  if (!query.trim()) return allFaqs;
+  return allFaqs
+    .map((faq) => ({
+      faq,
+      score: scoreFields(query, [
+        { text: faq.question, weight: 8 },
+        { text: faq.answer, weight: 4 },
+        { text: faq.category ?? "", weight: 3 },
+      ]),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(({ faq }) => faq);
 }

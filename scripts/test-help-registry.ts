@@ -84,6 +84,8 @@ async function main() {
     "Expected qr-codes-and-tables"
   );
 
+  check(searchHelpArticles("How do I print a table QR code?")[0]?.article.slug === "qr-codes-and-tables", "Natural language QR question should rank printing first");
+
   const kitchenResults = searchHelpArticles("kitchen");
   check(kitchenResults.length > 0, "Query 'kitchen' should return results");
   check(

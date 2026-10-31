@@ -72,6 +72,14 @@ describe("Help Content Registry", () => {
     expect(veganResults.length).toBeGreaterThan(0);
   });
 
+  it("answers natural-language help requests without matching unrelated articles", () => {
+    expect(searchHelpArticles("How do I print a table QR code?")[0]?.article.slug).toBe("qr-codes-and-tables");
+    expect(searchHelpArticles("How do I mark a dish sold out?").some((r) => r.article.slug === "live-orders-and-service")).toBe(true);
+    expect(searchHelpArticles("My internet stopped during service").some((r) => r.article.slug === "offline-menu-and-pwa")).toBe(true);
+    expect(searchHelpArticles("QR", "customer").every((r) => r.article.audience === "customer")).toBe(true);
+    expect(searchHelpArticles("xxxyyyzzzaaa")).toEqual([]);
+  });
+
   it("searchFaqs finds matching FAQ items", () => {
     const freeFaqs = searchFaqs("free");
     expect(freeFaqs.length).toBeGreaterThan(0);
