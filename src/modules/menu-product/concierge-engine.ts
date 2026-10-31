@@ -49,7 +49,7 @@ export function candidatesForMenu(data: PublicProduct, preferences: ConciergePre
   const seen = new Set<string>();
   const avoid = preferences.avoid.split(/[,;]/).map((term) => term.trim().toLocaleLowerCase()).filter(Boolean);
   for (const menu of data.menus) {
-    const view = projectMenu(menu.document, data.outlet.timezone, new Date(data.now), menu.overrides);
+    const view = projectMenu(menu.document, data.outlet.timezone, new Date(), menu.overrides);
     for (const category of view.categories) {
       for (const dish of category.items) {
         if (dish.soldOut || !dish.open || seen.has(dish.id)) continue;

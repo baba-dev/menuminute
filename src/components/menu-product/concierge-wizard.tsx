@@ -57,7 +57,10 @@ function initial(craving: string): ConciergePreferences {
 export function ConciergeWizard({ craving, currency, busy, error, onClose, onRecommend, children }: Props) {
   const [step, setStep] = useState(0);
   const [choices, setChoices] = useState<ConciergePreferences>(() => initial(craving));
-  const [budget, setBudget] = useState("");
+  const [budget, setBudget] = useState(() => {
+    const match = craving.match(/(?:under|below|up to|upto|budget(?: of)?|₹|rs\.?)\s*(?:₹|rs\.?\s*)?(\d+(?:\.\d+)?)/i);
+    return match?.[1] ?? "";
+  });
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -134,10 +137,10 @@ export function ConciergeWizard({ craving, currency, busy, error, onClose, onRec
             <span className="concierge-step-name">04 / PERSONAL TOUCH</span>
             <h2 id="concierge-wizard-title">Let&apos;s get it just right.</h2>
             <p className="concierge-step-description">Tell us what you enjoy—and anything you must avoid.</p>
-            <div className="concierge-form-card"><label><ShieldAlert size={18}/> Dietary preference or restriction</label>
+            <div className="concierge-form-card"><div className="concierge-form-label"><ShieldAlert size={18}/> Dietary preference or restriction</div>
               <div className="concierge-chips">{diets.map(([key,label]) => <button type="button" key={key} aria-pressed={choices.diet===key} className={choices.diet===key?"is-selected":""} onClick={() => set("diet",key)}>{label}</button>)}</div>
             </div>
-            <div className="concierge-form-card"><label><Flame size={18}/> Spice preference</label>
+            <div className="concierge-form-card"><div className="concierge-form-label"><Flame size={18}/> Spice preference</div>
               <div className="concierge-chips">{spices.map(([key,label]) => <button type="button" key={key} aria-pressed={choices.spice===key} className={choices.spice===key?"is-selected":""} onClick={() => set("spice",key)}>{label}</button>)}</div>
             </div>
             <div className="concierge-form-card"><label htmlFor="concierge-avoid"><Heart size={18}/> Ingredients to avoid (optional)</label>

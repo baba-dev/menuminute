@@ -107,6 +107,7 @@ export function PublicMenu({
 
   const [customizingDish, setCustomizingDish] = useState<CustomizerDish | null>(null);
   const [customizingCategory, setCustomizingCategory] = useState("");
+  const [customizerSequence, setCustomizerSequence] = useState(0);
 
   // Sync cart to sessionStorage
   useEffect(() => {
@@ -364,6 +365,7 @@ export function PublicMenu({
       advanceMealRef.current = false;
       const next = mealDraftRef.current?.remaining[0];
       if (next) {
+        setCustomizerSequence((current) => current + 1);
         setCustomizingDish(next.dish);
         setCustomizingCategory(next.category);
         return;
@@ -823,7 +825,7 @@ export function PublicMenu({
 
           return (
             <ItemCustomizer
-              key={customizingDish?.id ?? "empty"}
+              key={(customizingDish?.id ?? "empty") + ":" + customizerSequence}
               dish={customizingDish}
               visual={
                 customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null

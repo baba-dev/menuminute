@@ -77,7 +77,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
   let notice: string | null = null;
   if (conciergeNvidiaReady()) {
     try {
-      const shortlisted = candidates.slice(0,60);
+      const shortlisted = (["starter","main","side","drink","dessert"] as const)
+        .flatMap((role) => candidates.filter((dish) => dish.role === role).slice(0,12));
       const result = await nvidiaAdapter({
         provider:"nvidia",model:env.AI_NVIDIA_MODEL!,key:env.NVIDIA_API_KEY!,supportsTools:false,
       },{
