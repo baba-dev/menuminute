@@ -5,6 +5,7 @@ import { env } from "@/lib/config/env";
 import { boundedJson } from "@/modules/intelligence/request";
 import { createProviderHub } from "@/modules/intelligence";
 import { beginTurn, conversationInput, turnInput } from "@/modules/intelligence/store";
+import { enforceDemoEmber } from "@/modules/demo/ember-limit";
 import { runReadOnlyTurn } from "@/modules/intelligence/orchestrator";
 const schema = conversationInput.omit({ key: true }).extend(turnInput.shape).strict();
 async function observed_POST(
@@ -25,6 +26,7 @@ async function observed_POST(
         { status: 503, headers: { "cache-control": "no-store" } }
       );
     const input = schema.parse(await boundedJson(req));
+    await enforceDemoEmber(req, actor.userId, "turn", input.prompt);
     const { conversationId } = await context.params;
     const scope = { actor, organizationId: input.organizationId, outletId: input.outletId };
     const start = await beginTurn(scope, conversationId, { key: input.key, prompt: input.prompt });

@@ -1,4 +1,6 @@
 import { auth } from "@/lib/auth";
+import { DemoBanner } from "@/components/demo/demo-banner";
+import { isDemoActor } from "@/modules/demo/guard";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
@@ -96,6 +98,7 @@ export default async function KitchenPage() {
   }
   return (
     <>
+      {isDemoActor(session.user.id) && <DemoBanner />}
       {kitchenOperational && pwaOperationalEnabledForOutlet(outlet.id) ? (
         <OperationalPwa workspace="Kitchen" />
       ) : null}

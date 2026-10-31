@@ -407,6 +407,41 @@
       "when": 1793451600014,
       "tag": "0058_pwa_push",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793538000013,
+      "tag": "0059_demo_outlet_reset",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793624400014,
+      "tag": "0060_demo_kitchen_and_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793710800015,
+      "tag": "0061_order_item_variant_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793797200016,
+      "tag": "0062_demo_ember_budget",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1793883600017,
+      "tag": "0063_demo_service_calls",
+      "breakpoints": true
     }
   ]
 }

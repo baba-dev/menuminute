@@ -159,14 +159,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🔑 Local test/demo access only
 
-The explicit **non-production** demo seed provides a local restaurant owner account. Never run it
-against production or interpret this account as an actual merchant:
+The explicit **non-production** CI seed (`pnpm db:seed`) creates a one-dish sample restaurant. Never run it
+against production or interpret it as an actual merchant:
 
 - **Login URL**: [http://localhost:3000/login](http://localhost:3000/login)
 - **Email**: `demo@menuminute.com`
-- **Password**: `demo-password-change-me`
-- **Demo Restaurant**: _Spice Route Kitchen_ (23 dishes across 7 categories)
+- **Password**: the unique `DEMO_PASSWORD` (12+ characters) you passed to the seed command
+- **Sample Restaurant**: _Spice Route Kitchen_ (one sample dish)
 - **Public Menu URL**: [http://localhost:3000/m/demo-spice-route-kitchen-v1](http://localhost:3000/m/demo-spice-route-kitchen-v1)
+
+The full public demo (236 dishes, one-click entry, 30-minute reset) is a separate, owner-approved
+tenant described in [docs/demo.md](docs/demo.md).
 
 ---
 

@@ -5,6 +5,7 @@ import { errorResponse } from "@/lib/request-context";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/config/env";
 import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { isDemoActor } from "@/modules/demo/guard";
 import { listDevices, revokeDeviceSessions } from "@/lib/device-sessions";
 
 const command = z.discriminatedUnion("action", [
@@ -24,6 +25,8 @@ async function deviceActor(req: Request, mutation = false) {
     throw new ForbiddenError();
   const session = await auth();
   if (!session?.user.id || !session.session.id) throw new UnauthorizedError();
+  if (mutation && isDemoActor(session.user.id))
+    throw new ForbiddenError("This action is disabled in the public demo.");
   return { userId: session.user.id, sessionId: session.session.id };
 }
 async function observed_GET(req: Request) {

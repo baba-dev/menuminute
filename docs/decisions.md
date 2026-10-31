@@ -69,3 +69,14 @@ is public: launch uses staff acceptance; stronger physical table-session control
 
 Earlier single-outlet/India-only or dine-in-only guidance is superseded. Pickup details, complex
 dish calculation examples, jurisdiction rules and complete UX remain explicit implementation inputs.
+
+## Public demo (approved 2026-10-31)
+
+| ADR | Decision                                                 | Consequence                                                                                                                                                                                 |
+| --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 022 | One shared public demo tenant on the production database | Supersedes "no production demo seed" for exactly one fixed tenant. Isolation relies on RLS, a hardcoded definer reset, a kill switch and tests. See AGENTS.md exception.                    |
+| 023 | Periodic in-place reset instead of per-visitor sandboxes | Visitors share state; baseline restored every 30 minutes. Immutable POS ledger is excluded, so the demo outlet never enables POS.                                                           |
+| 024 | All 236 catalogue dishes with sample (unverified) data   | Allergen, dietary and nutrition values are rule-derived samples, `verified:false`. Dishes without art use the generic plate placeholder until illustrations exist.                          |
+| 025 | Demo-only bypass of the Kitchen Pro pilot gate           | `provision_demo_ops()` enables the demo kitchen and grants Ordering/Kitchen for ten years; owner-only, hardcoded to the demo outlet. Real outlets keep the two-operator pilot or paid path. |
+| 026 | Drop the legacy `order_items.variant_id` foreign key     | Versioned-menu variant ids are not legacy rows; the FK rejected every guest order line with a variant. Order items are immutable snapshots. Migration 0061.                                 |
+| 027 | Higher Ember daily budget for the shared demo actor only | Per-user/org budgets and table checks widened for `demo-owner`/`org-demo-outlet` (migration 0062); application-level per-source and daily caps bound real cost.                             |

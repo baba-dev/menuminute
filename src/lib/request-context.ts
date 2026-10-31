@@ -15,6 +15,7 @@ import { setTraceContext } from "@/lib/tracing";
 import { telemetry } from "@/lib/telemetry";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { demoRequestAllowed, isDemoActor } from "@/modules/demo/guard";
 export async function requestActor(
   req: Request,
   mutation = false,
@@ -31,6 +32,9 @@ export async function requestActor(
   // Email verification is deferred; sensitive actions (billing, invitations) still require it.
   if (options.verified && !session.user.emailVerified)
     throw new ForbiddenError("Verify your email address to continue.");
+  // Public demo: the shared account may only perform allowlisted, resettable mutations.
+  if (isDemoActor(session.user.id) && !demoRequestAllowed(req.method, new URL(req.url).pathname))
+    throw new ForbiddenError("This action is disabled in the public demo.");
   setTraceContext({ actorId: session.user.id });
   return { userId: session.user.id, sessionId: session.session.id };
 }

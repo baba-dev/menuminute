@@ -49,10 +49,12 @@ for (const asset of manifest.assets) {
   if (!allowedStates.has(asset.state)) errors.push("Unknown approval state: " + key);
   if (asset.state === "approved") {
     approvedCount++;
-    if (asset.approvalBasis !== "owner-directed-original-collection-2026-10-23")
+    const original = ["indian", "western", "italian"].includes(asset.category);
+    const basis = original
+      ? "owner-directed-original-collection-2026-10-23"
+      : "owner-directed-all-collections-2026-10-31";
+    if (asset.approvalBasis !== basis)
       errors.push("Approved art has no recognized owner directive: " + key);
-    if (!["indian", "western", "italian"].includes(asset.category))
-      errors.push("Pending review batch unexpectedly approved: " + key);
   } else {
     pendingCount++;
   }
@@ -147,10 +149,11 @@ if (JSON.stringify(runtimeArt) !== JSON.stringify(approvedForRuntime))
   errors.push("Public runtime artwork index differs from approved manifest entries");
 
 if (
-  approvedCount !== 36 ||
-  pendingCount !== 188 ||
+  approvedCount !== 224 ||
+  pendingCount !== 0 ||
   manifest.approvalSummary?.approvedOriginal !== 36 ||
-  manifest.approvalSummary?.pendingOwnerReview !== 188
+  manifest.approvalSummary?.approvedOwnerDirectedExpansion !== 188 ||
+  manifest.approvalSummary?.pendingOwnerReview !== 0
 )
   errors.push("Approved/pending artwork reconciliation mismatch");
 

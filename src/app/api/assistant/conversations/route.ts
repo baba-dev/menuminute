@@ -8,6 +8,7 @@ import {
   listConversations,
 } from "@/modules/intelligence/store";
 import { env } from "@/lib/config/env";
+import { enforceDemoEmber } from "@/modules/demo/ember-limit";
 const scopeSchema = conversationInput.omit({ key: true });
 async function observed_GET(req: Request) {
   try {
@@ -30,6 +31,7 @@ async function observed_POST(req: Request) {
         { status: 503, headers: { "cache-control": "no-store" } }
       );
     const input = conversationInput.parse(await boundedJson(req));
+    await enforceDemoEmber(req, actor.userId, "conversation");
     const data = await createConversation(
       { actor, organizationId: input.organizationId, outletId: input.outletId },
       input.key

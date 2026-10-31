@@ -28,6 +28,8 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | PWA_OPERATIONAL_ENABLED                        | Default-off guest/POS/Kitchen operational PWA gate |
 | PWA_OPERATIONAL_OUTLET_IDS                     | Comma-separated exact outlet rollout allowlist     |
 
+`DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
+
 Billing and edition are opt-in: the hosted service must set `COMMUNITY_EDITION=false`; `RAZORPAY_ENABLED=false` and `RAZORPAY_KITCHEN_ENABLED=false` are safe defaults. Before enabling Razorpay install verified production plan IDs, webhook/REST keys and a distinct restricted `BILLING_DATABASE_URL` identity. Never reuse the application or migration-owner credential. Self-hosted edition needs a separately provisioned, owner-controlled database configuration.
 
 Set explicit connection/request timeouts and pool/concurrency limits in validated configuration.
