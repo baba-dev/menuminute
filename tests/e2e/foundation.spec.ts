@@ -65,7 +65,9 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
     data: { name: "Browser category" },
   });
   expect(created.status()).toBe(201);
-  await page.getByRole("button", { name: /sign out/i }).click();
+  // Sign out lives on Account after the redundant sidebar profile was removed.
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/login/);
