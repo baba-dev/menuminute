@@ -1,7 +1,7 @@
 # Public demo runbook
 
-Status: **dataset, reset, provisioning, one-click entry and demo request guard implemented; Ember limits,
-demo orders and the documentation site are planned** (see the plan in the PR description). Read the
+Status: **dataset, reset, provisioning, one-click entry, request guard, demo orders, kitchen and
+entitlements implemented; Ember limits and the documentation site are planned** (see the plan in the PR description). Read the
 [Public demo exception](../AGENTS.md#public-demo-exception) first.
 
 ## What exists
@@ -35,6 +35,23 @@ demo orders and the documentation site are planned** (see the plan in the PR des
 - Adding a route that should work in the demo means adding it to the allowlist **and** making sure the
   reset undoes its effects.
 
+## Orders, kitchen and entitlements
+
+- `app_private.provision_demo_ops()` (migration 0058, **migration-owner only**) creates three credential-less
+  demo staff, four stations (Tandoor & Grill, Wok & Fry, Curry & Rice, Cold & Sweet), routes every dish by
+  category, enables the kitchen, serves the versioned menu (`free_menu_enabled`) and grants `ordering.new`
+  and `kitchen.new` for ten years. It deliberately bypasses the Kitchen Pro pilot gate for the demo outlet
+  only (ADR 025). `scripts/demo-provision.ts` runs it; re-running is safe.
+- Guests can order from `/m/demo-spice-route-kitchen-v2`; orders flow through Orders and the Kitchen display
+  exactly as for a real outlet (no payment provider is involved) and are removed by the next reset.
+- Each reset re-seeds about 470 orders over 30 days plus a live board (3 pending, 3 accepted, 2 preparing,
+  1 ready) from `src/modules/demo/history.ts` (deterministic for a given clock). Live orders progress through
+  real status updates, so kitchen work is created by the normal triggers.
+- The menu revision is only bumped by a reset when a visitor changed the published menu. The worker cannot
+  invalidate the web cache, so after a revert guests may see one "menu changed" conflict for up to 3 minutes.
+- Migration 0059 removes the legacy `order_items.variant_id` foreign key. Without it any guest order that
+  chose a variant (Half/Full, sizes) failed for **every** tenant (ADR 026).
+
 ## What a reset never touches
 
 POS ledger (immutable), audit trail, AI spend accounting, identity, entitlements, billing, QR codes,
@@ -43,11 +60,10 @@ legacy flat menu tables. The demo outlet therefore does not enable POS or billin
 ## Operator steps (production)
 
 1. Verified encrypted off-host backup; ERP HTTP 200 captured before and after (see the runbook).
-2. Deploy a reviewed SHA through the normal path so migration 0057 applies.
-3. Provision once: `ALLOW_DEMO_PROVISION=true MIGRATION_DATABASE_URL=... pnpm tsx scripts/demo-provision.ts`.
-4. Grant the demo organization Ordering and Kitchen Pro with `scripts/entitlement.ts`.
-5. Set `DEMO_MODE_ENABLED=true` in the worker environment and restart the worker.
-6. To switch the demo off: set `DEMO_MODE_ENABLED=false` and restart. Existing demo data stays inert.
+2. Deploy a reviewed SHA through the normal path so migrations 0057-0059 apply.
+3. Provision once (tenant, credential, kitchen, entitlements, history): `ALLOW_DEMO_PROVISION=true AUTH_SECRET=... MIGRATION_DATABASE_URL=... pnpm tsx scripts/demo-provision.ts`.
+4. Set `DEMO_MODE_ENABLED=true` in the worker environment and restart the worker.
+5. To switch the demo off: set `DEMO_MODE_ENABLED=false` and restart. Existing demo data stays inert.
 
 ## Verification
 

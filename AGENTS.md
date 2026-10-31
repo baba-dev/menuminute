@@ -127,6 +127,12 @@ seed" rule solely under these conditions; any deviation reverts to the prohibiti
 - **Reset** is `app_private.reset_demo_outlet(jsonb)` (migration 0057): `SECURITY DEFINER`, hardcoded
   to the demo ids, refuses unless the outlet is `is_demo_data`, executable only by `menuminute_worker`.
   The worker runs it every 30 minutes only when `DEMO_MODE_ENABLED=true` (default false = kill switch).
+- **Demo kitchen and entitlements** (owner-approved 2026-10-31): `app_private.provision_demo_ops()`
+  (migration 0058) enables the demo outlet's kitchen, routes its dishes and grants `ordering.new` and
+  `kitchen.new` for ten years. This is a deliberate demo-only bypass of the Kitchen Pro pilot gate and
+  the normal grant control plane. It is hardcoded to the demo ids, refuses unless `is_demo_data`, and
+  is executable by the migration owner only (never `menuminute_app`, `menuminute_worker` or
+  `menuminute_billing`). No other outlet may ever be activated this way.
 - **Never reset or modified by demo code**: the immutable POS ledger, audit trail, AI spend accounting,
   identity/sessions, entitlements and billing. The demo outlet never enables POS or billing.
 - **Isolation**: the demo actor must not receive a super-admin, other-tenant or billing capability; a new

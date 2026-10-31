@@ -46,6 +46,11 @@ export async function provisionDemo(
     await c.query("rollback").catch(() => undefined);
     throw e;
   }
+  const baseline = JSON.stringify(buildDemoBaseline());
+  // 1) publish the menu, 2) route every dish and grant Ordering/Kitchen (demo-only function),
+  // 3) reset again so seeded live orders fan out to the now-enabled kitchen.
+  await c.query("select app_private.reset_demo_outlet($1::jsonb)", [baseline]);
+  await c.query("select app_private.provision_demo_ops()");
   const { rows } = await c.query("select app_private.reset_demo_outlet($1::jsonb) as s", [
     JSON.stringify(buildDemoBaseline()),
   ]);

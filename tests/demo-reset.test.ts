@@ -143,12 +143,8 @@ describe("demo outlet reset", () => {
     );
     expect(release.rows[0].n).toBe(1);
     expect(
-      (
-        await owner.query("select count(*)::int n from orders where restaurant_id=$1", [
-          DEMO_IDS.outletId,
-        ])
-      ).rows[0].n
-    ).toBe(0);
+      (await owner.query("select count(*)::int n from orders where id='demo-order-1'")).rows[0].n
+    ).toBe(0); // the visitor order is gone; the seeded history is restored (see demo-orders.test.ts)
     const tables = await owner.query(
       "select count(*)::int n, bool_or(label='Visitor edit') edited from restaurant_tables where restaurant_id=$1",
       [DEMO_IDS.outletId]
@@ -156,7 +152,7 @@ describe("demo outlet reset", () => {
     expect(tables.rows[0]).toEqual({ n: 12, edited: false });
   });
 
-  it("is deterministic: a second reset yields the identical menu with a higher revision", async () => {
+  it("is deterministic and keeps the revision stable unless a visitor edited the menu", async () => {
     const before = (
       await owner.query("select revision, document from menus where id=$1", [DEMO_IDS.menuId])
     ).rows[0];
@@ -164,9 +160,31 @@ describe("demo outlet reset", () => {
     const after = (
       await owner.query("select revision, document from menus where id=$1", [DEMO_IDS.menuId])
     ).rows[0];
-    expect(after.revision).toBe(before.revision + 1);
-    expect(after.document).toEqual(before.document);
+    expect(after.revision).toBe(before.revision); // untouched menu: no needless cache-busting bump
     expect(after.document).toEqual(JSON.parse(JSON.stringify(buildDemoBaseline().menu)));
+
+    // A visitor edit (new revision, republished) is reverted at a strictly higher revision.
+    await owner.query(
+      `update menus set document=jsonb_set(document,'{name}','"Hacked"'), revision=revision+1, published_revision=revision+1 where id=$1`,
+      [DEMO_IDS.menuId]
+    );
+    const edited = (await owner.query("select revision from menus where id=$1", [DEMO_IDS.menuId]))
+      .rows[0];
+    await resetDemoOutlet(worker);
+    const reverted = (
+      await owner.query("select revision, document->>'name' as name from menus where id=$1", [
+        DEMO_IDS.menuId,
+      ])
+    ).rows[0];
+    expect(reverted.name).toBe("Spice Route Kitchen");
+    expect(reverted.revision).toBe(edited.revision + 1);
+    expect(
+      (
+        await owner.query("select count(*)::int n from menu_releases where menu_id=$1", [
+          DEMO_IDS.menuId,
+        ])
+      ).rows[0].n
+    ).toBe(1);
   });
 
   it("never touches other tenants", async () => {

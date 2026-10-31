@@ -1,5 +1,6 @@
 import demoMenu from "@/data/demo/demo-menu.json";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
+import { buildDemoOrders, type DemoOrder } from "./history";
 
 import { DEMO_IDS } from "./ids";
 
@@ -10,6 +11,7 @@ export type DemoBaseline = {
   tables: Array<{ id: string; number: string; label: string; capacity: number }>;
   translations: Record<string, unknown>;
   outlet: { name: string; description: string; city: string };
+  orders: DemoOrder[];
 };
 
 /** Dining-room layout restored on every reset. */
@@ -27,9 +29,14 @@ const tables = [
 ];
 
 /** Validated baseline passed to app_private.reset_demo_outlet. Parsing fails closed in tests/CI. */
-export function buildDemoBaseline(): DemoBaseline {
+export function buildDemoBaseline(now: Date = new Date()): DemoBaseline {
   const menu = menuDocumentSchema.parse(demoMenu);
   return {
+    orders: buildDemoOrders(
+      menu,
+      tables.map((t) => t.id),
+      now
+    ),
     menu,
     tables,
     translations: {},
