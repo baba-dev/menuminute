@@ -1,4 +1,3 @@
-import "server-only";
 import { env } from "@/lib/config/env";
 
 /** Explicit per-outlet rollout. No guest request can enable the feature. */
