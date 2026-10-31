@@ -5,7 +5,8 @@ export type TableShape = z.infer<typeof tableShapeSchema>;
 
 export const visualTableSchema = z.object({
   id: z.string().min(1).max(128),
-  tableNumber: z.string().trim().min(1).max(32),
+  // Existing QR Studio tables use UUIDs as table numbers (36 characters).
+  tableNumber: z.string().trim().min(1).max(64),
   label: z.string().trim().max(80).nullable().default(null),
   capacity: z.number().int().min(1).max(30).default(4),
   shape: tableShapeSchema.default("rectangle"),

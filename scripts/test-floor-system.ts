@@ -67,6 +67,13 @@ async function main() {
     tables: [{ id: "t1", capacity: -5 }], // negative capacity
   };
   assert(!floorLayoutDocSchema.safeParse(invalidLayout).success, "Invalid layout doc fails closed");
+  assert(
+    floorLayoutDocSchema.safeParse({
+      ...validLayout,
+      tables: [{ ...validLayout.tables[0], tableNumber: "c831832e-f9a1-4a38-9700-b41b4f31c12e" }],
+    }).success,
+    "Existing QR Studio UUID-style physical table numbers are accepted"
+  );
 
   const validRes = {
     tableId: "tbl-1",

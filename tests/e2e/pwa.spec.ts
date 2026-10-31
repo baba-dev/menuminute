@@ -80,8 +80,25 @@ test.describe("Progressive Web App", () => {
       if (!response.ok) throw new Error("public menu was not cached");
     });
 
+    // A registered worker is not necessarily the controller of this document.
+    // Prove both control and the explicitly enrolled public snapshot before
+    // testing the offline transition, particularly on mobile Chromium.
+    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+    await expect.poll(async () => page.evaluate(async () => {
+      const cacheKeys = await caches.keys();
+      const matches = await Promise.all(
+        cacheKeys.filter((key) => key.startsWith("menuminute-pwa-v2-guest-reads"))
+          .map(async (name) => {
+            const cache = await caches.open(name);
+            return Boolean(await cache.match("/api/public-menu/demo-spice-route-kitchen-v1"));
+          })
+      );
+      return matches.some(Boolean);
+    })).toBe(true);
+
     await context.setOffline(true);
     await page.reload();
+    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Spice Route Kitchen");
     await expect(
       page.getByText("You're offline. Live actions and ordering are unavailable.")

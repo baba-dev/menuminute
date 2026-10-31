@@ -449,8 +449,8 @@ test("floor lifecycle keeps one physical table, QR association, and reservation 
     headers,
     data: { table, layout: { ...initial.layout, tables: [...initial.layout.tables, table] } },
   });
-  expect(created.status()).toBe(200);
   const savedLayout = await created.json();
+  expect(created.status(), JSON.stringify(savedLayout)).toBe(200);
   const floor = await page.request.get("/api/floor", { headers });
   expect(floor.ok()).toBe(true);
   expect(
