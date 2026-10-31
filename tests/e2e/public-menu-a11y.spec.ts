@@ -6,23 +6,12 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 type Violation = { id: string; impact?: string | null; nodes: { target: unknown }[] };
 
-/**
- * Serious/critical violations fail the test. Colour contrast is reported as an
- * annotation until the owner's visual QA signs off both themes, so it stays visible
- * in the report without blocking unrelated PRs.
- */
+/** Serious/critical axe violations fail the test, including colour contrast. */
 async function audit(page: Page, label: string) {
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
   const blocking = (results.violations as Violation[]).filter(
-    (v) => (v.impact === "serious" || v.impact === "critical") && v.id !== "color-contrast"
+    (v) => v.impact === "serious" || v.impact === "critical"
   );
-  const contrast = (results.violations as Violation[]).find((v) => v.id === "color-contrast");
-  if (contrast) {
-    test.info().annotations.push({
-      type: "color-contrast",
-      description: `${label}: ${contrast.nodes.length} element(s) below WCAG AA contrast`,
-    });
-  }
   expect(
     blocking.map((v) => `${v.id} (${v.impact}): ${v.nodes.length} node(s)`),
     `${label}: axe violations`

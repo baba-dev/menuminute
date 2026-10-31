@@ -401,7 +401,7 @@ export function PublicMenu({
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search dishes, descriptions or categories…"
+              placeholder="Search dishes or categories…"
             />
             {search && (
               <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
