@@ -363,3 +363,39 @@ self.__MENUMINUTE_PWA_TEST__ = Object.freeze({
   parseGuestEnrollment,
   responseCanBeCached,
 });
+
+// H: Empty-payload push only. Never trust notification text, URL or tenant identity
+// from a server payload; opening Orders always reauthenticates on the network.
+self.addEventListener("push", (event) => {
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      if (windows.some((client) => client.visibilityState === "visible")) return;
+      await self.registration.showNotification("MenuMinute • new activity", {
+        body: "Open your restaurant workspace to check the latest activity.",
+        icon: "/brand/icons/pwa/icon-192.png",
+        badge: "/brand/icons/pwa/icon-192.png",
+        tag: "menuminute-activity",
+        data: { url: "/dashboard/orders" },
+      });
+    })()
+  );
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const target = new URL("/dashboard/orders", self.location.origin).href;
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const existing = windows.find(
+        (client) => new URL(client.url).origin === self.location.origin
+      );
+      if (existing) {
+        await existing.focus();
+        await existing.navigate(target);
+      } else {
+        await self.clients.openWindow(target);
+      }
+    })()
+  );
+});

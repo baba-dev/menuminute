@@ -79,6 +79,31 @@ export const envSchema = z
     // required. This remains independent from POS/Kitchen product activation and permissions.
     PWA_OPERATIONAL_ENABLED: strictBoolean.default(false),
     PWA_OPERATIONAL_OUTLET_IDS: rolloutOutletIds,
+    // H: opt-in push is independent of the guest offline and POS/Kitchen flags.
+    PWA_PUSH_ENABLED: strictBoolean.default(false),
+    PWA_PUSH_OUTLET_IDS: rolloutOutletIds,
+    // Treat blank, unconfigured .env entries as absent while the feature stays off.
+    PWA_PUSH_VAPID_PUBLIC_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{87}$/)
+        .optional()
+    ),
+    PWA_PUSH_VAPID_PRIVATE_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{43}$/)
+        .optional()
+    ),
+    PWA_PUSH_VAPID_SUBJECT: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^mailto:[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/)
+        .optional()
+    ),
     // Ember provider hub: independent activation from the existing review-only import engine.
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
@@ -151,6 +176,18 @@ export const envSchema = z
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
+    if (
+      e.PWA_PUSH_ENABLED &&
+      (e.PWA_PUSH_OUTLET_IDS.length === 0 ||
+        !e.PWA_PUSH_VAPID_PUBLIC_KEY ||
+        !e.PWA_PUSH_VAPID_PRIVATE_KEY ||
+        !e.PWA_PUSH_VAPID_SUBJECT)
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["PWA_PUSH_ENABLED"],
+        message: "Push requires approved outlet IDs, a P-256 VAPID key pair and contact subject",
+      });
     if (e.PWA_OPERATIONAL_ENABLED && e.PWA_OPERATIONAL_OUTLET_IDS.length === 0)
       ctx.addIssue({
         code: "custom",

@@ -130,6 +130,8 @@ describe("PWA cache policy", () => {
   it.each([
     ["POST order submission", request("/api/orders", { method: "POST" })],
     ["private context API", request("/api/context")],
+    ["private device alerts GET", request("/api/pwa/push")],
+    ["private device alerts POST", request("/api/pwa/push", { method: "POST" })],
     ["dashboard navigation", request("/dashboard", { mode: "navigate" })],
     ["kitchen navigation", request("/kitchen", { mode: "navigate" })],
     ["admin navigation", request("/admin", { mode: "navigate" })],
@@ -145,7 +147,9 @@ describe("PWA cache policy", () => {
 
   it("does not register background sync and rejects personalized responses", async () => {
     const { listeners, policy } = await loadWorkerPolicy();
-    expect(listeners).toEqual(new Set(["install", "activate", "message", "fetch"]));
+    expect(listeners).toEqual(
+      new Set(["install", "activate", "message", "fetch", "push", "notificationclick"])
+    );
     expect(listeners.has("sync")).toBe(false);
     expect(policy.CACHE_PREFIX).toBe("menuminute-pwa-v2-");
     expect(policy.PRECACHE_URLS).toContain("/offline");

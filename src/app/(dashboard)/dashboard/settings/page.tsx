@@ -49,26 +49,33 @@ export default async function SettingsPage() {
     if (!(error instanceof ForbiddenError)) throw error;
   }
   return (
-    <OutletAtelier
-      key={outlet.id}
-      organizationId={outlet.organizationId}
-      outletId={outlet.id}
-      outlet={{
-        name: outlet.name,
-        slug: outlet.slug,
-        publicId: outlet.publicId,
-        country: outlet.country || "IN",
-        currency: outlet.currency,
-        timezone: outlet.timezone,
-        outletType: outlet.outletType,
-        fulfillmentModes: outlet.fulfillmentModes,
-        isActive: outlet.isActive,
-        isDemoData: outlet.isDemoData,
-        profileVersion: outlet.profileVersion,
-      }}
-      initial={editableOutletProfile(outlet)}
-      canManage={canManage}
-      billing={billing}
-    />
+    <>
+      <div style={{ padding: "1rem", display: "flex", justifyContent: "flex-end" }}>
+        <Link href="/dashboard/settings/device" className="os-action os-action-primary">
+          Device &amp; app settings →
+        </Link>
+      </div>
+      <OutletAtelier
+        key={outlet.id}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        outlet={{
+          name: outlet.name,
+          slug: outlet.slug,
+          publicId: outlet.publicId,
+          country: outlet.country || "IN",
+          currency: outlet.currency,
+          timezone: outlet.timezone,
+          outletType: outlet.outletType,
+          fulfillmentModes: outlet.fulfillmentModes,
+          isActive: outlet.isActive,
+          isDemoData: outlet.isDemoData,
+          profileVersion: outlet.profileVersion,
+        }}
+        initial={editableOutletProfile(outlet)}
+        canManage={canManage}
+        billing={billing}
+      />
+    </>
   );
 }
