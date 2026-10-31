@@ -19,6 +19,7 @@ import { HelpHeroImage } from "@/components/help/help-hero-image";
 import { HelpTableOfContents } from "@/components/help/help-toc";
 import { HelpFeedback } from "@/components/help/help-feedback";
 import { HelpVisualCard } from "@/components/help/help-visuals";
+import { HelpScreenshotFigure, getHelpScreenshot } from "@/components/help/help-screenshot";
 import { HelpArticleJsonLd } from "@/components/help/help-jsonld";
 import { HelpCard } from "@/components/help/help-card";
 import { ownerArticles, getArticleBySlug, getRelatedArticles } from "@/content/help";
@@ -62,6 +63,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
   }
 
   const related = getRelatedArticles(article);
+  const screenshot = getHelpScreenshot(article.slug);
   const currentUrl = `https://food.bababuilds.com/help/owner/${article.slug}`;
   const tocSections = article.sections.map((s) => ({ id: s.id, title: s.title }));
 
@@ -166,13 +168,15 @@ export default async function OwnerArticlePage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Embedded Visual Mockup Component */}
-            {article.visualMockup && (
+            {/* Use verified demo captures where available; otherwise mark the mockup as illustrative. */}
+            {screenshot ? (
+              <HelpScreenshotFigure screenshot={screenshot} />
+            ) : article.visualMockup ? (
               <HelpVisualCard
                 type={article.visualMockup.type}
-                caption={article.visualMockup.caption}
+                caption={`Illustrative example · ${article.visualMockup.caption}`}
               />
-            )}
+            ) : null}
 
             {/* Article Body Sections */}
             <div className="space-y-12">
