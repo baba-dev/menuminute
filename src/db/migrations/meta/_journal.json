@@ -421,6 +421,13 @@
       "when": 1793710800015,
       "tag": "0059_order_item_variant_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793797200016,
+      "tag": "0060_demo_ember_budget",
+      "breakpoints": true
     }
   ]
 }

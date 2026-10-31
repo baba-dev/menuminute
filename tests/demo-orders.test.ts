@@ -233,3 +233,56 @@ describe("variant order lines (shared product defect fixed by migration 0059)", 
     expect(row.rows[0]).toEqual({ variant_id: variant.id, variant_name: variant.name });
   });
 });
+
+describe("demo Ember budget (migration 0060)", () => {
+  it("raises the daily budget only for the demo actor, leaving other tenants at 12/20/80", async () => {
+    const at = async (org: string, actor: string, kind: string) => {
+      const c = await owner.connect();
+      try {
+        await c.query("begin");
+        await c.query(
+          "select set_config('app.actor_id',$1,true), set_config('app.outlet_id',$2,true)",
+          [actor, O]
+        );
+        const ok = (
+          await c.query("select app_private.ai_reserve_user_budget($1,$2,$3,$4) as ok", [
+            org,
+            O,
+            actor,
+            kind,
+          ])
+        ).rows[0].ok;
+        await c.query("commit");
+        return ok as boolean;
+      } finally {
+        c.release();
+      }
+    };
+    // Without a valid scope the function refuses regardless of limits.
+    expect(await at("org-real-outlet", "real-user", "turn")).toBe(false);
+    const src = (
+      await owner.query(
+        "select pg_get_functiondef('app_private.ai_reserve_user_budget(text,text,text,text)'::regprocedure) d"
+      )
+    ).rows[0].d as string;
+    expect(src).toContain("conv_limit:=CASE WHEN demo THEN 60 ELSE 12 END");
+    expect(src).toContain("turn_limit:=CASE WHEN demo THEN 400 ELSE 20 END");
+    const orgSrc = (
+      await owner.query(
+        "select pg_get_functiondef('app_private.ai_reserve_org_budget(text,text,text)'::regprocedure) d"
+      )
+    ).rows[0].d as string;
+    expect(orgSrc).toContain("THEN 800 ELSE 80");
+    // The demo actor can take more than the old 20 turns in a day.
+    await owner.query("delete from assistant_user_daily_budget where user_id=$1", [
+      DEMO_IDS.userId,
+    ]);
+    let granted = 0;
+    for (let i = 0; i < 25; i++)
+      if (await at(DEMO_IDS.organizationId, DEMO_IDS.userId, "turn")) granted++;
+    expect(granted).toBe(25);
+    await owner.query("delete from assistant_user_daily_budget where user_id=$1", [
+      DEMO_IDS.userId,
+    ]);
+  });
+});

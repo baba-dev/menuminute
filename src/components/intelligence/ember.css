@@ -641,3 +641,30 @@
     animation: none !important;
   }
 }
+
+.mm-ember-demo-note {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px dashed currentColor;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+.mm-ember-samples {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.mm-ember-samples li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.85;
+}

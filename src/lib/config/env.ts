@@ -122,6 +122,9 @@ export const envSchema = z
     COMMUNITY_EDITION: strictBoolean.default(false),
     // Kill switch for the public demo tenant (reset job and demo exceptions). Off unless explicit.
     DEMO_MODE_ENABLED: strictBoolean.default(false),
+    // Public-demo Ember allowance: bounds worst-case provider spend of the shared demo account.
+    DEMO_AI_DAILY_TURNS: z.coerce.number().int().min(0).max(100000).default(150),
+    DEMO_AI_SOURCE_TURNS_PER_10MIN: z.coerce.number().int().min(1).max(1000).default(6),
     RAZORPAY_ENABLED: strictBoolean.default(false),
     RAZORPAY_KITCHEN_ENABLED: strictBoolean.default(false),
     BILLING_DATABASE_URL: pgUrl.optional(),

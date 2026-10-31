@@ -1,7 +1,7 @@
 # Public demo runbook
 
 Status: **dataset, reset, provisioning, one-click entry, request guard, demo orders, kitchen and
-entitlements implemented; Ember limits and the documentation site are planned** (see the plan in the PR description). Read the
+entitlements and Ember limits implemented; the documentation site is planned** (see the plan in the PR description). Read the
 [Public demo exception](../AGENTS.md#public-demo-exception) first.
 
 ## What exists
@@ -51,6 +51,24 @@ entitlements implemented; Ember limits and the documentation site are planned** 
   invalidate the web cache, so after a revert guests may see one "menu changed" conflict for up to 3 minutes.
 - Migration 0059 removes the legacy `order_items.variant_id` foreign key. Without it any guest order that
   chose a variant (Half/Full, sizes) failed for **every** tenant (ADR 026).
+
+## Ember (AI assistant) in the demo
+
+- Ember only works if the operator enables it (`AI_ASSISTANT_READ_ONLY_ENABLED`, a verified provider and its
+  daily spend cap). The demo never enables actions: `/api/assistant/actions*` is blocked by the guard.
+- All visitors share one account, so migration 0060 raises the hard-coded per-user and per-organization daily
+  budgets (and their table checks) **only for `demo-owner` / `org-demo-outlet`** (60 conversations, 400 turns,
+  800 attempts). Every other tenant keeps 12 / 20 / 80.
+- `src/modules/demo/ember-limit.ts` is the real cost ceiling for the demo: 6 turns per source per 10 minutes,
+  half that many conversations, `DEMO_AI_DAILY_TURNS` (default 150) turns per UTC day across all visitors, and
+  a 280-character prompt cap. Redis failure fails closed. Worst-case daily spend is
+  `DEMO_AI_DAILY_TURNS x (two attempts x per-attempt reservation)`; size it against the provider cap.
+- **The provider daily spend cap is shared with real tenants.** Set `DEMO_AI_DAILY_TURNS` low enough that the demo
+  cannot exhaust it, or give the demo its own provider budget before enabling Ember publicly.
+- The UI shows a public-demo notice, demo-specific starter questions and, when the daily allowance is used up,
+  clearly labelled sample answers instead of an empty error.
+- Pre-launch gate: Ember privacy and retention (issue #230) is still unapproved. Demo conversations are shared
+  between visitors and wiped by every reset.
 
 ## What a reset never touches
 
