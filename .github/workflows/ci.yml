@@ -86,6 +86,8 @@ jobs:
 
       - name: Lint source code (ESLint)
         run: pnpm lint
+      - name: Verify Help Center content, navigation and Ember knowledge
+        run: pnpm help:verify
 
   typecheck:
     name: TypeScript Strict Typecheck
