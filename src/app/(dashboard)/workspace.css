@@ -1550,3 +1550,59 @@
     flex-direction: column;
   }
 }
+
+/* Touch hardening on phones: 44px targets, no iOS focus-zoom on the outlet picker. */
+@media (max-width: 760px) {
+  .mm-workspace-switcher select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .mm-workspace-brand-link,
+  .mm-workspace-logout,
+  .mm-workspace-profile-link,
+  .mm-topbar-new,
+  .mm-topbar-chip,
+  .mm-topbar-connection,
+  .mm-topbar-bell,
+  .mm-dashboard-user,
+  .mm-dashboard-preview {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .mm-workspace-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Small "i" triggers keep their look but get a 44px hit area. */
+  .mm-dashboard-info {
+    position: relative;
+  }
+  .mm-dashboard-info::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
+  .mm-dashboard-priority-action,
+  .mm-dashboard-health-foot a,
+  .mm-dashboard-setup-foot a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .mm-topbar-new,
+  .mm-topbar-chip,
+  .mm-topbar-connection,
+  .mm-topbar-bell,
+  button[aria-label^="Switch to"] {
+    height: 44px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  button[aria-label^="Switch to"] {
+    width: 44px;
+  }
+}

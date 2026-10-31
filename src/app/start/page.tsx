@@ -12,7 +12,12 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function StartPage() {
+export default async function StartPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ choose?: string }>;
+}) {
+  const { choose } = await searchParams;
   const session = await auth();
   if (!session) redirect("/login?next=%2Fstart");
   const [outlets, memberships] = await Promise.all([
@@ -21,6 +26,8 @@ export default async function StartPage() {
   ]);
   // Joining another restaurant as staff must never prevent someone from
   // creating their own first independently owned restaurant.
+  // A brand-new account has exactly one sensible path; skip the chooser unless asked for.
+  if (!choose && !outlets.length && !memberships.length) redirect("/onboarding");
   const ownsRestaurant = memberships.some((org) => org.isActive && org.role === "owner");
   const canAddOutlet = memberships.some(
     (org) => org.isActive && (org.role === "owner" || org.role === "admin")

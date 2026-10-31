@@ -22,9 +22,11 @@ legacy users to make rollout green.
 
 ## New accounts
 
-Better Auth sends 1-hour single-use verification links; no session is created at signup;
-verified email is required to log in. The DB trigger also guards new/changed effective
-organization memberships, including direct provisioning. Password-reset links last 30 minutes;
+Better Auth sends 24-hour single-use verification links (long enough to survive a slow mail
+provider); signup creates a session immediately and verification is deferred and nagged, not required
+to log in (see `docs/onboarding-entry-production-hardening.md#deferred-email-verification`). The DB
+trigger still guards new/changed effective organization memberships, including direct provisioning,
+and now exempts only the first owner membership of a brand-new organization. Password-reset links last 30 minutes;
 successful reset revokes existing sessions, using transactional PostgreSQL auth storage.
 Both production transports are fail-closed and never log credentials, recipients, provider response
 bodies or generated links. SMTP validates the certificate/hostname and never downgrades or falls back.

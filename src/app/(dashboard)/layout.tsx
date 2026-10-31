@@ -26,6 +26,7 @@ import {
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { auth, authServer } from "@/lib/auth";
 import { SessionContinuity } from "@/components/auth/session-continuity";
+import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import {
   getDefaultOrActiveRestaurant,
   getRestaurantsByUserId,
@@ -194,6 +195,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </aside>
         <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
+          {!session.user.emailVerified && (
+            <VerifyEmailBanner email={session.user.email} returnTo="/dashboard" />
+          )}
           <WorkspaceTopbar
             userName={name}
             publicHref={publicHref}

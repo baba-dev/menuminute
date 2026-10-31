@@ -12,7 +12,7 @@ export async function kitchenStreamActor(req: Request) {
     headers: req.headers,
     query: { disableRefresh: true },
   });
-  if (!session?.user?.id || !session.user.emailVerified) throw new UnauthorizedError();
+  if (!session?.user?.id) throw new UnauthorizedError();
   if (await needsMfaEnrollment(session.user.id, Boolean(session.user.twoFactorEnabled)))
     throw new ForbiddenError("Enroll two-factor authentication");
   return { userId: session.user.id, sessionId: session.session.id };

@@ -15,7 +15,11 @@ import { setTraceContext } from "@/lib/tracing";
 import { telemetry } from "@/lib/telemetry";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-export async function requestActor(req: Request, mutation = false) {
+export async function requestActor(
+  req: Request,
+  mutation = false,
+  options: { verified?: boolean } = {}
+) {
   if (
     mutation &&
     (req.headers.get("origin") !== new URL(env.APP_URL).origin ||
@@ -24,6 +28,9 @@ export async function requestActor(req: Request, mutation = false) {
     throw new ForbiddenError();
   const session = await auth();
   if (!session?.user.id) throw new UnauthorizedError();
+  // Email verification is deferred; sensitive actions (billing, invitations) still require it.
+  if (options.verified && !session.user.emailVerified)
+    throw new ForbiddenError("Verify your email address to continue.");
   setTraceContext({ actorId: session.user.id });
   return { userId: session.user.id, sessionId: session.session.id };
 }

@@ -38,15 +38,23 @@ export const authServer = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendOnSignIn: true,
-    autoSignInAfterVerification: false,
-    expiresIn: 60 * 60,
+    // Verification is deferred and nagged, never a signup gate: a slow mail provider must not
+    // delay account creation, and clicking the link in the same browser signs the owner in.
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendAuthEmail(user.email, "Verify your MenuMinute email", url);
+      // Deliberately not awaited: SMTP latency must not block signup or setup. A failed send is
+      // recoverable from the in-app verification banner, which can resend on demand.
+      void sendAuthEmail(user.email, "Verify your MenuMinute email", url).catch(() => {
+        console.error("[auth] Verification email delivery failed; user can resend from the banner");
+      });
     },
   },
   emailAndPassword: {
-    requireEmailVerification: true,
-    autoSignIn: false,
+    // Unverified accounts get working access to their own workspace. Invitations, billing,
+    // ownership/admin roles and step-up still require a verified email (see requestActor).
+    requireEmailVerification: false,
+    autoSignIn: true,
     resetPasswordTokenExpiresIn: 60 * 30,
     revokeSessionsOnPasswordReset: true,
     onPasswordReset: async ({ user }) => {
@@ -145,7 +153,12 @@ export async function auth() {
     headers: await headers(),
     query: { disableRefresh: true },
   });
-  return session?.user.emailVerified
+  return session
     ? { ...session, activeOutletId: (await cookies()).get("menuminute.outlet")?.value }
     : null;
+}
+/** Like auth(), but only for sessions whose email address has been verified. */
+export async function authVerified() {
+  const session = await auth();
+  return session?.user.emailVerified ? session : null;
 }

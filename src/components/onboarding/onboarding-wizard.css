@@ -1107,3 +1107,188 @@
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   Mobile hardening (320–640px): no clipped content, no iOS focus-zoom,
+   44px touch targets, sticky primary action, readable errors.
+   ========================================================================== */
+.wizard-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: contents;
+}
+.wizard-fieldset:disabled .wizard-input,
+.wizard-fieldset:disabled .wizard-select,
+.wizard-fieldset:disabled .wizard-textarea {
+  opacity: 0.7;
+}
+.wizard-error-wrap {
+  padding: 0 2.25rem 1rem;
+}
+.wizard-container,
+.wizard-card,
+.wizard-content,
+.wizard-field-group,
+.wizard-footer > *,
+.wizard-grid-2 > *,
+.wizard-grid-3 > * {
+  min-width: 0;
+}
+.wizard-error-banner {
+  overflow-wrap: anywhere;
+}
+[data-theme="light"] .wizard-error-banner {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .wizard-error-banner {
+    color: #fecaca;
+  }
+}
+.wizard-back-btn,
+.wizard-primary-btn {
+  min-height: 44px;
+}
+.wizard-counter-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .wizard-error-wrap {
+    padding: 0 1rem 1rem;
+  }
+  /* 16px prevents iOS Safari zooming the page when a field is focused. */
+  .wizard-input,
+  .wizard-select,
+  .wizard-textarea,
+  .wizard-hours-day input[type="time"] {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .wizard-step-node {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .wizard-label:has(input[type="checkbox"]),
+  .wizard-mode-card {
+    min-height: 44px;
+  }
+  .wizard-label input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+  .wizard-counter-btn {
+    flex: 0 0 auto;
+  }
+  /* `clip` (unlike `hidden`) keeps rounded corners without making the card a scroll container,
+     so the footer can stick to the viewport bottom. */
+  .wizard-card {
+    overflow: clip;
+  }
+  .wizard-footer-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: var(--wizard-card-bg, inherit);
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -8px 16px -12px rgba(0, 0, 0, 0.35);
+  }
+  .wizard-footer {
+    gap: 0.5rem;
+    padding-top: 0;
+    border-top: 0;
+    flex-wrap: nowrap;
+  }
+  .wizard-footer > div {
+    flex-wrap: nowrap;
+    gap: 0.5rem !important;
+  }
+  .wizard-footer .wizard-status-pill {
+    max-width: 5.5rem;
+    line-height: 1.2;
+  }
+  .wizard-footer .wizard-back-btn,
+  .wizard-footer .wizard-primary-btn {
+    padding-inline: 0.875rem;
+    white-space: nowrap;
+  }
+  .wizard-launch-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-width: 360px) {
+  .wizard-footer .wizard-status-pill {
+    display: none;
+  }
+  .wizard-type-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .wizard-counter-box {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+  .wizard-counter-box input[type="range"] {
+    flex: 1 1 100% !important;
+    min-height: 44px;
+    order: 5;
+  }
+}
+
+.wizard-card {
+  --wizard-card-bg: #181514;
+}
+[data-theme="light"] .wizard-card {
+  --wizard-card-bg: #fffdf9;
+}
+@media (max-width: 640px) {
+  .wizard-modes-grid {
+    grid-template-columns: 1fr;
+  }
+  /* The final action stays reachable on the review step, above the home indicator. */
+  .wizard-launch-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 0 -1rem -1.25rem;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--wizard-card-bg);
+    box-shadow: 0 -8px 16px -12px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Pre-existing contrast bug: the geo-panel title was near-white on the light panel. */
+[data-theme="light"] .wizard-geo-title {
+  color: #292524;
+}
+@media (max-width: 640px) {
+  .wizard-palette-chip {
+    min-height: 44px;
+  }
+  /* The swatches carry inline 36px sizes, hence !important. */
+  .wizard-fieldset input[type="color"] {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+@media (max-width: 640px) {
+  .wizard-fieldset input[type="color"] {
+    flex: 0 0 44px;
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* On the review step the launch bar is the sticky action; Back scrolls with the page. */
+  .wizard-footer-bar--review {
+    position: static;
+    box-shadow: none;
+  }
+}

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { mockTurnstileForBrowserTests } from "./turnstile-mock";
-import { admin } from "../helpers";
 
 test("first-outlet wizard resumes a saved draft, recovers from failure and opens guided setup", async ({
   page,
@@ -18,18 +17,9 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await page.getByLabel("Confirm password").fill("onboarding-secure-password-123");
   await page.getByRole("checkbox", { name: /I agree to the/ }).check();
   await page.getByRole("button", { name: "Create free account" }).click();
-  await expect(page).toHaveURL(/\/verify-email/);
-  await admin(async (_, pool) =>
-    pool.query("update users set email_verified=true where email=$1", [email])
-  );
-  await page.goto("/login");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill("onboarding-secure-password-123");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/start/);
-  await expect(page.getByRole("link", { name: /Create my first restaurant/ })).toBeVisible();
-  await page.getByRole("link", { name: /Create my first restaurant/ }).click();
+  // Verification is deferred: signup lands straight in setup, with a persistent nag to verify.
   await expect(page).toHaveURL(/\/onboarding/);
+  await expect(page.getByTestId("verify-email-banner")).toContainText(email);
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) <= 640) {
     await expect(page.locator(".wizard-mobile-step-pill")).toHaveText("Step 1 of 5");
