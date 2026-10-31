@@ -55,9 +55,7 @@ describe("provenance-bound main-only production delivery", () => {
       scripts: Record<string, string>;
     };
     expect(pkg.scripts["build:release-preflight"]).toContain("esbuild scripts/demo-provision.ts");
-    expect(pkg.scripts["build:release-preflight"]).toContain(
-      "--outfile=dist/demo-provision.mjs"
-    );
+    expect(pkg.scripts["build:release-preflight"]).toContain("--outfile=dist/demo-provision.mjs");
     expect(packageScript).toContain("test -s dist/demo-provision.mjs");
     expect(packageScript).toContain("node --check dist/demo-provision.mjs");
     expect(packageScript).toContain('cp -a dist/. "$stage/dist/"');
