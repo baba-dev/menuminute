@@ -522,11 +522,11 @@ export function DiningFloorContainer({
   const selectedTable = layout.tables.find((t) => t.id === selectedTableId) ?? null;
 
   return (
-    <div className="mm-floor-system" data-testid="dining-floor-system">
+    <div className="mm-floor-system" data-testid="floor-page">
       {/* 1. Floor Topbar & View Switcher */}
       <div className="mm-floor-topbar">
         <div className="mm-floor-heading">
-          <h1>Dining Floor</h1>
+          <h1>Dining floor</h1>
           <span className="text-muted-foreground text-xs" role="status" aria-live="polite">
             Layout: {saveStatus}
           </span>

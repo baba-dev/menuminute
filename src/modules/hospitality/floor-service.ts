@@ -289,9 +289,14 @@ export async function getReservations(
         ((coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date) + 1)::timestamp
         at time zone timezone) as finish
       from restaurants where id=${outletId}`);
-    const start = window.rows[0]?.start;
-    const finish = window.rows[0]?.finish;
-    if (!start || !finish) throw new NotFoundError("Outlet");
+    // PostgreSQL returns raw TIMESTAMPTZ expressions as strings through
+    // execute(). Drizzle timestamp comparisons require actual Date instances.
+    const row = window.rows[0];
+    if (!row) throw new NotFoundError("Outlet");
+    const start = new Date(row.start);
+    const finish = new Date(row.finish);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(finish.getTime()))
+      throw new ValidationError("Could not determine the outlet's reservation day");
     const rows = await tx
       .select()
       .from(diningReservations)
