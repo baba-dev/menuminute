@@ -121,78 +121,132 @@ export async function getFloorLayout(actor: Actor, outletId: string): Promise<Fl
 }
 
 /** Check the layout revision while holding the same outlet write lock. */
-async function nextLayoutRevision(tx: import("@/db").Transaction, outletId: string, expected: number) {
-  const [stored] = await tx.select({ layout: diningFloorPlans.layout }).from(diningFloorPlans)
-    .where(eq(diningFloorPlans.outletId, outletId)).for("update").limit(1);
+async function nextLayoutRevision(
+  tx: import("@/db").Transaction,
+  outletId: string,
+  expected: number
+) {
+  const [stored] = await tx
+    .select({ layout: diningFloorPlans.layout })
+    .from(diningFloorPlans)
+    .where(eq(diningFloorPlans.outletId, outletId))
+    .for("update")
+    .limit(1);
   const actual = stored ? floorLayoutDocSchema.safeParse(stored.layout) : null;
   const revision = actual?.success ? actual.data.revision : 0;
-  if (revision !== expected) throw new ConflictError("Floor was edited elsewhere. Refresh and retry.");
+  if (revision !== expected)
+    throw new ConflictError("Floor was edited elsewhere. Refresh and retry.");
   return revision + 1;
 }
 
 /** The floor document cannot invent or delete physical tables. */
-export async function saveFloorLayout(actor: Actor, outletId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
+export async function saveFloorLayout(
+  actor: Actor,
+  outletId: string,
+  doc: FloorLayoutDoc
+): Promise<FloorLayoutDoc> {
   const validated = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
     const revision = await nextLayoutRevision(tx, outletId, validated.revision);
     const updated: FloorLayoutDoc = { ...validated, revision };
-    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+    const active = await tx
+      .select({ id: restaurantTables.id })
+      .from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const ids = new Set(active.map((t) => t.id));
-    if (new Set(validated.tables.map((t) => t.id)).size !== ids.size
-      || validated.tables.some((t) => !ids.has(t.id))) {
+    if (
+      new Set(validated.tables.map((t) => t.id)).size !== ids.size ||
+      validated.tables.some((t) => !ids.has(t.id))
+    ) {
       throw new ConflictError("Table inventory changed; refresh the floor before saving.");
     }
     for (const table of validated.tables) {
-      await tx.update(restaurantTables).set({
-        tableNumber: table.tableNumber, label: table.label, capacity: table.capacity
-      }).where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.id, table.id)));
+      await tx
+        .update(restaurantTables)
+        .set({
+          tableNumber: table.tableNumber,
+          label: table.label,
+          capacity: table.capacity,
+        })
+        .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.id, table.id)));
     }
-    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() } });
+    await tx
+      .insert(diningFloorPlans)
+      .values({ outletId, layout: updated, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: diningFloorPlans.outletId,
+        set: { layout: updated, updatedAt: new Date() },
+      });
     return updated;
   });
 }
 
 /** Create a physical table and visual placement in one transaction. */
-export async function createFloorTable(actor: Actor, outletId: string, table: VisualTable, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
+export async function createFloorTable(
+  actor: Actor,
+  outletId: string,
+  table: VisualTable,
+  doc: FloorLayoutDoc
+): Promise<FloorLayoutDoc> {
   const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
     const revision = await nextLayoutRevision(tx, outletId, layout.revision);
     const updated: FloorLayoutDoc = { ...layout, revision };
-    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+    const active = await tx
+      .select({ id: restaurantTables.id })
+      .from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const existing = new Set(active.map((t) => t.id));
     const incoming = new Set(layout.tables.map((t) => t.id));
-    if (existing.has(table.id) || incoming.size !== existing.size + 1 || !incoming.has(table.id)
-      || [...existing].some((id) => !incoming.has(id))) {
+    if (
+      existing.has(table.id) ||
+      incoming.size !== existing.size + 1 ||
+      !incoming.has(table.id) ||
+      [...existing].some((id) => !incoming.has(id))
+    ) {
       throw new ConflictError("Table inventory changed; refresh before creating a table.");
     }
     await tx.insert(restaurantTables).values({
-      id: table.id, restaurantId: outletId, tableNumber: table.tableNumber,
-      label: table.label, capacity: table.capacity, isActive: true
+      id: table.id,
+      restaurantId: outletId,
+      tableNumber: table.tableNumber,
+      label: table.label,
+      capacity: table.capacity,
+      isActive: true,
     });
-    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() } });
+    await tx
+      .insert(diningFloorPlans)
+      .values({ outletId, layout: updated, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: diningFloorPlans.outletId,
+        set: { layout: updated, updatedAt: new Date() },
+      });
     return updated;
   });
 }
 
 /** Never archive an actively used table or its associated QR code. */
-export async function deleteTable(actor: Actor, outletId: string, tableId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
+export async function deleteTable(
+  actor: Actor,
+  outletId: string,
+  tableId: string,
+  doc: FloorLayoutDoc
+): Promise<FloorLayoutDoc> {
   const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
     const revision = await nextLayoutRevision(tx, outletId, layout.revision);
     const updated: FloorLayoutDoc = { ...layout, revision };
-    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+    const active = await tx
+      .select({ id: restaurantTables.id })
+      .from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const existing = new Set(active.map((t) => t.id));
     const expected = new Set([...existing].filter((id) => id !== tableId));
     if (!existing.has(tableId)) throw new NotFoundError("Active table");
-    if (new Set(layout.tables.map((t) => t.id)).size !== expected.size
-        || layout.tables.some((t) => !expected.has(t.id))) {
+    if (
+      new Set(layout.tables.map((t) => t.id)).size !== expected.size ||
+      layout.tables.some((t) => !expected.has(t.id))
+    ) {
       throw new ConflictError("Table inventory changed; refresh before archiving.");
     }
     const blocked = await tx.execute<{ blocked: boolean }>(sql`
@@ -201,21 +255,33 @@ export async function deleteTable(actor: Actor, outletId: string, tableId: strin
       or exists(select 1 from dining_reservations where outlet_id=${outletId} and table_id=${tableId}
         and status in ('confirmed','seated'))
       or exists(select 1 from qr_codes where restaurant_id=${outletId} and table_id=${tableId} and is_active)) as blocked`);
-    if (blocked.rows[0]?.blocked) throw new ConflictError("Table has active orders, bookings or QR codes. Resolve them before archiving.");
-    await tx.update(restaurantTables).set({ isActive: false })
+    if (blocked.rows[0]?.blocked)
+      throw new ConflictError(
+        "Table has active orders, bookings or QR codes. Resolve them before archiving."
+      );
+    await tx
+      .update(restaurantTables)
+      .set({ isActive: false })
       .where(and(eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId)));
-    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() } });
+    await tx
+      .insert(diningFloorPlans)
+      .values({ outletId, layout: updated, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: diningFloorPlans.outletId,
+        set: { layout: updated, updatedAt: new Date() },
+      });
     return updated;
   });
 }
 
 /** Reservations are fetched for the outlet's business day, never the server's day. */
 export async function getReservations(
-  actor: Actor, outletId: string, localDate?: string
+  actor: Actor,
+  outletId: string,
+  localDate?: string
 ): Promise<ReservationItem[]> {
-  if (localDate && !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) throw new ValidationError("Invalid booking date");
+  if (localDate && !/^\d{4}-\d{2}-\d{2}$/.test(localDate))
+    throw new ValidationError("Invalid booking date");
   return withOutletRead(actor, outletId, "orders.read", async (tx) => {
     const window = await tx.execute<{ start: Date; finish: Date }>(sql`
       select (coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date)::timestamp
@@ -226,27 +292,42 @@ export async function getReservations(
     const start = window.rows[0]?.start;
     const finish = window.rows[0]?.finish;
     if (!start || !finish) throw new NotFoundError("Outlet");
-    const rows = await tx.select().from(diningReservations).where(and(
-      eq(diningReservations.outletId, outletId),
-      gte(diningReservations.reservationTime, start),
-      sql`${diningReservations.reservationTime} < ${finish}`
-    )).orderBy(diningReservations.reservationTime);
+    const rows = await tx
+      .select()
+      .from(diningReservations)
+      .where(
+        and(
+          eq(diningReservations.outletId, outletId),
+          gte(diningReservations.reservationTime, start),
+          sql`${diningReservations.reservationTime} < ${finish}`
+        )
+      )
+      .orderBy(diningReservations.reservationTime);
     return rows.map(toReservationItem);
   });
 }
 function toReservationItem(r: DiningReservation): ReservationItem {
   return {
-    id: r.id, outletId: r.outletId, tableId: r.tableId,
-    guestName: r.guestName, guestPhone: r.guestPhone, guestEmail: r.guestEmail,
-    partySize: r.partySize, reservationTime: r.reservationTime.toISOString(),
-    durationMinutes: r.durationMinutes, status: r.status as ReservationItem["status"],
-    notes: r.notes, createdAt: r.createdAt.toISOString()
+    id: r.id,
+    outletId: r.outletId,
+    tableId: r.tableId,
+    guestName: r.guestName,
+    guestPhone: r.guestPhone,
+    guestEmail: r.guestEmail,
+    partySize: r.partySize,
+    reservationTime: r.reservationTime.toISOString(),
+    durationMinutes: r.durationMinutes,
+    status: r.status as ReservationItem["status"],
+    notes: r.notes,
+    createdAt: r.createdAt.toISOString(),
   };
 }
 
 /** The table-row lock serializes bookings for the same table. */
 export async function createReservation(
-  actor: Actor, outletId: string, input: CreateReservationInput
+  actor: Actor,
+  outletId: string,
+  input: CreateReservationInput
 ): Promise<ReservationItem> {
   if (!input.tableId) throw new ValidationError("Select a table before confirming a booking.");
   return withOutlet(actor, outletId, "orders.accept", async (tx) => {
@@ -266,14 +347,25 @@ export async function createReservation(
           and reservation_time < (${time}::timestamptz + (${input.durationMinutes} * interval '1 minute'))
           and (reservation_time + (duration_minutes * interval '1 minute')) > ${time}::timestamptz
       ) as booked`);
-    if (overlap.rows[0]?.booked) throw new ConflictError("This table is already booked for the selected time.");
+    if (overlap.rows[0]?.booked)
+      throw new ConflictError("This table is already booked for the selected time.");
     const id = crypto.randomUUID();
-    const [created] = await tx.insert(diningReservations).values({
-      id, outletId, tableId: input.tableId, guestName: input.guestName,
-      guestPhone: input.guestPhone ?? null, guestEmail: input.guestEmail ?? null,
-      partySize: input.partySize, reservationTime: time,
-      durationMinutes: input.durationMinutes, status: "confirmed", notes: input.notes ?? null
-    }).returning();
+    const [created] = await tx
+      .insert(diningReservations)
+      .values({
+        id,
+        outletId,
+        tableId: input.tableId,
+        guestName: input.guestName,
+        guestPhone: input.guestPhone ?? null,
+        guestEmail: input.guestEmail ?? null,
+        partySize: input.partySize,
+        reservationTime: time,
+        durationMinutes: input.durationMinutes,
+        status: "confirmed",
+        notes: input.notes ?? null,
+      })
+      .returning();
     await tx.execute(sql`
       insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id)
       values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.created','reservation',${id})`);
@@ -283,24 +375,37 @@ export async function createReservation(
 
 /** Allowed transitions form a one-way operator lifecycle, with audit evidence. */
 export async function updateReservationStatus(
-  actor: Actor, outletId: string, reservationId: string,
+  actor: Actor,
+  outletId: string,
+  reservationId: string,
   status: "confirmed" | "seated" | "completed" | "cancelled" | "no_show"
 ): Promise<void> {
   return withOutlet(actor, outletId, "orders.accept", async (tx) => {
-    const [current] = await tx.select().from(diningReservations).where(and(
-      eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId)
-    )).for("update").limit(1);
+    const [current] = await tx
+      .select()
+      .from(diningReservations)
+      .where(
+        and(eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId))
+      )
+      .for("update")
+      .limit(1);
     if (!current) throw new NotFoundError("Reservation");
     if (current.status === status) return;
     const allowed: Record<string, string[]> = {
-      confirmed: ["seated", "cancelled", "no_show"], seated: ["completed"],
-      completed: [], cancelled: [], no_show: []
+      confirmed: ["seated", "cancelled", "no_show"],
+      seated: ["completed"],
+      completed: [],
+      cancelled: [],
+      no_show: [],
     };
     if (!allowed[current.status]?.includes(status))
       throw new ConflictError("This reservation cannot move to the requested status.");
-    await tx.update(diningReservations).set({ status }).where(and(
-      eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId)
-    ));
+    await tx
+      .update(diningReservations)
+      .set({ status })
+      .where(
+        and(eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId))
+      );
     await tx.execute(sql`
       insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id,before,after)
       values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.status.changed',
@@ -311,11 +416,17 @@ export async function updateReservationStatus(
 /** Attach or reuse a QR that actually points at the selected physical table. */
 export async function attachExistingTableQr(actor: Actor, outletId: string, tableId: string) {
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    const existing = await tx.select({ tableNumber: restaurantTables.tableNumber })
-      .from(restaurantTables).where(and(
-        eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId),
-        eq(restaurantTables.isActive, true)
-      )).limit(1);
+    const existing = await tx
+      .select({ tableNumber: restaurantTables.tableNumber })
+      .from(restaurantTables)
+      .where(
+        and(
+          eq(restaurantTables.id, tableId),
+          eq(restaurantTables.restaurantId, outletId),
+          eq(restaurantTables.isActive, true)
+        )
+      )
+      .limit(1);
     if (!existing[0]) throw new NotFoundError("Active outlet table");
     const result = await tx.execute<{ record: { id: string; token: string; tableId: string } }>(sql`
       select app_private.attach_existing_table_qr(${outletId},${tableId},

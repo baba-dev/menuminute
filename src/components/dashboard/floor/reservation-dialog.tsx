@@ -78,7 +78,8 @@ export function ReservationDialog({
     setError("");
     try {
       if (!currentTable) throw new Error("Select an active table.");
-      if (partySize > currentTable.capacity) throw new Error("Party exceeds the seating capacity of the table.");
+      if (partySize > currentTable.capacity)
+        throw new Error("Party exceeds the seating capacity of the table.");
       await onSubmit({
         tableId: tableId || null,
         guestName: guestName.trim(),

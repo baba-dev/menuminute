@@ -9,7 +9,10 @@ async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const body = await req.json();
-    const parsed = z.object({ table: visualTableSchema, layout: floorLayoutDocSchema }).strict().parse(body);
+    const parsed = z
+      .object({ table: visualTableSchema, layout: floorLayoutDocSchema })
+      .strict()
+      .parse(body);
     const result = await createFloorTable(actor, restaurant.id, parsed.table, parsed.layout);
     return NextResponse.json(result);
   } catch (e) {
@@ -21,7 +24,10 @@ async function observed_DELETE(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const body = await req.json();
-    const { tableId, layout } = z.object({ tableId: z.string().min(1), layout: floorLayoutDocSchema }).strict().parse(body);
+    const { tableId, layout } = z
+      .object({ tableId: z.string().min(1), layout: floorLayoutDocSchema })
+      .strict()
+      .parse(body);
     const updated = await deleteTable(actor, restaurant.id, tableId, layout);
     return NextResponse.json(updated);
   } catch (e) {

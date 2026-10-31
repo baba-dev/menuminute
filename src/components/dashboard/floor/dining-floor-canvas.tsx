@@ -49,9 +49,14 @@ export function DiningFloorCanvas({
     const element = containerRef.current;
     if (!element) return;
     const fit = () => {
-      const value = Math.max(0.15, Math.min(1.5,
-        (element.clientWidth - 24) / layout.canvas.width,
-        (element.clientHeight - 24) / layout.canvas.height));
+      const value = Math.max(
+        0.15,
+        Math.min(
+          1.5,
+          (element.clientWidth - 24) / layout.canvas.width,
+          (element.clientHeight - 24) / layout.canvas.height
+        )
+      );
       onFitZoom(Number(value.toFixed(2)));
     };
     const observer = new ResizeObserver(fit);
@@ -144,7 +149,8 @@ export function DiningFloorCanvas({
 
   // Pointer events support mouse and touch panning without hijacking table drags.
   const handleCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as Element).closest(".mm-table-group") || (e.target as Element).closest("button")) return;
+    if ((e.target as Element).closest(".mm-table-group") || (e.target as Element).closest("button"))
+      return;
     if (e.pointerType === "mouse" && e.button !== 0 && e.button !== 1) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsPanning(true);
@@ -155,7 +161,8 @@ export function DiningFloorCanvas({
   };
   const handleCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsPanning(false);
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+    if (e.currentTarget.hasPointerCapture(e.pointerId))
+      e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   // Rotate selected table
@@ -227,7 +234,16 @@ export function DiningFloorCanvas({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedTableId, snapEnabled, layout, onChangeLayout, onSelectTable, onDeleteTable, selectedTable, haptics]);
+  }, [
+    selectedTableId,
+    snapEnabled,
+    layout,
+    onChangeLayout,
+    onSelectTable,
+    onDeleteTable,
+    selectedTable,
+    haptics,
+  ]);
 
   const { width: canvasW, height: canvasH } = layout.canvas;
 

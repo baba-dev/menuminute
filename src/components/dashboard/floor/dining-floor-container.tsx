@@ -32,15 +32,25 @@ import { useHaptics } from "@/lib/use-haptics";
 
 function outletMinute(date: Date, timeZone: string): number {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
   }).formatToParts(date);
   const n = (name: string) => Number(parts.find((part) => part.type === name)?.value ?? "0");
-  return Math.floor(Date.UTC(n("year"), n("month") - 1, n("day")) / 60000) + n("hour") * 60 + n("minute");
+  return (
+    Math.floor(Date.UTC(n("year"), n("month") - 1, n("day")) / 60000) + n("hour") * 60 + n("minute")
+  );
 }
 function outletDate(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   }).formatToParts(date);
   const value = (name: string) => parts.find((part) => part.type === name)?.value ?? "";
   return `${value("year")}-${value("month")}-${value("day")}`;
@@ -113,7 +123,8 @@ export function DiningFloorContainer({
       setSaveStatus("saving");
       try {
         const res = await fetch("/api/floor", {
-          method: "PUT", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+          method: "PUT",
+          headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
           body: JSON.stringify({ ...draft, revision: revisionRef.current }),
         });
         if (!res.ok) {
@@ -135,17 +146,25 @@ export function DiningFloorContainer({
     setSaveStatus("saved");
   }, [outlet.id]);
 
-  const persistLayout = useCallback((nextLayout: FloorLayoutDoc) => {
-    pendingRef.current = nextLayout;
-    setSaveStatus("unsaved");
-    if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => { void flushLayout(); }, 500);
-  }, [flushLayout]);
+  const persistLayout = useCallback(
+    (nextLayout: FloorLayoutDoc) => {
+      pendingRef.current = nextLayout;
+      setSaveStatus("unsaved");
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(() => {
+        void flushLayout();
+      }, 500);
+    },
+    [flushLayout]
+  );
 
-  const handleLayoutChange = useCallback((nextLayout: FloorLayoutDoc) => {
-    setLayout(nextLayout);
-    persistLayout(nextLayout);
-  }, [persistLayout]);
+  const handleLayoutChange = useCallback(
+    (nextLayout: FloorLayoutDoc) => {
+      setLayout(nextLayout);
+      persistLayout(nextLayout);
+    },
+    [persistLayout]
+  );
 
   // Map live statuses per table
   const tableStatuses = useMemo(() => {
@@ -171,15 +190,22 @@ export function DiningFloorContainer({
 
       // Timeline previews respect actual booking intervals in the outlet timezone.
       const currentMinute = outletMinute(new Date(), outlet.timezone);
-      const targetMinute = selectedHour === "now" ? currentMinute :
-        Math.floor(currentMinute / 1440) * 1440 +
-          Number(selectedHour.slice(0, 2)) * 60 + Number(selectedHour.slice(3, 5));
-      const upcomingRes = reservations.find((r) =>
-        r.tableId === t.id && (r.status === "confirmed" || r.status === "seated") &&
-        targetMinute >= outletMinute(new Date(r.reservationTime), outlet.timezone) &&
-        targetMinute < outletMinute(
-          new Date(new Date(r.reservationTime).getTime() + r.durationMinutes * 60000), outlet.timezone
-        )
+      const targetMinute =
+        selectedHour === "now"
+          ? currentMinute
+          : Math.floor(currentMinute / 1440) * 1440 +
+            Number(selectedHour.slice(0, 2)) * 60 +
+            Number(selectedHour.slice(3, 5));
+      const upcomingRes = reservations.find(
+        (r) =>
+          r.tableId === t.id &&
+          (r.status === "confirmed" || r.status === "seated") &&
+          targetMinute >= outletMinute(new Date(r.reservationTime), outlet.timezone) &&
+          targetMinute <
+            outletMinute(
+              new Date(new Date(r.reservationTime).getTime() + r.durationMinutes * 60000),
+              outlet.timezone
+            )
       );
 
       let state: TableLiveStatus["state"] = "available";
@@ -216,7 +242,15 @@ export function DiningFloorContainer({
       };
     }
     return map;
-  }, [layout.tables, orderMatrix, qrCodes, reservations, selectedHour, outlet.currency, outlet.timezone]);
+  }, [
+    layout.tables,
+    orderMatrix,
+    qrCodes,
+    reservations,
+    selectedHour,
+    outlet.currency,
+    outlet.timezone,
+  ]);
 
   // Handle table addition from HUD
   const handleAddTable = async (template: {
@@ -259,10 +293,17 @@ export function DiningFloorContainer({
       const res = await fetch("/api/floor/tables", {
         method: "POST",
         headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ table: newTable, layout: { ...nextLayout, revision: revisionRef.current } }),
+        body: JSON.stringify({
+          table: newTable,
+          layout: { ...nextLayout, revision: revisionRef.current },
+        }),
       });
       if (!res.ok) throw new Error("Table could not be created. Refresh and retry.");
-      { const saved = (await res.json()) as FloorLayoutDoc; revisionRef.current = saved.revision; setLayout(saved); }
+      {
+        const saved = (await res.json()) as FloorLayoutDoc;
+        revisionRef.current = saved.revision;
+        setLayout(saved);
+      }
       setSelectedTableId(newId);
       setInspectorOpen(true);
       toast.success(`Table ${newTable.tableNumber} created on floor`);
@@ -274,31 +315,59 @@ export function DiningFloorContainer({
   const handleDuplicateTable = async (table: VisualTable) => {
     let number = `${table.tableNumber}-B`;
     let suffix = 2;
-    while (layout.tables.some((t) => t.tableNumber === number)) number = `${table.tableNumber}-B${suffix++}`;
-    const duplicate: VisualTable = { ...table, id: crypto.randomUUID(), tableNumber: number,
+    while (layout.tables.some((t) => t.tableNumber === number))
+      number = `${table.tableNumber}-B${suffix++}`;
+    const duplicate: VisualTable = {
+      ...table,
+      id: crypto.randomUUID(),
+      tableNumber: number,
       x: Math.min(layout.canvas.width - table.width, table.x + 40),
-      y: Math.min(layout.canvas.height - table.height, table.y + 40) };
+      y: Math.min(layout.canvas.height - table.height, table.y + 40),
+    };
     try {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       await flushLayout();
       const res = await fetch("/api/floor/tables", {
-        method: "POST", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ table: duplicate, layout: { ...layout, revision: revisionRef.current, tables: [...layout.tables, duplicate] } })
+        method: "POST",
+        headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+        body: JSON.stringify({
+          table: duplicate,
+          layout: {
+            ...layout,
+            revision: revisionRef.current,
+            tables: [...layout.tables, duplicate],
+          },
+        }),
       });
       if (!res.ok) throw new Error("Could not duplicate table");
       setLayout((await res.json()) as FloorLayoutDoc);
       setSelectedTableId(duplicate.id);
       toast.success("Table duplicated");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not duplicate table"); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not duplicate table");
+    }
   };
 
   const handleDeleteTable = async (table: VisualTable) => {
-    if (!window.confirm(`Archive Table ${table.tableNumber}? Active orders, bookings and QR codes must be cleared first.`)) return;
+    if (
+      !window.confirm(
+        `Archive Table ${table.tableNumber}? Active orders, bookings and QR codes must be cleared first.`
+      )
+    )
+      return;
     try {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       const res = await fetch("/api/floor/tables", {
-        method: "DELETE", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ tableId: table.id, layout: { ...layout, revision: revisionRef.current, tables: layout.tables.filter((t) => t.id !== table.id) } })
+        method: "DELETE",
+        headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+        body: JSON.stringify({
+          tableId: table.id,
+          layout: {
+            ...layout,
+            revision: revisionRef.current,
+            tables: layout.tables.filter((t) => t.id !== table.id),
+          },
+        }),
       });
       if (!res.ok) {
         const error = await res.json().catch(() => ({}));
@@ -308,7 +377,9 @@ export function DiningFloorContainer({
       setSelectedTableId(null);
       setInspectorOpen(false);
       toast.success("Table archived");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not archive table"); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not archive table");
+    }
   };
 
   // Generate Table QR Code via /api/qr
@@ -368,13 +439,16 @@ export function DiningFloorContainer({
     toast.success(`Reservation confirmed for ${created.guestName}`);
   };
 
-  const loadReservations = useCallback(async (day: string) => {
-    const response = await fetch(`/api/floor/reservations?date=${encodeURIComponent(day)}`, {
-      headers: { "x-outlet-id": outlet.id },
-    });
-    if (!response.ok) throw new Error("Could not load reservations for this day");
-    setReservations((await response.json()) as ReservationItem[]);
-  }, [outlet.id]);
+  const loadReservations = useCallback(
+    async (day: string) => {
+      const response = await fetch(`/api/floor/reservations?date=${encodeURIComponent(day)}`, {
+        headers: { "x-outlet-id": outlet.id },
+      });
+      if (!response.ok) throw new Error("Could not load reservations for this day");
+      setReservations((await response.json()) as ReservationItem[]);
+    },
+    [outlet.id]
+  );
 
   React.useEffect(() => {
     void loadReservations(selectedDate).catch(() => {
@@ -415,7 +489,12 @@ export function DiningFloorContainer({
       if (!res.ok) throw new Error("Could not refresh floor data");
       if (res.ok) {
         const data = await res.json();
-        if (data.layout) { revisionRef.current = data.layout.revision; pendingRef.current = null; setLayout(data.layout); setSaveStatus("saved"); }
+        if (data.layout) {
+          revisionRef.current = data.layout.revision;
+          pendingRef.current = null;
+          setLayout(data.layout);
+          setSaveStatus("saved");
+        }
         if (data.orderMatrix) setOrderMatrix(data.orderMatrix);
         if (data.qrCodes) setQrCodes(data.qrCodes);
         await loadReservations(selectedDate);
@@ -434,7 +513,9 @@ export function DiningFloorContainer({
       <div className="mm-floor-topbar">
         <div className="mm-floor-heading">
           <h1>Dining Floor</h1>
-          <span className="text-muted-foreground text-xs" role="status" aria-live="polite">Layout: {saveStatus}</span>
+          <span className="text-muted-foreground text-xs" role="status" aria-live="polite">
+            Layout: {saveStatus}
+          </span>
           <p>
             {outlet.name} · {layout.tables.length} tables ·{" "}
             {qrCodes.filter((q) => q.isActive && q.tableId).length} tabletop QR standees
@@ -547,7 +628,10 @@ export function DiningFloorContainer({
             snapEnabled={snapEnabled}
             hapticsEnabled={hapticsEnabled}
             zoom={zoom}
-            onFitZoom={(value) => { setFitZoom(value); setZoom(value); }}
+            onFitZoom={(value) => {
+              setFitZoom(value);
+              setZoom(value);
+            }}
             onDuplicateTable={handleDuplicateTable}
             onDeleteTable={handleDeleteTable}
             onOpenInspector={(t) => {
@@ -613,24 +697,31 @@ export function DiningFloorContainer({
             <div>
               <h2 className="font-display text-xl font-bold">Daily Table Reservations</h2>
               <p className="text-muted-foreground text-sm">
-                Time-slot reservations and guest party arrivals for {outlet.name} ({outlet.timezone}).
+                Time-slot reservations and guest party arrivals for {outlet.name} ({outlet.timezone}
+                ).
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="floor-bookings-date" className="sr-only">Booking date</label>
-            <input id="floor-bookings-date" type="date" value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-              className="border-border bg-card rounded-lg border px-3 py-2 text-sm" />
-            <button
-              type="button"
-              className="mm-action-btn mm-action-primary"
-              onClick={() => {
-                setResDialogTable(layout.tables[0] ?? null);
-                setResDialogOpen(true);
-              }}
-            >
-              <Plus size={15} /> New Reservation
-            </button>
+              <label htmlFor="floor-bookings-date" className="sr-only">
+                Booking date
+              </label>
+              <input
+                id="floor-bookings-date"
+                type="date"
+                value={selectedDate}
+                onChange={(event) => setSelectedDate(event.target.value)}
+                className="border-border bg-card rounded-lg border px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                className="mm-action-btn mm-action-primary"
+                onClick={() => {
+                  setResDialogTable(layout.tables[0] ?? null);
+                  setResDialogOpen(true);
+                }}
+              >
+                <Plus size={15} /> New Reservation
+              </button>
             </div>
           </div>
 
