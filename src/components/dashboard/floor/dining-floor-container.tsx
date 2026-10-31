@@ -105,45 +105,52 @@ export function DiningFloorContainer({
   const [resDialogTable, setResDialogTable] = useState<VisualTable | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => outletDate(new Date(), outlet.timezone));
   const [fitZoom, setFitZoom] = useState(1);
+  const handleFitZoom = useCallback((value: number) => {
+    setFitZoom(value);
+    setZoom(value);
+  }, []);
 
   const haptics = useHaptics(hapticsEnabled);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savingRef = useRef(false);
+  const savingPromiseRef = useRef<Promise<void> | null>(null);
   const revisionRef = useRef(initialLayout.revision);
   const pendingRef = useRef<FloorLayoutDoc | null>(null);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
 
-  // Serial, revision-aware layout saves. A failed save remains visible to the operator.
-  const flushLayout = useCallback(async () => {
-    if (savingRef.current) return;
-    savingRef.current = true;
-    while (pendingRef.current) {
-      const draft = pendingRef.current;
-      pendingRef.current = null;
-      setSaveStatus("saving");
-      try {
-        const res = await fetch("/api/floor", {
-          method: "PUT",
-          headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-          body: JSON.stringify({ ...draft, revision: revisionRef.current }),
-        });
-        if (!res.ok) {
-          const detail = await res.json().catch(() => ({}));
-          throw new Error(detail.message ?? "Floor layout could not be saved");
-        }
-        const saved = (await res.json()) as FloorLayoutDoc;
-        revisionRef.current = saved.revision;
-        setLayout((current) => ({ ...current, revision: saved.revision }));
-      } catch (error) {
+  // A table mutation waits for any in-flight geometry writes.
+  const flushLayout = useCallback((): Promise<void> => {
+    if (savingPromiseRef.current) return savingPromiseRef.current;
+    const pending = (async () => {
+      while (pendingRef.current) {
+        const draft = pendingRef.current;
         pendingRef.current = null;
-        setSaveStatus("error");
-        toast.error(error instanceof Error ? error.message : "Floor layout could not be saved");
-        savingRef.current = false;
-        return;
+        setSaveStatus("saving");
+        try {
+          const response = await fetch("/api/floor", {
+            method: "PUT",
+            headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+            body: JSON.stringify({ ...draft, revision: revisionRef.current }),
+          });
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message ?? "Floor layout could not be saved");
+          }
+          const saved = (await response.json()) as FloorLayoutDoc;
+          revisionRef.current = saved.revision;
+          setLayout((current) => ({ ...current, revision: saved.revision }));
+        } catch (error) {
+          pendingRef.current = null;
+          setSaveStatus("error");
+          toast.error(error instanceof Error ? error.message : "Floor layout could not be saved");
+          throw error;
+        }
       }
-    }
-    savingRef.current = false;
-    setSaveStatus("saved");
+      setSaveStatus("saved");
+    })();
+    savingPromiseRef.current = pending;
+    return pending.finally(() => {
+      if (savingPromiseRef.current === pending) savingPromiseRef.current = null;
+    });
   }, [outlet.id]);
 
   const persistLayout = useCallback(
@@ -152,7 +159,7 @@ export function DiningFloorContainer({
       setSaveStatus("unsaved");
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       saveTimeout.current = setTimeout(() => {
-        void flushLayout();
+        void flushLayout().catch(() => undefined);
       }, 500);
     },
     [flushLayout]
@@ -193,7 +200,7 @@ export function DiningFloorContainer({
       const targetMinute =
         selectedHour === "now"
           ? currentMinute
-          : Math.floor(currentMinute / 1440) * 1440 +
+          : Date.parse(`${selectedDate}T00:00:00Z`) / 60000 +
             Number(selectedHour.slice(0, 2)) * 60 +
             Number(selectedHour.slice(3, 5));
       const upcomingRes = reservations.find(
@@ -248,6 +255,7 @@ export function DiningFloorContainer({
     qrCodes,
     reservations,
     selectedHour,
+    selectedDate,
     outlet.currency,
     outlet.timezone,
   ]);
@@ -340,7 +348,9 @@ export function DiningFloorContainer({
         }),
       });
       if (!res.ok) throw new Error("Could not duplicate table");
-      setLayout((await res.json()) as FloorLayoutDoc);
+      const saved = (await res.json()) as FloorLayoutDoc;
+      revisionRef.current = saved.revision;
+      setLayout(saved);
       setSelectedTableId(duplicate.id);
       toast.success("Table duplicated");
     } catch (error) {
@@ -357,6 +367,7 @@ export function DiningFloorContainer({
       return;
     try {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      await flushLayout();
       const res = await fetch("/api/floor/tables", {
         method: "DELETE",
         headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
@@ -373,7 +384,9 @@ export function DiningFloorContainer({
         const error = await res.json().catch(() => ({}));
         throw new Error(error.message ?? "Could not archive table");
       }
-      setLayout((await res.json()) as FloorLayoutDoc);
+      const saved = (await res.json()) as FloorLayoutDoc;
+      revisionRef.current = saved.revision;
+      setLayout(saved);
       setSelectedTableId(null);
       setInspectorOpen(false);
       toast.success("Table archived");
@@ -382,7 +395,7 @@ export function DiningFloorContainer({
     }
   };
 
-  // Generate Table QR Code via /api/qr
+  // Generate Table QR Code via the dedicated table-association API
   const handleGenerateQr = async (table: VisualTable) => {
     const pointLabel = `Table ${table.tableNumber}`;
     const res = await fetch("/api/floor/tables/qr", {
@@ -458,6 +471,7 @@ export function DiningFloorContainer({
 
   // Seat reservation
   const handleSeatReservation = async (resId: string) => {
+    try {
     haptics.confirm();
     const res = await fetch("/api/floor/reservations", {
       method: "PATCH",
@@ -477,6 +491,9 @@ export function DiningFloorContainer({
 
     setReservations((prev) => prev.map((r) => (r.id === resId ? { ...r, status: "seated" } : r)));
     toast.success("Party seated at table");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not seat guests");
+    }
   };
 
   // Refresh floor data
@@ -628,10 +645,7 @@ export function DiningFloorContainer({
             snapEnabled={snapEnabled}
             hapticsEnabled={hapticsEnabled}
             zoom={zoom}
-            onFitZoom={(value) => {
-              setFitZoom(value);
-              setZoom(value);
-            }}
+            onFitZoom={handleFitZoom}
             onDuplicateTable={handleDuplicateTable}
             onDeleteTable={handleDeleteTable}
             onOpenInspector={(t) => {
@@ -709,7 +723,9 @@ export function DiningFloorContainer({
                 id="floor-bookings-date"
                 type="date"
                 value={selectedDate}
-                onChange={(event) => setSelectedDate(event.target.value)}
+                onChange={(event) => {
+                  if (event.target.value) setSelectedDate(event.target.value);
+                }}
                 className="border-border bg-card rounded-lg border px-3 py-2 text-sm"
               />
               <button
@@ -728,7 +744,7 @@ export function DiningFloorContainer({
           {reservations.length === 0 ? (
             <div className="border-border bg-panel rounded-2xl border border-dashed p-12 text-center">
               <CalendarDays size={36} className="text-muted-foreground/60 mx-auto mb-3" />
-              <h3 className="text-base font-bold">No reservations scheduled today</h3>
+              <h3 className="text-base font-bold">No reservations scheduled for {selectedDate}</h3>
               <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
                 All tables are currently open for walk-in dining guests.
               </p>
@@ -804,6 +820,8 @@ export function DiningFloorContainer({
         open={resDialogOpen}
         onClose={() => setResDialogOpen(false)}
         tables={layout.tables}
+        outletTimezone={outlet.timezone}
+        defaultDate={selectedDate}
         selectedTable={resDialogTable}
         onSubmit={handleCreateReservation}
       />

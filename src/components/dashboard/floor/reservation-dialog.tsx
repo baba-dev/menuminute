@@ -11,6 +11,7 @@ interface ReservationDialogProps {
   tables: VisualTable[];
   selectedTable: VisualTable | null;
   outletTimezone: string;
+  defaultDate: string;
   onSubmit: (input: CreateReservationInput) => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export function ReservationDialog({
   tables,
   selectedTable,
   outletTimezone,
+  defaultDate,
   onSubmit,
 }: ReservationDialogProps) {
   const haptics = useHaptics(true);
@@ -49,8 +51,17 @@ export function ReservationDialog({
       setGuestEmail("");
       setNotes("");
       setError("");
+      if (defaultDate) {
+        const now = new Date();
+        const today = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, "0"),
+          String(now.getDate()).padStart(2, "0"),
+        ].join("-");
+        if (defaultDate !== today) setReservationTime(`${defaultDate}T19:00`);
+      }
     }
-  }, [open, selectedTable?.id, selectedTable?.capacity]);
+  }, [open, selectedTable?.id, selectedTable?.capacity, defaultDate]);
 
   useEffect(() => {
     if (!open) return;
