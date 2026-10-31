@@ -126,6 +126,8 @@ async function nextLayoutRevision(
   outletId: string,
   expected: number
 ) {
+  // Serialize the first save as well as later revisions (there may be no plan row yet).
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${outletId}, 87314))`);
   const [stored] = await tx
     .select({ layout: diningFloorPlans.layout })
     .from(diningFloorPlans)
@@ -283,7 +285,7 @@ export async function getReservations(
   if (localDate && !/^\d{4}-\d{2}-\d{2}$/.test(localDate))
     throw new ValidationError("Invalid booking date");
   return withOutletRead(actor, outletId, "orders.read", async (tx) => {
-    const window = await tx.execute<{ start: Date; finish: Date }>(sql`
+    const window = await tx.execute<{ start: string | Date; finish: string | Date }>(sql`
       select (coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date)::timestamp
         at time zone timezone) as start,
         ((coalesce(${localDate ?? null}::date,(now() at time zone timezone)::date) + 1)::timestamp
@@ -293,8 +295,8 @@ export async function getReservations(
     // execute(). Drizzle timestamp comparisons require actual Date instances.
     const row = window.rows[0];
     if (!row) throw new NotFoundError("Outlet");
-    const start = new Date(row.start);
-    const finish = new Date(row.finish);
+    const start = row.start instanceof Date ? row.start : new Date(row.start);
+    const finish = row.finish instanceof Date ? row.finish : new Date(row.finish);
     if (!Number.isFinite(start.getTime()) || !Number.isFinite(finish.getTime()))
       throw new ValidationError("Could not determine the outlet's reservation day");
     const rows = await tx
