@@ -43,7 +43,10 @@ async function handleGet(req: Request) {
   try {
     const { actor, outlet } = await scope(req, false);
     const result = await withOutletRead(actor, outlet.id, "orders.read", (tx) =>
-      tx.execute<{ list: unknown }>(sql`select app_private.pwa_push_list(${outlet.id}) as list`)
+      tx.execute<{ list: unknown; canKitchen: boolean }>(
+        sql`select app_private.pwa_push_list(${outlet.id}) as list,
+          app_private.kitchen_access(${outlet.id}) as "canKitchen"`
+      )
     );
     const enabled = env.PWA_PUSH_ENABLED && env.PWA_PUSH_OUTLET_IDS.includes(outlet.id);
     return NextResponse.json(
@@ -52,6 +55,7 @@ async function handleGet(req: Request) {
         publicKey: enabled ? env.PWA_PUSH_VAPID_PUBLIC_KEY : null,
         outletId: outlet.id,
         subscriptions: result.rows[0]?.list ?? [],
+        canKitchen: result.rows[0]?.canKitchen === true,
       },
       { headers }
     );

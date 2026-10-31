@@ -163,6 +163,9 @@ describe("PWA H: push service safety and signing", () => {
       "GRANT EXECUTE ON FUNCTION app_private.pwa_push_claim(text[]) TO menuminute_worker"
     );
     expect(sql).toContain("s.expires_at>now()");
+    expect(sql).toContain("EXCEPTION WHEN OTHERS");
+    expect(sql).toContain("app_private.kitchen_access(p_outlet)");
+    expect(sql).toContain("JOIN kitchen_work kw");
     expect(sql).toContain("m.is_active");
     expect(sql).toContain("p_outlet IS DISTINCT FROM current_setting('app.outlet_id',true)");
     expect(sql).toContain("REVOKE ALL ON pwa_push_subscriptions,pwa_push_deliveries");

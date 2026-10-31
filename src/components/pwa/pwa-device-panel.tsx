@@ -21,6 +21,7 @@ import styles from "./pwa-device-panel.module.css";
 
 type ServerState = {
   enabled: boolean;
+  canKitchen: boolean;
   publicKey: string | null;
   outletId: string;
   subscriptions: Array<{
@@ -106,7 +107,7 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
       setEnabledForDevice(Boolean(currentRecord));
       if (currentRecord) {
         setNewOrders(currentRecord.newOrders);
-        setKitchenUpdates(currentRecord.kitchenUpdates);
+        setKitchenUpdates(currentRecord.kitchenUpdates && state.canKitchen);
         setLastUpdated(currentRecord.updatedAt);
       } else setLastUpdated(null);
       setStatus(
@@ -264,7 +265,7 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
             <input
               type="checkbox"
               checked={kitchenUpdates}
-              disabled={busy || !remote?.enabled}
+              disabled={busy || !remote?.enabled || !remote.canKitchen}
               onChange={(e) => setKitchenUpdates(e.target.checked)}
             />
           </label>

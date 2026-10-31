@@ -47,6 +47,7 @@ BEGIN
   OR NOT app_private.can_outlet(p_outlet,'orders.read')
   OR p_hash !~ '^[0-9a-f]{64}$' OR length(p_endpoint) NOT BETWEEN 35 AND 2048
   OR p_new IS NULL OR p_kitchen IS NULL
+  OR (p_kitchen AND NOT app_private.kitchen_access(p_outlet))
   OR NOT EXISTS (SELECT 1 FROM sessions s WHERE s.id=sess AND s.user_id=actor AND s.expires_at>now())
  THEN RAISE EXCEPTION 'Push subscription is not authorized' USING ERRCODE='42501'; END IF;
  SELECT r.organization_id INTO org FROM restaurants r JOIN organizations o ON o.id=r.organization_id
@@ -111,7 +112,12 @@ BEGIN
       (NEW.type='kitchen.changed' AND s.kitchen_updates))
  LIMIT 100;
  RETURN NEW;
-END $$;
+EXCEPTION WHEN OTHERS THEN
+ -- Optional notifications must NEVER abort the canonical order transaction.
+ -- This handler rolls back only the trigger's local changes, not the outbox insert.
+ RAISE LOG 'PWA optional notification capture skipped; canonical event preserved';
+ RETURN NEW;
+END $;
 REVOKE ALL ON FUNCTION app_private.pwa_push_from_outbox() FROM PUBLIC;
 CREATE TRIGGER pwa_push_order_event AFTER INSERT ON outbox_events
  FOR EACH ROW EXECUTE FUNCTION app_private.pwa_push_from_outbox();
@@ -140,6 +146,22 @@ BEGIN
  AND d.outlet_id=ANY(p_outlets)
  AND (m.role IN ('owner','admin') OR g.roles && ARRAY['manager','service','kitchen']::text[])
  AND ((d.kind='order.created' AND s.new_orders) OR (d.kind='kitchen.changed' AND s.kitchen_updates))
+ -- Kitchen operators only receive activity from a station they CURRENTLY staff.
+ -- Owners/admins and explicitly granted outlet managers can receive all.
+ AND (
+   d.kind <> 'kitchen.changed'
+   OR m.role IN ('owner','admin')
+   OR g.roles && ARRAY['manager']::text[]
+   OR EXISTS(
+     SELECT 1 FROM outbox_events oe
+     JOIN kitchen_events ke ON ke.outlet_id=d.outlet_id
+       AND ke.seq=(oe.payload->>'seq')::bigint
+     JOIN kitchen_work kw ON kw.id=ke.work_id AND kw.outlet_id=d.outlet_id
+     JOIN kitchen_station_members sm ON sm.outlet_id=d.outlet_id
+       AND sm.station_id=kw.station_id AND sm.member_id=m.id
+     WHERE oe.id=d.event_id
+   )
+ )
  ORDER BY d.next_attempt_at,d.id FOR UPDATE OF d SKIP LOCKED LIMIT 1;
  IF NOT FOUND THEN RETURN NULL; END IF;
  UPDATE pwa_push_deliveries SET attempts=attempts+1,lease_token=lease,
