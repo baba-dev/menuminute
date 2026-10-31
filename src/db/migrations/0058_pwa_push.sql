@@ -117,7 +117,7 @@ EXCEPTION WHEN OTHERS THEN
  -- This handler rolls back only the trigger's local changes, not the outbox insert.
  RAISE LOG 'PWA optional notification capture skipped; canonical event preserved';
  RETURN NEW;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION app_private.pwa_push_from_outbox() FROM PUBLIC;
 CREATE TRIGGER pwa_push_order_event AFTER INSERT ON outbox_events
  FOR EACH ROW EXECUTE FUNCTION app_private.pwa_push_from_outbox();
