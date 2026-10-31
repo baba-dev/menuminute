@@ -111,6 +111,9 @@ const envSchema = z
         .optional()
     ),
     // Ember provider hub: independent activation from the existing review-only import engine.
+    // Independent guest-facing rollout. NVIDIA is the only inference provider for this feature.
+    AI_DINING_CONCIERGE_ENABLED: strictBoolean.default(false),
+    AI_DINING_CONCIERGE_OUTLET_IDS: rolloutOutletIds,
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_ACTIONS_ENABLED: strictBoolean.default(false),
