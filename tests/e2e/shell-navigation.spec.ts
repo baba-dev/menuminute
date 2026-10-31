@@ -152,9 +152,9 @@ test.describe("desktop shell", () => {
     );
     for (const width of [920, 1280]) {
       await page.setViewportSize({ width, height: 720 });
-      const overflow = await sidebar.locator(".mm-workspace-nav").evaluate(
-        (element) => element.scrollWidth > element.clientWidth
-      );
+      const overflow = await sidebar
+        .locator(".mm-workspace-nav")
+        .evaluate((element) => element.scrollWidth > element.clientWidth);
       expect(overflow).toBe(false);
     }
     await page.setViewportSize({ width: 1024, height: 420 });
@@ -174,10 +174,12 @@ test.describe("desktop shell", () => {
     const selected = await selector.inputValue();
     const target = selected === owner.outletId ? owner.secondaryOutletId! : owner.outletId;
     await selector.selectOption(target);
-    await expect.poll(async () => {
-      const response = await page.request.get("/api/context");
-      return (await response.json()).selectedOutletId;
-    }).toBe(target);
+    await expect
+      .poll(async () => {
+        const response = await page.request.get("/api/context");
+        return (await response.json()).selectedOutletId;
+      })
+      .toBe(target);
     await expect(selector).toHaveValue(target);
   });
 
@@ -336,7 +338,10 @@ test.describe("phone shell", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true
     );
-    await page.getByRole("navigation", { name: "Primary" }).getByRole("button", { name: "More" }).click();
+    await page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("button", { name: "More" })
+      .click();
     const sheet = page.getByRole("dialog", { name: "More" });
     await expect(sheet.getByRole("link", { name: "Account & security" })).toBeVisible();
     await expect(sheet.getByRole("link", { name: "Platform admin" })).toHaveCount(0);
