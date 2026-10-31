@@ -39,7 +39,13 @@ const smtpHostname = z
         !/^\d+(?:\.\d+){3}$/.test(value)),
     "SMTP hostname required"
   );
-export const envSchema = z
+export // Blank values (as in .env.example) mean "unset"; Number("") would otherwise coerce to 0.
+const microUsd = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.coerce.number().int().min(1).max(1_000_000_000).optional()
+);
+
+const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     APP_URL: z.string().url(),
@@ -117,42 +123,12 @@ export const envSchema = z
     AI_CLOUDFLARE_TOOLS_VERIFIED: strictBoolean.default(false),
     // Operator-approved exact-model pricing in micro-USD per million tokens.
     // No defaults: Ember refuses inference until these rates and ceilings are set.
-    AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
-    AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
-    AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
-    AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
-    AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
-    AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(1_000_000_000)
-      .optional(),
+    AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK: microUsd,
+    AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK: microUsd,
+    AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD: microUsd,
+    AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK: microUsd,
+    AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK: microUsd,
+    AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD: microUsd,
     POS_STRIPE_ENABLED: strictBoolean.default(false),
     POS_STRIPE_SECRET_KEY: z
       .string()
@@ -219,6 +195,43 @@ export const envSchema = z
         path: ["AI_ASSISTANT_READ_ONLY_ENABLED"],
         message: "Ember requires the master flags and an enabled, verified tool-capable provider",
       });
+    // Without operator-approved rates and a daily cap every Ember turn is refused at spend
+    // reservation with `not_configured`; fail at boot with an actionable message instead.
+    if (e.AI_ASSISTANT_READ_ONLY_ENABLED) {
+      const providers = [
+        {
+          on: e.AI_NVIDIA_ENABLED && e.AI_NVIDIA_TOOLS_VERIFIED,
+          name: "NVIDIA",
+          vars: [
+            ["AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK", e.AI_EMBER_NVIDIA_INPUT_MICROUSD_MTOK],
+            ["AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK", e.AI_EMBER_NVIDIA_OUTPUT_MICROUSD_MTOK],
+            ["AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD", e.AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD],
+          ],
+        },
+        {
+          on: e.AI_CLOUDFLARE_ENABLED && e.AI_CLOUDFLARE_TOOLS_VERIFIED,
+          name: "Cloudflare",
+          vars: [
+            ["AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK", e.AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK],
+            [
+              "AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK",
+              e.AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK,
+            ],
+            ["AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD", e.AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD],
+          ],
+        },
+      ] as const;
+      for (const p of providers) {
+        if (!p.on) continue;
+        for (const [name, value] of p.vars)
+          if (value === undefined)
+            ctx.addIssue({
+              code: "custom",
+              path: [name],
+              message: `Ember on ${p.name} needs operator-approved pricing and a daily cap (${name}); see docs/intelligence-2-rollout.md`,
+            });
+      }
+    }
     if (e.AI_ORCHESTRATOR_ENABLED) {
       if (!e.AI_FEATURES_ENABLED)
         ctx.addIssue({
