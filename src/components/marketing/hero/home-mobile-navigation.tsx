@@ -9,6 +9,7 @@ import { HomeAuthActions } from "./home-auth-actions";
 const links = [
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
+  { href: "/help", label: "Guides & Help" },
 ] as const;
 
 export function HomeMobileNavigation() {

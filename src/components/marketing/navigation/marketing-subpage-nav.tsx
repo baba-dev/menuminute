@@ -13,6 +13,7 @@ const subpageLinks = [
   { href: "/", label: "Home" },
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
+  { href: "/help", label: "Guides" },
 ] as const;
 
 export function MarketingSubpageNav() {
@@ -87,6 +88,17 @@ export function MarketingSubpageNav() {
               }`}
             >
               Demo
+            </Link>
+            <Link
+              href="/help"
+              aria-current={pathname?.startsWith("/help") ? "page" : undefined}
+              className={`text-sm font-medium transition-colors ${
+                pathname?.startsWith("/help")
+                  ? "text-brand-800 dark:text-brand-200 font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Guides
             </Link>
             <HomeAuthActions surface="subpage" />
             <ThemeControl />

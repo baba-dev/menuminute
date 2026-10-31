@@ -83,6 +83,15 @@ export function WorkspaceTopbar({
           </span>
         )}
         {assistantAction}
+        <Link
+          href="/help/owner"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mm-dashboard-preview"
+          title="Open Restaurant Help & Guides (opens in a new tab)"
+        >
+          Help <ExternalLink size={14} aria-hidden="true" />
+        </Link>
         <ThemeControl />
         <Link
           href="/account"

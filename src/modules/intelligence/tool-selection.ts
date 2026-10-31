@@ -12,6 +12,12 @@ export function selectQuestionTools<T extends { name: string }>(
     if (!priorities.includes(name)) priorities.push(name);
   };
   if (
+    /\b(how (to|do|can|i)|guide|tutorial|steps?|instructions?|explain|where (do|can)|help|faq|documentation)\b/.test(
+      q
+    )
+  )
+    add("help.search");
+  if (
     /\b(sales?|revenue|earnings?|income|turnover|best.selling|top.selling|last week|this week|this month)\b/.test(
       q
     )
