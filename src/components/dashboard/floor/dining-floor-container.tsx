@@ -79,37 +79,55 @@ export function DiningFloorContainer({
   const [resDialogTable, setResDialogTable] = useState<VisualTable | null>(null);
 
   const haptics = useHaptics(hapticsEnabled);
-  const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingRef = useRef(false);
+  const revisionRef = useRef(initialLayout.revision);
+  const pendingRef = useRef<FloorLayoutDoc | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
 
-  // Debounced auto-save of floor layout
-  const persistLayout = useCallback(
-    (nextLayout: FloorLayoutDoc) => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-      saveTimeout.current = setTimeout(async () => {
-        try {
-          await fetch("/api/floor", {
-            method: "PUT",
-            headers: {
-              "content-type": "application/json",
-              "x-outlet-id": outlet.id,
-            },
-            body: JSON.stringify(nextLayout),
-          });
-        } catch {
-          // Layout auto-save failure handled gracefully
+  // Serial, revision-aware layout saves. A failed save remains visible to the operator.
+  const flushLayout = useCallback(async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    while (pendingRef.current) {
+      const draft = pendingRef.current;
+      pendingRef.current = null;
+      setSaveStatus("saving");
+      try {
+        const res = await fetch("/api/floor", {
+          method: "PUT", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+          body: JSON.stringify({ ...draft, revision: revisionRef.current }),
+        });
+        if (!res.ok) {
+          const detail = await res.json().catch(() => ({}));
+          throw new Error(detail.message ?? "Floor layout could not be saved");
         }
-      }, 500);
-    },
-    [outlet.id]
-  );
+        const saved = (await res.json()) as FloorLayoutDoc;
+        revisionRef.current = saved.revision;
+        setLayout((current) => ({ ...current, revision: saved.revision }));
+      } catch (error) {
+        pendingRef.current = null;
+        setSaveStatus("error");
+        toast.error(error instanceof Error ? error.message : "Floor layout could not be saved");
+        savingRef.current = false;
+        return;
+      }
+    }
+    savingRef.current = false;
+    setSaveStatus("saved");
+  }, [outlet.id]);
 
-  const handleLayoutChange = useCallback(
-    (nextLayout: FloorLayoutDoc) => {
-      setLayout(nextLayout);
-      persistLayout(nextLayout);
-    },
-    [persistLayout]
-  );
+  const persistLayout = useCallback((nextLayout: FloorLayoutDoc) => {
+    pendingRef.current = nextLayout;
+    setSaveStatus("unsaved");
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => { void flushLayout(); }, 500);
+  }, [flushLayout]);
+
+  const handleLayoutChange = useCallback((nextLayout: FloorLayoutDoc) => {
+    setLayout(nextLayout);
+    persistLayout(nextLayout);
+  }, [persistLayout]);
 
   // Map live statuses per table
   const tableStatuses = useMemo(() => {
@@ -210,13 +228,14 @@ export function DiningFloorContainer({
 
     try {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      await flushLayout();
       const res = await fetch("/api/floor/tables", {
         method: "POST",
         headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ table: newTable, layout: nextLayout }),
+        body: JSON.stringify({ table: newTable, layout: { ...nextLayout, revision: revisionRef.current } }),
       });
       if (!res.ok) throw new Error("Table could not be created. Refresh and retry.");
-      setLayout((await res.json()) as FloorLayoutDoc);
+      { const saved = (await res.json()) as FloorLayoutDoc; revisionRef.current = saved.revision; setLayout(saved); }
       setSelectedTableId(newId);
       setInspectorOpen(true);
       toast.success(`Table ${newTable.tableNumber} created on floor`);
@@ -234,9 +253,10 @@ export function DiningFloorContainer({
       y: Math.min(layout.canvas.height - table.height, table.y + 40) };
     try {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      await flushLayout();
       const res = await fetch("/api/floor/tables", {
         method: "POST", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ table: duplicate, layout: { ...layout, tables: [...layout.tables, duplicate] } })
+        body: JSON.stringify({ table: duplicate, layout: { ...layout, revision: revisionRef.current, tables: [...layout.tables, duplicate] } })
       });
       if (!res.ok) throw new Error("Could not duplicate table");
       setLayout((await res.json()) as FloorLayoutDoc);
@@ -251,7 +271,7 @@ export function DiningFloorContainer({
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       const res = await fetch("/api/floor/tables", {
         method: "DELETE", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify({ tableId: table.id, layout: { ...layout, tables: layout.tables.filter((t) => t.id !== table.id) } })
+        body: JSON.stringify({ tableId: table.id, layout: { ...layout, revision: revisionRef.current, tables: layout.tables.filter((t) => t.id !== table.id) } })
       });
       if (!res.ok) {
         const error = await res.json().catch(() => ({}));
@@ -351,7 +371,7 @@ export function DiningFloorContainer({
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.layout) setLayout(data.layout);
+        if (data.layout) { revisionRef.current = data.layout.revision; pendingRef.current = null; setLayout(data.layout); setSaveStatus("saved"); }
         if (data.orderMatrix) setOrderMatrix(data.orderMatrix);
         if (data.qrCodes) setQrCodes(data.qrCodes);
         if (data.reservations) setReservations(data.reservations);
@@ -370,6 +390,7 @@ export function DiningFloorContainer({
       <div className="mm-floor-topbar">
         <div className="mm-floor-heading">
           <h1>Dining Floor</h1>
+          <span className="text-muted-foreground text-xs" role="status" aria-live="polite">Layout: {saveStatus}</span>
           <p>
             {outlet.name} · {layout.tables.length} tables ·{" "}
             {qrCodes.filter((q) => q.isActive && q.tableId).length} tabletop QR standees

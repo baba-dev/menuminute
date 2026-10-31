@@ -62,6 +62,7 @@ export async function getFloorLayout(actor: Actor, outletId: string): Promise<Fl
     } else {
       layout = {
         version: 1,
+        revision: 0,
         canvas: { width: 1400, height: 900, gridSnap: 20 },
         sections: defaultSections,
         tables: [],
@@ -119,10 +120,22 @@ export async function getFloorLayout(actor: Actor, outletId: string): Promise<Fl
   });
 }
 
+/** Check the layout revision while holding the same outlet write lock. */
+async function nextLayoutRevision(tx: import("@/db").Transaction, outletId: string, expected: number) {
+  const [stored] = await tx.select({ layout: diningFloorPlans.layout }).from(diningFloorPlans)
+    .where(eq(diningFloorPlans.outletId, outletId)).for("update").limit(1);
+  const actual = stored ? floorLayoutDocSchema.safeParse(stored.layout) : null;
+  const revision = actual?.success ? actual.data.revision : 0;
+  if (revision !== expected) throw new ConflictError("Floor was edited elsewhere. Refresh and retry.");
+  return revision + 1;
+}
+
 /** The floor document cannot invent or delete physical tables. */
 export async function saveFloorLayout(actor: Actor, outletId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
   const validated = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
+    const revision = await nextLayoutRevision(tx, outletId, validated.revision);
+    const updated: FloorLayoutDoc = { ...validated, revision };
     const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const ids = new Set(active.map((t) => t.id));
@@ -135,10 +148,10 @@ export async function saveFloorLayout(actor: Actor, outletId: string, doc: Floor
         tableNumber: table.tableNumber, label: table.label, capacity: table.capacity
       }).where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.id, table.id)));
     }
-    await tx.insert(diningFloorPlans).values({ outletId, layout: validated, updatedAt: new Date() })
+    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
       .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout: validated, updatedAt: new Date() } });
-    return validated;
+        set: { layout: updated, updatedAt: new Date() } });
+    return updated;
   });
 }
 
@@ -146,6 +159,8 @@ export async function saveFloorLayout(actor: Actor, outletId: string, doc: Floor
 export async function createFloorTable(actor: Actor, outletId: string, table: VisualTable, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
   const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
+    const revision = await nextLayoutRevision(tx, outletId, layout.revision);
+    const updated: FloorLayoutDoc = { ...layout, revision };
     const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const existing = new Set(active.map((t) => t.id));
@@ -158,10 +173,10 @@ export async function createFloorTable(actor: Actor, outletId: string, table: Vi
       id: table.id, restaurantId: outletId, tableNumber: table.tableNumber,
       label: table.label, capacity: table.capacity, isActive: true
     });
-    await tx.insert(diningFloorPlans).values({ outletId, layout, updatedAt: new Date() })
+    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
       .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout, updatedAt: new Date() } });
-    return layout;
+        set: { layout: updated, updatedAt: new Date() } });
+    return updated;
   });
 }
 
@@ -169,6 +184,8 @@ export async function createFloorTable(actor: Actor, outletId: string, table: Vi
 export async function deleteTable(actor: Actor, outletId: string, tableId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
   const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
+    const revision = await nextLayoutRevision(tx, outletId, layout.revision);
+    const updated: FloorLayoutDoc = { ...layout, revision };
     const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
     const existing = new Set(active.map((t) => t.id));
@@ -187,10 +204,10 @@ export async function deleteTable(actor: Actor, outletId: string, tableId: strin
     if (blocked.rows[0]?.blocked) throw new ConflictError("Table has active orders, bookings or QR codes. Resolve them before archiving.");
     await tx.update(restaurantTables).set({ isActive: false })
       .where(and(eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId)));
-    await tx.insert(diningFloorPlans).values({ outletId, layout, updatedAt: new Date() })
+    await tx.insert(diningFloorPlans).values({ outletId, layout: updated, updatedAt: new Date() })
       .onConflictDoUpdate({ target: diningFloorPlans.outletId,
-        set: { layout, updatedAt: new Date() } });
-    return layout;
+        set: { layout: updated, updatedAt: new Date() } });
+    return updated;
   });
 }
 

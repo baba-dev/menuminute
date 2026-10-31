@@ -31,6 +31,7 @@ export type DiningSection = z.infer<typeof diningSectionSchema>;
 
 export const floorLayoutDocSchema = z.object({
   version: z.literal(1).default(1),
+  revision: z.number().int().nonnegative().default(0),
   canvas: z.object({
     width: z.number().int().min(600).max(4000).default(1400),
     height: z.number().int().min(400).max(3000).default(900),

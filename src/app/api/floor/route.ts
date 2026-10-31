@@ -14,9 +14,9 @@ async function observed_GET(req: Request) {
     const { actor, restaurant } = await requestContext(req);
     const [layout, orderMatrix, qrCodes, reservations] = await Promise.all([
       getFloorLayout(actor, restaurant.id),
-      getOutletFloorMatrix(actor, restaurant.organizationId, restaurant.id).catch(() => []),
-      getRestaurantQrCodes(actor, restaurant.id).catch(() => []),
-      getReservations(actor, restaurant.id).catch(() => []),
+      getOutletFloorMatrix(actor, restaurant.organizationId, restaurant.id),
+      getRestaurantQrCodes(actor, restaurant.id),
+      getReservations(actor, restaurant.id),
     ]);
 
     return NextResponse.json({

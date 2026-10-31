@@ -49,19 +49,10 @@ export default async function FloorPage({
 
   // Concurrent loading of layout, order metrics, QR codes, and reservations
   const [layout, orderMatrix, qrCodes, reservations] = await Promise.all([
-    getFloorLayout(actor, outlet.id).catch(() => ({
-      version: 1 as const,
-      canvas: { width: 1400, height: 900, gridSnap: 20 },
-      sections: [
-        { id: "sec-main", name: "Main Dining", color: "#f59e0b" },
-        { id: "sec-terrace", name: "Terrace", color: "#10b981" },
-        { id: "sec-bar", name: "Bar & Lounge", color: "#8b5cf6" },
-      ],
-      tables: [],
-    })),
-    getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null),
-    getRestaurantQrCodes(actor, outlet.id).catch(() => []),
-    getReservations(actor, outlet.id).catch(() => []),
+    getFloorLayout(actor, outlet.id),
+    getOutletFloorMatrix(actor, outlet.organizationId, outlet.id),
+    getRestaurantQrCodes(actor, outlet.id),
+    getReservations(actor, outlet.id),
   ]);
 
   return (
