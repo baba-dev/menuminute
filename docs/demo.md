@@ -118,6 +118,7 @@ legacy flat menu tables. The demo outlet therefore does not enable POS or billin
    ```
 
    The one-time operator command intentionally receives both the existing web `AUTH_SECRET` and **migration-owner-only** `MIGRATION_DATABASE_URL` via root-only environment files. Neither web nor worker receives the owner's database credential. Never print either environment file, paste the credentials into a command, or run the provisioner via an app/worker DB identity. If the `migration.env` path has not been provisioned, stop and reconcile the production migration-owner configuration instead. Re-running the provisioner is designed to be idempotent but **resets demo visitor data** to baseline.
+
 4. Verify `restaurants.id='demo-outlet'` has `public_id='demo-spice-route-kitchen-v2'`, `is_published=true`, and that the derived demo credential exists for `users.id='demo-owner'`. Confirm the guest menu returns 200 and the sign-in works in a fresh browser session.
 5. Set `DEMO_MODE_ENABLED=true` in **both** web and worker environments and restart both services. The worker resets the provisioned demo at startup and every half hour.
 6. To switch the demo off: set `DEMO_MODE_ENABLED=false` in both environments and restart. Existing demo data stays inert.
