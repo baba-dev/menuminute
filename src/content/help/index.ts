@@ -164,10 +164,31 @@ function articleFields(a: HelpArticle): Array<{ text: string; weight: number }> 
     { text: a.faqs.map((f) => f.question + " " + f.answer).join(" "), weight: 2 },
   ];
 }
+// Common restaurant tasks receive a precise guide match before broad terms
+// such as "code" or "table" influence the rest of the results.
+const taskGuides = [
+  { words: ["qr", "print"], slug: "qr-codes-and-tables" },
+  { words: ["sold", "dish"], slug: "live-orders-and-service" },
+  { words: ["internet", "stopped"], slug: "offline-menu-and-pwa" },
+  { words: ["mark", "paid"], slug: "pos-and-payments" },
+] as const;
+
+function taskMatchBoost(queryWords: string[], slug: string): number {
+  return taskGuides.some(
+    (rule) => rule.slug === slug && rule.words.every((word) => queryWords.includes(word))
+  )
+    ? 60
+    : 0;
+}
+
 export function searchHelpArticles(query: string, audience?: Audience): SearchResult[] {
-  if (!tokens(query).length) return [];
+  const queryWords = tokens(query);
+  if (!queryWords.length) return [];
   return (audience ? getArticlesByAudience(audience) : allArticles)
-    .map((article) => ({ article, score: scoreFields(query, articleFields(article)) }))
+    .map((article) => ({
+      article,
+      score: scoreFields(query, articleFields(article)) + taskMatchBoost(queryWords, article.slug),
+    }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || a.article.title.localeCompare(b.article.title))
     .slice(0, 12)
