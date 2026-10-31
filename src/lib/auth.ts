@@ -12,6 +12,7 @@ import { twoFactor, captcha } from "better-auth/plugins";
 import { APIError } from "better-auth/api";
 import { recordAuthEvent, alertSecurityEvent } from "@/lib/security-events";
 import { sendAuthEmail } from "@/lib/auth-email";
+import { isDemoActor } from "@/modules/demo/guard";
 export const authServer = betterAuth({
   appName: "MenuMinute",
   baseURL: env.APP_URL,
@@ -95,12 +96,15 @@ export const authServer = betterAuth({
     session: {
       create: {
         after: async (session) => {
+          // The shared public-demo account never records events or sends sign-in alert email.
+          if (isDemoActor(session.userId)) return;
           await recordAuthEvent(session.userId, "session.created", session.id);
           void alertSecurityEvent(session.userId, "New MenuMinute sign-in");
         },
       },
       delete: {
         after: async (session) => {
+          if (isDemoActor(session.userId)) return;
           await recordAuthEvent(session.userId, "session.revoked", session.id);
         },
       },

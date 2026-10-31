@@ -3,7 +3,10 @@ import { generateMenuQrCode } from "@/modules/qr/service";
 import { buildDemoBaseline, DEMO_IDS } from "./baseline";
 
 /** Idempotent. Needs the migration-owner connection; call only from operator scripts and tests. */
-export async function provisionDemo(c: PoolClient): Promise<Record<string, number>> {
+export async function provisionDemo(
+  c: PoolClient,
+  passwordHash?: string
+): Promise<Record<string, number>> {
   const qr = await generateMenuQrCode(DEMO_IDS.publicId);
   await c.query("begin");
   try {
@@ -14,6 +17,12 @@ export async function provisionDemo(c: PoolClient): Promise<Record<string, numbe
        on conflict (id) do nothing`,
       [DEMO_IDS.userId, DEMO_IDS.userEmail]
     );
+    if (passwordHash)
+      await c.query(
+        `insert into accounts(id,user_id,provider_id,account_id,password) values('demo-credential',$1,'credential',$1,$2)
+         on conflict (id) do update set password=excluded.password`,
+        [DEMO_IDS.userId, passwordHash]
+      );
     await c.query("select set_config('app.actor_id',$1,true)", [DEMO_IDS.userId]);
     await c.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
       DEMO_IDS.outletId,

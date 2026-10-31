@@ -1,7 +1,7 @@
 # Public demo runbook
 
-Status: **reset, provisioning and dataset implemented; entry route, demo guard, Ember limits and
-documentation site are planned** (see the plan in the PR description). Read the
+Status: **dataset, reset, provisioning, one-click entry and demo request guard implemented; Ember limits,
+demo orders and the documentation site are planned** (see the plan in the PR description). Read the
 [Public demo exception](../AGENTS.md#public-demo-exception) first.
 
 ## What exists
@@ -19,6 +19,21 @@ documentation site are planned** (see the plan in the PR description). Read the
   and restores the floor plan. Reset takes about 150 ms.
 - **Worker job:** runs the reset every 30 minutes when `DEMO_MODE_ENABLED=true`, and
   relies on the 180 s public-menu cache TTL to converge (the worker has no cache credentials). Off by default.
+
+## Entry and guard
+
+- `/demo` shows the entry button only while `DEMO_MODE_ENABLED=true`. `POST /demo/enter` checks the
+  Origin, applies a Redis per-source/global limit (fail closed), then signs in the fixed `demo-owner`
+  through Better Auth with a password **derived from `AUTH_SECRET`** (`src/modules/demo/credential.ts`).
+  No password is published. The session is capped to 2 hours server-side and stale ones are pruned.
+- The derived credential is written by `scripts/demo-provision.ts` (needs `AUTH_SECRET`). If the web
+  `AUTH_SECRET` is rotated, rerun provisioning.
+- `requestActor` enforces an **allowlist** (`src/modules/demo/guard.ts`) for every non-GET request by the
+  demo user; unlisted routes answer 403. Better Auth account endpoints (password, email, MFA, delete) and
+  device revocation are blocked for the demo session. Sign-in and revocation events and alert emails are
+  skipped for the demo user.
+- Adding a route that should work in the demo means adding it to the allowlist **and** making sure the
+  reset undoes its effects.
 
 ## What a reset never touches
 

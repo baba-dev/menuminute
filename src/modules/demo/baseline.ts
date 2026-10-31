@@ -1,15 +1,9 @@
 import demoMenu from "@/data/demo/demo-menu.json";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 
-/** Fixed identities of the single public demo tenant. Never derive these from request input. */
-export const DEMO_IDS = {
-  userId: "demo-owner",
-  userEmail: "demo-owner@demo.menuminute.invalid",
-  organizationId: "org-demo-outlet",
-  outletId: "demo-outlet",
-  menuId: "menu-demo-outlet",
-  publicId: "demo-spice-route-kitchen-v2",
-} as const;
+import { DEMO_IDS } from "./ids";
+
+export { DEMO_IDS };
 
 export type DemoBaseline = {
   menu: unknown;
