@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { searchHelpArticles } from "@/content/help";
+import { searchFaqs, searchHelpArticles } from "@/content/help";
 import {
   merchantReport,
   merchantFindDish,
@@ -51,11 +51,19 @@ const helpSearchTool = {
   },
   schema: z.object({ query: z.string().trim().min(2).max(80) }).strict(),
   run: async (_context: ToolContext, args: { query: string }) => {
-    const results = searchHelpArticles(args.query);
+    // Staff are restaurant-side users: owner guides plus shared ones, never diner-only pages.
+    const results = searchHelpArticles(args.query, "owner");
+    const faqs = searchFaqs(args.query).slice(0, 2);
     return {
       source: "help.knowledgeBase",
       data: {
         query: args.query,
+        // Published Help Center answers: authoritative product facts (pricing, plans, limits).
+        faqs: faqs.map((f) => ({
+          question: f.question,
+          answer: f.answer.slice(0, 600),
+          category: f.category ?? "",
+        })),
         matches: results.slice(0, 3).map((r) => ({
           title: r.article.title,
           slug: r.article.slug,

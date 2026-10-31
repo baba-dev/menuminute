@@ -24,3 +24,14 @@ Migration 0021 follows the merged checkout migration 0020 in the append-only jou
 ## Deployment and gates
 
 Add AI_ASSISTANT_READ_ONLY_ENABLED=false to runtime config, independent of the existing default-off AI master/provider flags. Activation requires an approved verified tools-capable model. Never enable production based only on a green PR. Requirements: migration 0020/0021 reconciliation, exact final-head four ARM64 CI lanes + aggregate, independent security/integration review, entitled commercial keys, privacy/retention approval and separate production release evidence. No live model call in CI. Application ordering, POS and kitchen remain usable during AI outages.
+
+## Product knowledge (Help Center)
+
+Ember answers "how do I…" and product questions (plans, commission, Kitchen Pro, offline use) from
+the published Help Center only: `help.search` returns the best owner guides (diner-only guides are
+excluded) plus up to two matching Help Center FAQ answers, and the reply links to the illustrated
+guide. Nothing under `docs/` is exposed to the model: those files contain operations, hosting and
+security detail. Adding a new topic means adding a Help Center article or FAQ in `src/content/help`.
+If no guide matches, Ember says so and links to the guides; it must not invent product features.
+Greetings, thanks and "what can you do?" are answered without a model call from the person's
+authorized tools (`small-talk.ts`).

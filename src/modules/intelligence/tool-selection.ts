@@ -17,7 +17,12 @@ export function selectQuestionTools<T extends { name: string }>(
     /\b(how (?:do|can) i (?:set up|create|add|edit|print|mark|change|configure|use|publish|invite|open|scan|remove|download|start|stop|reset)|how to|step.by.step|tutorial|instructions?|guide|documentation|faq)\b/.test(
       q
     ) || /^(?:help me|i need help|where (?:do|can) i)\b/.test(q);
-  if (instructional) add("help.search");
+  // Product questions (plans, pricing, features) are answered from the published Help Center.
+  const productInfo =
+    /\b(menuminute|kitchen pro|pricing|pricing plans?|commission|subscription|upgrade|free plan|offline|install(?:ing)? the app)\b/.test(
+      q
+    );
+  if (instructional || productInfo) add("help.search");
   if (
     /\b(sales?|revenue|earnings?|income|turnover|best.selling|top.selling|last week|this week|this month)\b/.test(
       q
@@ -46,9 +51,10 @@ export function selectQuestionTools<T extends { name: string }>(
         "orders.history",
         "tables.pulse",
         "qr.pulse",
+        "help.search",
       ];
   return order
     .map((name) => allowed.find((candidate) => candidate.name === name))
     .filter((tool): tool is T => Boolean(tool))
-    .slice(0, 8);
+    .slice(0, 9);
 }
