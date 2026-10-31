@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fixture } from "./helpers";
 import {
   beginTurn,
@@ -9,6 +9,11 @@ import {
   reserveAttempt,
   settleAttempt,
 } from "../src/modules/intelligence/store";
+import {
+  actionKinds,
+  decideAction,
+  proposeAction,
+} from "../src/modules/intelligence/action-requests";
 
 const spend = {
   reservationMicroUsd: 15,
@@ -84,6 +89,70 @@ describe("Ember definer functions under a non-superuser owner", () => {
       await owner.query("drop owned by ember_plain_owner");
       await owner.query("drop role ember_plain_owner");
       await owner.query(sqlFile);
+      await owner.end();
+    }
+  }, 60000);
+
+  it("lets the generic action-request functions work under a non-superuser owner", async () => {
+    const owner = new pg.Client({ connectionString: process.env["MIGRATION_DATABASE_URL"] });
+    await owner.connect();
+    const original = (await owner.query("select current_user as u")).rows[0].u as string;
+    const fns = [
+      "app_private.ai_propose_action(text,text,text,text,jsonb,jsonb,text,text,uuid)",
+      "app_private.ai_claim_action(text,text,uuid,uuid,text,text)",
+      "app_private.ai_finish_action(text,text,uuid,uuid,text,jsonb)",
+    ];
+    try {
+      await owner.query("drop owned by ember_plain_owner").catch(() => {});
+      await owner.query("drop role if exists ember_plain_owner");
+      await owner.query("create role ember_plain_owner nosuperuser nobypassrls");
+      await owner.query("grant usage on schema public, app_private to ember_plain_owner");
+      await owner.query(
+        "grant execute on function app_private.ai_scope(text,text,text) to ember_plain_owner"
+      );
+      await owner.query(
+        "grant execute on function app_private.can_outlet(text,text) to ember_plain_owner"
+      );
+      await owner.query("grant all on assistant_conversations, users to ember_plain_owner");
+      // Mirrors migration 0064's owner policy for the role that owns the functions.
+      await owner.query(
+        "create policy tmp_plain_owner on assistant_conversations for all to ember_plain_owner using (true)"
+      );
+      await owner.query("alter table assistant_action_requests owner to ember_plain_owner");
+      await owner.query(
+        "create policy tmp_plain_owner on assistant_action_requests for all to ember_plain_owner using (true) with check (true)"
+      );
+      for (const fn of fns) await owner.query(`alter function ${fn} owner to ember_plain_owner`);
+      const f = await fixture();
+      const scope = {
+        actor: f.actor,
+        organizationId: f.outlet.organizationId,
+        outletId: f.outlet.id,
+      };
+      const conversation = await createConversation(scope, crypto.randomUUID());
+      const request = await proposeAction(scope, {
+        conversationId: conversation.id,
+        key: crypto.randomUUID(),
+        kind: "service_request.acknowledge",
+        params: { requestId: crypto.randomUUID() },
+        summary: "Mark a request as seen",
+      });
+      const spy = vi
+        .spyOn(actionKinds["service_request.acknowledge"], "execute")
+        .mockResolvedValue({ status: "confirmed", message: "Marked as seen by staff." });
+      const done = await decideAction(scope, request.id, {
+        key: crypto.randomUUID(),
+        decision: "confirm",
+      });
+      expect(done).toMatchObject({ status: "confirmed" });
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.restoreAllMocks();
+      await owner.query("reset role");
+      await owner.query(`alter table assistant_action_requests owner to ${original}`);
+      for (const fn of fns) await owner.query(`alter function ${fn} owner to ${original}`);
+      await owner.query("drop owned by ember_plain_owner");
+      await owner.query("drop role ember_plain_owner");
       await owner.end();
     }
   }, 60000);

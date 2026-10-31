@@ -449,6 +449,13 @@
       "when": 1793970000018,
       "tag": "0064_assistant_definer_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1794056400019,
+      "tag": "0065_assistant_action_requests",
+      "breakpoints": true
     }
   ]
 }
