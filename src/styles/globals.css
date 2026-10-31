@@ -213,8 +213,8 @@ body {
 }
 
 .stamp-badge--sold-out {
-  color: #dc2626;
-  border-color: #dc2626;
+  color: #b91c1c;
+  border-color: #b91c1c;
   background: rgba(220, 38, 38, 0.08);
 }
 
@@ -225,8 +225,8 @@ body {
 }
 
 .stamp-badge--paid {
-  color: #059669;
-  border-color: #059669;
+  color: #047857;
+  border-color: #047857;
   background: rgba(5, 150, 105, 0.08);
   transform: rotate(1.5deg);
 }
@@ -238,8 +238,8 @@ body {
 }
 
 .stamp-badge--confirmed {
-  color: #d97706;
-  border-color: #d97706;
+  color: #9a4a07;
+  border-color: #9a4a07;
   background: rgba(217, 119, 6, 0.08);
   transform: rotate(-1.5deg);
 }
@@ -251,8 +251,8 @@ body {
 }
 
 .stamp-badge--chef-pick {
-  color: #ea580c;
-  border-color: #ea580c;
+  color: #b93a0a;
+  border-color: #b93a0a;
   background: rgba(234, 88, 12, 0.08);
   transform: rotate(1deg);
 }

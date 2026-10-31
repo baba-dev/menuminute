@@ -163,6 +163,11 @@ body {
 .product .quiet {
   background: var(--panel);
 }
+/* Guest pages sit on --paper panels; keep captions from showing a grey box. */
+.product .public-shell .quiet,
+.product .public-shell small {
+  background: transparent;
+}
 .product .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.16em;
