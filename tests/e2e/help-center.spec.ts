@@ -108,7 +108,6 @@ test("help articles show genuine demo captures without mislabelling unavailable 
   await page.goto("/help/customer/customizing-dishes");
   const guestShot = page.locator("figure").filter({ hasText: "Demo interface capture." });
   await expect(guestShot).toBeVisible();
-  await expect(guestShot.locator('img[alt*="dish-details"]')).toHaveCount(0);
   await expect(guestShot.locator('img[alt*="Guest dish-details"]')).toHaveCount(3);
 
   await page.goto("/help/owner/pos-and-payments");
