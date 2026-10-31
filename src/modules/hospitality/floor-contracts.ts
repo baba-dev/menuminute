@@ -36,8 +36,24 @@ export const floorLayoutDocSchema = z.object({
     height: z.number().int().min(400).max(3000).default(900),
     gridSnap: z.number().int().min(5).max(100).default(20),
   }),
-  sections: z.array(diningSectionSchema).default([]),
-  tables: z.array(visualTableSchema).default([]),
+  sections: z.array(diningSectionSchema).max(24).default([]),
+  tables: z.array(visualTableSchema).max(200).default([]),
+}).superRefine((layout, context) => {
+  const ids = new Set<string>();
+  const numbers = new Set<string>();
+  for (const table of layout.tables) {
+    if (ids.has(table.id)) {
+      context.addIssue({ code: "custom", path: ["tables"], message: "Duplicate table identifier" });
+    }
+    ids.add(table.id);
+    if (numbers.has(table.tableNumber)) {
+      context.addIssue({ code: "custom", path: ["tables"], message: "Duplicate table number" });
+    }
+    numbers.add(table.tableNumber);
+    if (!layout.sections.some((section) => section.name === table.section)) {
+      context.addIssue({ code: "custom", path: ["tables"], message: "Unknown table section" });
+    }
+  }
 });
 export type FloorLayoutDoc = z.infer<typeof floorLayoutDocSchema>;
 

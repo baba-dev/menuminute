@@ -28,28 +28,42 @@ CREATE INDEX IF NOT EXISTS dining_res_table_idx ON dining_reservations(table_id)
 ALTER TABLE dining_floor_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dining_reservations ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'dining_floor_plans' AND policyname = 'dining_floor_plans_app_all'
-  ) THEN
-    CREATE POLICY dining_floor_plans_app_all ON dining_floor_plans FOR ALL TO menuminute_app USING (true) WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'dining_floor_plans' AND policyname = 'dining_floor_plans_worker_all'
-  ) THEN
-    CREATE POLICY dining_floor_plans_worker_all ON dining_floor_plans FOR ALL TO menuminute_worker USING (true) WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'dining_reservations' AND policyname = 'dining_reservations_app_all'
-  ) THEN
-    CREATE POLICY dining_reservations_app_all ON dining_reservations FOR ALL TO menuminute_app USING (true) WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'dining_reservations' AND policyname = 'dining_reservations_worker_all'
-  ) THEN
-    CREATE POLICY dining_reservations_worker_all ON dining_reservations FOR ALL TO menuminute_worker USING (true) WITH CHECK (true);
-  END IF;
-END $$;
+-- Outlet-scoped policies. Application authorization remains enforced by
+-- withOutlet/withOutletRead, while RLS adds a second tenant boundary.
+CREATE POLICY dining_floor_app_read ON dining_floor_plans FOR SELECT TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.read'));
+CREATE POLICY dining_floor_app_insert ON dining_floor_plans FOR INSERT TO menuminute_app
+ WITH CHECK (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'menu.write'));
+CREATE POLICY dining_floor_app_update ON dining_floor_plans FOR UPDATE TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'menu.write'))
+ WITH CHECK (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'menu.write'));
+CREATE POLICY dining_floor_app_delete ON dining_floor_plans FOR DELETE TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'menu.write'));
+
+CREATE POLICY dining_res_app_read ON dining_reservations FOR SELECT TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.read'));
+CREATE POLICY dining_res_app_insert ON dining_reservations FOR INSERT TO menuminute_app
+ WITH CHECK (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.accept'));
+CREATE POLICY dining_res_app_update ON dining_reservations FOR UPDATE TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.accept'))
+ WITH CHECK (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.accept'));
+CREATE POLICY dining_res_app_delete ON dining_reservations FOR DELETE TO menuminute_app
+ USING (outlet_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(outlet_id,'orders.accept'));
+-- Only the approved fixed demo outlet can be reset by the isolated worker.
+CREATE POLICY dining_floor_worker_demo ON dining_floor_plans FOR ALL TO menuminute_worker
+ USING (outlet_id='demo-outlet') WITH CHECK (outlet_id='demo-outlet');
+CREATE POLICY dining_res_worker_demo ON dining_reservations FOR ALL TO menuminute_worker
+ USING (outlet_id='demo-outlet') WITH CHECK (outlet_id='demo-outlet');
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON dining_floor_plans TO menuminute_app, menuminute_worker;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dining_reservations TO menuminute_app, menuminute_worker;
