@@ -13,11 +13,8 @@ export function HelpArticleJsonLd({ article, url }: ArticleJsonLdProps) {
     name: article.title,
     description: article.summary,
     totalTime: `PT${article.readTimeMinutes}M`,
-    estimatedCost: {
-      "@type": "MonetaryAmount",
-      currency: "USD",
-      value: "0",
-    },
+    dateModified: article.lastUpdated,
+    mainEntityOfPage: url,
     step: article.quickSteps.map((step, idx) => ({
       "@type": "HowToStep",
       position: idx + 1,
@@ -31,7 +28,7 @@ export function HelpArticleJsonLd({ article, url }: ArticleJsonLdProps) {
       url: "https://food.bababuilds.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://food.bababuilds.com/brand/icons/icon-512.png",
+        url: "https://food.bababuilds.com/brand/icons/pwa/icon-512.png",
       },
     },
   };
@@ -65,11 +62,11 @@ export function HelpArticleJsonLd({ article, url }: ArticleJsonLdProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs).replace(/</g, "\\u003c") }}
       />
     </>
   );
@@ -96,7 +93,7 @@ export function FaqJsonLd({ faqs }: FaqJsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }}
     />
   );
 }

@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${article.title} — MenuMinute Diner Guide`,
     description: article.summary,
     keywords: article.keywords,
+    alternates: { canonical: `/help/${article.audience}/${article.slug}` },
     openGraph: {
       title: `${article.title} — Dining Guest Guide`,
       description: article.summary,
@@ -129,7 +130,7 @@ export default async function CustomerArticlePage({ params }: PageProps) {
                       <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                         {idx + 1}
                       </span>
-                      <span className="text-stone-800 dark:text-stone-200">{step}</span>
+                      <span id={`step-${idx + 1}`} className="scroll-mt-28 text-stone-800 dark:text-stone-200">{step}</span>
                     </li>
                   ))}
                 </ol>
