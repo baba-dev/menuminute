@@ -266,22 +266,14 @@ export function DiningFloorContainer({
 
   // Generate Table QR Code via /api/qr
   const handleGenerateQr = async (table: VisualTable) => {
-    const key = crypto.randomUUID();
     const pointLabel = `Table ${table.tableNumber}`;
-    const res = await fetch("/api/qr", {
+    const res = await fetch("/api/floor/tables/qr", {
       method: "POST",
       headers: {
         "content-type": "application/json",
         "x-outlet-id": outlet.id,
       },
-      body: JSON.stringify({
-        key,
-        action: "create",
-        data: {
-          label: pointLabel,
-          pointLabel,
-        },
-      }),
+      body: JSON.stringify({ tableId: table.id }),
     });
 
     if (!res.ok) {
@@ -289,11 +281,12 @@ export function DiningFloorContainer({
       throw new Error(err.message || "Failed to create tabletop QR");
     }
 
-    const result = (await res.json()) as { id: string; token: string };
+    const result = (await res.json()) as { id: string; token: string; tableId: string };
+    if (result.tableId !== table.id) throw new Error("QR table association mismatch");
 
     // Update local QR inventory
     setQrCodes((prev) => [
-      ...prev,
+      ...prev.filter((q) => q.tableId !== table.id || !q.isActive),
       {
         id: result.id,
         label: pointLabel,

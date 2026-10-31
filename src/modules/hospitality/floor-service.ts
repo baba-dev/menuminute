@@ -299,3 +299,19 @@ export async function updateReservationStatus(
       );
   });
 }
+
+/** Attach or reuse a QR that actually points at the selected physical table. */
+export async function attachExistingTableQr(actor: Actor, outletId: string, tableId: string) {
+  return withOutlet(actor, outletId, "menu.write", async (tx) => {
+    const existing = await tx.select({ tableNumber: restaurantTables.tableNumber })
+      .from(restaurantTables).where(and(
+        eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId),
+        eq(restaurantTables.isActive, true)
+      )).limit(1);
+    if (!existing[0]) throw new NotFoundError("Active outlet table");
+    const result = await tx.execute<{ record: { id: string; token: string; tableId: string } }>(sql`
+      select app_private.attach_existing_table_qr(${outletId},${tableId},
+      ${"Table " + existing[0].tableNumber}) as record`);
+    return result.rows[0]!.record;
+  });
+}

@@ -184,3 +184,35 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app_private.reset_demo_outlet(jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.reset_demo_outlet(jsonb) TO menuminute_worker;
+
+-- Associate a table QR without creating an unrelated physical restaurant table.
+-- The legacy generic QR command remains unchanged for other QR Studio consumers.
+CREATE OR REPLACE FUNCTION app_private.attach_existing_table_qr(
+  p_outlet text, p_table text, p_label text
+) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE t restaurant_tables%ROWTYPE; q qr_codes%ROWTYPE; token text; qid text;
+BEGIN
+  IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+     OR NOT app_private.can_outlet(p_outlet,'menu.write') THEN
+    RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501';
+  END IF;
+  SELECT * INTO t FROM restaurant_tables
+    WHERE id=p_table AND restaurant_id=p_outlet AND is_active FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Active outlet table required' USING ERRCODE='22023'; END IF;
+  SELECT * INTO q FROM qr_codes
+    WHERE table_id=p_table AND restaurant_id=p_outlet AND is_active
+    ORDER BY created_at ASC,id ASC LIMIT 1;
+  IF FOUND THEN
+    RETURN jsonb_build_object('id',q.id,'token',q.destination_token,'tableId',p_table);
+  END IF;
+  token:=gen_random_uuid()::text;
+  qid:=gen_random_uuid()::text;
+  INSERT INTO qr_codes(id,restaurant_id,table_id,label,destination_token,purpose)
+  VALUES(qid,p_outlet,p_table,COALESCE(NULLIF(p_label,''),'Table '||t.table_number),token,'order');
+  PERFORM app_private.record_org_change(
+    (SELECT organization_id FROM restaurants WHERE id=p_outlet),'qr.table.attach',p_outlet);
+  RETURN jsonb_build_object('id',qid,'token',token,'tableId',p_table);
+END $$;
+REVOKE ALL ON FUNCTION app_private.attach_existing_table_qr(text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.attach_existing_table_qr(text,text,text) TO menuminute_app;
