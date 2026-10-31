@@ -113,6 +113,11 @@ export default async function DashboardPage() {
   const stats = dashboardSummary(menus, codes, publicProjection);
   const setup = await outletSetupReadiness(actor, outlet);
   const hasSavedMenu = setup.checks.some((check) => check.id === "dishes" && check.complete);
+  // An outlet with no dishes and nothing published is on its first visit, however it got here.
+  const firstRun = !hasSavedMenu && !stats.hasPublicMenu;
+  // The empty default menu every new outlet starts with is not "unpublished edits".
+  const draftCount = hasSavedMenu ? stats.draftCount : 0;
+  const nextSetupStep = setup.checks.find((check) => !check.complete);
   // Operational counters are optional. A failed order query must never hide the
   // independent menu, publishing and QR workspace for this authorized outlet.
   const kpis = [
@@ -149,7 +154,7 @@ export default async function DashboardPage() {
     },
     {
       label: "Menus to publish",
-      value: stats.draftCount,
+      value: draftCount,
       detail: "With unpublished edits",
       explanation:
         "Counts menus with saved changes awaiting publication—not the number of individual edits.",
@@ -332,16 +337,16 @@ export default async function DashboardPage() {
           </span>
           <span>
             <strong>
-              {stats.draftCount > 0
+              {draftCount > 0
                 ? "Review & publish changes"
                 : stats.hasPublicMenu
                   ? "Keep your menu fresh"
                   : "Create & publish your menu"}
             </strong>
             <small>
-              {stats.draftCount > 0
-                ? stats.draftCount +
-                  (stats.draftCount === 1 ? " menu has" : " menus have") +
+              {draftCount > 0
+                ? draftCount +
+                  (draftCount === 1 ? " menu has" : " menus have") +
                   " unpublished changes."
                 : stats.hasPublicMenu
                   ? "Your current release is live. Edit whenever you need."
@@ -482,15 +487,33 @@ export default async function DashboardPage() {
           <span className="mm-dashboard-eyebrow">
             {servicePeriod.period} · {servicePeriod.greeting}
           </span>
-          <h1>
-            Make something
-            <br />
-            delicious today.
-          </h1>
-          <p>
-            Welcome back to <strong>{outlet.name}</strong>.<br />
-            <span className="opacity-90">{servicePeriod.subtext}</span>
-          </p>
+          {firstRun ? (
+            <>
+              <h1>
+                Your restaurant is ready.
+                <br />
+                Let’s add your first dish.
+              </h1>
+              <p>
+                Welcome to <strong>{outlet.name}</strong>. A few dishes and one publish make your QR
+                menu live for guests.
+                <br />
+                <span className="opacity-90">{servicePeriod.subtext}</span>
+              </p>
+            </>
+          ) : (
+            <>
+              <h1>
+                Make something
+                <br />
+                delicious today.
+              </h1>
+              <p>
+                Welcome back to <strong>{outlet.name}</strong>.<br />
+                <span className="opacity-90">{servicePeriod.subtext}</span>
+              </p>
+            </>
+          )}
           {outlet.isDemoData && <span className="mm-dashboard-demo">Demo outlet</span>}
           <div className="mm-dashboard-hero-actions">
             <Link
@@ -520,6 +543,34 @@ export default async function DashboardPage() {
       </header>
 
       <div className="mm-dashboard-body">
+        {nextSetupStep && (
+          <section className="mm-setup-card" aria-labelledby="mm-setup-card-title">
+            <div>
+              <h2 id="mm-setup-card-title">
+                Finish setting up · {setup.completed} of {setup.total} done
+              </h2>
+              <progress
+                max={setup.total}
+                value={setup.completed}
+                aria-label="Setup checklist progress"
+              />
+              <p>
+                Next: <strong>{nextSetupStep.label}</strong>. {nextSetupStep.description}
+              </p>
+            </div>
+            <div className="mm-setup-card-actions">
+              <Link
+                href={nextSetupStep.href}
+                className="mm-dashboard-button mm-dashboard-button--primary"
+              >
+                Continue setup <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <Link href="/dashboard/get-started" className="mm-setup-card-link">
+                View full checklist
+              </Link>
+            </div>
+          </section>
+        )}
         <DashboardLayoutEditor
           initialLayout={layout}
           presentWidgets={visibleWidgets.map((widget) => widget.id)}

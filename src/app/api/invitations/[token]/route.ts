@@ -19,7 +19,10 @@ async function observed_GET(req: Request, c: C) {
 async function observed_POST(req: Request, c: C) {
   try {
     return NextResponse.json(
-      await acceptInvitation(await requestActor(req, true), (await c.params).token),
+      await acceptInvitation(
+        await requestActor(req, true, { verified: true }),
+        (await c.params).token
+      ),
       { headers: noStore }
     );
   } catch (e) {

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { mockTurnstileForBrowserTests } from "./turnstile-mock";
-import { admin } from "../helpers";
 test("private pages require login and private menu APIs do not fall back to demo", async ({
   page,
   request,
@@ -26,18 +25,9 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByLabel("Confirm password").fill("browser-password-123");
   await page.getByRole("checkbox", { name: /I agree to the/ }).check();
   await page.getByRole("button", { name: "Create free account" }).click();
-  await expect(page).toHaveURL(/\/verify-email/);
-  // Isolated synthetic browser account: simulate clicking the delivered verification link.
-  await admin(async (_db, pool) => {
-    await pool.query("update users set email_verified=true where email=$1", [email]);
-  });
-  await page.goto("/login");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill("browser-password-123");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/start/);
-  await page.getByRole("link", { name: /Create my first restaurant/ }).click();
+  // Verification is deferred: signup lands straight in setup, with a persistent nag to verify.
   await expect(page).toHaveURL(/\/onboarding/);
+  await expect(page.getByTestId("verify-email-banner")).toContainText(email);
   // The first-outlet wizard replaced the legacy single-step form. Exercise every
   // stage before continuing the existing private mutation/session recovery check.
   await expect(page.getByLabel(/Outlet Public Name/)).toBeVisible();

@@ -29,12 +29,20 @@ it("creates database sessions and revokes them without cached JWT authority", as
     termsAcceptedAt: new Date(),
   });
   expect(signup.status).toBe(200);
-  expect(signup.headers.get("set-cookie")).toBeNull();
+  // Verification is deferred: signup signs the owner in immediately, flagged as unverified.
+  const signupCookie = signup.headers.get("set-cookie")!.split(";")[0]!;
+  expect(signupCookie).toContain("session_token");
+  const unverified = await (await request("get-session", undefined, signupCookie)).json();
+  expect(unverified.user.emailVerified).toBe(false);
+  // The (possibly slow) verification email is still sent exactly once.
   const emails = drainAuthTestMessages();
   expect(emails).toHaveLength(1);
   const link = emails[0]!.text.match(/https?:\/\/\S+/)?.[0];
   expect(link).toBeTruthy();
-  expect((await authServer.handler(new Request(link!))).status).toBe(302);
+  const verifiedResponse = await authServer.handler(new Request(link!));
+  expect(verifiedResponse.status).toBe(302);
+  // Clicking the link signs the clicker in on the same browser.
+  expect(verifiedResponse.headers.get("set-cookie")).toContain("session_token");
   const signedIn = await request("sign-in/email", { email, password: "test-password-123" });
   expect(signedIn.status).toBe(200);
   const cookie = signedIn.headers.get("set-cookie")!.split(";")[0]!;

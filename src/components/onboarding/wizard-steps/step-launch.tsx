@@ -146,7 +146,7 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
           Creating your private outlet workspace…
         </p>
       )}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="wizard-launch-bar" style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
           type="button"
           className="wizard-primary-btn wizard-launch-btn"
