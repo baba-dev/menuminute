@@ -58,13 +58,13 @@ function QrCardVisual() {
         <QrCode className="size-32 text-stone-800 dark:text-stone-200" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="rounded-full bg-white p-1.5 shadow-md dark:bg-stone-900">
-            <UtensilsCrossed className="size-6 text-amber-600" />
+            <UtensilsCrossed className="size-6 text-amber-700" />
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-center gap-2 text-xs font-medium text-stone-600 dark:text-stone-400">
-        <Smartphone className="size-4 text-amber-600" />
+        <Smartphone className="size-4 text-amber-700" />
         <span>No app download needed • Safari or Chrome</span>
       </div>
     </div>
@@ -89,7 +89,7 @@ function DishCardVisual() {
           </div>
         </div>
         <div className="absolute bottom-3 left-4 flex items-center gap-2 text-stone-700 dark:text-stone-300">
-          <UtensilsCrossed className="size-5 text-amber-600" />
+          <UtensilsCrossed className="size-5 text-amber-700" />
           <span className="text-xs font-medium">Italian Handmade Pasta</span>
         </div>
       </div>
@@ -109,8 +109,8 @@ function DishCardVisual() {
           </span>
         </div>
         <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3 dark:border-stone-800">
-          <span className="text-xs text-stone-400">Nut-free • Contains dairy</span>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
+          <span className="text-xs text-stone-600">Nut-free • Contains dairy</span>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
             Customize &amp; Add &rarr;
           </span>
         </div>
@@ -124,7 +124,7 @@ function KdsTicketVisual() {
     <div className="mx-auto max-w-sm rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="flex items-center justify-between border-b border-stone-100 pb-3 dark:border-stone-800">
         <div>
-          <span className="text-xs font-bold text-amber-600">Ticket #104</span>
+          <span className="text-xs font-bold text-amber-700">Ticket #104</span>
           <h4 className="font-bold text-stone-900 dark:text-stone-100">Table 6 • Dine-In</h4>
         </div>
         <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
@@ -179,11 +179,11 @@ function OrderStepperVisual() {
     <div className="mx-auto max-w-md rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-stone-400">Order #829 • Table 4</span>
+          <span className="text-xs font-semibold text-stone-600">Order #829 • Table 4</span>
           <h4 className="font-bold text-stone-900 dark:text-stone-100">Meal in Preparation</h4>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          <Flame className="size-3.5 text-amber-600" />
+          <Flame className="size-3.5 text-amber-700" />
           On Schedule
         </span>
       </div>
@@ -197,7 +197,7 @@ function OrderStepperVisual() {
                   ? "bg-emerald-600 text-white"
                   : s.status === "active"
                     ? "animate-pulse bg-amber-600 text-white ring-4 ring-amber-100 dark:ring-amber-950"
-                    : "bg-stone-100 text-stone-400 dark:bg-stone-800"
+                    : "bg-stone-100 text-stone-600 dark:bg-stone-800"
               }`}
             >
               {s.status === "completed" ? (
@@ -214,12 +214,12 @@ function OrderStepperVisual() {
                   ? "text-amber-700 dark:text-amber-400"
                   : s.status === "completed"
                     ? "text-stone-900 dark:text-stone-100"
-                    : "text-stone-400"
+                    : "text-stone-600"
               }`}
             >
               {s.title}
             </span>
-            <span className="text-[10px] text-stone-400">{s.time}</span>
+            <span className="text-[10px] text-stone-600">{s.time}</span>
           </div>
         ))}
       </div>
@@ -232,7 +232,7 @@ function EightSixBoardVisual() {
     <div className="mx-auto max-w-sm rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="mb-3 flex items-center justify-between border-b border-stone-100 pb-2 dark:border-stone-800">
         <h4 className="font-bold text-stone-900 dark:text-stone-100">86 Board (Availability)</h4>
-        <span className="text-xs text-stone-400">1-Click Live Sync</span>
+        <span className="text-xs text-stone-600">1-Click Live Sync</span>
       </div>
       <div className="space-y-3 text-xs">
         <div className="flex items-center justify-between rounded-lg bg-stone-50 p-2.5 dark:bg-stone-800/50">
@@ -251,7 +251,7 @@ function EightSixBoardVisual() {
             </p>
             <span className="text-[11px] font-semibold text-rose-600">Sold out for today (86)</span>
           </div>
-          <ToggleLeft className="size-6 text-stone-400" />
+          <ToggleLeft className="size-6 text-stone-600" />
         </div>
       </div>
     </div>
@@ -263,7 +263,7 @@ function CartDrawerVisual() {
     <div className="mx-auto max-w-sm rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="mb-3 flex items-center justify-between border-b border-stone-100 pb-2 dark:border-stone-800">
         <div className="flex items-center gap-1.5 font-bold text-stone-900 dark:text-stone-100">
-          <ShoppingBag className="size-4 text-amber-600" /> Your Order
+          <ShoppingBag className="size-4 text-amber-700" /> Your Order
         </div>
         <span className="rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
           Table 4

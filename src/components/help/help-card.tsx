@@ -26,13 +26,13 @@ export function HelpCard({ article }: HelpCardProps) {
           >
             {article.category}
           </span>
-          <div className="flex items-center gap-1 text-xs text-stone-400">
+          <div className="flex items-center gap-1 text-xs text-stone-600">
             <Clock className="size-3.5" />
             <span>{article.readTimeMinutes} min</span>
           </div>
         </div>
 
-        <h3 className="font-display mt-3 text-base font-bold text-stone-900 transition-colors group-hover:text-orange-600 dark:text-stone-100 dark:group-hover:text-orange-400">
+        <h3 className="font-display mt-3 text-base font-bold text-stone-900 transition-colors group-hover:text-orange-700 dark:text-stone-100 dark:group-hover:text-orange-400">
           {article.title}
         </h3>
         <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-stone-600 dark:text-stone-400">
@@ -41,10 +41,10 @@ export function HelpCard({ article }: HelpCardProps) {
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-stone-100 pt-3 dark:border-stone-800">
-        <span className="text-xs font-semibold text-orange-600 group-hover:underline dark:text-orange-400">
+        <span className="text-xs font-semibold text-orange-700 group-hover:underline dark:text-orange-400">
           Read Guide
         </span>
-        <ArrowRight className="size-4 text-stone-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-600 dark:text-stone-600 dark:group-hover:text-orange-400" />
+        <ArrowRight className="size-4 text-stone-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-700 dark:text-stone-600 dark:group-hover:text-orange-400" />
       </div>
     </Link>
   );

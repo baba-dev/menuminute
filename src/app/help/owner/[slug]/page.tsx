@@ -77,8 +77,13 @@ export default async function OwnerArticlePage({ params }: PageProps) {
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12">
+          {/* Place section links before the article on phones and alongside it on desktop. */}
+          <aside className="lg:col-span-4 lg:col-start-9 lg:row-start-1">
+            <HelpTableOfContents sections={tocSections} />
+          </aside>
+
           {/* Main Article Content */}
-          <article className="lg:col-span-8">
+          <article className="lg:col-span-8 lg:col-start-1 lg:row-start-1">
             {/* Article Header */}
             <header className="border-b border-stone-200/80 pb-8 dark:border-stone-800">
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
@@ -118,7 +123,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
                   </div>
                   <Link
                     href={article.dashboardLink.href}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-700"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-orange-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-800"
                   >
                     <span>{article.dashboardLink.label}</span>
                     <ExternalLink className="size-3.5" />
@@ -140,7 +145,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
             {/* Quick Steps Checklist */}
             {article.quickSteps && article.quickSteps.length > 0 && (
               <div className="my-8 rounded-3xl border border-stone-200/80 bg-white p-7 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-                <h2 className="flex items-center gap-2 text-xs font-bold tracking-wider text-orange-600 uppercase dark:text-orange-400">
+                <h2 className="flex items-center gap-2 text-xs font-bold tracking-wider text-orange-700 uppercase dark:text-orange-400">
                   <CheckCircle2 className="size-4" /> Quick Steps Summary
                 </h2>
                 <ol className="mt-4 space-y-3 text-sm">
@@ -187,7 +192,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
                     <div className="my-6 space-y-4 rounded-2xl border border-stone-200/80 bg-stone-50/60 p-6 dark:border-stone-800 dark:bg-stone-900/40">
                       {section.steps.map((step) => (
                         <div key={step.stepNumber} className="flex items-start gap-4">
-                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white shadow-sm">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-700 text-xs font-bold text-white shadow-sm">
                             {step.stepNumber}
                           </span>
                           <div>
@@ -222,9 +227,9 @@ export default async function OwnerArticlePage({ params }: PageProps) {
                       {section.callout.type === "pitfall" ? (
                         <AlertTriangle className="size-5 shrink-0 text-rose-600" />
                       ) : section.callout.type === "delight" ? (
-                        <Sparkles className="size-5 shrink-0 text-amber-600" />
+                        <Sparkles className="size-5 shrink-0 text-amber-700" />
                       ) : (
-                        <Lightbulb className="size-5 shrink-0 text-orange-600" />
+                        <Lightbulb className="size-5 shrink-0 text-orange-700" />
                       )}
                       <div>
                         <h5 className="font-bold">{section.callout.title}</h5>
@@ -237,7 +242,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
 
                   {section.proTip && !section.callout && (
                     <div className="my-6 flex items-start gap-3.5 rounded-2xl border border-orange-200 bg-orange-50/60 p-5 text-sm text-orange-950 dark:border-orange-900/40 dark:bg-orange-950/20 dark:text-orange-200">
-                      <Lightbulb className="size-5 shrink-0 text-orange-600" />
+                      <Lightbulb className="size-5 shrink-0 text-orange-700" />
                       <div>
                         <span className="font-bold">Hospitality Pro Tip: </span>
                         <span>{section.proTip}</span>
@@ -260,7 +265,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
                 <div className="mt-5">
                   <Link
                     href={article.dashboardLink.href}
-                    className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-700"
+                    className="inline-flex items-center gap-2 rounded-xl bg-orange-700 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-800"
                   >
                     <span>{article.dashboardLink.label}</span>
                     <ExternalLink className="size-4" />
@@ -273,7 +278,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
             {article.faqs && article.faqs.length > 0 && (
               <section className="mt-14 border-t border-stone-200/80 pt-10 dark:border-stone-800">
                 <h3 className="font-display flex items-center gap-2 text-xl font-bold text-stone-900 dark:text-stone-100">
-                  <HelpCircle className="size-5 text-orange-600" /> Frequently Asked Questions
+                  <HelpCircle className="size-5 text-orange-700" /> Frequently Asked Questions
                 </h3>
                 <div className="mt-5 space-y-3">
                   {article.faqs.map((faq) => (
@@ -311,10 +316,6 @@ export default async function OwnerArticlePage({ params }: PageProps) {
             )}
           </article>
 
-          {/* Sticky Sidebar: Table of Contents */}
-          <aside className="hidden lg:col-span-4 lg:block">
-            <HelpTableOfContents sections={tocSections} />
-          </aside>
         </div>
       </main>
 

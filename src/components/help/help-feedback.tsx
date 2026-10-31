@@ -19,7 +19,7 @@ export function HelpFeedback({ articleTitle }: { articleTitle: string }) {
       <div className="mt-4 flex flex-wrap gap-3">
         <Link
           href="/help/faq"
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
         >
           <MessageCircleQuestion size={17} aria-hidden="true" /> Common questions
         </Link>

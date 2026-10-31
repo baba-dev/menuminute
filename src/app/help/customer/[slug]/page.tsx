@@ -75,8 +75,13 @@ export default async function CustomerArticlePage({ params }: PageProps) {
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12">
+          {/* Place section links before the article on phones and alongside it on desktop. */}
+          <aside className="lg:col-span-4 lg:col-start-9 lg:row-start-1">
+            <HelpTableOfContents sections={tocSections} />
+          </aside>
+
           {/* Main Article Content */}
-          <article className="lg:col-span-8">
+          <article className="lg:col-span-8 lg:col-start-1 lg:row-start-1">
             {/* Article Header */}
             <header className="border-b border-stone-200/80 pb-8 dark:border-stone-800">
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
@@ -200,7 +205,7 @@ export default async function CustomerArticlePage({ params }: PageProps) {
                       ) : section.callout.type === "delight" ? (
                         <Sparkles className="size-5 shrink-0 text-emerald-600" />
                       ) : (
-                        <Lightbulb className="size-5 shrink-0 text-amber-600" />
+                        <Lightbulb className="size-5 shrink-0 text-amber-700" />
                       )}
                       <div>
                         <h5 className="font-bold">{section.callout.title}</h5>
@@ -266,10 +271,6 @@ export default async function CustomerArticlePage({ params }: PageProps) {
             )}
           </article>
 
-          {/* Sticky Sidebar: Table of Contents */}
-          <aside className="hidden lg:col-span-4 lg:block">
-            <HelpTableOfContents sections={tocSections} />
-          </aside>
         </div>
       </main>
 
