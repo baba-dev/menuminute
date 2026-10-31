@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, ShieldAlert, Sparkles } from "lucide-react";
 import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import {
   addOnHint,
@@ -42,7 +42,13 @@ function NavLink({ item }: { item: ResolvedNavItem }) {
  * Grouped sidebar: Run service, Menu, Insights, Admin. Destinations the plan or role does not
  * include collapse into an "Add-ons" disclosure with a plain hint instead of a row of dead links.
  */
-export function WorkspaceNavigation({ capabilities }: { capabilities?: DashboardNavigation }) {
+export function WorkspaceNavigation({
+  capabilities,
+  isSuperAdmin = false,
+}: {
+  capabilities?: DashboardNavigation;
+  isSuperAdmin?: boolean;
+}) {
   const grouped = groupNavigation(capabilities);
   const [addOnsOpen, setAddOnsOpen] = useState(false);
   const addOnsList = useRef<HTMLUListElement>(null);
@@ -70,6 +76,12 @@ export function WorkspaceNavigation({ capabilities }: { capabilities?: Dashboard
             {group.items.map((item) => (
               <NavLink key={item.id} item={item} />
             ))}
+            {group.id === "admin" && isSuperAdmin && (
+              <Link href="/admin" className="mm-workspace-nav-link">
+                <ShieldAlert size={19} strokeWidth={1.9} aria-hidden="true" />
+                <span>Platform admin</span>
+              </Link>
+            )}
           </div>
         </div>
       ))}

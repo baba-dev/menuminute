@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ShieldAlert } from "lucide-react";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -145,13 +144,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
             </div>
           )}
-          <WorkspaceNavigation capabilities={capabilities} />
-          {isSuperAdmin && (
-            <Link href="/admin" className="mm-workspace-nav-link">
-              <ShieldAlert size={19} aria-hidden="true" />
-              <span>Platform admin</span>
-            </Link>
-          )}
+          <WorkspaceNavigation capabilities={capabilities} isSuperAdmin={isSuperAdmin} />
         </aside>
         <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
           <WorkspaceTopbar
@@ -171,7 +164,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           {children}
         </main>
-        <WorkspaceBottomBar />
+        <WorkspaceBottomBar isSuperAdmin={isSuperAdmin} />
         <CommandPalette />
         <NotificationDrawer />
       </div>

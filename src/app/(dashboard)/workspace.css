@@ -70,19 +70,6 @@
   text-transform: uppercase;
 }
 
-.mm-workspace-outlet-name {
-  overflow-wrap: anywhere;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.mm-workspace-outlet-meta {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
 .mm-workspace-switcher {
   margin-top: 11px;
 }
@@ -1071,7 +1058,6 @@
   .mm-workspace-brand {
     min-height: 60px;
     margin: 0 16px;
-    padding-right: 130px;
   }
 
   .mm-workspace-brand img {
@@ -1086,57 +1072,9 @@
     margin-bottom: 2px;
   }
 
-  .mm-workspace-outlet-name {
-    font-size: 13px;
-  }
-
-  .mm-workspace-outlet-meta {
-    display: none;
-  }
-
   .mm-workspace-switcher {
     max-width: 220px;
     margin-top: 5px;
-  }
-
-  .mm-workspace-nav {
-    overflow: visible;
-    padding: 5px 11px 10px;
-  }
-
-  .mm-workspace-nav-label {
-    display: none;
-  }
-
-  .mm-workspace-nav-items {
-    display: flex;
-    gap: 5px;
-    overflow-x: auto;
-    padding-bottom: 3px;
-    scrollbar-width: thin;
-  }
-
-  .mm-workspace-nav-link {
-    min-height: 42px;
-    flex: none;
-    padding: 9px 12px;
-  }
-
-  .mm-workspace-profile {
-    position: absolute;
-    top: 7px;
-    right: 12px;
-    min-height: 44px;
-    margin: 0;
-    border: 0;
-  }
-
-  .mm-workspace-profile-link {
-    flex: none;
-  }
-
-  .mm-workspace-profile-copy {
-    display: none;
   }
 
   .mm-workspace-main {
@@ -1263,17 +1201,11 @@
 
 @media (max-width: 390px) {
   .mm-workspace-brand {
-    padding-right: 54px;
     margin: 0 10px;
   }
 
   .mm-workspace-brand img {
-    width: 110px;
-  }
-
-  .mm-workspace-profile {
-    top: 8px;
-    right: 8px;
+    width: 145px;
   }
 
   .mm-dashboard-hero {
