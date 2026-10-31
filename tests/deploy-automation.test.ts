@@ -50,6 +50,20 @@ describe("provenance-bound main-only production delivery", () => {
     expect(publisher).toContain("run-id: ${{ github.event.workflow_run.id }}");
   });
 
+  it("ships a production demo provisioner without development-time TS dependencies", () => {
+    const pkg = JSON.parse(readFileSync(path.resolve("package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    expect(pkg.scripts["build:release-preflight"]).toContain("esbuild scripts/demo-provision.ts");
+    expect(pkg.scripts["build:release-preflight"]).toContain(
+      "--outfile=dist/demo-provision.mjs"
+    );
+    expect(packageScript).toContain("test -s dist/demo-provision.mjs");
+    expect(packageScript).toContain("node --check dist/demo-provision.mjs");
+    expect(packageScript).toContain('cp -a dist/. "$stage/dist/"');
+    expect(packageScript).toContain("pnpm install --prod --frozen-lockfile");
+  });
+
   it("rejects PR/failed CI for publication and binds the source run", () => {
     expect(publisher).toContain("workflows: [CI]");
     expect(publisher).toContain("github.event.workflow_run.conclusion == 'success'");
