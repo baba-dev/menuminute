@@ -1,7 +1,7 @@
 # Public demo runbook
 
 Status: **dataset, reset, provisioning, one-click entry, request guard, demo orders, kitchen and
-entitlements and Ember limits implemented; the documentation site is planned** (see the plan in the PR description). Read the
+entitlements, Ember limits and the documentation site implemented; the visual polish pass is planned** (see the plan in the PR description). Read the
 [Public demo exception](../AGENTS.md#public-demo-exception) first.
 
 ## What exists
@@ -69,6 +69,20 @@ entitlements and Ember limits implemented; the documentation site is planned** (
   clearly labelled sample answers instead of an empty error.
 - Pre-launch gate: Ember privacy and retention (issue #230) is still unapproved. Demo conversations are shared
   between visitors and wiped by every reset.
+
+## Documentation site and screenshots
+
+- `/docs` and `/docs/<guide>` render the guides in `src/content/docs/guides.ts` (the old `/guides` and `/help`
+  info pages redirect there). Each guide shows light, dark and phone screenshots from the demo and links to
+  the matching screen. Features the demo cannot run (Point of Sale, menu import) say so explicitly.
+- Screenshots live in `public/docs-media/` with a checksummed `manifest.json`. `pnpm media:verify:docs`
+  (also part of `pnpm build`) fails on a missing, altered, oversized or unlisted file and when a shot defined
+  in `scripts/demo/docs-shots.mjs` has no capture.
+- To refresh them: provision the demo locally (`scripts/demo-provision.ts`), run the app with
+  `DEMO_MODE_ENABLED=true` (and Ember flags if you want Ember in the shots), then
+  `pnpm docs:capture [shotId ...]`. It signs in through the real `/demo/enter` route, captures desktop light
+  and dark (1200 px) and phone light (390 px) as WebP, and rewrites the manifest. Do not capture from a
+  production deployment: use a local or staging copy.
 
 ## What a reset never touches
 
