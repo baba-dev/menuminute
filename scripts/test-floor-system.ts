@@ -230,7 +230,7 @@ async function main() {
   );
   assert(
     Boolean(entry68 && entry68.idx === 67),
-    "Migration 0065 is registered at idx 67 in _journal.json"
+    "Migration 0068 is registered at idx 67 in _journal.json"
   );
 
   const demoTestPath = path.resolve(process.cwd(), "tests/demo-reset.test.ts");

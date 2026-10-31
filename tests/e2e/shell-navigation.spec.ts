@@ -427,7 +427,7 @@ test("floor lifecycle keeps one physical table, QR association, and reservation 
   await page.getByRole("tab", { name: /Bookings/ }).click();
   await expect(page.getByLabel("Booking date")).toBeVisible();
 
-  const headers = { "x-outlet-id": fixture.outletId };
+  const headers = { "x-outlet-id": fixture.outletId, origin: "https://localhost:3443" };
   const response = await page.request.get("/api/floor", { headers });
   expect(response.ok()).toBe(true);
   const initial = await response.json();
@@ -479,9 +479,9 @@ test("floor lifecycle keeps one physical table, QR association, and reservation 
     reservationTime: start,
     durationMinutes: 90,
   };
-  expect((await page.request.post("/api/floor/reservations", { headers, data: booking })).ok()).toBe(
-    true
-  );
+  expect(
+    (await page.request.post("/api/floor/reservations", { headers, data: booking })).ok()
+  ).toBe(true);
   expect(
     (await page.request.post("/api/floor/reservations", { headers, data: booking })).status()
   ).toBe(409);
