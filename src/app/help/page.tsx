@@ -52,9 +52,9 @@ export default function HelpCenterPage() {
           {/* Hero Visual Placeholder Card */}
           <div className="mx-auto mt-12 max-w-3xl">
             <HelpHeroImage
-              src="/brand/preview/qr-system.webp"
+              src="/brand/qr-studio/tabletop-press/hero-desktop-light.webp"
               alt="MenuMinute permanent tabletop QR codes and digital menu display"
-              badge="Permanent QR Architecture"
+              badge="Illustrative product artwork"
               caption="Permanent tabletop QR stickers ensure your menus stay live forever without ever re-printing."
             />
           </div>

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 process.env.APP_URL = "http://localhost:3000";
 process.env.AUTH_SECRET = randomBytes(32).toString("hex");
@@ -47,6 +49,7 @@ async function main() {
     check(!slugs.has(article.slug), `Duplicate slug: ${article.slug}`);
     slugs.add(article.slug);
 
+    if (article.heroImage) check(existsSync(join(process.cwd(), "public", article.heroImage.src.slice(1))), `Missing hero image for ${article.slug}`);
     check(article.title.length > 5, `Article ${article.slug} has title too short`);
     check(article.summary.length > 20, `Article ${article.slug} has summary too short`);
     check(article.quickSteps.length >= 3, `Article ${article.slug} must have >= 3 quick steps`);

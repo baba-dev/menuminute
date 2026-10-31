@@ -132,7 +132,7 @@ export default async function OwnerArticlePage({ params }: PageProps) {
                 src={article.heroImage.src}
                 alt={article.heroImage.alt}
                 caption={article.heroImage.caption}
-                badge={article.category}
+                badge={`Illustration · ${article.category}`}
               />
             )}
 

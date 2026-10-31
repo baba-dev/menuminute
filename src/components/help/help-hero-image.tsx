@@ -10,10 +10,10 @@ interface HelpHeroImageProps {
 }
 
 export function HelpHeroImage({
-  src = "/brand/preview/qr-system.webp",
+  src = "/brand/qr-studio/tabletop-press/hero-desktop-light.webp",
   alt,
   caption,
-  badge = "Hospitality Visual Guide",
+  badge = "Illustrative product artwork",
 }: HelpHeroImageProps) {
   return (
     <div className="relative my-8 overflow-hidden rounded-3xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">

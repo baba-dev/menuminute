@@ -24,7 +24,7 @@ export const ownerArticles: HelpArticle[] = [
       "profile",
     ],
     heroImage: {
-      src: "/brand/preview/qr-system.webp",
+      src: "/brand/onboarding-wizard/welcome-hero-desktop-light.webp",
       alt: "MenuMinute permanent tabletop QR system and digital menu presentation",
       caption:
         "Your digital dining room comes to life with permanent tabletop QR codes and instant live updates.",
@@ -134,7 +134,7 @@ export const ownerArticles: HelpArticle[] = [
       "publish",
     ],
     heroImage: {
-      src: "/brand/preview/identity-concept-board.webp",
+      src: "/brand/menu-studio/recipe-atelier/hero-desktop-light.webp",
       alt: "Menu Studio dish crafting workspace",
       caption:
         "Craft appetizing dishes with portion sizes, preparation choices, and dietary badges.",
@@ -251,7 +251,7 @@ export const ownerArticles: HelpArticle[] = [
     lastUpdated: "2026-10-31",
     keywords: ["ai import", "ocr", "scan menu", "pdf import", "photo upload", "menu digitizer"],
     heroImage: {
-      src: "/brand/preview/production-asset-preview.webp",
+      src: "/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp",
       alt: "AI Menu Import scanning workflow",
       caption: "Review extracted menu items before adding them to your private draft.",
     },
@@ -333,7 +333,7 @@ export const ownerArticles: HelpArticle[] = [
       "permanent qr",
     ],
     heroImage: {
-      src: "/brand/preview/qr-system.webp",
+      src: "/brand/qr-studio/tabletop-press/hero-desktop-light.webp",
       alt: "Permanent tabletop QR codes and print templates",
       caption:
         "Permanent tabletop QR stickers ensure your dining room never has to re-print codes when prices change.",
@@ -432,7 +432,7 @@ export const ownerArticles: HelpArticle[] = [
       "prep timer",
     ],
     heroImage: {
-      src: "/brand/preview/loading-motion-storyboard.webp",
+      src: "/brand/orders/service-counter/ticket-stack.webp",
       alt: "Kitchen Pro KDS display workflow",
       caption: "Paperless station tickets with preparation timers and instant order bumping.",
     },
@@ -518,7 +518,7 @@ export const ownerArticles: HelpArticle[] = [
       "pickup",
     ],
     heroImage: {
-      src: "/brand/preview/window-stickers.webp",
+      src: "/brand/orders/service-counter/hero-desktop-light.webp",
       alt: "Live service counter and front of house ordering",
       caption:
         "Accept orders, attend to guest requests, and manage 86 sold-out items from one calm screen.",
@@ -607,7 +607,7 @@ export const ownerArticles: HelpArticle[] = [
       "host stand",
     ],
     heroImage: {
-      src: "/brand/preview/qr-system.webp",
+      src: "/brand/dashboard/editorial/dining-room-empty-light.svg",
       alt: "Table floor matrix dining layout",
       caption: "A visual floor map showing table occupancy, active prep, and open balances.",
     },
@@ -677,7 +677,7 @@ export const ownerArticles: HelpArticle[] = [
       "register",
     ],
     heroImage: {
-      src: "/brand/preview/production-asset-preview.webp",
+      src: "/brand/orders/service-counter/ticket-stack.webp",
       alt: "POS register and receipt printing",
       caption:
         "Record cash and card tenders accurately with thermal receipt printing and shift closing reports.",
@@ -757,7 +757,7 @@ export const ownerArticles: HelpArticle[] = [
       "milestones",
     ],
     heroImage: {
-      src: "/brand/preview/identity-concept-board.webp",
+      src: "/brand/dashboard/editorial/hero-desktop-light.webp",
       alt: "Restaurant shift analytics and sales reports",
       caption:
         "Track shift milestones, top-selling dishes, and financial totals across any time period.",
@@ -835,7 +835,7 @@ export const ownerArticles: HelpArticle[] = [
       "invite",
     ],
     heroImage: {
-      src: "/brand/preview/loading-motion-storyboard.webp",
+      src: "/brand/organization/hospitality-house/illustrations/team-hall-light.webp",
       alt: "Ember AI Assistant and team security",
       caption: "Grounded conversational assistance and secure role-based team management.",
     },

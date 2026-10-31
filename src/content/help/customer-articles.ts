@@ -16,7 +16,7 @@ export const customerArticles: HelpArticle[] = [
     lastUpdated: "2026-10-31",
     keywords: ["scan qr", "how to scan", "camera", "qr code", "iphone", "android", "no app"],
     heroImage: {
-      src: "/brand/preview/qr-system.webp",
+      src: "/brand/qr-studio/tabletop-press/print-studio-illustration.webp",
       alt: "Scanning tabletop QR menu on mobile",
       caption:
         "Instant camera scanning launches the full menu directly in your mobile browser with zero app installation.",
@@ -110,7 +110,7 @@ export const customerArticles: HelpArticle[] = [
       "allergens",
     ],
     heroImage: {
-      src: "/brand/preview/identity-concept-board.webp",
+      src: "/assets/public-menu/covers/artisan-bakery.webp",
       alt: "Browsing dishes and dietary categories",
       caption: "Explore categories, filter by dietary requirements, and view appetizing photos.",
     },
@@ -182,7 +182,7 @@ export const customerArticles: HelpArticle[] = [
       "kitchen notes",
     ],
     heroImage: {
-      src: "/brand/preview/production-asset-preview.webp",
+      src: "/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp",
       alt: "Customizing dishes and selecting add-ons",
       caption: "Select portion sizes, dressings, and optional toppings with transparent pricing.",
     },
@@ -245,7 +245,7 @@ export const customerArticles: HelpArticle[] = [
     lastUpdated: "2026-10-31",
     keywords: ["place order", "cart", "checkout", "dine in", "pickup", "table number"],
     heroImage: {
-      src: "/brand/preview/window-stickers.webp",
+      src: "/brand/orders/service-counter/ticket-stack.webp",
       alt: "Reviewing cart and placing dine in order",
       caption:
         "Review itemized dishes and table numbers before submitting directly to the kitchen.",
@@ -316,7 +316,7 @@ export const customerArticles: HelpArticle[] = [
       "service bell",
     ],
     heroImage: {
-      src: "/brand/preview/loading-motion-storyboard.webp",
+      src: "/brand/orders/service-counter/hero-desktop-light.webp",
       alt: "Live order tracking and call waiter service bell",
       caption:
         "Follow preparation progress from kitchen to pass and alert your server with a single tap.",
@@ -389,7 +389,7 @@ export const customerArticles: HelpArticle[] = [
       "connectivity",
     ],
     heroImage: {
-      src: "/brand/preview/qr-system.webp",
+      src: "/brand/reference/qr-system.webp",
       alt: "Safe offline browsing on mobile",
       caption:
         "Cached menus keep dishes and photos readable even in underground cellars with zero mobile reception.",
