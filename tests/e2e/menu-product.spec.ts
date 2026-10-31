@@ -133,7 +133,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(studioOverview).toBeVisible();
   await expect(page.locator('[aria-label="Menu Studio overview"]:visible')).toHaveCount(1);
   // App Router can retain an inactive route tree: operate on the visible studio only.
-  const dishSearch = studioOverview.getByRole("searchbox", { name: "Find a dish" });
+  const dishSearch = page.locator("#workspace-main").getByRole("searchbox", { name: "Find a dish" });
   await dishSearch.fill("nonexistent-dish-search");
   await expect(dishSearch).toHaveValue("nonexistent-dish-search");
   await dishSearch.clear();
