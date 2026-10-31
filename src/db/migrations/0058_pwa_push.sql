@@ -52,6 +52,11 @@ BEGIN
  SELECT r.organization_id INTO org FROM restaurants r JOIN organizations o ON o.id=r.organization_id
  WHERE r.id=p_outlet AND r.is_active AND o.is_active;
  IF org IS NULL THEN RAISE EXCEPTION 'Outlet unavailable' USING ERRCODE='42501'; END IF;
+ -- A bounded device inventory prevents untrusted clients from exhausting storage.
+ IF (SELECT count(*) FROM pwa_push_subscriptions
+     WHERE user_id=actor AND outlet_id=p_outlet AND endpoint_hash<>p_hash) >= 5 THEN
+   RAISE EXCEPTION 'Device subscription limit reached' USING ERRCODE='22023';
+ END IF;
  -- One push endpoint cannot continue notifying a previous login on this device.
  DELETE FROM pwa_push_subscriptions WHERE endpoint_hash=p_hash AND user_id<>actor;
  INSERT INTO pwa_push_subscriptions(user_id,session_id,organization_id,outlet_id,endpoint,endpoint_hash,new_orders,kitchen_updates)
@@ -168,7 +173,9 @@ RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public
 BEGIN
  DELETE FROM pwa_push_deliveries WHERE created_at<now()-interval '3 days';
  DELETE FROM pwa_push_subscriptions WHERE updated_at<now()-interval '90 days'
- OR NOT EXISTS(SELECT 1 FROM sessions s WHERE s.id=session_id AND s.user_id=user_id AND s.expires_at>now());
+ OR NOT EXISTS(SELECT 1 FROM sessions s
+  WHERE s.id=pwa_push_subscriptions.session_id
+  AND s.user_id=pwa_push_subscriptions.user_id AND s.expires_at>now());
 END $$;
 REVOKE ALL ON FUNCTION app_private.pwa_push_prune() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.pwa_push_prune() TO menuminute_worker;

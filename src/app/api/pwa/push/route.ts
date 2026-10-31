@@ -9,6 +9,7 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { withOutlet, withOutletRead } from "@/modules/tenancy/service";
 import { env } from "@/lib/config/env";
 import { allowedPushEndpoint } from "@/modules/pwa/vapid";
+import { reservePushMutation } from "@/modules/pwa/push-rate-limit";
 
 const headers = { "cache-control": "private, no-store", vary: "Cookie" };
 const subscriptionInput = z.discriminatedUnion("action", [
@@ -64,6 +65,7 @@ async function handleGet(req: Request) {
 async function handlePost(req: Request) {
   try {
     const { actor, outlet } = await scope(req, true);
+    await reservePushMutation(actor, outlet.id);
     // Bound JSON before parsing; never log endpoints, keys or browser identifiers.
     const raw = await req.text();
     if (raw.length > 3500)
