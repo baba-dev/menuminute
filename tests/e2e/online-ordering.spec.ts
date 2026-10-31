@@ -104,7 +104,7 @@ test("the free QR-only outlet retains its public menu but does not offer checkou
   await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
   await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
   await detail.getByRole("button", { name: "Back to menu" }).click();
-  await expect(page.getByRole("button", { name: "View order cart" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
 });
 
 test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking capability", async ({
@@ -119,7 +119,7 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     .getByRole("dialog", { name: "Paneer Curry" })
     .getByRole("button", { name: /Add to Order/ })
     .click();
-  await page.getByRole("button", { name: "View order cart" }).click();
+  await page.getByRole("button", { name: /^View Your Order/ }).click();
   const receipt = page.locator(".ticket-receipt-card");
   await expect(receipt).toBeVisible();
   await expect(receipt).toContainText("Estimated item subtotal");

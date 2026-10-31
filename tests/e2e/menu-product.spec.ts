@@ -236,7 +236,7 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(guestDetails.getByText(/Browse the available options and pricing/)).toBeVisible();
   await expect(guestDetails.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
   await guestDetails.getByRole("button", { name: "Back to menu" }).click();
-  await expect(guest.getByRole("button", { name: "View order cart" })).toHaveCount(0);
+  await expect(guest.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
   await expect(guest.getByText("Sold Out", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Edit Signature thali" }).click();
   await page.getByLabel("Sold out", { exact: true }).check();

@@ -455,23 +455,39 @@ export function OrderTracker({
         {!isTerminalNegative && (
           <div className="panel stack" style={{ gap: "1rem" }}>
             <span className="section-title">Preparation Progress</span>
-            <div className="stepper-track stack" style={{ gap: "1rem" }}>
+            <p className="step-state" role="status" aria-live="polite">
+              {`Current status: ${steps.find((_, i) => getStepState(i) === "active")?.label ?? order.status}`}
+            </p>
+            <ol className="stepper-track" aria-label="Order progress">
               {steps.map((s, idx) => {
                 const state = getStepState(idx);
                 const IconComponent = s.icon;
                 return (
-                  <div key={s.id} className={`stepper-step row ${state}`}>
-                    <div className="step-indicator">
+                  <li
+                    key={s.id}
+                    className={`stepper-step row ${state}`}
+                    aria-current={state === "active" ? "step" : undefined}
+                  >
+                    <div className="step-indicator" aria-hidden="true">
                       <IconComponent size={16} />
                     </div>
                     <div className="stack" style={{ gap: "0.1rem" }}>
-                      <span className="step-title">{s.label}</span>
+                      <span className="step-title">
+                        {s.label}
+                        <span className="step-state">
+                          {state === "completed"
+                            ? " (done)"
+                            : state === "active"
+                              ? " (current step)"
+                              : " (upcoming)"}
+                        </span>
+                      </span>
                       <small className="quiet">{s.desc}</small>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           </div>
         )}
 
