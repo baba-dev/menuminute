@@ -144,6 +144,7 @@ test("scan table allows selecting photos before creating a private session", asy
   await expect(page.locator(".scan-image-tile").first()).toContainText("specials.png");
   await page.getByRole("button", { name: "Upload photos privately" }).click();
   await expect(page.getByText("Page 1 · ready")).toBeVisible();
+  await expect(page.getByText("Page 2 · ready")).toBeVisible();
   await page.getByRole("button", { name: "All drafts" }).click();
   await expect(page.getByRole("heading", { name: "Recent imports" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Create private draft" })).toBeVisible();

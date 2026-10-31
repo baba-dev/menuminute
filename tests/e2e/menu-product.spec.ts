@@ -607,11 +607,13 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
       .locator("img")
   ).toBeVisible();
   await page.getByRole("button", { name: "Preview draft" }).click();
-  await expect(page.locator(".atelier-preview-dialog")).toBeVisible();
-  await expect(page.locator(".atelier-preview-viewport")).toBeVisible();
-  await expect(page.getByText("Draft preview — not public", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Back to edit" }).click();
-  await expect(page.locator(".atelier-preview-dialog")).toBeHidden();
+  const openPreview = page.locator("dialog.atelier-preview-dialog[open]");
+  await expect(openPreview).toHaveCount(1);
+  await expect(openPreview).toBeVisible();
+  await expect(openPreview.locator(".atelier-preview-viewport")).toBeVisible();
+  await expect(openPreview.getByText("Draft preview — not public", { exact: true })).toBeVisible();
+  await openPreview.getByRole("button", { name: "Back to edit" }).click();
+  await expect(openPreview).toHaveCount(0);
 });
 
 test("Tabletop Press is responsive and uses real QR media for all printable formats", async ({
