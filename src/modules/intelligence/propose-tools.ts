@@ -6,6 +6,7 @@ import { kitchenSnapshot } from "@/modules/kitchen/service";
 import { ForbiddenError } from "@/lib/errors";
 import type { ToolContext } from "./read-tools";
 import { proposeAction } from "./action-requests";
+import { SUPPORT_CATEGORIES, SUPPORT_PRIORITIES } from "@/modules/support/service";
 
 /**
  * Propose-only tools. Running one stores a PENDING request for the signed-in person to confirm; it
@@ -71,6 +72,15 @@ const kitchenTicketSchema = z
     orderNumber: z.number().int().min(1).max(99_999_999),
     action: z.enum(["start", "complete"]),
     dish: z.string().trim().min(2).max(80).optional(),
+  })
+  .strict();
+
+const supportTicketSchema = z
+  .object({
+    subject: z.string().trim().min(3).max(120),
+    details: z.string().trim().min(1).max(2000),
+    category: z.enum(SUPPORT_CATEGORIES).optional(),
+    priority: z.enum(SUPPORT_PRIORITIES).optional(),
   })
   .strict();
 
@@ -248,6 +258,42 @@ export const proposeTools = [
       return prepared(summary, row.kind, row.id);
     },
   },
+  {
+    name: "propose.supportTicket",
+    description:
+      "Prepare (not send) a support request to the MenuMinute team for the person to confirm. Use when they want to report a problem, get help from a person, or raise an issue. Write a short plain subject and put what they told you in the details.",
+    parameters: {
+      type: "object",
+      properties: {
+        subject: { type: "string", minLength: 3, maxLength: 120 },
+        details: { type: "string", maxLength: 2000 },
+        category: { type: "string", enum: [...SUPPORT_CATEGORIES] },
+        priority: { type: "string", enum: [...SUPPORT_PRIORITIES] },
+      },
+      required: ["subject", "details"],
+      additionalProperties: false,
+    },
+    schema: supportTicketSchema,
+    permissions: ["orders.read", "menu.read"],
+    run: async (context: ToolContext, args: z.infer<typeof supportTicketSchema>) => {
+      const conversationId = withConversation(context);
+      const subject = args.subject.replace(/\s+/g, " ");
+      const summary = `Send to support: “${subject.length > 90 ? subject.slice(0, 89) + "…" : subject}”`;
+      const row = await proposeAction(context, {
+        conversationId,
+        key: randomUUID(),
+        kind: "support.ticket",
+        params: {
+          subject,
+          details: args.details,
+          category: args.category ?? "question",
+          priority: args.priority ?? "normal",
+        },
+        summary,
+      });
+      return prepared(summary, row.kind, row.id);
+    },
+  },
 ] as const;
 
 export type ProposeToolName = (typeof proposeTools)[number]["name"];
@@ -269,6 +315,8 @@ export async function executeProposeTool(context: ToolContext, name: string, unt
       return proposeTools[1].run(context, proposeTools[1].schema.parse(untrusted));
     case "propose.kitchenTicket":
       return proposeTools[2].run(context, proposeTools[2].schema.parse(untrusted));
+    case "propose.supportTicket":
+      return proposeTools[3].run(context, proposeTools[3].schema.parse(untrusted));
     default:
       throw new Error("Unknown action tool");
   }

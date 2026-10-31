@@ -9,6 +9,8 @@ export type ActionRequest = {
   summary: string;
   expiresAt: string;
   createdAt: string;
+  /** A short excerpt of the free text being sent (support requests), shown muted under the title. */
+  preview?: string | null;
   result: { message?: string } | null;
 };
 type Decision = "confirm" | "reject";
@@ -97,6 +99,7 @@ export function EmberActionCard({
       aria-label={`Confirm: ${request.summary}`}
     >
       <p className="mm-ember-act-text">{request.summary}</p>
+      {request.preview && <p className="mm-ember-act-preview">{request.preview}</p>}
       <div className="mm-ember-act-buttons">
         <button
           type="button"

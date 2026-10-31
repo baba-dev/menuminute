@@ -5,7 +5,8 @@ import { callGuestService } from "../src/modules/hospitality/service";
 import { createConversation } from "../src/modules/intelligence/store";
 import { authorizedToolDefinitions, executeReadTool } from "../src/modules/intelligence/read-tools";
 import { executeProposeTool } from "../src/modules/intelligence/propose-tools";
-import { decideAction } from "../src/modules/intelligence/action-requests";
+import { actionRequestHistory, decideAction } from "../src/modules/intelligence/action-requests";
+import { listMySupportTickets } from "../src/modules/support/service";
 import { runReadOnlyTurn } from "../src/modules/intelligence/orchestrator";
 import { beginTurn } from "../src/modules/intelligence/store";
 import { createProviderHub } from "../src/modules/intelligence";
@@ -255,5 +256,50 @@ describe("Ember propose-only tools", () => {
     ]);
     expect(fetcher).toHaveBeenCalledTimes(1); // grounded reply: no second model call
     expect(await status(ids.pendingDineIn)).toBe("pending");
+  });
+});
+
+describe("Ember support requests", () => {
+  it("prepares a request, sends nothing until confirmed, then the person sees it and replies", async () => {
+    const { ctx } = await seed();
+    const scope = { actor: ctx.actor, organizationId: ctx.organizationId, outletId: ctx.outletId };
+    const prep = await executeProposeTool(ctx, "propose.supportTicket", {
+      subject: "Kitchen printer not printing",
+      details: "Since noon the kitchen printer does not print new orders.",
+      category: "kitchen",
+    });
+    expect(prep.data).toMatchObject({
+      prepared: true,
+      summary: "Send to support: “Kitchen printer not printing”",
+    });
+    expect(await listMySupportTickets(scope.actor)).toEqual([]); // nothing sent yet
+    const history = await actionRequestHistory(scope, ctx.conversationId);
+    expect(history[0]).toMatchObject({ kind: "support.ticket", status: "pending" });
+    expect((history[0] as { preview?: string }).preview).toContain("kitchen printer");
+
+    const receipt = await decideAction(ctx, (prep.data as { requestId: string }).requestId, {
+      key: uuid(),
+      decision: "confirm",
+    });
+    expect(receipt).toMatchObject({ status: "confirmed" });
+    expect((receipt as { message: string }).message).toMatch(/ticket #\d+/);
+    const mine = await executeReadTool(ctx, "support.myTickets", {});
+    expect(mine.data).toMatchObject({
+      count: 1,
+      tickets: [{ subject: "Kitchen printer not printing", status: "received, not picked up yet" }],
+    });
+  });
+
+  it("rejects a vague or oversized request before anything is stored", async () => {
+    const { ctx } = await seed();
+    await expect(
+      executeProposeTool(ctx, "propose.supportTicket", { subject: "hi", details: "x" })
+    ).rejects.toThrow();
+    await expect(
+      executeProposeTool(ctx, "propose.supportTicket", {
+        subject: "A real subject",
+        details: "x".repeat(2001),
+      })
+    ).rejects.toThrow();
   });
 });

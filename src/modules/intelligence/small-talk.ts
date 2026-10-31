@@ -21,6 +21,11 @@ const CAPABILITIES: Array<{ tool: string; line: string }> = [
   { tool: "qr.details", line: "show which QR codes are active and how often they're scanned" },
   { tool: "reports.insights", line: "find your busiest hours and slow-selling dishes" },
   { tool: "billing.status", line: "show which paid features are active on your plan" },
+  {
+    tool: "propose.supportTicket",
+    line: "send a support request to the MenuMinute team (you confirm first)",
+  },
+  { tool: "support.myTickets", line: "show your support requests and any replies" },
   { tool: "help.search", line: "explain how to do things in MenuMinute, step by step" },
 ];
 

@@ -6,6 +6,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@
 import { staffServiceRequestAction } from "@/modules/hospitality/service";
 import { transitionOutletOrder } from "@/modules/orders/service";
 import { kitchenWorkCommand } from "@/modules/kitchen/service";
+import { createSupportTicket, createTicketInput } from "@/modules/support/service";
 import { assertAssistantScope, type Scope } from "./store";
 
 /**
@@ -31,7 +32,11 @@ const ORDER_TARGETS = [
 ] as const;
 
 type Kind =
-  "service_request.acknowledge" | "service_request.resolve" | "order.transition" | "kitchen.work";
+  | "service_request.acknowledge"
+  | "service_request.resolve"
+  | "order.transition"
+  | "kitchen.work"
+  | "support.ticket";
 type Definition<T extends z.ZodType> = {
   schema: T;
   /** Any one of these permissions lets the person propose and confirm; the domain re-checks. */
@@ -40,7 +45,9 @@ type Definition<T extends z.ZodType> = {
 };
 export type ExecutionOutcome =
   | { status: "confirmed"; message: string; detail?: Record<string, unknown> }
-  | { status: "stale"; message: string };
+  | { status: "stale"; message: string }
+  /** A refusal the person should read (for example "daily limit reached"); nothing was changed. */
+  | { status: "failed"; message: string };
 
 const requestParams = z.object({ requestId: uuid }).strict();
 const orderParams = z
@@ -148,6 +155,27 @@ export const actionKinds: { [K in Kind]: Definition<z.ZodType> } = {
         };
       }),
   },
+  "support.ticket": {
+    schema: createTicketInput,
+    permissions: () => ["orders.read", "menu.read"],
+    execute: async (s, raw) => {
+      try {
+        const r = await createSupportTicket(s, raw, "ember");
+        return {
+          status: "confirmed",
+          message: `Sent to support as ticket #${r.ticketNumber}. The team will reply here.`,
+          detail: { ticketNumber: r.ticketNumber },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError || error instanceof ForbiddenError)
+          return {
+            status: "failed",
+            message: error.message || "Support couldn't take that request.",
+          };
+        throw error;
+      }
+    },
+  },
 };
 
 export const proposeActionInput = z
@@ -159,6 +187,7 @@ export const proposeActionInput = z
       "service_request.resolve",
       "order.transition",
       "kitchen.work",
+      "support.ticket",
     ]),
     params: z.record(z.string(), z.unknown()),
     expected: z.record(z.string(), z.unknown()).default({}),
@@ -286,7 +315,8 @@ export async function actionRequestHistory(s: Scope, conversationId: string) {
   uuid.parse(conversationId);
   return scopedTx(s, async (tx) => {
     const rows = await tx.execute(
-      sql`select id,status,kind,summary,expires_at as "expiresAt",created_at as "createdAt",result
+      sql`select id,status,kind,summary,expires_at as "expiresAt",created_at as "createdAt",result,
+        case when kind='support.ticket' then left(params->>'details',220) end as preview
         from assistant_action_requests where conversation_id=${conversationId}
         and organization_id=${s.organizationId} and outlet_id=${s.outletId} and user_id=${s.actor.userId}
         order by created_at desc,id desc limit 20`

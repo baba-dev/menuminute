@@ -23,6 +23,19 @@ export function selectQuestionTools<T extends { name: string }>(
     )
   )
     add("billing.status");
+  // Support: raising a request prepares a confirm-first card; checking progress is read-only.
+  if (
+    /\b(my|our)\b.{0,20}\b(support )?(tickets?|requests?)\b|\bticket (status|update)|status of (my|the) (ticket|request)|\bany repl(y|ies)\b/.test(
+      q
+    )
+  )
+    add("support.myTickets");
+  if (
+    /\b(raise|create|open|file|log|send|submit|make)\b.{0,25}\b(support|ticket|request|complaint)\b|\b(report|tell|contact|reach|message)\b.{0,25}\b(support|the team|a human|someone)\b|\b(need|want|get)\b.{0,15}\b(support|human help|a person)\b|\bsomething (is )?(broken|wrong|not working)\b|\b(bug|problem|issue) with\b/.test(
+      q
+    )
+  )
+    add("propose.supportTicket");
   // Action requests ("mark order 12 ready", "resolve table 5's water request") prepare a
   // confirm-first card. Only offered when the person's actions are enabled and permitted.
   if (

@@ -60,6 +60,8 @@ describe("Ember additional read tools", () => {
       "imports.pulse",
       "qr.pulse",
       ...NEW,
+      "support.myTickets",
+      "propose.supportTicket",
       "help.search",
     ].map((name) => ({ name }));
     const first = (q: string) => selectQuestionTools(registry, q)[0]?.name;
@@ -71,5 +73,11 @@ describe("Ember additional read tools", () => {
     expect(first("What is my subscription status?")).toBe("billing.status");
     expect(first("How much sale this week?")).toBe("reports.summary");
     expect(first("What are my orders right now?")).toBe("orders.pulse");
+    expect(first("Show my support tickets")).toBe("support.myTickets");
+    expect(first("Any reply to my request?")).toBe("support.myTickets");
+    expect(first("Please raise a support request, the printer is broken")).toBe(
+      "propose.supportTicket"
+    );
+    expect(first("Something is not working with my menu")).toBe("propose.supportTicket");
   });
 });

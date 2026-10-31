@@ -697,6 +697,17 @@
   color: var(--ink, #23150e);
   overflow-wrap: anywhere;
 }
+.mm-ember-act-preview {
+  margin: -4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted, #695949);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
 .mm-ember-act-buttons {
   display: flex;
   align-items: center;

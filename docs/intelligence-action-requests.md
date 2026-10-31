@@ -17,7 +17,8 @@ under `prefers-reduced-motion`.
 
 ## Propose-only tools
 
-`propose.guestRequest`, `propose.orderStatus`, `propose.kitchenTicket` take human references
+`propose.guestRequest`, `propose.orderStatus`, `propose.kitchenTicket` and `propose.supportTicket`
+(see `support-desk.md`) take human references
 (table, order number, dish), resolve the real record on the server, check the next step is allowed
 (for orders: pending→accepted|rejected, accepted→preparing|cancelled, preparing→ready|cancelled,
 ready→cancelled|served (dine-in)|collected (pickup); kitchen-run orders are left to the kitchen) and

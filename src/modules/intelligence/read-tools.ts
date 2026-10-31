@@ -9,6 +9,7 @@ import {
   merchantServiceRequests,
   merchantInsights,
   merchantBilling,
+  merchantMyTickets,
   reportPeriods,
 } from "./merchant-tools";
 import { sql } from "drizzle-orm";
@@ -333,6 +334,14 @@ export const readTools = [
     schema: empty,
     run: async (context: ToolContext) => merchantBilling(context),
   },
+  {
+    name: "support.myTickets",
+    description:
+      "Show the person's own recent support requests, their progress and the latest reply from the support team. Read-only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantMyTickets(context),
+  },
   helpSearchTool,
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
@@ -369,6 +378,8 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     if (definition.name === "finance.pulse" || definition.name === "billing.status")
       return access?.billing === true;
     if (definition.name === "qr.details") return access?.menu === true;
+    if (definition.name === "support.myTickets")
+      return access?.menu === true || access?.orders === true;
     if (definition.name === "reports.summary") return access?.orders === true;
     return access?.orders === true;
   });
@@ -436,6 +447,9 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "billing.status":
       empty.parse(untrusted);
       return readTools[13].run(context);
+    case "support.myTickets":
+      empty.parse(untrusted);
+      return readTools[14].run(context);
     case "help.search":
       return helpSearchTool.run(context, helpSearchTool.schema.parse(untrusted));
     default:

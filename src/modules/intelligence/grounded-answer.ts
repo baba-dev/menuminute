@@ -191,6 +191,33 @@ export function groundedMerchantAnswer(
     lines.push("", "*Order totals are not the same as verified paid revenue.*");
     return lines.join("\n");
   }
+  if (item.tool === "support.myTickets") {
+    const parsed = z
+      .object({
+        count: z.number(),
+        tickets: z.array(
+          z.object({
+            number: z.number(),
+            subject: z.string(),
+            status: z.string(),
+            latestReply: z.string().nullable(),
+          })
+        ),
+      })
+      .safeParse(item.data);
+    if (!parsed.success) return null;
+    if (!parsed.data.count)
+      return "You haven't sent any support requests yet. Tell me what's wrong and I'll prepare one for you to confirm.";
+    return [
+      "Here are your latest support requests:",
+      "",
+      ...parsed.data.tickets.map(
+        (t) =>
+          `- **#${t.number} · ${safe(t.subject)}** — ${safe(t.status)}` +
+          (t.latestReply ? `\n  Latest reply: “${safe(t.latestReply).slice(0, 160)}”` : "")
+      ),
+    ].join("\n");
+  }
   if (item.tool.startsWith("propose.")) {
     const parsed = z
       .object({

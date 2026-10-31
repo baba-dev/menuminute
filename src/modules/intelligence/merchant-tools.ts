@@ -10,6 +10,7 @@ import { staffServiceRequests } from "@/modules/hospitality/service";
 import { getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { billingState } from "@/modules/billing/service";
 import { ForbiddenError } from "@/lib/errors";
+import { listMySupportTickets } from "@/modules/support/service";
 import type { ToolContext } from "./read-tools";
 
 export const reportPeriods = ["today", "yesterday", "week", "7d", "30d", "month"] as const;
@@ -304,4 +305,29 @@ export async function merchantBilling(context: ToolContext) {
       };
     throw error;
   }
+}
+
+const TICKET_STATUS = {
+  open: "received, not picked up yet",
+  in_progress: "being looked at",
+  waiting: "waiting for your reply",
+  resolved: "resolved",
+  closed: "closed",
+} as const;
+/** The person's own support requests and the latest reply written for them. */
+export async function merchantMyTickets(context: ToolContext) {
+  const rows = await listMySupportTickets(context.actor, 5);
+  return {
+    source: "support.myTickets",
+    data: {
+      count: rows.length,
+      tickets: rows.map((t) => ({
+        number: t.number,
+        subject: t.subject,
+        status: TICKET_STATUS[t.status],
+        sent: t.createdAt,
+        latestReply: t.latestReply?.body ?? null,
+      })),
+    },
+  };
 }
