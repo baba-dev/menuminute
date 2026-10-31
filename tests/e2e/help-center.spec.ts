@@ -90,3 +90,28 @@ test("help article has no serious accessibility violations", async ({ page }) =>
     results.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
   ).toEqual([]);
 });
+
+
+test("help articles show genuine demo captures without mislabelling unavailable workflows", async ({
+  page,
+  request,
+}) => {
+  const image = await request.get("/docs-media/menu-studio-desktop-light.webp");
+  expect(image.status()).toBe(200);
+  expect(image.headers()["content-type"]).toContain("image/webp");
+
+  await page.goto("/help/owner/menu-studio");
+  const ownerShot = page.locator("figure").filter({ hasText: "Demo interface capture." });
+  await expect(ownerShot).toBeVisible();
+  await expect(ownerShot.locator('img[alt*="Menu Studio"]')).toHaveCount(3);
+
+  await page.goto("/help/customer/customizing-dishes");
+  const guestShot = page.locator("figure").filter({ hasText: "Demo interface capture." });
+  await expect(guestShot).toBeVisible();
+  await expect(guestShot.locator('img[alt*="dish-details"]')).toHaveCount(0);
+  await expect(guestShot.locator('img[alt*="Guest dish-details"]')).toHaveCount(3);
+
+  await page.goto("/help/owner/pos-and-payments");
+  await expect(page.getByText("Demo interface capture.")).toHaveCount(0);
+  await expect(page.getByText(/Illustrative example ·/).first()).toBeVisible();
+});
