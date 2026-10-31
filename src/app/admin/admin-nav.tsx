@@ -11,6 +11,7 @@ import {
   CreditCard,
   ChefHat,
   Lock,
+  LifeBuoy,
   ArrowLeft,
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { href: "/admin/organizations", label: "Organizations & Outlets", icon: Building2 },
   { href: "/admin/payments", label: "Payments & Grants", icon: CreditCard },
   { href: "/admin/kitchen", label: "Kitchen Control Desk", icon: ChefHat },
+  { href: "/admin/support", label: "Support Desk", icon: LifeBuoy },
   { href: "/admin/security", label: "Security & Audits", icon: Lock },
 ];
 

@@ -111,9 +111,14 @@ const envSchema = z
         .optional()
     ),
     // Ember provider hub: independent activation from the existing review-only import engine.
+    // Independent guest-facing rollout. NVIDIA is the only inference provider for this feature.
+    AI_DINING_CONCIERGE_ENABLED: strictBoolean.default(false),
+    AI_DINING_CONCIERGE_OUTLET_IDS: rolloutOutletIds,
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_ACTIONS_ENABLED: strictBoolean.default(false),
+    // Separate switch: lets Ember PREPARE a menu publish that a person then confirms. Off by default.
+    AI_ASSISTANT_PUBLISH_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_ENABLED: strictBoolean.default(false),
     AI_NVIDIA_COMMERCIAL_APPROVED: strictBoolean.default(false),
     AI_NVIDIA_MODEL: z.string().max(128).optional(),
@@ -174,6 +179,12 @@ const envSchema = z
         code: "custom",
         path: ["PWA_OPERATIONAL_OUTLET_IDS"],
         message: "Operational PWA rollout requires at least one outlet ID",
+      });
+    if (e.AI_ASSISTANT_PUBLISH_ENABLED && !e.AI_ASSISTANT_ACTIONS_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["AI_ASSISTANT_PUBLISH_ENABLED"],
+        message: "Confirmed menu publishing requires Ember confirmed actions to be enabled",
       });
     if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
       ctx.addIssue({

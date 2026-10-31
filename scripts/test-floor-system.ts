@@ -219,18 +219,18 @@ async function main() {
   console.log("\n5. Validating Migration Journal & Demo Test Registration...");
   const migrationPath = path.resolve(
     process.cwd(),
-    "src/db/migrations/0065_dining_floor_and_reservations.sql"
+    "src/db/migrations/0068_dining_floor_and_reservations.sql"
   );
-  assert(fs.existsSync(migrationPath), "Migration 0065_dining_floor_and_reservations.sql exists");
+  assert(fs.existsSync(migrationPath), "Migration 0068_dining_floor_and_reservations.sql exists");
 
   const journalPath = path.resolve(process.cwd(), "src/db/migrations/meta/_journal.json");
   const journal = JSON.parse(fs.readFileSync(journalPath, "utf-8"));
-  const entry65 = journal.entries.find(
-    (e: { tag: string }) => e.tag === "0065_dining_floor_and_reservations"
+  const entry68 = journal.entries.find(
+    (e: { tag: string }) => e.tag === "0068_dining_floor_and_reservations"
   );
   assert(
-    Boolean(entry65 && entry65.idx === 64),
-    "Migration 0065 is registered at idx 64 in _journal.json"
+    Boolean(entry68 && entry68.idx === 67),
+    "Migration 0065 is registered at idx 67 in _journal.json"
   );
 
   const demoTestPath = path.resolve(process.cwd(), "tests/demo-reset.test.ts");

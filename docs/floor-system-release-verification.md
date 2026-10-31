@@ -16,7 +16,7 @@ PR #259 adds a visual dining floor, durable table mutations, QR attachment and o
 ## Safety boundaries
 
 Floor reservations do not activate billing, fiscal operations or kitchen entitlements.
-The new migration extends the approved demo reset; it does not provision another
+Migration 0068 extends the approved demo reset; it does not provision another
 production demo tenant. A merge is not a deployment. Production migration requires
 the configured backup, release identity and existing Oracle VPS deployment gates.
 

@@ -18,6 +18,14 @@ describe("Ember small talk", () => {
     expect(caps.answer).not.toContain("till");
     expect(caps.answer).not.toMatch(/[a-z]+\.[a-z]+Pulse|orders\.pulse|JSON/i);
   });
+  it("lists menu editing and publishing only when those tools are authorized", () => {
+    const all = smallTalkReply("what can you do", ["menu.summary", "propose.menuPrice"])!.answer;
+    expect(all).toContain("draft menu");
+    expect(all).not.toContain("publish your menu");
+    expect(
+      smallTalkReply("what can you do", ["propose.menuPrice", "propose.menuPublish"])!.answer
+    ).toContain("publish your menu");
+  });
   it("never intercepts real questions and handles a role with no tools", () => {
     expect(smallTalkReply("hi, how many orders did we get today?", tools)).toBeNull();
     expect(smallTalkReply("Mark paneer as sold out", tools)).toBeNull();

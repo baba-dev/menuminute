@@ -5,6 +5,11 @@ import {
   merchantFindDish,
   merchantImports,
   merchantQr,
+  merchantQrDetails,
+  merchantServiceRequests,
+  merchantInsights,
+  merchantBilling,
+  merchantMyTickets,
   reportPeriods,
 } from "./merchant-tools";
 import { sql } from "drizzle-orm";
@@ -17,10 +22,18 @@ import { posWorkspace } from "@/modules/pos/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { NotFoundError } from "@/lib/errors";
+import { env } from "@/lib/config/env";
+import { executeProposeTool, isProposeTool, proposeToolDefinitions } from "./propose-tools";
 import { withActor, withOutletRead, type Actor } from "@/modules/tenancy/service";
 
 /** Tool descriptions are authored server-side. No SQL, URLs or write tools exist here. */
-export type ToolContext = { actor: Actor; organizationId: string; outletId: string };
+export type ToolContext = {
+  actor: Actor;
+  organizationId: string;
+  outletId: string;
+  /** Present during a conversation turn; propose-only tools attach their pending request to it. */
+  conversationId?: string;
+};
 const empty = z.object({}).strict();
 const history = z
   .object({
@@ -283,6 +296,52 @@ export const readTools = [
     schema: empty,
     run: async (context: ToolContext) => merchantQr(context),
   },
+  {
+    name: "service.requests",
+    description:
+      "List open guest requests at tables (call a server, water refill, bill request) with how long each has waited. Read-only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantServiceRequests(context),
+  },
+  {
+    name: "qr.details",
+    description:
+      "Show the outlet's saved QR codes by name and table, whether each is active and how many times each was scanned. Never returns links or images.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantQrDetails(context),
+  },
+  {
+    name: "reports.insights",
+    description:
+      "Busiest hours, slow-selling dishes, category mix and average kitchen prep time for today, yesterday, this calendar week, seven days, thirty days or this month. Order values are not paid revenue.",
+    parameters: {
+      type: "object",
+      properties: { range: { type: "string", enum: [...reportPeriods] } },
+      required: ["range"],
+      additionalProperties: false,
+    },
+    schema: z.object({ range: z.enum(reportPeriods) }).strict(),
+    run: async (context: ToolContext, args: { range: (typeof reportPeriods)[number] }) =>
+      merchantInsights(context, args.range),
+  },
+  {
+    name: "billing.status",
+    description:
+      "Show which paid features (online ordering, kitchen screens) are active and the subscription status. Owners and administrators only. Plan information only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantBilling(context),
+  },
+  {
+    name: "support.myTickets",
+    description:
+      "Show the person's own recent support requests, their progress and the latest reply from the support team. Read-only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantMyTickets(context),
+  },
   helpSearchTool,
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
@@ -306,18 +365,52 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     );
     return response.rows[0];
   });
-  return toolDefinitions().filter((definition) => {
+  const proposable = env.AI_ASSISTANT_ACTIONS_ENABLED
+    ? (await proposeAccess(context, proposeToolDefinitions())).filter(
+        (d) => d.name !== "propose.menuPublish" || env.AI_ASSISTANT_PUBLISH_ENABLED
+      )
+    : [];
+  return [...toolDefinitions(), ...proposable].filter((definition) => {
+    if (isProposeTool(definition.name)) return true;
     if (definition.name === "help.search") return true;
     if (["menu.summary", "menu.findDish", "qr.pulse"].includes(definition.name))
       return access?.menu === true;
     if (definition.name === "imports.pulse")
       return access?.menu === true && access?.menuWrite === true;
-    if (definition.name === "finance.pulse") return access?.billing === true;
+    if (definition.name === "finance.pulse" || definition.name === "billing.status")
+      return access?.billing === true;
+    if (definition.name === "qr.details") return access?.menu === true;
+    if (definition.name === "support.myTickets")
+      return access?.menu === true || access?.orders === true;
     if (definition.name === "reports.summary") return access?.orders === true;
     return access?.orders === true;
   });
 }
+/** Keep a propose tool only when the person holds at least one permission it may need. */
+async function proposeAccess<T extends { permissions: string[] }>(context: ToolContext, defs: T[]) {
+  const held = await withActor(context.actor, async (tx) => {
+    await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
+    const all = [...new Set(defs.flatMap((d) => d.permissions))];
+    const out = new Set<string>();
+    for (const permission of all) {
+      const r = await tx.execute<{ allowed: boolean }>(
+        sql`select app_private.can_outlet(${context.outletId},${permission}) as allowed`
+      );
+      if (r.rows[0]?.allowed) out.add(permission);
+    }
+    return out;
+  });
+  return defs
+    .filter((d) => d.permissions.some((p) => held.has(p)))
+    .map(({ permissions: _p, ...rest }) => rest);
+}
 export async function executeReadTool(context: ToolContext, name: string, untrusted: unknown) {
+  if (isProposeTool(name)) {
+    if (!env.AI_ASSISTANT_ACTIONS_ENABLED) throw new Error("Unknown read-only tool");
+    if (name === "propose.menuPublish" && !env.AI_ASSISTANT_PUBLISH_ENABLED)
+      throw new Error("Unknown read-only tool");
+    return executeProposeTool(context, name, untrusted);
+  }
   // Deliberately dispatch individually so TypeScript and Zod validate each handler.
   switch (name) {
     case "orders.pulse":
@@ -347,6 +440,20 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "qr.pulse":
       empty.parse(untrusted);
       return readTools[9].run(context);
+    case "service.requests":
+      empty.parse(untrusted);
+      return readTools[10].run(context);
+    case "qr.details":
+      empty.parse(untrusted);
+      return readTools[11].run(context);
+    case "reports.insights":
+      return readTools[12].run(context, readTools[12].schema.parse(untrusted));
+    case "billing.status":
+      empty.parse(untrusted);
+      return readTools[13].run(context);
+    case "support.myTickets":
+      empty.parse(untrusted);
+      return readTools[14].run(context);
     case "help.search":
       return helpSearchTool.run(context, helpSearchTool.schema.parse(untrusted));
     default:

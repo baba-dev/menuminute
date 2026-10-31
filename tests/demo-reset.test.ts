@@ -19,7 +19,9 @@ const app = asRole("menuminute_app", "isolated-ci-app-password");
 const PRESERVED: Record<string, string> = {
   account_workspace_preferences: "user preference",
   ai_usage_records: "spend accounting",
+  assistant_action_requests: "removed with its conversation by ON DELETE CASCADE (migration 0065)",
   assistant_model_daily_budget: "spend accounting",
+  support_tickets: "never written for the demo outlet (blocked in support_create_ticket)",
   assistant_org_daily_budget: "spend accounting",
   audit_logs: "audit trail",
   brand_outlets: "tenant structure",

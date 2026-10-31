@@ -17,12 +17,74 @@ export function selectQuestionTools<T extends { name: string }>(
     /\b(how (?:do|can) i (?:set up|create|add|edit|print|mark|change|configure|use|publish|invite|open|scan|remove|download|start|stop|reset)|how to|step.by.step|tutorial|instructions?|guide|documentation|faq)\b/.test(
       q
     ) || /^(?:help me|i need help|where (?:do|can) i)\b/.test(q);
+  if (
+    /\b(my plan|my subscription|subscription status|billing|paid features?|renew(?:al)?|trial)\b/.test(
+      q
+    )
+  )
+    add("billing.status");
+  // Support: raising a request prepares a confirm-first card; checking progress is read-only.
+  if (
+    /\b(my|our)\b.{0,20}\b(support )?(tickets?|requests?)\b|\bticket (status|update)|status of (my|the) (ticket|request)|\bany repl(y|ies)\b/.test(
+      q
+    )
+  )
+    add("support.myTickets");
+  if (
+    /\b(raise|create|open|file|log|send|submit|make)\b.{0,25}\b(support|ticket|request|complaint)\b|\b(report|tell|contact|reach|message)\b.{0,25}\b(support|the team|a human|someone)\b|\b(need|want|get)\b.{0,15}\b(support|human help|a person)\b|\bsomething (is )?(broken|wrong|not working)\b|\b(bug|problem|issue) with\b/.test(
+      q
+    )
+  )
+    add("propose.supportTicket");
+  // Menu changes. Edits go to the draft; publishing needs an explicit request to go live.
+  if (
+    /\b(publish|go live|goes live|make (?:it|them|that|those|the changes?) live|push (?:it |them |the changes? )?live|put (?:it |them |the changes? )?live)\b/.test(
+      q
+    )
+  )
+    add("propose.menuPublish");
+  if (
+    /\bdescription\b|\bdescribe\b|\bwording\b|\btagline\b|\bblurb\b/.test(q) &&
+    /\b(change|update|rewrite|edit|set|make|reword|replace|write|add)\b/.test(q)
+  )
+    add("propose.menuDescription");
+  if (
+    /\b(price|cost|costs|priced|pricing)\b/.test(q) &&
+    /\b(change|set|update|make|raise|lower|increase|decrease|reduce|drop|put|to)\b/.test(q) &&
+    /\d/.test(q)
+  )
+    add("propose.menuPrice");
+  // Action requests ("mark order 12 ready", "resolve table 5's water request") prepare a
+  // confirm-first card. Only offered when the person's actions are enabled and permitted.
+  if (
+    /\b(mark|set|move|accept|reject|cancel|start|complete|finish|resolve|acknowledge|close|clear|dismiss)\b/.test(
+      q
+    )
+  ) {
+    if (/\b(table|water|bill|server|waiter|guest request)\b/.test(q) && !/\border\b/.test(q))
+      add("propose.guestRequest");
+    if (/\b(order|#\s?\d+)\b/.test(q)) add("propose.orderStatus");
+    if (/\b(ticket|kitchen|prep|start cooking)\b/.test(q)) add("propose.kitchenTicket");
+  }
   // Product questions (plans, pricing, features) are answered from the published Help Center.
   const productInfo =
     /\b(menuminute|kitchen pro|pricing|pricing plans?|commission|subscription|upgrade|free plan|offline|install(?:ing)? the app)\b/.test(
       q
     );
   if (instructional || productInfo) add("help.search");
+  if (
+    /\b(waiters?|servers?|water|bill request|asking for (?:the )?bill|guest requests?|service requests?|calling for|needs? (?:help|attention))\b/.test(
+      q
+    )
+  )
+    add("service.requests");
+  if (
+    /\b(busiest|peak|rush|slowest|slow.selling|worst.selling|least popular|categor(?:y|ies)|prep time)\b/.test(
+      q
+    )
+  )
+    add("reports.insights");
+  if (/\b(scans?|scanned|which qr|inactive qr)\b/.test(q)) add("qr.details");
   if (
     /\b(sales?|revenue|earnings?|income|turnover|best.selling|top.selling|last week|this week|this month)\b/.test(
       q

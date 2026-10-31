@@ -14,6 +14,26 @@ const CAPABILITIES: Array<{ tool: string; line: string }> = [
   { tool: "imports.pulse", line: "check the progress of a menu import" },
   { tool: "reports.summary", line: "summarize orders and sales for a day, week or month" },
   { tool: "finance.pulse", line: "look at your till and payments overview" },
+  {
+    tool: "service.requests",
+    line: "see which tables are waiting for a server, water or the bill",
+  },
+  { tool: "qr.details", line: "show which QR codes are active and how often they're scanned" },
+  { tool: "reports.insights", line: "find your busiest hours and slow-selling dishes" },
+  { tool: "billing.status", line: "show which paid features are active on your plan" },
+  {
+    tool: "propose.menuPrice",
+    line: "change a dish's price or description in your draft menu (you confirm first)",
+  },
+  {
+    tool: "propose.menuPublish",
+    line: "publish your menu when you ask me to (you confirm first and see exactly what changes)",
+  },
+  {
+    tool: "propose.supportTicket",
+    line: "send a support request to the MenuMinute team (you confirm first)",
+  },
+  { tool: "support.myTickets", line: "show your support requests and any replies" },
   { tool: "help.search", line: "explain how to do things in MenuMinute, step by step" },
 ];
 

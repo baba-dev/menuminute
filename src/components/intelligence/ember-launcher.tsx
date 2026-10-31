@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { navigation, routesForEvidence, type RouteId } from "@/modules/intelligence/navigation";
 import { EmberRichAnswer } from "./ember-rich-answer";
+import { EmberActionCard, EmberThinking, type ActionRequest } from "./ember-action-card";
 import { EMBER_ASK_EVENT } from "@/lib/ember-events";
 import "./ember.css";
 
@@ -55,6 +56,8 @@ type Capabilities = {
   enabled: boolean;
   demo?: { promptChars: number } | null;
   actionsEnabled: boolean;
+  /** Ember may prepare confirm-first changes (orders, requests, kitchen) for this person. */
+  actionRequests?: boolean;
   tools: string[];
   navigation: { id: RouteId; label: string; href: string }[];
 };
@@ -172,6 +175,7 @@ export function EmberLauncher({
   const [dishId, setDishId] = useState("");
   const [desiredSoldOut, setDesiredSoldOut] = useState(true);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [actionRequests, setActionRequests] = useState<ActionRequest[]>([]);
   const [acknowledged, setAcknowledged] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -202,7 +206,7 @@ export function EmberLauncher({
   }, [qs]);
   const loadHistory = useCallback(
     async (id: string) => {
-      const [data, actions] = await Promise.all([
+      const [data, actions, requests] = await Promise.all([
         api<{ turns: StoredTurn[] }>(
           "/api/assistant/conversations/" + encodeURIComponent(id) + "?" + qs
         ),
@@ -211,13 +215,19 @@ export function EmberLauncher({
               "/api/assistant/conversations/" + encodeURIComponent(id) + "/actions?" + qs
             )
           : Promise.resolve([]),
+        caps?.actionRequests
+          ? api<ActionRequest[]>(
+              "/api/assistant/conversations/" + encodeURIComponent(id) + "/action-requests?" + qs
+            )
+          : Promise.resolve([] as ActionRequest[]),
       ]);
       if (currentId.current !== id) return;
       setTurns(data.turns);
       setProposals(actions);
+      setActionRequests(requests);
       if (data.turns.some((t) => t.status === "processing")) setPendingPoll((n) => n + 1);
     },
-    [qs, caps?.actionsEnabled]
+    [qs, caps?.actionsEnabled, caps?.actionRequests]
   );
   useEffect(() => {
     if (!open) return;
@@ -461,6 +471,29 @@ export function EmberLauncher({
       setBusy(false);
     }
   };
+  /** Confirm or dismiss a prepared change. The key is kept so a retry can never run it twice. */
+  const decideRequest = async (request: ActionRequest, decision: "confirm" | "reject") => {
+    if (!conversationId) return;
+    const existing = decisionKeys.current.get(request.id);
+    const key = existing?.decision === decision ? existing.key : crypto.randomUUID();
+    decisionKeys.current.set(request.id, { key, decision });
+    const result = await api<{ status: ActionRequest["status"]; message?: string }>(
+      "/api/assistant/action-requests/" + encodeURIComponent(request.id),
+      { method: "POST", headers: jsonHeaders, body: JSON.stringify({ ...scope, key, decision }) }
+    );
+    setActionRequests((rows) =>
+      rows.map((row) =>
+        row.id === request.id
+          ? { ...row, status: result.status, result: { message: result.message } }
+          : row
+      )
+    );
+    if (result.status === "confirmed") {
+      setStatus("Done.");
+      router.refresh();
+    }
+    await loadHistory(conversationId).catch(() => undefined);
+  };
   return (
     <>
       <button
@@ -626,96 +659,113 @@ export function EmberLauncher({
                     </div>
                   </div>
                 )}
-                {turns.map((t) => (
-                  <article key={t.id} className="mm-ember-exchange">
-                    <div className="mm-ember-human">
-                      <span>You</span>
-                      <p>{t.prompt}</p>
-                    </div>
-                    <div className="mm-ember-answer">
-                      <span>
-                        <Sparkles size={15} /> Ember
-                      </span>
-                      {t.status === "processing" ? (
-                        <p>
-                          <LoaderCircle size={16} className="mm-ember-spin" /> Checking authorized
-                          sources…
-                        </p>
-                      ) : t.status === "failed" ? (
-                        <div role="status">
-                          <p>
-                            <strong>{failureCopy(t.errorCode).title}</strong>{" "}
-                            {failureCopy(t.errorCode).next} {NO_CHANGE_NOTE}
-                          </p>
-                          <details>
-                            <summary>Details for support</summary>
-                            <p>Reference: {t.errorCode ?? "processing_failed"}</p>
-                          </details>
-                        </div>
-                      ) : (
-                        <EmberRichAnswer text={t.answer} />
-                      )}
-                      {caps?.actionsEnabled && availabilityIntent(t.prompt) && (
-                        <button
-                          type="button"
-                          className="mm-ember-navigate"
-                          disabled={busy}
-                          onClick={() =>
-                            void fetchOptions(availabilityIntent(t.prompt) ?? undefined)
-                          }
-                        >
-                          <ShieldCheck size={15} aria-hidden="true" />
-                          Prepare availability change
-                          <ArrowRight size={14} aria-hidden="true" />
-                        </button>
-                      )}
-                      {Array.isArray(t.evidence) && t.evidence.length > 0 && (
-                        <details className="mm-ember-evidence">
-                          <summary>
-                            <BookOpen size={14} /> Where this information came from
-                          </summary>
-                          {t.evidence.map((e, i) =>
-                            typeof e === "object" && e !== null && "source" in e ? (
-                              <div key={i}>
-                                <strong>{evidenceLabel(e.source)}</strong>
-                                <small>
-                                  {"capturedAt" in e
-                                    ? new Date(String(e.capturedAt)).toLocaleString()
-                                    : "Current scoped snapshot"}
-                                </small>
-                                <p>
-                                  {e.source === "orders.listServiceHistory"
-                                    ? "Order amounts are snapshots, not payments."
-                                    : e.source === "menu.listMenus"
-                                      ? "Draft counts are not guest publication."
-                                      : "Visible outlet data only."}
-                                </p>
-                              </div>
-                            ) : null
-                          )}
-                        </details>
-                      )}
-                      {caps &&
-                        routesForEvidence(
-                          t.evidence,
-                          caps.navigation.map((n) => n.id)
-                        ).map((link) => (
+                {turns.map((t, index) => {
+                  const next = turns[index + 1];
+                  const cards = actionRequests
+                    .filter(
+                      (r) => r.createdAt >= t.createdAt && (!next || r.createdAt < next.createdAt)
+                    )
+                    .slice(0, 3);
+                  return (
+                    <article key={t.id} className="mm-ember-exchange">
+                      <div className="mm-ember-human">
+                        <span>You</span>
+                        <p>{t.prompt}</p>
+                      </div>
+                      <div className="mm-ember-answer">
+                        <span>
+                          <Sparkles size={15} /> Ember
+                        </span>
+                        {t.status === "processing" ? (
+                          <EmberThinking />
+                        ) : t.status === "failed" ? (
+                          <div role="status">
+                            <p>
+                              <strong>{failureCopy(t.errorCode).title}</strong>{" "}
+                              {failureCopy(t.errorCode).next} {NO_CHANGE_NOTE}
+                            </p>
+                            <details>
+                              <summary>Details for support</summary>
+                              <p>Reference: {t.errorCode ?? "processing_failed"}</p>
+                            </details>
+                          </div>
+                        ) : (
+                          <EmberRichAnswer text={t.answer} />
+                        )}
+                        {caps?.actionsEnabled && availabilityIntent(t.prompt) && (
                           <button
-                            className="mm-ember-navigate"
-                            key={link.id}
                             type="button"
-                            onClick={() => {
-                              setOpen(false);
-                              router.push(navigation[link.id].href);
-                            }}
+                            className="mm-ember-navigate"
+                            disabled={busy}
+                            onClick={() =>
+                              void fetchOptions(availabilityIntent(t.prompt) ?? undefined)
+                            }
                           >
-                            {link.label}
-                            <ArrowRight size={14} />
+                            <ShieldCheck size={15} aria-hidden="true" />
+                            Prepare availability change
+                            <ArrowRight size={14} aria-hidden="true" />
                           </button>
-                        ))}
-                    </div>
-                  </article>
-                ))}
+                        )}
+                        {Array.isArray(t.evidence) && t.evidence.length > 0 && (
+                          <details className="mm-ember-evidence">
+                            <summary>
+                              <BookOpen size={14} /> Where this information came from
+                            </summary>
+                            {t.evidence.map((e, i) =>
+                              typeof e === "object" && e !== null && "source" in e ? (
+                                <div key={i}>
+                                  <strong>{evidenceLabel(e.source)}</strong>
+                                  <small>
+                                    {"capturedAt" in e
+                                      ? new Date(String(e.capturedAt)).toLocaleString()
+                                      : "Current scoped snapshot"}
+                                  </small>
+                                  <p>
+                                    {e.source === "orders.listServiceHistory"
+                                      ? "Order amounts are snapshots, not payments."
+                                      : e.source === "menu.listMenus"
+                                        ? "Draft counts are not guest publication."
+                                        : "Visible outlet data only."}
+                                  </p>
+                                </div>
+                              ) : null
+                            )}
+                          </details>
+                        )}
+                        {caps &&
+                          routesForEvidence(
+                            t.evidence,
+                            caps.navigation.map((n) => n.id)
+                          ).map((link) => (
+                            <button
+                              className="mm-ember-navigate"
+                              key={link.id}
+                              type="button"
+                              onClick={() => {
+                                setOpen(false);
+                                router.push(navigation[link.id].href);
+                              }}
+                            >
+                              {link.label}
+                              <ArrowRight size={14} />
+                            </button>
+                          ))}
+                      </div>
+                      {cards.length > 0 && (
+                        <div className="mm-ember-acts">
+                          {cards.map((r) => (
+                            <EmberActionCard
+                              key={r.id}
+                              request={r}
+                              now={now}
+                              onDecide={decideRequest}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
                 {actionOpen && caps?.actionsEnabled && (
                   <section
                     className="mm-ember-action-editor"
