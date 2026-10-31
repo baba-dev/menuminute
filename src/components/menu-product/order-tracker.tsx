@@ -65,6 +65,8 @@ export type TrackingData = {
   }[];
 };
 
+const TERMINAL_STATUSES = ["served", "collected", "rejected", "cancelled", "expired"];
+
 export function OrderTracker({
   orderId,
   trackingToken,
@@ -90,7 +92,7 @@ export function OrderTracker({
   const [data, setData] = useState<TrackingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const terminalRef = useRef(false);
   const [callingService, setCallingService] = useState(false);
   const [serviceError, setServiceError] = useState("");
   const [serviceRequests, setServiceRequests] = useState<
@@ -113,6 +115,7 @@ export function OrderTracker({
     }
   }, [trackingToken, token, orderId]);
 
+  /** Returns true when the poll succeeded; callers use it to back off on failure. */
   const fetchTracking = useCallback(async () => {
     try {
       const res = await fetch(
@@ -125,15 +128,11 @@ export function OrderTracker({
       const json = await res.json();
       setData(json);
       setError(null);
-      if (
-        ["served", "collected", "rejected", "cancelled", "expired"].includes(json.order.status) &&
-        timerRef.current
-      ) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      terminalRef.current = TERMINAL_STATUSES.includes(json.order.status);
+      return true;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error loading tracking");
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -142,14 +141,36 @@ export function OrderTracker({
   useEffect(() => {
     if (!capability) return;
     let active = true;
-    void Promise.resolve().then(() => {
-      if (active) void fetchTracking();
-    });
-    timerRef.current = setInterval(fetchTracking, 4000);
+    let failures = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (!active) return;
+      // 4s while healthy; exponential backoff to 60s after failures.
+      const delay = Math.min(4000 * 2 ** failures, 60000);
+      timer = setTimeout(() => void tick(), delay);
+    };
+    const tick = async () => {
+      timer = null;
+      if (!active) return;
+      // Hidden tabs resume from the visibilitychange handler instead of polling.
+      if (document.visibilityState === "hidden") return;
+      const ok = await fetchTracking();
+      if (!active) return;
+      failures = ok ? 0 : Math.min(failures + 1, 4);
+      if (ok && terminalRef.current) return;
+      schedule();
+    };
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || timer || terminalRef.current) return;
+      failures = 0;
+      void tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    void Promise.resolve().then(() => void tick());
     return () => {
       active = false;
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = null;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [capability, fetchTracking]);
 
@@ -171,7 +192,9 @@ export function OrderTracker({
   useEffect(() => {
     if (!capability || data?.order.fulfillmentMode !== "dine_in") return;
     void Promise.resolve().then(refreshServices);
-    const id = window.setInterval(() => void refreshServices(), 12000);
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshServices();
+    }, 12000);
     return () => window.clearInterval(id);
   }, [capability, data?.order.fulfillmentMode, refreshServices]);
   async function callService(signal: "call_server" | "water_refill" | "bill_request") {
@@ -432,23 +455,39 @@ export function OrderTracker({
         {!isTerminalNegative && (
           <div className="panel stack" style={{ gap: "1rem" }}>
             <span className="section-title">Preparation Progress</span>
-            <div className="stepper-track stack" style={{ gap: "1rem" }}>
+            <p className="step-state" role="status" aria-live="polite">
+              {`Current status: ${steps.find((_, i) => getStepState(i) === "active")?.label ?? order.status}`}
+            </p>
+            <ol className="stepper-track" aria-label="Order progress">
               {steps.map((s, idx) => {
                 const state = getStepState(idx);
                 const IconComponent = s.icon;
                 return (
-                  <div key={s.id} className={`stepper-step row ${state}`}>
-                    <div className="step-indicator">
+                  <li
+                    key={s.id}
+                    className={`stepper-step row ${state}`}
+                    aria-current={state === "active" ? "step" : undefined}
+                  >
+                    <div className="step-indicator" aria-hidden="true">
                       <IconComponent size={16} />
                     </div>
                     <div className="stack" style={{ gap: "0.1rem" }}>
-                      <span className="step-title">{s.label}</span>
+                      <span className="step-title">
+                        {s.label}
+                        <span className="step-state">
+                          {state === "completed"
+                            ? " (done)"
+                            : state === "active"
+                              ? " (current step)"
+                              : " (upcoming)"}
+                        </span>
+                      </span>
                       <small className="quiet">{s.desc}</small>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           </div>
         )}
 
@@ -467,7 +506,7 @@ export function OrderTracker({
                 Request assistance at your table. Staff must acknowledge your request; use in-person
                 help if urgent.
               </p>
-              <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+              <div className="service-actions">
                 {(
                   [
                     { id: "call_server", label: "Call server", Icon: BellRing },
@@ -481,7 +520,7 @@ export function OrderTracker({
                     disabled={callingService}
                     onClick={() => void callService(id)}
                     className="action secondary"
-                    style={{ minHeight: 44, flex: "1 1 110px", padding: "0.7rem" }}
+                    style={{ minHeight: 44, padding: "0.7rem" }}
                   >
                     <Icon size={17} aria-hidden="true" />
                     {callingService ? "Saving…" : label}
