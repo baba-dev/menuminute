@@ -88,3 +88,17 @@ listens on loopback, and the root-only edge secret agrees with
 ORDER_EDGE_SHARED_SECRET in web.env. Without a valid signed client identity,
 image delivery and public-menu reads deliberately fail closed with 503. Do not
 roll out this release before confirming live image and menu requests.
+
+## Optional PWA Web Push (H)
+
+Push is **off by default**. The isolated worker and web runtime need
+`PWA_PUSH_ENABLED=true`, a reviewed comma-separated `PWA_PUSH_OUTLET_IDS` (up to 50
+IDs), `PWA_PUSH_VAPID_PUBLIC_KEY` (65-byte P-256 uncompressed point, base64url),
+`PWA_PUSH_VAPID_PRIVATE_KEY` (32-byte scalar, base64url), and
+`PWA_PUSH_VAPID_SUBJECT=mailto:operations@example.com`. Do not commit real keys.
+The private key is never sent to the browser. A user must explicitly subscribe on
+an authorized outlet/device. The queue is limited and subscriptions are checked
+against live sessions and grants. The push service accepting a request does **not**
+prove that a device displayed it. No order/customer payload is sent; the service
+worker shows local generic copy. Roll back by setting `PWA_PUSH_ENABLED=false`
+on both worker and web; this never stops the canonical Kitchen/Orders flows.
