@@ -103,9 +103,25 @@ legacy flat menu tables. The demo outlet therefore does not enable POS or billin
 
 1. Verified encrypted off-host backup; ERP HTTP 200 captured before and after (see the runbook).
 2. Deploy a reviewed SHA through the normal path so migrations 0059-0063 apply.
-3. Provision once (tenant, credential, kitchen, entitlements, history): `ALLOW_DEMO_PROVISION=true AUTH_SECRET=... MIGRATION_DATABASE_URL=... pnpm tsx scripts/demo-provision.ts`.
-4. Set `DEMO_MODE_ENABLED=true` in the worker environment and restart the worker.
-5. To switch the demo off: set `DEMO_MODE_ENABLED=false` and restart. Existing demo data stays inert.
+3. Provision once (tenant, credential, kitchen, entitlements, history) **before** switching on the demo. The signed production release contains `dist/demo-provision.mjs`; it does **not** ship `scripts/demo-provision.ts` or the development-only `tsx` tool. Confirm that migrations 0059–0063 have applied, that a verified off-host backup exists, and that `/etc/menuminute/migration.env` is the existing root-only migration-owner environment (do not synthesize a new database credential):
+
+   ```bash
+   sudo test -s /etc/menuminute/migration.env
+   sudo test -s /var/www/menuminute/current/dist/demo-provision.mjs
+   sudo systemd-run --quiet --wait --collect --pipe \\
+     --property=WorkingDirectory=/var/www/menuminute/current \\
+     --property=EnvironmentFile=/etc/menuminute/web.env \\
+     --property=EnvironmentFile=/etc/menuminute/migration.env \\
+     --setenv=ALLOW_DEMO_PROVISION=true \\
+     /opt/menuminute/node24/bin/node \\
+     /var/www/menuminute/current/dist/demo-provision.mjs
+   ```
+
+   The one-time operator command intentionally receives both the existing web `AUTH_SECRET` and **migration-owner-only** `MIGRATION_DATABASE_URL` via root-only environment files. Neither web nor worker receives the owner's database credential. Never print either environment file, paste the credentials into a command, or run the provisioner via an app/worker DB identity. If the `migration.env` path has not been provisioned, stop and reconcile the production migration-owner configuration instead. Re-running the provisioner is designed to be idempotent but **resets demo visitor data** to baseline.
+
+4. Verify `restaurants.id='demo-outlet'` has `public_id='demo-spice-route-kitchen-v2'`, `is_published=true`, and that the derived demo credential exists for `users.id='demo-owner'`. Confirm the guest menu returns 200 and the sign-in works in a fresh browser session.
+5. Set `DEMO_MODE_ENABLED=true` in **both** web and worker environments and restart both services. The worker resets the provisioned demo at startup and every half hour.
+6. To switch the demo off: set `DEMO_MODE_ENABLED=false` in both environments and restart. Existing demo data stays inert.
 
 ## Verification
 
