@@ -120,6 +120,8 @@ export const envSchema = z
       .regex(/^whsec_[A-Za-z0-9]+$/)
       .optional(),
     COMMUNITY_EDITION: strictBoolean.default(false),
+    // Kill switch for the public demo tenant (reset job and demo exceptions). Off unless explicit.
+    DEMO_MODE_ENABLED: strictBoolean.default(false),
     RAZORPAY_ENABLED: strictBoolean.default(false),
     RAZORPAY_KITCHEN_ENABLED: strictBoolean.default(false),
     BILLING_DATABASE_URL: pgUrl.optional(),

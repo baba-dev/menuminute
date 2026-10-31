@@ -923,7 +923,8 @@ for (const d of catalogue) {
     archived: false,
     mediaId: null,
     artworkId: art ? art.id : null,
-    imageMode: art ? "artwork" : "auto",
+    // Dishes without an approved illustration show the generic plate placeholder until art exists.
+    imageMode: art ? "artwork" : "none",
     dietary: dietaryUnique,
     nutrition,
     culinary,

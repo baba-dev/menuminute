@@ -69,3 +69,11 @@ is public: launch uses staff acceptance; stronger physical table-session control
 
 Earlier single-outlet/India-only or dine-in-only guidance is superseded. Pickup details, complex
 dish calculation examples, jurisdiction rules and complete UX remain explicit implementation inputs.
+
+## Public demo (approved 2026-10-31)
+
+| ADR | Decision                                                 | Consequence                                                                                                                                                              |
+| --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 022 | One shared public demo tenant on the production database | Supersedes "no production demo seed" for exactly one fixed tenant. Isolation relies on RLS, a hardcoded definer reset, a kill switch and tests. See AGENTS.md exception. |
+| 023 | Periodic in-place reset instead of per-visitor sandboxes | Visitors share state; baseline restored every 30 minutes. Immutable POS ledger is excluded, so the demo outlet never enables POS.                                        |
+| 024 | All 236 catalogue dishes with sample (unverified) data   | Allergen, dietary and nutrition values are rule-derived samples, `verified:false`. Dishes without art use the generic plate placeholder until illustrations exist.       |

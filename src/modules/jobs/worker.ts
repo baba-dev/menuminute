@@ -1,5 +1,6 @@
 import { processMedia } from "../media/worker";
 import { processImport } from "../menu-import/engine";
+import { DEMO_RESET_INTERVAL_MS, demoModeEnabled, resetDemoOutlet } from "../demo/reset";
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
@@ -372,6 +373,19 @@ export async function startWorker(
   };
   const maintenanceTimer = setInterval(prune, 6 * 60 * 60 * 1000);
   prune();
+  // Public demo: restore the fixed demo outlet to its baseline. Off unless DEMO_MODE_ENABLED=true.
+  // Never blocks the dispatcher; a failure only logs and retries at the next interval.
+  let demoReset: Promise<unknown> | undefined;
+  const demoTick = () => {
+    if (stopping || demoReset) return;
+    demoReset = resetDemoOutlet(pool)
+      .catch(() => console.error("Demo reset unavailable"))
+      .finally(() => {
+        demoReset = undefined;
+      });
+  };
+  const demoTimer = demoModeEnabled() ? setInterval(demoTick, DEMO_RESET_INTERVAL_MS) : undefined;
+  if (demoTimer) demoTick();
   return {
     pool,
     worker,
@@ -382,7 +396,8 @@ export async function startWorker(
       stopping = true;
       clearInterval(timer);
       clearInterval(maintenanceTimer);
-      await Promise.all([pending, maintenance]);
+      if (demoTimer) clearInterval(demoTimer);
+      await Promise.all([pending, maintenance, demoReset]);
       await Promise.all([worker.close(), importWorker.close()]);
       await Promise.all([producer.close(), importProducer.close()]);
       await pool.end();

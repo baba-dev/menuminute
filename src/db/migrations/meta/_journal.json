@@ -400,6 +400,13 @@
       "when": 1793451600012,
       "tag": "0056_deferred_email_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793538000013,
+      "tag": "0057_demo_outlet_reset",
+      "breakpoints": true
     }
   ]
 }

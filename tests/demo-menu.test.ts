@@ -54,6 +54,9 @@ describe("public demo menu dataset", () => {
         );
     }
   });
+  it("shows the generic placeholder only for dishes that lack an illustration", () => {
+    for (const d of dishes) expect(d.imageMode, d.name).toBe(d.artworkId ? "artwork" : "none");
+  });
   it("ships all 224 illustrations as approved runtime artwork", () => {
     expect(approvedArt).toHaveLength(224);
     expect(approvedArt.every((a) => a.state === "approved")).toBe(true);
