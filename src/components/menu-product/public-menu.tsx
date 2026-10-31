@@ -354,7 +354,7 @@ export function PublicMenu({
           </a>
         </div>
       </header>
-      <div className="dining-shell">
+      <div className="dining-shell" lang={data.locale ?? undefined}>
         {status && (
           <p role="status" className="dining-notice">
             {status}
