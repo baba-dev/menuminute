@@ -428,6 +428,13 @@
       "when": 1793797200016,
       "tag": "0060_demo_ember_budget",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793883600017,
+      "tag": "0061_demo_service_calls",
+      "breakpoints": true
     }
   ]
 }

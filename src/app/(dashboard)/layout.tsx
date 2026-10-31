@@ -25,6 +25,8 @@ import {
 } from "@/modules/menu-product/dashboard-data";
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { auth, authServer } from "@/lib/auth";
+import { DemoBanner } from "@/components/demo/demo-banner";
+import { isDemoActor } from "@/modules/demo/guard";
 import { SessionContinuity } from "@/components/auth/session-continuity";
 import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import {
@@ -198,6 +200,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {!session.user.emailVerified && (
             <VerifyEmailBanner email={session.user.email} returnTo="/dashboard" />
           )}
+          {isDemoActor(session.user.id) && <DemoBanner />}
           <WorkspaceTopbar
             userName={name}
             publicHref={publicHref}

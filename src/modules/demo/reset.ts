@@ -1,7 +1,7 @@
 import type { Pool } from "pg";
 import { buildDemoBaseline } from "./baseline";
 
-export { DEMO_RESET_INTERVAL_MS, demoModeEnabled } from "./ids";
+export { DEMO_RESET_INTERVAL_MS, demoModeEnabled, nextDemoResetAt } from "./ids";
 
 /**
  * Restores the demo outlet to its baseline through the SECURITY DEFINER function (hardcoded to the

@@ -1,7 +1,7 @@
 # Public demo runbook
 
 Status: **dataset, reset, provisioning, one-click entry, request guard, demo orders, kitchen and
-entitlements, Ember limits and the documentation site implemented; the visual polish pass is planned** (see the plan in the PR description). Read the
+entitlements, Ember limits, documentation site and the visual polish pass implemented** (see the plan in the PR description). Read the
 [Public demo exception](../AGENTS.md#public-demo-exception) first.
 
 ## What exists
@@ -51,6 +51,16 @@ entitlements, Ember limits and the documentation site implemented; the visual po
   invalidate the web cache, so after a revert guests may see one "menu changed" conflict for up to 3 minutes.
 - Migration 0059 removes the legacy `order_items.variant_id` foreign key. Without it any guest order that
   chose a variant (Half/Full, sizes) failed for **every** tenant (ADR 026).
+
+## Polish: banner, schedule, checklist, service calls
+
+- Resets run on wall-clock boundaries (:00 and :30 UTC, also :00/:30 in IST) via `nextDemoResetAt()`, plus once
+  when the worker starts. The dashboard and kitchen show a **Public demo** banner with a countdown computed
+  from the clock (no server call) and a Refresh button just after each reset.
+- `/demo` offers three doors (public demo, AI and agents, documentation) and a six-step "try everything in ten
+  minutes" checklist that links to the guides.
+- Each reset also seeds three guest service calls (call server, water refill, bill request; one already
+  acknowledged) on live dine-in orders, so the Dining floor view is alive (migration 0061).
 
 ## Ember (AI assistant) in the demo
 

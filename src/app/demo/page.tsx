@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
-import { ArrowRight, Smartphone, Eye, Sparkles, Bot, RefreshCw } from "lucide-react";
+import {
+  ArrowRight,
+  Smartphone,
+  Eye,
+  Sparkles,
+  Bot,
+  RefreshCw,
+  BookOpen,
+  ListChecks,
+} from "lucide-react";
 import { generateMenuQrCode } from "@/modules/qr/service";
 import { DEMO_IDS, demoModeEnabled, DEMO_RESET_INTERVAL_MS } from "@/modules/demo/ids";
 import demoMenu from "@/data/demo/demo-menu.json";
@@ -35,7 +44,7 @@ export default async function DemoPage({
     <div className="bg-background text-foreground min-h-screen transition-colors">
       <MarketingSubpageNav />
 
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
         <div className="mb-10 text-center">
           <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
             <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
@@ -57,6 +66,109 @@ export default async function DemoPage({
             customer view directly on your browser.
           </p>
         </div>
+
+        <section aria-labelledby="demo-doors" className="mb-12">
+          <h2 id="demo-doors" className="sr-only">
+            Ways to explore
+          </h2>
+          <ul className="grid gap-4 md:grid-cols-3">
+            <li className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-6 shadow-sm">
+              <Eye className="text-brand-600 h-6 w-6" aria-hidden="true" />
+              <h3 className="font-display text-lg font-bold">Public demo</h3>
+              <p className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                Browse the guest menu, then step behind the counter in the live dashboard.
+              </p>
+              <Link
+                href={`/m/${DEMO_PUBLIC_ID}`}
+                className="text-brand-700 dark:text-brand-400 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+              >
+                Open the guest menu <ArrowRight className="h-4 w-4" />
+              </Link>
+            </li>
+            <li className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-6 shadow-sm">
+              <Bot className="text-brand-600 h-6 w-6" aria-hidden="true" />
+              <h3 className="font-display text-lg font-bold">AI &amp; agents</h3>
+              <p className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                Ask the Ember assistant about orders, the menu and the kitchen. It is read-only and
+                labels its sources. AI agents and browser tools use the same one-click entry; there
+                are no keys to request.
+              </p>
+              {live ? (
+                <form action="/demo/enter" method="post">
+                  <button
+                    type="submit"
+                    className="text-brand-700 dark:text-brand-400 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+                  >
+                    Enter, then open Ember <ArrowRight className="h-4 w-4" />
+                  </button>
+                </form>
+              ) : (
+                <span className="text-muted-foreground text-sm">Not available right now.</span>
+              )}
+            </li>
+            <li className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-6 shadow-sm">
+              <BookOpen className="text-brand-600 h-6 w-6" aria-hidden="true" />
+              <h3 className="font-display text-lg font-bold">App documentation</h3>
+              <p className="text-muted-foreground flex-1 text-sm leading-relaxed">
+                Sixteen short guides with screenshots of every screen, from menus and QR codes to
+                the kitchen and reports.
+              </p>
+              <Link
+                href="/docs"
+                className="text-brand-700 dark:text-brand-400 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+              >
+                Read the guides <ArrowRight className="h-4 w-4" />
+              </Link>
+            </li>
+          </ul>
+        </section>
+
+        <section
+          aria-labelledby="demo-checklist"
+          className="border-border bg-muted/40 mb-12 rounded-2xl border p-6 sm:p-8"
+        >
+          <h2
+            id="demo-checklist"
+            className="font-display flex items-center gap-2 text-xl font-bold"
+          >
+            <ListChecks className="text-brand-600 h-5 w-5" aria-hidden="true" /> Try everything in
+            ten minutes
+          </h2>
+          <ol className="mt-4 grid gap-3 sm:grid-cols-2">
+            {[
+              [
+                "Place an order",
+                "Choose a few dishes on the guest menu and send it.",
+                "/docs/public-menu",
+              ],
+              ["Accept it", "In Orders, accept the new ticket.", "/docs/orders"],
+              [
+                "Cook it",
+                "Watch it appear on the kitchen stations and finish it.",
+                "/docs/kitchen",
+              ],
+              ["Check the floor", "See table activity and guest service calls.", "/docs/floor"],
+              ["Edit a dish", "Change a price in Menu Studio and publish.", "/docs/menu-studio"],
+              [
+                "Ask Ember",
+                "Ask how the queue looks, or which dishes contain peanuts.",
+                "/docs/ember",
+              ],
+            ].map(([title, text, href], index) => (
+              <li key={title} className="border-border bg-card flex gap-3 rounded-xl border p-4">
+                <span className="bg-brand-600 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
+                  {index + 1}
+                </span>
+                <span className="text-sm leading-relaxed">
+                  <Link href={href!} className="font-semibold underline-offset-2 hover:underline">
+                    {title}
+                  </Link>
+                  <span className="text-muted-foreground"> — {text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         <div className="grid items-stretch gap-8 md:grid-cols-2">
           {/* QR Code Experience */}

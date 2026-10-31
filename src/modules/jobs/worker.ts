@@ -1,6 +1,11 @@
 import { processMedia } from "../media/worker";
 import { processImport } from "../menu-import/engine";
-import { DEMO_RESET_INTERVAL_MS, demoModeEnabled, resetDemoOutlet } from "../demo/reset";
+import {
+  DEMO_RESET_INTERVAL_MS,
+  demoModeEnabled,
+  nextDemoResetAt,
+  resetDemoOutlet,
+} from "../demo/reset";
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
@@ -384,8 +389,18 @@ export async function startWorker(
         demoReset = undefined;
       });
   };
-  const demoTimer = demoModeEnabled() ? setInterval(demoTick, DEMO_RESET_INTERVAL_MS) : undefined;
-  if (demoTimer) demoTick();
+  // Reset once at start, then on every wall-clock half hour so the dashboard countdown stays truthful.
+  let demoTimer: ReturnType<typeof setInterval> | undefined;
+  const demoAlign = demoModeEnabled()
+    ? setTimeout(
+        () => {
+          demoTick();
+          demoTimer = setInterval(demoTick, DEMO_RESET_INTERVAL_MS);
+        },
+        nextDemoResetAt(Date.now()) - Date.now()
+      )
+    : undefined;
+  if (demoAlign) demoTick();
   return {
     pool,
     worker,
@@ -396,6 +411,7 @@ export async function startWorker(
       stopping = true;
       clearInterval(timer);
       clearInterval(maintenanceTimer);
+      if (demoAlign) clearTimeout(demoAlign);
       if (demoTimer) clearInterval(demoTimer);
       await Promise.all([pending, maintenance, demoReset]);
       await Promise.all([worker.close(), importWorker.close()]);

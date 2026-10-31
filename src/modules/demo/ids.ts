@@ -15,3 +15,9 @@ export const DEMO_RESET_INTERVAL_MS = 30 * 60 * 1000;
 export function demoModeEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   return env["DEMO_MODE_ENABLED"] === "true";
 }
+
+/** Resets run on wall-clock boundaries (:00 and :30 UTC, which are also :00/:30 in IST) so the UI can show
+ * an honest countdown without asking the server. */
+export function nextDemoResetAt(nowMs: number): number {
+  return (Math.floor(nowMs / DEMO_RESET_INTERVAL_MS) + 1) * DEMO_RESET_INTERVAL_MS;
+}
