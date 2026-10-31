@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem, CustomizerDish } from "./item-customizer";
@@ -14,6 +14,11 @@ import {
   writePendingGuestOrder,
   type PendingGuestOrder,
 } from "@/modules/orders/guest-checkout";
+import {
+  getOnlineStatus,
+  getServerOnlineStatus,
+  subscribeOnlineStatus,
+} from "@/lib/pwa/connectivity";
 
 function outletInputValue(value: Date, timezone: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -124,6 +129,11 @@ export function CartDrawer({
     orderNumber: number;
   }) => void;
 }) {
+  const online = useSyncExternalStore(
+    subscribeOnlineStatus,
+    getOnlineStatus,
+    getServerOnlineStatus
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [fulfillmentMode, setFulfillmentMode] = useState<"dine_in" | "pickup">(() => {
     return fulfillmentModes.includes("dine_in") ? "dine_in" : "pickup";
@@ -203,6 +213,11 @@ export function CartDrawer({
   if (items.length === 0) return null;
 
   const handleSubmitOrder = async () => {
+    if (!online) {
+      setErrorMessage("You are offline. Reconnect before submitting—this order has not been sent.");
+      setIsOpen(true);
+      return;
+    }
     if (fulfillmentMode === "pickup" && !pickupTime && !pendingRecovery) {
       setErrorMessage("Choose a pickup time before submitting your order.");
       setIsOpen(true);
@@ -663,14 +678,16 @@ export function CartDrawer({
                 type="button"
                 className="action ember"
                 style={{ width: "100%", minHeight: "50px", fontSize: "1.05rem" }}
-                disabled={isSubmitting || items.length === 0}
+                disabled={isSubmitting || items.length === 0 || !online}
                 onClick={handleSubmitOrder}
               >
-                {isSubmitting
-                  ? "Submitting your order request..."
-                  : pendingRecovery
-                    ? "Check previous submission"
-                    : `Submit order request · ${formatPrice(subtotalMinor, currency)}`}
+                {!online
+                  ? "Reconnect to submit order"
+                  : isSubmitting
+                    ? "Submitting your order request..."
+                    : pendingRecovery
+                      ? "Check previous submission"
+                      : `Submit order request · ${formatPrice(subtotalMinor, currency)}`}
               </button>
             </div>
           </div>

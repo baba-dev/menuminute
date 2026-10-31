@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { coverFor } from "@/modules/menu-product/public-presentation";
 import { publicProduct } from "@/modules/menu-product/service";
 import { PublicMenu } from "@/components/menu-product/public-menu";
+import { GuestOfflineCoordinator } from "@/components/pwa/guest-offline-coordinator";
+import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
 
 export const dynamic = "force-dynamic";
 type Props = {
@@ -37,7 +39,17 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 }
 export default async function Page({ params, searchParams }: Props) {
   const { publicMenuId } = await params;
-  const data = await publicProduct(publicMenuId, (await searchParams).lang);
+  const { lang } = await searchParams;
+  const data = await publicProduct(publicMenuId, lang);
   if (!data) notFound();
-  return <PublicMenu key={data.locale ?? "canonical"} initial={data} token={publicMenuId} />;
+  return (
+    <>
+      <GuestOfflineCoordinator
+        enabled={pwaOperationalEnabledForOutlet(data.outlet.id)}
+        token={publicMenuId}
+        locale={data.locale ?? null}
+      />
+      <PublicMenu key={data.locale ?? "canonical"} initial={data} token={publicMenuId} />
+    </>
+  );
 }

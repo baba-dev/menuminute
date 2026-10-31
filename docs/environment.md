@@ -25,6 +25,8 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | POS_STRIPE_ENABLED                             | Default-off Stripe Checkout runtime gate           |
 | POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled            |
 | POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook     |
+| PWA_OPERATIONAL_ENABLED                        | Default-off guest/POS/Kitchen operational PWA gate |
+| PWA_OPERATIONAL_OUTLET_IDS                     | Comma-separated exact outlet rollout allowlist     |
 
 Billing and edition are opt-in: the hosted service must set `COMMUNITY_EDITION=false`; `RAZORPAY_ENABLED=false` and `RAZORPAY_KITCHEN_ENABLED=false` are safe defaults. Before enabling Razorpay install verified production plan IDs, webhook/REST keys and a distinct restricted `BILLING_DATABASE_URL` identity. Never reuse the application or migration-owner credential. Self-hosted edition needs a separately provisioned, owner-controlled database configuration.
 
@@ -36,6 +38,12 @@ Missing required production values must fail startup without printing them. Miss
 keys disables the feature. Readiness reports dependency status without leaking connection strings.
 Store production secrets outside the repository and application releases with restrictive permissions.
 Do not copy demo passwords, development defaults or CI test secrets into production.
+
+Operational PWA phases F-G require both `PWA_OPERATIONAL_ENABLED=true` and an exact outlet ID in
+`PWA_OPERATIONAL_OUTLET_IDS`. The allowlist is capped at 50 unique IDs and may be staged while the
+master switch remains false. This gate does not replace outlet publication, POS/Kitchen activation,
+subscription entitlement, or RBAC. Remove an outlet from the list (or turn off the master switch) to
+stop new guest offline enrollment and operational enhancements on the next server render.
 
 ## Current production credential placement (2026-10-16)
 

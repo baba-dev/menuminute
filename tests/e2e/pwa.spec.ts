@@ -48,6 +48,7 @@ test.describe("Progressive Web App", () => {
     await page.evaluate(async () => {
       await navigator.serviceWorker.ready;
     });
+    await expect(page.getByText(/Available offline · last synced/)).toBeVisible();
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Spice Route Kitchen");
 
@@ -66,6 +67,8 @@ test.describe("Progressive Web App", () => {
     await expect(
       page.getByText("You're offline. Live actions and ordering are unavailable.")
     ).toBeVisible();
+    await expect(page.getByText("Viewing a saved menu")).toBeVisible();
+    await expect(page.getByText(/Ordering is paused until you reconnect/)).toBeVisible();
 
     const results = await page.evaluate(async () => {
       const publicRead = await fetch("/api/public-menu/demo-spice-route-kitchen-v1").then(

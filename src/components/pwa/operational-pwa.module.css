@@ -1,0 +1,77 @@
+.wakeControl {
+  position: fixed;
+  z-index: 9000;
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+  max-width: min(25rem, calc(100vw - 1.5rem));
+}
+
+.wakeControl button,
+.outageCard button {
+  min-height: 2.75rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.75rem;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 800;
+  padding: 0.625rem 0.875rem;
+}
+
+.wakeControl span {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-card);
+  box-shadow: var(--shadow-floating);
+  color: var(--color-card-foreground);
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.outage {
+  position: fixed;
+  z-index: 2147483647;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  background: color-mix(in oklab, var(--color-background) 88%, black 12%);
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+
+.outageCard {
+  width: min(34rem, 100%);
+  border: 1px solid color-mix(in oklab, var(--color-warning) 55%, var(--color-border));
+  border-radius: 1.5rem;
+  background: var(--color-card);
+  box-shadow: var(--shadow-floating);
+  color: var(--color-card-foreground);
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.outageCard h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  margin: 0;
+}
+
+.outageCard p:not(.eyebrow) {
+  color: var(--color-muted-foreground);
+  line-height: 1.55;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+}

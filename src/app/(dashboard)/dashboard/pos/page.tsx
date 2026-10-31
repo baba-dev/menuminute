@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { posWorkspace } from "@/modules/pos/service";
 import { ForbiddenError } from "@/lib/errors";
+import { OperationalPwa } from "@/components/pwa/operational-pwa";
+import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
 import { TheTill } from "./the-till";
 import "./pos.css";
 import "./pos-editorial.css";
@@ -45,11 +47,16 @@ export default async function PosPage() {
       </main>
     );
   return (
-    <TheTill
-      key={outlet.id}
-      organizationId={outlet.organizationId}
-      outletId={outlet.id}
-      initial={workspace}
-    />
+    <>
+      {workspace.context.enabled && pwaOperationalEnabledForOutlet(outlet.id) ? (
+        <OperationalPwa workspace="POS" />
+      ) : null}
+      <TheTill
+        key={outlet.id}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        initial={workspace}
+      />
+    </>
   );
 }

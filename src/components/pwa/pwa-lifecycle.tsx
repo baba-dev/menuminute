@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  getOnlineStatus,
+  getServerOnlineStatus,
+  subscribeOnlineStatus,
+} from "@/lib/pwa/connectivity";
 import styles from "./pwa-lifecycle.module.css";
 
 const INSTALL_DISMISSED_AT = "menuminute:pwa-install-dismissed-at";
@@ -34,21 +39,12 @@ function installPromptWasRecentlyDismissed() {
   }
 }
 
-function subscribeToOnlineStatus(onStoreChange: () => void) {
-  window.addEventListener("online", onStoreChange);
-  window.addEventListener("offline", onStoreChange);
-  return () => {
-    window.removeEventListener("online", onStoreChange);
-    window.removeEventListener("offline", onStoreChange);
-  };
-}
-
-function getOnlineStatus() {
-  return navigator.onLine;
-}
-
 export function PwaLifecycle() {
-  const online = useSyncExternalStore(subscribeToOnlineStatus, getOnlineStatus, () => true);
+  const online = useSyncExternalStore(
+    subscribeOnlineStatus,
+    getOnlineStatus,
+    getServerOnlineStatus
+  );
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
