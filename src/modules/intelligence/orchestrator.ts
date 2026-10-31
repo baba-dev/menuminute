@@ -1,6 +1,6 @@
 import { env, type Env } from "@/lib/config/env";
 import { assistantSpendPolicy } from "./spend";
-import { ValidationError } from "@/lib/errors";
+import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
 import { selectQuestionTools } from "./tool-selection";
 import { groundedMerchantAnswer } from "./grounded-answer";
@@ -24,6 +24,7 @@ import {
   type Scope,
   type StoredTurn,
 } from "./store";
+import { smallTalkReply } from "./small-talk";
 
 const systemPrompt = [
   "You are Ember, a helpful restaurant assistant speaking to a busy nontechnical merchant.",
@@ -86,7 +87,18 @@ export async function runReadOnlyTurn(
   try {
     await assertAssistantScope(scope);
     stage = "authorize_tools";
-    const definitions = selectQuestionTools(await authorizedToolDefinitions(scope), turn.prompt);
+    const allTools = await authorizedToolDefinitions(scope);
+    // Greetings, thanks and "what can you do?" are answered without a model call or any spend.
+    const smallTalk = smallTalkReply(
+      turn.prompt,
+      allTools.map((t) => t.name)
+    );
+    if (smallTalk) {
+      stage = "persist_small_talk";
+      await finishTurn(scope, turn.id, smallTalk.answer, []);
+      return { turnId: turn.id, status: "completed", answer: smallTalk.answer, evidence: [] };
+    }
+    const definitions = selectQuestionTools(allTools, turn.prompt);
     if (!definitions.length) throw new ValidationError("No authorized read-only tools");
     stage = "select_provider";
     const model = preferred(hub);
@@ -199,7 +211,9 @@ export async function runReadOnlyTurn(
         ? error.code
         : error instanceof ValidationError
           ? "invalid_response"
-          : "processing_failed";
+          : error instanceof ForbiddenError && stage.startsWith("reserve_round_")
+            ? "quota_exhausted" // the organization's daily inference allowance
+            : "processing_failed";
     console.error("[ember] Read-only turn failed", {
       stage,
       code,
