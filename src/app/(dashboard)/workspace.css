@@ -16,6 +16,7 @@
   height: 100dvh;
   min-width: 0;
   flex-direction: column;
+  overflow-x: clip;
   border-right: 1px solid var(--decorative);
   background: var(--paper);
 }
@@ -119,10 +120,15 @@
 }
 
 .mm-workspace-nav {
+  box-sizing: border-box;
+  min-width: 0;
   min-height: 0;
+  width: 100%;
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 20px 12px;
+  overscroll-behavior-y: contain;
+  padding: 16px 10px 18px;
 }
 
 .mm-workspace-nav-label {
@@ -131,15 +137,19 @@
 
 .mm-workspace-nav-items {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
 .mm-workspace-nav-link {
+  box-sizing: border-box;
   display: flex;
+  min-width: 0;
   min-height: 44px;
+  width: 100%;
   align-items: center;
-  gap: 12px;
-  padding: 10px 13px;
+  gap: 10px;
+  padding: 9px 10px;
   border-radius: 11px;
   color: var(--ink);
   font-size: 13px;
@@ -148,14 +158,28 @@
   transition:
     background-color 150ms ease,
     color 150ms ease;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
+
+.mm-workspace-nav-link > svg {
+  flex: none;
+}
+
+.mm-workspace-nav-link > span {
+  min-width: 0;
+}
+
 .mm-workspace-nav-link.is-unavailable {
+  flex-wrap: wrap;
   cursor: not-allowed;
   opacity: 0.58;
 }
 .mm-workspace-nav-link.is-unavailable small {
-  margin-left: auto;
+  max-width: calc(100% - 29px);
+  margin-left: 29px;
+  overflow-wrap: anywhere;
   font-size: 0.65rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
