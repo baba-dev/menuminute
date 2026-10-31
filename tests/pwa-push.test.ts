@@ -151,7 +151,6 @@ describe("PWA H: push service safety and signing", () => {
     });
     expect(blanks.PWA_PUSH_ENABLED).toBe(false);
     expect(blanks.PWA_PUSH_VAPID_PUBLIC_KEY).toBeUndefined();
-
   });
 
   it("keeps database and worker boundaries visible for migration/security review", async () => {
