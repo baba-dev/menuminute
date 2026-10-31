@@ -199,6 +199,65 @@ END $$;
 REVOKE ALL ON FUNCTION app_private.reset_demo_outlet(jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.reset_demo_outlet(jsonb) TO menuminute_worker;
 
+-- Existing table RLS already restricts SELECT. Add narrowly scoped mutation
+-- policies for menu editors; general application table mutations remain denied.
+CREATE POLICY floor_table_app_insert ON restaurant_tables FOR INSERT TO menuminute_app
+ WITH CHECK (restaurant_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(restaurant_id,'menu.write'));
+CREATE POLICY floor_table_app_update ON restaurant_tables FOR UPDATE TO menuminute_app
+ USING (restaurant_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(restaurant_id,'menu.write'))
+ WITH CHECK (restaurant_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(restaurant_id,'menu.write'));
+CREATE POLICY floor_table_operator_read ON restaurant_tables FOR SELECT TO menuminute_app
+ USING (restaurant_id=current_setting('app.outlet_id',true)
+   AND app_private.can_outlet(restaurant_id,'orders.read'));
+GRANT INSERT (id,restaurant_id,table_number,label,capacity,is_active) ON restaurant_tables TO menuminute_app;
+GRANT UPDATE (table_number,label,capacity,is_active) ON restaurant_tables TO menuminute_app;
+
+-- Booking staff need a row lock for capacity/overlap serialization but must
+-- not gain general write access to physical table identities.
+CREATE OR REPLACE FUNCTION app_private.floor_booking_table_capacity(
+ p_outlet text,p_table text
+) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $
+DECLARE n integer;
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+    OR NOT app_private.can_outlet(p_outlet,'orders.accept') THEN
+   RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501';
+ END IF;
+ SELECT capacity INTO n FROM restaurant_tables
+ WHERE id=p_table AND restaurant_id=p_outlet AND is_active FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Active outlet table required' USING ERRCODE='22023'; END IF;
+ RETURN COALESCE(n,0);
+END $;
+REVOKE ALL ON FUNCTION app_private.floor_booking_table_capacity(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.floor_booking_table_capacity(text,text) TO menuminute_app;
+
+-- Append-only scoped audit action; no generic INSERT grant on audit_logs.
+CREATE OR REPLACE FUNCTION app_private.floor_reservation_audit(
+ p_outlet text,p_reservation text,p_before text,p_after text
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $
+DECLARE v_actor text:=nullif(current_setting('app.actor_id',true),'');
+BEGIN
+ IF v_actor IS NULL
+    OR current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+    OR NOT app_private.can_outlet(p_outlet,'orders.accept')
+    OR NOT EXISTS(SELECT 1 FROM dining_reservations
+                  WHERE id=p_reservation AND outlet_id=p_outlet) THEN
+    RAISE EXCEPTION 'Forbidden' USING ERRCODE='42501';
+ END IF;
+ INSERT INTO audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id,before,after)
+ VALUES(gen_random_uuid()::text,v_actor,p_outlet,
+   CASE WHEN p_before IS NULL THEN 'reservation.created'
+        ELSE 'reservation.status.changed' END,
+   'reservation',p_reservation,p_before,p_after);
+END $;
+REVOKE ALL ON FUNCTION app_private.floor_reservation_audit(text,text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.floor_reservation_audit(text,text,text,text) TO menuminute_app;
+
 -- Associate a table QR without creating an unrelated physical restaurant table.
 -- The legacy generic QR command remains unchanged for other QR Studio consumers.
 CREATE OR REPLACE FUNCTION app_private.attach_existing_table_qr(

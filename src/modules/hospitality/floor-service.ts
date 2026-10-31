@@ -334,11 +334,9 @@ export async function createReservation(
     const time = new Date(input.reservationTime);
     if (!Number.isFinite(time.getTime()) || time.getTime() < Date.now() - 5 * 60_000)
       throw new ValidationError("Select a future reservation time.");
-    const physical = await tx.execute<{ capacity: number | null }>(sql`
-      select capacity from restaurant_tables
-      where id=${input.tableId} and restaurant_id=${outletId} and is_active FOR UPDATE`);
-    if (!physical.rows[0]) throw new ValidationError("Select an active table in this outlet.");
-    if (input.partySize > (physical.rows[0].capacity ?? 0))
+    const physical = await tx.execute<{ capacity: number }>(sql`
+      select app_private.floor_booking_table_capacity(${outletId},${input.tableId}) as capacity`);
+    if (input.partySize > physical.rows[0]!.capacity)
       throw new ValidationError("Party exceeds the seating capacity of this table.");
     const overlap = await tx.execute<{ booked: boolean }>(sql`
       select exists(select 1 from dining_reservations
@@ -367,8 +365,8 @@ export async function createReservation(
       })
       .returning();
     await tx.execute(sql`
-      insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id)
-      values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.created','reservation',${id})`);
+      select app_private.floor_reservation_audit(${outletId},${id},
+        null::text,'confirmed'::text)`);
     return toReservationItem(created!);
   });
 }
@@ -407,9 +405,8 @@ export async function updateReservationStatus(
         and(eq(diningReservations.id, reservationId), eq(diningReservations.outletId, outletId))
       );
     await tx.execute(sql`
-      insert into audit_logs(id,user_id,restaurant_id,action,resource_type,resource_id,before,after)
-      values(gen_random_uuid()::text,${actor.userId},${outletId},'reservation.status.changed',
-        'reservation',${reservationId},${current.status},${status})`);
+      select app_private.floor_reservation_audit(${outletId},${reservationId},
+        ${current.status},${status})`);
   });
 }
 
