@@ -101,10 +101,7 @@ describe("PWA H: push service safety and signing", () => {
       subject: "mailto:admin@bababuilds.com",
     };
     expect(await sendEmptyPush(endpoint, config)).toBe("accepted");
-    const [sentUrl, sentOptions] = fetchMock.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const [sentUrl, sentOptions] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(sentUrl).toBe(endpoint);
     expect(sentOptions.method).toBe("POST");
     expect(sentOptions).not.toHaveProperty("body");
@@ -152,7 +149,9 @@ describe("PWA H: push service safety and signing", () => {
       "utf8"
     );
     expect(sql).toContain("REFERENCES sessions(id) ON DELETE CASCADE");
-    expect(sql).toContain("GRANT EXECUTE ON FUNCTION app_private.pwa_push_claim(text[]) TO menuminute_worker");
+    expect(sql).toContain(
+      "GRANT EXECUTE ON FUNCTION app_private.pwa_push_claim(text[]) TO menuminute_worker"
+    );
     expect(sql).toContain("s.expires_at>now()");
     expect(sql).toContain("m.is_active");
     expect(sql).toContain("p_outlet IS DISTINCT FROM current_setting('app.outlet_id',true)");

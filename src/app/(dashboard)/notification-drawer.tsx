@@ -86,7 +86,6 @@ export function NotificationDrawer() {
               <X size={18} aria-hidden="true" />
             </Dialog.Close>
           </header>
-
           <section className="mm-notify-section" aria-labelledby="mm-notify-status">
             <h3 id="mm-notify-status" className="mm-notify-heading">
               Status
@@ -144,7 +143,6 @@ export function NotificationDrawer() {
               </Link>
             )}
           </section>
-
           <section className="mm-notify-section" aria-labelledby="mm-notify-alerts">
             <h3 id="mm-notify-alerts" className="mm-notify-heading">
               Alerts
@@ -196,8 +194,25 @@ export function NotificationDrawer() {
               </p>
             )}
           </section>
-
-          <section className="mm-notify-section" aria-label="Device alerts">\n            <Link href="/dashboard/settings/device" className="mm-notify-row mm-notify-link" onClick={() => setDrawerOpen(false)}>\n              <Bell size={18} aria-hidden="true" />\n              <div><strong>Device &amp; app settings</strong><small>Optional background alerts, installed app and offline storage</small></div>\n            </Link>\n          </section>\n\n          <section className="mm-notify-section" aria-labelledby="mm-notify-sound">
+          <section className="mm-notify-section" aria-label="Device alerts">
+            \n{" "}
+            <Link
+              href="/dashboard/settings/device"
+              className="mm-notify-row mm-notify-link"
+              onClick={() => setDrawerOpen(false)}
+            >
+              \n <Bell size={18} aria-hidden="true" />
+              \n{" "}
+              <div>
+                <strong>Device &amp; app settings</strong>
+                <small>Optional background alerts, installed app and offline storage</small>
+              </div>
+              \n{" "}
+            </Link>
+            \n{" "}
+          </section>
+          \n\n{" "}
+          <section className="mm-notify-section" aria-labelledby="mm-notify-sound">
             <h3 id="mm-notify-sound" className="mm-notify-heading">
               Sound
             </h3>

@@ -1,4 +1,3 @@
-
 ## Phase H — opt-in device alerts (source delivery)
 
 The Web Push bridge is separate from the canonical Kitchen/Orders streams and from phases F–G.

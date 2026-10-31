@@ -75,12 +75,7 @@ export async function sendEmptyPush(
 ): Promise<"accepted" | "gone" | "retry" | "failed"> {
   if (!allowedPushEndpoint(endpoint)) return "gone";
   try {
-    const headers = createVapidHeaders(
-      endpoint,
-      keys.publicKey,
-      keys.privateKey,
-      keys.subject
-    );
+    const headers = createVapidHeaders(endpoint, keys.publicKey, keys.privateKey, keys.subject);
     const response = await fetch(endpoint, {
       method: "POST",
       headers,

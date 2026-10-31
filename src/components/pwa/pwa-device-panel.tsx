@@ -132,12 +132,12 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
       if (!("Notification" in window) || !("serviceWorker" in navigator))
         throw new Error("This browser does not support Web Push notifications.");
       const granted =
-        Notification.permission === "granted"
-          ? "granted"
-          : await Notification.requestPermission();
+        Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
       setPermission(granted);
       if (granted !== "granted")
-        throw new Error("Notifications are blocked. Change your browser permissions to enable them.");
+        throw new Error(
+          "Notifications are blocked. Change your browser permissions to enable them."
+        );
       const reg = await navigator.serviceWorker.getRegistration("/");
       if (!reg?.active || !("pushManager" in reg))
         throw new Error("The MenuMinute app worker is not ready. Install or reload the app.");
@@ -183,9 +183,13 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
       if (!("caches" in window)) throw new Error("Offline storage is not available.");
       const names = await caches.keys();
       await Promise.all(
-        names.filter((name) => name.startsWith("menuminute-pwa-")).map((name) => caches.delete(name))
+        names
+          .filter((name) => name.startsWith("menuminute-pwa-"))
+          .map((name) => caches.delete(name))
       );
-      setStatus("Saved public pages cleared. Private orders and financial data were never stored there.");
+      setStatus(
+        "Saved public pages cleared. Private orders and financial data were never stored there."
+      );
     } catch {
       setStatus("Offline storage could not be cleared in this browser.");
     } finally {
@@ -199,8 +203,8 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
         <span className={styles.eyebrow}>YOUR DEVICE · {outletName}</span>
         <h1>MenuMinute on this device</h1>
         <p>
-          Keep service alerts and offline viewing under your control. Live orders,
-          Kitchen and Point of Sale always need a working connection.
+          Keep service alerts and offline viewing under your control. Live orders, Kitchen and Point
+          of Sale always need a working connection.
         </p>
       </section>
       <div className={styles.stats}>
@@ -223,7 +227,11 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
       <section className={styles.panel} aria-labelledby="device-alerts">
         <div className={styles.panelTitle}>
           <div className={styles.heading}>
-            {enabledForDevice ? <Bell size={22} aria-hidden="true" /> : <BellOff size={22} aria-hidden="true" />}
+            {enabledForDevice ? (
+              <Bell size={22} aria-hidden="true" />
+            ) : (
+              <BellOff size={22} aria-hidden="true" />
+            )}
             <div>
               <h2 id="device-alerts">Activity alerts</h2>
               <p>Only for this device and the currently selected outlet.</p>
@@ -235,35 +243,68 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
         </div>
         <div className={styles.preferences}>
           <label className={styles.option}>
-            <span><strong>New orders</strong><small>Check the latest tickets in MenuMinute</small></span>
-            <input type="checkbox" checked={newOrders} disabled={busy || !remote?.enabled} onChange={(e) => setNewOrders(e.target.checked)} />
+            <span>
+              <strong>New orders</strong>
+              <small>Check the latest tickets in MenuMinute</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={newOrders}
+              disabled={busy || !remote?.enabled}
+              onChange={(e) => setNewOrders(e.target.checked)}
+            />
           </label>
           <label className={styles.option}>
-            <span><strong>Kitchen activity</strong><small>Generic station activity reminders, not job acknowledgements</small></span>
-            <input type="checkbox" checked={kitchenUpdates} disabled={busy || !remote?.enabled} onChange={(e) => setKitchenUpdates(e.target.checked)} />
+            <span>
+              <strong>Kitchen activity</strong>
+              <small>Generic station activity reminders, not job acknowledgements</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={kitchenUpdates}
+              disabled={busy || !remote?.enabled}
+              onChange={(e) => setKitchenUpdates(e.target.checked)}
+            />
           </label>
         </div>
         <div className={styles.actions}>
           {enabledForDevice ? (
             <>
-              <button className={styles.primary} onClick={() => void enable()} disabled={busy || !remote?.enabled || !online} type="button">
+              <button
+                className={styles.primary}
+                onClick={() => void enable()}
+                disabled={busy || !remote?.enabled || !online}
+                type="button"
+              >
                 Save preferences
               </button>
-              <button className={styles.danger} onClick={() => void disable()} disabled={busy || !online} type="button">
+              <button
+                className={styles.danger}
+                onClick={() => void disable()}
+                disabled={busy || !online}
+                type="button"
+              >
                 Stop alerts
               </button>
             </>
           ) : (
-            <button className={styles.primary} onClick={() => void enable()} disabled={busy || !remote?.enabled || !online || (!newOrders && !kitchenUpdates)} type="button">
+            <button
+              className={styles.primary}
+              onClick={() => void enable()}
+              disabled={busy || !remote?.enabled || !online || (!newOrders && !kitchenUpdates)}
+              type="button"
+            >
               Enable device alerts
             </button>
           )}
         </div>
-        {lastUpdated && <p className={styles.footnote}>Last saved {new Date(lastUpdated).toLocaleString()}</p>}
+        {lastUpdated && (
+          <p className={styles.footnote}>Last saved {new Date(lastUpdated).toLocaleString()}</p>
+        )}
         <p className={styles.footnote}>
-          On iPhone or iPad, first install using Safari → Share → Add to Home Screen
-          (iOS/iPadOS 16.4 or later). Permission is requested only after your tap.
-          Push delivery is best effort; always check the live order and kitchen queues.
+          On iPhone or iPad, first install using Safari → Share → Add to Home Screen (iOS/iPadOS
+          16.4 or later). Permission is requested only after your tap. Push delivery is best effort;
+          always check the live order and kitchen queues.
         </p>
       </section>
       <section className={styles.panel} aria-labelledby="device-storage">
@@ -274,16 +315,25 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
             <p>Clear previously saved public menu pages and app assets on this device.</p>
           </div>
         </div>
-        <button className={styles.secondary} onClick={() => void clearOffline()} disabled={busy} type="button">
+        <button
+          className={styles.secondary}
+          onClick={() => void clearOffline()}
+          disabled={busy}
+          type="button"
+        >
           <Trash2 size={16} aria-hidden="true" /> Clear saved public pages
         </button>
         <p className={styles.footnote}>
-          This does not remove your account, browser sign-in, unfinished cart or other websites’ storage.
-          Private outlet reports, orders and financial records are not cached.
+          This does not remove your account, browser sign-in, unfinished cart or other websites’
+          storage. Private outlet reports, orders and financial records are not cached.
         </p>
       </section>
       <div className={styles.result} role="status" aria-live="polite">
-        {status.includes("offline") ? <WifiOff size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
+        {status.includes("offline") ? (
+          <WifiOff size={18} aria-hidden="true" />
+        ) : (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        )}
         <span>{status}</span>
       </div>
     </div>

@@ -56,25 +56,25 @@ export default async function SettingsPage() {
         </Link>
       </div>
       <OutletAtelier
-      key={outlet.id}
-      organizationId={outlet.organizationId}
-      outletId={outlet.id}
-      outlet={{
-        name: outlet.name,
-        slug: outlet.slug,
-        publicId: outlet.publicId,
-        country: outlet.country || "IN",
-        currency: outlet.currency,
-        timezone: outlet.timezone,
-        outletType: outlet.outletType,
-        fulfillmentModes: outlet.fulfillmentModes,
-        isActive: outlet.isActive,
-        isDemoData: outlet.isDemoData,
-        profileVersion: outlet.profileVersion,
-      }}
-      initial={editableOutletProfile(outlet)}
-      canManage={canManage}
-      billing={billing}
+        key={outlet.id}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        outlet={{
+          name: outlet.name,
+          slug: outlet.slug,
+          publicId: outlet.publicId,
+          country: outlet.country || "IN",
+          currency: outlet.currency,
+          timezone: outlet.timezone,
+          outletType: outlet.outletType,
+          fulfillmentModes: outlet.fulfillmentModes,
+          isActive: outlet.isActive,
+          isDemoData: outlet.isDemoData,
+          profileVersion: outlet.profileVersion,
+        }}
+        initial={editableOutletProfile(outlet)}
+        canManage={canManage}
+        billing={billing}
       />
     </>
   );

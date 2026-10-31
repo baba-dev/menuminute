@@ -147,7 +147,9 @@ describe("PWA cache policy", () => {
 
   it("does not register background sync and rejects personalized responses", async () => {
     const { listeners, policy } = await loadWorkerPolicy();
-    expect(listeners).toEqual(new Set(["install", "activate", "message", "fetch", "push", "notificationclick"]));
+    expect(listeners).toEqual(
+      new Set(["install", "activate", "message", "fetch", "push", "notificationclick"])
+    );
     expect(listeners.has("sync")).toBe(false);
     expect(policy.CACHE_PREFIX).toBe("menuminute-pwa-v2-");
     expect(policy.PRECACHE_URLS).toContain("/offline");

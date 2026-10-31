@@ -12,16 +12,20 @@ import { allowedPushEndpoint } from "@/modules/pwa/vapid";
 
 const headers = { "cache-control": "private, no-store", vary: "Cookie" };
 const subscriptionInput = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("subscribe"),
-    endpoint: z.string().min(35).max(2048),
-    newOrders: z.boolean(),
-    kitchenUpdates: z.boolean(),
-  }).strict(),
-  z.object({
-    action: z.literal("unsubscribe"),
-    endpoint: z.string().min(35).max(2048),
-  }).strict(),
+  z
+    .object({
+      action: z.literal("subscribe"),
+      endpoint: z.string().min(35).max(2048),
+      newOrders: z.boolean(),
+      kitchenUpdates: z.boolean(),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("unsubscribe"),
+      endpoint: z.string().min(35).max(2048),
+    })
+    .strict(),
 ]);
 
 async function scope(req: Request, mutation: boolean) {
@@ -38,12 +42,9 @@ async function handleGet(req: Request) {
   try {
     const { actor, outlet } = await scope(req, false);
     const result = await withOutletRead(actor, outlet.id, "orders.read", (tx) =>
-      tx.execute<{ list: unknown }>(
-        sql`select app_private.pwa_push_list(${outlet.id}) as list`
-      )
+      tx.execute<{ list: unknown }>(sql`select app_private.pwa_push_list(${outlet.id}) as list`)
     );
-    const enabled =
-      env.PWA_PUSH_ENABLED && env.PWA_PUSH_OUTLET_IDS.includes(outlet.id);
+    const enabled = env.PWA_PUSH_ENABLED && env.PWA_PUSH_OUTLET_IDS.includes(outlet.id);
     return NextResponse.json(
       {
         enabled,
@@ -65,7 +66,8 @@ async function handlePost(req: Request) {
     const { actor, outlet } = await scope(req, true);
     // Bound JSON before parsing; never log endpoints, keys or browser identifiers.
     const raw = await req.text();
-    if (raw.length > 3500) return NextResponse.json({ message: "Request too large" }, { status: 413, headers });
+    if (raw.length > 3500)
+      return NextResponse.json({ message: "Request too large" }, { status: 413, headers });
     const input = subscriptionInput.parse(JSON.parse(raw));
     if (!allowedPushEndpoint(input.endpoint))
       return NextResponse.json({ message: "Unsupported push service" }, { status: 422, headers });
@@ -73,14 +75,15 @@ async function handlePost(req: Request) {
       input.action === "subscribe" &&
       (!env.PWA_PUSH_ENABLED || !env.PWA_PUSH_OUTLET_IDS.includes(outlet.id))
     ) {
-      return NextResponse.json({ message: "Device alerts are not enabled for this outlet" }, { status: 403, headers });
+      return NextResponse.json(
+        { message: "Device alerts are not enabled for this outlet" },
+        { status: 403, headers }
+      );
     }
     const hash = createHash("sha256").update(input.endpoint).digest("hex");
     await withOutlet(actor, outlet.id, "orders.read", async (tx) => {
       if (input.action === "unsubscribe")
-        await tx.execute(
-          sql`select app_private.pwa_push_unsubscribe(${outlet.id},${hash})`
-        );
+        await tx.execute(sql`select app_private.pwa_push_unsubscribe(${outlet.id},${hash})`);
       else
         await tx.execute(
           sql`select app_private.pwa_push_subscribe(${outlet.id},${input.endpoint},${hash},${input.newOrders},${input.kitchenUpdates})`

@@ -43,14 +43,21 @@ test.describe("Progressive Web App", () => {
     expect(new URL(scope).pathname).toBe("/");
   });
 
-  test("push registration is private, no-store and cannot bypass a guest session", async ({ request }) => {
+  test("push registration is private, no-store and cannot bypass a guest session", async ({
+    request,
+  }) => {
     const unauthenticated = await request.get("/api/pwa/push");
     expect(unauthenticated.status()).toBe(401);
     expect(unauthenticated.headers()["cache-control"]).toContain("no-store");
 
     const badOrigin = await request.post("/api/pwa/push", {
       headers: { origin: "https://attacker.invalid", "content-type": "application/json" },
-      data: { action: "subscribe", endpoint: "https://web.push.apple.com/abc", newOrders: true, kitchenUpdates: false },
+      data: {
+        action: "subscribe",
+        endpoint: "https://web.push.apple.com/abc",
+        newOrders: true,
+        kitchenUpdates: false,
+      },
     });
     expect(badOrigin.status()).toBe(403);
   });

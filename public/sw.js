@@ -387,7 +387,9 @@ self.addEventListener("notificationclick", (event) => {
     (async () => {
       const target = new URL("/dashboard/orders", self.location.origin).href;
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      const existing = windows.find(
+        (client) => new URL(client.url).origin === self.location.origin
+      );
       if (existing) {
         await existing.focus();
         await existing.navigate(target);
