@@ -469,25 +469,25 @@ export function DiningFloorContainer({
   // Seat reservation
   const handleSeatReservation = async (resId: string) => {
     try {
-    haptics.confirm();
-    const res = await fetch("/api/floor/reservations", {
-      method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-        "x-outlet-id": outlet.id,
-      },
-      body: JSON.stringify({
-        reservationId: resId,
-        status: "seated",
-      }),
-    });
+      haptics.confirm();
+      const res = await fetch("/api/floor/reservations", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          "x-outlet-id": outlet.id,
+        },
+        body: JSON.stringify({
+          reservationId: resId,
+          status: "seated",
+        }),
+      });
 
-    if (!res.ok) {
-      throw new Error("Failed to seat party");
-    }
+      if (!res.ok) {
+        throw new Error("Failed to seat party");
+      }
 
-    setReservations((prev) => prev.map((r) => (r.id === resId ? { ...r, status: "seated" } : r)));
-    toast.success("Party seated at table");
+      setReservations((prev) => prev.map((r) => (r.id === resId ? { ...r, status: "seated" } : r)));
+      toast.success("Party seated at table");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not seat guests");
     }
@@ -723,7 +723,9 @@ export function DiningFloorContainer({
                 onChange={(event) => {
                   if (event.target.value) {
                     setSelectedDate(event.target.value);
-                    void loadReservations(event.target.value).catch(() => toast.error("Could not load reservations"));
+                    void loadReservations(event.target.value).catch(() =>
+                      toast.error("Could not load reservations")
+                    );
                   }
                 }}
                 className="border-border bg-card rounded-lg border px-3 py-2 text-sm"
@@ -817,15 +819,15 @@ export function DiningFloorContainer({
 
       {/* Remount the booking dialog for every new reservation to reset form state. */}
       {resDialogOpen && (
-      <ReservationDialog
-        open={resDialogOpen}
-        onClose={() => setResDialogOpen(false)}
-        tables={layout.tables}
-        outletTimezone={outlet.timezone}
-        defaultDate={selectedDate}
-        selectedTable={resDialogTable}
-        onSubmit={handleCreateReservation}
-      />
+        <ReservationDialog
+          open={resDialogOpen}
+          onClose={() => setResDialogOpen(false)}
+          tables={layout.tables}
+          outletTimezone={outlet.timezone}
+          defaultDate={selectedDate}
+          selectedTable={resDialogTable}
+          onSubmit={handleCreateReservation}
+        />
       )}
     </div>
   );

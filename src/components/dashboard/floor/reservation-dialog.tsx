@@ -51,7 +51,6 @@ export function ReservationDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
