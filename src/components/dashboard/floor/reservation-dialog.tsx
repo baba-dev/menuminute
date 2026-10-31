@@ -31,6 +31,15 @@ export function ReservationDialog({
   const [guestEmail, setGuestEmail] = useState("");
   const [partySize, setPartySize] = useState(selectedTable?.capacity || 2);
   const [reservationTime, setReservationTime] = useState(() => {
+    if (defaultDate) {
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+      ].join("-");
+      if (defaultDate !== today) return `${defaultDate}T19:00`;
+    }
     // Default to nearest 30 mins
     const d = new Date();
     d.setMinutes(d.getMinutes() + 30);
@@ -42,26 +51,6 @@ export function ReservationDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (open) {
-      setTableId(selectedTable?.id ?? tables[0]?.id ?? "");
-      setPartySize(selectedTable?.capacity ?? 2);
-      setGuestName("");
-      setGuestPhone("");
-      setGuestEmail("");
-      setNotes("");
-      setError("");
-      if (defaultDate) {
-        const now = new Date();
-        const today = [
-          now.getFullYear(),
-          String(now.getMonth() + 1).padStart(2, "0"),
-          String(now.getDate()).padStart(2, "0"),
-        ].join("-");
-        if (defaultDate !== today) setReservationTime(`${defaultDate}T19:00`);
-      }
-    }
-  }, [open, selectedTable?.id, selectedTable?.capacity, defaultDate]);
 
   useEffect(() => {
     if (!open) return;

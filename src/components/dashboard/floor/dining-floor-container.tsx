@@ -448,7 +448,10 @@ export function DiningFloorContainer({
     const created = (await res.json()) as ReservationItem;
     const bookedDay = outletDate(new Date(created.reservationTime), outlet.timezone);
     if (bookedDay === selectedDate) setReservations((prev) => [...prev, created]);
-    else setSelectedDate(bookedDay);
+    else {
+      setSelectedDate(bookedDay);
+      void loadReservations(bookedDay).catch(() => toast.error("Could not load booked date"));
+    }
     toast.success(`Reservation confirmed for ${created.guestName}`);
   };
 
@@ -462,12 +465,6 @@ export function DiningFloorContainer({
     },
     [outlet.id]
   );
-
-  React.useEffect(() => {
-    void loadReservations(selectedDate).catch(() => {
-      toast.error("Bookings could not be loaded. Retry using Refresh.");
-    });
-  }, [selectedDate, loadReservations]);
 
   // Seat reservation
   const handleSeatReservation = async (resId: string) => {
@@ -724,7 +721,10 @@ export function DiningFloorContainer({
                 type="date"
                 value={selectedDate}
                 onChange={(event) => {
-                  if (event.target.value) setSelectedDate(event.target.value);
+                  if (event.target.value) {
+                    setSelectedDate(event.target.value);
+                    void loadReservations(event.target.value).catch(() => toast.error("Could not load reservations"));
+                  }
                 }}
                 className="border-border bg-card rounded-lg border px-3 py-2 text-sm"
               />
@@ -815,7 +815,8 @@ export function DiningFloorContainer({
         </div>
       )}
 
-      {/* Reservation Dialog Modal */}
+      {/* Remount the booking dialog for every new reservation to reset form state. */}
+      {resDialogOpen && (
       <ReservationDialog
         open={resDialogOpen}
         onClose={() => setResDialogOpen(false)}
@@ -825,6 +826,7 @@ export function DiningFloorContainer({
         selectedTable={resDialogTable}
         onSubmit={handleCreateReservation}
       />
+      )}
     </div>
   );
 }
