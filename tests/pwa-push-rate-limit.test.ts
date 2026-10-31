@@ -23,7 +23,9 @@ describe("PWA H: bounded mutation limits", () => {
     ];
     expect(input.keys).toHaveLength(4);
     expect(input.arguments).toEqual(["60", "12", "35", "200", "2000"]);
-    expect(input.keys.every((key) => !key.includes("user-1") && !key.includes("session-1"))).toBe(true);
+    expect(input.keys.every((key) => !key.includes("user-1") && !key.includes("session-1"))).toBe(
+      true
+    );
   });
 
   it("rejects abusive requests and fails closed when Redis cannot respond", async () => {
