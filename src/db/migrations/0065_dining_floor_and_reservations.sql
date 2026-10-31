@@ -220,7 +220,7 @@ GRANT UPDATE (table_number,label,capacity,is_active) ON restaurant_tables TO men
 CREATE OR REPLACE FUNCTION app_private.floor_booking_table_capacity(
  p_outlet text,p_table text
 ) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER
-SET search_path=pg_catalog,public,pg_temp AS $
+SET search_path=pg_catalog,public,pg_temp AS $floor_booking$
 DECLARE n integer;
 BEGIN
  IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
@@ -231,7 +231,7 @@ BEGIN
  WHERE id=p_table AND restaurant_id=p_outlet AND is_active FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION 'Active outlet table required' USING ERRCODE='22023'; END IF;
  RETURN COALESCE(n,0);
-END $;
+END $floor_booking$;
 REVOKE ALL ON FUNCTION app_private.floor_booking_table_capacity(text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.floor_booking_table_capacity(text,text) TO menuminute_app;
 
@@ -239,7 +239,7 @@ GRANT EXECUTE ON FUNCTION app_private.floor_booking_table_capacity(text,text) TO
 CREATE OR REPLACE FUNCTION app_private.floor_reservation_audit(
  p_outlet text,p_reservation text,p_before text,p_after text
 ) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
-SET search_path=pg_catalog,public,pg_temp AS $
+SET search_path=pg_catalog,public,pg_temp AS $floor_audit$
 DECLARE v_actor text:=nullif(current_setting('app.actor_id',true),'');
 BEGIN
  IF v_actor IS NULL
@@ -254,7 +254,7 @@ BEGIN
    CASE WHEN p_before IS NULL THEN 'reservation.created'
         ELSE 'reservation.status.changed' END,
    'reservation',p_reservation,p_before,p_after);
-END $;
+END $floor_audit$;
 REVOKE ALL ON FUNCTION app_private.floor_reservation_audit(text,text,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.floor_reservation_audit(text,text,text,text) TO menuminute_app;
 
