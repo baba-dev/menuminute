@@ -1,0 +1,58 @@
+name: Concierge one-time formatter
+on:
+  push:
+    branches: [feature/ai-dining-concierge-v1]
+    paths: [.github/workflows/concierge-format.yml]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format concierge changes
+        run: |
+          pnpm exec prettier --write \
+            src/components/menu-product/concierge-entry.tsx \
+            src/components/menu-product/concierge-wizard.tsx \
+            src/components/menu-product/concierge-results.tsx \
+            src/components/menu-product/concierge-experience.tsx \
+            src/components/menu-product/public-menu.tsx \
+            src/modules/menu-product/concierge-contracts.ts \
+            src/modules/menu-product/concierge-engine.ts \
+            src/modules/menu-product/concierge-engine.test.ts \
+            src/modules/menu-product/concierge-feature.ts \
+            src/modules/menu-product/service.ts \
+            'src/app/api/public-menu/[token]/concierge/route.ts' \
+            src/lib/config/env.ts \
+            src/styles/dining-concierge.css \
+            docs/ai-dining-concierge.md
+      - name: Push formatter changes only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/menu-product/concierge-entry.tsx \
+            src/components/menu-product/concierge-wizard.tsx \
+            src/components/menu-product/concierge-results.tsx \
+            src/components/menu-product/concierge-experience.tsx \
+            src/components/menu-product/public-menu.tsx \
+            src/modules/menu-product/concierge-contracts.ts \
+            src/modules/menu-product/concierge-engine.ts \
+            src/modules/menu-product/concierge-engine.test.ts \
+            src/modules/menu-product/concierge-feature.ts \
+            src/modules/menu-product/service.ts \
+            'src/app/api/public-menu/[token]/concierge/route.ts' \
+            src/lib/config/env.ts \
+            src/styles/dining-concierge.css docs/ai-dining-concierge.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(concierge): apply repository Prettier formatting'
+            git push origin HEAD:feature/ai-dining-concierge-v1
+          fi
