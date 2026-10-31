@@ -5,6 +5,10 @@ import {
   merchantFindDish,
   merchantImports,
   merchantQr,
+  merchantQrDetails,
+  merchantServiceRequests,
+  merchantInsights,
+  merchantBilling,
   reportPeriods,
 } from "./merchant-tools";
 import { sql } from "drizzle-orm";
@@ -283,6 +287,44 @@ export const readTools = [
     schema: empty,
     run: async (context: ToolContext) => merchantQr(context),
   },
+  {
+    name: "service.requests",
+    description:
+      "List open guest requests at tables (call a server, water refill, bill request) with how long each has waited. Read-only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantServiceRequests(context),
+  },
+  {
+    name: "qr.details",
+    description:
+      "Show the outlet's saved QR codes by name and table, whether each is active and how many times each was scanned. Never returns links or images.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantQrDetails(context),
+  },
+  {
+    name: "reports.insights",
+    description:
+      "Busiest hours, slow-selling dishes, category mix and average kitchen prep time for today, yesterday, this calendar week, seven days, thirty days or this month. Order values are not paid revenue.",
+    parameters: {
+      type: "object",
+      properties: { range: { type: "string", enum: [...reportPeriods] } },
+      required: ["range"],
+      additionalProperties: false,
+    },
+    schema: z.object({ range: z.enum(reportPeriods) }).strict(),
+    run: async (context: ToolContext, args: { range: (typeof reportPeriods)[number] }) =>
+      merchantInsights(context, args.range),
+  },
+  {
+    name: "billing.status",
+    description:
+      "Show which paid features (online ordering, kitchen screens) are active and the subscription status. Owners and administrators only. Plan information only.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    schema: empty,
+    run: async (context: ToolContext) => merchantBilling(context),
+  },
   helpSearchTool,
 ] as const;
 export type ReadToolName = (typeof readTools)[number]["name"];
@@ -312,7 +354,9 @@ export async function authorizedToolDefinitions(context: ToolContext) {
       return access?.menu === true;
     if (definition.name === "imports.pulse")
       return access?.menu === true && access?.menuWrite === true;
-    if (definition.name === "finance.pulse") return access?.billing === true;
+    if (definition.name === "finance.pulse" || definition.name === "billing.status")
+      return access?.billing === true;
+    if (definition.name === "qr.details") return access?.menu === true;
     if (definition.name === "reports.summary") return access?.orders === true;
     return access?.orders === true;
   });
@@ -347,6 +391,17 @@ export async function executeReadTool(context: ToolContext, name: string, untrus
     case "qr.pulse":
       empty.parse(untrusted);
       return readTools[9].run(context);
+    case "service.requests":
+      empty.parse(untrusted);
+      return readTools[10].run(context);
+    case "qr.details":
+      empty.parse(untrusted);
+      return readTools[11].run(context);
+    case "reports.insights":
+      return readTools[12].run(context, readTools[12].schema.parse(untrusted));
+    case "billing.status":
+      empty.parse(untrusted);
+      return readTools[13].run(context);
     case "help.search":
       return helpSearchTool.run(context, helpSearchTool.schema.parse(untrusted));
     default:

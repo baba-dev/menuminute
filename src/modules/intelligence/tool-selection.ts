@@ -17,12 +17,31 @@ export function selectQuestionTools<T extends { name: string }>(
     /\b(how (?:do|can) i (?:set up|create|add|edit|print|mark|change|configure|use|publish|invite|open|scan|remove|download|start|stop|reset)|how to|step.by.step|tutorial|instructions?|guide|documentation|faq)\b/.test(
       q
     ) || /^(?:help me|i need help|where (?:do|can) i)\b/.test(q);
+  if (
+    /\b(my plan|my subscription|subscription status|billing|paid features?|renew(?:al)?|trial)\b/.test(
+      q
+    )
+  )
+    add("billing.status");
   // Product questions (plans, pricing, features) are answered from the published Help Center.
   const productInfo =
     /\b(menuminute|kitchen pro|pricing|pricing plans?|commission|subscription|upgrade|free plan|offline|install(?:ing)? the app)\b/.test(
       q
     );
   if (instructional || productInfo) add("help.search");
+  if (
+    /\b(waiters?|servers?|water|bill request|asking for (?:the )?bill|guest requests?|service requests?|calling for|needs? (?:help|attention))\b/.test(
+      q
+    )
+  )
+    add("service.requests");
+  if (
+    /\b(busiest|peak|rush|slowest|slow.selling|worst.selling|least popular|categor(?:y|ies)|prep time)\b/.test(
+      q
+    )
+  )
+    add("reports.insights");
+  if (/\b(scans?|scanned|which qr|inactive qr)\b/.test(q)) add("qr.details");
   if (
     /\b(sales?|revenue|earnings?|income|turnover|best.selling|top.selling|last week|this week|this month)\b/.test(
       q
