@@ -3,12 +3,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import {
+  ConnectionIndicator,
+  NewMenu,
+  NotificationBell,
+  PaletteTrigger,
+  TillChip,
+} from "./workspace-controls";
 
 const labels: Record<string, string> = {
   "/dashboard": "Restaurant overview",
   "/dashboard/menu": "Menu Studio",
   "/dashboard/orders": "Service Counter",
   "/dashboard/kitchen": "Kitchen",
+  "/dashboard/floor": "Dining floor",
   "/dashboard/qr-codes": "QR Studio",
   "/dashboard/settings": "Settings",
   "/dashboard/pos": "Point of Sale",
@@ -48,6 +56,11 @@ export function WorkspaceTopbar({
         <span aria-current="page">{label}</span>
       </nav>
       <div className="mm-dashboard-top-actions">
+        <PaletteTrigger />
+        <NewMenu />
+        <TillChip />
+        <ConnectionIndicator />
+        <NotificationBell />
         {publicHref ? (
           <Link
             href={publicHref}

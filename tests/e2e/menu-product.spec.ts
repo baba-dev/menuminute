@@ -496,7 +496,9 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
-  const studio = page.getByTestId("recipe-atelier-studio");
+  // The streamed Next.js HTML can contain an inert, hidden #S:* payload outside main.
+  // Check the real editor, while retaining strictness for duplicates within the workspace.
+  const studio = page.locator("#workspace-main").getByTestId("recipe-atelier-studio");
   await expect(studio).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
@@ -599,7 +601,10 @@ test("Menu Studio 3.1 carries curated artwork into draft and gives review and pr
   await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
   await page.reload();
   await expect(
-    page.locator(".menu-board-dish").filter({ hasText: "Butter Chicken" }).locator("img")
+    page
+      .locator("#workspace-main .menu-board-dish")
+      .filter({ hasText: "Butter Chicken" })
+      .locator("img")
   ).toBeVisible();
   await page.getByRole("button", { name: "Preview draft" }).click();
   await expect(page.locator(".atelier-preview-dialog")).toBeVisible();

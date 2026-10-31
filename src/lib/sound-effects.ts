@@ -6,6 +6,8 @@
  * Muted by default to respect quiet environments and browser autoplay policies.
  */
 
+import { isSoundAudible, readSoundPreference } from "./sound-preference";
+
 const AUDIO_STORAGE_KEY = "mm_sound_of_service_enabled";
 export type AudioScope = "orders" | "kitchen" | "tactile";
 
@@ -31,8 +33,9 @@ function getAudioContext(): AudioContext | null {
 export function isAudioEnabled(scope: AudioScope = "tactile"): boolean {
   if (typeof window === "undefined") return false;
   try {
-    if (scope === "orders") return localStorage.getItem("menuminute.orders.sound") === "enabled";
-    if (scope === "kitchen") return localStorage.getItem("menuminute.kitchen.sound") === "true";
+    // Orders and kitchen share the one workspace setting, including its temporary snooze.
+    if (scope === "orders" || scope === "kitchen")
+      return isSoundAudible(readSoundPreference(localStorage), Date.now());
     return localStorage.getItem(AUDIO_STORAGE_KEY) === "true";
   } catch {
     return false;

@@ -754,7 +754,8 @@
   }
   .atelier-actionbar {
     position: fixed;
-    inset: auto 0 0;
+    /* Sits above the workspace's mobile navigation bar (0 where there is none). */
+    inset: auto 0 var(--mm-bottom-bar, 0px);
     width: 100%;
     margin: 0;
     padding: 11px 16px max(12px, env(safe-area-inset-bottom));

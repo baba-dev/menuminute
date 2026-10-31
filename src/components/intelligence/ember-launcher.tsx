@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { navigation, routesForEvidence, type RouteId } from "@/modules/intelligence/navigation";
 import { EmberRichAnswer } from "./ember-rich-answer";
+import { EMBER_ASK_EVENT } from "@/lib/ember-events";
 import "./ember.css";
 
 type StoredTurn = {
@@ -157,6 +158,20 @@ export function EmberLauncher({
   const currentMenu = options.find((m) => m.id === menuId);
   const currentDish = currentMenu?.items.find((i) => i.id === dishId);
   const scope = { organizationId, outletId };
+  // The command palette can open the assistant with a question pre-filled. It only fills the
+  // input: nothing is sent until the person presses Send.
+  useEffect(() => {
+    const onAsk = (event: Event) => {
+      const asked = (event as CustomEvent<{ prompt?: unknown }>).detail?.prompt;
+      if (typeof asked !== "string" || !asked.trim()) return;
+      setNow(Date.now());
+      setOpen(true);
+      setError("");
+      setPrompt(asked.slice(0, 4000));
+    };
+    window.addEventListener(EMBER_ASK_EVENT, onAsk);
+    return () => window.removeEventListener(EMBER_ASK_EVENT, onAsk);
+  }, []);
   const getConversations = useCallback(async () => {
     const rows = await api<Conversation[]>("/api/assistant/conversations?" + qs);
     setConversations(rows);

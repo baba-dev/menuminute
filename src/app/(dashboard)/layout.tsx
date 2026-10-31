@@ -11,6 +11,11 @@ import { ContextSwitcher } from "./context-switcher";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { WorkspaceTopbar } from "./workspace-topbar";
 import { RouteFocus, WORKSPACE_MAIN_ID, WorkspaceSkipLink } from "./workspace-a11y";
+import { WorkspaceShellProvider } from "./workspace-shell";
+import { WorkspaceBottomBar } from "./workspace-bottom-bar";
+import { CommandPalette } from "./command-palette";
+import { NotificationDrawer } from "./notification-drawer";
+import { shellCapabilities } from "@/modules/dashboard/shell-data";
 import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import { ForbiddenError } from "@/lib/errors";
 import {
@@ -48,19 +53,27 @@ export default async function DashboardLayout({ children }: { children: React.Re
   });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
   let capabilities: DashboardNavigation | undefined;
+  let menuWrite = false;
+  let outletManage = false;
   let publicHref: string | null = null;
   let previewError = false;
   if (restaurant) {
     // Preview and optional paid navigation must not make menu, POS, orders or
     // settings inaccessible during unrelated dependency failures.
-    const [navigationResult, qrResult] = await Promise.allSettled([
+    const [navigationResult, qrResult, extraResult] = await Promise.allSettled([
       dashboardNavigation(
         { userId: session.user.id, sessionId: session.session.id },
         restaurant.organizationId,
         restaurant.id
       ),
       dashboardQrRows(session.user.id, restaurant.id),
+      shellCapabilities({ userId: session.user.id, sessionId: session.session.id }, restaurant.id),
     ]);
+    // Extra flags only decide which shortcuts to offer; the server re-checks every action.
+    if (extraResult.status === "fulfilled") {
+      menuWrite = extraResult.value.menuWrite;
+      outletManage = extraResult.value.outletManage;
+    }
     if (navigationResult.status === "fulfilled") {
       capabilities = navigationResult.value;
     } else {
@@ -93,95 +106,116 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .join("")
     .toUpperCase();
 
+  const shellScope = restaurant
+    ? {
+        organizationId: restaurant.organizationId,
+        outletId: restaurant.id,
+        outletName: restaurant.name,
+        currency: restaurant.currency ?? "INR",
+        timezone: restaurant.timezone ?? "UTC",
+      }
+    : null;
+
   return (
-    <div className="mm-workspace-shell">
-      <WorkspaceSkipLink />
-      <RouteFocus />
-      <SessionContinuity />
-      <aside className="mm-workspace-sidebar" aria-label="Workspace sidebar">
-        <div className="mm-workspace-brand">
-          <Link href="/" aria-label="MenuMinute homepage" className="mm-workspace-brand-link">
-            <Image
-              src="/brand/logos/logo-horizontal-light.svg"
-              alt="MenuMinute by BabaBuilds"
-              width={175}
-              height={43}
-              className="mm-workspace-brand-light"
-              priority
-            />
-            <Image
-              src="/brand/logos/logo-horizontal-dark.svg"
-              alt="MenuMinute by BabaBuilds"
-              width={175}
-              height={43}
-              className="mm-workspace-brand-dark"
-            />
-          </Link>
-        </div>
-        <div className="mm-workspace-outlet">
-          <span className="mm-workspace-caption">Current outlet</span>
-          <h2 className="mm-workspace-outlet-name">{restaurant?.name || "Set up an outlet"}</h2>
-          <p className="mm-workspace-outlet-meta">
-            {restaurant
-              ? "Selected outlet · " + restaurant.currency
-              : "Create an outlet to get started"}
-          </p>
-          <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
-        </div>
-        <WorkspaceNavigation capabilities={capabilities} />
-        {isSuperAdmin && (
-          <Link href="/admin" className="mm-workspace-nav-link">
-            <ShieldAlert size={19} aria-hidden="true" />
-            <span>Platform admin</span>
-          </Link>
-        )}
-        <div className="mm-workspace-profile">
-          <Link href="/account" className="mm-workspace-profile-link">
-            <span className="mm-workspace-avatar" aria-hidden="true">
-              {initials || "MM"}
-            </span>
-            <span className="mm-workspace-profile-copy">
-              <strong>{name}</strong>
-              <small>Account &amp; security</small>
-            </span>
-          </Link>
-          <form
-            action={async () => {
-              "use server";
-              await authServer.api.signOut({ headers: await headers() });
-              redirect("/login");
-            }}
-          >
-            <button
-              type="submit"
-              className="mm-workspace-logout"
-              aria-label="Sign out"
-              title="Sign out"
-            >
-              <LogOut size={17} aria-hidden="true" />
-            </button>
-          </form>
-        </div>
-      </aside>
-      <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
-        <WorkspaceTopbar
-          userName={name}
-          publicHref={publicHref}
-          previewError={previewError}
-          assistantAction={
-            restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED ? (
-              <EmberLauncher
-                key={restaurant.id}
-                organizationId={restaurant.organizationId}
-                outletId={restaurant.id}
-                outletName={restaurant.name}
+    <WorkspaceShellProvider
+      scope={shellScope}
+      capabilities={capabilities}
+      menuWrite={menuWrite}
+      outletManage={outletManage}
+      assistantEnabled={Boolean(restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED)}
+    >
+      <div className="mm-workspace-shell">
+        <WorkspaceSkipLink />
+        <RouteFocus />
+        <SessionContinuity />
+        <aside className="mm-workspace-sidebar" aria-label="Workspace sidebar">
+          <div className="mm-workspace-brand">
+            <Link href="/" aria-label="MenuMinute homepage" className="mm-workspace-brand-link">
+              <Image
+                src="/brand/logos/logo-horizontal-light.svg"
+                alt="MenuMinute by BabaBuilds"
+                width={175}
+                height={43}
+                className="mm-workspace-brand-light"
+                priority
               />
-            ) : null
-          }
-        />
-        {children}
-      </main>
-    </div>
+              <Image
+                src="/brand/logos/logo-horizontal-dark.svg"
+                alt="MenuMinute by BabaBuilds"
+                width={175}
+                height={43}
+                className="mm-workspace-brand-dark"
+              />
+            </Link>
+          </div>
+          <div className="mm-workspace-outlet">
+            <span className="mm-workspace-caption">Current outlet</span>
+            <h2 className="mm-workspace-outlet-name">{restaurant?.name || "Set up an outlet"}</h2>
+            <p className="mm-workspace-outlet-meta">
+              {restaurant
+                ? "Selected outlet · " + restaurant.currency
+                : "Create an outlet to get started"}
+            </p>
+            <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
+          </div>
+          <WorkspaceNavigation capabilities={capabilities} />
+          {isSuperAdmin && (
+            <Link href="/admin" className="mm-workspace-nav-link">
+              <ShieldAlert size={19} aria-hidden="true" />
+              <span>Platform admin</span>
+            </Link>
+          )}
+          <div className="mm-workspace-profile">
+            <Link href="/account" className="mm-workspace-profile-link">
+              <span className="mm-workspace-avatar" aria-hidden="true">
+                {initials || "MM"}
+              </span>
+              <span className="mm-workspace-profile-copy">
+                <strong>{name}</strong>
+                <small>Account &amp; security</small>
+              </span>
+            </Link>
+            <form
+              action={async () => {
+                "use server";
+                await authServer.api.signOut({ headers: await headers() });
+                redirect("/login");
+              }}
+            >
+              <button
+                type="submit"
+                className="mm-workspace-logout"
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut size={17} aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+        </aside>
+        <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
+          <WorkspaceTopbar
+            userName={name}
+            publicHref={publicHref}
+            previewError={previewError}
+            assistantAction={
+              restaurant && env.AI_ASSISTANT_READ_ONLY_ENABLED ? (
+                <EmberLauncher
+                  key={restaurant.id}
+                  organizationId={restaurant.organizationId}
+                  outletId={restaurant.id}
+                  outletName={restaurant.name}
+                />
+              ) : null
+            }
+          />
+          {children}
+        </main>
+        <WorkspaceBottomBar />
+        <CommandPalette />
+        <NotificationDrawer />
+      </div>
+    </WorkspaceShellProvider>
   );
 }
 
