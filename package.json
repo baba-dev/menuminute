@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node scripts/dashboard-media.mjs && node scripts/prepare-orders-media.mjs && next dev",
-    "build": "node scripts/verify-qr-studio-media.mjs && node scripts/verify-menu-studio-media.mjs && node scripts/dashboard-media.mjs && node scripts/prepare-orders-media.mjs && node scripts/verify-orders-media.mjs && next build",
+    "build": "node scripts/verify-qr-studio-media.mjs && node scripts/verify-menu-studio-media.mjs && node scripts/dashboard-media.mjs && node scripts/prepare-orders-media.mjs && node scripts/verify-orders-media.mjs && node scripts/verify-docs-media.mjs && next build",
     "start": "next start",
     "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint src --fix",
@@ -36,6 +36,8 @@
     "media:verify:studio": "node scripts/verify-menu-studio-media.mjs && node scripts/food-artwork/verify.mjs",
     "media:verify:qr": "node scripts/verify-qr-studio-media.mjs",
     "media:verify:orders": "node scripts/prepare-orders-media.mjs && node scripts/verify-orders-media.mjs",
+    "media:verify:docs": "node scripts/verify-docs-media.mjs",
+    "docs:capture": "node scripts/demo/capture-docs.mjs",
     "help:verify": "tsx scripts/test-help-registry.ts"
   },
   "dependencies": {

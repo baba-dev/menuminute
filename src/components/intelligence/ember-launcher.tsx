@@ -52,6 +52,7 @@ type Proposal = {
 };
 type Capabilities = {
   enabled: boolean;
+  demo?: { promptChars: number } | null;
   actionsEnabled: boolean;
   tools: string[];
   navigation: { id: RouteId; label: string; href: string }[];
@@ -121,6 +122,27 @@ function evidenceLabel(source: unknown) {
 function message(error: unknown) {
   return error instanceof Error ? error.message : "The request could not be completed.";
 }
+const DEMO_PROMPTS = [
+  "How is my order queue looking?",
+  "Which dishes on our menu contain peanuts?",
+  "How many orders did we get this week?",
+  "Do I sell Chole Bhature?",
+];
+// Shown only when the shared demo allowance is used up. Illustrative, never live data.
+const DEMO_SAMPLES: Array<[string, string]> = [
+  [
+    "How is my order queue looking?",
+    "Sample answer: about nine orders are on the board, three waiting for acceptance, five in the kitchen and one ready to serve.",
+  ],
+  [
+    "Which dishes on our menu contain peanuts?",
+    "Sample answer: Ember lists the dishes whose draft allergen notes include peanuts, with each source labelled. Demo allergen data is unverified.",
+  ],
+  [
+    "How many orders did we get this week?",
+    "Sample answer: Ember totals the week's orders and revenue from your order history and shows the busiest days.",
+  ],
+];
 export function EmberLauncher({
   organizationId,
   outletId,
@@ -287,7 +309,7 @@ export function EmberLauncher({
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
     const value = prompt.trim();
-    if (!value || value.length > 4000 || busy) return;
+    if (!value || value.length > (caps?.demo?.promptChars ?? 4000) || busy) return;
     setBusy(true);
     setError("");
     setStatus("Preparing a scoped answer…");
@@ -320,9 +342,11 @@ export function EmberLauncher({
       await loadHistory(id);
       await getConversations();
     } catch (e) {
+      const text = message(e);
       setError(
-        message(e) +
-          " The request may have been recorded; check History before submitting it again."
+        text.startsWith("Demo limit:") || text.startsWith("Demo questions")
+          ? text
+          : text + " The request may have been recorded; check History before submitting it again."
       );
       await (id ? loadHistory(id).catch(() => {}) : Promise.resolve());
     } finally {
@@ -571,13 +595,22 @@ export function EmberLauncher({
                       Ask about your orders, published menu, or kitchen activity. Ember uses your
                       current outlet permissions and labels its sources.
                     </p>
+                    {caps?.demo && (
+                      <p role="note" className="mm-ember-demo-note">
+                        Public demo: conversations are shared with other visitors and reset every 30
+                        minutes. Please do not enter personal details.
+                      </p>
+                    )}
                     <div className="mm-ember-suggestions">
-                      {[
-                        "How is my order queue looking?",
-                        "How much did my orders total this week?",
-                        "Do I sell Chole Bhature?",
-                        "Show my recent menu imports",
-                      ].map((question) => (
+                      {(caps?.demo
+                        ? DEMO_PROMPTS
+                        : [
+                            "How is my order queue looking?",
+                            "How much did my orders total this week?",
+                            "Do I sell Chole Bhature?",
+                            "Show my recent menu imports",
+                          ]
+                      ).map((question) => (
                         <button key={question} type="button" onClick={() => setPrompt(question)}>
                           {question}
                           <ArrowRight size={14} />
@@ -824,6 +857,16 @@ export function EmberLauncher({
                     {error}
                   </p>
                 )}
+                {error.includes("allowance for today is used up") && (
+                  <ul className="mm-ember-samples" aria-label="Sample Ember answers">
+                    {DEMO_SAMPLES.map(([question, answer]) => (
+                      <li key={question}>
+                        <strong>{question}</strong>
+                        <span>{answer}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {status && (
                   <p className="mm-ember-note" role="status">
                     {status}
@@ -835,7 +878,7 @@ export function EmberLauncher({
                   </label>
                   <textarea
                     id="mm-ember-prompt"
-                    maxLength={4000}
+                    maxLength={caps?.demo?.promptChars ?? 4000}
                     rows={2}
                     value={prompt}
                     disabled={busy}

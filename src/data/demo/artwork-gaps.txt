@@ -1,0 +1,72 @@
+MM-IN-048 Adai with Avial
+MM-IN-007 Aloo Gobi
+MM-IN-013 Amritsari Fish
+MM-IN-076 Andhra Kodi Vepudu
+MM-IN-137 Assamese Duck Curry
+MM-IN-130 Axone Pork
+MM-IN-030 Baati Chokha
+MM-IN-008 Baingan Bharta
+MM-IN-197 Balushahi
+MM-IN-028 Banarasi Kachori Sabzi
+MM-IN-027 Banarasi Tamatar Chaat
+MM-IN-108 Basanti Pulao
+MM-IN-025 Bedmi Puri with Aloo Sabzi
+MM-IN-187 Besan Ladoo
+MM-IN-087 Bharli Mirchi
+MM-IN-009 Bhindi Masala
+MM-IN-039 Bhutte Ka Kees
+MM-IN-046 Chettinad Pepper Mushroom
+MM-IN-158 Chicken 65
+MM-IN-180 Chicken in Black Pepper Sauce
+MM-IN-178 Chicken in Hot Garlic Sauce
+MM-IN-165 Chicken Manchurian Dry
+MM-IN-152 Chicken Spring Rolls
+MM-IN-157 Chilli Garlic Fish
+MM-IN-161 Chilli Garlic Veg Momos
+MM-IN-163 Chilli Soya Chaap
+MM-IN-160 Crispy Lotus Stem
+MM-IN-177 Crispy Pan-Fried Noodles
+MM-IN-104 Doi Maach
+MM-IN-198 Double Ka Meetha
+MM-IN-185 Gajar Ka Halwa
+MM-IN-194 Ghevar
+MM-IN-139 Gudok with Dried Fish
+MM-IN-164 Honey Chilli Cauliflower
+MM-IN-022 Kakori Kebab
+MM-IN-006 Kashmiri Dum Aloo
+MM-IN-019 Kashmiri Haak Saag
+MM-IN-017 Kashmiri Mutton Yakhni
+MM-IN-033 Ker Sangri
+MM-IN-089 Kolhapuri Tambda Rassa
+MM-IN-196 Kulfi
+MM-IN-162 Kung Pao Chicken Indian Style
+MM-IN-115 Macha Besara
+MM-IN-195 Malpua with Rabri
+MM-IN-029 Matar Ka Nimona
+MM-IN-179 Mixed Vegetables in Hot Garlic Sauce
+MM-IN-107 Mochar Ghonto
+MM-IN-191 Modak
+MM-IN-186 Moong Dal Halwa
+MM-IN-188 Motichoor Ladoo
+MM-IN-150 Mushroom Manchurian
+MM-IN-020 Mutton Korma
+MM-IN-189 Mysore Pak
+MM-IN-018 Nadru Yakhni
+MM-IN-190 Palada Payasam
+MM-IN-200 Patishapta
+MM-IN-038 Poha Jalebi
+MM-IN-010 Punjabi Kadhi Pakora
+MM-IN-192 Puran Poli
+MM-IN-181 Rasgulla
+MM-IN-035 Safed Maas
+MM-IN-155 Salt and Pepper Prawns
+MM-IN-090 Saoji Chicken
+MM-IN-156 Schezwan Paneer Dry
+MM-IN-024 Sheermal
+MM-IN-193 Shrikhand
+MM-IN-106 Shukto
+MM-IN-040 Siddu
+MM-IN-176 Veg Sweet Corn Soup
+MM-IN-131 Vegetable Galho
+MM-IN-026 Vegetable Tehri
+MM-IN-140 Zan

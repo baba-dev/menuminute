@@ -4,7 +4,7 @@
   "assetCount": 224,
   "sourceFormat": "AI-rendered reference sheets (PNG)",
   "exportFormat": "360×280 transparent PNG (RGBA), not native SVG",
-  "status": "partially-approved-original-collection",
+  "status": "approved-owner-directed-full-collection",
   "groups": {
     "indian": 12,
     "western": 12,
@@ -434,8 +434,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 1
+      "state": "approved",
+      "sourceCell": 1,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -445,8 +446,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 2
+      "state": "approved",
+      "sourceCell": 2,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -456,8 +458,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 3
+      "state": "approved",
+      "sourceCell": 3,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -467,8 +470,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 4
+      "state": "approved",
+      "sourceCell": 4,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -478,8 +482,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 5
+      "state": "approved",
+      "sourceCell": 5,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -489,8 +494,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 6
+      "state": "approved",
+      "sourceCell": 6,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -500,8 +506,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 7
+      "state": "approved",
+      "sourceCell": 7,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -511,8 +518,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 8
+      "state": "approved",
+      "sourceCell": 8,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -522,8 +530,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 9
+      "state": "approved",
+      "sourceCell": 9,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-classics",
@@ -533,8 +542,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 10
+      "state": "approved",
+      "sourceCell": 10,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -544,8 +554,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 1
+      "state": "approved",
+      "sourceCell": 1,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -555,8 +566,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 2
+      "state": "approved",
+      "sourceCell": 2,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -566,8 +578,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 3
+      "state": "approved",
+      "sourceCell": 3,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -577,8 +590,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 4
+      "state": "approved",
+      "sourceCell": 4,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -588,8 +602,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 5
+      "state": "approved",
+      "sourceCell": 5,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -599,8 +614,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 6
+      "state": "approved",
+      "sourceCell": 6,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -610,8 +626,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 7
+      "state": "approved",
+      "sourceCell": 7,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -621,8 +638,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 8
+      "state": "approved",
+      "sourceCell": 8,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -632,8 +650,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 9
+      "state": "approved",
+      "sourceCell": 9,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "street-food-snacks",
@@ -643,8 +662,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 10
+      "state": "approved",
+      "sourceCell": 10,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -654,8 +674,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 1
+      "state": "approved",
+      "sourceCell": 1,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -665,8 +686,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 2
+      "state": "approved",
+      "sourceCell": 2,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -676,8 +698,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 3
+      "state": "approved",
+      "sourceCell": 3,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -687,8 +710,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 4
+      "state": "approved",
+      "sourceCell": 4,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -698,8 +722,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 5
+      "state": "approved",
+      "sourceCell": 5,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -709,8 +734,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 6
+      "state": "approved",
+      "sourceCell": 6,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -720,8 +746,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 7
+      "state": "approved",
+      "sourceCell": 7,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -731,8 +758,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 8
+      "state": "approved",
+      "sourceCell": 8,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -742,8 +770,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 9
+      "state": "approved",
+      "sourceCell": 9,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "south-coastal-specials",
@@ -753,8 +782,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 10
+      "state": "approved",
+      "sourceCell": 10,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -764,8 +794,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 1
+      "state": "approved",
+      "sourceCell": 1,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -775,8 +806,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 2
+      "state": "approved",
+      "sourceCell": 2,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -786,8 +818,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 3
+      "state": "approved",
+      "sourceCell": 3,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -797,8 +830,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 4
+      "state": "approved",
+      "sourceCell": 4,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -808,8 +842,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 5
+      "state": "approved",
+      "sourceCell": 5,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -819,8 +854,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 6
+      "state": "approved",
+      "sourceCell": 6,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -830,8 +866,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 7
+      "state": "approved",
+      "sourceCell": 7,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -841,8 +878,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 8
+      "state": "approved",
+      "sourceCell": 8,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -852,8 +890,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 9
+      "state": "approved",
+      "sourceCell": 9,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "east-northeast-specials",
@@ -863,8 +902,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 10
+      "state": "approved",
+      "sourceCell": 10,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -874,8 +914,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 1
+      "state": "approved",
+      "sourceCell": 1,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -885,8 +926,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 2
+      "state": "approved",
+      "sourceCell": 2,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -896,8 +938,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 3
+      "state": "approved",
+      "sourceCell": 3,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -907,8 +950,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 4
+      "state": "approved",
+      "sourceCell": 4,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -918,8 +962,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 5
+      "state": "approved",
+      "sourceCell": 5,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -929,8 +974,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 6
+      "state": "approved",
+      "sourceCell": 6,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -940,8 +986,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 7
+      "state": "approved",
+      "sourceCell": 7,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -951,8 +998,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 8
+      "state": "approved",
+      "sourceCell": 8,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -962,8 +1010,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 9
+      "state": "approved",
+      "sourceCell": 9,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters",
@@ -973,8 +1022,9 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
-      "sourceCell": 10
+      "state": "approved",
+      "sourceCell": 10,
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -984,12 +1034,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 1,
       "gitBlobSha": "00866007f55641245a42bc8cad05af04c618fce7",
       "datasetId": "MM-IN-051",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -999,12 +1050,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 2,
       "gitBlobSha": "8e238ae8d8c342e55794fb0bd75d0872b735643b",
       "datasetId": "MM-IN-052",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1014,12 +1066,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 3,
       "gitBlobSha": "ad4ed4921ffaf796aa16c83bafdc9b540afb1b97",
       "datasetId": "MM-IN-053",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1029,12 +1082,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 4,
       "gitBlobSha": "5f4b235da8392b82d0589705bf85ac24d7d21c94",
       "datasetId": "MM-IN-054",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1044,12 +1098,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 5,
       "gitBlobSha": "fa80211a157a9a37a4807479c9b2cdacf231aa04",
       "datasetId": "MM-IN-055",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1059,12 +1114,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 6,
       "gitBlobSha": "592c3a26be0c3052a8cd4fa3ece0efd06d0c51eb",
       "datasetId": "MM-IN-056",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1074,12 +1130,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 7,
       "gitBlobSha": "58bc0c9a1d95880bb9abdd16c718376320605803",
       "datasetId": "MM-IN-057",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1089,12 +1146,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 8,
       "gitBlobSha": "bc9feb5245dcbab45809a54b4c0511012e0bb0e0",
       "datasetId": "MM-IN-058",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1104,12 +1162,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 9,
       "gitBlobSha": "8fea8eafc5fe217143e50a578b5e982ef59d7ba7",
       "datasetId": "MM-IN-059",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "tamil-karnataka-fare",
@@ -1119,12 +1178,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 10,
       "gitBlobSha": "3c41613fc388fbe45ee34c5d6d27f5efd9187f35",
       "datasetId": "MM-IN-060",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1134,12 +1194,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 1,
       "gitBlobSha": "6b4261d34684e4bd453d2c737f7ccd5dc99d8eff",
       "datasetId": "MM-IN-061",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1149,12 +1210,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 2,
       "gitBlobSha": "5c1f0794ef8841376a53736564229f2031d51ea0",
       "datasetId": "MM-IN-062",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1164,12 +1226,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 3,
       "gitBlobSha": "63ac71a8acbce87235db95fcc0bf3fcaa3204af4",
       "datasetId": "MM-IN-063",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1179,12 +1242,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 4,
       "gitBlobSha": "c7ac68ac060dcc2ca4a0f7780dd566b8783fc933",
       "datasetId": "MM-IN-064",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1194,12 +1258,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 5,
       "gitBlobSha": "ebf21f117c19bc0d9868a8115d2277af9b00fe90",
       "datasetId": "MM-IN-065",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1209,12 +1274,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 6,
       "gitBlobSha": "0dd04ed689fe4117a9badc5fe197543f9917678f",
       "datasetId": "MM-IN-066",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1224,12 +1290,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 7,
       "gitBlobSha": "2738e61bd496e29f31802ca9fea1d8bf20e2a94c",
       "datasetId": "MM-IN-067",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1239,12 +1306,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 8,
       "gitBlobSha": "d636ed782b730fb24571869e414b3220643f9cc4",
       "datasetId": "MM-IN-068",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1254,12 +1322,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 9,
       "gitBlobSha": "9ddd29c5e926c94258c8c61e781933b1c43b38bb",
       "datasetId": "MM-IN-069",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "kerala-signatures",
@@ -1269,12 +1338,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 10,
       "gitBlobSha": "ded90694cbea98d9e24393745e9348f9f628da82",
       "datasetId": "MM-IN-070",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1284,12 +1354,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 1,
       "gitBlobSha": "6b73e63cc9a2d971aa8899cc5d049cef1918d13d",
       "datasetId": "MM-IN-071",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1299,12 +1370,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 2,
       "gitBlobSha": "445a25812184ee81e2563e276ef42fd6f8d34ce3",
       "datasetId": "MM-IN-072",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1314,12 +1386,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 3,
       "gitBlobSha": "f8e9750e80cc82f67da6bdb17ef908a66cde3188",
       "datasetId": "MM-IN-073",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1329,12 +1402,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 4,
       "gitBlobSha": "de5e2b0aa33c2e7022498b939c78e12fb731235f",
       "datasetId": "MM-IN-074",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1344,12 +1418,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 5,
       "gitBlobSha": "178194c9925a3eb47683e080fb0c94aeadbe47ad",
       "datasetId": "MM-IN-075",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1359,12 +1434,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 6,
       "gitBlobSha": "d1ad2793801454de3c58d7ab970565602f2d9707",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1374,12 +1450,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 7,
       "gitBlobSha": "3b4e2740bf6525a84d1904eac51500eea5ffa988",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1389,12 +1466,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 8,
       "gitBlobSha": "51d195970771751ea299545074d070faa8aa6d55",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1404,12 +1482,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 9,
       "gitBlobSha": "9d9113fdd2df4f3df9085ec0d2e465c1bb4ce96f",
       "datasetId": "MM-IN-079",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "andhra-telangana-flavors",
@@ -1419,12 +1498,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 10,
       "gitBlobSha": "1af47f5a61e9b4c7d38c4708be10951028712f18",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1434,12 +1514,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 1,
       "gitBlobSha": "0a8e6f035a1437d307c22bfcbd2232bb7feca2fd",
       "datasetId": "MM-IN-084",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1449,12 +1530,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 2,
       "gitBlobSha": "66bd5d3cea1f244dda4c4ec108946a3e9e3542c7",
       "datasetId": "MM-IN-083",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1464,12 +1546,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 3,
       "gitBlobSha": "1a8d5d43ea63182c04a6cf0ea3920035cc9dff07",
       "datasetId": "MM-IN-085",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1479,12 +1562,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 4,
       "gitBlobSha": "65441f3f87de7a231e4eba2e413512175369bb03",
       "datasetId": "MM-IN-088",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1494,12 +1578,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 5,
       "gitBlobSha": "77920abbbe2b070833c75b2eb8a851d84b1ff28c",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1509,12 +1594,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 6,
       "gitBlobSha": "2c7af90d39084bfc4e046d2098ae4f59202edd33",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1524,12 +1610,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 7,
       "gitBlobSha": "8606229e1666bed777384f9d923f3126b21ddfb6",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1539,12 +1626,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 8,
       "gitBlobSha": "3779247defff4f94d21b7a94c9e797c4b6adb2c8",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1554,12 +1642,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 9,
       "gitBlobSha": "98420d66146874d9f819f8d8fc5b1303c466b6b4",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "maharashtra-classics",
@@ -1569,12 +1658,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 10,
       "gitBlobSha": "b1381a16a72dc1e9276fdd61740f264921331a6d",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1584,12 +1674,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 1,
       "gitBlobSha": "6a4c639baded205f345eead7ac59f4803bd40671",
       "datasetId": "MM-IN-094",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1599,12 +1690,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 2,
       "gitBlobSha": "25cc83b2af05b5fa7352c21d4204f9bf69ec229d",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1614,12 +1706,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 3,
       "gitBlobSha": "8b53b233814652e9e1443957661c25c92520afe9",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1629,12 +1722,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 4,
       "gitBlobSha": "911911fc718dccafb3a6a00e71c04ea4d5530a54",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1644,12 +1738,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 5,
       "gitBlobSha": "61c0140f7d7eaee67c6db3c48a59eb50f09f3597",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1659,12 +1754,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 6,
       "gitBlobSha": "a14c944ed5e6bb02dd17dd1db7ba86f67fe89108",
       "datasetId": "MM-IN-097",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1674,12 +1770,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 7,
       "gitBlobSha": "25127d3388400cecec30afc016673ec07994132a",
       "datasetId": null,
-      "datasetMatch": "unmatched-review-required"
+      "datasetMatch": "unmatched-review-required",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1689,12 +1786,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 8,
       "gitBlobSha": "b9ed84330247f92427811cd3f2e7b8e9621d4694",
       "datasetId": "MM-IN-098",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1704,12 +1802,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 9,
       "gitBlobSha": "f0cccbf4982fc07382aa4d50a526628501a53c16",
       "datasetId": "MM-IN-100",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "gujarat-goa-delights",
@@ -1719,12 +1818,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "second-50-generated-collection",
       "sourceCell": 10,
       "gitBlobSha": "a83e2b95c9080200a6faa88deb8534cf6295e44f",
       "datasetId": "MM-IN-199",
-      "datasetMatch": "exact-slug"
+      "datasetMatch": "exact-slug",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1734,12 +1834,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 1,
       "sha256": "575e251ff33898127d2f3a633cf2ef4fe473d6f6fa226b6f4a26b95f99527f87",
       "batch": "third-50",
-      "datasetId": "MM-IN-101"
+      "datasetId": "MM-IN-101",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1749,12 +1850,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 2,
       "sha256": "8715fb59becfaf6a0a491d8369f02660864d5b0afdb0fa3ff8224b43237e6da5",
       "batch": "third-50",
-      "datasetId": "MM-IN-103"
+      "datasetId": "MM-IN-103",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1764,12 +1866,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 3,
       "sha256": "991f36b779d7783ab46c218121d82a78e70551fb793d8b481a6a972ea807f4d3",
       "batch": "third-50",
-      "datasetId": "MM-IN-105"
+      "datasetId": "MM-IN-105",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1779,12 +1882,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 4,
       "sha256": "cc7f528cf7d6b5443b9d26a67fc6029ab9b7cea553fcd2f4385fe1b917f7cf2d",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1794,12 +1898,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 5,
       "sha256": "5695828499eb95ed0b10e57a29acf51524992396063fc1eced59d3c5211a6c2c",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1809,12 +1914,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 6,
       "sha256": "75a2d9c0c10055aaf8c6937e52ca358c750183517ee0354487894f6ab501e576",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1824,12 +1930,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 7,
       "sha256": "9c5967b46e21e899e1d0f04b86d224078293c80e0ce08c184b284a281aa379ab",
       "batch": "third-50",
-      "datasetId": "MM-IN-111"
+      "datasetId": "MM-IN-111",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1839,12 +1946,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 8,
       "sha256": "4007143fef5c003b9f6c94e47f3379dcdf423bf73ddda33671ce1b0c732989ad",
       "batch": "third-50",
-      "datasetId": "MM-IN-114"
+      "datasetId": "MM-IN-114",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1854,12 +1962,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 9,
       "sha256": "e206a5e5f9f5dc65bbad9a373b383fa305082a15226b3864291b8043724ff5f2",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bengal-odisha-delights",
@@ -1869,12 +1978,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bengal_odisha_delights_menu.png",
       "sourceCell": 10,
       "sha256": "ac6f78ca27c89880ea56c20546643790843b1f06723e275bf522ee5aa2c1b090",
       "batch": "third-50",
-      "datasetId": "MM-IN-113"
+      "datasetId": "MM-IN-113",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1884,12 +1994,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 1,
       "sha256": "14725ec6a09c4bb61d963a1e2b176420d0dcca4e998b17cf79ede90eda24bcaf",
       "batch": "third-50",
-      "datasetId": "MM-IN-117"
+      "datasetId": "MM-IN-117",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1899,12 +2010,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 2,
       "sha256": "8563eb7fcf429bd46438f37f4db288cdab55f81ddd94a1bbaaf1819f4551813d",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1914,12 +2026,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 3,
       "sha256": "2c7696ebdc0d1ce09f372ab91b10e30b8a6bdc901ee9fa82df086e838b77c7fe",
       "batch": "third-50",
-      "datasetId": "MM-IN-118"
+      "datasetId": "MM-IN-118",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1929,12 +2042,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 4,
       "sha256": "061e0e0724bd6e5f9c83414d366328c2f48151cd16b908e77f939a812cfc3601",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1944,12 +2058,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 5,
       "sha256": "10f4a6e78590378768f252816d56313c462dca0efbcac77cd370accfa97c3654",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1959,12 +2074,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 6,
       "sha256": "6cc4e39bbd0f30e87dd11bdc8f09e61b164a08e2f1154d71f10ee31a0f90a904",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1974,12 +2090,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 7,
       "sha256": "68ea288e7cd9c888642d53ad609a9a500aa6839ea3ef1ef09bd78093bd9abe6d",
       "batch": "third-50",
-      "datasetId": "MM-IN-120"
+      "datasetId": "MM-IN-120",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -1989,12 +2106,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 8,
       "sha256": "3c9ae6e66c85bafecc68bc55ccf1434acc3bdbb3c590c158ff5fd3c826d025ea",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -2004,12 +2122,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 9,
       "sha256": "7312abb4b70c7d2cd27f79a4e6d5b8f68df81682a87286257d3d158359b89513",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "bihar-jharkhand-classics",
@@ -2019,12 +2138,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "bihar_jharkhand_classics_icon_poster.png",
       "sourceCell": 10,
       "sha256": "e2d828a921f7214ba3c37f48fc9df98d7e7969a78f6efb7534bcc035d22b8f78",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2034,12 +2154,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 1,
       "sha256": "cbaa181deb5565470874d83919de2d9f568a087d7a81945f2d37ad6dfde3bee6",
       "batch": "third-50",
-      "datasetId": "MM-IN-135"
+      "datasetId": "MM-IN-135",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2049,12 +2170,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 2,
       "sha256": "de3454e0ceb71aeef3a4a19d177d4876c745cb84ef248fce9b4cc615acd109b3",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2064,12 +2186,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 3,
       "sha256": "271c0a205053513f16b51cdc50dae516775268b21e8b692dd008b8c0e3244f79",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2079,12 +2202,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 4,
       "sha256": "87903816b098ed881e5151688db4c6b118137eb7dc6f3269e86df2344c73fcdf",
       "batch": "third-50",
-      "datasetId": "MM-IN-134"
+      "datasetId": "MM-IN-134",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2094,12 +2218,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 5,
       "sha256": "a6154d1459f7fe87e0048dcf0392c24374ef136784e5d50e36828d36cb36a4d1",
       "batch": "third-50",
-      "datasetId": "MM-IN-133"
+      "datasetId": "MM-IN-133",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2109,12 +2234,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 6,
       "sha256": "ce9b9881a3df96b6c4b8e4930c9642622cd0422232761bbc723c77f2eb1bfcdf",
       "batch": "third-50",
-      "datasetId": "MM-IN-126"
+      "datasetId": "MM-IN-126",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2124,12 +2250,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 7,
       "sha256": "1a321b9e36102024dc7b6ca8b7d12d6edb377ba0fec225c1f2527f0fc4caa4bf",
       "batch": "third-50",
-      "datasetId": "MM-IN-127"
+      "datasetId": "MM-IN-127",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2139,12 +2266,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 8,
       "sha256": "256639cdf2651295d349e2e7a2061bbeb87192ab90316dc0a2872c13e6890f15",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2154,12 +2282,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 9,
       "sha256": "cf1de5b202f5e6a54622604df29d2697e49d889e4485d0807d484495c7792141",
       "batch": "third-50",
-      "datasetId": "MM-IN-128"
+      "datasetId": "MM-IN-128",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "northeast-treasures",
@@ -2169,12 +2298,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "northeast_treasures_food_icon_collection.png",
       "sourceCell": 10,
       "sha256": "a430898c962ae2918e17175b7253a41838bbb54578e081feadfe5c43621219bb",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2184,12 +2314,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 1,
       "sha256": "0529dee855f9e790343e815d05ba9407198604c84c844778c51da27957a8fe0e",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2199,12 +2330,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 2,
       "sha256": "b5ff381869542dc8668091bd8b99ae7f031e28b6765a75a86522595b34b74808",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2214,12 +2346,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 3,
       "sha256": "1280876fb7338d422d6b25eb6ba7b067aaddde4c5e35b21752e4eddeb0bd65a5",
       "batch": "third-50",
-      "datasetId": "MM-IN-124"
+      "datasetId": "MM-IN-124",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2229,12 +2362,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 4,
       "sha256": "e6b26495a2c7d581da2f1610f1697270ec7cf1511f2772d6dea3730b3533acfb",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2244,12 +2378,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 5,
       "sha256": "17672a2fd4239a236354c6c2478ebd5a59c44e7d36dade7463cc277f9b16605f",
       "batch": "third-50",
-      "datasetId": "MM-IN-123"
+      "datasetId": "MM-IN-123",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2259,12 +2394,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 6,
       "sha256": "4b6542c0dcc2f008a28c8c2abaef8755d757c42c910f604563537bff3c27e803",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2274,12 +2410,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 7,
       "sha256": "f1dde020358631071ecdb8c70661932431a9826e0b206b91a8753661174522fa",
       "batch": "third-50",
-      "datasetId": "MM-IN-125"
+      "datasetId": "MM-IN-125",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2289,12 +2426,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 8,
       "sha256": "64792e975f48ab6de1a8dc9edeb849a85c5b81c1a42fd6fcc614328d31c8bf0c",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2304,12 +2442,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 9,
       "sha256": "5c78c0c58a4e8371b7cf9442fcae67a64c9d10b4086b5afa0ad384d7c9fa2143",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "himalayan-comforts",
@@ -2319,12 +2458,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "himalayan_comforts_food_icon_guide.png",
       "sourceCell": 10,
       "sha256": "eb028c2017ad04468c049fd706daa1e990b58beaf2ea1dbc3fdb3ac2ec53c098",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2334,12 +2474,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 1,
       "sha256": "9e486554cedd8d417c3dc2bd8172b2b2f725012964b8f43c57b7786d443b189e",
       "batch": "third-50",
-      "datasetId": "MM-IN-144"
+      "datasetId": "MM-IN-144",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2349,12 +2490,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 2,
       "sha256": "2dcbbc39640d721070e9b100400bf3cee32048e587ccc36e39ba7c6d685cbf4a",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2364,12 +2506,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 3,
       "sha256": "ebcf8e3666d05c8c0c7f8647b3084332c817db1282eebdf8db405bde17880a5d",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2379,12 +2522,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 4,
       "sha256": "f86076de32804c4f2b0f404f9c0678ef38fbc3fe7a57e529a52ee08a2b919636",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2394,12 +2538,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 5,
       "sha256": "1fcd1c4e51798a729e85e33eeb00b6d6c1c11b8b2e0a245588f25f48a4032eeb",
       "batch": "third-50",
-      "datasetId": "MM-IN-148"
+      "datasetId": "MM-IN-148",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2409,12 +2554,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 6,
       "sha256": "cc309c268115fa4537cb052ff2b5c61142dd490fddfe1e0ac725a52da0e6acd5",
       "batch": "third-50",
-      "datasetId": "MM-IN-146"
+      "datasetId": "MM-IN-146",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2424,12 +2570,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 7,
       "sha256": "a1a47abf1ae7a021fa2b0d2083b3e0f98a83888b025806d9bc0ee3dbafd40609",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2439,12 +2586,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 8,
       "sha256": "0d31130fb3e2b59756ebf9150fc2d81363a6cd271e9ff7fd404281ebc6d4937c",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2454,12 +2602,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 9,
       "sha256": "4449c6db8a7df1e45af90d38e60272ff1195678da07b68f84f0f8029449d9f71",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-starters-ii",
@@ -2469,12 +2618,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceSheet": "indo_chinese_starters_icon_menu.png",
       "sourceCell": 10,
       "sha256": "fbc08aa2f418c912588aa8976151991c1712cd549b35a54ec152f8860fc08504",
       "batch": "third-50",
-      "datasetMatchStatus": "unmatched-exact-name-review"
+      "datasetMatchStatus": "unmatched-exact-name-review",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2484,11 +2634,12 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 1,
-      "sha256": "63e549ecf9a7bb3d1e0a7122000e91407ff6bb60a2d261e69dc0d32b4a2e289c"
+      "sha256": "63e549ecf9a7bb3d1e0a7122000e91407ff6bb60a2d261e69dc0d32b4a2e289c",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2498,11 +2649,12 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 2,
-      "sha256": "924ae8bc06362665b45f9c05b2dd8e55969934be114eb8f0c6ec6be15be9a227"
+      "sha256": "924ae8bc06362665b45f9c05b2dd8e55969934be114eb8f0c6ec6be15be9a227",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2512,12 +2664,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 3,
       "sha256": "5df6a7e54f4c4f75dba0e503d57002998385317ba256c908ef6cdc6d3a824df6",
-      "datasetId": "MM-IN-110"
+      "datasetId": "MM-IN-110",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2527,11 +2680,12 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 4,
-      "sha256": "ce52c0550d22bcf1634b0433154bc4aab3fafa1f462f946028c715f698a82bb6"
+      "sha256": "ce52c0550d22bcf1634b0433154bc4aab3fafa1f462f946028c715f698a82bb6",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2541,11 +2695,12 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 7,
-      "sha256": "c54f68c591e27614b6c908171a37ad13e25b8c113e33bbd0a39ca5a810b05962"
+      "sha256": "c54f68c591e27614b6c908171a37ad13e25b8c113e33bbd0a39ca5a810b05962",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2555,12 +2710,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 8,
       "sha256": "9c4341fb9dff54e05cbc600a6d274071400701b912ece039e7c8e41b4088a06a",
-      "datasetId": "MM-IN-183"
+      "datasetId": "MM-IN-183",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2570,12 +2726,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 9,
       "sha256": "7c9c02f0e00777478f42a3b21756f49e23a898a3e3f87558a60ac9a83cdfd4ac",
-      "datasetId": "MM-IN-184"
+      "datasetId": "MM-IN-184",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "high-demand-essentials",
@@ -2585,12 +2742,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "high_demand_essentials_food_icon_menu.png",
       "sourceCell": 10,
       "sha256": "29f15af2dfb4cde5ef24a253b80edfb7d7e0cb97ae135f547117154a97f6ab21",
-      "datasetId": "MM-IN-182"
+      "datasetId": "MM-IN-182",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2600,12 +2758,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 1,
       "sha256": "0cf6be3e1a371f2453da59cee693d494ad7b6b172e07acaba42bb849bd1b81b9",
-      "datasetId": "MM-IN-166"
+      "datasetId": "MM-IN-166",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2615,12 +2774,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 2,
       "sha256": "2e7e4d486faed13c4fa024a4cdd2920093f5cc50dd793195408acad0e9e815df",
-      "datasetId": "MM-IN-167"
+      "datasetId": "MM-IN-167",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2630,12 +2790,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 3,
       "sha256": "bcc574ee484a0856a1e02c513fe5fa9764ae7efc181603f0a12ed44f299783ca",
-      "datasetId": "MM-IN-168"
+      "datasetId": "MM-IN-168",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2645,12 +2806,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 4,
       "sha256": "c5f94a9768cfd51fff75143f11dd95710a6efbf3d0eb0a58c684d9c5a0f07a61",
-      "datasetId": "MM-IN-169"
+      "datasetId": "MM-IN-169",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2660,12 +2822,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 5,
       "sha256": "7b3c777c126e2b6ad8d8f349bb1ea5997a336096ac6b8313c4a4d45bae7b8795",
-      "datasetId": "MM-IN-170"
+      "datasetId": "MM-IN-170",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2675,12 +2838,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 6,
       "sha256": "853c7673c4f30f3fb12c47378be662fa892b6cbad53d93d934c1c26d15964a1b",
-      "datasetId": "MM-IN-171"
+      "datasetId": "MM-IN-171",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2690,12 +2854,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 7,
       "sha256": "5186f08ed6d59b499cb28b45c736b421adf785f2d8f6ec8bd53217ca09f29d0a",
-      "datasetId": "MM-IN-172"
+      "datasetId": "MM-IN-172",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2705,12 +2870,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 8,
       "sha256": "3ced5383f294b1a7bdfa7466859ce54e12db63750911a3195f251cc9f7344155",
-      "datasetId": "MM-IN-173"
+      "datasetId": "MM-IN-173",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2720,12 +2886,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 9,
       "sha256": "618a6ad1ec6841169a3312da50b3ee51940b313902cfd10947f34899c6bccb98",
-      "datasetId": "MM-IN-174"
+      "datasetId": "MM-IN-174",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "indo-chinese-mains-soups",
@@ -2735,12 +2902,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "indo_chinese_mains_and_soups_icons.png",
       "sourceCell": 10,
       "sha256": "87f46de7f4ecf257d8721207e6ad28685e0315244ea50bc16bdfb249549ea4f4",
-      "datasetId": "MM-IN-175"
+      "datasetId": "MM-IN-175",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2750,12 +2918,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 1,
       "sha256": "5e2de28ecbd5243bee7d05bc2bb534d41983adfd7fbe80589b6fc70916a9ac33",
-      "datasetId": "MM-IN-011"
+      "datasetId": "MM-IN-011",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2765,12 +2934,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 2,
       "sha256": "643e1a8c0f5230863a781b8f714b12734a11b72f1ace549215d005b1265aa15e",
-      "datasetId": "MM-IN-012"
+      "datasetId": "MM-IN-012",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2780,12 +2950,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 3,
       "sha256": "af9fbacb901285fa30a60ed086c8cc11b04e119b4ff2519d15b207f6c87a8b7a",
-      "datasetId": "MM-IN-016"
+      "datasetId": "MM-IN-016",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2795,12 +2966,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 4,
       "sha256": "ee3e57883ae71d4c6b19f5fd7e6b5239484ac0b9348da4e28309b9d27129c67b",
-      "datasetId": "MM-IN-021"
+      "datasetId": "MM-IN-021",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2810,12 +2982,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 5,
       "sha256": "8b53118e2f645dbd68c76a415e010456640779b10ba2ddf8af5253a4e709942c",
-      "datasetId": "MM-IN-023"
+      "datasetId": "MM-IN-023",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2825,12 +2998,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 6,
       "sha256": "d14bf34bcd77cabce8bcf5cdcae3fe8e6f0b18f9c5d7ec0384544b82816afe4f",
-      "datasetId": "MM-IN-031"
+      "datasetId": "MM-IN-031",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2840,12 +3014,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 7,
       "sha256": "bbb144a1fa7cc814a0cd61fc521a1adb981d6e33f7a97e4d9ab8db2b77bcae8a",
-      "datasetId": "MM-IN-032"
+      "datasetId": "MM-IN-032",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2855,12 +3030,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 8,
       "sha256": "edb81594b5a3d285987af15b54c3e9ca03332699b57ad11d5ce474dddcb2875f",
-      "datasetId": "MM-IN-034"
+      "datasetId": "MM-IN-034",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2870,12 +3046,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 9,
       "sha256": "87df03c9722f1bfff60c557103eb9dd562dadb96e38fffbd76447e75ee4d41da",
-      "datasetId": "MM-IN-036"
+      "datasetId": "MM-IN-036",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "north-indian-rajasthani",
@@ -2885,12 +3062,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "iconic_north_indian_rajasthani_dishes.png",
       "sourceCell": 10,
       "sha256": "4467bc453dbb2a63be99e6bafc4793228abb303ddcd4cc6b5af43e3546eb79e7",
-      "datasetId": "MM-IN-037"
+      "datasetId": "MM-IN-037",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2900,12 +3078,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 1,
       "sha256": "406affd6ea566d1977e660ed1737b167e6bb93dc013709e32740780087c211b1",
-      "datasetId": "MM-IN-043"
+      "datasetId": "MM-IN-043",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2915,12 +3094,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 2,
       "sha256": "db43d83ea8ae34c76fd8761c4f15ad7251a117237a604fb617e544617f1dc62a",
-      "datasetId": "MM-IN-044"
+      "datasetId": "MM-IN-044",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2930,12 +3110,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 3,
       "sha256": "53fd9725ef30cfceb6c9f0e9280225c962a602ba9a61dabd0e30e005951edc43",
-      "datasetId": "MM-IN-047"
+      "datasetId": "MM-IN-047",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2945,12 +3126,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 4,
       "sha256": "35cfd705080ba4be378ee1ee4a09cbf4c2d3bb2a29203dd277b24921800c0e9e",
-      "datasetId": "MM-IN-049"
+      "datasetId": "MM-IN-049",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2960,12 +3142,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 5,
       "sha256": "1d82ba8c334c1e0940c48581c1f12db744d357c905f90735ce5b7b8ab6219ff5",
-      "datasetId": "MM-IN-050"
+      "datasetId": "MM-IN-050",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2975,12 +3158,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 6,
       "sha256": "a0c02cdeccd0ea927ee0a8b3651de22435b5524df7aff9824b8bfac92f4b99ae",
-      "datasetId": "MM-IN-078"
+      "datasetId": "MM-IN-078",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -2990,12 +3174,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 7,
       "sha256": "831349fac55d1b22d258e635d432adc6853eddabb80f2b182ce50849f7cb43f5",
-      "datasetId": "MM-IN-080"
+      "datasetId": "MM-IN-080",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -3005,12 +3190,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 8,
       "sha256": "dbc0b89face182040962729ad0bbd9ea980a7222d8b6bc4940807a51e1f0bc08",
-      "datasetId": "MM-IN-086"
+      "datasetId": "MM-IN-086",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -3020,12 +3206,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 9,
       "sha256": "56da9580cb5a03eb21a0dad9c0fdafe191b94c33562a7534ac96c356d7cc81fd",
-      "datasetId": "MM-IN-096"
+      "datasetId": "MM-IN-096",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     },
     {
       "category": "regional-restaurant-favorites",
@@ -3035,12 +3222,13 @@
       "width": 360,
       "height": 280,
       "format": "image/png",
-      "state": "assets-imported-awaiting-owner-review",
+      "state": "approved",
       "sourceBatch": "sheets-abcd",
       "sourceSheet": "missing_regional_indian_favourites.png",
       "sourceCell": 10,
       "sha256": "0180cd0565e8a591092b16d7c10a83cb7af7b9b49b1270852640525ddca854a7",
-      "datasetId": "MM-IN-099"
+      "datasetId": "MM-IN-099",
+      "approvalBasis": "owner-directed-all-collections-2026-10-31"
     }
   ],
   "reviewBatches": {
@@ -3051,7 +3239,8 @@
   },
   "approvalSummary": {
     "approvedOriginal": 36,
-    "pendingOwnerReview": 188,
-    "policy": "Only assets with state=approved and canonical in-repository paths are available to the guest runtime. Owner visual review is required before merging."
+    "approvedOwnerDirectedExpansion": 188,
+    "pendingOwnerReview": 0,
+    "policy": "Only assets with state=approved and canonical in-repository paths are available to the guest runtime. The owner directed approval of the remaining 188 collections on 2026-10-31."
   }
 }

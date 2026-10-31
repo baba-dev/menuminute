@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "shots": {
+    "dashboard-desktop-dark.webp": {
+      "id": "dashboard",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 97650,
+      "sha256": "577c92b23839d9c4f143e4d68c3e9b39e9193bffb2563f5945634e69d7a47662"
+    },
+    "dashboard-desktop-light.webp": {
+      "id": "dashboard",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 93288,
+      "sha256": "2d0471d536267d7cfdf90c5be6e27668b0821e2209ebbcd010a4f0a8becae8de"
+    },
+    "dashboard-mobile-light.webp": {
+      "id": "dashboard",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 49514,
+      "sha256": "294524e3307f53d7510ef5001bf6c6996ef2c49484201c0b2b7f3d4e65c49727"
+    },
+    "demo-hub-desktop-dark.webp": {
+      "id": "demo-hub",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 39610,
+      "sha256": "58725a6e2559ac182a07522ddea9ce6480db8af43970706ffa8aad2667819b61"
+    },
+    "demo-hub-desktop-light.webp": {
+      "id": "demo-hub",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 38844,
+      "sha256": "b87ddeb1dbf312da2547974aa67c91283032b95e0b433cfae97645c5af74f3a1"
+    },
+    "demo-hub-mobile-light.webp": {
+      "id": "demo-hub",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 25676,
+      "sha256": "2f1ac8762dd18db0f1f06e5aecf0c4c0bdf2c195ce5c65a8fcfeab1863a2fed4"
+    },
+    "ember-desktop-dark.webp": {
+      "id": "ember",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 56078,
+      "sha256": "8b0706a31df68a125a43db175ffba00c4e58839802240e955ec4f4ed19cd2a01"
+    },
+    "ember-desktop-light.webp": {
+      "id": "ember",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 54644,
+      "sha256": "37a6869cd22bfd79d494640edbdabb2892cbb7ef000d1615e71a043fd57372fc"
+    },
+    "ember-mobile-light.webp": {
+      "id": "ember",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 26972,
+      "sha256": "bd6bde6ed2cf808447b651788cbe1a7604d6ea0d4480ddf94accf37180cfc771"
+    },
+    "floor-desktop-dark.webp": {
+      "id": "floor",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 48570,
+      "sha256": "4f9403288c75ff763a1d4bd225a28e3062a6697ac892724515159ea958e85442"
+    },
+    "floor-desktop-light.webp": {
+      "id": "floor",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 48506,
+      "sha256": "408a8e55d26ebefecb73306c93f6bc27be1146481d54e8ecfddc055f3352971c"
+    },
+    "floor-mobile-light.webp": {
+      "id": "floor",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 25954,
+      "sha256": "bdda011bf6fe4ed2c302ef92277d4a56268c46fc841881f4640b20ae850ed738"
+    },
+    "kitchen-desktop-dark.webp": {
+      "id": "kitchen",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 34482,
+      "sha256": "c11b3bfad96446706bef55cad37e662f570ae94c64d27f315b3c39ca999b5469"
+    },
+    "kitchen-desktop-light.webp": {
+      "id": "kitchen",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 33982,
+      "sha256": "81f204a8266f1ce6df1821088dc70b4fd5329731bcca9cc46faa2587ed45355d"
+    },
+    "kitchen-mobile-light.webp": {
+      "id": "kitchen",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 28024,
+      "sha256": "95c5416a931a872f76e52157c15128f5a240a348f82de7056f6b904c6b45ec3a"
+    },
+    "menu-import-desktop-dark.webp": {
+      "id": "menu-import",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 57098,
+      "sha256": "dcaaa3e029fd361bd683bd054049d0413c36bcb06636998967a96be0bfe1d6c6"
+    },
+    "menu-import-desktop-light.webp": {
+      "id": "menu-import",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 59962,
+      "sha256": "9fa9b87b6723ac71c43fc8fda01595829bda6c689ad03f0e10d9b2d6d032c622"
+    },
+    "menu-import-mobile-light.webp": {
+      "id": "menu-import",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 28286,
+      "sha256": "6cecd65a729e6687b4570f6729b4f18c8ffb2b0cb3c4373722a183b16f3cce60"
+    },
+    "menu-studio-desktop-dark.webp": {
+      "id": "menu-studio",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 63296,
+      "sha256": "90aa0fd8009261bc45ac130597cc53fdbe987c9a9fede061cd3142402d7c97e1"
+    },
+    "menu-studio-desktop-light.webp": {
+      "id": "menu-studio",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 83668,
+      "sha256": "28cab153d2f5f6e4e9694cd65ad052eab6a13cdca3170a3bbe2c86136ae696d5"
+    },
+    "menu-studio-mobile-light.webp": {
+      "id": "menu-studio",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 37686,
+      "sha256": "1eba21370ef145542abca3bdf36ba68ae5ec64d965ff6c1f0e2b5b08d84b6e4e"
+    },
+    "orders-desktop-dark.webp": {
+      "id": "orders",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 64046,
+      "sha256": "8b08fc6068f47139e7f9932cee2dd1e68c2014fd3c9006c703fee63776f9f0b4"
+    },
+    "orders-desktop-light.webp": {
+      "id": "orders",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 61288,
+      "sha256": "9b7e3f742fa8990e98c64c8195673026abc7443172375d4e10d253a16266b9f4"
+    },
+    "orders-mobile-light.webp": {
+      "id": "orders",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 34376,
+      "sha256": "7357421f8e9e73dfc65384d4b0a40cf7a62f56cfb0f55e02f6d42d28b75e9363"
+    },
+    "organization-desktop-dark.webp": {
+      "id": "organization",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 103900,
+      "sha256": "e162971ebab98da930106c7ce09cd1d4b898a3c95d8d6391b58c75632fd7af88"
+    },
+    "organization-desktop-light.webp": {
+      "id": "organization",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 85956,
+      "sha256": "3b329cf8b584ed452b524a0d48ffc0f2bef5b696faecd40bb938f5543fe819f0"
+    },
+    "organization-mobile-light.webp": {
+      "id": "organization",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 47954,
+      "sha256": "1bd5da6aa693f664aae37474e0786436801b1b6da0990d347cc546f019dda3bc"
+    },
+    "public-menu-desktop-dark.webp": {
+      "id": "public-menu",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 112406,
+      "sha256": "041439bb12817f211b71388c96c229268f2303a02f79693aa73eaf38043012c8"
+    },
+    "public-menu-desktop-light.webp": {
+      "id": "public-menu",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 110904,
+      "sha256": "700e9d0f726d94acd3492b35fc95a28f9f465dd56d225d18727bbbb3dc23f619"
+    },
+    "public-menu-dish-desktop-dark.webp": {
+      "id": "public-menu-dish",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 69066,
+      "sha256": "e65aee83bbd34ca6c8bcfad80b8eb94cbdadfa5a3516e78e004cdcf073d4d5ee"
+    },
+    "public-menu-dish-desktop-light.webp": {
+      "id": "public-menu-dish",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 71158,
+      "sha256": "72a5c466c446614eeda7e7a5b8c3fd5f2710844a6dd979684a469f40f5e2b6a8"
+    },
+    "public-menu-dish-mobile-light.webp": {
+      "id": "public-menu-dish",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 35038,
+      "sha256": "4dd56882ea9f13849b78db71a7a91950849917e02a68cf8b68ffc34d09a932c7"
+    },
+    "public-menu-mobile-light.webp": {
+      "id": "public-menu",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 43340,
+      "sha256": "bbfb19b14a2027d38cae78e72d2eb17a01fe76635ec0fb9bb20f884dd4db0cad"
+    },
+    "qr-studio-desktop-dark.webp": {
+      "id": "qr-studio",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 88624,
+      "sha256": "9427c7ce5f5013c6b2a063c566379216a4dac329f819f4171e4ba795411389f7"
+    },
+    "qr-studio-desktop-light.webp": {
+      "id": "qr-studio",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 82226,
+      "sha256": "d7c93389b595f367f2125f1b3e86fb57527c0cb19989f7d8c53af30321623b3e"
+    },
+    "qr-studio-mobile-light.webp": {
+      "id": "qr-studio",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 45848,
+      "sha256": "8d7d443c8f21a88b3d0530756b19ed916aa7737801d344d7423e56f62f4da979"
+    },
+    "reports-desktop-dark.webp": {
+      "id": "reports",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 57314,
+      "sha256": "73bc6aada413a6189a03d15c36047cdf9a3d99761fa988fbf60e966f523efb3d"
+    },
+    "reports-desktop-light.webp": {
+      "id": "reports",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 55430,
+      "sha256": "de9c183d7bbe61b2b79bfacd0004cda7d51470058ec41fc5134a1e87634f75d3"
+    },
+    "reports-mobile-light.webp": {
+      "id": "reports",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 27054,
+      "sha256": "d88b28b84ec7600518431e31dfa37a8388659af724d5af0abf9f630bf6b82417"
+    },
+    "settings-desktop-dark.webp": {
+      "id": "settings",
+      "variant": "desktop-dark",
+      "width": 1200,
+      "height": 750,
+      "bytes": 53654,
+      "sha256": "10059c96fd61ce326c6dfa58435d234aad91da942d4461c65c71ce61978b4d4c"
+    },
+    "settings-desktop-light.webp": {
+      "id": "settings",
+      "variant": "desktop-light",
+      "width": 1200,
+      "height": 750,
+      "bytes": 52142,
+      "sha256": "cbb0d3d2a7768641ff11c5b550985c1928c5c537abc2f1756e23d7afa2cbb685"
+    },
+    "settings-mobile-light.webp": {
+      "id": "settings",
+      "variant": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "bytes": 25194,
+      "sha256": "8a55419aa70da7288e12310d2bffae30bdbeef44e5164f153371444c939343b9"
+    }
+  }
+}

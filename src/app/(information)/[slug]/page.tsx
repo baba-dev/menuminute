@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 
@@ -118,6 +118,8 @@ export async function generateMetadata({
 }
 export default async function InformationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // Guides and the help centre now live in the documentation section.
+  if (slug === "guides" || slug === "help") redirect("/docs");
   const page = getPage(slug);
   if (!page) notFound();
   return (

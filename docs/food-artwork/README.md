@@ -1,5 +1,7 @@
 # MenuMinute dish artwork — runtime approval ledger
 
+> **Update 2026-10-31:** the owner directed approval of the remaining 188 illustrations. All **224** assets are now `approved` (basis `owner-directed-all-collections-2026-10-31`) and `src/data/approved-dish-artwork.json` lists all 224. The text below records the earlier 36/188 staging. The India-200 backlog ledger keeps its own `illustration_status` values.
+
 There are **224 separately named transparent 360×280 RGBA PNG illustrations across 22 collections**. Under the owner's Public Menu 2.0 integration directive, the **36 original Indian/Western/Italian illustrations** are proposed as the approved runtime baseline. The other **188 remain pending owner visual review**; this PR does not bulk-approve them. Review the original 36 in both themes before merging. The manifest state is the source of truth; file existence is not approval. The first 186 existing artwork files are unchanged. Sheets A–D added 38 unique images from 40 illustrated cells: two dishes (Veg Hakka Noodles and Chicken Fried Rice) appear on both A and B, with B as the canonical file.
 
 - [Browse all artwork](gallery.md) · [canonical manifest](manifest.json)

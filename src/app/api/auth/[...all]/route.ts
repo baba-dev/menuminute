@@ -4,6 +4,8 @@ import { authServer } from "@/lib/auth";
 import { allowAuthRequest } from "@/lib/auth-abuse";
 import { TERMS_VERSION } from "@/content/legal";
 import { env } from "@/lib/config/env";
+import { demoAuthPathAllowed, isDemoActor } from "@/modules/demo/guard";
+import { auth } from "@/lib/auth";
 const handler = toNextJsHandler(authServer);
 export const GET = observedRoute(handler.GET);
 async function observed_POST(request: Request) {
@@ -18,6 +20,15 @@ async function observed_POST(request: Request) {
       { message: "Authentication temporarily unavailable" },
       { status: 503, headers: { "cache-control": "no-store" } }
     );
+  }
+  // Public demo: a demo session may not change credentials, email, MFA or delete the account.
+  if (env.DEMO_MODE_ENABLED && !demoAuthPathAllowed(new URL(request.url).pathname)) {
+    const session = await auth().catch(() => null);
+    if (session && isDemoActor(session.user.id))
+      return Response.json(
+        { message: "This action is disabled in the public demo." },
+        { status: 403, headers: { "cache-control": "no-store" } }
+      );
   }
   if (new URL(request.url).pathname.endsWith("/sign-up/email")) {
     // The browser is not authoritative for the legal version or acceptance time.

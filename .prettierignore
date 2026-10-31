@@ -9,3 +9,4 @@ build
 
 # Approved generated brand SVG/binary masters
 public/brand/
+src/data/demo/demo-menu.json

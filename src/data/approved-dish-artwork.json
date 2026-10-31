@@ -250,5 +250,1321 @@
     "state": "approved",
     "slug": "gelato",
     "category": "italian"
+  },
+  {
+    "label": "Dal Makhani",
+    "path": "/assets/food/dishes/north-indian-classics/dal-makhani.png",
+    "state": "approved",
+    "slug": "dal-makhani",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Palak Paneer",
+    "path": "/assets/food/dishes/north-indian-classics/palak-paneer.png",
+    "state": "approved",
+    "slug": "palak-paneer",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Kadai Paneer",
+    "path": "/assets/food/dishes/north-indian-classics/kadai-paneer.png",
+    "state": "approved",
+    "slug": "kadai-paneer",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Shahi Paneer",
+    "path": "/assets/food/dishes/north-indian-classics/shahi-paneer.png",
+    "state": "approved",
+    "slug": "shahi-paneer",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Tandoori Chicken",
+    "path": "/assets/food/dishes/north-indian-classics/tandoori-chicken.png",
+    "state": "approved",
+    "slug": "tandoori-chicken",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Chicken Tikka",
+    "path": "/assets/food/dishes/north-indian-classics/chicken-tikka.png",
+    "state": "approved",
+    "slug": "chicken-tikka",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Malai Kofta",
+    "path": "/assets/food/dishes/north-indian-classics/malai-kofta.png",
+    "state": "approved",
+    "slug": "malai-kofta",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Aloo Paratha",
+    "path": "/assets/food/dishes/north-indian-classics/aloo-paratha.png",
+    "state": "approved",
+    "slug": "aloo-paratha",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Pindi Chole",
+    "path": "/assets/food/dishes/north-indian-classics/pindi-chole.png",
+    "state": "approved",
+    "slug": "pindi-chole",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Lassi",
+    "path": "/assets/food/dishes/north-indian-classics/lassi.png",
+    "state": "approved",
+    "slug": "lassi",
+    "category": "north-indian-classics"
+  },
+  {
+    "label": "Pav Bhaji",
+    "path": "/assets/food/dishes/street-food-snacks/pav-bhaji.png",
+    "state": "approved",
+    "slug": "pav-bhaji",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Dabeli",
+    "path": "/assets/food/dishes/street-food-snacks/dabeli.png",
+    "state": "approved",
+    "slug": "dabeli",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Pani Puri",
+    "path": "/assets/food/dishes/street-food-snacks/pani-puri.png",
+    "state": "approved",
+    "slug": "pani-puri",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Bhel Puri",
+    "path": "/assets/food/dishes/street-food-snacks/bhel-puri.png",
+    "state": "approved",
+    "slug": "bhel-puri",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Ragda Pattice",
+    "path": "/assets/food/dishes/street-food-snacks/ragda-pattice.png",
+    "state": "approved",
+    "slug": "ragda-pattice",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Poha",
+    "path": "/assets/food/dishes/street-food-snacks/poha.png",
+    "state": "approved",
+    "slug": "poha",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Misal Pav",
+    "path": "/assets/food/dishes/street-food-snacks/misal-pav.png",
+    "state": "approved",
+    "slug": "misal-pav",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Kachori",
+    "path": "/assets/food/dishes/street-food-snacks/kachori.png",
+    "state": "approved",
+    "slug": "kachori",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Dhokla",
+    "path": "/assets/food/dishes/street-food-snacks/dhokla.png",
+    "state": "approved",
+    "slug": "dhokla",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Khandvi",
+    "path": "/assets/food/dishes/street-food-snacks/khandvi.png",
+    "state": "approved",
+    "slug": "khandvi",
+    "category": "street-food-snacks"
+  },
+  {
+    "label": "Medu Vada",
+    "path": "/assets/food/dishes/south-coastal-specials/medu-vada.png",
+    "state": "approved",
+    "slug": "medu-vada",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Uttapam",
+    "path": "/assets/food/dishes/south-coastal-specials/uttapam.png",
+    "state": "approved",
+    "slug": "uttapam",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Ven Pongal",
+    "path": "/assets/food/dishes/south-coastal-specials/ven-pongal.png",
+    "state": "approved",
+    "slug": "ven-pongal",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Appam with Stew",
+    "path": "/assets/food/dishes/south-coastal-specials/appam-with-stew.png",
+    "state": "approved",
+    "slug": "appam-with-stew",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Puttu Kadala",
+    "path": "/assets/food/dishes/south-coastal-specials/puttu-kadala.png",
+    "state": "approved",
+    "slug": "puttu-kadala",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Kerala Parotta",
+    "path": "/assets/food/dishes/south-coastal-specials/kerala-parotta.png",
+    "state": "approved",
+    "slug": "kerala-parotta",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Hyderabadi Haleem",
+    "path": "/assets/food/dishes/south-coastal-specials/hyderabadi-haleem.png",
+    "state": "approved",
+    "slug": "hyderabadi-haleem",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Chettinad Chicken",
+    "path": "/assets/food/dishes/south-coastal-specials/chettinad-chicken.png",
+    "state": "approved",
+    "slug": "chettinad-chicken",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Fish Curry Rice",
+    "path": "/assets/food/dishes/south-coastal-specials/fish-curry-rice.png",
+    "state": "approved",
+    "slug": "fish-curry-rice",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Pesarattu",
+    "path": "/assets/food/dishes/south-coastal-specials/pesarattu.png",
+    "state": "approved",
+    "slug": "pesarattu",
+    "category": "south-coastal-specials"
+  },
+  {
+    "label": "Litti Chokha",
+    "path": "/assets/food/dishes/east-northeast-specials/litti-chokha.png",
+    "state": "approved",
+    "slug": "litti-chokha",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Macher Jhol",
+    "path": "/assets/food/dishes/east-northeast-specials/macher-jhol.png",
+    "state": "approved",
+    "slug": "macher-jhol",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Kosha Mangsho",
+    "path": "/assets/food/dishes/east-northeast-specials/kosha-mangsho.png",
+    "state": "approved",
+    "slug": "kosha-mangsho",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Pakhala Bhata",
+    "path": "/assets/food/dishes/east-northeast-specials/pakhala-bhata.png",
+    "state": "approved",
+    "slug": "pakhala-bhata",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Dhuska",
+    "path": "/assets/food/dishes/east-northeast-specials/dhuska.png",
+    "state": "approved",
+    "slug": "dhuska",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Aloo Pitika",
+    "path": "/assets/food/dishes/east-northeast-specials/aloo-pitika.png",
+    "state": "approved",
+    "slug": "aloo-pitika",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Jadoh",
+    "path": "/assets/food/dishes/east-northeast-specials/jadoh.png",
+    "state": "approved",
+    "slug": "jadoh",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Smoked Pork with Bamboo Shoot",
+    "path": "/assets/food/dishes/east-northeast-specials/smoked-pork-with-bamboo-shoot.png",
+    "state": "approved",
+    "slug": "smoked-pork-with-bamboo-shoot",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Momos",
+    "path": "/assets/food/dishes/east-northeast-specials/momos.png",
+    "state": "approved",
+    "slug": "momos",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Thukpa",
+    "path": "/assets/food/dishes/east-northeast-specials/thukpa.png",
+    "state": "approved",
+    "slug": "thukpa",
+    "category": "east-northeast-specials"
+  },
+  {
+    "label": "Chilli Paneer Dry",
+    "path": "/assets/food/dishes/indo-chinese-starters/chilli-paneer-dry.png",
+    "state": "approved",
+    "slug": "chilli-paneer-dry",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Gobi Manchurian",
+    "path": "/assets/food/dishes/indo-chinese-starters/gobi-manchurian.png",
+    "state": "approved",
+    "slug": "gobi-manchurian",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Chicken Lollipop",
+    "path": "/assets/food/dishes/indo-chinese-starters/chicken-lollipop.png",
+    "state": "approved",
+    "slug": "chicken-lollipop",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Veg Spring Rolls",
+    "path": "/assets/food/dishes/indo-chinese-starters/veg-spring-rolls.png",
+    "state": "approved",
+    "slug": "veg-spring-rolls",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Honey Chilli Potato",
+    "path": "/assets/food/dishes/indo-chinese-starters/honey-chilli-potato.png",
+    "state": "approved",
+    "slug": "honey-chilli-potato",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Crispy Corn",
+    "path": "/assets/food/dishes/indo-chinese-starters/crispy-corn.png",
+    "state": "approved",
+    "slug": "crispy-corn",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Veg Manchurian Dry",
+    "path": "/assets/food/dishes/indo-chinese-starters/veg-manchurian-dry.png",
+    "state": "approved",
+    "slug": "veg-manchurian-dry",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Dragon Chicken",
+    "path": "/assets/food/dishes/indo-chinese-starters/dragon-chicken.png",
+    "state": "approved",
+    "slug": "dragon-chicken",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Paneer 65",
+    "path": "/assets/food/dishes/indo-chinese-starters/paneer-65.png",
+    "state": "approved",
+    "slug": "paneer-65",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Schezwan Momos",
+    "path": "/assets/food/dishes/indo-chinese-starters/schezwan-momos.png",
+    "state": "approved",
+    "slug": "schezwan-momos",
+    "category": "indo-chinese-starters"
+  },
+  {
+    "label": "Puliyodarai",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/puliyodarai.png",
+    "state": "approved",
+    "slug": "puliyodarai",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Bisi Bele Bath",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/bisi-bele-bath.png",
+    "state": "approved",
+    "slug": "bisi-bele-bath",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Ragi Mudde with Bassaru",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/ragi-mudde-with-bassaru.png",
+    "state": "approved",
+    "slug": "ragi-mudde-with-bassaru",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Akki Roti",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/akki-roti.png",
+    "state": "approved",
+    "slug": "akki-roti",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Maddur Vada",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/maddur-vada.png",
+    "state": "approved",
+    "slug": "maddur-vada",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Mangalore Buns",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/mangalore-buns.png",
+    "state": "approved",
+    "slug": "mangalore-buns",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Kori Rotti",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/kori-rotti.png",
+    "state": "approved",
+    "slug": "kori-rotti",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Chicken Sukka",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/chicken-sukka.png",
+    "state": "approved",
+    "slug": "chicken-sukka",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Chow Chow Bath",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/chow-chow-bath.png",
+    "state": "approved",
+    "slug": "chow-chow-bath",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Mysore Bonda",
+    "path": "/assets/food/dishes/tamil-karnataka-fare/mysore-bonda.png",
+    "state": "approved",
+    "slug": "mysore-bonda",
+    "category": "tamil-karnataka-fare"
+  },
+  {
+    "label": "Appam with Vegetable Stew",
+    "path": "/assets/food/dishes/kerala-signatures/appam-with-vegetable-stew.png",
+    "state": "approved",
+    "slug": "appam-with-vegetable-stew",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Puttu Kadala Curry",
+    "path": "/assets/food/dishes/kerala-signatures/puttu-kadala-curry.png",
+    "state": "approved",
+    "slug": "puttu-kadala-curry",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Kerala Sadya",
+    "path": "/assets/food/dishes/kerala-signatures/kerala-sadya.png",
+    "state": "approved",
+    "slug": "kerala-sadya",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Malabar Parotta with Chicken Curry",
+    "path": "/assets/food/dishes/kerala-signatures/malabar-parotta-with-chicken-curry.png",
+    "state": "approved",
+    "slug": "malabar-parotta-with-chicken-curry",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Karimeen Pollichathu",
+    "path": "/assets/food/dishes/kerala-signatures/karimeen-pollichathu.png",
+    "state": "approved",
+    "slug": "karimeen-pollichathu",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Meen Moilee",
+    "path": "/assets/food/dishes/kerala-signatures/meen-moilee.png",
+    "state": "approved",
+    "slug": "meen-moilee",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Kerala Beef Fry",
+    "path": "/assets/food/dishes/kerala-signatures/kerala-beef-fry.png",
+    "state": "approved",
+    "slug": "kerala-beef-fry",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Erachi Pathiri",
+    "path": "/assets/food/dishes/kerala-signatures/erachi-pathiri.png",
+    "state": "approved",
+    "slug": "erachi-pathiri",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Pazham Pori",
+    "path": "/assets/food/dishes/kerala-signatures/pazham-pori.png",
+    "state": "approved",
+    "slug": "pazham-pori",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Avial",
+    "path": "/assets/food/dishes/kerala-signatures/avial.png",
+    "state": "approved",
+    "slug": "avial",
+    "category": "kerala-signatures"
+  },
+  {
+    "label": "Gongura Pachadi",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/gongura-pachadi.png",
+    "state": "approved",
+    "slug": "gongura-pachadi",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Gongura Mutton",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/gongura-mutton.png",
+    "state": "approved",
+    "slug": "gongura-mutton",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Pesarattu Upma",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/pesarattu-upma.png",
+    "state": "approved",
+    "slug": "pesarattu-upma",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Royyala Iguru",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/royyala-iguru.png",
+    "state": "approved",
+    "slug": "royyala-iguru",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Gutti Vankaya Kura",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/gutti-vankaya-kura.png",
+    "state": "approved",
+    "slug": "gutti-vankaya-kura",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Andhra Chicken Fry",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/andhra-chicken-fry.png",
+    "state": "approved",
+    "slug": "andhra-chicken-fry",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Ulavacharu",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/ulavacharu.png",
+    "state": "approved",
+    "slug": "ulavacharu",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Kodi Vepudu",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/kodi-vepudu.png",
+    "state": "approved",
+    "slug": "kodi-vepudu",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Sarva Pindi",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/sarva-pindi.png",
+    "state": "approved",
+    "slug": "sarva-pindi",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Qubani ka Meetha",
+    "path": "/assets/food/dishes/andhra-telangana-flavors/qubani-ka-meetha.png",
+    "state": "approved",
+    "slug": "qubani-ka-meetha",
+    "category": "andhra-telangana-flavors"
+  },
+  {
+    "label": "Thalipeeth",
+    "path": "/assets/food/dishes/maharashtra-classics/thalipeeth.png",
+    "state": "approved",
+    "slug": "thalipeeth",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Sabudana Khichdi",
+    "path": "/assets/food/dishes/maharashtra-classics/sabudana-khichdi.png",
+    "state": "approved",
+    "slug": "sabudana-khichdi",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Pithla Bhakri",
+    "path": "/assets/food/dishes/maharashtra-classics/pithla-bhakri.png",
+    "state": "approved",
+    "slug": "pithla-bhakri",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Bharli Vangi",
+    "path": "/assets/food/dishes/maharashtra-classics/bharli-vangi.png",
+    "state": "approved",
+    "slug": "bharli-vangi",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Kolhapuri Chicken",
+    "path": "/assets/food/dishes/maharashtra-classics/kolhapuri-chicken.png",
+    "state": "approved",
+    "slug": "kolhapuri-chicken",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Malvani Fish Curry",
+    "path": "/assets/food/dishes/maharashtra-classics/malvani-fish-curry.png",
+    "state": "approved",
+    "slug": "malvani-fish-curry",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Bombil Fry",
+    "path": "/assets/food/dishes/maharashtra-classics/bombil-fry.png",
+    "state": "approved",
+    "slug": "bombil-fry",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Sol Kadhi",
+    "path": "/assets/food/dishes/maharashtra-classics/sol-kadhi.png",
+    "state": "approved",
+    "slug": "sol-kadhi",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Kombdi Vade",
+    "path": "/assets/food/dishes/maharashtra-classics/kombdi-vade.png",
+    "state": "approved",
+    "slug": "kombdi-vade",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Zunka Bhakar",
+    "path": "/assets/food/dishes/maharashtra-classics/zunka-bhakar.png",
+    "state": "approved",
+    "slug": "zunka-bhakar",
+    "category": "maharashtra-classics"
+  },
+  {
+    "label": "Undhiyu",
+    "path": "/assets/food/dishes/gujarat-goa-delights/undhiyu.png",
+    "state": "approved",
+    "slug": "undhiyu",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Sev Tameta",
+    "path": "/assets/food/dishes/gujarat-goa-delights/sev-tameta.png",
+    "state": "approved",
+    "slug": "sev-tameta",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Thepla",
+    "path": "/assets/food/dishes/gujarat-goa-delights/thepla.png",
+    "state": "approved",
+    "slug": "thepla",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Fafda Jalebi",
+    "path": "/assets/food/dishes/gujarat-goa-delights/fafda-jalebi.png",
+    "state": "approved",
+    "slug": "fafda-jalebi",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Handvo",
+    "path": "/assets/food/dishes/gujarat-goa-delights/handvo.png",
+    "state": "approved",
+    "slug": "handvo",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Patra",
+    "path": "/assets/food/dishes/gujarat-goa-delights/patra.png",
+    "state": "approved",
+    "slug": "patra",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Khaman",
+    "path": "/assets/food/dishes/gujarat-goa-delights/khaman.png",
+    "state": "approved",
+    "slug": "khaman",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Goan Fish Curry",
+    "path": "/assets/food/dishes/gujarat-goa-delights/goan-fish-curry.png",
+    "state": "approved",
+    "slug": "goan-fish-curry",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Chicken Cafreal",
+    "path": "/assets/food/dishes/gujarat-goa-delights/chicken-cafreal.png",
+    "state": "approved",
+    "slug": "chicken-cafreal",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Bebinca",
+    "path": "/assets/food/dishes/gujarat-goa-delights/bebinca.png",
+    "state": "approved",
+    "slug": "bebinca",
+    "category": "gujarat-goa-delights"
+  },
+  {
+    "label": "Shorshe Ilish",
+    "path": "/assets/food/dishes/bengal-odisha-delights/shorshe-ilish.png",
+    "state": "approved",
+    "slug": "shorshe-ilish",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Chingri Malai Curry",
+    "path": "/assets/food/dishes/bengal-odisha-delights/chingri-malai-curry.png",
+    "state": "approved",
+    "slug": "chingri-malai-curry",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Aloo Posto",
+    "path": "/assets/food/dishes/bengal-odisha-delights/aloo-posto.png",
+    "state": "approved",
+    "slug": "aloo-posto",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Luchi Aloor Dom",
+    "path": "/assets/food/dishes/bengal-odisha-delights/luchi-aloor-dom.png",
+    "state": "approved",
+    "slug": "luchi-aloor-dom",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Macher Paturi",
+    "path": "/assets/food/dishes/bengal-odisha-delights/macher-paturi.png",
+    "state": "approved",
+    "slug": "macher-paturi",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Mishti Pulao",
+    "path": "/assets/food/dishes/bengal-odisha-delights/mishti-pulao.png",
+    "state": "approved",
+    "slug": "mishti-pulao",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Dalma",
+    "path": "/assets/food/dishes/bengal-odisha-delights/dalma.png",
+    "state": "approved",
+    "slug": "dalma",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Santula",
+    "path": "/assets/food/dishes/bengal-odisha-delights/santula.png",
+    "state": "approved",
+    "slug": "santula",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Chenna Tarkari",
+    "path": "/assets/food/dishes/bengal-odisha-delights/chenna-tarkari.png",
+    "state": "approved",
+    "slug": "chenna-tarkari",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Chhena Poda",
+    "path": "/assets/food/dishes/bengal-odisha-delights/chhena-poda.png",
+    "state": "approved",
+    "slug": "chhena-poda",
+    "category": "bengal-odisha-delights"
+  },
+  {
+    "label": "Sattu Paratha",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/sattu-paratha.png",
+    "state": "approved",
+    "slug": "sattu-paratha",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Champaran Mutton",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/champaran-mutton.png",
+    "state": "approved",
+    "slug": "champaran-mutton",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Dal Pitha",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/dal-pitha.png",
+    "state": "approved",
+    "slug": "dal-pitha",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Ghugni",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/ghugni.png",
+    "state": "approved",
+    "slug": "ghugni",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Thekua",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/thekua.png",
+    "state": "approved",
+    "slug": "thekua",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Makhana Kheer",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/makhana-kheer.png",
+    "state": "approved",
+    "slug": "makhana-kheer",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Rugra Curry",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/rugra-curry.png",
+    "state": "approved",
+    "slug": "rugra-curry",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Kadhi Bari",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/kadhi-bari.png",
+    "state": "approved",
+    "slug": "kadhi-bari",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Chilka Roti",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/chilka-roti.png",
+    "state": "approved",
+    "slug": "chilka-roti",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Tilkut",
+    "path": "/assets/food/dishes/bihar-jharkhand-classics/tilkut.png",
+    "state": "approved",
+    "slug": "tilkut",
+    "category": "bihar-jharkhand-classics"
+  },
+  {
+    "label": "Masor Tenga",
+    "path": "/assets/food/dishes/northeast-treasures/masor-tenga.png",
+    "state": "approved",
+    "slug": "masor-tenga",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Khar",
+    "path": "/assets/food/dishes/northeast-treasures/khar.png",
+    "state": "approved",
+    "slug": "khar",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Bai",
+    "path": "/assets/food/dishes/northeast-treasures/bai.png",
+    "state": "approved",
+    "slug": "bai",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Tungrymbai",
+    "path": "/assets/food/dishes/northeast-treasures/tungrymbai.png",
+    "state": "approved",
+    "slug": "tungrymbai",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Dohneiiong",
+    "path": "/assets/food/dishes/northeast-treasures/dohneiiong.png",
+    "state": "approved",
+    "slug": "dohneiiong",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Eromba",
+    "path": "/assets/food/dishes/northeast-treasures/eromba.png",
+    "state": "approved",
+    "slug": "eromba",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Singju",
+    "path": "/assets/food/dishes/northeast-treasures/singju.png",
+    "state": "approved",
+    "slug": "singju",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Smoked Pork with Axone",
+    "path": "/assets/food/dishes/northeast-treasures/smoked-pork-with-axone.png",
+    "state": "approved",
+    "slug": "smoked-pork-with-axone",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Chak Hao Kheer",
+    "path": "/assets/food/dishes/northeast-treasures/chak-hao-kheer.png",
+    "state": "approved",
+    "slug": "chak-hao-kheer",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Duck with Bamboo Shoot",
+    "path": "/assets/food/dishes/northeast-treasures/duck-with-bamboo-shoot.png",
+    "state": "approved",
+    "slug": "duck-with-bamboo-shoot",
+    "category": "northeast-treasures"
+  },
+  {
+    "label": "Thenthuk",
+    "path": "/assets/food/dishes/himalayan-comforts/thenthuk.png",
+    "state": "approved",
+    "slug": "thenthuk",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Tingmo with Shapta",
+    "path": "/assets/food/dishes/himalayan-comforts/tingmo-with-shapta.png",
+    "state": "approved",
+    "slug": "tingmo-with-shapta",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Sha Phaley",
+    "path": "/assets/food/dishes/himalayan-comforts/sha-phaley.png",
+    "state": "approved",
+    "slug": "sha-phaley",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Gyathuk",
+    "path": "/assets/food/dishes/himalayan-comforts/gyathuk.png",
+    "state": "approved",
+    "slug": "gyathuk",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Phagshapa",
+    "path": "/assets/food/dishes/himalayan-comforts/phagshapa.png",
+    "state": "approved",
+    "slug": "phagshapa",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Sel Roti",
+    "path": "/assets/food/dishes/himalayan-comforts/sel-roti.png",
+    "state": "approved",
+    "slug": "sel-roti",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Gundruk Soup",
+    "path": "/assets/food/dishes/himalayan-comforts/gundruk-soup.png",
+    "state": "approved",
+    "slug": "gundruk-soup",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Kinema Curry",
+    "path": "/assets/food/dishes/himalayan-comforts/kinema-curry.png",
+    "state": "approved",
+    "slug": "kinema-curry",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Chhurpi Soup",
+    "path": "/assets/food/dishes/himalayan-comforts/chhurpi-soup.png",
+    "state": "approved",
+    "slug": "chhurpi-soup",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Yomari",
+    "path": "/assets/food/dishes/himalayan-comforts/yomari.png",
+    "state": "approved",
+    "slug": "yomari",
+    "category": "himalayan-comforts"
+  },
+  {
+    "label": "Chilli Chicken Dry",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/chilli-chicken-dry.png",
+    "state": "approved",
+    "slug": "chilli-chicken-dry",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Chilli Mushroom",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/chilli-mushroom.png",
+    "state": "approved",
+    "slug": "chilli-mushroom",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Baby Corn Manchurian",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/baby-corn-manchurian.png",
+    "state": "approved",
+    "slug": "baby-corn-manchurian",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Salt & Pepper Corn",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/salt-pepper-corn.png",
+    "state": "approved",
+    "slug": "salt-pepper-corn",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Crispy Chilli Baby Corn",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/crispy-chilli-baby-corn.png",
+    "state": "approved",
+    "slug": "crispy-chilli-baby-corn",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Drums of Heaven",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/drums-of-heaven.png",
+    "state": "approved",
+    "slug": "drums-of-heaven",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Hot Garlic Paneer",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/hot-garlic-paneer.png",
+    "state": "approved",
+    "slug": "hot-garlic-paneer",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Pan Fried Momos",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/pan-fried-momos.png",
+    "state": "approved",
+    "slug": "pan-fried-momos",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Schezwan Chicken Wings",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/schezwan-chicken-wings.png",
+    "state": "approved",
+    "slug": "schezwan-chicken-wings",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Crispy Spinach Corn",
+    "path": "/assets/food/dishes/indo-chinese-starters-ii/crispy-spinach-corn.png",
+    "state": "approved",
+    "slug": "crispy-spinach-corn",
+    "category": "indo-chinese-starters-ii"
+  },
+  {
+    "label": "Chicken Biryani",
+    "path": "/assets/food/dishes/high-demand-essentials/chicken-biryani.png",
+    "state": "approved",
+    "slug": "chicken-biryani",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Plain Veg Dosa",
+    "path": "/assets/food/dishes/high-demand-essentials/veg-dosa.png",
+    "state": "approved",
+    "slug": "veg-dosa",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Chicken Kathi Roll",
+    "path": "/assets/food/dishes/high-demand-essentials/chicken-kathi-roll.png",
+    "state": "approved",
+    "slug": "chicken-kathi-roll",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Chicken Nuggets",
+    "path": "/assets/food/dishes/high-demand-essentials/chicken-nuggets.png",
+    "state": "approved",
+    "slug": "chicken-nuggets",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "White Chocolate Cake",
+    "path": "/assets/food/dishes/high-demand-essentials/white-chocolate-cake.png",
+    "state": "approved",
+    "slug": "white-chocolate-cake",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Kaju Katli",
+    "path": "/assets/food/dishes/high-demand-essentials/kaju-katli.png",
+    "state": "approved",
+    "slug": "kaju-katli",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Jalebi",
+    "path": "/assets/food/dishes/high-demand-essentials/jalebi.png",
+    "state": "approved",
+    "slug": "jalebi",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Rasmalai",
+    "path": "/assets/food/dishes/high-demand-essentials/rasmalai.png",
+    "state": "approved",
+    "slug": "rasmalai",
+    "category": "high-demand-essentials"
+  },
+  {
+    "label": "Veg Hakka Noodles",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-hakka-noodles.png",
+    "state": "approved",
+    "slug": "veg-hakka-noodles",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Veg Schezwan Noodles",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-schezwan-noodles.png",
+    "state": "approved",
+    "slug": "veg-schezwan-noodles",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Veg Schezwan Fried Rice",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-schezwan-fried-rice.png",
+    "state": "approved",
+    "slug": "veg-schezwan-fried-rice",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Egg Fried Rice",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/egg-fried-rice.png",
+    "state": "approved",
+    "slug": "egg-fried-rice",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Chicken Fried Rice",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/chicken-fried-rice.png",
+    "state": "approved",
+    "slug": "chicken-fried-rice",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Veg Triple Schezwan Rice",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-triple-schezwan-rice.png",
+    "state": "approved",
+    "slug": "veg-triple-schezwan-rice",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Veg American Chop Suey",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-american-chop-suey.png",
+    "state": "approved",
+    "slug": "veg-american-chop-suey",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Chicken Chop Suey",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/chicken-chop-suey.png",
+    "state": "approved",
+    "slug": "chicken-chop-suey",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Veg Manchow Soup",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/veg-manchow-soup.png",
+    "state": "approved",
+    "slug": "veg-manchow-soup",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Chicken Hot and Sour Soup",
+    "path": "/assets/food/dishes/indo-chinese-mains-soups/chicken-hot-and-sour-soup.png",
+    "state": "approved",
+    "slug": "chicken-hot-and-sour-soup",
+    "category": "indo-chinese-mains-soups"
+  },
+  {
+    "label": "Amritsari Kulcha",
+    "path": "/assets/food/dishes/north-indian-rajasthani/amritsari-kulcha.png",
+    "state": "approved",
+    "slug": "amritsari-kulcha",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Makki di Roti & Sarson da Saag",
+    "path": "/assets/food/dishes/north-indian-rajasthani/makki-di-roti-sarson-da-saag.png",
+    "state": "approved",
+    "slug": "makki-di-roti-sarson-da-saag",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Rogan Josh",
+    "path": "/assets/food/dishes/north-indian-rajasthani/rogan-josh.png",
+    "state": "approved",
+    "slug": "rogan-josh",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Galouti Kebab",
+    "path": "/assets/food/dishes/north-indian-rajasthani/galouti-kebab.png",
+    "state": "approved",
+    "slug": "galouti-kebab",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Lucknowi Nihari",
+    "path": "/assets/food/dishes/north-indian-rajasthani/lucknowi-nihari.png",
+    "state": "approved",
+    "slug": "lucknowi-nihari",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Dal Baati Churma",
+    "path": "/assets/food/dishes/north-indian-rajasthani/dal-baati-churma.png",
+    "state": "approved",
+    "slug": "dal-baati-churma",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Gatte Ki Sabzi",
+    "path": "/assets/food/dishes/north-indian-rajasthani/gatte-ki-sabzi.png",
+    "state": "approved",
+    "slug": "gatte-ki-sabzi",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Laal Maas",
+    "path": "/assets/food/dishes/north-indian-rajasthani/laal-maas.png",
+    "state": "approved",
+    "slug": "laal-maas",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Pyaaz Kachori",
+    "path": "/assets/food/dishes/north-indian-rajasthani/pyaaz-kachori.png",
+    "state": "approved",
+    "slug": "pyaaz-kachori",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Mirchi Vada",
+    "path": "/assets/food/dishes/north-indian-rajasthani/mirchi-vada.png",
+    "state": "approved",
+    "slug": "mirchi-vada",
+    "category": "north-indian-rajasthani"
+  },
+  {
+    "label": "Vegetable Kothu Parotta",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/vegetable-kothu-parotta.png",
+    "state": "approved",
+    "slug": "vegetable-kothu-parotta",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Parotta With Salna",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/parotta-with-salna.png",
+    "state": "approved",
+    "slug": "parotta-with-salna",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Kuzhi Paniyaram",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/kuzhi-paniyaram.png",
+    "state": "approved",
+    "slug": "kuzhi-paniyaram",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Curd Rice",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/curd-rice.png",
+    "state": "approved",
+    "slug": "curd-rice",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Lemon Rice",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/lemon-rice.png",
+    "state": "approved",
+    "slug": "lemon-rice",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Bagara Baingan",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/bagara-baingan.png",
+    "state": "approved",
+    "slug": "bagara-baingan",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Mirchi Ka Salan",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/mirchi-ka-salan.png",
+    "state": "approved",
+    "slug": "mirchi-ka-salan",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Kothimbir Vadi",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/kothimbir-vadi.png",
+    "state": "approved",
+    "slug": "kothimbir-vadi",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Dal Dhokli",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/dal-dhokli.png",
+    "state": "approved",
+    "slug": "dal-dhokli",
+    "category": "regional-restaurant-favorites"
+  },
+  {
+    "label": "Prawn Balchao",
+    "path": "/assets/food/dishes/regional-restaurant-favorites/prawn-balchao.png",
+    "state": "approved",
+    "slug": "prawn-balchao",
+    "category": "regional-restaurant-favorites"
   }
 ]

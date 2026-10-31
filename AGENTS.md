@@ -58,7 +58,9 @@ the product planning context is Food Minutes. Do not rename the product incident
 - Runtime: lint, typecheck, relevant tests and production build; execute end-to-end tests for
   affected workflows. Follow `docs/testing-strategy.md` for migration and ordering gates.
 - Use frozen-lockfile installs. Do not regenerate migrations merely to start the app.
-- No `db:push` against production, production demo seed, secret logging or destructive migrations.
+- No `db:push` against production, secret logging or destructive migrations. Production demo seed is
+  forbidden **except** the single, owner-approved public demo tenant defined in
+  [Public demo exception](#public-demo-exception) below; `scripts/db-seed.ts` itself stays non-production.
 - Don't weaken checks to hide failures. Keep unrelated fixes separate and report baseline issues.
 - Never request or print production credentials in commits, fixtures, logs or PR descriptions.
 - Public browsing and local tests must not trigger paid providers or production order submissions.
@@ -109,3 +111,33 @@ runtime identities. Public-readiness release identity must equal the candidate
 SHA. A failed public check may restore only a verified schema-compatible
 application release, never SQL or customer data. Preserve GitHub Environment
 protections; a configured required reviewer remains an explicit operator gate.
+
+## Public demo exception
+
+Approved by the owner on 2026-10-31 ([ADR 022](docs/decisions.md), runbook [docs/demo.md](docs/demo.md)).
+This is the **only** permitted production demo data. It supersedes the blanket "no production demo
+seed" rule solely under these conditions; any deviation reverts to the prohibition:
+
+- **One fixed tenant**: user `demo-owner`, `org-demo-outlet`, `demo-outlet`, public id
+  `demo-spice-route-kitchen-v2`, flagged `is_demo_data`. No other tenant is ever flagged, seeded or reset
+  by demo code. Demo identifiers are constants in `src/modules/demo/baseline.ts`, never request input.
+- **Provisioning** is an explicit operator action: `scripts/demo-provision.ts` with the isolated
+  migration-owner URL and `ALLOW_DEMO_PROVISION=true`, after a verified backup. It is never run by
+  CI, the web process, the worker or an automatic migration. `scripts/db-seed.ts` remains non-production.
+- **Reset** is `app_private.reset_demo_outlet(jsonb)` (migration 0059): `SECURITY DEFINER`, hardcoded
+  to the demo ids, refuses unless the outlet is `is_demo_data`, executable only by `menuminute_worker`.
+  The worker runs it every 30 minutes only when `DEMO_MODE_ENABLED=true` (default false = kill switch).
+- **Demo kitchen and entitlements** (owner-approved 2026-10-31): `app_private.provision_demo_ops()`
+  (migration 0060) enables the demo outlet's kitchen, routes its dishes and grants `ordering.new` and
+  `kitchen.new` for ten years. This is a deliberate demo-only bypass of the Kitchen Pro pilot gate and
+  the normal grant control plane. It is hardcoded to the demo ids, refuses unless `is_demo_data`, and
+  is executable by the migration owner only (never `menuminute_app`, `menuminute_worker` or
+  `menuminute_billing`). No other outlet may ever be activated this way.
+- **Never reset or modified by demo code**: the immutable POS ledger, audit trail, AI spend accounting,
+  identity/sessions, entitlements and billing. The demo outlet never enables POS or billing.
+- **Isolation**: the demo actor must not receive a super-admin, other-tenant or billing capability; a new
+  outlet/organization-scoped table must be added to the reset function or to the preserved list in
+  `tests/demo-reset.test.ts`, which fails otherwise.
+- **No outbound effects**: no email, payment-provider call or paid AI beyond the dedicated demo budget.
+- Demo dish data is **sample data** (`verified:false`, no free-from claims); it must never be presented
+  as verified allergen or nutrition information.

@@ -6,6 +6,8 @@ import { conversationInput, assertAssistantScope } from "@/modules/intelligence/
 import { authorizedToolDefinitions } from "@/modules/intelligence/read-tools";
 import { withActor } from "@/modules/tenancy/service";
 import { sql } from "drizzle-orm";
+import { isDemoActor } from "@/modules/demo/guard";
+import { DEMO_EMBER_PROMPT_CHARS } from "@/modules/demo/ember-limit";
 import { navigationForPermissions } from "@/modules/intelligence/navigation";
 async function observed_GET(req: Request) {
   try {
@@ -28,6 +30,7 @@ async function observed_GET(req: Request) {
         enabled: env.AI_ASSISTANT_READ_ONLY_ENABLED,
         actionsEnabled:
           env.AI_ASSISTANT_READ_ONLY_ENABLED && env.AI_ASSISTANT_ACTIONS_ENABLED && menuWrite,
+        demo: isDemoActor(actor.userId) ? { promptChars: DEMO_EMBER_PROMPT_CHARS } : null,
         tools: tools.map((t) => t.name),
         navigation: navigationForPermissions({
           menuRead: tools.some((t) => t.name === "menu.summary"),

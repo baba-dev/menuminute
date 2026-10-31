@@ -29,7 +29,7 @@ const groups = [
     links: [
       { label: "Help centre", href: "/help" },
       { label: "FAQs", href: "/help/faq" },
-      { label: "Guides", href: "/help/owner" },
+      { label: "Guides", href: "/docs" },
       { label: "Integrations", href: "/integrations", soon: true },
       { label: "System status", href: "/status", soon: true },
     ],
