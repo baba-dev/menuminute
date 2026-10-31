@@ -1,6 +1,6 @@
 import { env, type Env } from "@/lib/config/env";
 import { assistantSpendPolicy } from "./spend";
-import { ValidationError } from "@/lib/errors";
+import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { isInternalAssistantPayload } from "./answer-quality";
 import { selectQuestionTools } from "./tool-selection";
 import { groundedMerchantAnswer } from "./grounded-answer";
@@ -199,7 +199,9 @@ export async function runReadOnlyTurn(
         ? error.code
         : error instanceof ValidationError
           ? "invalid_response"
-          : "processing_failed";
+          : error instanceof ForbiddenError && stage.startsWith("reserve_round_")
+            ? "quota_exhausted" // the organization's daily inference allowance
+            : "processing_failed";
     console.error("[ember] Read-only turn failed", {
       stage,
       code,

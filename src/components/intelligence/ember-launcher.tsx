@@ -1,5 +1,6 @@
 "use client";
 
+import { failureCopy, NO_CHANGE_NOTE } from "@/modules/intelligence/user-messages";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
@@ -338,7 +339,13 @@ export function EmberLauncher({
       );
       setPrompt("");
       if (result.status === "failed")
-        setError("Ember could not verify the answer. No business change occurred.");
+        setError(
+          failureCopy(result.errorCode).title +
+            " " +
+            failureCopy(result.errorCode).next +
+            " " +
+            NO_CHANGE_NOTE
+        );
       await loadHistory(id);
       await getConversations();
     } catch (e) {
@@ -346,7 +353,7 @@ export function EmberLauncher({
       setError(
         text.startsWith("Demo limit:") || text.startsWith("Demo questions")
           ? text
-          : text + " The request may have been recorded; check History before submitting it again."
+          : text + " Check History to see whether Ember already received it before asking again."
       );
       await (id ? loadHistory(id).catch(() => {}) : Promise.resolve());
     } finally {
@@ -635,10 +642,16 @@ export function EmberLauncher({
                           sources…
                         </p>
                       ) : t.status === "failed" ? (
-                        <p role="status">
-                          Unable to verify this answer ({t.errorCode ?? "processing_failed"}). No
-                          business action was taken.
-                        </p>
+                        <div role="status">
+                          <p>
+                            <strong>{failureCopy(t.errorCode).title}</strong>{" "}
+                            {failureCopy(t.errorCode).next} {NO_CHANGE_NOTE}
+                          </p>
+                          <details>
+                            <summary>Details for support</summary>
+                            <p>Reference: {t.errorCode ?? "processing_failed"}</p>
+                          </details>
+                        </div>
                       ) : (
                         <EmberRichAnswer text={t.answer} />
                       )}
