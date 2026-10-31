@@ -28,6 +28,9 @@ export function HelpSearch({
           <Search className="pointer-events-none absolute left-4 size-5 text-stone-400" />
           <input
             type="search"
+            aria-label="Search help guides"
+            autoComplete="off"
+            onKeyDown={(event) => { if (event.key === "Escape") setQuery(""); }}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
@@ -50,6 +53,7 @@ export function HelpSearch({
           <button
             type="button"
             onClick={() => setSelectedAudience("both")}
+            aria-pressed={selectedAudience === "both"}
             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
               selectedAudience === "both"
                 ? "bg-stone-900 text-white shadow-sm dark:bg-stone-100 dark:text-stone-900"
@@ -61,6 +65,7 @@ export function HelpSearch({
           <button
             type="button"
             onClick={() => setSelectedAudience("owner")}
+            aria-pressed={selectedAudience === "owner"}
             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
               selectedAudience === "owner"
                 ? "bg-orange-600 text-white shadow-sm"
@@ -72,6 +77,7 @@ export function HelpSearch({
           <button
             type="button"
             onClick={() => setSelectedAudience("customer")}
+            aria-pressed={selectedAudience === "customer"}
             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
               selectedAudience === "customer"
                 ? "bg-emerald-600 text-white shadow-sm"
@@ -84,7 +90,9 @@ export function HelpSearch({
 
         {/* Live Search Results Dropdown */}
         {query.trim().length >= 2 && (
-          <div className="absolute top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2 shadow-xl dark:border-stone-800 dark:bg-stone-900">
+          <div role="region"
+            aria-label="Matching help guides"
+            className="absolute top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2 shadow-xl dark:border-stone-800 dark:bg-stone-900">
             {results.length > 0 ? (
               <div className="space-y-1">
                 {results.map(({ article, snippet }) => (

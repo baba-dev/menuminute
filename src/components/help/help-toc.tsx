@@ -43,7 +43,24 @@ export function HelpTableOfContents({ sections }: HelpTocProps) {
   if (!sections.length) return null;
 
   return (
-    <aside aria-label="Table of contents" className="hidden lg:block">
+    <>
+      <details className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900 lg:hidden">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-stone-900 dark:text-stone-100">
+          Jump to a section
+        </summary>
+        <nav aria-label="Article sections" className="mt-3 flex flex-col gap-1">
+          {sections.map((section) => (
+            <Link
+              key={section.id}
+              href={`#${section.id}`}
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-orange-600 dark:text-stone-200 dark:hover:bg-stone-800"
+            >
+              {section.title}
+            </Link>
+          ))}
+        </nav>
+      </details>
+      <aside aria-label="Table of contents" className="hidden lg:block">
       <div className="sticky top-24 rounded-2xl border border-stone-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/80">
         <h4 className="flex items-center gap-2 text-xs font-bold tracking-wider text-stone-900 uppercase dark:text-stone-100">
           <ListFilter className="size-3.5 text-orange-600" />
@@ -76,5 +93,6 @@ export function HelpTableOfContents({ sections }: HelpTocProps) {
         </nav>
       </div>
     </aside>
+    </>
   );
 }

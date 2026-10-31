@@ -24,7 +24,7 @@ export function HelpReadingProgress() {
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-orange-500 to-amber-600 transition-all duration-150 ease-out"
+        className="h-full bg-gradient-to-r from-orange-500 to-amber-600 transition-all duration-150 ease-out motion-reduce:transition-none"
         style={{ width: `${progress}%` }}
       />
     </div>

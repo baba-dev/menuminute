@@ -64,6 +64,7 @@ export default function FaqPage() {
               <Search className="pointer-events-none absolute left-4 size-4 text-stone-400" />
               <input
                 type="search"
+                aria-label="Search frequently asked questions"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search questions (e.g. 'pricing', 'stickers', 'offline')..."
@@ -78,6 +79,7 @@ export default function FaqPage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
+                  aria-pressed={selectedCategory === cat}
                   className={`rounded-full px-3.5 py-1 text-xs font-semibold capitalize transition ${
                     selectedCategory === cat
                       ? "bg-orange-600 text-white shadow-xs"
