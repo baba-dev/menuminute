@@ -129,7 +129,12 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await page.getByLabel("Active outlet").selectOption(pickup.id);
   await expect(page.getByLabel("Active outlet")).toHaveValue(pickup.id);
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: "Scoped Pickup", exact: true })).toBeVisible();
+  // The compact sidebar no longer repeats the selected outlet as a heading.
+  // Verify persisted, authorized outlet context instead of relying on removed chrome.
+  const activeContext = await page.request.get("/api/context");
+  expect(activeContext.ok()).toBe(true);
+  expect((await activeContext.json()).selectedOutletId).toBe(pickup.id);
+  await expect(page.getByRole("heading", { name: "Scoped Pickup", exact: true })).toHaveCount(0);
   await page.goto("/dashboard/organization");
   await page.getByLabel("Organization", { exact: true }).selectOption(f.org);
   await expect(page.getByRole("heading", { name: "Billing entitlements" })).toBeVisible();
@@ -151,9 +156,11 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await reactivate.getByLabel("Confirm organization status change").check();
   await reactivate.getByRole("button", { name: "Reactivate organization" }).click();
   await expect(page.getByRole("button", { name: "Suspend organization" })).toBeVisible();
-  await page.getByRole("button", { name: "Sign out" }).click();
-  // The logout is a server action. Do not race its cookie deletion with the
-  // next server-rendered /login request (which redirects valid sessions).
+  // The navigation-first workspace intentionally has no sidebar logout.
+  // Exercise the real Account-page sign-out flow on desktop and mobile.
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  // Confirm the new sign-out action clears the session before signing in again.
   await expect(page).toHaveURL(/\/login(?:\?|$)/);
   await expect(page.getByLabel("Email address")).toBeVisible();
   await login(page, f.memberEmail, f.password);

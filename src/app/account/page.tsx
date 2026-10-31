@@ -5,6 +5,7 @@ import { SessionContinuity } from "@/components/auth/session-continuity";
 import { listOrganizations } from "@/modules/organizations/service";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 import { ThemeControl } from "@/components/menu-product/theme-control";
+import { AccountSignOutButton } from "./sign-out-button";
 import { AccountWorkspacePreference } from "./workspace-preference";
 import { readWorkspacePreference } from "@/modules/organizations/workspace-preferences";
 export const metadata = { title: "Your account — MenuMinute" };
@@ -49,6 +50,7 @@ export default async function AccountPage() {
           <Link className="action" href="/account/security">
             Manage account security and sessions →
           </Link>
+          <AccountSignOutButton />
         </section>
         <section className="panel stack">
           <h2>Organizations & outlets</h2>
