@@ -1,6 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  getOnlineStatus,
+  getServerOnlineStatus,
+  subscribeOnlineStatus,
+} from "@/lib/pwa/connectivity";
 import {
   Bell,
   BellOff,
@@ -66,7 +71,11 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
   const [kitchenUpdates, setKitchenUpdates] = useState(false);
   const [enabledForDevice, setEnabledForDevice] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [online, setOnline] = useState(true);
+  const online = useSyncExternalStore(
+    subscribeOnlineStatus,
+    getOnlineStatus,
+    getServerOnlineStatus
+  );
   const [status, setStatus] = useState("Checking your device and notification settings…");
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
@@ -110,19 +119,12 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
     } catch {
       setStatus("Could not check device alerts. Refresh after your connection returns.");
     }
-  }, []);
+  }, [online]);
 
   useEffect(() => {
-    const sync = () => setOnline(navigator.onLine);
-    sync();
-    window.addEventListener("online", sync);
-    window.addEventListener("offline", sync);
-    // Never ask notification permission on mount.
-    void refresh();
-    return () => {
-      window.removeEventListener("online", sync);
-      window.removeEventListener("offline", sync);
-    };
+    // Defer the initial async probe: never synchronize render state from an effect.
+    const timer = window.setTimeout(() => void refresh(), 0);
+    return () => window.clearTimeout(timer);
   }, [refresh]);
 
   async function enable() {
