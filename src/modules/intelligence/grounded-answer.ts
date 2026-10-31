@@ -45,6 +45,9 @@ const report = z
 
 const helpDataSchema = z.object({
   query: z.string(),
+  faqs: z
+    .array(z.object({ question: z.string(), answer: z.string(), category: z.string() }))
+    .default([]),
   matches: z.array(
     z.object({
       title: z.string(),
@@ -192,6 +195,11 @@ export function groundedMerchantAnswer(
     const parsed = helpDataSchema.safeParse(item.data);
     if (!parsed.success) return null;
     const d = parsed.data;
+    const faqLines = d.faqs.map((f) => `**${safe(f.question)}**\n${safe(f.answer)}`);
+    if (!d.matches.length && faqLines.length)
+      return [...faqLines, "", "More answers are in the [Help Center FAQ](/help/faq)."].join(
+        "\n\n"
+      );
     if (!d.matches.length) {
       return (
         "I couldn't find an exact guide matching **" +
@@ -224,6 +232,7 @@ export function groundedMerchantAnswer(
             .join(", ")
       );
     }
+    if (faqLines.length) lines.push("", "**Quick answer**", ...faqLines);
     return lines.join("\n");
   }
   return null;
