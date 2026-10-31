@@ -4,6 +4,9 @@ import { coverFor } from "@/modules/menu-product/public-presentation";
 import { publicProduct } from "@/modules/menu-product/service";
 import { PublicMenu } from "@/components/menu-product/public-menu";
 
+// Must stay dynamic: the page depends on ?lang=, embeds the request time for opening
+// hours, and publicProduct re-checks QR revocation in PostgreSQL on every request.
+// Caching lives in the Redis layer (modules/menu-product/cache.ts), not the route.
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ publicMenuId: string }>;

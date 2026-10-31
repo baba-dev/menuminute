@@ -115,7 +115,6 @@ export function OrderTracker({
     }
   }, [trackingToken, token, orderId]);
 
-
   /** Returns true when the poll succeeded; callers use it to back off on failure. */
   const fetchTracking = useCallback(async () => {
     try {
