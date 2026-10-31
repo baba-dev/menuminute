@@ -1,4 +1,5 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import {
   diningFloorPlans,
@@ -118,99 +119,78 @@ export async function getFloorLayout(actor: Actor, outletId: string): Promise<Fl
   });
 }
 
-/**
- * Saves the entire visual layout doc and syncs table labels/capacities.
- */
-export async function saveFloorLayout(
-  actor: Actor,
-  outletId: string,
-  doc: FloorLayoutDoc
-): Promise<FloorLayoutDoc> {
+/** The floor document cannot invent or delete physical tables. */
+export async function saveFloorLayout(actor: Actor, outletId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
   const validated = floorLayoutDocSchema.parse(doc);
-
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    // 1. Upsert floor plan
-    await tx
-      .insert(diningFloorPlans)
-      .values({
-        outletId,
-        layout: validated,
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: diningFloorPlans.outletId,
-        set: {
-          layout: validated,
-          updatedAt: new Date(),
-        },
-      });
-
-    // 2. Sync table metadata to restaurant_tables
-    for (const vt of validated.tables) {
-      await tx
-        .update(restaurantTables)
-        .set({
-          tableNumber: vt.tableNumber,
-          label: vt.label,
-          capacity: vt.capacity,
-        })
-        .where(and(eq(restaurantTables.id, vt.id), eq(restaurantTables.restaurantId, outletId)));
+    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
+    const ids = new Set(active.map((t) => t.id));
+    if (new Set(validated.tables.map((t) => t.id)).size !== ids.size
+      || validated.tables.some((t) => !ids.has(t.id))) {
+      throw new ConflictError("Table inventory changed; refresh the floor before saving.");
     }
-
+    for (const table of validated.tables) {
+      await tx.update(restaurantTables).set({
+        tableNumber: table.tableNumber, label: table.label, capacity: table.capacity
+      }).where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.id, table.id)));
+    }
+    await tx.insert(diningFloorPlans).values({ outletId, layout: validated, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
+        set: { layout: validated, updatedAt: new Date() } });
     return validated;
   });
 }
 
-/**
- * Creates or updates an individual table.
- */
-export async function createOrUpdateTable(
-  actor: Actor,
-  outletId: string,
-  table: VisualTable
-): Promise<VisualTable> {
+/** Create a physical table and visual placement in one transaction. */
+export async function createFloorTable(actor: Actor, outletId: string, table: VisualTable, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
+  const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    // Check if table already exists
-    const existing = await tx
-      .select({ id: restaurantTables.id })
-      .from(restaurantTables)
-      .where(and(eq(restaurantTables.id, table.id), eq(restaurantTables.restaurantId, outletId)))
-      .limit(1);
-
-    if (existing[0]) {
-      await tx
-        .update(restaurantTables)
-        .set({
-          tableNumber: table.tableNumber,
-          label: table.label,
-          capacity: table.capacity,
-          isActive: true,
-        })
-        .where(eq(restaurantTables.id, table.id));
-    } else {
-      await tx.insert(restaurantTables).values({
-        id: table.id,
-        restaurantId: outletId,
-        tableNumber: table.tableNumber,
-        label: table.label,
-        capacity: table.capacity,
-        isActive: true,
-      });
+    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
+    const existing = new Set(active.map((t) => t.id));
+    const incoming = new Set(layout.tables.map((t) => t.id));
+    if (existing.has(table.id) || incoming.size !== existing.size + 1 || !incoming.has(table.id)
+      || [...existing].some((id) => !incoming.has(id))) {
+      throw new ConflictError("Table inventory changed; refresh before creating a table.");
     }
-
-    return table;
+    await tx.insert(restaurantTables).values({
+      id: table.id, restaurantId: outletId, tableNumber: table.tableNumber,
+      label: table.label, capacity: table.capacity, isActive: true
+    });
+    await tx.insert(diningFloorPlans).values({ outletId, layout, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
+        set: { layout, updatedAt: new Date() } });
+    return layout;
   });
 }
 
-/**
- * Deactivates a table (archives it).
- */
-export async function deleteTable(actor: Actor, outletId: string, tableId: string): Promise<void> {
+/** Never archive an actively used table or its associated QR code. */
+export async function deleteTable(actor: Actor, outletId: string, tableId: string, doc: FloorLayoutDoc): Promise<FloorLayoutDoc> {
+  const layout = floorLayoutDocSchema.parse(doc);
   return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    await tx
-      .update(restaurantTables)
-      .set({ isActive: false })
+    const active = await tx.select({ id: restaurantTables.id }).from(restaurantTables)
+      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
+    const existing = new Set(active.map((t) => t.id));
+    const expected = new Set([...existing].filter((id) => id !== tableId));
+    if (!existing.has(tableId)) throw new NotFoundError("Active table");
+    if (new Set(layout.tables.map((t) => t.id)).size !== expected.size
+        || layout.tables.some((t) => !expected.has(t.id))) {
+      throw new ConflictError("Table inventory changed; refresh before archiving.");
+    }
+    const blocked = await tx.execute<{ blocked: boolean }>(sql`
+      select (exists(select 1 from orders where restaurant_id=${outletId} and table_id=${tableId}
+        and (status in ('pending','accepted','preparing','ready') or payment_status='unpaid'))
+      or exists(select 1 from dining_reservations where outlet_id=${outletId} and table_id=${tableId}
+        and status in ('confirmed','seated'))
+      or exists(select 1 from qr_codes where restaurant_id=${outletId} and table_id=${tableId} and is_active)) as blocked`);
+    if (blocked.rows[0]?.blocked) throw new ConflictError("Table has active orders, bookings or QR codes. Resolve them before archiving.");
+    await tx.update(restaurantTables).set({ isActive: false })
       .where(and(eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId)));
+    await tx.insert(diningFloorPlans).values({ outletId, layout, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: diningFloorPlans.outletId,
+        set: { layout, updatedAt: new Date() } });
+    return layout;
   });
 }
 

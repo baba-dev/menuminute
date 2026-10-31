@@ -20,6 +20,8 @@ interface DiningFloorCanvasProps {
   hapticsEnabled: boolean;
   zoom: number;
   onOpenInspector: (table: VisualTable) => void;
+  onDuplicateTable: (table: VisualTable) => void;
+  onDeleteTable: (table: VisualTable) => void;
   activeSectionFilter: string;
 }
 
@@ -33,6 +35,8 @@ export function DiningFloorCanvas({
   hapticsEnabled,
   zoom,
   onOpenInspector,
+  onDuplicateTable,
+  onDeleteTable,
   activeSectionFilter,
 }: DiningFloorCanvasProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -170,36 +174,14 @@ export function DiningFloorCanvas({
     });
   };
 
-  // Duplicate table
+  // Physical table mutations must be committed through the service.
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!selectedTable) return;
-    haptics.confirm();
-    const newId = crypto.randomUUID();
-    const duplicate: VisualTable = {
-      ...selectedTable,
-      id: newId,
-      tableNumber: `${selectedTable.tableNumber}-B`,
-      x: selectedTable.x + 40,
-      y: selectedTable.y + 40,
-    };
-    onChangeLayout({
-      ...layout,
-      tables: [...layout.tables, duplicate],
-    });
-    onSelectTable(duplicate);
+    if (selectedTable) onDuplicateTable(selectedTable);
   };
-
-  // Delete table
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!selectedTable) return;
-    haptics.drop();
-    onChangeLayout({
-      ...layout,
-      tables: layout.tables.filter((t) => t.id !== selectedTable.id),
-    });
-    onSelectTable(null);
+    if (selectedTable) onDeleteTable(selectedTable);
   };
 
   // Keyboard navigation
@@ -226,20 +208,15 @@ export function DiningFloorCanvas({
           }),
         });
       }
-      if (e.key === "Delete" || e.key === "Backspace") {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedTable) {
         e.preventDefault();
-        haptics.drop();
-        onChangeLayout({
-          ...layout,
-          tables: layout.tables.filter((t) => t.id !== selectedTableId),
-        });
-        onSelectTable(null);
+        onDeleteTable(selectedTable);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedTableId, snapEnabled, layout, onChangeLayout, onSelectTable, haptics]);
+  }, [selectedTableId, snapEnabled, layout, onChangeLayout, onSelectTable, onDeleteTable, selectedTable, haptics]);
 
   const { width: canvasW, height: canvasH } = layout.canvas;
 

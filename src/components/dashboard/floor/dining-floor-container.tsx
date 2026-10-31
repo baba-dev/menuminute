@@ -208,21 +208,60 @@ export function DiningFloorContainer({
       tables: [...layout.tables, newTable],
     };
 
-    setLayout(nextLayout);
-    setSelectedTableId(newId);
-    setInspectorOpen(true);
-    persistLayout(nextLayout);
-
     try {
-      await fetch("/api/floor/tables", {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      const res = await fetch("/api/floor/tables", {
         method: "POST",
         headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
-        body: JSON.stringify(newTable),
+        body: JSON.stringify({ table: newTable, layout: nextLayout }),
       });
+      if (!res.ok) throw new Error("Table could not be created. Refresh and retry.");
+      setLayout((await res.json()) as FloorLayoutDoc);
+      setSelectedTableId(newId);
+      setInspectorOpen(true);
       toast.success(`Table ${newTable.tableNumber} created on floor`);
-    } catch {
-      // Background sync handles persistence
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create table");
     }
+  };
+
+  const handleDuplicateTable = async (table: VisualTable) => {
+    let number = `${table.tableNumber}-B`;
+    let suffix = 2;
+    while (layout.tables.some((t) => t.tableNumber === number)) number = `${table.tableNumber}-B${suffix++}`;
+    const duplicate: VisualTable = { ...table, id: crypto.randomUUID(), tableNumber: number,
+      x: Math.min(layout.canvas.width - table.width, table.x + 40),
+      y: Math.min(layout.canvas.height - table.height, table.y + 40) };
+    try {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      const res = await fetch("/api/floor/tables", {
+        method: "POST", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+        body: JSON.stringify({ table: duplicate, layout: { ...layout, tables: [...layout.tables, duplicate] } })
+      });
+      if (!res.ok) throw new Error("Could not duplicate table");
+      setLayout((await res.json()) as FloorLayoutDoc);
+      setSelectedTableId(duplicate.id);
+      toast.success("Table duplicated");
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not duplicate table"); }
+  };
+
+  const handleDeleteTable = async (table: VisualTable) => {
+    if (!window.confirm(`Archive Table ${table.tableNumber}? Active orders, bookings and QR codes must be cleared first.`)) return;
+    try {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      const res = await fetch("/api/floor/tables", {
+        method: "DELETE", headers: { "content-type": "application/json", "x-outlet-id": outlet.id },
+        body: JSON.stringify({ tableId: table.id, layout: { ...layout, tables: layout.tables.filter((t) => t.id !== table.id) } })
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message ?? "Could not archive table");
+      }
+      setLayout((await res.json()) as FloorLayoutDoc);
+      setSelectedTableId(null);
+      setInspectorOpen(false);
+      toast.success("Table archived");
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not archive table"); }
   };
 
   // Generate Table QR Code via /api/qr
@@ -450,6 +489,8 @@ export function DiningFloorContainer({
             snapEnabled={snapEnabled}
             hapticsEnabled={hapticsEnabled}
             zoom={zoom}
+            onDuplicateTable={handleDuplicateTable}
+            onDeleteTable={handleDeleteTable}
             onOpenInspector={(t) => {
               setSelectedTableId(t.id);
               setInspectorOpen(true);
