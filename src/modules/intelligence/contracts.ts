@@ -109,6 +109,8 @@ export type ProviderAdapter = (
   options?: {
     request?: typeof fetch;
     signal?: AbortSignal;
+    /** Opt-in NVIDIA-only wire parameter for short structured responses. */
+    reasoningEffort?: "none";
   }
 ) => Promise<InferenceResult>;
 export type FailureCode =

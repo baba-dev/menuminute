@@ -206,6 +206,8 @@ export async function chatCompletion(
   options: {
     request?: typeof fetch;
     signal?: AbortSignal;
+    /** Explicit opt-in only; ordinary Ember requests are not affected. */
+    reasoningEffort?: "none";
   } = {}
 ): Promise<InferenceResult> {
   if (input.capability === "tools" && !model.supportsTools)
@@ -228,7 +230,12 @@ export async function chatCompletion(
           ? Math.max(input.maxOutputTokens, 2048)
           : input.maxOutputTokens,
       temperature: input.temperature,
-      ...(nemotronTools ? { reasoning_effort: "none" } : {}),
+      // The concierge explicitly opts out of reasoning for reliable short JSON responses.
+      // Retain the previously verified Nemotron tool profile for Ember unchanged.
+      ...(nemotronTools ||
+      (model.provider === "nvidia" && options.reasoningEffort === "none")
+        ? { reasoning_effort: "none" }
+        : {}),
       ...(input.responseFormat ? { response_format: input.responseFormat } : {}),
       ...(input.capability === "tools"
         ? {

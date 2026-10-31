@@ -153,7 +153,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
           tools: [],
           responseFormat: { type: "json_object" },
           temperature: 0.25,
-          maxOutputTokens: 1800,
+          maxOutputTokens: 2048,
           messages: [
             { role: "system", content: instruction },
             {
@@ -177,7 +177,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
             },
           ],
         },
-        { signal: req.signal }
+        { signal: req.signal, reasoningEffort: "none" }
       );
       if (
         result.finishReason === "stop" &&
