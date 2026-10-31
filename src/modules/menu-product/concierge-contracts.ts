@@ -16,12 +16,12 @@ export type ConciergePreferences = z.infer<typeof conciergePreferencesSchema>;
 export const conciergeRecommendationSchema = z.object({
   title: z.string().trim().min(3).max(100),
   introduction: z.string().trim().max(260),
-  dishIds: z.array(z.string().regex(/^[A-Za-z0-9_-]{1,128}$/)).min(1).max(12),
+  items: z.array(z.object({dishId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/), quantity: z.number().int().min(1).max(12)}).strict()).min(1).max(12),
 }).strict();
 export type ConciergeRecommendation = z.infer<typeof conciergeRecommendationSchema>;
 
 export const conciergeResponseSchema = z.object({
-  recommendations: z.array(conciergeRecommendationSchema).min(1).max(3),
+  recommendations: z.array(conciergeRecommendationSchema).max(3),
   source: z.enum(["nvidia", "curated"]),
   fingerprint: z.string().min(1),
   notice: z.string().max(280).nullable(),
