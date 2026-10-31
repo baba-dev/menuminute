@@ -533,8 +533,7 @@ export const ownerArticles: HelpArticle[] = [
     ],
     visualMockup: {
       type: "eight-six-board",
-      caption:
-        "An example of how you can mark a dish sold out or restore its availability.",
+      caption: "An example of how you can mark a dish sold out or restore its availability.",
       altText: "Illustration of available and sold-out dishes",
     },
     sections: [
