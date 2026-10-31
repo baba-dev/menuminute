@@ -148,16 +148,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
               />
             </Link>
           </div>
-          <div className="mm-workspace-outlet">
-            <span className="mm-workspace-caption">Current outlet</span>
-            <h2 className="mm-workspace-outlet-name">{restaurant?.name || "Set up an outlet"}</h2>
-            <p className="mm-workspace-outlet-meta">
-              {restaurant
-                ? "Selected outlet · " + restaurant.currency
-                : "Create an outlet to get started"}
-            </p>
-            <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
-          </div>
+          {outlets.length > 1 && (
+            <div className="mm-workspace-outlet">
+              <span className="mm-workspace-caption">Current outlet</span>
+              <ContextSwitcher outlets={outlets} selected={restaurant?.id} />
+            </div>
+          )}
           <WorkspaceNavigation capabilities={capabilities} />
           {isSuperAdmin && (
             <Link href="/admin" className="mm-workspace-nav-link">
