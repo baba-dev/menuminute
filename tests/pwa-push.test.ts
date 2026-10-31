@@ -141,6 +141,17 @@ describe("PWA H: push service safety and signing", () => {
       PWA_PUSH_VAPID_SUBJECT: undefined,
     });
     expect(config.PWA_PUSH_ENABLED).toBe(false);
+    const blanks = parseEnv({
+      ...process.env,
+      PWA_PUSH_ENABLED: "false",
+      PWA_PUSH_OUTLET_IDS: "",
+      PWA_PUSH_VAPID_PUBLIC_KEY: "",
+      PWA_PUSH_VAPID_PRIVATE_KEY: "",
+      PWA_PUSH_VAPID_SUBJECT: "",
+    });
+    expect(blanks.PWA_PUSH_ENABLED).toBe(false);
+    expect(blanks.PWA_PUSH_VAPID_PUBLIC_KEY).toBeUndefined();
+
   });
 
   it("keeps database and worker boundaries visible for migration/security review", async () => {
