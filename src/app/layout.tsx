@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 
 import "@/styles/menu-product.css";
 import "@/styles/public-dining.css";
+import { PwaLifecycle } from "@/components/pwa/pwa-lifecycle";
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
@@ -47,9 +48,22 @@ export const metadata: Metadata = {
     "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
   applicationName: "MenuMinute",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/brand/icons/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/brand/icons/favicon.svg",
+    apple: [
+      {
+        url: "/brand/icons/pwa/apple-touch-icon-180.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MenuMinute",
   },
   authors: [{ name: "MenuMinute" }],
   creator: "MenuMinute",
@@ -94,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <ThemeSync />
         {children}
+        <PwaLifecycle />
         <Toaster richColors position="top-right" />
       </body>
     </html>
