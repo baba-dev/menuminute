@@ -127,7 +127,9 @@ export type FailureCode =
 export class IntelligenceError extends Error {
   constructor(
     readonly code: FailureCode,
-    readonly httpStatus?: number
+    readonly httpStatus?: number,
+    /** Operator-facing diagnostic only (never shown to end users, never a secret). */
+    readonly reason?: string
   ) {
     super(code);
     this.name = "IntelligenceError";

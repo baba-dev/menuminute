@@ -49,18 +49,21 @@ export function assistantSpendPolicy(
   const cap = nvidia
     ? config.AI_EMBER_NVIDIA_DAILY_CAP_MICROUSD
     : config.AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD;
-  if (
-    !model ||
-    model !== expectedModel ||
-    !valid(inputPrice) ||
-    !valid(outputPrice) ||
-    !valid(cap) ||
-    !Number.isSafeInteger(requestedOutputTokens) ||
-    requestedOutputTokens < 1 ||
-    requestedOutputTokens > 4096
-  ) {
-    throw new IntelligenceError("not_configured");
-  }
+  const reason = !model
+    ? "model_missing"
+    : model !== expectedModel
+      ? "model_mismatch"
+      : !valid(inputPrice) || !valid(outputPrice)
+        ? "pricing_missing"
+        : !valid(cap)
+          ? "daily_cap_missing"
+          : !Number.isSafeInteger(requestedOutputTokens) ||
+              requestedOutputTokens < 1 ||
+              requestedOutputTokens > 4096
+            ? "bad_output_cap"
+            : undefined;
+  if (reason || !valid(inputPrice) || !valid(outputPrice) || !valid(cap))
+    throw new IntelligenceError("not_configured", undefined, reason);
   const serialized = JSON.stringify({ messages, tools });
   const inputLimit = Buffer.byteLength(serialized, "utf8") + 4096;
   if (inputLimit > 1_000_000) throw new IntelligenceError("invalid_request");

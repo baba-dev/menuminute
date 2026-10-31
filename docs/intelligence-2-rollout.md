@@ -129,6 +129,19 @@ would exceed the cap. Rates are snapshotted per attempt: settled actual charges
 use the provider's usage fields, not a later price edit. An unknown/failed/timeout
 response keeps the full reservation, and there is no provider failover.
 
+### Symptom: every Ember answer says "not_configured"
+
+Cause: `AI_ASSISTANT_READ_ONLY_ENABLED=true` with a verified provider but the three
+`AI_EMBER_<PROVIDER>_*` values unset (or `AI_*_MODEL` no longer matching the selected
+model). Each turn is then refused at spend reservation and no business action is taken.
+
+Since this change the server **refuses to boot** in that state, naming the missing variable.
+Operator fix: set the three values for the provider in use to the approved rates and daily
+cap, restart web **and** worker (environment is parsed at boot), then ask Ember one
+question. A failed turn's server log line `[ember] Read-only turn failed` carries
+`stage` and a non-secret `reason` (`pricing_missing`, `daily_cap_missing`, `model_mismatch`,
+`model_missing`, `bad_output_cap`). Blank values count as unset.
+
 Do not infer billed totals from this ledger: provider cache discounts, hidden
 reasoning usage, rounding and invoiced charges must be reconciled independently.
 An unexpected provider token count above the reserved bound is accounted at full

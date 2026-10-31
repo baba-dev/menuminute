@@ -251,6 +251,9 @@ jobs:
       AI_CLOUDFLARE_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
       CLOUDFLARE_ACCOUNT_ID: "00000000000000000000000000000000"
       CLOUDFLARE_API_TOKEN: "synthetic-browser-test-never-used"
+      AI_EMBER_CLOUDFLARE_INPUT_MICROUSD_MTOK: "1000"
+      AI_EMBER_CLOUDFLARE_OUTPUT_MICROUSD_MTOK: "1000"
+      AI_EMBER_CLOUDFLARE_DAILY_CAP_MICROUSD: "1000000"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

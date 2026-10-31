@@ -205,6 +205,7 @@ export async function runReadOnlyTurn(
       code,
       kind: error instanceof Error ? error.name : "unknown",
       providerStatus: error instanceof IntelligenceError ? error.httpStatus : undefined,
+      reason: error instanceof IntelligenceError ? error.reason : undefined,
       sqlstate: safeSqlstate(error),
     });
     // A revoked actor may lose the ability to settle their own stored turn. That
