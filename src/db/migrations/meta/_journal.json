@@ -400,6 +400,13 @@
       "when": 1793451600012,
       "tag": "0056_deferred_email_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793451600014,
+      "tag": "0058_pwa_push",
+      "breakpoints": true
     }
   ]
 }

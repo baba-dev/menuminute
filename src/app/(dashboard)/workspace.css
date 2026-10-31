@@ -16,6 +16,7 @@
   height: 100dvh;
   min-width: 0;
   flex-direction: column;
+  overflow-x: clip;
   border-right: 1px solid var(--decorative);
   background: var(--paper);
 }
@@ -69,19 +70,6 @@
   text-transform: uppercase;
 }
 
-.mm-workspace-outlet-name {
-  overflow-wrap: anywhere;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.mm-workspace-outlet-meta {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
 .mm-workspace-switcher {
   margin-top: 11px;
 }
@@ -99,9 +87,7 @@
 }
 
 .mm-workspace-switcher select:focus-visible,
-.mm-workspace-nav-link:focus-visible,
-.mm-workspace-profile a:focus-visible,
-.mm-workspace-logout:focus-visible {
+.mm-workspace-nav-link:focus-visible {
   outline: 3px solid var(--mm-focus);
   outline-offset: 3px;
 }
@@ -119,10 +105,15 @@
 }
 
 .mm-workspace-nav {
+  box-sizing: border-box;
+  min-width: 0;
   min-height: 0;
+  width: 100%;
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 20px 12px;
+  overscroll-behavior-y: contain;
+  padding: 16px 10px 18px;
 }
 
 .mm-workspace-nav-label {
@@ -131,15 +122,19 @@
 
 .mm-workspace-nav-items {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
 .mm-workspace-nav-link {
+  box-sizing: border-box;
   display: flex;
+  min-width: 0;
   min-height: 44px;
+  width: 100%;
   align-items: center;
-  gap: 12px;
-  padding: 10px 13px;
+  gap: 10px;
+  padding: 9px 10px;
   border-radius: 11px;
   color: var(--ink);
   font-size: 13px;
@@ -148,14 +143,28 @@
   transition:
     background-color 150ms ease,
     color 150ms ease;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
+
+.mm-workspace-nav-link > svg {
+  flex: none;
+}
+
+.mm-workspace-nav-link > span {
+  min-width: 0;
+}
+
 .mm-workspace-nav-link.is-unavailable {
+  flex-wrap: wrap;
   cursor: not-allowed;
   opacity: 0.58;
 }
 .mm-workspace-nav-link.is-unavailable small {
-  margin-left: auto;
+  max-width: calc(100% - 29px);
+  margin-left: 29px;
+  overflow-wrap: anywhere;
   font-size: 0.65rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -176,26 +185,6 @@
   color: #ffcb75;
 }
 
-.mm-workspace-profile {
-  display: flex;
-  min-height: 88px;
-  align-items: center;
-  gap: 7px;
-  margin: 0 18px;
-  border-top: 1px solid var(--decorative);
-}
-
-.mm-workspace-profile-link {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: center;
-  gap: 9px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.mm-workspace-avatar,
 .mm-dashboard-user {
   display: inline-flex;
   width: 37px;
@@ -209,47 +198,6 @@
   font-size: 11px;
   font-weight: 800;
   text-decoration: none;
-}
-
-.mm-workspace-profile-copy {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.mm-workspace-profile-copy strong {
-  overflow: hidden;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mm-workspace-profile-copy small {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.mm-workspace-logout {
-  display: inline-flex;
-  width: 35px;
-  height: 35px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.mm-workspace-logout:hover {
-  background: var(--panel);
-  color: var(--danger);
-}
-
-.mm-workspace-profile .mm-theme-toggle {
-  width: 35px;
-  height: 35px;
-  min-height: 35px;
-  border: 0;
 }
 
 .mm-workspace-main {
@@ -1110,7 +1058,6 @@
   .mm-workspace-brand {
     min-height: 60px;
     margin: 0 16px;
-    padding-right: 130px;
   }
 
   .mm-workspace-brand img {
@@ -1125,57 +1072,9 @@
     margin-bottom: 2px;
   }
 
-  .mm-workspace-outlet-name {
-    font-size: 13px;
-  }
-
-  .mm-workspace-outlet-meta {
-    display: none;
-  }
-
   .mm-workspace-switcher {
     max-width: 220px;
     margin-top: 5px;
-  }
-
-  .mm-workspace-nav {
-    overflow: visible;
-    padding: 5px 11px 10px;
-  }
-
-  .mm-workspace-nav-label {
-    display: none;
-  }
-
-  .mm-workspace-nav-items {
-    display: flex;
-    gap: 5px;
-    overflow-x: auto;
-    padding-bottom: 3px;
-    scrollbar-width: thin;
-  }
-
-  .mm-workspace-nav-link {
-    min-height: 42px;
-    flex: none;
-    padding: 9px 12px;
-  }
-
-  .mm-workspace-profile {
-    position: absolute;
-    top: 7px;
-    right: 12px;
-    min-height: 44px;
-    margin: 0;
-    border: 0;
-  }
-
-  .mm-workspace-profile-link {
-    flex: none;
-  }
-
-  .mm-workspace-profile-copy {
-    display: none;
   }
 
   .mm-workspace-main {
@@ -1302,17 +1201,11 @@
 
 @media (max-width: 390px) {
   .mm-workspace-brand {
-    padding-right: 54px;
     margin: 0 10px;
   }
 
   .mm-workspace-brand img {
-    width: 110px;
-  }
-
-  .mm-workspace-profile {
-    top: 8px;
-    right: 8px;
+    width: 145px;
   }
 
   .mm-dashboard-hero {

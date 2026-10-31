@@ -9,6 +9,22 @@ const redisUrl = z
   .url()
   .refine((v) => /^rediss?:\/\//.test(v), "Redis URL required");
 const strictBoolean = z.enum(["true", "false"]).transform((v) => v === "true");
+const rolloutOutletIds = z
+  .string()
+  .max(6_500)
+  .default("")
+  .transform((value) =>
+    value
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean)
+  )
+  .pipe(
+    z
+      .array(z.string().regex(/^[A-Za-z0-9_-]{1,128}$/))
+      .max(50)
+      .refine((ids) => new Set(ids).size === ids.length, "Outlet IDs must be unique")
+  );
 const smtpHostname = z
   .string()
   .trim()
@@ -59,6 +75,35 @@ export const envSchema = z
     PEXELS_API_KEY: z.string().optional(),
     AI_FEATURES_ENABLED: strictBoolean.default(false),
     IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
+    // Operational PWA phases F-G: both the master switch and the exact outlet allowlist are
+    // required. This remains independent from POS/Kitchen product activation and permissions.
+    PWA_OPERATIONAL_ENABLED: strictBoolean.default(false),
+    PWA_OPERATIONAL_OUTLET_IDS: rolloutOutletIds,
+    // H: opt-in push is independent of the guest offline and POS/Kitchen flags.
+    PWA_PUSH_ENABLED: strictBoolean.default(false),
+    PWA_PUSH_OUTLET_IDS: rolloutOutletIds,
+    // Treat blank, unconfigured .env entries as absent while the feature stays off.
+    PWA_PUSH_VAPID_PUBLIC_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{87}$/)
+        .optional()
+    ),
+    PWA_PUSH_VAPID_PRIVATE_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{43}$/)
+        .optional()
+    ),
+    PWA_PUSH_VAPID_SUBJECT: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^mailto:[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/)
+        .optional()
+    ),
     // Ember provider hub: independent activation from the existing review-only import engine.
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
@@ -131,6 +176,24 @@ export const envSchema = z
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
+    if (
+      e.PWA_PUSH_ENABLED &&
+      (e.PWA_PUSH_OUTLET_IDS.length === 0 ||
+        !e.PWA_PUSH_VAPID_PUBLIC_KEY ||
+        !e.PWA_PUSH_VAPID_PRIVATE_KEY ||
+        !e.PWA_PUSH_VAPID_SUBJECT)
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["PWA_PUSH_ENABLED"],
+        message: "Push requires approved outlet IDs, a P-256 VAPID key pair and contact subject",
+      });
+    if (e.PWA_OPERATIONAL_ENABLED && e.PWA_OPERATIONAL_OUTLET_IDS.length === 0)
+      ctx.addIssue({
+        code: "custom",
+        path: ["PWA_OPERATIONAL_OUTLET_IDS"],
+        message: "Operational PWA rollout requires at least one outlet ID",
+      });
     if (e.AI_ASSISTANT_ACTIONS_ENABLED && !e.AI_ASSISTANT_READ_ONLY_ENABLED)
       ctx.addIssue({
         code: "custom",

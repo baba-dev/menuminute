@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import nextConfig from "../next.config";
 import manifest from "../src/app/manifest";
+import { parseEnv } from "../src/lib/config/env";
 
 type WorkerPolicy = {
   CACHE_PREFIX: string;
@@ -13,7 +14,17 @@ type WorkerPolicy = {
     mode: string;
     url: string;
     headers: Headers;
-  }): "network-only" | "public-navigation" | "public-read" | "static";
+  }):
+    | "network-only"
+    | "public-navigation"
+    | "guest-navigation"
+    | "guest-read"
+    | "guest-media"
+    | "static";
+  parseGuestEnrollment(
+    data: unknown,
+    clientUrl: string
+  ): { enabled: boolean; pageUrl: string; apiUrl: string; syncedAt: string } | null;
   responseCanBeCached(response: Response): boolean;
 };
 
@@ -107,18 +118,20 @@ describe("PWA cache policy", () => {
     const { policy } = await loadWorkerPolicy();
     expect(policy.classifyRequest(request("/", { mode: "navigate" }))).toBe("public-navigation");
     expect(policy.classifyRequest(request("/m/public-token", { mode: "navigate" }))).toBe(
-      "public-navigation"
+      "guest-navigation"
     );
     expect(policy.classifyRequest(request("/api/public-menu/public-token?lang=hi"))).toBe(
-      "public-read"
+      "guest-read"
     );
-    expect(policy.classifyRequest(request("/api/public-media/media-id"))).toBe("public-read");
+    expect(policy.classifyRequest(request("/api/public-media/media-id"))).toBe("guest-media");
     expect(policy.classifyRequest(request("/_next/static/chunks/app.js"))).toBe("static");
   });
 
   it.each([
     ["POST order submission", request("/api/orders", { method: "POST" })],
     ["private context API", request("/api/context")],
+    ["private device alerts GET", request("/api/pwa/push")],
+    ["private device alerts POST", request("/api/pwa/push", { method: "POST" })],
     ["dashboard navigation", request("/dashboard", { mode: "navigate" })],
     ["kitchen navigation", request("/kitchen", { mode: "navigate" })],
     ["admin navigation", request("/admin", { mode: "navigate" })],
@@ -134,9 +147,11 @@ describe("PWA cache policy", () => {
 
   it("does not register background sync and rejects personalized responses", async () => {
     const { listeners, policy } = await loadWorkerPolicy();
-    expect(listeners).toEqual(new Set(["install", "activate", "message", "fetch"]));
+    expect(listeners).toEqual(
+      new Set(["install", "activate", "message", "fetch", "push", "notificationclick"])
+    );
     expect(listeners.has("sync")).toBe(false);
-    expect(policy.CACHE_PREFIX).toBe("menuminute-pwa-v1-");
+    expect(policy.CACHE_PREFIX).toBe("menuminute-pwa-v2-");
     expect(policy.PRECACHE_URLS).toContain("/offline");
     expect(
       policy.responseCanBeCached(
@@ -144,5 +159,68 @@ describe("PWA cache policy", () => {
       )
     ).toBe(false);
     expect(policy.responseCanBeCached(new Response("public", { status: 200 }))).toBe(true);
+  });
+
+  it("accepts only same-origin, same-token guest enrollment from the matching menu client", async () => {
+    const { policy } = await loadWorkerPolicy();
+    const data = {
+      type: "SET_GUEST_OFFLINE",
+      enabled: true,
+      pagePath: "/m/public-token?lang=hi",
+      apiPath: "/api/public-menu/public-token?lang=hi",
+    };
+    expect(
+      policy.parseGuestEnrollment(data, "https://food.bababuilds.com/m/public-token?lang=hi")
+    ).toMatchObject({
+      enabled: true,
+      pageUrl: "https://food.bababuilds.com/m/public-token?lang=hi",
+      apiUrl: "https://food.bababuilds.com/api/public-menu/public-token?lang=hi",
+    });
+    expect(
+      policy.parseGuestEnrollment(
+        { ...data, apiPath: "/api/public-menu/another-token?lang=hi" },
+        "https://food.bababuilds.com/m/public-token?lang=hi"
+      )
+    ).toBeNull();
+    expect(
+      policy.parseGuestEnrollment(data, "https://food.bababuilds.com/m/another-token?lang=hi")
+    ).toBeNull();
+    expect(
+      policy.parseGuestEnrollment(
+        { ...data, apiPath: "/api/public-menu/public-token" },
+        "https://food.bababuilds.com/m/public-token?lang=hi"
+      )
+    ).toMatchObject({ apiUrl: "https://food.bababuilds.com/api/public-menu/public-token" });
+    expect(
+      policy.parseGuestEnrollment(
+        { ...data, pagePath: "https://evil.example/m/public-token?lang=hi" },
+        "https://food.bababuilds.com/m/public-token?lang=hi"
+      )
+    ).toBeNull();
+  });
+});
+
+describe("PWA operational rollout configuration", () => {
+  it("requires a bounded unique allowlist when the master gate is enabled", () => {
+    const enabled = parseEnv({
+      ...process.env,
+      PWA_OPERATIONAL_ENABLED: "true",
+      PWA_OPERATIONAL_OUTLET_IDS: "demo-outlet, second-outlet",
+    });
+    expect(enabled.PWA_OPERATIONAL_OUTLET_IDS).toEqual(["demo-outlet", "second-outlet"]);
+    expect(() =>
+      parseEnv({
+        ...process.env,
+        PWA_OPERATIONAL_ENABLED: "true",
+        PWA_OPERATIONAL_OUTLET_IDS: "",
+      })
+    ).toThrow("PWA_OPERATIONAL_OUTLET_IDS");
+    expect(() =>
+      parseEnv({
+        ...process.env,
+        PWA_OPERATIONAL_ENABLED: "true",
+        PWA_OPERATIONAL_OUTLET_IDS: "demo-outlet,demo-outlet",
+      })
+    ).toThrow("PWA_OPERATIONAL_OUTLET_IDS");
   });
 });

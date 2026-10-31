@@ -199,6 +199,17 @@ describe("grouped sidebar", () => {
     expect(screen.queryByRole("button", { name: /Add-ons/ })).toBeNull();
     expect(screen.getAllByText("Availability unknown").length).toBeGreaterThan(0);
   });
+
+  it("shows Platform admin only for server-authorized administrators", () => {
+    const view = render(<WorkspaceNavigation capabilities={caps()} />);
+    expect(screen.queryByRole("link", { name: "Platform admin" })).toBeNull();
+    view.rerender(<WorkspaceNavigation capabilities={caps()} isSuperAdmin />);
+    const admin = screen.getByRole("group", { name: "Admin" });
+    expect(within(admin).getByRole("link", { name: "Platform admin" })).toHaveAttribute(
+      "href",
+      "/admin"
+    );
+  });
 });
 
 describe("mobile bottom bar", () => {
@@ -216,6 +227,30 @@ describe("mobile bottom bar", () => {
         .map((l) => l.getAttribute("aria-label"))
     ).toEqual(["Orders", "Point of Sale", "Kitchen", "Dining floor"]);
     expect(within(bar).getByRole("button", { name: "More" })).toBeInTheDocument();
+  });
+
+  it("keeps privileged navigation in More without showing it to other users", async () => {
+    const view = render(
+      <Shell withScope={false}>
+        <WorkspaceBottomBar />
+      </Shell>
+    );
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    let dialog = await screen.findByRole("dialog", { name: "More" });
+    expect(within(dialog).queryByRole("link", { name: "Platform admin" })).toBeNull();
+    view.unmount();
+
+    render(
+      <Shell withScope={false}>
+        <WorkspaceBottomBar isSuperAdmin />
+      </Shell>
+    );
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    dialog = await screen.findByRole("dialog", { name: "More" });
+    expect(within(dialog).getByRole("link", { name: "Platform admin" })).toHaveAttribute(
+      "href",
+      "/admin"
+    );
   });
 
   it("keeps the Kitchen Setup name while it is still being set up", () => {

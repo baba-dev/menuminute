@@ -20,7 +20,7 @@ describe("Ember merchant intelligence routing and business dates", () => {
     expect(selectQuestionTools(names, "Any failed menu imports?")[0]?.name).toBe("imports.pulse");
     expect(selectQuestionTools(names, "Any failed menu import?")[0]?.name).toBe("imports.pulse");
     expect(selectQuestionTools(names, "How many QR codes?")[0]?.name).toBe("qr.pulse");
-    expect(selectQuestionTools(names, "Help me")[0]?.name).toBe("orders.pulse");
+    expect(selectQuestionTools(names, "Help me")[0]?.name).toBe("help.search");
   });
   it("uses the outlet calendar week across timezones, not server time", () => {
     const clock = new Date("2026-10-25T22:30:00Z"); // India Monday; UTC Sunday
