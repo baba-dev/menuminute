@@ -124,7 +124,14 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Import from photos" })).toBeVisible();
-  await expect(page.getByLabel("Menu Studio overview")).toBeVisible();
+  // Ignore an inactive route tree retained during an App Router transition,
+  // while still requiring one accessible, visible overview for the active page.
+  const studioOverview = page
+    .locator("#workspace-main")
+    .getByRole("region", { name: "Menu Studio overview" });
+  await expect(studioOverview).toHaveCount(1);
+  await expect(studioOverview).toBeVisible();
+  await expect(page.locator('[aria-label="Menu Studio overview"]:visible')).toHaveCount(1);
   await page.getByPlaceholder("Search dishes or sections").fill("nonexistent-dish-search");
   await expect(page.getByPlaceholder("Search dishes or sections")).toHaveValue(
     "nonexistent-dish-search"
