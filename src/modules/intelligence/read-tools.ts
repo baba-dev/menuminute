@@ -21,10 +21,18 @@ import { posWorkspace } from "@/modules/pos/service";
 import { listMenus } from "@/modules/menu-product/service";
 import { menuDocumentSchema } from "@/modules/menu-product/contracts";
 import { NotFoundError } from "@/lib/errors";
+import { env } from "@/lib/config/env";
+import { executeProposeTool, isProposeTool, proposeToolDefinitions } from "./propose-tools";
 import { withActor, withOutletRead, type Actor } from "@/modules/tenancy/service";
 
 /** Tool descriptions are authored server-side. No SQL, URLs or write tools exist here. */
-export type ToolContext = { actor: Actor; organizationId: string; outletId: string };
+export type ToolContext = {
+  actor: Actor;
+  organizationId: string;
+  outletId: string;
+  /** Present during a conversation turn; propose-only tools attach their pending request to it. */
+  conversationId?: string;
+};
 const empty = z.object({}).strict();
 const history = z
   .object({
@@ -348,7 +356,11 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     );
     return response.rows[0];
   });
-  return toolDefinitions().filter((definition) => {
+  const proposable = env.AI_ASSISTANT_ACTIONS_ENABLED
+    ? await proposeAccess(context, proposeToolDefinitions())
+    : [];
+  return [...toolDefinitions(), ...proposable].filter((definition) => {
+    if (isProposeTool(definition.name)) return true;
     if (definition.name === "help.search") return true;
     if (["menu.summary", "menu.findDish", "qr.pulse"].includes(definition.name))
       return access?.menu === true;
@@ -361,7 +373,29 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     return access?.orders === true;
   });
 }
+/** Keep a propose tool only when the person holds at least one permission it may need. */
+async function proposeAccess<T extends { permissions: string[] }>(context: ToolContext, defs: T[]) {
+  const held = await withActor(context.actor, async (tx) => {
+    await tx.execute(sql`select set_config('app.outlet_id',${context.outletId},true)`);
+    const all = [...new Set(defs.flatMap((d) => d.permissions))];
+    const out = new Set<string>();
+    for (const permission of all) {
+      const r = await tx.execute<{ allowed: boolean }>(
+        sql`select app_private.can_outlet(${context.outletId},${permission}) as allowed`
+      );
+      if (r.rows[0]?.allowed) out.add(permission);
+    }
+    return out;
+  });
+  return defs
+    .filter((d) => d.permissions.some((p) => held.has(p)))
+    .map(({ permissions: _p, ...rest }) => rest);
+}
 export async function executeReadTool(context: ToolContext, name: string, untrusted: unknown) {
+  if (isProposeTool(name)) {
+    if (!env.AI_ASSISTANT_ACTIONS_ENABLED) throw new Error("Unknown read-only tool");
+    return executeProposeTool(context, name, untrusted);
+  }
   // Deliberately dispatch individually so TypeScript and Zod validate each handler.
   switch (name) {
     case "orders.pulse":

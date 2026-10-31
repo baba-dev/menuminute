@@ -635,6 +635,9 @@
   .mm-ember-spin {
     animation: none;
   }
+  .mm-ember-act-timer {
+    display: none;
+  }
   .mm-ember-layer * {
     scroll-behavior: auto !important;
     transition: none !important;
@@ -667,4 +670,218 @@
   font-size: 12px;
   line-height: 1.45;
   opacity: 0.85;
+}
+
+/* ── Confirm-first action cards: one calm line, two buttons, no chrome ───────────────────── */
+.mm-ember-acts {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.mm-ember-act {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 11px 13px 13px;
+  border: 1px solid var(--decorative, #d8ccba);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--paper, #fff) 92%, #e79531 8%);
+  overflow: hidden;
+  animation: mm-ember-rise 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.mm-ember-act-text {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--ink, #23150e);
+  overflow-wrap: anywhere;
+}
+.mm-ember-act-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mm-ember-act-go,
+.mm-ember-act-skip {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    transform 140ms ease,
+    opacity 140ms ease;
+}
+.mm-ember-act-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: #e79531;
+  color: #2b1606;
+}
+.mm-ember-act[data-tone="careful"] .mm-ember-act-go {
+  background: #af3f18;
+  color: #fff;
+}
+.mm-ember-act-go:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+.mm-ember-act-go:active:not(:disabled) {
+  transform: translateY(0);
+}
+.mm-ember-act-skip {
+  border: 0;
+  background: transparent;
+  color: var(--muted, #695949);
+}
+.mm-ember-act-skip:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.mm-ember-act-go:disabled,
+.mm-ember-act-skip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.mm-ember-act-problem {
+  margin: 0;
+  font-size: 12px;
+  color: #af3f18;
+}
+/* Hairline that quietly drains over the request's remaining life. */
+.mm-ember-act-timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #e79531;
+  opacity: 0.45;
+  transform-origin: left center;
+  animation: mm-ember-drain linear forwards;
+}
+.mm-ember-act[data-working="true"] .mm-ember-act-timer {
+  animation-play-state: paused;
+}
+.mm-ember-act-receipt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted, #695949);
+  animation: mm-ember-rise 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.mm-ember-act-receipt svg {
+  flex: none;
+  margin-top: 2px;
+  color: #3f7d45;
+}
+.mm-ember-act-tick {
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  animation: mm-ember-draw 360ms 80ms ease-out both;
+}
+.mm-ember-act-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin: 7px 4px 0 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+.mm-ember-act-receipt-main {
+  color: var(--ink, #23150e);
+  font-weight: 600;
+}
+
+/* Thinking: three soft dots and a status line that fades between phrases. */
+.mm-ember-thinking {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted, #695949);
+}
+.mm-ember-thinking-text {
+  animation: mm-ember-fade 2600ms ease-in-out both;
+}
+.mm-ember-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.mm-ember-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e79531;
+  animation: mm-ember-pulse 1.2s ease-in-out infinite;
+}
+.mm-ember-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.mm-ember-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.mm-ember-act-go .mm-ember-dots i {
+  background: currentColor;
+  width: 4px;
+  height: 4px;
+}
+@keyframes mm-ember-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes mm-ember-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes mm-ember-draw {
+  from {
+    stroke-dashoffset: 16;
+  }
+}
+@keyframes mm-ember-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes mm-ember-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  12%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
 }

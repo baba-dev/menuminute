@@ -191,6 +191,19 @@ export function groundedMerchantAnswer(
     lines.push("", "*Order totals are not the same as verified paid revenue.*");
     return lines.join("\n");
   }
+  if (item.tool.startsWith("propose.")) {
+    const parsed = z
+      .object({
+        prepared: z.boolean(),
+        summary: z.string().optional(),
+        reason: z.string().optional(),
+      })
+      .safeParse(item.data);
+    if (!parsed.success) return null;
+    if (!parsed.data.prepared) return safe(parsed.data.reason ?? "I couldn't prepare that change.");
+    // The card carries the exact change; the reply stays short and never claims it is done.
+    return "I've prepared that for you. Nothing changes until you tap **Confirm** on the card below.";
+  }
   if (item.tool === "help.search") {
     const parsed = helpDataSchema.safeParse(item.data);
     if (!parsed.success) return null;

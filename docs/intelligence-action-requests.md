@@ -1,9 +1,29 @@
 # Ember confirm-first actions (generic framework)
 
-Status: **stage 1 of 3, not user-visible yet.** Stage 1 (this document's code) adds the storage,
-SQL functions and server module. Stage 2 adds the model's propose-only tools, API routes and the
-confirmation card. Stage 3 adds menu price/description kinds. `AI_ASSISTANT_ACTIONS_ENABLED`
-remains the kill switch; nothing here runs until stage 2 exposes it.
+Status: **stages 1-2 of 3 implemented.** Stage 1: storage, SQL functions and the server module
+(`action-requests.ts`). Stage 2: propose-only model tools (`propose-tools.ts`), the list/decide API
+routes and the confirmation card (`ember-action-card.tsx`). Stage 3 adds menu price/description
+kinds (draft-only, never publishing). `AI_ASSISTANT_ACTIONS_ENABLED` is the kill switch: with it
+off, no propose tool is advertised or executable and the routes refuse.
+
+## What people see
+
+Ask "accept order 12", "mark table 5's water request as seen" or "start the paneer for order 12".
+Ember replies in one short line and shows a quiet card with the exact change, **Confirm** and
+**Not now**, and a hairline that drains over the request's 10 minutes. Nothing changes before
+Confirm. Afterwards the card settles into a one-line receipt; "Not now" and expired cards simply
+disappear. Motion is a short entrance, the hairline, a drawn tick and soft thinking dots, all off
+under `prefers-reduced-motion`.
+
+## Propose-only tools
+
+`propose.guestRequest`, `propose.orderStatus`, `propose.kitchenTicket` take human references
+(table, order number, dish), resolve the real record on the server, check the next step is allowed
+(for orders: pending→accepted|rejected, accepted→preparing|cancelled, preparing→ready|cancelled,
+ready→cancelled|served (dine-in)|collected (pickup); kitchen-run orders are left to the kitchen) and
+store a pending request with a server-built summary. Ambiguity ("table 5 has two requests") is
+returned as a question, never guessed. Tools are advertised only when actions are enabled **and** the
+person holds a matching permission.
 
 ## Rules
 

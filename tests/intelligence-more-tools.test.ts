@@ -2,8 +2,26 @@ import { describe, expect, it } from "vitest";
 import { fixture } from "./helpers";
 import { executeReadTool, authorizedToolDefinitions } from "../src/modules/intelligence/read-tools";
 import { selectQuestionTools } from "../src/modules/intelligence/tool-selection";
+import { toolDefinitions } from "../src/modules/intelligence/read-tools";
+import { proposeToolDefinitions } from "../src/modules/intelligence/propose-tools";
+import { toolDefinition } from "../src/modules/intelligence/contracts";
 
 const NEW = ["service.requests", "qr.details", "reports.insights", "billing.status"];
+
+describe("Ember tool registry contract", () => {
+  it("every advertised tool satisfies the provider contract (a bad name fails every such question)", () => {
+    const all = [...toolDefinitions(), ...proposeToolDefinitions()];
+    for (const tool of all) {
+      const definition = {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+      };
+      expect(toolDefinition.safeParse(definition).success, tool.name).toBe(true);
+    }
+    expect(new Set(all.map((t) => t.name.replaceAll(".", "_"))).size).toBe(all.length);
+  });
+});
 
 describe("Ember additional read tools", () => {
   it("offers the new tools to an owner and returns safe, bounded data", async () => {

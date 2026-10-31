@@ -30,6 +30,10 @@ async function observed_GET(req: Request) {
         enabled: env.AI_ASSISTANT_READ_ONLY_ENABLED,
         actionsEnabled:
           env.AI_ASSISTANT_READ_ONLY_ENABLED && env.AI_ASSISTANT_ACTIONS_ENABLED && menuWrite,
+        actionRequests:
+          env.AI_ASSISTANT_READ_ONLY_ENABLED &&
+          env.AI_ASSISTANT_ACTIONS_ENABLED &&
+          tools.some((t) => t.name.startsWith("propose.")),
         demo: isDemoActor(actor.userId) ? { promptChars: DEMO_EMBER_PROMPT_CHARS } : null,
         tools: tools.map((t) => t.name),
         navigation: navigationForPermissions({

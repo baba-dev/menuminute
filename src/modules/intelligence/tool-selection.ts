@@ -23,6 +23,18 @@ export function selectQuestionTools<T extends { name: string }>(
     )
   )
     add("billing.status");
+  // Action requests ("mark order 12 ready", "resolve table 5's water request") prepare a
+  // confirm-first card. Only offered when the person's actions are enabled and permitted.
+  if (
+    /\b(mark|set|move|accept|reject|cancel|start|complete|finish|resolve|acknowledge|close|clear|dismiss)\b/.test(
+      q
+    )
+  ) {
+    if (/\b(table|water|bill|server|waiter|guest request)\b/.test(q) && !/\border\b/.test(q))
+      add("propose.guestRequest");
+    if (/\b(order|#\s?\d+)\b/.test(q)) add("propose.orderStatus");
+    if (/\b(ticket|kitchen|prep|start cooking)\b/.test(q)) add("propose.kitchenTicket");
+  }
   // Product questions (plans, pricing, features) are answered from the published Help Center.
   const productInfo =
     /\b(menuminute|kitchen pro|pricing|pricing plans?|commission|subscription|upgrade|free plan|offline|install(?:ing)? the app)\b/.test(

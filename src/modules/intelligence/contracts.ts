@@ -2,7 +2,8 @@ import { z } from "zod";
 
 /** Provider-neutral chat contract. There is deliberately no tool executor in PR A. */
 const text = z.string().max(16_000);
-const toolName = z.string().regex(/^[a-z][a-z0-9_.-]{0,63}$/);
+// camelCase segments are allowed ("menu.findDish"); the wire alias only replaces dots.
+const toolName = z.string().regex(/^[a-z][a-zA-Z0-9_.-]{0,63}$/);
 const argumentsObject = z.record(z.string(), z.unknown());
 export const toolCall = z
   .object({
