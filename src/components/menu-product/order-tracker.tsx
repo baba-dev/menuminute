@@ -506,7 +506,7 @@ export function OrderTracker({
                 Request assistance at your table. Staff must acknowledge your request; use in-person
                 help if urgent.
               </p>
-              <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+              <div className="service-actions">
                 {(
                   [
                     { id: "call_server", label: "Call server", Icon: BellRing },
@@ -520,7 +520,7 @@ export function OrderTracker({
                     disabled={callingService}
                     onClick={() => void callService(id)}
                     className="action secondary"
-                    style={{ minHeight: 44, flex: "1 1 110px", padding: "0.7rem" }}
+                    style={{ minHeight: 44, padding: "0.7rem" }}
                   >
                     <Icon size={17} aria-hidden="true" />
                     {callingService ? "Saving…" : label}

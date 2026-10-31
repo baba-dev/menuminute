@@ -62,6 +62,8 @@ export function PublicMenu({
     cartRef.current = cartItems;
   }, [cartItems]);
   const [cartHydrated, setCartHydrated] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+  const categoryNavRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
@@ -108,6 +110,38 @@ export function PublicMenu({
       // Ignore storage quota errors
     }
   }, [cartItems, token, cartHydrated]);
+
+  // Highlight the last category whose heading has passed under the sticky bar.
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>(".dining-section"));
+    if (!sections.length) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const passed = sections.filter((section) => section.getBoundingClientRect().top <= 140);
+      setActiveSection((passed.at(-1) ?? sections[0]!).id);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [data, search, diet]);
+  useEffect(() => {
+    const nav = categoryNavRef.current;
+    const pill = nav?.querySelector<HTMLElement>('[aria-current="location"]');
+    if (!nav || !pill) return;
+    nav.scrollTo({
+      left: pill.offsetLeft - (nav.clientWidth - pill.offsetWidth) / 2,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }, [activeSection]);
 
   useEffect(() => {
     if (!token || preview) return;
@@ -436,7 +470,11 @@ export function PublicMenu({
             ))}
           </div>
         </div>
-        <nav className="dining-categories no-print" aria-label="Menu categories">
+        <nav
+          ref={categoryNavRef}
+          className="dining-categories no-print"
+          aria-label="Menu categories"
+        >
           {docs.flatMap((menu) =>
             menu.view.categories
               .filter((category) => category.items.some((item) => matches(item, category.name)))
@@ -445,13 +483,16 @@ export function PublicMenu({
                   key={menu.id + category.id}
                   href={"#c-" + menu.id + "-" + category.id}
                   className="dining-category-tile"
+                  aria-current={
+                    activeSection === "c-" + menu.id + "-" + category.id ? "location" : undefined
+                  }
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={categoryImage(category.name)}
                     alt=""
-                    width={96}
-                    height={96}
+                    width={36}
+                    height={36}
                     loading="lazy"
                   />
                   <span>{category.name}</span>

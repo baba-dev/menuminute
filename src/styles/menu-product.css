@@ -884,6 +884,20 @@ body.font-sans {
   }
 }
 
+/* Table service actions: two columns, an odd last button spans the row. */
+.service-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+}
+.service-actions > button {
+  white-space: nowrap;
+  justify-content: center;
+}
+.service-actions > button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 /* Stepper Track */
 .stepper-track {
   list-style: none;

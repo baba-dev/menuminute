@@ -55,3 +55,15 @@ test("menu remains usable at 200% text zoom", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Paneer Tikka" })).toBeVisible();
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 });
+
+test("category bar is sticky and marks the active section for assistive tech", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(MENU);
+  const nav = page.getByRole("navigation", { name: "Menu categories" });
+  await expect(nav).toHaveCSS("position", "sticky");
+  const pill = nav.getByRole("link").first();
+  await pill.click();
+  await expect(pill).toHaveAttribute("aria-current", "location");
+  const box = await pill.boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+});
