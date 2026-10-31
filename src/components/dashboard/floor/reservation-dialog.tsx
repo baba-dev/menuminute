@@ -10,6 +10,7 @@ interface ReservationDialogProps {
   onClose: () => void;
   tables: VisualTable[];
   selectedTable: VisualTable | null;
+  outletTimezone: string;
   onSubmit: (input: CreateReservationInput) => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ export function ReservationDialog({
   onClose,
   tables,
   selectedTable,
+  outletTimezone,
   onSubmit,
 }: ReservationDialogProps) {
   const haptics = useHaptics(true);
@@ -48,7 +50,18 @@ export function ReservationDialog({
       setNotes("");
       setError("");
     }
-  }, [open, selectedTable?.id, selectedTable?.capacity, tables]);
+  }, [open, selectedTable?.id, selectedTable?.capacity]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const focus = document.getElementById("res-guest-name");
+    focus?.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, busy, onClose]);
 
   if (!open) return null;
 
@@ -201,7 +214,8 @@ export function ReservationDialog({
             </div>
 
             <div className="mm-form-row sm:col-span-2">
-              <label htmlFor="res-time">Date & Arrival Time</label>
+              <label htmlFor="res-time">Date & Arrival Time (device local time)</label>
+              <p className="text-muted-foreground text-xs">Outlet timezone: {outletTimezone}</p>
               <input
                 id="res-time"
                 type="datetime-local"

@@ -1336,3 +1336,34 @@
     transform: scale(1);
   }
 }
+
+/* Tablet/phone controls preserve actionable space and avoid a clipped floor. */
+.mm-floor-canvas-container { touch-action: none; }
+@media (max-width: 767px) {
+  .mm-floor-system { min-height: calc(100dvh - 96px); }
+  .mm-floor-topbar { gap: 10px; padding: 12px; }
+  .mm-floor-top-actions { flex-wrap: wrap; width: 100%; }
+  .mm-view-mode-switcher { width: 100%; }
+  .mm-view-btn { flex: 1; justify-content: center; padding: 8px 5px; font-size: 11px; }
+  .mm-floor-hud { top: 124px; width: calc(100% - 16px); }
+  .mm-hud-sections { width: 100%; }
+  .mm-hud-dock { max-width: 100%; overflow-x: auto; }
+  .mm-floor-canvas-container { min-height: 420px; height: calc(100dvh - 230px); }
+  .mm-table-quick-toolbar button { min-width: 36px; min-height: 36px; }
+  .mm-drawer-tabs { overflow-x: auto; }
+  .mm-tab-btn { min-width: 94px; }
+  .mm-drawer-header, .mm-drawer-body { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-table-drawer, .mm-hud-menu { animation: none; }
+}
+@media print {
+  body * { visibility: hidden !important; }
+  .mm-standee-sheet-preview, .mm-standee-sheet-preview * { visibility: visible !important; }
+  .mm-standee-sheet-preview {
+    position: fixed; top: 10mm; left: 10mm; width: calc(100% - 20mm);
+    border: none; box-shadow: none; background: white;
+    break-inside: avoid;
+  }
+  .mm-standee-qr-frame { width: 50mm; height: 50mm; }
+}

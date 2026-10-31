@@ -19,6 +19,7 @@ interface DiningFloorCanvasProps {
   snapEnabled: boolean;
   hapticsEnabled: boolean;
   zoom: number;
+  onFitZoom: (zoom: number) => void;
   onOpenInspector: (table: VisualTable) => void;
   onDuplicateTable: (table: VisualTable) => void;
   onDeleteTable: (table: VisualTable) => void;
@@ -34,6 +35,7 @@ export function DiningFloorCanvas({
   snapEnabled,
   hapticsEnabled,
   zoom,
+  onFitZoom,
   onOpenInspector,
   onDuplicateTable,
   onDeleteTable,
@@ -42,6 +44,20 @@ export function DiningFloorCanvas({
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const haptics = useHaptics(hapticsEnabled);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const fit = () => {
+      const value = Math.max(0.15, Math.min(1.5,
+        (element.clientWidth - 24) / layout.canvas.width,
+        (element.clientHeight - 24) / layout.canvas.height));
+      onFitZoom(Number(value.toFixed(2)));
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [layout.canvas.width, layout.canvas.height, onFitZoom]);
 
   // Pan state
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -126,25 +142,20 @@ export function DiningFloorCanvas({
     haptics.drop();
   };
 
-  // Handle canvas background pan
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || e.button === 0) {
-      // Middle click or click on canvas background
-      setIsPanning(true);
-      panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-    }
+  // Pointer events support mouse and touch panning without hijacking table drags.
+  const handleCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if ((e.target as Element).closest(".mm-table-group") || (e.target as Element).closest("button")) return;
+    if (e.pointerType === "mouse" && e.button !== 0 && e.button !== 1) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsPanning(true);
+    panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
   };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning) return;
-    setPan({
-      x: e.clientX - panStart.current.x,
-      y: e.clientY - panStart.current.y,
-    });
+  const handleCanvasPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPanning) setPan({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y });
   };
-
-  const handleCanvasMouseUp = () => {
+  const handleCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsPanning(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   // Rotate selected table
@@ -224,9 +235,10 @@ export function DiningFloorCanvas({
     <div
       ref={containerRef}
       className="mm-floor-canvas-container"
-      onMouseDown={handleCanvasMouseDown}
-      onMouseMove={handleCanvasMouseMove}
-      onMouseUp={handleCanvasMouseUp}
+      onPointerDown={handleCanvasPointerDown}
+      onPointerMove={handleCanvasPointerMove}
+      onPointerUp={handleCanvasPointerUp}
+      onPointerCancel={handleCanvasPointerUp}
       onClick={() => onSelectTable(null)}
     >
       <div

@@ -30,6 +30,22 @@ import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
 import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
 import { useHaptics } from "@/lib/use-haptics";
 
+function outletMinute(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(date);
+  const n = (name: string) => Number(parts.find((part) => part.type === name)?.value ?? "0");
+  return Math.floor(Date.UTC(n("year"), n("month") - 1, n("day")) / 60000) + n("hour") * 60 + n("minute");
+}
+function outletDate(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const value = (name: string) => parts.find((part) => part.type === name)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
 interface DiningFloorContainerProps {
   initialLayout: FloorLayoutDoc;
   initialOrderMatrix: FloorTable[] | null;
@@ -77,6 +93,8 @@ export function DiningFloorContainer({
   const [zoom, setZoom] = useState(1.0);
   const [resDialogOpen, setResDialogOpen] = useState(false);
   const [resDialogTable, setResDialogTable] = useState<VisualTable | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => outletDate(new Date(), outlet.timezone));
+  const [fitZoom, setFitZoom] = useState(1);
 
   const haptics = useHaptics(hapticsEnabled);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -151,16 +169,25 @@ export function DiningFloorContainer({
       const dueMinor = order?.dueMinor ?? "0";
       const qr = qrByTableId.get(t.id);
 
-      // Check upcoming reservation for this table
-      const upcomingRes = reservations.find(
-        (r) => r.tableId === t.id && (r.status === "confirmed" || r.status === "seated")
+      // Timeline previews respect actual booking intervals in the outlet timezone.
+      const currentMinute = outletMinute(new Date(), outlet.timezone);
+      const targetMinute = selectedHour === "now" ? currentMinute :
+        Math.floor(currentMinute / 1440) * 1440 +
+          Number(selectedHour.slice(0, 2)) * 60 + Number(selectedHour.slice(3, 5));
+      const upcomingRes = reservations.find((r) =>
+        r.tableId === t.id && (r.status === "confirmed" || r.status === "seated") &&
+        targetMinute >= outletMinute(new Date(r.reservationTime), outlet.timezone) &&
+        targetMinute < outletMinute(
+          new Date(new Date(r.reservationTime).getTime() + r.durationMinutes * 60000), outlet.timezone
+        )
       );
 
       let state: TableLiveStatus["state"] = "available";
-      if (unpaidOrders > 0) state = "unpaid";
-      else if (activeOrders > 0) state = "active";
-      else if (upcomingRes && selectedHour !== "now") state = "reserved";
-      else if (upcomingRes?.status === "seated") state = "active";
+      if (selectedHour === "now") {
+        if (unpaidOrders > 0) state = "unpaid";
+        else if (activeOrders > 0 || upcomingRes?.status === "seated") state = "active";
+        else if (upcomingRes) state = "reserved";
+      } else if (upcomingRes) state = "reserved";
 
       map[t.id] = {
         state,
@@ -189,7 +216,7 @@ export function DiningFloorContainer({
       };
     }
     return map;
-  }, [layout.tables, orderMatrix, qrCodes, reservations, selectedHour, outlet.currency]);
+  }, [layout.tables, orderMatrix, qrCodes, reservations, selectedHour, outlet.currency, outlet.timezone]);
 
   // Handle table addition from HUD
   const handleAddTable = async (template: {
@@ -335,9 +362,25 @@ export function DiningFloorContainer({
     }
 
     const created = (await res.json()) as ReservationItem;
-    setReservations((prev) => [...prev, created]);
+    const bookedDay = outletDate(new Date(created.reservationTime), outlet.timezone);
+    if (bookedDay === selectedDate) setReservations((prev) => [...prev, created]);
+    else setSelectedDate(bookedDay);
     toast.success(`Reservation confirmed for ${created.guestName}`);
   };
+
+  const loadReservations = useCallback(async (day: string) => {
+    const response = await fetch(`/api/floor/reservations?date=${encodeURIComponent(day)}`, {
+      headers: { "x-outlet-id": outlet.id },
+    });
+    if (!response.ok) throw new Error("Could not load reservations for this day");
+    setReservations((await response.json()) as ReservationItem[]);
+  }, [outlet.id]);
+
+  React.useEffect(() => {
+    void loadReservations(selectedDate).catch(() => {
+      toast.error("Bookings could not be loaded. Retry using Refresh.");
+    });
+  }, [selectedDate, loadReservations]);
 
   // Seat reservation
   const handleSeatReservation = async (resId: string) => {
@@ -369,12 +412,13 @@ export function DiningFloorContainer({
       const res = await fetch("/api/floor", {
         headers: { "x-outlet-id": outlet.id },
       });
+      if (!res.ok) throw new Error("Could not refresh floor data");
       if (res.ok) {
         const data = await res.json();
         if (data.layout) { revisionRef.current = data.layout.revision; pendingRef.current = null; setLayout(data.layout); setSaveStatus("saved"); }
         if (data.orderMatrix) setOrderMatrix(data.orderMatrix);
         if (data.qrCodes) setQrCodes(data.qrCodes);
-        if (data.reservations) setReservations(data.reservations);
+        await loadReservations(selectedDate);
         toast.success("Dining floor refreshed");
       }
     } catch {
@@ -484,8 +528,8 @@ export function DiningFloorContainer({
             }}
             zoom={zoom}
             onZoomIn={() => setZoom((z) => Math.min(2.2, Number((z + 0.15).toFixed(2))))}
-            onZoomOut={() => setZoom((z) => Math.max(0.45, Number((z - 0.15).toFixed(2))))}
-            onResetZoom={() => setZoom(1.0)}
+            onZoomOut={() => setZoom((z) => Math.max(0.15, Number((z - 0.15).toFixed(2))))}
+            onResetZoom={() => setZoom(fitZoom)}
             selectedHour={selectedHour}
             onSelectHour={setSelectedHour}
           />
@@ -503,6 +547,7 @@ export function DiningFloorContainer({
             snapEnabled={snapEnabled}
             hapticsEnabled={hapticsEnabled}
             zoom={zoom}
+            onFitZoom={(value) => { setFitZoom(value); setZoom(value); }}
             onDuplicateTable={handleDuplicateTable}
             onDeleteTable={handleDeleteTable}
             onOpenInspector={(t) => {
@@ -568,9 +613,14 @@ export function DiningFloorContainer({
             <div>
               <h2 className="font-display text-xl font-bold">Daily Table Reservations</h2>
               <p className="text-muted-foreground text-sm">
-                Time-slot reservations and guest party arrivals for {outlet.name}.
+                Time-slot reservations and guest party arrivals for {outlet.name} ({outlet.timezone}).
               </p>
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="floor-bookings-date" className="sr-only">Booking date</label>
+            <input id="floor-bookings-date" type="date" value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="border-border bg-card rounded-lg border px-3 py-2 text-sm" />
             <button
               type="button"
               className="mm-action-btn mm-action-primary"
@@ -581,6 +631,7 @@ export function DiningFloorContainer({
             >
               <Plus size={15} /> New Reservation
             </button>
+            </div>
           </div>
 
           {reservations.length === 0 ? (
