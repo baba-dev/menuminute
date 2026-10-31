@@ -41,7 +41,10 @@ const ItemCustomizer = dynamic(
 const CartDrawer = dynamic(() => import("./cart-drawer").then((mod) => mod.CartDrawer), {
   ssr: false,
 });
-const ConciergeExperience = dynamic(() => import("./concierge-experience").then((mod) => mod.ConciergeExperience), { ssr: false });
+const ConciergeExperience = dynamic(
+  () => import("./concierge-experience").then((mod) => mod.ConciergeExperience),
+  { ssr: false }
+);
 
 // Keep the schedule projector in a client-safe module; the server data module is imported as types only.
 export function PublicMenu({
@@ -59,7 +62,10 @@ export function PublicMenu({
   const [diet, setDiet] = useState("all");
   const [status, setStatus] = useState("");
   const [conciergeCraving, setConciergeCraving] = useState<string | null>(null);
-  const mealDraftRef = useRef<{ remaining: { dish: CustomizerDish; category: string }[]; collected: CartItem[] } | null>(null);
+  const mealDraftRef = useRef<{
+    remaining: { dish: CustomizerDish; category: string }[];
+    collected: CartItem[];
+  } | null>(null);
   const advanceMealRef = useRef(false);
 
   // Online Ordering Cart & Customization State
@@ -314,51 +320,75 @@ export function PublicMenu({
   const handleAddToCart = (item: CartItem) => {
     playWoodenTap();
     const draft = mealDraftRef.current;
-    if (!draft) { setCartItems((prev) => [...prev, item]); return; }
+    if (!draft) {
+      setCartItems((prev) => [...prev, item]);
+      return;
+    }
     const remaining = draft.remaining.slice(1);
-    const collected = [...draft.collected,item];
+    const collected = [...draft.collected, item];
     if (remaining.length) {
-      mealDraftRef.current = {remaining,collected};
+      mealDraftRef.current = { remaining, collected };
       advanceMealRef.current = true;
     } else {
       mealDraftRef.current = null;
-      setCartItems((prev)=>[...prev,...collected]);
+      setCartItems((prev) => [...prev, ...collected]);
       setStatus("Your curated meal has been added to the order. Review the cart before checkout.");
     }
   };
 
   const addConciergeMeal = (items: MealItem[]) => {
-    const catalog = new Map(docs.flatMap((menu)=>menu.view.categories.flatMap((category)=>
-      category.items.map((dish)=>[dish.id,{dish: dish as CustomizerDish,category:category.name}] as const)
-    )));
+    const catalog = new Map(
+      docs.flatMap((menu) =>
+        menu.view.categories.flatMap((category) =>
+          category.items.map(
+            (dish) => [dish.id, { dish: dish as CustomizerDish, category: category.name }] as const
+          )
+        )
+      )
+    );
     const collected: CartItem[] = [];
     const remaining: { dish: CustomizerDish; category: string }[] = [];
     for (const item of items) {
       const selected = catalog.get(item.dishId);
-      if (!selected || selected.dish.soldOut || selected.dish.open===false ||
-          !Number.isInteger(item.quantity) || item.quantity<1 || item.quantity>12) {
-        setStatus("The menu changed. Refresh the recommendation and try again."); return;
+      if (
+        !selected ||
+        selected.dish.soldOut ||
+        selected.dish.open === false ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 12
+      ) {
+        setStatus("The menu changed. Refresh the recommendation and try again.");
+        return;
       }
       const dish = selected.dish;
-      if (dish.variants.length || dish.addOnGroups.some((group)=>group.min>0)) {
-        for (let index=0; index<item.quantity; index++) remaining.push(selected);
+      if (dish.variants.length || dish.addOnGroups.some((group) => group.min > 0)) {
+        for (let index = 0; index < item.quantity; index++) remaining.push(selected);
       } else {
         collected.push({
-          dishId:dish.id,dishName:dish.name,variantId:null,variantName:null,
-          selectedAddOns:[],unitPriceMinor:dish.priceMinor,quantity:item.quantity,itemNotes:"",
+          dishId: dish.id,
+          dishName: dish.name,
+          variantId: null,
+          variantName: null,
+          selectedAddOns: [],
+          unitPriceMinor: dish.priceMinor,
+          quantity: item.quantity,
+          itemNotes: "",
         });
       }
     }
     setConciergeCraving(null);
     if (!remaining.length) {
-      setCartItems((prev)=>[...prev,...collected]);
+      setCartItems((prev) => [...prev, ...collected]);
       setStatus("Your curated meal has been added to the order. Review the cart before checkout.");
       return;
     }
-    mealDraftRef.current = {remaining,collected};
+    mealDraftRef.current = { remaining, collected };
     setCustomizingDish(remaining[0]!.dish);
     setCustomizingCategory(remaining[0]!.category);
-    setStatus("Choose the required options for each dish. Nothing is added until all choices are complete.");
+    setStatus(
+      "Choose the required options for each dish. Nothing is added until all choices are complete."
+    );
   };
   const closeDishCustomizer = () => {
     if (advanceMealRef.current) {
@@ -372,7 +402,7 @@ export function PublicMenu({
       }
     }
     if (mealDraftRef.current) {
-      mealDraftRef.current=null;
+      mealDraftRef.current = null;
       setStatus("Meal customization cancelled. No part of that meal was added.");
     }
     setCustomizingDish(null);
@@ -497,7 +527,9 @@ export function PublicMenu({
               </select>
             </label>
           )}
-          {data.conciergeEnabled && token && !preview && <ConciergeEntry onStart={(craving)=>setConciergeCraving(craving)} />}
+          {data.conciergeEnabled && token && !preview && (
+            <ConciergeEntry onStart={(craving) => setConciergeCraving(craving)} />
+          )}
           <label className="dining-search">
             <Search size={21} aria-hidden="true" />
             <span className="sr-only">Search the menu</span>
@@ -848,12 +880,23 @@ export function PublicMenu({
         })()}
       {data.conciergeEnabled && token && !preview && conciergeCraving !== null && (
         <ConciergeExperience
-          token={token} data={data} craving={conciergeCraving} preview={preview} ordering={ordering}
-          onClose={()=>setConciergeCraving(null)} onAddMeal={addConciergeMeal}
-          onViewDish={(dishId)=>{
-            const found=docs.flatMap((menu)=>menu.view.categories.flatMap((category)=>category.items.map((dish)=>({dish,category:category.name})))).find((entry)=>entry.dish.id===dishId);
+          token={token}
+          data={data}
+          craving={conciergeCraving}
+          preview={preview}
+          ordering={ordering}
+          onClose={() => setConciergeCraving(null)}
+          onAddMeal={addConciergeMeal}
+          onViewDish={(dishId) => {
+            const found = docs
+              .flatMap((menu) =>
+                menu.view.categories.flatMap((category) =>
+                  category.items.map((dish) => ({ dish, category: category.name }))
+                )
+              )
+              .find((entry) => entry.dish.id === dishId);
             setConciergeCraving(null);
-            if (found) openDish(found.dish,found.category);
+            if (found) openDish(found.dish, found.category);
           }}
         />
       )}

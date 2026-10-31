@@ -345,7 +345,12 @@ export const publicProduct = cache(
         "select app_private.public_menu_cache_token_active($1,$2) as active",
         [token, cached.fence.outletId]
       );
-      if (live.rows[0]?.active) return { ...cached.data, conciergeEnabled: conciergeEnabledForOutlet(cached.data.outlet.id) && conciergeNvidiaReady() };
+      if (live.rows[0]?.active)
+        return {
+          ...cached.data,
+          conciergeEnabled:
+            conciergeEnabledForOutlet(cached.data.outlet.id) && conciergeNvidiaReady(),
+        };
       return null;
     }
 
