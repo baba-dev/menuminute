@@ -35,9 +35,7 @@
   outline-offset: 6px;
 }
 
-.mm-workspace-nav-link:focus-visible,
-.mm-workspace-logout:focus-visible,
-.mm-workspace-profile-link:focus-visible {
+.mm-workspace-nav-link:focus-visible {
   outline: 3px solid var(--mm-focus);
   outline-offset: 2px;
 }
