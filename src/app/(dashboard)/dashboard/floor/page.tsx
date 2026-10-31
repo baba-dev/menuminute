@@ -2,19 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
+import { env } from "@/lib/config/env";
+import { getDefaultOrActiveRestaurant, getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
-import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
-import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
+import { getFloorLayout, getReservations } from "@/modules/hospitality/floor-service";
+import { DiningFloorContainer } from "@/components/dashboard/floor/dining-floor-container";
 import "../dashboard-operations.css";
 
 export const metadata: Metadata = {
-  title: "Dining floor",
-  description: "Tables, unpaid balances and guest requests for the selected outlet.",
+  title: "Dining Floor & Tabletop Studio — MenuMinute",
+  description:
+    "Interactive visual dining room floor plan, parametric SVG tables & chairs, server assignments, time reservations, and tabletop QR code generator.",
   robots: { index: false, follow: false },
 };
 
-/** The dining room on its own page, so staff on a phone reach it in one tap. */
+/**
+ * Visual Dining Floor:
+ * Direct-manipulation SVG layout, live order telemetry, time reservations,
+ * and tabletop QR standee generator.
+ */
 export default async function FloorPage({
   searchParams,
 }: {
@@ -22,6 +28,7 @@ export default async function FloorPage({
 }) {
   const session = await auth();
   if (!session?.user.id) redirect("/login");
+
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
   if (!outlet) {
     return (
@@ -32,32 +39,54 @@ export default async function FloorPage({
       </div>
     );
   }
+
   const raw = (await searchParams)["table"];
   const focusTableId =
     typeof raw === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(raw) ? raw : undefined;
+
   const actor = { userId: session.user.id };
-  // A restricted or failing read is shown as "unavailable", never as an empty room.
-  const tables = await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(
-    () => null
-  );
+
+  // Concurrent loading of layout, order metrics, QR codes, and reservations
+  const [layout, orderMatrix, qrCodes, reservations] = await Promise.all([
+    getFloorLayout(actor, outlet.id).catch(() => ({
+      version: 1 as const,
+      canvas: { width: 1400, height: 900, gridSnap: 20 },
+      sections: [
+        { id: "sec-main", name: "Main Dining", color: "#f59e0b" },
+        { id: "sec-terrace", name: "Terrace", color: "#10b981" },
+        { id: "sec-bar", name: "Bar & Lounge", color: "#8b5cf6" },
+      ],
+      tables: [],
+    })),
+    getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null),
+    getRestaurantQrCodes(actor, outlet.id).catch(() => []),
+    getReservations(actor, outlet.id).catch(() => []),
+  ]);
+
   return (
-    <div className="mm-dashboard product mm-floor-page" data-testid="floor-page">
-      <header>
-        <h1>Dining floor</h1>
-        <p>{outlet.name} · tables, unpaid balances and guest requests.</p>
-      </header>
-      <div className="mm-floor-grid">
-        <TableFloorMatrix
-          tables={tables}
-          currency={outlet.currency ?? "INR"}
-          focusTableId={focusTableId}
-        />
-        <ServiceRequestsPanel
-          organizationId={outlet.organizationId}
-          outletId={outlet.id}
-          timezone={outlet.timezone}
-        />
-      </div>
-    </div>
+    <DiningFloorContainer
+      initialLayout={layout}
+      initialOrderMatrix={orderMatrix}
+      initialQrCodes={qrCodes.map(
+        ({ id, label, destinationToken, isActive, tableId, pointLabel }) => ({
+          id,
+          label,
+          destinationToken,
+          isActive,
+          tableId,
+          pointLabel,
+        })
+      )}
+      initialReservations={reservations}
+      outlet={{
+        id: outlet.id,
+        organizationId: outlet.organizationId,
+        name: outlet.name,
+        currency: outlet.currency ?? "INR",
+        timezone: outlet.timezone ?? "UTC",
+      }}
+      origin={env.APP_URL}
+      focusTableId={focusTableId}
+    />
   );
 }

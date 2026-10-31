@@ -28,3 +28,4 @@ export * from "./pos";
 
 export * from "./assistant";
 export * from "./assistant-actions";
+export * from "./hospitality";
