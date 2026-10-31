@@ -35,9 +35,7 @@ describe("NVIDIA structured concierge output profile", () => {
       payloads.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return new Response(
         JSON.stringify({
-          choices: [
-            { finish_reason: "stop", message: { content: '{"recommendations":[]}' } },
-          ],
+          choices: [{ finish_reason: "stop", message: { content: '{"recommendations":[]}' } }],
         }),
         { headers: { "content-type": "application/json" } }
       );

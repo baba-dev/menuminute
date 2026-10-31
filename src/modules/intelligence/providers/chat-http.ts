@@ -232,8 +232,7 @@ export async function chatCompletion(
       temperature: input.temperature,
       // The concierge explicitly opts out of reasoning for reliable short JSON responses.
       // Retain the previously verified Nemotron tool profile for Ember unchanged.
-      ...(nemotronTools ||
-      (model.provider === "nvidia" && options.reasoningEffort === "none")
+      ...(nemotronTools || (model.provider === "nvidia" && options.reasoningEffort === "none")
         ? { reasoning_effort: "none" }
         : {}),
       ...(input.responseFormat ? { response_format: input.responseFormat } : {}),
