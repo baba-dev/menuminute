@@ -212,7 +212,7 @@ CREATE POLICY floor_table_app_update ON restaurant_tables FOR UPDATE TO menuminu
 CREATE POLICY floor_table_operator_read ON restaurant_tables FOR SELECT TO menuminute_app
  USING (restaurant_id=current_setting('app.outlet_id',true)
    AND app_private.can_outlet(restaurant_id,'orders.read'));
-GRANT INSERT (id,restaurant_id,table_number,label,capacity,is_active) ON restaurant_tables TO menuminute_app;
+GRANT INSERT (id,restaurant_id,table_number,label,capacity,is_active,created_at) ON restaurant_tables TO menuminute_app;
 GRANT UPDATE (table_number,label,capacity,is_active) ON restaurant_tables TO menuminute_app;
 
 -- Booking staff need a row lock for capacity/overlap serialization but must
