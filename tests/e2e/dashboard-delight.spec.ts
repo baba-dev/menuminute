@@ -60,8 +60,9 @@ async function signIn(page: Page, owner: { email: string; password: string }) {
 test("keyboard users can skip the sidebar", async ({ page }) => {
   test.setTimeout(90000);
   await signIn(page, await seedOwner());
-  await page.goto("/dashboard");
-  await expect(page.getByTestId("editorial-dashboard")).toBeVisible();
+  // signIn already lands on the dashboard: an immediate redundant navigation can
+  // catch the outgoing and incoming route during a short App Router transition.
+  await expect(page.locator("#workspace-main").getByTestId("editorial-dashboard")).toHaveCount(1);
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name: "Skip to main content" });
   await expect(skip).toBeFocused();

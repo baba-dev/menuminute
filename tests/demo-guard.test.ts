@@ -58,6 +58,8 @@ describe("public demo request guard (allowlist)", () => {
       ["POST", scoped("pos/settings")],
       ["PATCH", scoped("profile")],
       ["POST", "/api/admin/logs/export"],
+      ["POST", "/api/pwa/push"],
+      ["DELETE", "/api/pwa/push"],
     ];
     for (const [method, path] of denied)
       expect(demoRequestAllowed(method, path), `${method} ${path}`).toBe(false);
@@ -73,6 +75,10 @@ describe("public demo request guard (allowlist)", () => {
       demoRequestAllowed("POST", `/api/organizations/${org}/outlets/other/orders/o1/transition`)
     ).toBe(false);
     expect(demoRequestAllowed("POST", scoped("orders/o1/transition/../payment"))).toBe(false);
+  });
+  it("only allows menu edits on the demo menu itself", () => {
+    expect(demoRequestAllowed("PATCH", "/api/catalog/some-other-menu")).toBe(false);
+    expect(demoRequestAllowed("PUT", "/api/catalog/some-other-menu/translations")).toBe(false);
   });
   it("does not allow method or path-prefix tricks", () => {
     expect(demoRequestAllowed("DELETE", "/api/catalog/menu-demo-outlet")).toBe(false);

@@ -3,13 +3,14 @@ import { hashPassword } from "better-auth/crypto";
 import { Pool } from "pg";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 
-async function seed(options: { ordering: boolean }) {
+async function seed(options: { ordering: boolean; outlets?: number }) {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
     throw new Error("The shell navigation browser test requires an isolated test database");
   const pool = new Pool({ connectionString: url, max: 1 });
   const userId = crypto.randomUUID();
   const outletId = crypto.randomUUID();
+  const secondaryOutletId = options.outlets === 2 ? crypto.randomUUID() : null;
   const email = "shell-" + userId + "@browser.invalid";
   const password = "shell-browser-password";
   let publicToken = "";
@@ -37,6 +38,19 @@ async function seed(options: { ordering: boolean }) {
           outletType: "cafe",
         }),
       ]);
+      if (secondaryOutletId) {
+        await client.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
+          secondaryOutletId,
+          crypto.randomUUID(),
+          JSON.stringify({
+            name: "Second Shell Kitchen",
+            country: "OM",
+            currency: "OMR",
+            timezone: "Asia/Muscat",
+            outletType: "cafe",
+          }),
+        ]);
+      }
       const document = menuDocumentSchema.parse({
         name: "Live menu",
         currency: "OMR",
@@ -90,7 +104,7 @@ async function seed(options: { ordering: boolean }) {
   } finally {
     await pool.end();
   }
-  return { email, password, outletId, publicToken };
+  return { email, password, outletId, secondaryOutletId, publicToken };
 }
 
 async function signIn(page: Page, owner: { email: string; password: string }) {
@@ -122,6 +136,51 @@ test.describe("desktop shell", () => {
     // unavailable there is no Add-ons section to distract from.
     await expect(nav.getByRole("link", { name: "Kitchen Setup" })).toBeVisible();
     await expect(nav.getByRole("button", { name: /Add-ons/ })).toHaveCount(0);
+  });
+
+  test("a single outlet has no selector or profile footer and keeps account access", async ({
+    page,
+  }) => {
+    await signIn(page, await seed({ ordering: true }));
+    const sidebar = page.getByLabel("Workspace sidebar");
+    await expect(sidebar.locator(".mm-workspace-outlet")).toHaveCount(0);
+    await expect(sidebar.locator(".mm-workspace-profile")).toHaveCount(0);
+    await expect(sidebar.getByRole("link", { name: "Overview" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Account settings for/ })).toHaveAttribute(
+      "href",
+      "/account"
+    );
+    for (const width of [920, 1280]) {
+      await page.setViewportSize({ width, height: 720 });
+      const overflow = await sidebar
+        .locator(".mm-workspace-nav")
+        .evaluate((element) => element.scrollWidth > element.clientWidth);
+      expect(overflow).toBe(false);
+    }
+    await page.setViewportSize({ width: 1024, height: 420 });
+    const nav = sidebar.getByRole("navigation", { name: "Workspace" });
+    await nav.getByRole("link", { name: "Settings", exact: true }).scrollIntoViewIfNeeded();
+    await expect(nav.getByRole("link", { name: "Settings", exact: true })).toBeVisible();
+  });
+
+  test("multi-outlet owners can switch without duplicated outlet metadata", async ({ page }) => {
+    const owner = await seed({ ordering: true, outlets: 2 });
+    await signIn(page, owner);
+    const sidebar = page.getByLabel("Workspace sidebar");
+    await expect(sidebar.getByText("Current outlet")).toBeVisible();
+    await expect(sidebar.getByText(/Selected outlet| · OMR/)).toHaveCount(0);
+    const selector = sidebar.getByRole("combobox", { name: "Active outlet" });
+    await expect(selector.locator("option")).toHaveCount(3);
+    const selected = await selector.inputValue();
+    const target = selected === owner.outletId ? owner.secondaryOutletId! : owner.outletId;
+    await selector.selectOption(target);
+    await expect
+      .poll(async () => {
+        const response = await page.request.get("/api/context");
+        return (await response.json()).selectedOutletId;
+      })
+      .toBe(target);
+    await expect(selector).toHaveValue(target);
   });
 
   test("a menu-only outlet keeps ordering pages out of the sidebar, with an upgrade hint", async ({
@@ -267,6 +326,36 @@ test.describe("phone shell", () => {
     await expect(page).toHaveURL(/\/dashboard\/menu/);
     await expect(page.getByRole("dialog", { name: "More" })).toHaveCount(0);
     await expect(bar.getByRole("button", { name: "More" })).toBeVisible();
+  });
+
+  test("a mobile single outlet uses the compact header, without sideways scrolling", async ({
+    page,
+  }) => {
+    await signIn(page, await seed({ ordering: true }));
+    const sidebar = page.getByLabel("Workspace sidebar");
+    await expect(sidebar.locator(".mm-workspace-outlet")).toHaveCount(0);
+    await expect(sidebar.locator(".mm-workspace-profile")).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+    await page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("button", { name: "More" })
+      .click();
+    const sheet = page.getByRole("dialog", { name: "More" });
+    await expect(sheet.getByRole("link", { name: "Account & security" })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Platform admin" })).toHaveCount(0);
+  });
+
+  test("a mobile multi-outlet account retains its context switcher", async ({ page }) => {
+    const owner = await seed({ ordering: true, outlets: 2 });
+    await signIn(page, owner);
+    const sidebar = page.getByLabel("Workspace sidebar");
+    await expect(sidebar.getByText("Current outlet")).toBeVisible();
+    await expect(sidebar.getByRole("combobox", { name: "Active outlet" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
   });
 
   test("Menu Studio's own action bar sits above the nav bar instead of hiding under it", async ({

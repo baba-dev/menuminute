@@ -17,6 +17,8 @@ import { env } from "@/lib/config/env";
 import { assertAssistantScope } from "@/modules/intelligence/store";
 import { EmberLauncher } from "@/components/intelligence/ember-launcher";
 import type { Metadata } from "next";
+import { OperationalPwa } from "@/components/pwa/operational-pwa";
+import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
 import "./kitchen.css";
 export const metadata: Metadata = {
   title: "The Chef’s Pass | Kitchen Pro",
@@ -97,6 +99,9 @@ export default async function KitchenPage() {
   return (
     <>
       {isDemoActor(session.user.id) && <DemoBanner />}
+      {kitchenOperational && pwaOperationalEnabledForOutlet(outlet.id) ? (
+        <OperationalPwa workspace="Kitchen" />
+      ) : null}
       {showEmber && (
         <EmberLauncher
           organizationId={outlet.organizationId}

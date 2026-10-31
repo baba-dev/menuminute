@@ -43,11 +43,31 @@ test.describe("Progressive Web App", () => {
     expect(new URL(scope).pathname).toBe("/");
   });
 
+  test("push registration is private, no-store and cannot bypass a guest session", async ({
+    request,
+  }) => {
+    const unauthenticated = await request.get("/api/pwa/push");
+    expect(unauthenticated.status()).toBe(401);
+    expect(unauthenticated.headers()["cache-control"]).toContain("no-store");
+
+    const badOrigin = await request.post("/api/pwa/push", {
+      headers: { origin: "https://attacker.invalid", "content-type": "application/json" },
+      data: {
+        action: "subscribe",
+        endpoint: "https://web.push.apple.com/abc",
+        newOrders: true,
+        kitchenUpdates: false,
+      },
+    });
+    expect(badOrigin.status()).toBe(403);
+  });
+
   test("falls back only for cached public reads while offline", async ({ page, context }) => {
     await page.goto("/m/demo-spice-route-kitchen-v1");
     await page.evaluate(async () => {
       await navigator.serviceWorker.ready;
     });
+    await expect(page.getByText(/Available offline · last synced/)).toBeVisible();
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Spice Route Kitchen");
 
@@ -66,6 +86,8 @@ test.describe("Progressive Web App", () => {
     await expect(
       page.getByText("You're offline. Live actions and ordering are unavailable.")
     ).toBeVisible();
+    await expect(page.getByText("Viewing a saved menu")).toBeVisible();
+    await expect(page.getByText(/Ordering is paused until you reconnect/)).toBeVisible();
 
     const results = await page.evaluate(async () => {
       const publicRead = await fetch("/api/public-menu/demo-spice-route-kitchen-v1").then(

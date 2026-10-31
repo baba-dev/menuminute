@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Bell, Ellipsis, Search, UserRound, X } from "lucide-react";
+import { Bell, Ellipsis, Search, ShieldAlert, UserRound, X } from "lucide-react";
 import {
   bottomBarItems,
   isNavSelected,
@@ -18,7 +18,7 @@ import { useWorkspaceShell } from "./workspace-shell";
  * Phone navigation: Orders, Till, Kitchen and Floor (whichever the user can use), then More.
  * Visible text is short; the accessible name stays the full label (for example "Kitchen Setup").
  */
-export function WorkspaceBottomBar() {
+export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const pathname = usePathname();
   const returnFocus = useReturnFocus();
   const {
@@ -140,6 +140,14 @@ export function WorkspaceBottomBar() {
                   </Link>
                 </li>
               ))}
+              {isSuperAdmin && (
+                <li>
+                  <Link href="/admin" className="mm-sheet-link" onClick={() => setMoreOpen(false)}>
+                    <ShieldAlert size={19} strokeWidth={1.9} aria-hidden="true" />
+                    <span>Platform admin</span>
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href="/account" className="mm-sheet-link" onClick={() => setMoreOpen(false)}>
                   <UserRound size={19} strokeWidth={1.9} aria-hidden="true" />

@@ -13,7 +13,7 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
   (`public/icons/category-default.svg`, `imageMode:"none"`) until artwork is delivered.
 - **Baseline:** `src/modules/demo/baseline.ts` (menu, 12 tables, outlet text). Public id
   `demo-spice-route-kitchen-v2`; the legacy CI seed (`demo-spice-route-kitchen-v1`) is unchanged.
-- **Reset:** migration `0057_demo_outlet_reset.sql` adds `app_private.reset_demo_outlet(jsonb)`.
+- **Reset:** migration `0059_demo_outlet_reset.sql` adds `app_private.reset_demo_outlet(jsonb)`.
   It deletes visitor runtime state (orders, kitchen work, service calls, Ember conversations, menu
   imports, overrides, outbox, invitations), republishes the baseline menu at a **monotonic** revision
   and restores the floor plan. Reset takes about 150 ms.
@@ -37,7 +37,7 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
 
 ## Orders, kitchen and entitlements
 
-- `app_private.provision_demo_ops()` (migration 0058, **migration-owner only**) creates three credential-less
+- `app_private.provision_demo_ops()` (migration 0060, **migration-owner only**) creates three credential-less
   demo staff, four stations (Tandoor & Grill, Wok & Fry, Curry & Rice, Cold & Sweet), routes every dish by
   category, enables the kitchen, serves the versioned menu (`free_menu_enabled`) and grants `ordering.new`
   and `kitchen.new` for ten years. It deliberately bypasses the Kitchen Pro pilot gate for the demo outlet
@@ -49,7 +49,7 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
   real status updates, so kitchen work is created by the normal triggers.
 - The menu revision is only bumped by a reset when a visitor changed the published menu. The worker cannot
   invalidate the web cache, so after a revert guests may see one "menu changed" conflict for up to 3 minutes.
-- Migration 0059 removes the legacy `order_items.variant_id` foreign key. Without it any guest order that
+- Migration 0061 removes the legacy `order_items.variant_id` foreign key. Without it any guest order that
   chose a variant (Half/Full, sizes) failed for **every** tenant (ADR 026).
 
 ## Polish: banner, schedule, checklist, service calls
@@ -60,13 +60,13 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
 - `/demo` offers three doors (public demo, AI and agents, documentation) and a six-step "try everything in ten
   minutes" checklist that links to the guides.
 - Each reset also seeds three guest service calls (call server, water refill, bill request; one already
-  acknowledged) on live dine-in orders, so the Dining floor view is alive (migration 0061).
+  acknowledged) on live dine-in orders, so the Dining floor view is alive (migration 0063).
 
 ## Ember (AI assistant) in the demo
 
 - Ember only works if the operator enables it (`AI_ASSISTANT_READ_ONLY_ENABLED`, a verified provider and its
   daily spend cap). The demo never enables actions: `/api/assistant/actions*` is blocked by the guard.
-- All visitors share one account, so migration 0060 raises the hard-coded per-user and per-organization daily
+- All visitors share one account, so migration 0062 raises the hard-coded per-user and per-organization daily
   budgets (and their table checks) **only for `demo-owner` / `org-demo-outlet`** (60 conversations, 400 turns,
   800 attempts). Every other tenant keeps 12 / 20 / 80.
 - `src/modules/demo/ember-limit.ts` is the real cost ceiling for the demo: 6 turns per source per 10 minutes,
@@ -102,7 +102,7 @@ legacy flat menu tables. The demo outlet therefore does not enable POS or billin
 ## Operator steps (production)
 
 1. Verified encrypted off-host backup; ERP HTTP 200 captured before and after (see the runbook).
-2. Deploy a reviewed SHA through the normal path so migrations 0057-0059 apply.
+2. Deploy a reviewed SHA through the normal path so migrations 0059-0063 apply.
 3. Provision once (tenant, credential, kitchen, entitlements, history): `ALLOW_DEMO_PROVISION=true AUTH_SECRET=... MIGRATION_DATABASE_URL=... pnpm tsx scripts/demo-provision.ts`.
 4. Set `DEMO_MODE_ENABLED=true` in the worker environment and restart the worker.
 5. To switch the demo off: set `DEMO_MODE_ENABLED=false` and restart. Existing demo data stays inert.

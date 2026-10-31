@@ -25,6 +25,8 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | POS_STRIPE_ENABLED                             | Default-off Stripe Checkout runtime gate           |
 | POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled            |
 | POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook     |
+| PWA_OPERATIONAL_ENABLED                        | Default-off guest/POS/Kitchen operational PWA gate |
+| PWA_OPERATIONAL_OUTLET_IDS                     | Comma-separated exact outlet rollout allowlist     |
 
 `DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
 
@@ -38,6 +40,12 @@ Missing required production values must fail startup without printing them. Miss
 keys disables the feature. Readiness reports dependency status without leaking connection strings.
 Store production secrets outside the repository and application releases with restrictive permissions.
 Do not copy demo passwords, development defaults or CI test secrets into production.
+
+Operational PWA phases F-G require both `PWA_OPERATIONAL_ENABLED=true` and an exact outlet ID in
+`PWA_OPERATIONAL_OUTLET_IDS`. The allowlist is capped at 50 unique IDs and may be staged while the
+master switch remains false. This gate does not replace outlet publication, POS/Kitchen activation,
+subscription entitlement, or RBAC. Remove an outlet from the list (or turn off the master switch) to
+stop new guest offline enrollment and operational enhancements on the next server render.
 
 ## Current production credential placement (2026-10-16)
 
@@ -82,3 +90,17 @@ listens on loopback, and the root-only edge secret agrees with
 ORDER_EDGE_SHARED_SECRET in web.env. Without a valid signed client identity,
 image delivery and public-menu reads deliberately fail closed with 503. Do not
 roll out this release before confirming live image and menu requests.
+
+## Optional PWA Web Push (H)
+
+Push is **off by default**. The isolated worker and web runtime need
+`PWA_PUSH_ENABLED=true`, a reviewed comma-separated `PWA_PUSH_OUTLET_IDS` (up to 50
+IDs), `PWA_PUSH_VAPID_PUBLIC_KEY` (65-byte P-256 uncompressed point, base64url),
+`PWA_PUSH_VAPID_PRIVATE_KEY` (32-byte scalar, base64url), and
+`PWA_PUSH_VAPID_SUBJECT=mailto:operations@example.com`. Do not commit real keys.
+The private key is never sent to the browser. A user must explicitly subscribe on
+an authorized outlet/device. The queue is limited and subscriptions are checked
+against live sessions and grants. The push service accepting a request does **not**
+prove that a device displayed it. No order/customer payload is sent; the service
+worker shows local generic copy. Roll back by setting `PWA_PUSH_ENABLED=false`
+on both worker and web; this never stops the canonical Kitchen/Orders flows.

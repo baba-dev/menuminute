@@ -2,7 +2,7 @@
 -- Both functions are hardcoded to demo-outlet/org-demo-outlet and refuse unless the outlet is flagged
 -- is_demo_data. provision_demo_ops is the OWNER-APPROVED demo-only bypass of the Kitchen Pro pilot gate:
 -- it is executable by the migration owner only (operator script), never by web, worker or billing roles.
--- Forward-only: reset_demo_outlet is replaced with a superset of its 0057 behaviour.
+-- Forward-only: reset_demo_outlet is replaced with a superset of its 0059 behaviour.
 
 CREATE OR REPLACE FUNCTION app_private.provision_demo_ops() RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$

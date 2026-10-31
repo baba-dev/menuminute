@@ -204,7 +204,7 @@ describe("demo orders, kitchen and entitlements", () => {
   });
 });
 
-describe("variant order lines (shared product defect fixed by migration 0059)", () => {
+describe("variant order lines (shared product defect fixed by migration 0061)", () => {
   it("accepts a guest order that selects a published menu variant", async () => {
     const menu = menuDocumentSchema.parse(buildDemoBaseline().menu);
     const dish = menu.categories
@@ -234,7 +234,7 @@ describe("variant order lines (shared product defect fixed by migration 0059)", 
   });
 });
 
-describe("demo Ember budget (migration 0060)", () => {
+describe("demo Ember budget (migration 0062)", () => {
   it("raises the daily budget only for the demo actor, leaving other tenants at 12/20/80", async () => {
     const at = async (org: string, actor: string, kind: string) => {
       const c = await owner.connect();

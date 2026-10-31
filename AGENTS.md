@@ -124,11 +124,11 @@ seed" rule solely under these conditions; any deviation reverts to the prohibiti
 - **Provisioning** is an explicit operator action: `scripts/demo-provision.ts` with the isolated
   migration-owner URL and `ALLOW_DEMO_PROVISION=true`, after a verified backup. It is never run by
   CI, the web process, the worker or an automatic migration. `scripts/db-seed.ts` remains non-production.
-- **Reset** is `app_private.reset_demo_outlet(jsonb)` (migration 0057): `SECURITY DEFINER`, hardcoded
+- **Reset** is `app_private.reset_demo_outlet(jsonb)` (migration 0059): `SECURITY DEFINER`, hardcoded
   to the demo ids, refuses unless the outlet is `is_demo_data`, executable only by `menuminute_worker`.
   The worker runs it every 30 minutes only when `DEMO_MODE_ENABLED=true` (default false = kill switch).
 - **Demo kitchen and entitlements** (owner-approved 2026-10-31): `app_private.provision_demo_ops()`
-  (migration 0058) enables the demo outlet's kitchen, routes its dishes and grants `ordering.new` and
+  (migration 0060) enables the demo outlet's kitchen, routes its dishes and grants `ordering.new` and
   `kitchen.new` for ten years. This is a deliberate demo-only bypass of the Kitchen Pro pilot gate and
   the normal grant control plane. It is hardcoded to the demo ids, refuses unless `is_demo_data`, and
   is executable by the migration owner only (never `menuminute_app`, `menuminute_worker` or

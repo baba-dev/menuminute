@@ -11,8 +11,8 @@ const outletScope = `^/api/organizations/${DEMO_IDS.organizationId}/outlets/${DE
  * legacy menu tables, outlet profile, AI autofill and menu import are intentionally absent.
  */
 const ALLOWED: ReadonlyArray<readonly [method: string, pattern: RegExp]> = [
-  ["PATCH", /^\/api\/catalog\/[^/]+$/],
-  ["PUT", /^\/api\/catalog\/[^/]+\/translations$/],
+  ["PATCH", new RegExp(`^/api/catalog/${DEMO_IDS.menuId}$`)],
+  ["PUT", new RegExp(`^/api/catalog/${DEMO_IDS.menuId}/translations$`)],
   ["POST", /^\/api\/context$/],
   ["POST", /^\/api\/assistant\/conversations$/],
   ["POST", /^\/api\/assistant\/conversations\/[^/]+\/turns$/],

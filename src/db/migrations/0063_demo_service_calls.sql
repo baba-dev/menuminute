@@ -1,5 +1,5 @@
 -- Seed a few open guest service calls (call server, water refill, bill request) on the live demo orders.
--- seed_demo_orders is replaced with a superset of its 0058 behaviour; reset_demo_outlet already deletes
+-- seed_demo_orders is replaced with a superset of its 0060 behaviour; reset_demo_outlet already deletes
 -- guest_service_requests before seeding. Forward-only.
 CREATE OR REPLACE FUNCTION app_private.seed_demo_orders(p_orders jsonb) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$

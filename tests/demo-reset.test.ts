@@ -47,6 +47,10 @@ const PRESERVED: Record<string, string> = {
   outlet_grants: "demo team (managed by provisioning)",
   provisioning_requests: "provisioning idempotency",
   qr_codes: "tenant structure",
+  pwa_push_deliveries:
+    "push is blocked for the demo actor (guard denies /api/pwa/push); stays empty",
+  pwa_push_subscriptions:
+    "push is blocked for the demo actor (guard denies /api/pwa/push); stays empty",
   razorpay_checkout_intents: "billing is blocked for the demo org",
   razorpay_subscriptions: "billing is blocked for the demo org",
   restaurant_subscriptions: "billing",
@@ -250,7 +254,7 @@ describe("demo outlet reset", () => {
     const unaccounted = rows.map((r) => r.t).filter((t) => !reset.has(t) && !(t in PRESERVED));
     expect(unaccounted, "new scoped table: add it to the reset function or PRESERVED").toEqual([]);
     const migration = (await import("node:fs")).readFileSync(
-      "src/db/migrations/0057_demo_outlet_reset.sql",
+      "src/db/migrations/0059_demo_outlet_reset.sql",
       "utf8"
     );
     for (const t of reset)
