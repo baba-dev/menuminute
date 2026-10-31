@@ -39,7 +39,12 @@ export function parsePushWorkerSettings(source: NodeJS.ProcessEnv): PushSettings
     subject: source["PWA_PUSH_VAPID_SUBJECT"] ?? "",
   };
   // Fail closed at startup instead of accepting invalid key pairs after a queue lease.
-  createVapidHeaders("https://web.push.apple.com/vapid-check", keys.publicKey, keys.privateKey, keys.subject);
+  createVapidHeaders(
+    "https://web.push.apple.com/vapid-check",
+    keys.publicKey,
+    keys.privateKey,
+    keys.subject
+  );
   return { outletIds, keys };
 }
 
