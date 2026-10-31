@@ -57,10 +57,10 @@ describe("PWA H: push service safety and signing", () => {
     );
     const jwt = result.Authorization.match(/^vapid t=([^,]+), k=(.+)$/);
     expect(jwt).not.toBeNull();
-    const encoded = jwt![1].split(".");
+    const encoded = (jwt?.[1] ?? "").split(".");
     expect(encoded).toHaveLength(3);
-    expect(jwt![2]).toBe(pair.publicKey);
-    const claims = JSON.parse(Buffer.from(encoded[1], "base64url").toString("utf8")) as {
+    expect(jwt?.[2]).toBe(pair.publicKey);
+    const claims = JSON.parse(Buffer.from(encoded[1] ?? "", "base64url").toString("utf8")) as {
       aud: string;
       sub: string;
       exp: number;
@@ -81,9 +81,9 @@ describe("PWA H: push service safety and signing", () => {
     expect(
       verify(
         "sha256",
-        Buffer.from(encoded[0] + "." + encoded[1]),
+        Buffer.from((encoded[0] ?? "") + "." + (encoded[1] ?? "")),
         { key, dsaEncoding: "ieee-p1363" },
-        Buffer.from(encoded[2], "base64url")
+        Buffer.from(encoded[2] ?? "", "base64url")
       )
     ).toBe(true);
     expect(() =>
