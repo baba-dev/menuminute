@@ -86,7 +86,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             every service.
           </h1>
           <p>
-            A clearer view of sales, dishes, service and settlements at{" "}
+            A clearer view of orders, dishes, service and settlements at{" "}
             <strong>{outlet.name}</strong>.
           </p>
           <div className="reports-hero-meta">
@@ -106,7 +106,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               aria-pressed={activeTab === "z-report"}
               onClick={() => handleTabChange("z-report")}
             >
-              <Printer size={16} aria-hidden="true" /> View Daily Sales Summary
+              <Printer size={16} aria-hidden="true" /> View Daily Order Summary
             </button>
             <a href={exportUrl} download className="reports-hero-secondary">
               <Download size={16} aria-hidden="true" /> Export CSV
@@ -153,7 +153,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             onClick={() => handleTabChange("overview")}
           >
             <BarChart3 size={16} aria-hidden="true" />
-            Overview & Sales
+            Overview & Orders
           </button>
           <button
             type="button"
@@ -188,7 +188,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             onClick={() => handleTabChange("z-report")}
           >
             <Printer size={16} aria-hidden="true" />
-            Daily Sales Summary
+            Daily Order Summary
           </button>
         </nav>
 
@@ -231,12 +231,15 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
             <div className="reports-panel">
               <div className="reports-panel-head">
                 <div className="reports-panel-title">
-                  <h2>Hourly Sales Velocity & Trajectory</h2>
-                  <p>Intraday sales performance compared against previous 14-day average.</p>
+                  <h2>Hourly Order Value & Trajectory</h2>
+                  <p>
+                    Eligible order value (including unpaid) compared with the previous 14-day
+                    average.
+                  </p>
                 </div>
                 <div className="reports-panel-legend">
                   <span>
-                    <span className="legend-dot is-actual" /> Sales Velocity
+                    <span className="legend-dot is-actual" /> Order Value
                   </span>
                   <span>
                     <span className="legend-dot is-benchmark" /> 14-Day Average
@@ -254,7 +257,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 <div className="reports-panel-head">
                   <div className="reports-panel-title">
                     <h2>Fulfillment Channels</h2>
-                    <p>Volume and revenue by dining modality.</p>
+                    <p>Order volume and value by dining mode (including unpaid).</p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-4 py-2">
@@ -291,8 +294,8 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <div className="reports-panel">
                 <div className="reports-panel-head">
                   <div className="reports-panel-title">
-                    <h2>Category Revenue Mix</h2>
-                    <p>Top category shares contributing to gross revenue.</p>
+                    <h2>Category Order Value Mix</h2>
+                    <p>Eligible order value by category, including unpaid orders.</p>
                   </div>
                 </div>
                 <SvgBarChart
@@ -315,9 +318,9 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 icon={<UtensilsCrossed size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
-                label="Menu Revenue"
+                label="Menu Order Value"
                 value={formatMoney(menuEngineering.totalMenuRevenueMinor, currency)}
-                subtext="Culinary gross revenue"
+                subtext="Includes unpaid orders"
                 icon={<DollarSign size={18} aria-hidden="true" />}
               />
               <KpiMetricCard
@@ -329,7 +332,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
               <KpiMetricCard
                 label="Star Dishes"
                 value={`${menuEngineering.quadrants.stars.length} dishes`}
-                subtext="High volume & revenue"
+                subtext="High volume & order value"
                 icon={<TrendingUp size={18} aria-hidden="true" />}
               />
             </div>
@@ -339,7 +342,7 @@ export function ReportsHub({ initialData }: { initialData: ReportsWorkspaceData 
                 <div className="reports-panel-title">
                   <h2>Menu Performance Matrix</h2>
                   <p>
-                    Revenue-based classification of demand; profitability requires verified dish
+                    Order-value classification of demand; profitability requires verified dish
                     costs.
                   </p>
                 </div>

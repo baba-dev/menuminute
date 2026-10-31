@@ -8,7 +8,7 @@ import { inrMonthlyPrice } from "@/modules/billing/catalog";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Free permanent QR menus and AI paper scans forever. Table ordering from ₹119/mo and Kitchen Pro from ₹299/mo.",
+    "Free permanent QR menus. AI import, ordering and Kitchen Pro require separate availability and operator approval.",
 };
 
 const plans = [
@@ -16,20 +16,22 @@ const plans = [
     name: "Free Forever",
     price: "Free",
     period: "forever",
-    description: "Everything you need to go digital with a beautiful QR menu and AI scan.",
+    description: "Everything needed to publish a beautiful, permanent restaurant QR menu.",
     cta: "Get started free",
     ctaHref: "/register",
     primary: false,
     badge: "Acquisition Favorite",
+    availability:
+      "AI photo extraction is optional and requires a supported, approved provider; it is not part of the always-on free QR menu.",
     features: [
       "Categories, dishes and descriptions",
       "Unlimited items and variants",
-      "Free AI paper menu photo scanner",
+      "AI photo import where separately enabled and approved",
       "Permanent table QR codes",
       "Mobile-optimised instant menu view",
       "No customer registration required",
-      "Real-time 86 sold-out dish toggles",
-      "Print-ready vector PDF & SVG downloads",
+      "Live sold-out dish controls",
+      "SVG/PNG QR downloads and browser Save as PDF printing",
     ],
   },
   {
@@ -39,10 +41,12 @@ const plans = [
     altPrice: "INR billing · international pricing coming later",
     description:
       "Let diners order directly from their phone at the table. Eliminate waiter wait times and turn tables faster.",
-    cta: "Start Live Ordering",
+    cta: "Create an account to check access",
     ctaHref: "/register",
     primary: true,
-    badge: "Most Popular",
+    badge: "Limited rollout",
+    availability:
+      "Ordering is feature-gated and available only to eligible, activated outlets. Registering does not immediately enable order intake.",
     features: [
       "Everything in Free Forever",
       "Table-based QR ordering & cart",
@@ -60,10 +64,12 @@ const plans = [
     altPrice: "Available after Kitchen Pro release approval",
     description:
       "Full digital Kitchen Display System replacing paper tickets with real-time station tablets and chimes.",
-    cta: "Join Kitchen Pro early access",
+    cta: "Create an account for Kitchen Pro",
     ctaHref: "/register",
     primary: false,
     badge: "High Rush Kitchens",
+    availability:
+      "Kitchen Pro requires approved operator activation, staff assignment and readiness checks. This is not instant paid activation.",
     features: [
       "Everything in Live Ordering",
       "Live Kitchen Display System (KDS)",
@@ -91,8 +97,8 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
-            QR menus and AI paper scans are 100% free forever. Upgrade anytime to automated table
-            ordering and kitchen displays for less than a cup of chai a day.
+            Permanent QR menus are free. AI import and paid ordering or Kitchen Pro features become
+            available only after the required provider, entitlement and rollout approvals.
           </p>
         </div>
 
@@ -144,9 +150,14 @@ export default function PricingPage() {
                   </p>
                 )}
                 <p
-                  className={`mb-6 text-sm ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
+                  className={`mb-3 text-sm ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
                 >
                   {plan.description}
+                </p>
+                <p
+                  className={`mb-6 text-xs leading-relaxed ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
+                >
+                  {plan.availability}
                 </p>
 
                 <ul className="space-y-3 border-t border-stone-200/20 pt-6">
@@ -192,8 +203,9 @@ export default function PricingPage() {
               </h2>
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
                 Prefer to run your own infrastructure? MenuMinute is open source under the MIT
-                License. Single-user self-hosted instances have all features (ordering, KDS, AI
-                scans) unlocked without subscription fees; operational safety checks still apply.
+                License. Community Edition is for single-user deployments. Ordering and KDS remain
+                subject to runtime and safety gates; AI requires configured provider credentials and
+                appropriate commercial rights.
               </p>
             </div>
             <a

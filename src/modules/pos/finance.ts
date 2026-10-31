@@ -15,6 +15,7 @@ import { getPool } from "@/db";
 import { sendTransactionalEmail } from "@/lib/email";
 import { validateTender } from "@/lib/pos/finance-math";
 import { assessFiscalReadiness } from "./fiscal-readiness";
+import { formatFinancialDocumentEmail } from "./document-email";
 
 const key = z.string().uuid();
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -778,31 +779,11 @@ async function deliverDocument(
       ${requestKey}::uuid,${recipientHash}) as result`
   );
   if (prepared.state === "sent" || !prepared.documentNumber || !prepared.snapshot) return prepared;
-  const bill =
-    prepared.snapshot.bill && typeof prepared.snapshot.bill === "object"
-      ? (prepared.snapshot.bill as Record<string, unknown>)
-      : null;
-  const currency = typeof bill?.currency === "string" ? bill.currency : "";
-  const total =
-    typeof bill?.totalMinor === "string"
-      ? bill.totalMinor
-      : typeof prepared.snapshot.totalMinor === "string"
-        ? prepared.snapshot.totalMinor
-        : "";
-  const text = [
-    "MenuMinute private financial document",
-    "",
-    `Document: ${prepared.documentNumber}`,
-    `Type: ${prepared.kind ?? "document"}`,
-    currency && total ? `Recorded total: ${total} minor units (${currency})` : "",
-    typeof prepared.snapshot.legalStatus === "string"
-      ? `Status: ${prepared.snapshot.legalStatus}`
-      : "",
-    "",
-    "This message is a delivery of the immutable merchant record. It is not proof of bank settlement or government fiscal registration.",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const text = formatFinancialDocumentEmail({
+    documentNumber: prepared.documentNumber,
+    kind: prepared.kind ?? "document",
+    snapshot: prepared.snapshot,
+  });
   try {
     await sendTransactionalEmail({
       to: normalizedRecipient,

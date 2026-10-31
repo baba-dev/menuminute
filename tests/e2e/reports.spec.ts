@@ -66,6 +66,10 @@ test("Reports Atelier supports real server filters, export and narrow viewports"
   await expect(page.getByTestId("reports-hub")).toBeVisible();
   await expect(page.getByRole("heading", { name: /story behind/i })).toBeVisible();
   await expect(page.getByTestId("reports-hub").getByText("Reports Test Kitchen")).toBeVisible();
+  await expect(page.getByText("Recorded Order Value", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Hourly Order Value & Trajectory" })
+  ).toBeVisible();
 
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -88,5 +92,5 @@ test("Reports Atelier supports real server filters, export and narrow viewports"
   const csv = await page.request.get("/api/reports/export?range=yesterday&tab=overview");
   expect(csv.status()).toBe(200);
   expect(csv.headers()["content-type"]).toContain("text/csv");
-  expect(await csv.text()).toContain("Gross Sales");
+  expect(await csv.text()).toContain("Recorded Order Value");
 });

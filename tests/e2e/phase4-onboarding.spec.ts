@@ -5,6 +5,9 @@ import { admin } from "../helpers";
 test("first-outlet wizard resumes a saved draft, recovers from failure and opens guided setup", async ({
   page,
 }) => {
+  // Full sign-up, email-verification, five-step setup, injected failure and recovery.
+  // Keep this real end-to-end test and give its distinct stages a realistic bounded budget.
+  test.setTimeout(90_000);
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const email = `onboarding-${crypto.randomUUID()}@browser.invalid`;
   await mockTurnstileForBrowserTests(page);

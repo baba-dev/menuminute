@@ -827,7 +827,13 @@ export async function exportReportCsv(
   }
 
   // Default: Executive Sales Summary by Hour
-  const headers = ["Hour", "Time", "Gross Sales", "Orders Count", "Benchmark Average"];
+  const headers = [
+    "Hour",
+    "Time",
+    "Recorded Order Value",
+    "Orders Count",
+    "Historical Order Value Average",
+  ];
   const rows = data.hourlyTrajectory.map((h) => [
     h.hour,
     h.label,
@@ -836,7 +842,7 @@ export async function exportReportCsv(
     formatMoneyAmount(h.benchmarkMinor, currency),
   ]);
   return {
-    filename: `Sales-Velocity-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
+    filename: `Order-Value-by-Hour-${data.dateRange.from}-to-${data.dateRange.to}.csv`,
     content: serializeCsv(headers, rows),
   };
 }
