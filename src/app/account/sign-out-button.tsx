@@ -37,7 +37,11 @@ export function AccountSignOutButton() {
         <LogOut size={17} aria-hidden="true" />
         {pending ? "Signing out…" : "Sign out"}
       </button>
-      {error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
