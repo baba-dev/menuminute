@@ -6,11 +6,14 @@ app-store release.
 ## Phase A — safety boundary
 
 The service worker is deliberately an anonymous public-read cache, not a general application cache.
-It handles same-origin `GET` requests only:
+Its baseline handles same-origin `GET` requests only:
 
-- network-first public pages and `/m/{publicMenuId}`;
-- network-first `/api/public-menu/{token}` and `/api/public-media/{mediaId}` reads;
+- network-first public marketing pages;
 - cache-first immutable `/_next/static/`, `/brand/` and `/assets/` files, with bounded entry counts.
+
+Public menu documents and APIs are network-only until the outlet passes the phase F-G server gate
+described below. An enrolled menu gets an exact page/API snapshot; public media is cached only when
+requested from an enrolled menu client.
 
 Everything else remains browser-default network-only behavior. In particular, the worker does not
 intercept authenticated dashboards, context, orders, carts, checkout, kitchen, admin or assistant
@@ -18,9 +21,9 @@ APIs; non-GET requests; range requests; cross-origin requests; or responses vari
 Authorization. There is no Background Sync listener and no mutation queue. An offline order cannot
 be submitted or replayed.
 
-Online `404` and `410` public responses evict all cached language/query variants for that pathname
-and are returned directly. They are never replaced by stale data. Network failure can return a
-previous public response, which the global offline notice labels as potentially stale.
+Online `404` and `410` enrolled page/API responses remove the matching enrollment and cached
+snapshot and are returned directly. They are never replaced by stale data. Network failure can
+return a previous enrolled response, which the guest notice labels as potentially stale.
 
 ## Phase B — install assets
 
@@ -31,13 +34,14 @@ asset and is not advertised as the install icon.
 
 ## Phase C — worker lifecycle
 
-`public/sw.js` owns cache policy v1. The worker installs without taking over an existing worker, so an
+`public/sw.js` owns cache policy v2. The worker installs without taking over an existing worker, so an
 update cannot discard an in-progress form. Activation deletes only older cache names beginning with
 `menuminute-pwa-`; it never clears unrelated origin storage. The script is served with `no-store`,
 `updateViaCache: "none"` and root scope so browsers check the current worker code.
 
-Cache limits are 24 public documents, 80 public API/media responses and 96 static assets. Cache
-Storage is an availability convenience, not an authorization source or durable record.
+Cache limits are 24 public marketing documents, 50 enrolled guest pages/APIs, 160 enrolled guest
+media responses and 96 static assets. Cache Storage is an availability convenience, not an
+authorization source or durable record.
 
 ## Phase D — install, offline and update UX
 
@@ -50,7 +54,8 @@ The root layout mounts `PwaLifecycle`:
 - a waiting worker asks before reload, warning that unsaved form state may be lost.
 
 The `/offline` route is precached as the last-resort document. Previously opened public menus can
-render from cache; private routes and actions fail normally without connectivity.
+render from cache only after phase F enrollment; private routes and actions fail normally without
+connectivity.
 
 ## Phase E — evidence and rollback
 
@@ -63,3 +68,49 @@ Rollback is two-step: first ship a replacement worker that unregisters itself an
 `menuminute-pwa-*` caches, then remove registration code in a later release. Removing the script
 without a decommission worker can strand the last installed worker in existing browsers. Database,
 Redis, order, media-source and deployment migrations are not involved.
+
+## Phase F — outlet-gated guest offline viewing
+
+The server renders `GuestOfflineCoordinator` on every public menu, but it enrolls a snapshot only
+when both `PWA_OPERATIONAL_ENABLED=true` and the menu's exact outlet ID is present in the bounded
+`PWA_OPERATIONAL_OUTLET_IDS` allowlist. The worker accepts enrollment only from the matching
+same-origin menu client, with matching page/API tokens and independently validated optional `lang`
+queries. This permits a requested unavailable language to use the server's canonical fallback.
+
+An enrolled guest sees the last successful sync time. Offline mode clearly says that prices and
+availability may have changed and that ordering is paused. `CartDrawer` also blocks submission
+before it writes a recovery attempt or sends a request whenever the browser reports offline. There
+is still no mutation queue, Background Sync or automatic replay.
+
+Removing an outlet from the allowlist sends a removal message on its next online public-menu render.
+An already offline device may retain its explicitly stale snapshot until it next reconnects; it
+cannot order from that snapshot.
+
+## Phase G — POS and Kitchen operational safety
+
+The rollout gate adds client safety behavior only after existing product authority has succeeded:
+
+- POS requires its existing outlet setting to be enabled;
+- Kitchen requires its existing primary operational workspace check;
+- normal authentication, outlet scope, permission and entitlement checks remain unchanged.
+
+Private pages and APIs remain network-only. A connectivity loss places an enrolled POS or Kitchen
+screen behind a blocking safety pause and releases any Screen Wake Lock. Reconnection does not
+silently resume: the operator must choose **Reload and sync** so the server revalidates current
+outlet state. In an installed standalone display, an operator may explicitly request a Screen Wake
+Lock; it is released when the page hides, goes offline, or unmounts, and denial is non-fatal.
+
+## Activation and rollback
+
+1. Deploy with `PWA_OPERATIONAL_ENABLED=false`; this also replaces v1 caches with the safer v2
+   namespace.
+2. Stage one or more reviewed outlet IDs in `PWA_OPERATIONAL_OUTLET_IDS` while the master gate stays
+   false.
+3. Confirm outlet publication, POS/Kitchen activation and assignments independently.
+4. Set the master gate true and verify guest sync timestamp, offline read-only messaging, blocked
+   ordering, and POS/Kitchen disconnect/reload behavior at each enrolled outlet.
+5. Expand the allowlist gradually, up to the validated 50-ID bound.
+
+For operational rollback, set the master gate false first. The next online render removes each guest
+snapshot and stops rendering the POS/Kitchen enhancement. Keep the worker deployed because phases
+A-E and safe cache cleanup still depend on it. No database migration is required.
