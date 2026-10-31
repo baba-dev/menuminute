@@ -222,6 +222,7 @@ export function groundedMerchantAnswer(
     const parsed = z
       .object({
         prepared: z.boolean(),
+        kind: z.string().optional(),
         summary: z.string().optional(),
         reason: z.string().optional(),
       })
@@ -229,6 +230,10 @@ export function groundedMerchantAnswer(
     if (!parsed.success) return null;
     if (!parsed.data.prepared) return safe(parsed.data.reason ?? "I couldn't prepare that change.");
     // The card carries the exact change; the reply stays short and never claims it is done.
+    if (parsed.data.kind === "menu.publish")
+      return "I've prepared that. Nothing goes live until you tap **Publish** on the card below, which lists exactly what will change.";
+    if (parsed.data.kind === "menu.price" || parsed.data.kind === "menu.description")
+      return "I've prepared that change for your **draft** menu. Nothing changes until you tap **Confirm**, and guests won't see it until the menu is published.";
     return "I've prepared that for you. Nothing changes until you tap **Confirm** on the card below.";
   }
   if (item.tool === "help.search") {

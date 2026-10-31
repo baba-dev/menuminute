@@ -366,7 +366,9 @@ export async function authorizedToolDefinitions(context: ToolContext) {
     return response.rows[0];
   });
   const proposable = env.AI_ASSISTANT_ACTIONS_ENABLED
-    ? await proposeAccess(context, proposeToolDefinitions())
+    ? (await proposeAccess(context, proposeToolDefinitions())).filter(
+        (d) => d.name !== "propose.menuPublish" || env.AI_ASSISTANT_PUBLISH_ENABLED
+      )
     : [];
   return [...toolDefinitions(), ...proposable].filter((definition) => {
     if (isProposeTool(definition.name)) return true;
@@ -405,6 +407,8 @@ async function proposeAccess<T extends { permissions: string[] }>(context: ToolC
 export async function executeReadTool(context: ToolContext, name: string, untrusted: unknown) {
   if (isProposeTool(name)) {
     if (!env.AI_ASSISTANT_ACTIONS_ENABLED) throw new Error("Unknown read-only tool");
+    if (name === "propose.menuPublish" && !env.AI_ASSISTANT_PUBLISH_ENABLED)
+      throw new Error("Unknown read-only tool");
     return executeProposeTool(context, name, untrusted);
   }
   // Deliberately dispatch individually so TypeScript and Zod validate each handler.

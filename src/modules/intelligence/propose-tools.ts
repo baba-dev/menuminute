@@ -5,7 +5,16 @@ import { listOutletOrders } from "@/modules/orders/service";
 import { kitchenSnapshot } from "@/modules/kitchen/service";
 import { ForbiddenError } from "@/lib/errors";
 import type { ToolContext } from "./read-tools";
-import { proposeAction } from "./action-requests";
+import { actionRequestHistory, proposeAction } from "./action-requests";
+import {
+  describeChanges,
+  diffMenus,
+  editableMenus,
+  findDraftDishes,
+  formatMoney,
+  introducesSafetyClaim,
+  priceToMinor,
+} from "./menu-actions";
 import { SUPPORT_CATEGORIES, SUPPORT_PRIORITIES } from "@/modules/support/service";
 
 /**
@@ -83,6 +92,23 @@ const supportTicketSchema = z
     priority: z.enum(SUPPORT_PRIORITIES).optional(),
   })
   .strict();
+
+const menuPriceSchema = z
+  .object({
+    dish: z.string().trim().min(2).max(80),
+    newPrice: z.number().positive().max(10_000_000),
+    menu: z.string().trim().min(1).max(80).optional(),
+    confirmLargeChange: z.boolean().optional(),
+  })
+  .strict();
+const menuDescriptionSchema = z
+  .object({
+    dish: z.string().trim().min(2).max(80),
+    description: z.string().trim().min(1).max(500),
+    menu: z.string().trim().min(1).max(80).optional(),
+  })
+  .strict();
+const menuPublishSchema = z.object({ menu: z.string().trim().min(1).max(80).optional() }).strict();
 
 const withConversation = (context: ToolContext) => {
   if (!context.conversationId) throw new ForbiddenError("Actions need an open conversation");
@@ -294,6 +320,194 @@ export const proposeTools = [
       return prepared(summary, row.kind, row.id);
     },
   },
+  {
+    name: "propose.menuPrice",
+    description:
+      "Prepare (not apply) a price change for one dish in the DRAFT menu, for the person to confirm. Give the dish name and the new price in normal currency units (e.g. 300). The change is not visible to guests until the menu is published. Set confirmLargeChange only if the person has clearly said the big change is intended.",
+    parameters: {
+      type: "object",
+      properties: {
+        dish: { type: "string", minLength: 2, maxLength: 80 },
+        newPrice: { type: "number", exclusiveMinimum: 0 },
+        menu: { type: "string", maxLength: 80 },
+        confirmLargeChange: { type: "boolean" },
+      },
+      required: ["dish", "newPrice"],
+      additionalProperties: false,
+    },
+    schema: menuPriceSchema,
+    permissions: ["menu.write"],
+    run: async (context: ToolContext, args: z.infer<typeof menuPriceSchema>) => {
+      const conversationId = withConversation(context);
+      const found = await findDraftDishes(context, args.dish, args.menu);
+      if (!found.length)
+        return empty(`I couldn't find a dish called “${args.dish}” in your menus.`);
+      if (found.length > 1)
+        return empty(
+          `Several dishes match “${args.dish}”: ${found
+            .slice(0, 4)
+            .map((f) => `${f.dishName} (${f.menuName})`)
+            .join(", ")}. Which one?`
+        );
+      const d = found[0]!;
+      if (d.hasVariants)
+        return empty(
+          `${d.dishName} has size options, so its prices are best changed in Menu Studio.`
+        );
+      if (d.localPriceMinor !== null)
+        return empty(
+          `This outlet sells ${d.dishName} at a local price of ${formatMoney(d.localPriceMinor, d.currency)}, which overrides the menu price. Change that in Menu Studio.`
+        );
+      let minor: number;
+      try {
+        minor = priceToMinor(args.newPrice, d.currency);
+      } catch (error) {
+        return empty(error instanceof Error ? error.message : "That price isn't valid.");
+      }
+      if (minor === d.priceMinor)
+        return empty(`${d.dishName} is already ${formatMoney(minor, d.currency)}.`);
+      if (
+        !args.confirmLargeChange &&
+        d.priceMinor > 0 &&
+        (minor > d.priceMinor * 3 || minor * 3 < d.priceMinor)
+      )
+        return empty(
+          `That would change ${d.dishName} from ${formatMoney(d.priceMinor, d.currency)} to ${formatMoney(minor, d.currency)}, which is a big jump. Please confirm the new price is right.`
+        );
+      const summary = `Change ${d.dishName} from ${formatMoney(d.priceMinor, d.currency)} to ${formatMoney(minor, d.currency)} in the “${d.menuName}” draft`;
+      const row = await proposeAction(context, {
+        conversationId,
+        key: randomUUID(),
+        kind: "menu.price",
+        params: {
+          menuId: d.menuId,
+          dishId: d.dishId,
+          beforeMinor: d.priceMinor,
+          priceMinor: minor,
+          expectedRevision: d.revision,
+        },
+        expected: { revision: d.revision },
+        summary,
+      });
+      return prepared(summary, row.kind, row.id);
+    },
+  },
+  {
+    name: "propose.menuDescription",
+    description:
+      "Prepare (not apply) a new description for one dish in the DRAFT menu, for the person to confirm. Use the person's own wording, lightly tidied. Never add allergen, dietary or nutrition claims. Not visible to guests until the menu is published.",
+    parameters: {
+      type: "object",
+      properties: {
+        dish: { type: "string", minLength: 2, maxLength: 80 },
+        description: { type: "string", minLength: 1, maxLength: 500 },
+        menu: { type: "string", maxLength: 80 },
+      },
+      required: ["dish", "description"],
+      additionalProperties: false,
+    },
+    schema: menuDescriptionSchema,
+    permissions: ["menu.write"],
+    run: async (context: ToolContext, args: z.infer<typeof menuDescriptionSchema>) => {
+      const conversationId = withConversation(context);
+      const found = await findDraftDishes(context, args.dish, args.menu);
+      if (!found.length)
+        return empty(`I couldn't find a dish called “${args.dish}” in your menus.`);
+      if (found.length > 1)
+        return empty(
+          `Several dishes match “${args.dish}”: ${found
+            .slice(0, 4)
+            .map((f) => `${f.dishName} (${f.menuName})`)
+            .join(", ")}. Which one?`
+        );
+      const d = found[0]!;
+      const next = args.description.replace(/\s+/g, " ").trim();
+      if (next === d.description.trim())
+        return empty(`${d.dishName} already has that description.`);
+      if (introducesSafetyClaim(d.description, next))
+        return empty(
+          "I can't add allergen, dietary or nutrition details, because those must be checked by you. Please edit them in Menu Studio."
+        );
+      const summary = `Update the description of ${d.dishName} in the “${d.menuName}” draft`;
+      const row = await proposeAction(context, {
+        conversationId,
+        key: randomUUID(),
+        kind: "menu.description",
+        params: {
+          menuId: d.menuId,
+          dishId: d.dishId,
+          before: d.description,
+          description: next,
+          expectedRevision: d.revision,
+        },
+        expected: { revision: d.revision },
+        summary,
+      });
+      return prepared(summary, row.kind, row.id);
+    },
+  },
+  {
+    name: "propose.menuPublish",
+    description:
+      "Prepare (not perform) publishing the DRAFT menu so guests see it, for the person to confirm. Use ONLY when the person explicitly asks to publish or make changes live. The confirmation card lists exactly what will change.",
+    parameters: {
+      type: "object",
+      properties: { menu: { type: "string", maxLength: 80 } },
+      additionalProperties: false,
+    },
+    schema: menuPublishSchema,
+    permissions: ["menu.write"],
+    run: async (context: ToolContext, args: z.infer<typeof menuPublishSchema>) => {
+      const conversationId = withConversation(context);
+      const pending = (await actionRequestHistory(context, conversationId)).filter((r) => {
+        const row = r as { kind: string; status: string; expiresAt: string | Date };
+        return (
+          ["menu.price", "menu.description"].includes(row.kind) &&
+          row.status === "pending" &&
+          new Date(row.expiresAt).getTime() > Date.now()
+        );
+      });
+      if (pending.length)
+        return empty(
+          "You still have a draft change waiting on a card above. Confirm or dismiss it first, then ask me to publish."
+        );
+      const menus = (await editableMenus(context, args.menu)).filter((m) => !m.archived);
+      const visibleDishes = (m: (typeof menus)[number]) =>
+        m.document.categories.reduce(
+          (n, c) => n + (c.archived ? 0 : c.items.filter((i) => !i.archived).length),
+          0
+        );
+      const changed = menus
+        .map((m) => ({ m, changes: diffMenus(m.document, m.publishedDocument) }))
+        // A never-published menu only counts once it has a dish; the database refuses an empty one.
+        .filter((x) => (x.m.publishedDocument ? x.changes.length > 0 : visibleDishes(x.m) > 0));
+      if (!changed.length)
+        return empty("Everything is already published, so there is nothing to put live.");
+      if (changed.length > 1)
+        return empty(
+          `More than one menu has unpublished changes (${changed
+            .slice(0, 4)
+            .map((x) => x.m.document.name)
+            .join(", ")}). Which one should I publish?`
+        );
+      const { m, changes } = changed[0]!;
+      const first = !m.publishedDocument;
+      const dishes = visibleDishes(m);
+      const lines = first ? [`First publish: ${dishes} dishes go live`] : changes;
+      const summary = first
+        ? `Publish “${m.document.name}” for the first time`
+        : `Publish “${m.document.name}”: ${changes.length} ${changes.length === 1 ? "change goes" : "changes go"} live`;
+      const row = await proposeAction(context, {
+        conversationId,
+        key: randomUUID(),
+        kind: "menu.publish",
+        params: { menuId: m.id, expectedRevision: m.revision },
+        expected: { revision: m.revision, preview: describeChanges(lines) },
+        summary,
+      });
+      return prepared(summary, row.kind, row.id);
+    },
+  },
 ] as const;
 
 export type ProposeToolName = (typeof proposeTools)[number]["name"];
@@ -317,6 +531,12 @@ export async function executeProposeTool(context: ToolContext, name: string, unt
       return proposeTools[2].run(context, proposeTools[2].schema.parse(untrusted));
     case "propose.supportTicket":
       return proposeTools[3].run(context, proposeTools[3].schema.parse(untrusted));
+    case "propose.menuPrice":
+      return proposeTools[4].run(context, proposeTools[4].schema.parse(untrusted));
+    case "propose.menuDescription":
+      return proposeTools[5].run(context, proposeTools[5].schema.parse(untrusted));
+    case "propose.menuPublish":
+      return proposeTools[6].run(context, proposeTools[6].schema.parse(untrusted));
     default:
       throw new Error("Unknown action tool");
   }

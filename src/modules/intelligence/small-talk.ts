@@ -22,6 +22,14 @@ const CAPABILITIES: Array<{ tool: string; line: string }> = [
   { tool: "reports.insights", line: "find your busiest hours and slow-selling dishes" },
   { tool: "billing.status", line: "show which paid features are active on your plan" },
   {
+    tool: "propose.menuPrice",
+    line: "change a dish's price or description in your draft menu (you confirm first)",
+  },
+  {
+    tool: "propose.menuPublish",
+    line: "publish your menu when you ask me to (you confirm first and see exactly what changes)",
+  },
+  {
     tool: "propose.supportTicket",
     line: "send a support request to the MenuMinute team (you confirm first)",
   },

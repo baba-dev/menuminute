@@ -1,9 +1,9 @@
 # Ember confirm-first actions (generic framework)
 
-Status: **stages 1-2 of 3 implemented.** Stage 1: storage, SQL functions and the server module
+Status: **all three stages implemented.** Stage 1: storage, SQL functions and the server module
 (`action-requests.ts`). Stage 2: propose-only model tools (`propose-tools.ts`), the list/decide API
 routes and the confirmation card (`ember-action-card.tsx`). Stage 3 adds menu price/description
-kinds (draft-only, never publishing). `AI_ASSISTANT_ACTIONS_ENABLED` is the kill switch: with it
+draft edits and a confirmed publish (below). `AI_ASSISTANT_ACTIONS_ENABLED` is the kill switch: with it
 off, no propose tool is advertised or executable and the routes refuse.
 
 ## What people see
@@ -63,3 +63,23 @@ in the receipt.
   `tests/demo-reset.test.ts` lists the table under `PRESERVED` for that reason.
 - Like `0064`, the table has an owner-only policy because the functions are `SECURITY DEFINER`
   and the production migration owner is a plain role (`tests/intelligence-definer-rls.test.ts`).
+
+## Menu changes and publishing (stage 3)
+
+- `propose.menuPrice` and `propose.menuDescription` prepare a change to one dish in the **draft** menu.
+  Confirming saves the draft through the existing `menu_command` `save` (permission, revision check,
+  idempotency key = request id). **Guests do not see it until the menu is published**; the card and the
+  receipt say so. Refused up front (asked back in plain words): unknown or ambiguous dish, unchanged
+  value, dishes with size options or a local outlet price (change those in Menu Studio), a price that
+  jumps more than 3× either way unless the person clearly confirmed it, and any new allergen,
+  dietary or nutrition wording (never written by Ember; checked again at confirm).
+- `propose.menuPublish` prepares publishing the draft. It is only offered when
+  `AI_ASSISTANT_PUBLISH_ENABLED=true` (a separate switch that requires the actions switch), only on an
+  explicit "publish / make it live" request, and not while a draft edit card is still waiting. The
+  card is labelled **Publish** and lists what will change (price, description, new or removed dishes,
+  sold-out state; first publishes state the dish count). Confirming runs `menu_command` `publish` with
+  the revision seen when prepared, so if anyone edited the draft in between, nothing is published and
+  the person is told to ask again.
+- This is **human-confirmed publishing**, not autonomous AI publishing: every publish is one explicit
+  confirmation of an exact, previewed change by the same signed-in person with `menu.write`.
+- Migration `0067` only widens the request-kind check to add `menu.publish`.

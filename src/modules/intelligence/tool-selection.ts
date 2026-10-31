@@ -36,6 +36,24 @@ export function selectQuestionTools<T extends { name: string }>(
     )
   )
     add("propose.supportTicket");
+  // Menu changes. Edits go to the draft; publishing needs an explicit request to go live.
+  if (
+    /\b(publish|go live|goes live|make (?:it|them|that|those|the changes?) live|push (?:it |them |the changes? )?live|put (?:it |them |the changes? )?live)\b/.test(
+      q
+    )
+  )
+    add("propose.menuPublish");
+  if (
+    /\bdescription\b|\bdescribe\b|\bwording\b|\btagline\b|\bblurb\b/.test(q) &&
+    /\b(change|update|rewrite|edit|set|make|reword|replace|write|add)\b/.test(q)
+  )
+    add("propose.menuDescription");
+  if (
+    /\b(price|cost|costs|priced|pricing)\b/.test(q) &&
+    /\b(change|set|update|make|raise|lower|increase|decrease|reduce|drop|put|to)\b/.test(q) &&
+    /\d/.test(q)
+  )
+    add("propose.menuPrice");
   // Action requests ("mark order 12 ready", "resolve table 5's water request") prepare a
   // confirm-first card. Only offered when the person's actions are enabled and permitted.
   if (

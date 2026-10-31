@@ -51,4 +51,19 @@ describe("Ember pricing configuration", () => {
       })
     ).not.toThrow();
   });
+
+  it("only allows confirmed menu publishing when confirmed actions are enabled", () => {
+    expect(() => parseEnv({ ...base, ...pricing, AI_ASSISTANT_PUBLISH_ENABLED: "true" })).toThrow(
+      /AI_ASSISTANT_PUBLISH_ENABLED/
+    );
+    expect(
+      parseEnv({
+        ...base,
+        ...pricing,
+        AI_ASSISTANT_ACTIONS_ENABLED: "true",
+        AI_ASSISTANT_PUBLISH_ENABLED: "true",
+      }).AI_ASSISTANT_PUBLISH_ENABLED
+    ).toBe(true);
+    expect(parseEnv({ ...base, ...pricing }).AI_ASSISTANT_PUBLISH_ENABLED).toBe(false);
+  });
 });

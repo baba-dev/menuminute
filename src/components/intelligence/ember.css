@@ -703,10 +703,11 @@
   line-height: 1.5;
   color: var(--muted, #695949);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 .mm-ember-act-buttons {
   display: flex;

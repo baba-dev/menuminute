@@ -463,6 +463,13 @@
       "when": 1794142800020,
       "tag": "0066_support_tickets",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1794229200021,
+      "tag": "0067_assistant_menu_publish_kind",
+      "breakpoints": true
     }
   ]
 }

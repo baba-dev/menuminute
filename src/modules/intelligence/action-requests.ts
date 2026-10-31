@@ -7,6 +7,14 @@ import { staffServiceRequestAction } from "@/modules/hospitality/service";
 import { transitionOutletOrder } from "@/modules/orders/service";
 import { kitchenWorkCommand } from "@/modules/kitchen/service";
 import { createSupportTicket, createTicketInput } from "@/modules/support/service";
+import {
+  executeMenuDescription,
+  executeMenuPrice,
+  executeMenuPublish,
+  menuDescriptionParams,
+  menuPriceParams,
+  menuPublishParams,
+} from "./menu-actions";
 import { assertAssistantScope, type Scope } from "./store";
 
 /**
@@ -36,7 +44,10 @@ type Kind =
   | "service_request.resolve"
   | "order.transition"
   | "kitchen.work"
-  | "support.ticket";
+  | "support.ticket"
+  | "menu.price"
+  | "menu.description"
+  | "menu.publish";
 type Definition<T extends z.ZodType> = {
   schema: T;
   /** Any one of these permissions lets the person propose and confirm; the domain re-checks. */
@@ -176,6 +187,22 @@ export const actionKinds: { [K in Kind]: Definition<z.ZodType> } = {
       }
     },
   },
+  "menu.price": {
+    schema: menuPriceParams,
+    permissions: () => ["menu.write"],
+    execute: (s, raw, id) => executeMenuPrice(s, raw as z.infer<typeof menuPriceParams>, id),
+  },
+  "menu.description": {
+    schema: menuDescriptionParams,
+    permissions: () => ["menu.write"],
+    execute: (s, raw, id) =>
+      executeMenuDescription(s, raw as z.infer<typeof menuDescriptionParams>, id),
+  },
+  "menu.publish": {
+    schema: menuPublishParams,
+    permissions: () => ["menu.write"],
+    execute: (s, raw, id) => executeMenuPublish(s, raw as z.infer<typeof menuPublishParams>, id),
+  },
 };
 
 export const proposeActionInput = z
@@ -188,6 +215,9 @@ export const proposeActionInput = z
       "order.transition",
       "kitchen.work",
       "support.ticket",
+      "menu.price",
+      "menu.description",
+      "menu.publish",
     ]),
     params: z.record(z.string(), z.unknown()),
     expected: z.record(z.string(), z.unknown()).default({}),
@@ -316,7 +346,9 @@ export async function actionRequestHistory(s: Scope, conversationId: string) {
   return scopedTx(s, async (tx) => {
     const rows = await tx.execute(
       sql`select id,status,kind,summary,expires_at as "expiresAt",created_at as "createdAt",result,
-        case when kind='support.ticket' then left(params->>'details',220) end as preview
+        case kind when 'support.ticket' then left(params->>'details',220)
+          when 'menu.description' then left(params->>'description',220)
+          when 'menu.publish' then left(expected->>'preview',500) end as preview
         from assistant_action_requests where conversation_id=${conversationId}
         and organization_id=${s.organizationId} and outlet_id=${s.outletId} and user_id=${s.actor.userId}
         order by created_at desc,id desc limit 20`

@@ -48,6 +48,7 @@ export function EmberActionCard({
   });
   const open = request.status === "pending" && expires > now;
   const careful = /^(Cancel|Reject)\b/.test(request.summary);
+  const confirmLabel = /^Publish\b/.test(request.summary) ? "Publish" : "Confirm";
 
   async function decide(decision: Decision) {
     setProblem("");
@@ -117,7 +118,7 @@ export function EmberActionCard({
               Working
             </>
           ) : (
-            "Confirm"
+            confirmLabel
           )}
         </button>
         <button

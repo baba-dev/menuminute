@@ -62,6 +62,9 @@ describe("Ember additional read tools", () => {
       ...NEW,
       "support.myTickets",
       "propose.supportTicket",
+      "propose.menuPrice",
+      "propose.menuDescription",
+      "propose.menuPublish",
       "help.search",
     ].map((name) => ({ name }));
     const first = (q: string) => selectQuestionTools(registry, q)[0]?.name;
@@ -79,5 +82,10 @@ describe("Ember additional read tools", () => {
       "propose.supportTicket"
     );
     expect(first("Something is not working with my menu")).toBe("propose.supportTicket");
+    expect(first("Change the price of paneer tikka to 180")).toBe("propose.menuPrice");
+    expect(first("Update the description of dal makhani")).toBe("propose.menuDescription");
+    expect(first("Publish the menu")).toBe("propose.menuPublish");
+    expect(first("Please make the changes live")).toBe("propose.menuPublish");
+    expect(first("How much sale this week?")).toBe("reports.summary");
   });
 });
