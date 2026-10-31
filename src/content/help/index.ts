@@ -44,9 +44,39 @@ export interface SearchResult {
 // Search is shared by the public Help Center and Ember. It does not call a model,
 // store searches, or depend on the visitor's account.
 const stopWords = new Set([
-  "how", "do", "does", "did", "i", "my", "me", "you", "your", "the", "a", "an",
-  "to", "for", "with", "of", "can", "could", "is", "are", "what", "where", "in",
-  "and", "on", "from", "this", "that", "please", "our", "it", "we", "get",
+  "how",
+  "do",
+  "does",
+  "did",
+  "i",
+  "my",
+  "me",
+  "you",
+  "your",
+  "the",
+  "a",
+  "an",
+  "to",
+  "for",
+  "with",
+  "of",
+  "can",
+  "could",
+  "is",
+  "are",
+  "what",
+  "where",
+  "in",
+  "and",
+  "on",
+  "from",
+  "this",
+  "that",
+  "please",
+  "our",
+  "it",
+  "we",
+  "get",
 ]);
 const aliases: Record<string, string[]> = {
   qr: ["qr", "code", "sticker", "scan"],
@@ -70,20 +100,35 @@ const aliases: Record<string, string[]> = {
   another: ["another", "multiple", "outlet"],
 };
 function normalized(value: string): string {
-  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 function tokens(query: string): string[] {
-  return Array.from(new Set(normalized(query.slice(0, 200)).split(" ")
-    .filter((t) => t.length > 1 && !stopWords.has(t)))).slice(0, 16);
+  return Array.from(
+    new Set(
+      normalized(query.slice(0, 200))
+        .split(" ")
+        .filter((t) => t.length > 1 && !stopWords.has(t))
+    )
+  ).slice(0, 16);
 }
 function wordMatch(haystack: Set<string>, token: string): boolean {
   const variants = aliases[token] ?? [token];
-  return variants.some((v) => haystack.has(v) || [...haystack].some(
-    (word) => word.length > 4 && v.length > 4 &&
-      (word.startsWith(v) || v.startsWith(word)) &&
-      Math.abs(word.length - v.length) <= 4
-  ));
+  return variants.some(
+    (v) =>
+      haystack.has(v) ||
+      [...haystack].some(
+        (word) =>
+          word.length > 4 &&
+          v.length > 4 &&
+          (word.startsWith(v) || v.startsWith(word)) &&
+          Math.abs(word.length - v.length) <= 4
+      )
+  );
 }
 function scoreFields(query: string, fields: Array<{ text: string; weight: number }>): number {
   const words = tokens(query);
@@ -96,8 +141,11 @@ function scoreFields(query: string, fields: Array<{ text: string; weight: number
   let score = 0;
   let matched = 0;
   for (const word of words) {
-    const best = Math.max(0, ...indexed.map((f) => wordMatch(f.words, word) ? f.weight : 0));
-    if (best) { matched++; score += best; }
+    const best = Math.max(0, ...indexed.map((f) => (wordMatch(f.words, word) ? f.weight : 0)));
+    if (best) {
+      matched++;
+      score += best;
+    }
   }
   // Reject results that only happen to mention one unrelated word.
   if (matched < Math.max(1, Math.ceil(words.length / 2))) return 0;

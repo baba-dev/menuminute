@@ -22,7 +22,9 @@ describe("Ember merchant intelligence routing and business dates", () => {
     expect(selectQuestionTools(names, "How many QR codes?")[0]?.name).toBe("qr.pulse");
     expect(selectQuestionTools(names, "Help me")[0]?.name).toBe("help.search");
     expect(selectQuestionTools(names, "How do I print a table QR?")[0]?.name).toBe("help.search");
-    expect(selectQuestionTools(names, "How can I mark a dish as sold out?")[0]?.name).toBe("help.search");
+    expect(selectQuestionTools(names, "How can I mark a dish as sold out?")[0]?.name).toBe(
+      "help.search"
+    );
     expect(selectQuestionTools(names, "How many QR codes?")[0]?.name).toBe("qr.pulse");
     expect(selectQuestionTools(names, "How much sale this week?")[0]?.name).toBe("reports.summary");
   });

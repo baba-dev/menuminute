@@ -30,7 +30,9 @@ export function HelpSearch({
             type="search"
             aria-label="Search help guides"
             autoComplete="off"
-            onKeyDown={(event) => { if (event.key === "Escape") setQuery(""); }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setQuery("");
+            }}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
@@ -90,9 +92,11 @@ export function HelpSearch({
 
         {/* Live Search Results Dropdown */}
         {query.trim().length >= 2 && (
-          <div role="region"
+          <div
+            role="region"
             aria-label="Matching help guides"
-            className="absolute top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2 shadow-xl dark:border-stone-800 dark:bg-stone-900">
+            className="absolute top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2 shadow-xl dark:border-stone-800 dark:bg-stone-900"
+          >
             {results.length > 0 ? (
               <div className="space-y-1">
                 {results.map(({ article, snippet }) => (

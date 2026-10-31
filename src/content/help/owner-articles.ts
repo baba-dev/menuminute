@@ -381,7 +381,8 @@ export const ownerArticles: HelpArticle[] = [
           {
             stepNumber: 3,
             title: "Export Print Sheet",
-            description: "Preview your print layout and choose an available export format before printing.",
+            description:
+              "Preview your print layout and choose an available export format before printing.",
           },
         ],
         callout: {

@@ -13,8 +13,8 @@ export function HelpFeedback({ articleTitle }: { articleTitle: string }) {
         Still have a question?
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-        If this guide does not answer your question about {articleTitle}, browse
-        the common questions or ask a member of your restaurant team for help.
+        If this guide does not answer your question about {articleTitle}, browse the common
+        questions or ask a member of your restaurant team for help.
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <Link

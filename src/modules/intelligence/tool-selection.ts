@@ -14,8 +14,9 @@ export function selectQuestionTools<T extends { name: string }>(
   // "How much did I sell?" asks for live facts, not documentation.
   // Only explicit setup/how-to requests should rank guides first.
   const instructional =
-    /\\b(how (?:do|can) i (?:set up|create|add|edit|print|mark|change|configure|use|publish|invite|open|scan|remove|download|start|stop|reset)|how to|step.by.step|tutorial|instructions?|guide|documentation|faq)\\b/.test(q) ||
-    /^(?:help me|i need help|where (?:do|can) i)\\b/.test(q);
+    /\\b(how (?:do|can) i (?:set up|create|add|edit|print|mark|change|configure|use|publish|invite|open|scan|remove|download|start|stop|reset)|how to|step.by.step|tutorial|instructions?|guide|documentation|faq)\\b/.test(
+      q
+    ) || /^(?:help me|i need help|where (?:do|can) i)\\b/.test(q);
   if (instructional) add("help.search");
   if (
     /\b(sales?|revenue|earnings?|income|turnover|best.selling|top.selling|last week|this week|this month)\b/.test(

@@ -49,7 +49,11 @@ async function main() {
     check(!slugs.has(article.slug), `Duplicate slug: ${article.slug}`);
     slugs.add(article.slug);
 
-    if (article.heroImage) check(existsSync(join(process.cwd(), "public", article.heroImage.src.slice(1))), `Missing hero image for ${article.slug}`);
+    if (article.heroImage)
+      check(
+        existsSync(join(process.cwd(), "public", article.heroImage.src.slice(1))),
+        `Missing hero image for ${article.slug}`
+      );
     check(article.title.length > 5, `Article ${article.slug} has title too short`);
     check(article.summary.length > 20, `Article ${article.slug} has summary too short`);
     check(article.quickSteps.length >= 3, `Article ${article.slug} must have >= 3 quick steps`);
@@ -87,7 +91,11 @@ async function main() {
     "Expected qr-codes-and-tables"
   );
 
-  check(searchHelpArticles("How do I print a table QR code?")[0]?.article.slug === "qr-codes-and-tables", "Natural language QR question should rank printing first");
+  check(
+    searchHelpArticles("How do I print a table QR code?")[0]?.article.slug ===
+      "qr-codes-and-tables",
+    "Natural language QR question should rank printing first"
+  );
 
   const kitchenResults = searchHelpArticles("kitchen");
   check(kitchenResults.length > 0, "Query 'kitchen' should return results");
