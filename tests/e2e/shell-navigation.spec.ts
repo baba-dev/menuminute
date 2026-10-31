@@ -414,3 +414,86 @@ test.describe("phone shell", () => {
     await expect(page.getByRole("dialog", { name: "Notifications" })).toBeVisible();
   });
 });
+
+test("floor lifecycle keeps one physical table, QR association, and reservation conflict", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const fixture = await seed({ ordering: true });
+  await signIn(page, fixture);
+  await page.goto("/dashboard/floor");
+  await expect(page.getByRole("heading", { name: "Dining floor", level: 1 })).toBeVisible();
+  await expect(page.getByTestId("floor-page")).toBeVisible();
+  await page.getByRole("tab", { name: /Bookings/ }).click();
+  await expect(page.getByLabel("Booking date")).toBeVisible();
+
+  const headers = { "x-outlet-id": fixture.outletId };
+  const response = await page.request.get("/api/floor", { headers });
+  expect(response.ok()).toBe(true);
+  const initial = await response.json();
+  const table = {
+    id: crypto.randomUUID(),
+    tableNumber: "QA-1",
+    label: "QR test",
+    capacity: 4,
+    shape: "square",
+    x: 200,
+    y: 200,
+    width: 100,
+    height: 100,
+    rotation: 0,
+    section: initial.layout.sections[0].name,
+    assignedStaff: null,
+  };
+  const created = await page.request.post("/api/floor/tables", {
+    headers,
+    data: { table, layout: { ...initial.layout, tables: [...initial.layout.tables, table] } },
+  });
+  expect(created.status()).toBe(200);
+  const savedLayout = await created.json();
+  const floor = await page.request.get("/api/floor", { headers });
+  expect(floor.ok()).toBe(true);
+  expect(
+    (await floor.json()).layout.tables.filter((item: { id: string }) => item.id === table.id)
+  ).toHaveLength(1);
+
+  const qr = await page.request.post("/api/floor/tables/qr", {
+    headers,
+    data: { tableId: table.id },
+  });
+  expect(qr.status()).toBe(200);
+  const savedQr = await qr.json();
+  expect(savedQr.tableId).toBe(table.id);
+  const duplicate = await page.request.post("/api/floor/tables/qr", {
+    headers,
+    data: { tableId: table.id },
+  });
+  expect(duplicate.status()).toBe(200);
+  expect((await duplicate.json()).id).toBe(savedQr.id);
+
+  const start = new Date(Date.now() + 86400000 * 3).toISOString();
+  const booking = {
+    tableId: table.id,
+    guestName: "Floor QA",
+    partySize: 2,
+    reservationTime: start,
+    durationMinutes: 90,
+  };
+  expect((await page.request.post("/api/floor/reservations", { headers, data: booking })).ok()).toBe(
+    true
+  );
+  expect(
+    (await page.request.post("/api/floor/reservations", { headers, data: booking })).status()
+  ).toBe(409);
+  const archive = await page.request.delete("/api/floor/tables", {
+    headers,
+    data: {
+      tableId: table.id,
+      layout: {
+        ...savedLayout,
+        tables: savedLayout.tables.filter((item: { id: string }) => item.id !== table.id),
+      },
+    },
+  });
+  expect(archive.status()).toBe(409);
+});

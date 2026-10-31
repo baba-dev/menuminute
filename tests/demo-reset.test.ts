@@ -27,6 +27,8 @@ const PRESERVED: Record<string, string> = {
   brand_outlets: "tenant structure",
   brands: "tenant structure",
   consumer_receipts: "worker idempotency",
+  dining_floor_plans: "floor layout configuration",
+  dining_reservations: "reservations ledger",
   domain_audit: "audit trail",
   domain_projections: "projection",
   entitlement_grants: "demo entitlements",

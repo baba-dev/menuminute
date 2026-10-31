@@ -132,11 +132,11 @@ test("owner completes free menu, reviewed photograph, publication and permanent 
   await expect(studioOverview).toHaveCount(1);
   await expect(studioOverview).toBeVisible();
   await expect(page.locator('[aria-label="Menu Studio overview"]:visible')).toHaveCount(1);
-  await page.getByPlaceholder("Search dishes or sections").fill("nonexistent-dish-search");
-  await expect(page.getByPlaceholder("Search dishes or sections")).toHaveValue(
-    "nonexistent-dish-search"
-  );
-  await page.getByPlaceholder("Search dishes or sections").clear();
+  // App Router can retain an inactive route tree: operate on the visible studio only.
+  const dishSearch = page.locator("#workspace-main").getByRole("searchbox", { name: "Find a dish" });
+  await dishSearch.fill("nonexistent-dish-search");
+  await expect(dishSearch).toHaveValue("nonexistent-dish-search");
+  await dishSearch.clear();
   if ((page.viewportSize()?.width ?? 1440) <= 720) {
     await page.getByRole("button", { name: "Preview draft" }).click();
     await expect(page.getByText("Draft preview — not public")).toBeVisible();
