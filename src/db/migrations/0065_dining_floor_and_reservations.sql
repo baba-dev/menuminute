@@ -66,6 +66,7 @@ DECLARE
   org CONSTANT text := 'org-demo-outlet';
   mid CONSTANT text := 'menu-demo-outlet';
   rev integer;
+  cur record;
   locale_row record;
   tbl jsonb;
   res jsonb;
@@ -107,15 +108,25 @@ BEGIN
   DELETE FROM domain_commands WHERE organization_id=org;
   DELETE FROM organization_invitations WHERE organization_id=org;
 
-  -- Versioned menu: monotonic revision so the public-menu cache generation can never go backwards.
+  -- Versioned menu. The revision is monotonic so a public-menu cache generation never goes backwards,
+  -- but it is NOT bumped when the visitor left the published menu untouched: the guest order path
+  -- compares a fingerprint that includes the revision, and the worker cannot invalidate the web cache,
+  -- so a needless bump would make guests' orders conflict for up to the cache TTL after every reset.
   DELETE FROM menu_overrides WHERE outlet_id=o;
   DELETE FROM menu_translation_revisions WHERE menu_id=mid;
   DELETE FROM menu_translations WHERE menu_id=mid;
-  DELETE FROM menu_releases WHERE menu_id=mid;
-  SELECT revision+1 INTO rev FROM menus WHERE id=mid AND organization_id=org AND outlet_id=o FOR UPDATE;
-  IF rev IS NULL THEN RAISE EXCEPTION 'Demo menu is not provisioned' USING ERRCODE='42501'; END IF;
-  UPDATE menus SET document=p_baseline->'menu', revision=rev, published_revision=rev, archived=false, updated_at=now() WHERE id=mid;
-  INSERT INTO menu_releases(menu_id,revision,organization_id,document,published_by) VALUES(mid,rev,org,p_baseline->'menu','demo-owner');
+  SELECT revision, published_revision, document INTO cur FROM menus WHERE id=mid AND organization_id=org AND outlet_id=o FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Demo menu is not provisioned' USING ERRCODE='42501'; END IF;
+  IF cur.published_revision IS NOT DISTINCT FROM cur.revision AND cur.document=p_baseline->'menu'
+     AND EXISTS(SELECT 1 FROM menu_releases WHERE menu_id=mid AND revision=cur.revision AND document=p_baseline->'menu') THEN
+    rev:=cur.revision;
+    DELETE FROM menu_releases WHERE menu_id=mid AND revision<>rev;
+  ELSE
+    rev:=cur.revision+1;
+    DELETE FROM menu_releases WHERE menu_id=mid;
+    UPDATE menus SET document=p_baseline->'menu', revision=rev, published_revision=rev, archived=false, updated_at=now() WHERE id=mid;
+    INSERT INTO menu_releases(menu_id,revision,organization_id,document,published_by) VALUES(mid,rev,org,p_baseline->'menu','demo-owner');
+  END IF;
   IF jsonb_typeof(p_baseline->'translations')='object' THEN
     FOR locale_row IN SELECT key AS locale, value AS doc FROM jsonb_each(p_baseline->'translations') LOOP
       INSERT INTO menu_translations(organization_id,menu_id,locale,revision,source_revision,document,reviewed_by)
@@ -123,31 +134,29 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Floor plan tables.
+  -- Release dependent table associations before restoring the physical table catalog.
+  DELETE FROM dining_reservations WHERE outlet_id=o;
+  DELETE FROM dining_floor_plans WHERE outlet_id=o;
+  -- Floor plan.
   DELETE FROM restaurant_tables WHERE restaurant_id=o;
   FOR tbl IN SELECT * FROM jsonb_array_elements(p_baseline->'tables') LOOP
     INSERT INTO restaurant_tables(id,restaurant_id,table_number,label,capacity)
     VALUES(tbl->>'id',o,tbl->>'number',tbl->>'label',(tbl->>'capacity')::integer);
   END LOOP;
 
-  -- Restore visual floor plan layout
-  DELETE FROM dining_floor_plans WHERE outlet_id=o;
+  -- Restore the visual floor and demo reservations. The established order-history
+  -- seeding and stable publication revision logic below must remain unchanged.
   IF jsonb_typeof(p_baseline->'floorPlan')='object' THEN
-    INSERT INTO dining_floor_plans(outlet_id, layout)
-    VALUES(o, p_baseline->'floorPlan');
+    INSERT INTO dining_floor_plans(outlet_id,layout) VALUES(o,p_baseline->'floorPlan');
   END IF;
-
-  -- Restore sample reservations
-  DELETE FROM dining_reservations WHERE outlet_id=o;
   IF jsonb_typeof(p_baseline->'reservations')='array' THEN
     FOR res IN SELECT * FROM jsonb_array_elements(p_baseline->'reservations') LOOP
-      INSERT INTO dining_reservations(id, outlet_id, table_id, guest_name, guest_phone, party_size, reservation_time, duration_minutes, status, notes)
-      VALUES(
-        res->>'id', o, res->>'tableId', res->>'guestName', res->>'guestPhone',
-        (res->>'partySize')::integer, (res->>'reservationTime')::timestamptz,
-        COALESCE((res->>'durationMinutes')::integer, 90),
-        COALESCE(res->>'status', 'confirmed'), res->>'notes'
-      );
+      INSERT INTO dining_reservations(id,outlet_id,table_id,guest_name,guest_phone,party_size,
+        reservation_time,duration_minutes,status,notes)
+      VALUES(res->>'id',o,res->>'tableId',res->>'guestName',res->>'guestPhone',
+        (res->>'partySize')::integer,(res->>'reservationTime')::timestamptz,
+        COALESCE((res->>'durationMinutes')::integer,90),
+        COALESCE(res->>'status','confirmed'),res->>'notes');
     END LOOP;
   END IF;
 
@@ -157,8 +166,15 @@ BEGIN
       name=COALESCE(p_baseline->'outlet'->>'name',name),
       description=COALESCE(p_baseline->'outlet'->>'description',description),
       city=COALESCE(p_baseline->'outlet'->>'city',city),
-      is_published=true
+      is_published=true,
+      free_menu_enabled=true
     WHERE id=o;
+  END IF;
+
+  -- Seeded order history and live orders (final statuses inserted directly; live ones progress by
+  -- UPDATE so the normal kitchen fan-out triggers create station work when the kitchen is enabled).
+  IF jsonb_typeof(p_baseline->'orders')='array' THEN
+    counts:=counts||jsonb_build_object('seededOrders',app_private.seed_demo_orders(p_baseline->'orders'));
   END IF;
 
   counts:=counts||jsonb_build_object('menuRevision',rev);

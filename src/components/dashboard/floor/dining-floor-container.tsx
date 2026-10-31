@@ -29,7 +29,6 @@ import { ReservationDialog } from "./reservation-dialog";
 import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
 import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
 import { useHaptics } from "@/lib/use-haptics";
-import "./floor-system.css";
 
 interface DiningFloorContainerProps {
   initialLayout: FloorLayoutDoc;

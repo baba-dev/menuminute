@@ -8,6 +8,7 @@ import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
 import { getFloorLayout, getReservations } from "@/modules/hospitality/floor-service";
 import { DiningFloorContainer } from "@/components/dashboard/floor/dining-floor-container";
 import "../dashboard-operations.css";
+import "./floor-system.css";
 
 export const metadata: Metadata = {
   title: "Dining Floor & Tabletop Studio — MenuMinute",
