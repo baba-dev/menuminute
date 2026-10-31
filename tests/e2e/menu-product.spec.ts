@@ -496,7 +496,9 @@ test("Recipe Atelier uses the approved media, meaningful draft metrics and adapt
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/menu");
-  // The streamed Next.js HTML can contain an inert, hidden #S:* payload outside main.\n  // Check the real editor, while retaining strictness for duplicates within the workspace.\n  const studio = page.locator("#workspace-main").getByTestId("recipe-atelier-studio");
+  // The streamed Next.js HTML can contain an inert, hidden #S:* payload outside main.
+  // Check the real editor, while retaining strictness for duplicates within the workspace.
+  const studio = page.locator("#workspace-main").getByTestId("recipe-atelier-studio");
   await expect(studio).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   await expect(studio.getByLabel("Menu Studio overview")).toBeVisible();
