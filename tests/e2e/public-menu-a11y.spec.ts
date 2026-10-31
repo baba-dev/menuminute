@@ -13,7 +13,12 @@ async function audit(page: Page, label: string) {
     (v) => v.impact === "serious" || v.impact === "critical"
   );
   expect(
-    blocking.map((v) => `${v.id} (${v.impact}): ${v.nodes.length} node(s)`),
+    blocking.map((v) =>
+      `${v.id} (${v.impact}): ${v.nodes.length} node(s); targets: ${v.nodes
+        .slice(0, 3)
+        .map((n) => JSON.stringify(n.target))
+        .join(", ")}`
+    ),
     `${label}: axe violations`
   ).toEqual([]);
 }
