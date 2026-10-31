@@ -91,7 +91,6 @@ test("help article has no serious accessibility violations", async ({ page }) =>
   ).toEqual([]);
 });
 
-
 test("help articles show genuine demo captures without mislabelling unavailable workflows", async ({
   page,
   request,
