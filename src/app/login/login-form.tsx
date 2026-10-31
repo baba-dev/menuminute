@@ -163,9 +163,10 @@ export function LoginForm() {
           </div>
         )}
         <label className="mm-auth-field" htmlFor="email">
-          Email address
+          <span id="login-email-label">Email address</span>
           <input
             id="email"
+            aria-labelledby="login-email-label"
             type="email"
             autoComplete="email"
             placeholder="you@restaurant.com"
@@ -180,9 +181,10 @@ export function LoginForm() {
           )}
         </label>
         <label className="mm-auth-field" htmlFor="password">
-          Password
+          <span id="login-password-label">Password</span>
           <input
             id="password"
+            aria-labelledby="login-password-label"
             type="password"
             autoComplete="current-password"
             placeholder="Your password"

@@ -142,6 +142,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   const draftRevision = useRef(0);
   const timezoneTouched = useRef(false);
   const reconciliation = useRef(false);
+  const errorRef = useRef<HTMLDivElement>(null);
   const progressStorageKey = useRef("menuminute.first-outlet.step");
 
   // Reconcile and restore server-owned draft
@@ -268,6 +269,21 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
     }, 700);
     return () => window.clearTimeout(timeout);
   }, [draft, ready, provisioning, save]);
+
+  // Fields are disabled (not just ignored) until saved progress has loaded, so keystrokes can
+  // never be silently discarded. Once ready, hand focus to the first field.
+  useEffect(() => {
+    if (ready && currentStep === 0)
+      document.getElementById("wz-name")?.focus({ preventScroll: true });
+  }, [ready, currentStep]);
+
+  // A validation or launch error must be visible without hunting: on a phone it would otherwise
+  // sit far below the field that caused it.
+  useEffect(() => {
+    if (!errorMessage) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    errorRef.current?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+  }, [errorMessage]);
 
   const updateDraft = <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => {
     if (!ready || provisioning) return;
@@ -438,41 +454,51 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         )}
 
         {/* Step Views */}
-        {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
-        {currentStep === 1 && (
-          <StepLocation
-            draft={draft}
-            onChange={updateDraft}
-            onTimezoneSuggestion={(timezone) => {
-              if (!timezoneTouched.current) {
-                draftRevision.current += 1;
-                setDraft((prev) => ({ ...prev, timezone }));
-              }
-            }}
-          />
-        )}
-        {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
-        {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
-        {currentStep === 4 && (
-          <StepLaunch
-            key={draft.timezone}
-            draft={draft}
-            busy={busy || !ready}
-            onLaunch={handleLaunch}
-          />
-        )}
+        <fieldset
+          className="wizard-fieldset"
+          disabled={!ready || (provisioning && currentStep !== STEPS.length - 1)}
+          aria-busy={!ready}
+        >
+          <legend className="sr-only">{activeStepMeta.label}</legend>
+          {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
+          {currentStep === 1 && (
+            <StepLocation
+              draft={draft}
+              onChange={updateDraft}
+              onTimezoneSuggestion={(timezone) => {
+                if (!timezoneTouched.current) {
+                  draftRevision.current += 1;
+                  setDraft((prev) => ({ ...prev, timezone }));
+                }
+              }}
+            />
+          )}
+          {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
+          {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
+          {currentStep === 4 && (
+            <StepLaunch
+              key={draft.timezone}
+              draft={draft}
+              busy={busy || !ready}
+              onLaunch={handleLaunch}
+            />
+          )}
+        </fieldset>
 
         {/* Error and Status Banner */}
         {errorMessage && (
-          <div style={{ padding: "0 2.25rem 1rem 2.25rem" }}>
-            <div className="wizard-error-banner" role="alert">
+          <div className="wizard-error-wrap">
+            <div className="wizard-error-banner" role="alert" ref={errorRef}>
               {errorMessage}
             </div>
           </div>
         )}
 
         {/* Step Navigation Footer */}
-        <div className="wizard-content" style={{ paddingTop: 0 }}>
+        <div
+          className={`wizard-content wizard-footer-bar${currentStep === STEPS.length - 1 ? "wizard-footer-bar--review" : ""}`}
+          style={{ paddingTop: 0 }}
+        >
           <div className="wizard-footer">
             <div>
               {currentStep > 0 ? (

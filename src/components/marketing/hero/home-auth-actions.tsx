@@ -15,7 +15,7 @@ export function HomeAuthActions({
   surface?: "home" | "subpage";
 }) {
   const { data, isPending, error } = authClient.useSession();
-  const signedIn = !error && Boolean(data?.user?.emailVerified);
+  const signedIn = !error && Boolean(data?.user);
   const navClass =
     surface === "subpage"
       ? mobile

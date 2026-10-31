@@ -303,7 +303,7 @@ export function CartDrawer({
             type="button"
             className="cart-bar-button row between ember"
             onClick={() => setIsOpen(true)}
-            aria-label="View order cart"
+            aria-label={`View Your Order, ${totalQuantity} ${totalQuantity === 1 ? "item" : "items"}, ${formatPrice(subtotalMinor, currency)}`}
           >
             <div className="row" style={{ gap: "0.75rem", alignItems: "center" }}>
               <div className="cart-badge-icon">

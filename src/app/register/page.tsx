@@ -67,7 +67,8 @@ function RegistrationForm() {
               termsVersion: TERMS_VERSION,
               termsAcceptedAt: new Date(), // Server replaces this with a trusted timestamp.
               acceptTerms: values.acceptTerms,
-              callbackURL: "/login?verified=1" + (next ? "&next=" + encodeURIComponent(next) : ""),
+              // The link signs the owner in on the same browser; no second login is needed.
+              callbackURL: next || "/dashboard",
               fetchOptions: challenge
                 ? { headers: { "x-captcha-response": challenge } }
                 : undefined,
@@ -78,11 +79,9 @@ function RegistrationForm() {
               setError(response.error.message ?? "Unable to register. Try again.");
               return;
             }
-            router.push(
-              "/verify-email?email=" +
-                encodeURIComponent(values.email) +
-                (next ? "&next=" + encodeURIComponent(next) : "")
-            );
+            // Signed in already: go straight to setup. Verification is nagged, not required.
+            router.replace(next || "/onboarding");
+            router.refresh();
           } catch {
             setChallenge("");
             setChallengeRetry((value) => value + 1);
@@ -98,10 +97,11 @@ function RegistrationForm() {
           </p>
         )}
         <label className="mm-auth-field" htmlFor="name">
-          Your name
+          <span id="registration-name-label">Your name</span>
           <input
             {...register("name")}
             id="name"
+            aria-labelledby="registration-name-label"
             type="text"
             maxLength={100}
             autoComplete="name"
@@ -116,10 +116,11 @@ function RegistrationForm() {
           )}
         </label>
         <label className="mm-auth-field" htmlFor="email">
-          Email address
+          <span id="registration-email-label">Email address</span>
           <input
             {...register("email")}
             id="email"
+            aria-labelledby="registration-email-label"
             type="email"
             autoComplete="email"
             maxLength={254}
@@ -134,10 +135,11 @@ function RegistrationForm() {
           )}
         </label>
         <label className="mm-auth-field" htmlFor="password">
-          Password
+          <span id="registration-password-label">Password</span>
           <input
             {...register("password")}
             id="password"
+            aria-labelledby="registration-password-label"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
             minLength={8}
@@ -153,10 +155,11 @@ function RegistrationForm() {
           )}
         </label>
         <label className="mm-auth-field" htmlFor="confirmPassword">
-          Confirm password
+          <span id="registration-confirm-label">Confirm password</span>
           <input
             {...register("confirmPassword")}
             id="confirmPassword"
+            aria-labelledby="registration-confirm-label"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
             aria-invalid={!!errors.confirmPassword}

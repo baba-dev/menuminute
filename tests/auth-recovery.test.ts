@@ -24,8 +24,9 @@ it("verifies email only with a delivered single-use token; recovery revokes old 
     termsAcceptedAt: new Date(),
   });
   expect(signup.status).toBe(200);
-  const blocked = await send("sign-in/email", { email, password: "original-test-123" });
-  expect(blocked.status).not.toBe(200);
+  // Deferred verification: an unverified account can sign in; verification only flips the flag.
+  const early = await send("sign-in/email", { email, password: "original-test-123" });
+  expect(early.status).toBe(200);
   const mail = drainAuthTestMessages().find((m) => m.subject.includes("Verify"));
   expect(mail).toBeDefined();
   const link = mail!.text.match(/https?:\/\/\S+/)?.[0];

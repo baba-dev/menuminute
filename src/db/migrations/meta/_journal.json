@@ -393,6 +393,13 @@
       "when": 1793365200012,
       "tag": "0055_assistant_model_spend",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1793451600012,
+      "tag": "0056_deferred_email_verification",
+      "breakpoints": true
     }
   ]
 }

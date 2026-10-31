@@ -27,7 +27,7 @@ export default async function JoinTeamPage() {
         Need to use a different email? <Link href="/login?switch=1">Switch accounts</Link>.
       </p>
       <p className="mm-auth-secondary">
-        <Link href="/start">Choose another path</Link>
+        <Link href="/start?choose=1">Choose another path</Link>
       </p>
     </AuthShell>
   );

@@ -34,6 +34,14 @@ export function TableFloorMatrix({
   const rows = (tables ?? []).filter(
     (t) => filter === "all" || (filter === "active" ? t.activeOrders > 0 : t.unpaidOrders > 0)
   );
+  // A freshly created outlet has N idle tables; a wall of identical "No open tickets" cards
+  // buries the first-run guidance, so collapse the list until something happens.
+  const quiet =
+    (tables?.length ?? 0) > 3 &&
+    filter === "all" &&
+    !focusTableId &&
+    (tables ?? []).every((t) => t.activeOrders === 0 && t.unpaidOrders === 0);
+  const Wrapper = quiet ? "details" : "div";
   const fmt = (minor: string) => {
     const dec =
       new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
@@ -127,42 +135,52 @@ export function TableFloorMatrix({
               );
             })}
           </div>
-          <ul className="mm-ops-items">
-            {rows.map((table) => (
-              <li
-                className="mm-ops-item"
-                key={table.id}
-                id={"table-" + table.id}
-                ref={table.id === focusTableId ? focusedRow : undefined}
-                data-focused={table.id === focusTableId ? "true" : undefined}
-                aria-current={table.id === focusTableId ? "true" : undefined}
-              >
-                <strong>Table {table.tableNumber}</strong>
-                <span>
-                  {table.unpaidOrders > 0
-                    ? "Unpaid"
-                    : table.activeOrders > 0
-                      ? "Order active"
-                      : "No open tickets"}
-                </span>
-                {table.label && <p>{table.label}</p>}
-                <p>
-                  {table.activeOrders} active orders · {table.unpaidOrders} unpaid
-                </p>
-                {table.unpaidOrders > 0 && <strong>Due: {fmt(table.dueMinor)}</strong>}
-                {table.latestOrderId && (
-                  <div className="mm-ops-actions">
-                    <Link
-                      href={"/dashboard/pos?attachOrder=" + encodeURIComponent(table.latestOrderId)}
-                    >
-                      View in Till
-                    </Link>
-                    <Link href="/dashboard/orders">Orders Rail</Link>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+          {quiet && (
+            <p className="mm-ops-quiet" role="status">
+              All {tables.length} tables are quiet — nothing needs attention yet.
+            </p>
+          )}
+          <Wrapper {...(quiet ? { className: "mm-ops-collapsible" } : {})}>
+            {quiet && <summary>Show all {tables.length} tables</summary>}
+            <ul className="mm-ops-items">
+              {rows.map((table) => (
+                <li
+                  className="mm-ops-item"
+                  key={table.id}
+                  id={"table-" + table.id}
+                  ref={table.id === focusTableId ? focusedRow : undefined}
+                  data-focused={table.id === focusTableId ? "true" : undefined}
+                  aria-current={table.id === focusTableId ? "true" : undefined}
+                >
+                  <strong>Table {table.tableNumber}</strong>
+                  <span>
+                    {table.unpaidOrders > 0
+                      ? "Unpaid"
+                      : table.activeOrders > 0
+                        ? "Order active"
+                        : "No open tickets"}
+                  </span>
+                  {table.label && <p>{table.label}</p>}
+                  <p>
+                    {table.activeOrders} active orders · {table.unpaidOrders} unpaid
+                  </p>
+                  {table.unpaidOrders > 0 && <strong>Due: {fmt(table.dueMinor)}</strong>}
+                  {table.latestOrderId && (
+                    <div className="mm-ops-actions">
+                      <Link
+                        href={
+                          "/dashboard/pos?attachOrder=" + encodeURIComponent(table.latestOrderId)
+                        }
+                      >
+                        View in Till
+                      </Link>
+                      <Link href="/dashboard/orders">Orders Rail</Link>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Wrapper>
           {rows.length === 0 && <p role="status">No tables match this filter.</p>}
         </>
       )}

@@ -1,0 +1,100 @@
+.mm-verify-banner {
+  --vb-bg: #fff4e5;
+  --vb-border: #f0b36b;
+  --vb-text: #5c2e00;
+  --vb-accent: #b45309;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.875rem;
+  padding: 0.625rem max(1rem, env(safe-area-inset-right)) 0.625rem
+    max(1rem, env(safe-area-inset-left));
+  background: var(--vb-bg);
+  border-bottom: 1px solid var(--vb-border);
+  color: var(--vb-text);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  min-width: 0;
+}
+.mm-verify-banner[data-state="verified"] {
+  --vb-bg: #ecfdf3;
+  --vb-border: #86d9a8;
+  --vb-text: #14532d;
+}
+.mm-verify-banner__copy {
+  flex: 1 1 16rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mm-verify-banner__copy strong {
+  font-weight: 700;
+}
+.mm-verify-banner__status {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+}
+.mm-verify-banner__resend {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--vb-accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--vb-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mm-verify-banner__resend:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.mm-verify-banner__resend:focus-visible {
+  outline: 3px solid var(--vb-accent);
+  outline-offset: 2px;
+}
+:root[data-theme="dark"] .mm-verify-banner {
+  --vb-bg: #3a2410;
+  --vb-border: #8a5a24;
+  --vb-text: #ffe6c7;
+  --vb-accent: #f6ad55;
+}
+:root[data-theme="dark"] .mm-verify-banner[data-state="verified"] {
+  --vb-bg: #12301f;
+  --vb-border: #2f7a4b;
+  --vb-text: #c9f4d9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mm-verify-banner {
+    --vb-bg: #3a2410;
+    --vb-border: #8a5a24;
+    --vb-text: #ffe6c7;
+    --vb-accent: #f6ad55;
+  }
+  :root:not([data-theme="light"]) .mm-verify-banner[data-state="verified"] {
+    --vb-bg: #12301f;
+    --vb-border: #2f7a4b;
+    --vb-text: #c9f4d9;
+  }
+}
+
+/* Phones: one compact row so the banner never pushes the first screen of content away. */
+@media (max-width: 640px) {
+  .mm-verify-banner {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding-block: 0.375rem;
+    font-size: 0.8125rem;
+  }
+  .mm-verify-banner__copy {
+    flex: 1 1 auto;
+  }
+  .mm-verify-banner__more {
+    display: none;
+  }
+  .mm-verify-banner__resend {
+    flex: 0 0 auto;
+    padding: 0.375rem 0.75rem;
+  }
+}

@@ -13,7 +13,7 @@ async function observed_POST(
   context: { params: Promise<{ organizationId: string }> }
 ) {
   try {
-    const actor = await requestActor(req, true);
+    const actor = await requestActor(req, true, { verified: true });
     const { organizationId } = await context.params;
 
     if (!env.RAZORPAY_ENABLED)

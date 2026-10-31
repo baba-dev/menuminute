@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
@@ -104,7 +105,7 @@ test("the free QR-only outlet retains its public menu but does not offer checkou
   await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
   await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
   await detail.getByRole("button", { name: "Back to menu" }).click();
-  await expect(page.getByRole("button", { name: "View order cart" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
 });
 
 test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking capability", async ({
@@ -119,7 +120,7 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     .getByRole("dialog", { name: "Paneer Curry" })
     .getByRole("button", { name: /Add to Order/ })
     .click();
-  await page.getByRole("button", { name: "View order cart" }).click();
+  await page.getByRole("button", { name: /^View Your Order/ }).click();
   const receipt = page.locator(".ticket-receipt-card");
   await expect(receipt).toBeVisible();
   await expect(receipt).toContainText("Estimated item subtotal");
@@ -135,6 +136,15 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   await page.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
   await expect(page.getByText("Order Sent to Restaurant")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Order progress" })).toBeVisible();
+  const trackerAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(
+    trackerAxe.violations
+      .filter((v) => v.impact === "serious" || v.impact === "critical")
+      .map((v) => `${v.id}: ${v.nodes.length} node(s)`)
+  ).toEqual([]);
 
   const orderId = new URL(page.url()).pathname.split("/").at(-1)!;
   const unauthorized = await page.request.get(

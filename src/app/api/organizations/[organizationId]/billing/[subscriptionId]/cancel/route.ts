@@ -12,7 +12,7 @@ async function observed_POST(
   context: { params: Promise<{ organizationId: string; subscriptionId: string }> }
 ) {
   try {
-    const actor = await requestActor(req, true);
+    const actor = await requestActor(req, true, { verified: true });
     if (!env.RAZORPAY_ENABLED || env.COMMUNITY_EDITION)
       throw new ValidationError("Subscription changes are unavailable");
     const { organizationId, subscriptionId } = await context.params;

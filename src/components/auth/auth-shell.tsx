@@ -9,18 +9,22 @@ export function AuthShell({
   description,
   children,
   extra,
+  notice,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children: ReactNode;
   extra?: ReactNode;
+  /** Full-width notice above the header, e.g. the email-verification nag. */
+  notice?: ReactNode;
 }) {
   return (
     <div className="mm-auth">
       <a href="#auth-content" className="mm-auth-skip">
         Skip to form
       </a>
+      {notice}
       <header className="mm-auth-header">
         <Link className="mm-auth-logo" href="/" aria-label="MenuMinute homepage">
           <Image

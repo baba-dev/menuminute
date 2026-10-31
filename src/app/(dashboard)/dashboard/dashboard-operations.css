@@ -895,3 +895,62 @@
     border-bottom: 1px solid var(--editorial-line);
   }
 }
+
+/* First-run setup card: reachable at any time until every launch step is verified. */
+.mm-setup-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  min-width: 0;
+}
+.mm-setup-card > div {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+.mm-setup-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+.mm-setup-card progress {
+  width: 100%;
+  max-width: 24rem;
+  height: 0.5rem;
+}
+.mm-setup-card p {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.mm-setup-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  flex: 0 1 auto !important;
+}
+.mm-setup-card-actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.mm-setup-card-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mm-ops-collapsible > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+.mm-ops-quiet {
+  margin: 0.5rem 0;
+}

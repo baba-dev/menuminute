@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
@@ -11,12 +11,21 @@ function Form() {
   const [email, setEmail] = useState(params.get("email") ?? "");
   const [busy, setBusy] = useState(false),
     [status, setStatus] = useState(""),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
   return (
     <AuthShell
       eyebrow="ONE QUICK SECURITY STEP"
       title="Check your inbox."
-      description="Verify ownership of your address before we open access to restaurant data."
+      description={
+        (email ? "We sent a verification link to " + email + ". " : "") +
+        "It can take a few minutes to arrive; check your spam folder too. You can keep using MenuMinute while you wait."
+      }
       extra={
         <Link href={next ? "/login?next=" + encodeURIComponent(next) : "/login"}>
           Return to sign in
@@ -36,6 +45,7 @@ function Form() {
             const result = await authClient.sendVerificationEmail({ email, callbackURL: url });
             if (result.error) throw new Error("Unable to send a new link. Try again.");
             setStatus("If the address is eligible, a verification link has been sent.");
+            setCooldown(60);
           } catch (e) {
             setError(e instanceof Error ? e.message : "Unable to request a link.");
           } finally {
@@ -54,8 +64,12 @@ function Form() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <button className="mm-auth-submit" disabled={busy}>
-          {busy ? "Sending…" : "Resend verification email"}
+        <button className="mm-auth-submit" disabled={busy || cooldown > 0}>
+          {busy
+            ? "Sending…"
+            : cooldown > 0
+              ? "Resend available in " + cooldown + "s"
+              : "Resend verification email"}
         </button>
         {status && (
           <p className="mm-auth-message" role="status" aria-live="polite">
@@ -67,7 +81,10 @@ function Form() {
             {error}
           </p>
         )}
-        <p>Already verified? Sign in and continue from your saved onboarding step.</p>
+        <p>
+          <Link href={next || "/dashboard"}>Continue to my workspace</Link> — verification is only
+          needed for team invitations and billing.
+        </p>
       </form>
     </AuthShell>
   );

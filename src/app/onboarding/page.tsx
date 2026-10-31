@@ -5,6 +5,7 @@ import { SessionContinuity } from "@/components/auth/session-continuity";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "./setup-form";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { ThemedArtwork } from "@/components/onboarding/themed-artwork";
 import "@/components/onboarding/onboarding-wizard.css";
 export const metadata = { title: "Set up your outlet — MenuMinute" };
@@ -18,11 +19,16 @@ export default async function OnboardingPage() {
     <AuthShell
       eyebrow="FIRST OUTLET / SAVED AS YOU GO"
       title="Make it yours."
-      description="Set up your first outlet. We save your progress to your verified account, so interruptions and reloads are safe."
+      description="Set up your first outlet. We save your progress to your account, so interruptions and reloads are safe."
+      notice={
+        session.user.emailVerified ? undefined : (
+          <VerifyEmailBanner email={session.user.email} returnTo="/dashboard" />
+        )
+      }
     >
       <SessionContinuity />
       <p className="wizard-counter">
-        <Link href="/start">← Choose another setup path</Link>
+        <Link href="/start?choose=1">← Choose another setup path</Link>
       </p>
       <div className="wizard-welcome-media" aria-hidden="true">
         <ThemedArtwork
