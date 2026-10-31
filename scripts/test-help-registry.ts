@@ -168,7 +168,7 @@ async function main() {
   // 5. Sitemap & Robots SEO
   console.log("\n5. Validating Sitemap and Robots SEO...");
   const sitemapEntries = sitemap();
-  check(sitemapEntries.length >= 26, `Expected >= 26 sitemap URLs, got ${sitemapEntries.length}`);
+  check(sitemapEntries.length >= 25, `Expected >= 25 sitemap URLs, got ${sitemapEntries.length}`);
   check(
     sitemapEntries.some((e) => e.url === "https://food.bababuilds.com/help"),
     "Must include /help in sitemap"

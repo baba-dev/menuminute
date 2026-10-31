@@ -10,11 +10,8 @@ export default function robots(): MetadataRoute.Robots {
           "/help/",
           "/demo",
           "/pricing",
-          "/ordering",
           "/privacy",
           "/terms",
-          "/about",
-          "/contact",
           "/m/",
         ],
         disallow: [

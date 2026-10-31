@@ -42,6 +42,12 @@ test("all public help pages, their sitemap and robots.txt respond successfully",
       const text = await response.text();
       expect(text).toContain("/help/owner/menu-studio");
       expect(text).toContain("/help/customer/how-to-scan-qr");
+      const urls = [...text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]!);
+      for (const url of urls) {
+        const path = new URL(url).pathname;
+        const page = await request.get(path);
+        expect(page.status(), "Sitemap contains an unavailable page: " + path).toBe(200);
+      }
     }
   }
 });
