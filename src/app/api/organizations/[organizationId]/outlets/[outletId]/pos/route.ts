@@ -10,6 +10,7 @@ import {
   posIncomingOrders,
   posAcceptCustomerOrder,
   posOrderRegister,
+  posRepeatSelection,
 } from "@/modules/pos/service";
 
 type Params = { params: Promise<{ organizationId: string; outletId: string }> };
@@ -18,6 +19,12 @@ async function observed_GET(req: Request, { params }: Params) {
     const actor = await requestActor(req);
     const { organizationId, outletId } = await params;
     const url = new URL(req.url);
+    if (url.searchParams.get("view") === "repeat") {
+      return NextResponse.json(
+        await posRepeatSelection(actor, organizationId, outletId, url.searchParams.get("orderId")),
+        { headers: { "cache-control": "private, no-store" } }
+      );
+    }
     if (url.searchParams.get("view") === "register") {
       return NextResponse.json(
         await posOrderRegister(
