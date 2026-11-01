@@ -532,9 +532,9 @@ export function OrganizationManager({
           <span className="oh-kicker">THE HOSPITALITY HOUSE / ORGANIZATION</span>
           <h2 className="oh-hero-meta">Organization management</h2>
           <h1>
-            Everything under
+            All Under
             <br />
-            one roof.
+            One Roof.
           </h1>
           <p>Business structure, team access, brands, billing and owner controls.</p>
           <div className="oh-hero-buttons">
