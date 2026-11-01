@@ -1,0 +1,213 @@
+.mm-account-hero .oh-hero-copy {
+  width: min(690px, 64%);
+}
+
+.mm-account .account-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0;
+}
+
+.mm-account .account-detail-grid > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 18px;
+  border: 1px solid var(--oh-line);
+  border-radius: 13px;
+  background: var(--paper);
+}
+
+.mm-account .account-detail-grid dt {
+  color: var(--oh-subtle);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mm-account .account-detail-grid dd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 780;
+  overflow-wrap: anywhere;
+}
+
+.mm-account .account-detail-grid .is-verified {
+  color: #24714d;
+}
+
+.mm-account .account-detail-grid .is-warning {
+  color: #a64b1f;
+}
+
+:root[data-theme="dark"] .mm-account .account-detail-grid .is-verified {
+  color: #7ee0ad;
+}
+
+.account-action-card,
+.account-preference-card,
+.account-signout {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--oh-line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.account-action-card > div,
+.account-preference-card > div,
+.account-signout > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-action-card strong,
+.account-preference-card strong,
+.account-signout strong,
+.account-policy-grid strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.account-action-card p,
+.account-preference-card p,
+.account-signout p {
+  margin-top: 4px;
+  color: var(--oh-subtle);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.account-action-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  color: #a8491b;
+  background: #f4d4b4;
+}
+
+:root[data-theme="dark"] .account-action-icon {
+  color: #ffd0a1;
+  background: #61432c;
+}
+
+.account-preference-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-preference-card {
+  color: var(--oh-accent);
+  text-decoration: none;
+}
+
+.account-preference-card > svg {
+  flex: 0 0 auto;
+}
+
+.account-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-policy-grid a {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-height: 138px;
+  padding: 18px;
+  border: 1px solid var(--oh-line);
+  border-radius: 13px;
+  color: var(--oh-accent);
+  background: var(--paper);
+  text-decoration: none;
+}
+
+.account-policy-grid small {
+  color: var(--oh-subtle);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.account-signout {
+  background: color-mix(in srgb, var(--oh-soft) 72%, var(--paper));
+}
+
+.mm-account .account-signout button {
+  border-color: #c8997d;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.mm-account .account-signout button:hover {
+  background: var(--oh-soft);
+}
+
+.mm-account #workspace .oh-panel-content > .grid {
+  gap: 13px;
+}
+
+.mm-account #workspace .oh-panel-content > .grid > p:first-child {
+  display: none;
+}
+
+.mm-account #workspace .oh-panel-content button {
+  border-radius: 10px;
+  border-color: var(--oh-line);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.mm-account #workspace .oh-panel-content button:hover {
+  color: var(--oh-accent);
+  background: var(--oh-soft);
+}
+
+@media (max-width: 850px) {
+  .mm-account .account-detail-grid,
+  .account-policy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-preference-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .mm-account-hero .oh-hero-copy {
+    width: 100%;
+  }
+
+  .account-action-card,
+  .account-preference-card,
+  .account-signout {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .account-action-card .oh-primary {
+    width: 100%;
+  }
+}

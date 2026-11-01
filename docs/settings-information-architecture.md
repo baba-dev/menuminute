@@ -20,6 +20,9 @@ The three pages now follow the entity that owns the setting:
 
 All three pages use the same scope navigation. A stored default workspace remains a preference, not
 authorization. The current membership and outlet grant are rechecked by the existing services.
+The Account page is part of the authenticated dashboard route group, so it uses the same sidebar,
+top command bar, outlet context, responsive navigation and session banners as Organization and Outlet
+Settings while keeping its fields personal.
 
 ## Write paths and concurrency
 
