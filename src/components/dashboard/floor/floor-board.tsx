@@ -684,7 +684,11 @@ function TableCard({
           : `${table.currentOccupancy} seated`;
 
   return (
-    <article className={styles.card} aria-label={`Table ${table.displayNumber}, ${table.name}`}>
+    <article
+      className={styles.card}
+      id={`table-${table.id}`}
+      aria-label={`Table ${table.displayNumber}, ${table.name}`}
+    >
       <div className={styles.cardHead}>
         <span className={styles.number} aria-hidden="true">
           {table.displayNumber}

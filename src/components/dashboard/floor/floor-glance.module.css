@@ -1,0 +1,236 @@
+/* Miniature dining floor for the dashboard widget. Tokens match floor.module.css. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+.stat {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--editorial-line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.statLabel {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.statValue {
+  color: var(--ink);
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.statValue small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.statDetail {
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.meter {
+  height: 5px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--editorial-soft);
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ember);
+  transition: width 240ms ease;
+}
+
+.group {
+  margin-top: 14px;
+}
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dot, var(--ember));
+}
+.map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 8px 6px 8px;
+  border: 1px solid var(--editorial-line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    opacity 160ms ease,
+    border-color 160ms ease;
+}
+.tile:hover {
+  border-color: var(--ink);
+}
+.tile:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}
+.tile[data-dim="true"] {
+  opacity: 0.38;
+}
+.tile[data-focused="true"] {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 2px var(--ember);
+}
+.mini {
+  display: block;
+  width: 100%;
+  max-width: 84px;
+  height: 64px;
+  overflow: visible;
+}
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.flag {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c2410c;
+}
+.flag[data-kind="active"] {
+  background: var(--ember);
+}
+.flag[data-kind="stale"] {
+  background: var(--muted);
+}
+
+.top {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+.top[data-state="busy"] {
+  fill: #ffe3cf;
+}
+.top[data-state="full"] {
+  fill: #ffd9d2;
+}
+:root[data-theme="dark"] .top[data-state="busy"] {
+  fill: #4d2f1d;
+}
+:root[data-theme="dark"] .top[data-state="full"] {
+  fill: #55231b;
+}
+.num {
+  fill: var(--ink);
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.seat {
+  color: var(--ink);
+}
+.seatBack {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.seatBase {
+  fill: var(--paper);
+  stroke: currentColor;
+  stroke-width: 3;
+}
+.seat[data-occupied="true"] {
+  color: var(--ember);
+}
+.seat[data-occupied="true"] .seatBase {
+  fill: var(--ember);
+}
+
+.attention {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.attentionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--editorial-line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12px;
+}
+.attentionRow strong {
+  font-weight: 800;
+}
+.attentionRow a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 750;
+}
+.more {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  .map {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .meter > span,
+  .tile {
+    transition: none;
+  }
+}

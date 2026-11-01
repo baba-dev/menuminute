@@ -193,7 +193,7 @@ describe("layout editor", () => {
     expect(within(panel).getAllByRole("listitem")).toHaveLength(widgets.length);
     // Edges are disabled rather than silently doing nothing.
     expect(within(panel).getByRole("button", { name: "Move At a glance up" })).toBeDisabled();
-    expect(within(panel).getByRole("button", { name: "Move Guest service down" })).toBeDisabled();
+    expect(within(panel).getByRole("button", { name: "Move Today’s pulse down" })).toBeDisabled();
     fireEvent.keyDown(panel, { key: "Escape" });
     expect(screen.queryByRole("region", { name: "Customize your overview" })).toBeNull();
     expect(trigger).toHaveFocus();
@@ -207,7 +207,7 @@ describe("layout editor", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: /Customize layout/ }));
     fireEvent.click(screen.getByRole("button", { name: "Move At a glance down" }));
-    expect(screen.getByText("At a glance is now position 2 of 6.")).toBeInTheDocument();
+    expect(screen.getByText("At a glance is now position 2 of 7.")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled(); // debounced
     await act(async () => void vi.advanceTimersByTime(450));
     expect(fetchMock).toHaveBeenCalledTimes(1);

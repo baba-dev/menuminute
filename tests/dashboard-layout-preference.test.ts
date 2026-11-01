@@ -16,7 +16,7 @@ import { dashboardWidgetIds, defaultDashboardLayout } from "../src/modules/dashb
 
 const custom = {
   version: 1 as const,
-  order: ["health", "kpis", "priorities", "dispatch", "floor", "serviceRequests"],
+  order: ["health", "kpis", "priorities", "dispatch", "floor", "serviceRequests", "pulse"],
   hidden: ["floor"],
   pinned: ["health"],
 };

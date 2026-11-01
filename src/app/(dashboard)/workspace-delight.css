@@ -147,6 +147,22 @@
   }
 }
 
+/* Side by side, the tall dining floor spans two rows so the two widgets that follow it stack in
+   the right-hand column and stretch to meet its bottom edge instead of leaving a gap. */
+@media (min-width: 1161px) {
+  .mm-widget[data-widget="floor"] {
+    grid-row: span 2;
+  }
+  .mm-widget[data-widget="serviceRequests"],
+  .mm-widget[data-widget="pulse"] {
+    align-self: stretch;
+  }
+  .mm-widget[data-widget="serviceRequests"] > section,
+  .mm-widget[data-widget="pulse"] > section {
+    height: 100%;
+  }
+}
+
 /* ── Customize layout ───────────────────────────────────────────────── */
 .mm-layout-editor {
   display: grid;

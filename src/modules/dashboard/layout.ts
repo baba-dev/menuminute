@@ -8,6 +8,7 @@ export const dashboardWidgetIds = [
   "health",
   "floor",
   "serviceRequests",
+  "pulse",
 ] as const;
 export type DashboardWidgetId = (typeof dashboardWidgetIds)[number];
 
@@ -18,6 +19,7 @@ export const dashboardWidgetLabels: Record<DashboardWidgetId, string> = {
   health: "Outlet health",
   floor: "Dining floor",
   serviceRequests: "Guest service",
+  pulse: "Today’s pulse",
 };
 
 const widgetId = z.enum(dashboardWidgetIds);
