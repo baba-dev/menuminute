@@ -57,23 +57,26 @@ export function TodayPulsePanel({
   pulse,
   refreshing = false,
   Figure = PulseTicker,
+  locale,
 }: {
   pulse: TodayPulse | null;
   refreshing?: boolean;
   Figure?: PulseFigure;
+  /** Defaults to the visitor's locale. A public page pins one so server and client text match. */
+  locale?: string;
 }) {
   const currency = pulse?.currency ?? "INR";
   const money = useMemo(() => {
     const dec =
       new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
         .maximumFractionDigits ?? 2;
-    const f = new Intl.NumberFormat(undefined, {
+    const f = new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: dec,
     });
     return (minor: number) => f.format(minor / 10 ** dec);
-  }, [currency]);
+  }, [currency, locale]);
 
   return (
     <section
