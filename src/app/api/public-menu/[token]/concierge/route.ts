@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "@/lib/config/env";
 import { boundedBytes } from "@/lib/bounded-input";
 import { redisClient } from "@/lib/redis";
+import { reserveConciergeSource, reserveConciergeSpend, settleConciergeSpend, conciergeQuote } from "@/modules/menu-product/concierge-budget";
 import { verifiedOrderSource } from "@/modules/orders/rate-limit";
 import { publicProduct } from "@/modules/menu-product/service";
 import {
@@ -80,6 +81,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
       { status: 503, headers: noStore }
     );
   }
+  // Reserve a cheap source quota before any PostgreSQL work, including unknown QR tokens.
+  try {
+    if (!(await reserveConciergeSource(source)))
+      return NextResponse.json({ message: "Too many requests. Please try again later." },
+        { status: 429, headers: { ...noStore, "Retry-After": "600" } });
+  } catch {
+    return NextResponse.json({ message: "Dining concierge temporarily unavailable." },
+      { status: 503, headers: noStore });
+  }
   const { token } = await ctx.params;
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(token))
     return NextResponse.json({ message: "Menu unavailable." }, { status: 404, headers: noStore });
@@ -141,6 +151,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
       const shortlisted = (["starter", "main", "side", "drink", "dessert"] as const).flatMap(
         (role) => candidates.filter((dish) => dish.role === role).slice(0, 12)
       );
+      // Bound provider spend globally and per outlet; quota failure keeps the safe curated results.
+      const quote = conciergeQuote({ instruction, input, shortlisted });
+      const reservation = await reserveConciergeSpend(data.outlet.id, quote);
+      if (!reservation) {
+        notice = "AI recommendations reached today's allowance. Showing curated matches instead.";
+      } else {
       const result = await nvidiaAdapter(
         {
           provider: "nvidia",
@@ -179,6 +195,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
         },
         { signal: req.signal, reasoningEffort: "none" }
       );
+      try {
+        await settleConciergeSpend(reservation, result.usage);
+      } catch {
+        // Fail conservatively: an unrefunded reservation never enables excess spending.
+      }
       if (
         result.finishReason === "stop" &&
         result.content &&
@@ -194,13 +215,14 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
           }
         }
       }
+      }
     } catch (error) {
       console.warn("[concierge] nvidia response not usable", {
         reason: error instanceof Error ? error.name : "unknown",
       });
     }
   }
-  if (sourceLabel === "curated")
+  if (sourceLabel === "curated" && !notice)
     notice =
       "These are curated matches from the current menu. You can adjust your preferences or browse all dishes.";
   return NextResponse.json(
