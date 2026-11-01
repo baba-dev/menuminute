@@ -39,6 +39,7 @@ import { getServicePeriodText, outletHour } from "@/lib/service-period";
 import { withOutlet } from "@/modules/tenancy/service";
 import { ForbiddenError } from "@/lib/errors";
 import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
+import { getFloorOverview } from "@/modules/hospitality/floor-service";
 import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
 import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
 import { env } from "@/lib/config/env";
@@ -222,9 +223,20 @@ export default async function DashboardPage() {
 
   const servicePeriod = getServicePeriodText(outletHour(outlet.timezone));
   // Hidden widgets do not load their data.
-  const floorTables = isVisible("floor")
-    ? await getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null)
-    : null;
+  // The miniature floor reads the same overview as /dashboard/floor, plus the orders-only matrix
+  // for unpaid totals. Each degrades independently.
+  const [floorOverview, floorMatrix] = isVisible("floor")
+    ? await Promise.all([
+        getFloorOverview(actor, outlet.id).catch(() => null),
+        getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null),
+      ])
+    : [null, null];
+  const floorDueByTable = Object.fromEntries(
+    (floorMatrix ?? []).map((row) => [
+      row.id,
+      { dueMinor: row.dueMinor, latestOrderId: row.latestOrderId },
+    ])
+  );
   const canManageAvailability = publicProjection
     ? await withOutlet(actor, outlet.id, "menu.write", async () => true).catch((error: unknown) => {
         if (error instanceof ForbiddenError) return false;
@@ -470,7 +482,14 @@ export default async function DashboardPage() {
         </div>
       </section>
     ),
-    floor: <TableFloorMatrix tables={floorTables} currency={outlet.currency ?? "INR"} />,
+    floor: (
+      <TableFloorMatrix
+        overview={floorOverview}
+        dueByTable={floorDueByTable}
+        currency={outlet.currency ?? "INR"}
+        timezone={outlet.timezone ?? undefined}
+      />
+    ),
     serviceRequests: (
       <ServiceRequestsPanel
         organizationId={outlet.organizationId}

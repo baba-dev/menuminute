@@ -29,6 +29,16 @@ the next booking and the permanent system ID. It reuses the dashboard shell toke
 - **System ID** (`restaurant_tables.id`) never changes. `display_number` is the human number, unique among
   active tables. `table_number` mirrors it so QR codes, orders and POS keep working.
 
+## Dashboard miniature
+
+The Overview widget "Your dining floor" (`src/components/dashboard/table-floor-matrix.tsx`) is a read-only
+miniature of this page. It reads the same `getFloorOverview` (permission `orders.read`) plus the orders-only
+`getOutletFloorMatrix` for unpaid totals, and each read degrades independently. `buildFloorGlance`
+(`src/modules/hospitality/floor-glance.ts`) is the pure view-model: stat strip, tables grouped by section, at most
+12 tables ordered by attention (unpaid, stale, active, seated), and up to three "needs attention" rows. Mini tables
+reuse `layoutTable` so shapes and chair positions match the floor page. Tables link to `/dashboard/floor#table-<id>`.
+The widget never changes chair state, and keeps the "not a physical occupancy sensor" disclaimer.
+
 ## Migration 0073 (additive)
 
 Adds `dining_sections`, `restaurant_chairs`, and `name`, `display_number`, `section_id`, `shape` on
