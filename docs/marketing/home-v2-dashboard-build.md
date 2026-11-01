@@ -3,7 +3,7 @@
 Status: **the dashboard section is complete** at `/home-v2` (`noindex`, not in the sitemap): the shared
 homepage nav bar, a first-frame wireframe and scroll cue, the real sidebar, top bar, hero, KPI row,
 priorities, outlet health, Service Dispatch, dining floor, "At your service" and Today's pulse, the
-new-order beat, per-chapter captions with links and a closing call to action. The rest of the home-v2 page
+new-order beat, per-chapter captions with links and a closing call to action. Section 2, [scan to order](home-v2-scan-to-order.md), follows it. The rest of the home-v2 page
 (other sections, footer) is not built.
 
 ## Behavior

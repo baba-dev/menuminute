@@ -1,0 +1,917 @@
+/* Section 2 of home-v2: "Scan, tap, ordered". Hand-built effects (border beam, shimmer, rolling
+   numbers, FLIP, marquee, spotlight). Only transform and opacity are animated, plus a one-off
+   blur on first reveal. Motion is off for prefers-reduced-motion and the section reads fully
+   without script (the QR overlay needs script, so it is hidden when scripting is off). */
+.sto {
+  --sto-copy: #292018;
+  --sto-muted: #655647;
+  --sto-accent: #bb430f;
+  --sto-on-accent: #fff;
+  --sto-line: #e8d7c2;
+  --sto-surface: #fff;
+  --sto-soft: #fff4e4;
+  --sto-focus: #b03b04;
+  --sto-glow: rgb(187 67 15 / 0.16);
+  --sto-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  color: var(--sto-copy);
+  background: linear-gradient(180deg, #fff 0%, #fff8ee 50%, #fff 100%);
+  border-block: 1px solid var(--sto-line);
+}
+:root[data-theme="dark"] .sto {
+  --sto-copy: #fff4e3;
+  --sto-muted: #d6c3a8;
+  --sto-accent: #ffd05d;
+  --sto-on-accent: #241a08;
+  --sto-line: #4d3828;
+  --sto-surface: #251d17;
+  --sto-soft: #30241b;
+  --sto-focus: #ffd05d;
+  --sto-glow: rgb(255 208 93 / 0.16);
+  background: linear-gradient(180deg, #15120e 0%, #21180f 55%, #15120e 100%);
+}
+.sto *,
+.sto *::before,
+.sto *::after {
+  box-sizing: border-box;
+}
+.sto button {
+  font: inherit;
+  color: inherit;
+}
+.sto :is(button, a):focus-visible {
+  outline: 3px solid var(--sto-focus);
+  outline-offset: 2px;
+}
+.sto-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sto-container {
+  width: min(100% - 48px, 1240px);
+  margin-inline: auto;
+  padding-block: clamp(60px, 6vw, 84px);
+}
+
+/* Intro */
+.sto-intro {
+  max-width: 810px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+.sto-eyebrow {
+  display: block;
+  color: var(--sto-accent);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+.sto-badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--sto-line);
+  border-radius: 999px;
+  background: var(--sto-soft);
+  color: var(--sto-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.sto-intro h2 {
+  margin: 20px auto 14px;
+  font-family: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+.sto-word {
+  display: inline-block;
+}
+.sto-word:last-child {
+  color: var(--sto-accent);
+}
+.sto-lead {
+  margin: 0 auto;
+  font-weight: 500;
+  max-width: 34rem;
+  color: var(--sto-muted);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  line-height: 1.55;
+}
+
+/* Bento grid */
+.sto-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-rows: auto auto;
+  gap: 20px;
+}
+.sto-stage {
+  grid-row: 1 / span 2;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 640px;
+  padding: 32px 16px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 40%, var(--sto-glow), transparent 62%),
+    radial-gradient(color-mix(in srgb, var(--sto-line) 80%, transparent) 1px, transparent 1.4px) 0
+      0 / 18px 18px,
+    var(--sto-surface);
+}
+.sto-beam {
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.sto-beam::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--sto-line) 0 62%,
+    var(--sto-accent) 88%,
+    var(--sto-line) 100%
+  );
+  animation: sto-spin 7s linear infinite;
+}
+.sto[data-paused="true"] .sto-beam::before,
+.sto[data-paused="true"] .sto-laser,
+.sto[data-paused="true"] .sto-marquee__row ul {
+  animation-play-state: paused;
+}
+
+/* Phone */
+.sto-phone {
+  position: relative;
+  width: min(100%, 304px);
+  height: 580px;
+  border: 9px solid #1d1713;
+  border-radius: 42px;
+  background: #1d1713;
+  box-shadow:
+    0 28px 60px -22px rgb(41 32 24 / 0.55),
+    0 0 0 1px rgb(255 255 255 / 0.06) inset;
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+.sto-phone__notch {
+  position: absolute;
+  z-index: 4;
+  top: 8px;
+  left: 50%;
+  width: 84px;
+  height: 20px;
+  translate: -50% 0;
+  border-radius: 999px;
+  background: #1d1713;
+}
+.sto-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 32px;
+  background: var(--sto-surface);
+  color: var(--sto-copy);
+}
+.sto-menu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 40px 14px 0;
+}
+.sto-menu__head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 10px;
+}
+.sto-menu__head strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+.sto-menu__head span {
+  color: var(--sto-muted);
+  font-size: 0.72rem;
+}
+.sto-pills,
+.sto-sorts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sto-pills button,
+.sto-sorts button {
+  min-height: 32px;
+  padding: 4px 11px;
+  border: 1px solid var(--sto-line);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 700;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.sto-sorts button {
+  font-weight: 600;
+  color: var(--sto-muted);
+}
+.sto-pills button[aria-pressed="true"],
+.sto-sorts button[aria-pressed="true"] {
+  border-color: var(--sto-accent);
+  background: var(--sto-accent);
+  color: var(--sto-on-accent);
+}
+.sto-dishes {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sto-dishes li {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+.sto-screen[data-scanned="true"] .sto-dishes li {
+  animation: sto-rise 0.55s var(--sto-ease) backwards;
+  animation-delay: calc(var(--i) * 70ms + 120ms);
+}
+.sto-dish {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid var(--sto-line);
+  border-radius: 14px;
+  background: var(--sto-soft);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.18s var(--sto-ease);
+}
+.sto-dish:active {
+  transform: scale(0.97);
+}
+.sto-dish__name {
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+.sto-dish__price {
+  color: var(--sto-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.sto-plus,
+.sto-stepper button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  border: 1px solid var(--sto-line);
+  border-radius: 14px;
+  background: var(--sto-surface);
+  cursor: pointer;
+}
+.sto-plus:disabled,
+.sto-stepper button:disabled,
+.sto-shimmer:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.sto-plus:not(:disabled):active {
+  transform: scale(0.9);
+}
+.sto-basket {
+  position: absolute;
+  right: 10px;
+  bottom: 12px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--sto-line);
+  border-radius: 18px;
+  background: var(--sto-surface);
+  box-shadow: 0 10px 24px -14px rgb(41 32 24 / 0.5);
+}
+.sto-basket__sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+.sto-basket__sum > span:nth-child(2) {
+  color: var(--sto-muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Rolling numbers */
+.sto-roll {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+.sto-roll__visual {
+  display: inline-flex;
+}
+.sto-roll__col {
+  display: inline-block;
+  height: 1.2em;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.sto-roll__strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--d) * -1.2em));
+  transition: transform 0.7s var(--sto-ease);
+}
+.sto-roll__strip span {
+  height: 1.2em;
+}
+.sto-roll__visual > span:not(.sto-roll__col) {
+  line-height: 1.2;
+  white-space: pre;
+}
+
+/* Shimmer button */
+.sto-shimmer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--sto-accent);
+  color: var(--sto-on-accent);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: transform 0.18s var(--sto-ease);
+}
+.sto-shimmer--wide {
+  width: 100%;
+}
+.sto-shimmer:not(:disabled):active {
+  transform: scale(0.96);
+}
+.sto-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.4) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: sto-shimmer 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.sto-shimmer:disabled::after {
+  animation: none;
+}
+.sto[data-paused="true"] .sto-shimmer::after {
+  animation-play-state: paused;
+}
+
+/* Detail sheet */
+.sto-sheet {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 10px;
+  padding: 18px 16px 16px;
+  border-top: 1px solid var(--sto-line);
+  border-radius: 24px 24px 0 0;
+  background: var(--sto-surface);
+  box-shadow: 0 -18px 40px -20px rgb(41 32 24 / 0.55);
+  animation: sto-sheet 0.4s var(--sto-ease);
+}
+.sto-sheet h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.sto-sheet p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.sto-sheet__note {
+  color: var(--sto-muted);
+  font-size: 0.72rem !important;
+}
+.sto-sheet__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.sto-stepper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+/* Scan overlay (needs script, so hidden when scripting is off) */
+.sto-scan {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  background: var(--sto-surface);
+  text-align: center;
+  transition:
+    opacity 0.5s var(--sto-ease),
+    transform 0.5s var(--sto-ease),
+    visibility 0.5s;
+}
+@media (scripting: enabled) {
+  .sto-scan {
+    display: flex;
+  }
+}
+.sto-screen[data-scanned="true"] .sto-scan {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+.sto-scan p {
+  margin: 0;
+  color: var(--sto-muted);
+  font-size: 0.8rem;
+}
+.sto-viewfinder {
+  position: relative;
+  width: 192px;
+  height: 192px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+}
+.sto-viewfinder img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.sto-corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 0 solid var(--sto-accent);
+}
+.sto-corner--tl {
+  top: -6px;
+  left: -6px;
+  border-width: 4px 0 0 4px;
+  border-top-left-radius: 12px;
+}
+.sto-corner--tr {
+  top: -6px;
+  right: -6px;
+  border-width: 4px 4px 0 0;
+  border-top-right-radius: 12px;
+}
+.sto-corner--bl {
+  bottom: -6px;
+  left: -6px;
+  border-width: 0 0 4px 4px;
+  border-bottom-left-radius: 12px;
+}
+.sto-corner--br {
+  right: -6px;
+  bottom: -6px;
+  border-width: 0 4px 4px 0;
+  border-bottom-right-radius: 12px;
+}
+.sto-laser {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  left: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--sto-accent), transparent);
+  box-shadow: 0 0 14px 2px var(--sto-glow);
+  animation: sto-laser 2.2s ease-in-out infinite alternate;
+}
+
+/* Cards */
+.sto-card {
+  position: relative;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid var(--sto-line);
+  border-radius: 24px;
+  background: var(--sto-surface);
+}
+.sto-card h3 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.sto-card p {
+  margin: 0 0 14px;
+  color: var(--sto-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.sto-card small {
+  display: block;
+  color: var(--sto-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.sto-tickets {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  min-height: 120px;
+  align-content: start;
+}
+.sto-tickets__empty {
+  padding: 18px 12px;
+  border: 1px dashed var(--sto-line);
+  border-radius: 14px;
+  color: var(--sto-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+.sto-ticket {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--sto-line);
+  border-left: 4px solid var(--sto-accent);
+  border-radius: 12px;
+  background: var(--sto-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+  animation: sto-ticket 0.5s var(--sto-ease);
+}
+.sto-ticket[data-sent="true"] {
+  border-left-color: #2f7d4f;
+}
+.sto-kitchen {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--sto-line);
+  border-radius: 18px;
+  background: var(--sto-soft);
+  transition: border-color 0.3s;
+}
+.sto-kitchen[data-sent="true"] {
+  border-color: var(--sto-accent);
+  animation: sto-pulse 0.7s 0.5s var(--sto-ease);
+}
+.sto-kitchen strong {
+  display: block;
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+.sto-kitchen__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sto-accent);
+  color: var(--sto-on-accent);
+}
+.sto-particles i {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sto-accent);
+  opacity: 0;
+  animation: sto-fly 0.9s var(--sto-ease) both;
+  animation-delay: calc(var(--i) * 80ms);
+}
+.sto-reset {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--sto-line);
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.sto-currency__price {
+  margin: 4px 0 14px;
+  font-family: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
+  font-size: clamp(2.8rem, 5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.sto-currency__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.sto-currency__tabs button {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--sto-line);
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.sto-currency__tabs button[aria-pressed="true"] {
+  border-color: var(--sto-accent);
+  background: var(--sto-accent);
+  color: var(--sto-on-accent);
+}
+
+/* Marquee: decorative, so hidden from assistive tech and stopped for reduced motion */
+.sto-marquee {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.sto-marquee__row {
+  display: flex;
+  overflow: hidden;
+}
+.sto-marquee__row ul {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  min-width: 100%;
+  margin: 0;
+  padding: 0 5px;
+  list-style: none;
+  animation: sto-marquee 46s linear infinite;
+}
+.sto-marquee__row[data-reverse="true"] ul {
+  animation-direction: reverse;
+}
+.sto-marquee li {
+  padding: 8px 16px;
+  border: 1px solid var(--sto-line);
+  border-radius: 999px;
+  background: var(--sto-soft);
+  font-size: 0.9rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.sto-marquee li b {
+  margin-left: 6px;
+  color: var(--sto-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Spotlight cards */
+.sto-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+.sto-spot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    var(--sto-glow),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.sto-spot:hover::before {
+  opacity: 1;
+}
+.sto-spot > * {
+  position: relative;
+}
+.sto-spot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--sto-accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+.sto-spot a:hover {
+  text-decoration: underline;
+}
+.sto-note {
+  margin: 24px auto 0;
+  max-width: 44rem;
+  color: var(--sto-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* First reveal (script only; never hides content without script) */
+@media (prefers-reduced-motion: no-preference) {
+  .sto[data-ready="true"] [data-reveal]:not([data-in]) {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(8px);
+  }
+  .sto [data-reveal] {
+    transition:
+      opacity 0.8s var(--sto-ease),
+      transform 0.8s var(--sto-ease),
+      filter 0.8s var(--sto-ease);
+  }
+  .sto[data-ready="true"] .sto-intro:not([data-in]) .sto-word {
+    opacity: 0;
+    transform: translateY(0.4em);
+    filter: blur(10px);
+  }
+  .sto-word {
+    transition:
+      opacity 0.7s var(--sto-ease),
+      transform 0.7s var(--sto-ease),
+      filter 0.7s var(--sto-ease);
+    transition-delay: calc(var(--i) * 140ms);
+  }
+}
+
+@keyframes sto-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes sto-shimmer {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes sto-laser {
+  to {
+    transform: translateY(168px);
+  }
+}
+@keyframes sto-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes sto-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sto-ticket {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.96);
+  }
+}
+@keyframes sto-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-70px, calc((var(--i) - 2) * 14px)) scale(0.6);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(28px, 0) scale(1);
+  }
+}
+@keyframes sto-pulse {
+  50% {
+    transform: scale(1.03);
+  }
+}
+@keyframes sto-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* Tablet and phone: one column */
+@media (max-width: 920px) {
+  .sto-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .sto-stage {
+    grid-row: auto;
+    min-height: 0;
+  }
+  .sto-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .sto-container {
+    width: min(100% - 28px, 440px);
+  }
+  .sto-phone {
+    height: 560px;
+  }
+}
+
+/* Reduced motion: a static, composed frame; every control still works */
+@media (prefers-reduced-motion: reduce) {
+  .sto *,
+  .sto *::before,
+  .sto *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .sto-scan {
+    display: none !important;
+  }
+  .sto-phone {
+    transform: none;
+  }
+  .sto-marquee__row ul + ul {
+    display: none;
+  }
+  .sto-marquee__row {
+    justify-content: center;
+  }
+}
