@@ -133,7 +133,7 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.chip {
+.chip.chip {
   display: inline-flex;
   min-height: 36px;
   align-items: center;
@@ -273,7 +273,7 @@
   align-items: center;
   gap: 8px;
 }
-.btn {
+.btn.btn {
   display: inline-flex;
   min-height: 40px;
   align-items: center;
@@ -298,26 +298,26 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
-.btnPrimary {
+.btn.btnPrimary {
   background: #40271d;
   color: #fff9f2;
   box-shadow: 0 3px 9px rgb(65 29 12 / 12%);
 }
-.btnQuiet {
+.btn.btnQuiet {
   border-color: var(--decorative);
   background: var(--paper);
   color: var(--ink);
 }
-.btnDanger {
+.btn.btnDanger {
   border-color: #c0392b;
   background: transparent;
   color: #a02a1d;
 }
-:root[data-theme="dark"] .btnPrimary {
+:root[data-theme="dark"] .btn.btnPrimary {
   background: #ffb53d;
   color: #211600;
 }
-:root[data-theme="dark"] .btnDanger {
+:root[data-theme="dark"] .btn.btnDanger {
   color: #ff9d8c;
   border-color: #ff9d8c;
 }
@@ -370,10 +370,13 @@
   font-weight: 600;
   color: var(--muted);
 }
-.iconBtn {
+/* Doubled selectors beat the global ".product button" padding, border and min-height. */
+.iconBtn.iconBtn {
   display: inline-grid;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
   place-items: center;
   border: 0;
   border-radius: 50%;
@@ -381,7 +384,7 @@
   color: var(--muted);
   cursor: pointer;
 }
-.iconBtn:hover {
+.iconBtn.iconBtn:hover {
   background: var(--editorial-soft);
   color: var(--ink);
 }

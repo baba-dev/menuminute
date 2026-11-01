@@ -111,6 +111,7 @@ test("owner builds a dining room: table, chairs, one-tap occupancy, edit and arc
   await seat.getByRole("button", { name: /^Seat \d/ }).click();
   await expect(seat).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/4 of 6 seats taken/);
+  await card.screenshot({ path: info.outputPath(`dining-floor-${info.project.name}-seated.png`) });
   await card.getByRole("button", { name: "Clear table" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/6 seats, all free/);
 
