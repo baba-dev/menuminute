@@ -29,6 +29,22 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+/** True once an audio attempt was made but the browser still refuses to play (no user gesture yet). */
+export function isAudioSuspended(): boolean {
+  return audioCtx !== null && audioCtx.state !== "running";
+}
+/** Call from a user gesture (tap) to lift the browser's autoplay block. */
+export async function unlockAudio(): Promise<boolean> {
+  const ctx = getAudioContext();
+  if (!ctx) return false;
+  try {
+    await ctx.resume();
+  } catch {
+    /* Still blocked. */
+  }
+  return ctx.state === "running";
+}
+
 /** Keep the existing service and kitchen opt-in settings authoritative. */
 export function isAudioEnabled(scope: AudioScope = "tactile"): boolean {
   if (typeof window === "undefined") return false;

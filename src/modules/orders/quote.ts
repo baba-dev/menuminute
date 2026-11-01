@@ -24,6 +24,8 @@ export const quoteInputSchema = z
             variantId: id.nullable(),
             groups: z.array(selectedGroup).max(30),
             quantity: z.number().int().positive().safe(),
+            /** Staff-entered instruction for this dish (POS). Never affects pricing or the quote. */
+            note: z.string().trim().max(200).optional(),
           })
           .strict()
       )

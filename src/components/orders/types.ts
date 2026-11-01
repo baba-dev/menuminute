@@ -38,6 +38,8 @@ export type MerchantOrder = {
   updatedAt: string;
   expiresAt: string | null;
   kitchenManaged: boolean;
+  /** Dishes released at Final Check while the order is still being completed. */
+  partReady?: { released: number; total: number } | null;
   canAccept: boolean;
   canPrepare: boolean;
   canComplete: boolean;

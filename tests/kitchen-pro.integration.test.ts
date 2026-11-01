@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 import { fixture, admin } from "./helpers";
 import { applyEntitlement } from "../src/modules/billing/operator";
 import { commandMenu } from "../src/modules/menu-product/service";
-import { submitGuestOrder, transitionOutletOrder } from "../src/modules/orders/service";
+import {
+  submitGuestOrder,
+  transitionOutletOrder,
+  listOutletOrders,
+} from "../src/modules/orders/service";
 import {
   kitchenAdmin,
   kitchenSnapshot,
@@ -10,6 +14,7 @@ import {
   kitchenWorkCommand,
   kitchenExpoSnapshot,
   kitchenExpoRelease,
+  kitchenWorkRelease,
   kitchenReassign,
 } from "../src/modules/kitchen/service";
 
@@ -28,7 +33,20 @@ async function setup(routed = true) {
           {
             id: "food",
             name: "Food",
-            items: [{ id: "paneer", name: "Paneer Tikka", priceMinor: 12000 }],
+            items: [
+              {
+                id: "paneer",
+                name: "Paneer Tikka",
+                priceMinor: 12000,
+                dietary: ["vegetarian"],
+                safety: {
+                  ingredients: ["paneer"],
+                  allergens: ["dairy"],
+                  crossContact: "Shared tandoor",
+                  verified: false,
+                },
+              },
+            ],
           },
         ],
       },
@@ -185,6 +203,102 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     );
     expect(state.rows[0]?.status).toBe("preparing");
   });
+  it("snapshots the declared allergen profile onto the kitchen ticket at order time", async () => {
+    const f = await setup();
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted",
+      expectedVersion: 1,
+    });
+    const board = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(board.work.length).toBeGreaterThan(0);
+    for (const w of board.work) {
+      expect(w.dishSafety).toMatchObject({
+        declared: true,
+        allergens: ["dairy"],
+        crossContact: "Shared tandoor",
+        verified: false,
+        dietary: ["vegetarian"],
+      });
+      expect(w.intakeSource).toBe("guest_menu");
+    }
+    const expo = await kitchenExpoSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const items = expo.orders.find((x) => x.id === o.orderId)!.items;
+    expect(items.every((i) => i.dishSafety?.allergens?.[0] === "dairy")).toBe(true);
+  });
+
+  it("releases dishes one by one and makes the order Ready only with the last dish", async () => {
+    const f = await setup();
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted",
+      expectedVersion: 1,
+    });
+    const board = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const [first, second] = board.work;
+    const finish = async (workId: string) => {
+      const started = await kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+        workId,
+        action: "start",
+        expectedVersion: 0,
+        key: crypto.randomUUID(),
+      });
+      return kitchenWorkCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
+        workId,
+        action: "complete",
+        expectedVersion: started.version,
+        key: crypto.randomUUID(),
+      });
+    };
+    const release = (workId: string, expectedVersion: number, key = crypto.randomUUID()) =>
+      kitchenWorkRelease(f.actor, f.outlet.organizationId, f.outlet.id, {
+        workId,
+        expectedVersion,
+        key,
+      });
+
+    // An unfinished dish cannot be released.
+    await expect(release(first!.id, 0)).rejects.toMatchObject({ statusCode: 409 });
+
+    const doneFirst = await finish(first!.id);
+    let expo = await kitchenExpoSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    let row = expo.orders.find((x) => x.id === o.orderId)!;
+    expect(row).toMatchObject({ total: 2, done: 1, released: 0 });
+    expect(row.items).toHaveLength(2);
+    expect(row.items.every((i) => typeof i.dishName === "string" && i.stationName)).toBe(true);
+
+    // Release the finished dish while the other station is still waiting.
+    const key = crypto.randomUUID();
+    const released = await release(first!.id, doneFirst.version, key);
+    expect(released).toMatchObject({ released: true, orderReady: false });
+    expect(await release(first!.id, doneFirst.version, key)).toEqual(released); // idempotent replay
+    await expect(release(first!.id, doneFirst.version)).rejects.toMatchObject({
+      statusCode: 409,
+    }); // already released, fresh key
+
+    expo = await kitchenExpoSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    row = expo.orders.find((x) => x.id === o.orderId)!;
+    expect(row).toMatchObject({ total: 2, done: 1, released: 1, status: "preparing" });
+    const listed = (await listOutletOrders(f.actor, f.outlet.id)).find((x) => x.id === o.orderId)!;
+    expect(listed.status).toBe("preparing");
+    expect(listed.partReady).toEqual({ released: 1, total: 2 });
+
+    // The final dish makes the order Ready exactly once.
+    const doneSecond = await finish(second!.id);
+    const last = await release(second!.id, doneSecond.version);
+    expect(last).toMatchObject({ released: true, orderReady: true });
+    const records = await admin(async (_, pool) =>
+      pool.query<{ status: string; ready_events: string; released: string }>(
+        `select o.status,
+          (select count(*)::text from order_status_events e where e.order_id=o.id and e.to_status='ready') as ready_events,
+          (select count(*)::text from kitchen_work w where w.order_id=o.id and w.released_at is not null) as released
+         from orders o where o.id=$1`,
+        [o.orderId]
+      )
+    );
+    expect(records.rows[0]).toMatchObject({ status: "ready", ready_events: "1", released: "2" });
+  });
+
   it("serializes competing station writes and requires the expeditor to release exactly once", async () => {
     const f = await setup();
     const o = await place(f);

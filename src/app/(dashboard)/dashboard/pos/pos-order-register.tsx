@@ -293,6 +293,11 @@ export function PosOrderRegister({
                     <span className={"pos-register-pill pos-register-service-" + row.status}>
                       {serviceName(row.status)}
                     </span>
+                    {row.partReady && (
+                      <span className="pos-partready">
+                        Part ready · {row.partReady.released} of {row.partReady.total} dishes
+                      </span>
+                    )}
                     <small>
                       {row.items.reduce((sum, item) => sum + item.quantity, 0)} food items
                     </small>
@@ -400,7 +405,11 @@ export function PosOrderRegister({
               </button>
             </header>
             <p>
-              {serviceName(selected.status)} · {paymentName(selected)}
+              {serviceName(selected.status)}
+              {selected.partReady
+                ? ` (part ready: ${selected.partReady.released} of ${selected.partReady.total} dishes released)`
+                : ""}{" "}
+              · {paymentName(selected)}
             </p>
             <div className="pos-order-detail-items">
               {selected.items.map((item, index) => (
