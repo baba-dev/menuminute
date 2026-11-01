@@ -38,6 +38,7 @@ export function PosIncomingOrders({
   const keys = useRef<Map<string, string>>(new Map());
   const seen = useRef<Set<string> | null>(null);
   const sounding = useRef(false);
+  const scheduledInFlight = useRef(false);
   useEffect(() => {
     sounding.current = sound;
   }, [sound]);
@@ -69,7 +70,12 @@ export function PosIncomingOrders({
     const controller = new AbortController();
     const initial = window.setTimeout(() => void refresh(controller.signal), 0);
     const handle = () => {
-      if (document.visibilityState === "visible") void refresh(controller.signal);
+      if (document.visibilityState !== "visible" || !navigator.onLine || scheduledInFlight.current)
+        return;
+      scheduledInFlight.current = true;
+      void refresh(controller.signal).finally(() => {
+        scheduledInFlight.current = false;
+      });
     };
     const timer = window.setInterval(handle, 5000);
     document.addEventListener("visibilitychange", handle);
