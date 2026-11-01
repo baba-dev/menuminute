@@ -140,6 +140,9 @@ const server = https.createServer(
           ...req.headers,
           "x-forwarded-proto": "https",
           "x-forwarded-for": forwardedIp,
+          // Authentication and audit controls require the reverse proxy's trusted
+          // source identity, not a browser-supplied address. Always overwrite it.
+          "x-real-ip": forwardedIp,
           // Test TLS proxy overwrites both internal attestations, as production Nginx must.
           "x-menuminute-client-ip": forwardedIp,
           "x-menuminute-edge-key": process.env.ORDER_EDGE_SHARED_SECRET,

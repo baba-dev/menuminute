@@ -19,6 +19,11 @@ describe("A–F security regression contracts", () => {
     const source = readFileSync("src/app/(public-menu)/m/[publicMenuId]/page.tsx", "utf8");
     expect(source.match(/admitPublicMenuRender\(\)/g)?.length).toBe(2);
   });
+  it("overwrites trusted authentication IP in the isolated TLS proxy", () => {
+    const proxy = readFileSync("scripts/browser-server.mjs", "utf8");
+    expect(proxy).toContain('"x-real-ip": forwardedIp');
+    expect(proxy).toContain('"x-menuminute-client-ip": forwardedIp');
+  });
   it("preserves a single-use step-up proof for administrative writes", () => {
     const sql = readFileSync("src/db/migrations/0015_superadmin_control.sql", "utf8");
     expect(sql).toContain("app_private.require_step_up()");
