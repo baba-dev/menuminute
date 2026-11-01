@@ -6,11 +6,12 @@ test.describe("published Privacy Policy", () => {
     await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
     await expect(page.getByRole("main", { name: "Privacy Policy" })).toBeVisible();
     await expect(
-      page.getByText("Privacy Policy · Effective 20 October 2026", { exact: true })
+      page.getByText("Privacy Policy · Effective 2 November 2026", { exact: true })
     ).toBeVisible();
     await expect(page.getByText("BabaBuilds", { exact: false }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /15\. Contact and complaints/ })).toBeVisible();
-    await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute("content", /noindex/);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://food.bababuilds.com/privacy");
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     const sections = page.locator("main.privacy-copy > section.privacy-section");
     await expect(sections).toHaveCount(15);
@@ -25,7 +26,7 @@ test.describe("published Privacy Policy", () => {
     await expect(page).toHaveURL(/#retention$/);
   });
 
-  test("deletion request is public, honest about manual status and linked from policy", async ({
+  test("deletion request is final, indexable, honest about manual status and linked from policy", async ({
     page,
   }) => {
     await page.goto("/privacy");
@@ -34,12 +35,13 @@ test.describe("published Privacy Policy", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: /Request account and data deletion/ })
     ).toBeVisible();
-    await expect(page.getByText(/not a finished automated in-app deletion feature/)).toBeVisible();
+    await expect(page.getByText(/does not offer instant or automated deletion/)).toBeVisible();
     await expect(page.getByRole("link", { name: /Email admin@bababuilds.com/ })).toHaveAttribute(
       "href",
       /^mailto:admin@bababuilds\.com/
     );
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://food.bababuilds.com/delete-account");
   });
 
   test("small screen has visible contents and no horizontal overflow", async ({ page }) => {
