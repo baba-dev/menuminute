@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { observedRoute } from "@/lib/observed-route";
+import { boundedBytes } from "@/lib/bounded-input";
 import { requestActor, errorResponse } from "@/lib/request-context";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { withOutlet, withOutletRead } from "@/modules/tenancy/service";
@@ -71,9 +72,7 @@ async function handlePost(req: Request) {
     const { actor, outlet } = await scope(req, true);
     await reservePushMutation(actor, outlet.id);
     // Bound JSON before parsing; never log endpoints, keys or browser identifiers.
-    const raw = await req.text();
-    if (raw.length > 3500)
-      return NextResponse.json({ message: "Request too large" }, { status: 413, headers });
+    const raw = (await boundedBytes(req, 3500)).toString("utf8");
     const input = subscriptionInput.parse(JSON.parse(raw));
     if (!allowedPushEndpoint(input.endpoint))
       return NextResponse.json({ message: "Unsupported push service" }, { status: 422, headers });

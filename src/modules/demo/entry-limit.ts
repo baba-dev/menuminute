@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import { redisClient } from "@/lib/redis";
 
 const WINDOW_SECONDS = 600;
@@ -7,7 +8,8 @@ const GLOBAL_PER_WINDOW = 400;
 
 /** Fixed-window limiter for demo entry. Fails closed if Redis is unavailable. */
 export async function allowDemoEntry(req: Request): Promise<boolean> {
-  const source = req.headers.get("x-real-ip") ?? "missing-source";
+  const source = req.headers.get("x-real-ip");
+  if (!source || isIP(source) === 0) return false;
   const sourceKey = `demo:entry:src:${createHash("sha256").update(source).digest("hex")}`;
   try {
     const redis = await redisClient("cache");

@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -19,7 +20,7 @@ async function observed_POST(req: Request, context: C) {
       await inviteMember(
         await requestActor(req, true),
         (await context.params).organizationId,
-        await req.json()
+        await boundedJson(req)
       ),
       { status: 201 }
     );
@@ -33,7 +34,7 @@ async function observed_DELETE(req: Request, context: C) {
     const body = z
       .object({ id: z.uuid() })
       .strict()
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     await revokeInvitation(actor, (await context.params).organizationId, body.id);
     return NextResponse.json({ ok: true });
   } catch (e) {

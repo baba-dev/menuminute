@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextRequest, NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -38,7 +39,7 @@ async function observed_POST(req: NextRequest) {
   try {
     const { actor, restaurant } = await requestContext(req, req.method !== "GET");
 
-    const body = (await req.json()) as unknown;
+    const body = (await boundedJson(req)) as unknown;
     const parsed = createMenuItemSchema.safeParse(body);
 
     if (!parsed.success) {

@@ -137,6 +137,9 @@ export const authServer = betterAuth({
     twoFactor({
       issuer: "MenuMinute",
       backupCodeOptions: { amount: 10, length: 10, storeBackupCodes: "encrypted" },
+      // Explicitly enforce the native Better Auth 1.7 account lockout across
+      // TOTP and backup-code challenges, including new sessions.
+      accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: 900 },
     }),
     ...(env.TURNSTILE_SECRET_KEY
       ? [

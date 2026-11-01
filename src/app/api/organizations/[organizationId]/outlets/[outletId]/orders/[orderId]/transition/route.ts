@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -10,7 +11,7 @@ async function observed_POST(
   try {
     const actor = await requestActor(req, true);
     const { organizationId, outletId, orderId } = await context.params;
-    const body = await req.json();
+    const body = await boundedJson(req);
 
     const result = await transitionOutletOrder(actor, outletId, orderId, body, organizationId);
     if (result.expired)

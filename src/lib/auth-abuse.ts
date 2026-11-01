@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
+import { boundedBytes } from "@/lib/bounded-input";
 import { redisClient } from "@/lib/redis";
 
 const WINDOW_SECONDS = 600;
@@ -20,11 +22,41 @@ function fingerprint(value: string): string {
 
 export async function allowAuthRequest(req: Request): Promise<boolean> {
   const path = new URL(req.url).pathname.replace(/^\/api\/auth/, "");
+  // Native MFA challenges need an independent budget before Better Auth parses the body.
+  // Do not derive these from a claimed email (account-targeted lockout).
+  if (path === "/two-factor/verify-totp" || path === "/two-factor/verify-backup-code") {
+    const ip = req.headers.get("x-real-ip");
+    if ((!ip || isIP(ip) === 0) && process.env.NODE_ENV === "production") return false;
+    const identity = ip && isIP(ip) ? ip : "isolated-test-source";
+    const cookie = req.headers.get("cookie") ?? "";
+    if (cookie.length > 8192) return false;
+    // A valid challenge cannot authorize an unbounded streaming JSON body.
+    try {
+      await boundedBytes(req.clone(), 16384);
+    } catch {
+      return false;
+    }
+    const token = fingerprint(cookie || identity);
+    const source = fingerprint(identity);
+    const redis = await redisClient("cache");
+    const script = `for i=1,#KEYS do if tonumber(redis.call("GET",KEYS[i]) or "0") >= tonumber(ARGV[i]) then return 0 end end
+      for i=1,#KEYS do local n=redis.call("INCR",KEYS[i]); if n==1 then redis.call("EXPIRE",KEYS[i],600) end end
+      return 1`;
+    const allowed = await redis.eval(script, {
+      keys: [`auth:mfa:challenge:${token}`, `auth:mfa:source:${source}`, "auth:mfa:global"],
+      arguments: ["10", "30", "4000"],
+    });
+    return Number(allowed) === 1;
+  }
   if (path !== "/sign-in/email" && !(path in EMAIL_BUDGETS)) return true;
   const length = Number(req.headers.get("content-length") ?? 0);
   if (!Number.isFinite(length) || length > 16384) return false;
-  const raw = await req.clone().text();
-  if (Buffer.byteLength(raw, "utf8") > 16384) return false;
+  let raw: string;
+  try {
+    raw = (await boundedBytes(req.clone(), 16384)).toString("utf8");
+  } catch {
+    return false;
+  }
   let body: { email?: unknown };
   try {
     body = JSON.parse(raw) as { email?: unknown };
@@ -35,7 +67,9 @@ export async function allowAuthRequest(req: Request): Promise<boolean> {
   if (!email || email.length > 254) return true;
   const emailFingerprint = fingerprint(email);
   const source = req.headers.get("x-real-ip");
-  const sourceFingerprint = source ? fingerprint(source) : null;
+  // Missing or invalid reverse-proxy identity must not share a global 120-attempt bucket.
+  if ((!source || isIP(source) === 0) && process.env.NODE_ENV === "production") return false;
+  const sourceFingerprint = source && isIP(source) ? fingerprint(source) : null;
 
   if (path === "/sign-in/email") {
     // Missing proxy identity shares one deliberately small source bucket instead

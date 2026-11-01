@@ -130,10 +130,30 @@ describe("support tickets: admin side", () => {
       1
     );
 
+    await expect(adminArchiveTicket(boss, t.id, true)).rejects.toThrow(
+      /Confirm a privileged action/
+    );
+    // Only test fixture owner may create a simulated, time-limited verified proof.
+    await admin(async (_db, pool) => {
+      await pool.query(
+        "insert into auth_step_up(session_id,user_id,expires_at) values($1,$2,now()+interval '5 minutes')",
+        [boss.sessionId, boss.id]
+      );
+    });
     await adminArchiveTicket(boss, t.id, true);
     expect((await adminListTickets(boss, { q: title })).tickets).toHaveLength(0);
     expect((await adminListTickets(boss, { q: title, archived: true })).tickets).toHaveLength(1);
     expect(await listMySupportTickets(op.s.actor)).toEqual([]);
+    await expect(adminArchiveTicket(boss, t.id, false)).rejects.toThrow(
+      /Confirm a privileged action/
+    );
+    // Only test fixture owner may create a simulated, time-limited verified proof.
+    await admin(async (_db, pool) => {
+      await pool.query(
+        "insert into auth_step_up(session_id,user_id,expires_at) values($1,$2,now()+interval '5 minutes')",
+        [boss.sessionId, boss.id]
+      );
+    });
     await adminArchiveTicket(boss, t.id, false);
     expect((await adminListTickets(boss, { q: title })).tickets).toHaveLength(1);
 

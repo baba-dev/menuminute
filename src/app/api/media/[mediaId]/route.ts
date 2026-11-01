@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -21,7 +22,7 @@ async function observed_PATCH(req: Request, c: C) {
     const data = z
       .object({ action: z.enum(["approve", "unapprove"]) })
       .strict()
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     return NextResponse.json(
       await mediaCommand(actor, restaurant.id, (await c.params).mediaId, data.action)
     );

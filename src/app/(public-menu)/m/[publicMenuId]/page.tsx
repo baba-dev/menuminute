@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { coverFor } from "@/modules/menu-product/public-presentation";
 import { publicProduct } from "@/modules/menu-product/service";
+import { admitPublicMenuRender } from "@/modules/menu-product/public-ssr-admission";
 import { PublicMenu } from "@/components/menu-product/public-menu";
 import { GuestOfflineCoordinator } from "@/components/pwa/guest-offline-coordinator";
 import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
@@ -15,6 +16,8 @@ type Props = {
   searchParams: Promise<{ lang?: string }>;
 };
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  if (!(await admitPublicMenuRender()))
+    return { title: "Menu temporarily unavailable", robots: { index: false, follow: false } };
   const data = await publicProduct((await params).publicMenuId, (await searchParams).lang);
   if (!data) return { title: "Menu unavailable", robots: { index: false, follow: false } };
   const headline = data.menus[0]?.document.presentation?.headline;
@@ -41,6 +44,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   };
 }
 export default async function Page({ params, searchParams }: Props) {
+  if (!(await admitPublicMenuRender())) notFound();
   const { publicMenuId } = await params;
   const { lang } = await searchParams;
   const data = await publicProduct(publicMenuId, lang);

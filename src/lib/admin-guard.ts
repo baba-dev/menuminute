@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ForbiddenError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
+import { trustedAuditIp } from "@/lib/trusted-audit-source";
 
 export const SUPERADMIN_EMAIL = "admin@bababuilds.com";
 
@@ -61,7 +62,7 @@ export async function recordAdminAction(
   details?: Record<string, unknown>
 ) {
   const reqHeaders = await headers();
-  const ip = reqHeaders.get("x-forwarded-for") || reqHeaders.get("x-real-ip") || "unknown";
+  const ip = trustedAuditIp(reqHeaders);
   const userAgent = reqHeaders.get("user-agent") || "unknown";
 
   await withActor({ userId: actor.id, sessionId: actor.sessionId }, async (tx) => {

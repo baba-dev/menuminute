@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -10,7 +11,7 @@ async function observed_POST(
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
     return NextResponse.json(
-      await kitchenWorkRelease(actor, organizationId, outletId, await req.json()),
+      await kitchenWorkRelease(actor, organizationId, outletId, await boundedJson(req)),
       { headers: { "cache-control": "no-store" } }
     );
   } catch (e) {

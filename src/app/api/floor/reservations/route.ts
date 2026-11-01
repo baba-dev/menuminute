@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -30,7 +31,7 @@ async function observed_GET(req: Request) {
 async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
-    const body = await req.json();
+    const body = await boundedJson(req);
     const input = createReservationInputSchema.parse(body);
     const created = await createReservation(actor, restaurant.id, input);
     return NextResponse.json(created);
@@ -42,7 +43,7 @@ async function observed_POST(req: Request) {
 async function observed_PATCH(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
-    const body = await req.json();
+    const body = await boundedJson(req);
     const { reservationId, status } = z
       .object({
         reservationId: z.string().min(1),

@@ -3,7 +3,7 @@ import { verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
 import { authServer } from "@/lib/auth";
 import { recordAuthEvent, alertSecurityEvent } from "@/lib/security-events";
-import { verifyStepUpTotp } from "@/lib/totp-verification";
+import { matchingStepUpTotp } from "@/lib/totp-verification";
 
 /** Password AND native Better Auth TOTP, bound to the existing active DB session. */
 export async function confirmStepUp(
@@ -30,27 +30,47 @@ export async function confirmStepUp(
   // enrollment/pending login, not an already signed-in privileged step-up.
   const before = await authServer.api.getSession({ headers: requestHeaders });
   if (!before || before.user.id !== userId || before.session.id !== sessionId) return false;
-  let accepted = false;
+  let matchedStep: number | null = null;
   try {
     const factor = await authServer.api.getTOTPURI({
       body: { password },
       headers: requestHeaders,
     });
-    accepted = verifyStepUpTotp(factor.totpURI, code);
+    matchedStep = matchingStepUpTotp(factor.totpURI, code);
   } catch {
-    accepted = false;
+    matchedStep = null;
   }
-  if (!accepted) {
+  if (matchedStep === null) {
     await recordAuthEvent(userId, "mfa.failed", sessionId);
     return false;
   }
   // Do not create proof for any different/new session, or a session revoked during verification.
   const current = await authServer.api.getSession({ headers: requestHeaders });
   if (!current || current.user.id !== userId || current.session.id !== sessionId) return false;
-  await getPool().query(
-    "insert into auth_step_up(session_id,user_id,expires_at) values($1,$2,now()+interval '5 minutes') on conflict(session_id) do update set user_id=excluded.user_id,expires_at=excluded.expires_at",
-    [sessionId, userId]
-  );
+  // Consume the matched time step and create proof in the same transaction.
+  // Concurrent submissions of the same code cannot mint two proofs.
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const consumed = await client.query(
+      "insert into auth_totp_consumed(user_id,last_step) values($1,$2) on conflict(user_id) do update set last_step=excluded.last_step where auth_totp_consumed.last_step < excluded.last_step returning user_id",
+      [userId, matchedStep]
+    );
+    if (!consumed.rowCount) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    await client.query(
+      "insert into auth_step_up(session_id,user_id,expires_at) values($1,$2,now()+interval '5 minutes') on conflict(session_id) do update set user_id=excluded.user_id,expires_at=excluded.expires_at",
+      [sessionId, userId]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
   await recordAuthEvent(userId, "step_up.completed", sessionId);
   void alertSecurityEvent(userId, "Privileged MenuMinute confirmation completed");
   return true;

@@ -116,6 +116,32 @@ const envSchema = z
     // Explicit global mode for all active published guest menus; default remains fail-closed.
     AI_DINING_CONCIERGE_ALL_OUTLETS: strictBoolean.default(false),
     AI_DINING_CONCIERGE_OUTLET_IDS: rolloutOutletIds,
+    // Conservative per-token cost upper bounds (micro-USD per million tokens).
+    // Operators may override after verifying their exact NVIDIA commercial rate.
+    AI_DINING_CONCIERGE_INPUT_MICROUSD_MTOK: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1_000_000_000)
+      .default(5_000_000),
+    AI_DINING_CONCIERGE_OUTPUT_MICROUSD_MTOK: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1_000_000_000)
+      .default(10_000_000),
+    AI_DINING_CONCIERGE_DAILY_CAP_MICROUSD: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1_000_000_000)
+      .default(40_000_000),
+    AI_DINING_CONCIERGE_OUTLET_DAILY_CAP_MICROUSD: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1_000_000_000)
+      .default(10_000_000),
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_ACTIONS_ENABLED: strictBoolean.default(false),

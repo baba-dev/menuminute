@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -20,7 +21,7 @@ async function observed_POST(req: Request, { params }: Params) {
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
     return NextResponse.json(
-      await staffServiceRequestAction(actor, organizationId, outletId, await req.json()),
+      await staffServiceRequestAction(actor, organizationId, outletId, await boundedJson(req)),
       { headers }
     );
   } catch (e) {
