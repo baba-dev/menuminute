@@ -159,7 +159,21 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await expect(
     register.getByRole("button", { name: /Repeat order #.*into new ticket/ })
   ).toBeVisible();
+  const repeatResponse = page.waitForResponse(
+    (response) => response.url().includes("view=repeat") && response.request().method() === "GET"
+  );
   await register.getByRole("button", { name: /Repeat order #.*into new ticket/ }).click();
+  const selectionResponse = await repeatResponse;
+  expect(selectionResponse.status(), "The authorized repeat snapshot must be readable").toBe(200);
+  const repeatSnapshot = await selectionResponse.json();
+  expect(repeatSnapshot.items).toEqual([
+    expect.objectContaining({
+      dishId: "paneer",
+      quantity: 1,
+      selectedOptions: [expect.objectContaining({ groupId: "bread", optionId: "roti" })],
+    }),
+  ]);
+  await expect(page.getByText(/copied to a NEW draft/)).toBeVisible();
   await expect(page.locator(".till-cartline")).toContainText("Paneer Lunch");
   await expect(page.getByText(/copied to a NEW draft/)).toBeVisible();
   await expect(page.getByText(/no new order or payment has been recorded/)).toBeVisible();
