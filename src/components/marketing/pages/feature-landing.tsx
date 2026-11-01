@@ -26,6 +26,9 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
   return (
     <MarketingPageShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbs) }} />
+      {feature.slug === "free-qr-menu" && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd({ "@context": "https://schema.org", "@type": "SoftwareApplication", name: "MenuMinute Free QR Menu", applicationCategory: "BusinessApplication", operatingSystem: "Web", description: feature.seoDescription, url: PUBLIC_ORIGIN + feature.path, provider: { "@type": "Organization", name: "BabaBuilds" }, offers: { "@type": "Offer", price: "0", priceCurrency: "INR" } }) }} />
+      )}
       <section className="relative isolate overflow-hidden border-b border-border bg-gradient-to-br from-orange-500/10 via-background to-amber-500/5">
         <div className="pointer-events-none absolute -right-32 -top-48 size-[38rem] rounded-full bg-orange-400/10 blur-3xl dark:bg-orange-700/10" aria-hidden="true" />
         <div className="relative mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-6 sm:pb-24 lg:px-8">

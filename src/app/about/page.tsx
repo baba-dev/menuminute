@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpenText, HeartHandshake, QrCode, ShieldCheck } from "lucide-react";
 import { MarketingPageShell } from "@/components/marketing/pages/marketing-page-shell";
-import { marketingMetadata } from "@/lib/marketing/seo";
+import { marketingMetadata, safeJsonLd } from "@/lib/marketing/seo";
 export const metadata = marketingMetadata({
   title: "About MenuMinute — Built for Food Businesses",
   description: "Meet MenuMinute, a restaurant QR menu and operations product from BabaBuilds, based in Pilani, Rajasthan, India.",
@@ -15,6 +15,7 @@ const commitments = [
 export default function AboutPage() {
   return (
     <MarketingPageShell>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd({ "@context": "https://schema.org", "@type": "Organization", name: "BabaBuilds", url: "https://bababuilds.com", brand: { "@type": "Brand", name: "MenuMinute", url: "https://food.bababuilds.com" }, address: { "@type": "PostalAddress", addressLocality: "Pilani", addressRegion: "Rajasthan", addressCountry: "IN" }, contactPoint: { "@type": "ContactPoint", email: "admin@bababuilds.com", contactType: "customer support" } }) }} />
       <section className="border-b border-border bg-gradient-to-br from-orange-500/10 via-background to-amber-500/10 px-5 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl">
           <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-orange-700 dark:text-orange-300">Our story / BabaBuilds</p>

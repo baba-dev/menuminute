@@ -10,6 +10,7 @@ import "../privacy/privacy.css";
 import "./terms.css";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/terms" },
   title: "Terms of Service",
   description:
     "MenuMinute terms for merchant accounts, QR menus, ordering, kitchen tools and related services.",
