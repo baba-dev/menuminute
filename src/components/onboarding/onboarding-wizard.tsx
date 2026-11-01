@@ -202,7 +202,8 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
       const goal = data.draft?.onboardingGoal ?? "qr_menu";
       // An explicit Quick Start link takes precedence over an earlier full-wizard
       // preference from this browser session.
-      const shouldQuick = goal === "qr_menu" && (quickLinkRequested.current || savedQuick === "true");
+      const shouldQuick =
+        goal === "qr_menu" && (quickLinkRequested.current || savedQuick === "true");
       setQuickStart(shouldQuick);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
