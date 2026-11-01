@@ -119,6 +119,7 @@ export function TheTill({
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
+  const sellerTriggerUsed = useRef(false);
   useEffect(() => {
     if (mobileTicketOpen) mobileTicketRef.current?.focus();
   }, [mobileTicketOpen]);
@@ -142,6 +143,11 @@ export function TheTill({
     },
     () => ""
   );
+  // The seller trigger lives in the hero; reveal the form below the POS navigation.
+  useEffect(() => {
+    if (editingSettings && sellerTriggerUsed.current)
+      document.getElementById("pos-seller-settings")?.scrollIntoView({ block: "start" });
+  }, [editingSettings]);
   const incomingOrder = workspace.attachable.find((o) => o.orderId === incomingOrderId);
   const seller = workspace.context.seller;
   const [legalName, setLegalName] = useState(seller?.legalName ?? initial.context.outletName);
@@ -568,6 +574,20 @@ export function TheTill({
           <Link href="/dashboard/orders">
             Service Counter <ArrowRight size={15} />
           </Link>
+          {workspace.context.canConfigure && workspace.context.enabled && (
+            <button
+              type="button"
+              className="pos-seller-link"
+              aria-expanded={editingSettings}
+              aria-controls="pos-seller-settings"
+              onClick={() => {
+                sellerTriggerUsed.current = true;
+                setEditingSettings((value) => !value);
+              }}
+            >
+              <Settings2 size={15} aria-hidden="true" /> Seller details
+            </button>
+          )}
         </div>
         <span className="pos-hero-caption" aria-hidden="true">
           CRAFTED FOR THE COUNTER
@@ -575,15 +595,6 @@ export function TheTill({
       </header>
       <div className="pos-body">
         <PosNavigation active="till" />
-        {workspace.context.canConfigure && workspace.context.enabled && (
-          <button
-            type="button"
-            className="pos-seller-link"
-            onClick={() => setEditingSettings((value) => !value)}
-          >
-            <Settings2 size={15} aria-hidden="true" /> Seller details
-          </button>
-        )}
         {incomingOrderId && (
           <div role="status" className="mb-4 rounded-xl border border-amber-500/50 p-4">
             {incomingOrder ? (
@@ -672,7 +683,11 @@ export function TheTill({
           </div>
         )}
         {editingSettings && workspace.context.canConfigure && (
-          <form className="till-settings" onSubmit={(e) => void configure(e)}>
+          <form
+            id="pos-seller-settings"
+            className="till-settings"
+            onSubmit={(e) => void configure(e)}
+          >
             <div>
               <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
               <h2>Activate Point of Sale</h2>

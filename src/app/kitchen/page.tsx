@@ -7,7 +7,6 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { kitchenCanManage, kitchenSnapshot } from "@/modules/kitchen/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { KitchenBoard } from "./kitchen-board";
-import { KitchenIntake } from "./kitchen-intake";
 import { withOutlet } from "@/modules/tenancy/service";
 import { sql } from "drizzle-orm";
 import { ForbiddenError } from "@/lib/errors";
@@ -104,19 +103,13 @@ export default async function KitchenPage() {
           outletName={outlet.name}
         />
       )}
-      {kitchenOperational && (
-        <KitchenIntake
-          organizationId={outlet.organizationId}
-          outletId={outlet.id}
-          timezone={outlet.timezone}
-        />
-      )}
       <KitchenBoard
         organizationId={outlet.organizationId}
         outletId={outlet.id}
         outletName={outlet.name}
         initial={initial}
         canManage={canManage}
+        intakeEnabled={kitchenOperational}
         menuDishes={dishList}
         timezone={outlet.timezone}
       />

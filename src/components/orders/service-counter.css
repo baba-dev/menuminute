@@ -172,6 +172,7 @@
   margin-top: 23px;
 }
 .sc-hero-actions button,
+.sc-hero-actions a.sc-hero-secondary,
 .sc-hero-primary {
   display: inline-flex;
   justify-content: center;

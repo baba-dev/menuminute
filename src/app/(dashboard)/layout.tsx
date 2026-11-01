@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CircleHelp, ExternalLink } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
@@ -146,6 +147,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           )}
           <WorkspaceNavigation capabilities={capabilities} isSuperAdmin={isSuperAdmin} />
+          <div className="mm-workspace-sidebar-footer">
+            <Link
+              href="/help/owner"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mm-workspace-nav-link mm-workspace-help-link"
+              title="Open Restaurant Help & Guides in a new tab"
+            >
+              <CircleHelp size={19} strokeWidth={1.9} aria-hidden="true" />
+              <span>Help &amp; guides</span>
+              <ExternalLink size={14} className="mm-workspace-help-external" aria-hidden="true" />
+            </Link>
+          </div>
         </aside>
         <main id={WORKSPACE_MAIN_ID} className="mm-workspace-main" tabIndex={-1}>
           {!session.user.emailVerified && (

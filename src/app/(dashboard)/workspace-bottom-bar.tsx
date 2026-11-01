@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Bell, Ellipsis, Search, ShieldAlert, UserRound, X } from "lucide-react";
+import { Bell, CircleHelp, Ellipsis, Search, ShieldAlert, UserRound, X } from "lucide-react";
 import {
   bottomBarItems,
   isNavSelected,
@@ -152,6 +152,18 @@ export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: bo
                 <Link href="/account" className="mm-sheet-link" onClick={() => setMoreOpen(false)}>
                   <UserRound size={19} strokeWidth={1.9} aria-hidden="true" />
                   <span>Account &amp; security</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/help/owner"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mm-sheet-link"
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <CircleHelp size={19} strokeWidth={1.9} aria-hidden="true" />
+                  <span>Help &amp; guides (new tab)</span>
                 </Link>
               </li>
             </ul>

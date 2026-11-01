@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   ArrowDown,
   ArrowUp,
@@ -155,6 +156,20 @@ export function DashboardLayoutEditor({
     timer.current = window.setTimeout(() => void flush(), SAVE_DELAY_MS);
   }
 
+  // Keep the editor panel in the page body: the artwork hero clips overflow.
+  // The dashboard supplies the inline portal target; isolated/component renders
+  // still need a usable editor, so fall back to the document body.
+  const panelTarget =
+    typeof document === "undefined"
+      ? null
+      : (document.getElementById("mm-dashboard-layout-panel") ?? document.body);
+
+  useEffect(() => {
+    if (open) {
+      document.getElementById("mm-layout-editor")?.scrollIntoView?.({ block: "start" });
+    }
+  }, [open]);
+
   const rows = useMemo(() => resolveDashboardLayout(layout), [layout]);
   const style = useMemo(() => layoutStyles(layout), [layout]);
 
@@ -168,183 +183,184 @@ export function DashboardLayoutEditor({
   return (
     <>
       <style>{style}</style>
-      <div className="mm-dashboard-hero-tools">
-        <button
-          ref={trigger}
-          type="button"
-          className="mm-dashboard-button mm-dashboard-button--secondary"
-          aria-expanded={open}
-          aria-controls="mm-layout-editor"
-          onClick={() => setOpen((value) => !value)}
-        >
-          <LayoutGrid size={17} aria-hidden="true" /> Customize layout
-        </button>
-      </div>
-      {open && (
-        <section
-          id="mm-layout-editor"
-          className="mm-layout-editor"
-          aria-labelledby="mm-layout-title"
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              saveNow();
-              setOpen(false);
-              trigger.current?.focus();
-            }
-          }}
-        >
-          <div>
-            <h2 id="mm-layout-title">Customize your overview</h2>
-            <p>
-              Reorder, pin or hide sections. Pinned sections stay at the top. Changes are saved to
-              your account and follow you across devices.
-            </p>
-          </div>
-          <ol className="mm-layout-list">
-            {rows.map((widget, index) => {
-              const label = dashboardWidgetLabels[widget.id];
-              const group = rows.filter((row) => row.pinned === widget.pinned);
-              const position = group.findIndex((row) => row.id === widget.id);
-              return (
-                <li
-                  key={widget.id}
-                  className="mm-layout-row"
-                  data-hidden={widget.hidden}
-                  aria-label={`${label}, position ${index + 1} of ${rows.length}`}
+      <button
+        ref={trigger}
+        type="button"
+        className="mm-dashboard-button mm-dashboard-button--secondary"
+        aria-expanded={open}
+        aria-controls="mm-layout-editor"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <LayoutGrid size={17} aria-hidden="true" /> Customize layout
+      </button>
+      {open &&
+        panelTarget &&
+        createPortal(
+          <section
+            id="mm-layout-editor"
+            className="mm-layout-editor"
+            aria-labelledby="mm-layout-title"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                saveNow();
+                setOpen(false);
+                trigger.current?.focus();
+              }
+            }}
+          >
+            <div>
+              <h2 id="mm-layout-title">Customize your overview</h2>
+              <p>
+                Reorder, pin or hide sections. Pinned sections stay at the top. Changes are saved to
+                your account and follow you across devices.
+              </p>
+            </div>
+            <ol className="mm-layout-list">
+              {rows.map((widget, index) => {
+                const label = dashboardWidgetLabels[widget.id];
+                const group = rows.filter((row) => row.pinned === widget.pinned);
+                const position = group.findIndex((row) => row.id === widget.id);
+                return (
+                  <li
+                    key={widget.id}
+                    className="mm-layout-row"
+                    data-hidden={widget.hidden}
+                    aria-label={`${label}, position ${index + 1} of ${rows.length}`}
+                  >
+                    <span className="mm-layout-row-name">
+                      {label}
+                      {widget.pinned && (
+                        <span className="mm-layout-row-state">
+                          <Pin size={13} aria-hidden="true" /> Pinned
+                        </span>
+                      )}
+                      {widget.hidden && (
+                        <span className="mm-layout-row-state">
+                          <EyeOff size={13} aria-hidden="true" /> Hidden
+                        </span>
+                      )}
+                      {!widget.hidden && !presentWidgets.includes(widget.id) && (
+                        <span className="mm-layout-row-state">
+                          <LoaderCircle className="animate-spin" size={13} aria-hidden="true" />{" "}
+                          Loading
+                        </span>
+                      )}
+                    </span>
+                    <span className="mm-layout-row-actions">
+                      <button
+                        type="button"
+                        className="mm-icon-button"
+                        disabled={position === 0}
+                        aria-label={`Move ${label} up`}
+                        onClick={() =>
+                          change({ type: "move", id: widget.id, direction: -1 }, (next) =>
+                            positionText(next, widget.id)
+                          )
+                        }
+                      >
+                        <ArrowUp size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className="mm-icon-button"
+                        disabled={position === group.length - 1}
+                        aria-label={`Move ${label} down`}
+                        onClick={() =>
+                          change({ type: "move", id: widget.id, direction: 1 }, (next) =>
+                            positionText(next, widget.id)
+                          )
+                        }
+                      >
+                        <ArrowDown size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className="mm-icon-button"
+                        aria-pressed={widget.pinned}
+                        aria-label={`${widget.pinned ? "Unpin" : "Pin"} ${label}`}
+                        onClick={() =>
+                          change({ type: "togglePinned", id: widget.id }, (next) =>
+                            next.pinned.includes(widget.id)
+                              ? `${label} pinned to the top.`
+                              : `${label} unpinned.`
+                          )
+                        }
+                      >
+                        {widget.pinned ? (
+                          <PinOff size={16} aria-hidden="true" />
+                        ) : (
+                          <Pin size={16} aria-hidden="true" />
+                        )}
+                        {widget.pinned ? "Unpin" : "Pin"}
+                      </button>
+                      <button
+                        type="button"
+                        className="mm-icon-button"
+                        aria-pressed={widget.hidden}
+                        aria-label={`${widget.hidden ? "Show" : "Hide"} ${label}`}
+                        onClick={() =>
+                          change({ type: "toggleHidden", id: widget.id }, (next) =>
+                            next.hidden.includes(widget.id) ? `${label} hidden.` : `${label} shown.`
+                          )
+                        }
+                      >
+                        {widget.hidden ? (
+                          <Eye size={16} aria-hidden="true" />
+                        ) : (
+                          <EyeOff size={16} aria-hidden="true" />
+                        )}
+                        {widget.hidden ? "Show" : "Hide"}
+                      </button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            <div className="mm-layout-footer">
+              <span className="mm-layout-save-state" role="status">
+                {saveState === "saving" && (
+                  <>
+                    <LoaderCircle className="animate-spin" size={15} aria-hidden="true" /> Saving…
+                  </>
+                )}
+                {saveState === "saved" && (
+                  <>
+                    <Check size={15} aria-hidden="true" /> Saved to your account
+                  </>
+                )}
+                {saveState === "failed" && (
+                  <>
+                    <TriangleAlert size={15} aria-hidden="true" /> {error}
+                  </>
+                )}
+              </span>
+              <span className="mm-layout-row-actions">
+                <button
+                  type="button"
+                  className="mm-icon-button"
+                  onClick={() => change({ type: "reset" }, () => "Layout reset to the default.")}
                 >
-                  <span className="mm-layout-row-name">
-                    {label}
-                    {widget.pinned && (
-                      <span className="mm-layout-row-state">
-                        <Pin size={13} aria-hidden="true" /> Pinned
-                      </span>
-                    )}
-                    {widget.hidden && (
-                      <span className="mm-layout-row-state">
-                        <EyeOff size={13} aria-hidden="true" /> Hidden
-                      </span>
-                    )}
-                    {!widget.hidden && !presentWidgets.includes(widget.id) && (
-                      <span className="mm-layout-row-state">
-                        <LoaderCircle className="animate-spin" size={13} aria-hidden="true" />{" "}
-                        Loading
-                      </span>
-                    )}
-                  </span>
-                  <span className="mm-layout-row-actions">
-                    <button
-                      type="button"
-                      className="mm-icon-button"
-                      disabled={position === 0}
-                      aria-label={`Move ${label} up`}
-                      onClick={() =>
-                        change({ type: "move", id: widget.id, direction: -1 }, (next) =>
-                          positionText(next, widget.id)
-                        )
-                      }
-                    >
-                      <ArrowUp size={16} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      className="mm-icon-button"
-                      disabled={position === group.length - 1}
-                      aria-label={`Move ${label} down`}
-                      onClick={() =>
-                        change({ type: "move", id: widget.id, direction: 1 }, (next) =>
-                          positionText(next, widget.id)
-                        )
-                      }
-                    >
-                      <ArrowDown size={16} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      className="mm-icon-button"
-                      aria-pressed={widget.pinned}
-                      aria-label={`${widget.pinned ? "Unpin" : "Pin"} ${label}`}
-                      onClick={() =>
-                        change({ type: "togglePinned", id: widget.id }, (next) =>
-                          next.pinned.includes(widget.id)
-                            ? `${label} pinned to the top.`
-                            : `${label} unpinned.`
-                        )
-                      }
-                    >
-                      {widget.pinned ? (
-                        <PinOff size={16} aria-hidden="true" />
-                      ) : (
-                        <Pin size={16} aria-hidden="true" />
-                      )}
-                      {widget.pinned ? "Unpin" : "Pin"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mm-icon-button"
-                      aria-pressed={widget.hidden}
-                      aria-label={`${widget.hidden ? "Show" : "Hide"} ${label}`}
-                      onClick={() =>
-                        change({ type: "toggleHidden", id: widget.id }, (next) =>
-                          next.hidden.includes(widget.id) ? `${label} hidden.` : `${label} shown.`
-                        )
-                      }
-                    >
-                      {widget.hidden ? (
-                        <Eye size={16} aria-hidden="true" />
-                      ) : (
-                        <EyeOff size={16} aria-hidden="true" />
-                      )}
-                      {widget.hidden ? "Show" : "Hide"}
-                    </button>
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-          <div className="mm-layout-footer">
-            <span className="mm-layout-save-state" role="status">
-              {saveState === "saving" && (
-                <>
-                  <LoaderCircle className="animate-spin" size={15} aria-hidden="true" /> Saving…
-                </>
-              )}
-              {saveState === "saved" && (
-                <>
-                  <Check size={15} aria-hidden="true" /> Saved to your account
-                </>
-              )}
-              {saveState === "failed" && (
-                <>
-                  <TriangleAlert size={15} aria-hidden="true" /> {error}
-                </>
-              )}
-            </span>
-            <span className="mm-layout-row-actions">
-              <button
-                type="button"
-                className="mm-icon-button"
-                onClick={() => change({ type: "reset" }, () => "Layout reset to the default.")}
-              >
-                <RotateCcw size={16} aria-hidden="true" /> Reset
-              </button>
-              <button
-                type="button"
-                className="mm-icon-button"
-                onClick={() => {
-                  saveNow();
-                  setOpen(false);
-                  trigger.current?.focus();
-                }}
-              >
-                Done
-              </button>
-            </span>
-          </div>
-          <p className="sr-only" role="status" aria-live="polite">
-            {announcement}
-          </p>
-        </section>
-      )}
+                  <RotateCcw size={16} aria-hidden="true" /> Reset
+                </button>
+                <button
+                  type="button"
+                  className="mm-icon-button"
+                  onClick={() => {
+                    saveNow();
+                    setOpen(false);
+                    trigger.current?.focus();
+                  }}
+                >
+                  Done
+                </button>
+              </span>
+            </div>
+            <p className="sr-only" role="status" aria-live="polite">
+              {announcement}
+            </p>
+          </section>,
+          panelTarget
+        )}
     </>
   );
 }

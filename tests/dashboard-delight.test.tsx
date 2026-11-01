@@ -199,6 +199,25 @@ describe("layout editor", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("renders the editor below the hero when the dashboard portal target exists", () => {
+    render(
+      <>
+        <div id="mm-dashboard-layout-panel" />
+        <DashboardLayoutEditor initialLayout={defaultDashboardLayout} presentWidgets={widgets} />
+      </>
+    );
+    const trigger = screen.getByRole("button", { name: /Customize layout/ });
+    fireEvent.click(trigger);
+    const target = document.getElementById("mm-dashboard-layout-panel");
+    expect(target?.querySelector("#mm-layout-editor")).toBe(
+      screen.getByRole("region", { name: "Customize your overview" })
+    );
+    fireEvent.keyDown(screen.getByRole("region", { name: "Customize your overview" }), {
+      key: "Escape",
+    });
+    expect(trigger).toHaveFocus();
+  });
+
   it("applies a change instantly, announces it, then saves and refreshes the server render", async () => {
     vi.useFakeTimers();
     const fetchMock = mockFetch(true);
