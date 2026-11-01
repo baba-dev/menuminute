@@ -88,7 +88,7 @@ older docs keep the `expeditor`/`expo` identifiers; renaming them is out of scop
 preparation rail, then Final Check & Order Release. The Fast-Pass 86 panel was removed
 from `/kitchen`; dish availability stays in the dashboard command palette.
 
-## Per-item release (migration 0069)
+## Per-item release (migration 0070)
 
 Completed station items are released individually at Final Check:
 
@@ -98,7 +98,7 @@ Completed station items are released individually at Final Check:
 - Guests and the Orders desk see "Part ready" (`released of total`) via `guest_order_release_progress` (re-validates the tracking capability, returns counts only) and `kitchen_release_progress`. The order `status` enum is unchanged (still `preparing`).
 - Rollback: the application can be rolled back without data repair; new columns are nullable and older code ignores them. SQL is append-only and is not rolled back.
 
-## Ticket cards and allergen chips (migration 0070)
+## Ticket cards and allergen chips (migration 0071)
 
 - **Layout** (`dish-details.tsx`, shared by the rail and Final Check): allergens first, then customisations (size/option chips labelled by group), then a large "Guest note" callout, then a separate "Whole-order note". Tickets with options, notes, an order note or declared allergens get a "Special request" cue and an accent edge. Every cue pairs an icon and text, so colour is never the only signal. The card also shows the intake source (POS, QR menu, Online).
 - **Allergen data is only what the restaurant declared.** `order_items.dish_safety` is snapshotted by a `BEFORE INSERT` trigger from the outlet's published menu release (`safety.allergens`, `crossContact`, `verified`, and `dietary`), so it covers guest, POS and demo orders without changing those functions and reflects the menu at order time. Chips read "Contains … as listed by the restaurant", with "not verified" unless the profile is marked verified.
@@ -122,7 +122,7 @@ Independent, dependency-free implementations inspired by [Magic UI](https://magi
 
 Not used on purpose: animated borders on allergen panels (safety information stays steady), confetti, meteors, particles and pointer effects. Every effect is static under `prefers-reduced-motion`, has light and dark tokens, and never carries meaning alone (the wait is also written as text).
 
-## POS per-dish notes and "Part ready" (migration 0071)
+## POS per-dish notes and "Part ready" (migration 0072)
 
 - POS lines accept an optional `note` (trimmed, max 200). `app_private.pos_submit_order` stores it in `order_items.notes`, the column guest orders already use, so the kitchen ticket, Final Check, POS register and incoming-order views show it without further change. It never affects price, the catalogue fingerprint or the quote; a different note is a different request for idempotency. `pos_sale_lines`, receipts and finance documents are unchanged (kitchen instructions are not financial data).
 - The till cart has "Add dish note" per line; empty notes are not sent. Identical dishes with different notes stay separate lines.

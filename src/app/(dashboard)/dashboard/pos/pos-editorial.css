@@ -1173,6 +1173,219 @@
   }
 }
 
+/* Cashier register: compact, keyboard-accessible order data and operations. */
+.till-page.pos-editorial .pos-register-subtitle {
+  margin-top: 7px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.till-page.pos-editorial .pos-register-search {
+  background: color-mix(in srgb, var(--background, #fff) 94%, var(--till-ember) 6%);
+}
+.till-page.pos-editorial .pos-register-clear {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 7px;
+  color: inherit;
+}
+.till-page.pos-editorial .pos-register-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--till-ember);
+}
+.till-page.pos-editorial .pos-register-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--pos-line);
+  border-radius: 15px;
+}
+.till-page.pos-editorial .pos-register-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  text-align: left;
+}
+.till-page.pos-editorial .pos-register-table thead {
+  background: color-mix(in srgb, var(--till-ember) 7%, transparent);
+}
+.till-page.pos-editorial .pos-register-table th,
+.till-page.pos-editorial .pos-register-table td {
+  padding: 15px 13px;
+  border-bottom: 1px solid var(--pos-line);
+  vertical-align: middle;
+}
+.till-page.pos-editorial .pos-register-table thead th {
+  white-space: nowrap;
+  color: var(--till-ink);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+.till-page.pos-editorial .pos-register-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.till-page.pos-editorial .pos-register-table tbody tr:hover {
+  background: color-mix(in srgb, var(--till-ember) 5%, transparent);
+}
+.till-page.pos-editorial .pos-register-table tbody tr:focus-within {
+  background: color-mix(in srgb, var(--till-ember) 8%, transparent);
+}
+.till-page.pos-editorial .pos-register-table tbody small,
+.till-page.pos-editorial .pos-register-id small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.till-page.pos-editorial .pos-register-id strong {
+  color: var(--till-ember);
+  font-weight: 800;
+}
+.till-page.pos-editorial .pos-register-total {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.till-page.pos-editorial .pos-register-pill {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  padding: 5px 9px;
+  border: 1px solid var(--pos-line);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+.till-page.pos-editorial .pos-register-payment-paid,
+.till-page.pos-editorial .pos-register-service-served,
+.till-page.pos-editorial .pos-register-service-collected {
+  color: #20704b;
+  border-color: color-mix(in srgb, #20704b 40%, transparent);
+  background: color-mix(in srgb, #2f9c69 9%, transparent);
+}
+.till-page.pos-editorial .pos-register-service-cancelled,
+.till-page.pos-editorial .pos-register-service-rejected,
+.till-page.pos-editorial .pos-register-payment-voided {
+  color: var(--muted);
+}
+.till-page.pos-editorial .pos-register-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.till-page.pos-editorial .pos-register-action-heading {
+  text-align: right;
+}
+.till-page.pos-editorial .pos-register-actions .pos-register-icon {
+  display: inline-grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--pos-line);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+.till-page.pos-editorial .pos-register-actions .pos-register-icon:hover {
+  background: color-mix(in srgb, var(--till-ember) 13%, transparent);
+  border-color: var(--till-ember);
+  color: var(--till-ember);
+  transform: translateY(-1px);
+}
+.till-page.pos-editorial .pos-register-actions .pos-register-refund {
+  color: #b35333;
+}
+:root[data-theme="dark"] .till-page.pos-editorial .pos-register-payment-paid,
+.dark .till-page.pos-editorial .pos-register-payment-paid,
+:root[data-theme="dark"] .till-page.pos-editorial .pos-register-service-served,
+.dark .till-page.pos-editorial .pos-register-service-served {
+  color: #80deb0;
+}
+@media (max-width: 720px) {
+  .till-page.pos-editorial .pos-register-scroll {
+    border: 0;
+    overflow: visible;
+  }
+  .till-page.pos-editorial .pos-register-table {
+    min-width: 0;
+    display: block;
+  }
+  .till-page.pos-editorial .pos-register-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .till-page.pos-editorial .pos-register-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .till-page.pos-editorial .pos-register-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    padding: 15px;
+    border: 1px solid var(--pos-line);
+    border-radius: 14px;
+  }
+  .till-page.pos-editorial .pos-register-table tbody tr > * {
+    display: block;
+    padding: 0;
+    min-width: 0;
+    border: 0;
+  }
+  .till-page.pos-editorial .pos-register-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.03em;
+  }
+  .till-page.pos-editorial .pos-register-table tbody td:last-child {
+    grid-column: 1 / -1;
+    padding-top: 10px;
+    border-top: 1px solid var(--pos-line);
+  }
+  .till-page.pos-editorial .pos-register-actions {
+    justify-content: flex-start;
+  }
+  .till-page.pos-editorial .pos-register-actions .pos-register-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+  .till-page.pos-editorial .pos-order-register {
+    gap: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .till-page.pos-editorial .pos-register-actions .pos-register-icon {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* Per-dish kitchen note in the cart line */
 .till-page.pos-editorial .pos-linenote {
   display: block;

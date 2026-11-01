@@ -311,6 +311,42 @@ export type PosRegisterRow = {
 };
 export type PosRegisterPage = { items: PosRegisterRow[]; total: number; nextCursor: string | null };
 
+/** A private, order-scoped snapshot used only to prefill a new cashier draft. */
+const posRepeatId = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
+export const posRepeatSelectionSchema = z
+  .object({
+    orderId: posRepeatId,
+    items: z
+      .array(
+        z.object({
+          dishId: posRepeatId,
+          variantId: posRepeatId.nullable(),
+          quantity: z.number().int().min(1).max(99),
+          selectedOptions: z
+            .array(z.object({ groupId: posRepeatId, optionId: posRepeatId }))
+            .max(100),
+        })
+      )
+      .min(1)
+      .max(50),
+  })
+  .strict();
+export type PosRepeatSelection = z.infer<typeof posRepeatSelectionSchema>;
+
+export async function posRepeatSelection(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  rawOrderId: unknown
+): Promise<PosRepeatSelection> {
+  const orderId = posRepeatId.parse(rawOrderId);
+  await posContext(actor, organizationId, outletId);
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_repeat_selection(${outletId},${orderId}) as data`)
+  )) as { rows: { data: unknown }[] };
+  return posRepeatSelectionSchema.parse(result.rows[0]?.data);
+}
+
 export async function posOrderRegister(
   actor: Actor,
   organizationId: string,

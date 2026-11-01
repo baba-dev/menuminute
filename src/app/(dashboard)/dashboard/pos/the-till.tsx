@@ -17,7 +17,13 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import type { PosWorkspace, PosSaleResult } from "@/modules/pos/service";
+import type {
+  PosWorkspace,
+  PosSaleResult,
+  PosRegisterRow,
+  PosRepeatSelection,
+} from "@/modules/pos/service";
+import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
 import { PosIncomingOrders } from "./pos-incoming-orders";
@@ -194,6 +200,54 @@ export function TheTill({
     const fresh = await json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" }));
     setWorkspace(fresh);
     if (!fresh.menus.some((m) => m.id === selectedMenu)) setSelectedMenu(fresh.menus[0]?.id ?? "");
+  }
+  async function repeatOrder(order: PosRegisterRow) {
+    if (busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const [snapshot, fresh] = await Promise.all([
+        json<PosRepeatSelection>(
+          await fetch(endpoint + "?view=repeat&orderId=" + encodeURIComponent(order.orderId), {
+            cache: "no-store",
+          })
+        ),
+        json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" })),
+      ]);
+      const prepared = prepareRepeatCart(snapshot, fresh.menus, selectedMenu);
+      if (cart.length && !window.confirm("Replace the current ticket with this repeated order?")) {
+        return;
+      }
+      setWorkspace(fresh);
+      setSelectedMenu(prepared.menuId);
+      setCart(prepared.items.map((item) => ({ ...item, id: crypto.randomUUID() })));
+      setCategory("");
+      setSearch("");
+      setDish(null);
+      setEditingLineId(null);
+      setCustomer("");
+      setNote("");
+      setTableId("");
+      setMarkAsPaid(false);
+      setSuccess(null);
+      setPrintFallback(null);
+      commandRef.current = null;
+      setMessage(
+        "Order #" +
+          order.orderNumber +
+          " copied to a NEW draft. Current menu prices apply. Review the ticket before placing it; no new order or payment has been recorded."
+      );
+      if (window.innerWidth < 760) setMobileTicketOpen(true);
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector(".till-cart")
+          ?.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to repeat this order.");
+    } finally {
+      setBusy(false);
+    }
   }
   async function configure(event: FormEvent) {
     event.preventDefault();
@@ -1082,7 +1136,12 @@ export function TheTill({
           </div>
         )}
         {workspace.context.enabled && (
-          <PosOrderRegister organizationId={organizationId} outletId={outletId} />
+          <PosOrderRegister
+            organizationId={organizationId}
+            outletId={outletId}
+            onRepeat={repeatOrder}
+            refreshVersion={workspace.kpis.totalOrders}
+          />
         )}
       </div>
     </main>

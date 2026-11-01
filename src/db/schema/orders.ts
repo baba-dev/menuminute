@@ -145,7 +145,7 @@ export const orderItems = pgTable(
 
     quantity: integer("quantity").notNull().default(1),
     notes: text("notes"),
-    // Merchant-declared allergen/dietary snapshot taken at order time (migration 0070).
+    // Merchant-declared allergen/dietary snapshot taken at order time (migration 0071).
     dishSafety: jsonb("dish_safety").$type<Record<string, unknown> | null>(),
   },
   (t) => [

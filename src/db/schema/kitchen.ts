@@ -97,7 +97,7 @@ export const kitchenWork = pgTable(
       .notNull()
       .default("queued"),
     version: integer("version").notNull().default(0),
-    /** Set when the completed dish is released at Final Check (migration 0069). */
+    /** Set when the completed dish is released at Final Check (migration 0070). */
     releasedAt: stamp("released_at"),
     releasedBy: text("released_by"),
     createdAt: stamp("created_at").notNull().defaultNow(),

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -84,8 +84,10 @@ export function FinancialHub({
   initialFinance,
   initialLedger,
   initialShifts,
+  initialSaleId = null,
 }: {
   mode: Mode;
+  initialSaleId?: string | null;
   outletId: string;
   organizationId: string;
   workspace: PosWorkspace;
@@ -141,6 +143,7 @@ export function FinancialHub({
   const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
   const saleSelectionSequence = useRef(0);
+  const initialSaleProcessed = useRef(false);
   const [reconciliation, setReconciliation] = useState<{
     scannedCount: number;
     hasMore: boolean;
@@ -157,19 +160,18 @@ export function FinancialHub({
   const dishes = workspace.menus
     .flatMap((m) => m.categories.flatMap((c) => c.items))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i);
-  async function get<T>(
-    view: string,
-    id?: string,
-    cursor?: { at: string; id: string }
-  ): Promise<T> {
-    const qs = new URLSearchParams({ view });
-    if (id) qs.set("id", id);
-    if (cursor) {
-      qs.set("cursorAt", cursor.at);
-      qs.set("cursorId", cursor.id);
-    }
-    return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
-  }
+  const get = useCallback(
+    async <T,>(view: string, id?: string, cursor?: { at: string; id: string }): Promise<T> => {
+      const qs = new URLSearchParams({ view });
+      if (id) qs.set("id", id);
+      if (cursor) {
+        qs.set("cursorAt", cursor.at);
+        qs.set("cursorId", cursor.id);
+      }
+      return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
+    },
+    [endpoint]
+  );
   async function refresh() {
     const [f, l, s] = await Promise.all([
       get<FinanceContext>("context"),
@@ -224,30 +226,48 @@ export function FinancialHub({
       setReconciliationBusy(false);
     }
   }
-  async function selectSale(id: string) {
-    const request = ++saleSelectionSequence.current;
-    // A finance correction requires fresh, sale-specific user acknowledgement.
-    setStaffCorrectionReason("");
-    setStaffCorrectionConfirmed(false);
-    setSelected(null);
-    setSettlement(null);
-    setFiscalReadiness(null);
-    setPreview(null);
-    try {
-      const [detail, projection, fiscal] = await Promise.all([
-        get<Detail>("sale", id),
-        get<SettlementDetail>("settlement", id),
-        finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
-      ]);
-      if (request !== saleSelectionSequence.current) return;
-      setSelected(detail);
-      setSettlement(projection);
-      setFiscalReadiness(fiscal);
-    } catch (error) {
-      if (request === saleSelectionSequence.current)
-        setNotice(error instanceof Error ? error.message : "Unable to read sale details");
-    }
-  }
+  const selectSale = useCallback(
+    async (id: string) => {
+      const request = ++saleSelectionSequence.current;
+      // A finance correction requires fresh, sale-specific user acknowledgement.
+      setStaffCorrectionReason("");
+      setStaffCorrectionConfirmed(false);
+      setSelected(null);
+      setSettlement(null);
+      setFiscalReadiness(null);
+      setPreview(null);
+      try {
+        const [detail, projection, fiscal] = await Promise.all([
+          get<Detail>("sale", id),
+          get<SettlementDetail>("settlement", id),
+          finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
+        ]);
+        if (request !== saleSelectionSequence.current) return;
+        setSelected(detail);
+        setSettlement(projection);
+        setFiscalReadiness(fiscal);
+      } catch (error) {
+        if (request === saleSelectionSequence.current)
+          setNotice(error instanceof Error ? error.message : "Unable to read sale details");
+      }
+    },
+    [get, finance.canIssue]
+  );
+  // A POS refund shortcut selects the exact sale without bypassing any ledger permissions.
+  useEffect(() => {
+    if (!initialSaleId || initialSaleProcessed.current) return;
+    initialSaleProcessed.current = true;
+    void selectSale(initialSaleId);
+  }, [initialSaleId, selectSale]);
+
+  useEffect(() => {
+    if (!initialSaleId || selected?.saleId !== initialSaleId) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.querySelector(".finance-detail")?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [initialSaleId, selected]);
+
   async function command(action: string, data: Record<string, unknown>) {
     if (busy) return null;
     setBusy(true);
