@@ -36,6 +36,8 @@ export type TrackingData = {
     updatedAt: string;
     point: string | null;
   };
+  /** Present while some, but not all, dishes have been released by the kitchen. */
+  partReady?: { released: number; total: number } | null;
   outlet: {
     name: string;
     currency: string;
@@ -366,7 +368,11 @@ export function OrderTracker({
 
           <ChefStickyNote
             author="Order update"
-            text={getGuestOrderNote(order.status, order.fulfillmentMode, order.point)}
+            text={
+              data?.partReady
+                ? `Part of your order is ready (${data.partReady.released} of ${data.partReady.total} dishes). The rest is still being prepared.`
+                : getGuestOrderNote(order.status, order.fulfillmentMode, order.point)
+            }
           />
 
           {/* Essential Invariant Message */}

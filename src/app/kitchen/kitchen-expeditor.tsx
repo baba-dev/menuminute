@@ -1,9 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCheck, RefreshCw, ChefHat, AlertTriangle, ClipboardCheck } from "lucide-react";
+import { CheckCheck, RefreshCw, ChefHat, AlertTriangle, ClipboardCheck, Check } from "lucide-react";
 import type {
   KitchenExpoSnapshot,
   KitchenExpoOrder,
+  KitchenExpoItem,
   KitchenWorkView,
   KitchenSnapshot,
 } from "@/modules/kitchen/service";
@@ -15,11 +16,19 @@ type Props = {
   work: KitchenWorkView[];
   stations: KitchenSnapshot["stations"];
 };
-export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Props) {
+const stateLabel = (item: KitchenExpoItem) =>
+  item.releasedAt
+    ? "Released"
+    : item.status === "complete"
+      ? "Ready to release"
+      : item.status === "preparing"
+        ? "Cooking"
+        : "Waiting to start";
+export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   const [data, setData] = useState<KitchenExpoSnapshot>({ cursor: 0, overflow: false, orders: [] });
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
-  // Second step of the review gate: the order id the user is about to confirm.
+  // Second step of the review gate for releasing several dishes at once.
   const [confirming, setConfirming] = useState("");
   const [now, setNow] = useState<number | null>(null);
   const active = useRef(true);
@@ -29,10 +38,14 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
     const response = await fetch(base + "/expo", { cache: "no-store" });
     if (!response.ok) {
       if (!active.current || request !== sequence.current) return;
-      if (active.current && request === sequence.current)
-        setData({ cursor: 0, overflow: false, orders: [] });
+      // Only a revoked session clears the list; a transient failure keeps the last
+      // good data on screen (with a warning) instead of blanking the pass.
+      const revoked = response.status === 401 || response.status === 403;
+      if (revoked) setData({ cursor: 0, overflow: false, orders: [] });
       throw new Error(
-        "Final Check access or connection has changed. Refresh and verify permissions."
+        revoked
+          ? "Final Check access or connection has changed. Refresh and verify permissions."
+          : "Final Check could not refresh. Showing the last known orders; verify before releasing."
       );
     }
     const latest = (await response.json()) as KitchenExpoSnapshot;
@@ -78,35 +91,30 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
     const timer = setTimeout(() => setConfirming(""), 8000);
     return () => clearTimeout(timer);
   }, [confirming]);
-  const needsCheck = data.orders.filter(
-    (order) => order.total > 0 && order.done === order.total
-  ).length;
-  async function release(order: KitchenExpoOrder) {
-    if (
-      pending ||
-      error ||
-      !enabled ||
-      !["preparing", "accepted"].includes(order.status) ||
-      order.total === 0 ||
-      order.done !== order.total
-    )
-      return;
-    const key = crypto.randomUUID();
+
+  async function post(path: string, body: unknown) {
+    const response = await fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const details = (await response
+        .json()
+        .catch(() => ({ message: "Release not confirmed" }))) as {
+        message?: string;
+      };
+      throw new Error(details.message ?? "Release not confirmed");
+    }
+  }
+  /** Run one or more authoritative server commands, then reconcile. */
+  async function run(label: string, commands: Array<{ path: string; body: unknown }>) {
+    if (pending || !enabled || commands.length === 0) return;
     setConfirming("");
-    setPending(order.id);
+    setPending(label);
     setError("");
     try {
-      const response = await fetch(base + "/release", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id, expectedVersion: order.version, key }),
-      });
-      if (!response.ok) {
-        const details = (await response
-          .json()
-          .catch(() => ({ message: "Release not confirmed" }))) as { message?: string };
-        throw new Error(details.message ?? "Release not confirmed");
-      }
+      for (const command of commands) await post(command.path, command.body);
       await sync(); // A successful server response is authoritative; the live board reconciles separately.
     } catch (e) {
       setError(
@@ -118,6 +126,15 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
       setPending("");
     }
   }
+  const itemCommand = (item: KitchenExpoItem) => ({
+    path: "/release-item",
+    body: { workId: item.workId, expectedVersion: item.version, key: crypto.randomUUID() },
+  });
+  const readyOf = (order: KitchenExpoOrder) =>
+    order.items.filter((item) => item.status === "complete" && !item.releasedAt);
+  const needsCheck = data.orders.filter((order) => readyOf(order).length > 0).length;
+  const primaryButton =
+    "mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45";
   return (
     <section
       id="expeditor"
@@ -133,15 +150,16 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
             <ChefHat aria-hidden="true" size={23} /> Final Check &amp; Order Release
           </h3>
           <p className="text-sm text-stone-600 dark:text-stone-300">
-            Check every dish against the order — items, spice level, notes and packing — then
-            release it for pickup or serving.
+            Check each dish against the order — items, spice level, notes and packing — then release
+            it. Dishes can leave one by one as they finish; the order is Ready when its last dish
+            goes.
           </p>
           {needsCheck > 0 && (
             <p className="kk-check-banner" role="status">
               <ClipboardCheck size={16} aria-hidden="true" />
               {needsCheck === 1
-                ? "1 order needs a final check before release"
-                : `${needsCheck} orders need a final check before release`}
+                ? "1 order has dishes waiting for a final check"
+                : `${needsCheck} orders have dishes waiting for a final check`}
             </p>
           )}
         </div>
@@ -173,122 +191,158 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
         </p>
       )}
       {error && (
-        <p
+        <div
           role="alert"
-          className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-900 dark:bg-red-950 dark:text-red-200"
+          className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-900 dark:bg-red-950 dark:text-red-200"
         >
           {error}
-        </p>
+          <button type="button" onClick={() => setError("")} className="min-h-10 px-2 underline">
+            Dismiss
+          </button>
+        </div>
       )}
       <div className="kk-expeditor-orders mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {data.orders.map((order) => (
-          <article
-            key={order.id}
-            className={
-              "kk-expo-card p-4" +
-              (order.total > 0 && order.done === order.total ? " kk-expo-card-check" : "") +
-              (now !== null &&
-              order.total > 0 &&
-              order.done === order.total &&
-              now - new Date(order.createdAt).getTime() >= KITCHEN_WAIT_ALERT_MINUTES * 60000
-                ? " kk-expo-card-late"
-                : "")
-            }
-          >
-            <div className="flex justify-between gap-2">
-              <h4 className="text-lg font-black">#{order.orderNumber}</h4>
-              <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">
-                {order.status}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
-              {order.fulfillmentMode === "pickup"
-                ? "Pickup"
-                : order.tableLabel
-                  ? "Table " + order.tableLabel
-                  : "Dine in"}{" "}
-              · {new Date(order.createdAt).toLocaleTimeString()}
-            </p>
-            {order.total > 0 && order.done === order.total && (
-              <p className="kk-check-pill">
-                <ClipboardCheck size={14} aria-hidden="true" /> Check before release
-              </p>
-            )}
-            <p className="mt-3 text-sm font-semibold tabular-nums">
-              {order.done} / {order.total} station tasks complete
-            </p>
-            <ul
-              className="kk-expo-station-progress"
-              aria-label={`Order ${order.orderNumber} station progress`}
-            >
-              {stations
-                .filter((station) =>
-                  work.some((item) => item.orderId === order.id && item.stationId === station.id)
-                )
-                .map((station) => {
-                  const tasks = work.filter(
-                    (item) => item.orderId === order.id && item.stationId === station.id
-                  );
-                  const done = tasks.filter((item) => item.status === "complete").length;
-                  return (
-                    <li key={station.id}>
-                      <span>{station.name}</span>
-                      <strong>
-                        {done === tasks.length
-                          ? "Complete"
-                          : tasks.some((item) => item.status === "preparing")
-                            ? "Cooking"
-                            : "Waiting"}
-                      </strong>
-                      <small>
-                        {done}/{tasks.length}
-                      </small>
-                    </li>
-                  );
-                })}
-            </ul>
-            <div
-              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800"
-              role="progressbar"
-              aria-valuenow={order.done}
-              aria-valuemin={0}
-              aria-valuemax={order.total}
-              aria-label={`Order ${order.orderNumber} completed station tasks`}
-            >
-              <div
-                className="h-full rounded-full bg-orange-500"
-                style={{ width: `${order.total ? (order.done / order.total) * 100 : 0}%` }}
-              />
-            </div>
-            <button
-              type="button"
-              disabled={
-                !enabled ||
-                !!error ||
-                !!pending ||
-                !["preparing", "accepted"].includes(order.status) ||
-                order.total === 0 ||
-                order.done !== order.total
+        {data.orders.map((order) => {
+          const ready = readyOf(order);
+          const allDone = order.total > 0 && order.done === order.total;
+          const late =
+            now !== null &&
+            ready.length > 0 &&
+            now - new Date(order.createdAt).getTime() >= KITCHEN_WAIT_ALERT_MINUTES * 60000;
+          return (
+            <article
+              key={order.id}
+              className={
+                "kk-expo-card p-4" +
+                (ready.length > 0 ? " kk-expo-card-check" : "") +
+                (late ? " kk-expo-card-late" : "")
               }
-              onClick={() => {
-                if (confirming === order.id) void release(order);
-                else setConfirming(order.id);
-              }}
-              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
-              <CheckCheck size={18} />{" "}
-              {pending === order.id
-                ? "Confirming…"
-                : order.done === order.total && order.total > 0
-                  ? confirming === order.id
-                    ? "Checked — release now"
-                    : "Final check, then release"
-                  : order.status === "accepted"
-                    ? "Waiting for first station"
-                    : "Waiting for remaining stations"}
-            </button>
-          </article>
-        ))}
+              <div className="flex justify-between gap-2">
+                <h4 className="text-lg font-black">#{order.orderNumber}</h4>
+                <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">
+                  {order.status}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
+                {order.fulfillmentMode === "pickup"
+                  ? "Pickup"
+                  : order.tableLabel
+                    ? "Table " + order.tableLabel
+                    : "Dine in"}{" "}
+                · {new Date(order.createdAt).toLocaleTimeString()}
+              </p>
+              {ready.length > 0 && (
+                <p className="kk-check-pill">
+                  <ClipboardCheck size={14} aria-hidden="true" /> Check before release
+                </p>
+              )}
+              {order.orderNotes && (
+                <p className="kk-expo-order-note">Order note: {order.orderNotes}</p>
+              )}
+              <p className="mt-3 text-sm font-semibold tabular-nums">
+                {order.done} / {order.total} dishes ready · {order.released} released
+              </p>
+              <ul className="kk-expo-items" aria-label={`Order ${order.orderNumber} dishes`}>
+                {order.items.map((item) => (
+                  <li
+                    key={item.workId}
+                    className={
+                      "kk-expo-item" +
+                      (item.releasedAt
+                        ? " is-released"
+                        : item.status === "complete"
+                          ? " is-ready"
+                          : "")
+                    }
+                  >
+                    <div className="kk-expo-item-main">
+                      <strong>
+                        {item.quantity} × {item.dishName}
+                      </strong>
+                      {item.variantName && <span className="kk-expo-chip">{item.variantName}</span>}
+                      {item.selectedOptions.map((o, i) => (
+                        <span className="kk-expo-chip" key={i}>
+                          {o.groupName}: {o.optionName}
+                        </span>
+                      ))}
+                      {item.notes && <p className="kk-expo-item-note">Note: {item.notes}</p>}
+                      <small>
+                        {item.stationName} · {stateLabel(item)}
+                      </small>
+                    </div>
+                    {item.status === "complete" && !item.releasedAt && (
+                      <button
+                        type="button"
+                        disabled={!enabled || !!pending}
+                        onClick={() => void run(item.workId, [itemCommand(item)])}
+                        aria-label={`Release ${item.dishName} for order ${order.orderNumber}`}
+                        className="kk-expo-release"
+                      >
+                        {pending === item.workId ? "Releasing…" : "Release"}
+                      </button>
+                    )}
+                    {item.releasedAt && <Check size={18} aria-label="Released" />}
+                  </li>
+                ))}
+              </ul>
+              <div
+                className="mt-2 h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800"
+                role="progressbar"
+                aria-valuenow={order.released}
+                aria-valuemin={0}
+                aria-valuemax={order.total}
+                aria-label={`Order ${order.orderNumber} dishes released`}
+              >
+                <div
+                  className="h-full rounded-full bg-orange-500"
+                  style={{ width: `${order.total ? (order.released / order.total) * 100 : 0}%` }}
+                />
+              </div>
+              {ready.length > 0 ? (
+                <button
+                  type="button"
+                  disabled={!enabled || !!pending}
+                  onClick={() => {
+                    if (confirming === order.id)
+                      void run(
+                        order.id,
+                        allDone
+                          ? [
+                              {
+                                path: "/release",
+                                body: {
+                                  orderId: order.id,
+                                  expectedVersion: order.version,
+                                  key: crypto.randomUUID(),
+                                },
+                              },
+                            ]
+                          : ready.map(itemCommand)
+                      );
+                    else setConfirming(order.id);
+                  }}
+                  className={primaryButton}
+                >
+                  <CheckCheck size={18} />{" "}
+                  {pending === order.id
+                    ? "Confirming…"
+                    : confirming === order.id
+                      ? `Checked — release ${ready.length} now`
+                      : allDone
+                        ? "Final check, then release all"
+                        : `Final check, then release ${ready.length} ready`}
+                </button>
+              ) : (
+                <p className="kk-expo-waiting">
+                  {order.status === "accepted"
+                    ? "Waiting for the first dish to finish"
+                    : "Nothing new to release — dishes appear here as they finish"}
+                </p>
+              )}
+            </article>
+          );
+        })}
         {!data.orders.length && (
           <p className="col-span-full rounded-xl border border-dashed border-stone-300 p-7 text-center text-sm text-stone-600 dark:border-stone-700 dark:text-stone-300">
             No kitchen orders awaiting final check or release.

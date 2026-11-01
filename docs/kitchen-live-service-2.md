@@ -87,3 +87,13 @@ older docs keep the `expeditor`/`expo` identifiers; renaming them is out of scop
 `/kitchen` page order is: hero with the "Every station in sight" panel, pulse KPIs,
 preparation rail, then Final Check & Order Release. The Fast-Pass 86 panel was removed
 from `/kitchen`; dish availability stays in the dashboard command palette.
+
+## Per-item release (migration 0069)
+
+Completed station items are released individually at Final Check:
+
+- `kitchen_work.released_at/released_by` (nullable) mark a released dish; a CHECK allows it only on `complete` work.
+- `app_private.kitchen_work_release(outlet, work, expected_version, key)` locks the order then the work row, is idempotent through `kitchen_command_receipts` (`work.release`), requires `orders.complete` and an owner/admin/`outlet.manage` actor, and moves the order to `ready` in the same transaction only when its last non-cancelled item is released. The order version is unchanged by intermediate releases.
+- `kitchen_expo_release` ("release all") still requires every non-cancelled item to be complete; cancelled work no longer blocks or inflates counts. It marks remaining items released.
+- Guests and the Orders desk see "Part ready" (`released of total`) via `guest_order_release_progress` (re-validates the tracking capability, returns counts only) and `kitchen_release_progress`. The order `status` enum is unchanged (still `preparing`).
+- Rollback: the application can be rolled back without data repair; new columns are nullable and older code ignores them. SQL is append-only and is not rolled back.

@@ -57,7 +57,7 @@ async function verify(tx: Transaction, organizationId: string, outletId: string)
 async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.$inferSelect)[]) {
   const ids = rows.map((row) => row.id);
   const tableIds = [...new Set(rows.flatMap((row) => (row.tableId ? [row.tableId] : [])))];
-  const [items, tables, kitchen, allowed] = await Promise.all([
+  const [items, tables, progressRes, kitchen, allowed] = await Promise.all([
     ids.length
       ? tx
           .select()
@@ -76,6 +76,9 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
             and(eq(restaurantTables.restaurantId, outletId), inArray(restaurantTables.id, tableIds))
           )
       : Promise.resolve([]),
+    tx.execute<{ data: Record<string, { released: number; total: number }> }>(
+      sql`select app_private.kitchen_release_progress(${outletId}) as data`
+    ),
     ids.length
       ? tx.execute<{ data: string[] }>(
           sql`select app_private.kitchen_managed_orders_for_rail(${outletId}, ${JSON.stringify(ids)}::jsonb) as data`
@@ -105,6 +108,7 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
     tables.map((table) => [table.id, table.label || "Table " + table.number])
   );
   const managed = new Set(kitchen.rows[0]?.data ?? []);
+  const partReady = progressRes.rows[0]?.data ?? {};
   const p = allowed.rows[0];
   return rows.map((row) => ({
     id: row.id,
@@ -129,6 +133,7 @@ async function decorate(tx: Transaction, outletId: string, rows: (typeof orders.
     updatedAt: row.updatedAt,
     expiresAt: row.expiresAt,
     kitchenManaged: managed.has(row.id),
+    partReady: partReady[row.id] ?? null,
     canAccept: p?.accept === true,
     canPrepare: p?.prepare === true,
     canComplete: p?.complete === true,

@@ -235,7 +235,7 @@ export const GUIDES: Guide[] = [
     inDemo: true,
     whatItDoes: [
       "Kitchen Pro splits an accepted order into station tickets (for example Tandoor & Grill, Wok & Fry, Curry & Rice and Cold & Sweet).",
-      "Cooks move their station's items through queued, preparing and complete. Final Check & Order Release confirms and releases the finished order so the whole ticket leaves together.",
+      "Cooks move their station's items through queued, preparing and complete. Final Check & Order Release confirms and releases each finished dish, one by one or together; the order is Ready with its last dish.",
       "Updates stream to every device, and staff only see the stations and outlets they are assigned to.",
     ],
     steps: [

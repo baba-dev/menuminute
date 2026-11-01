@@ -172,7 +172,12 @@ export function Ticket({
         <strong>{formatPrice(order.totalMinor, order.currency)}</strong>
       </div>
       {order.kitchenManaged && (
-        <p className="sc-managed">Kitchen Pro managed · Ready requires Final Check & release</p>
+        <p className="sc-managed">
+          Kitchen Pro managed · Ready requires Final Check &amp; release
+          {order.partReady
+            ? ` · Part ready: ${order.partReady.released} of ${order.partReady.total} dishes released`
+            : ""}
+        </p>
       )}
       <div className="sc-ticket-actions">
         {action && (

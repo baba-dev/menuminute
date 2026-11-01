@@ -442,7 +442,7 @@ export const ownerArticles: HelpArticle[] = [
       "Select your kitchen station (e.g., Grill, Fryer, Salad & Cold, Bar, or All).",
       "Watch new orders arrive with an audible chime and clean ticket cards.",
       "Check item modifiers, special guest notes, and real-time elapsed prep timers.",
-      "Start preparation for your station, then mark its tasks complete. Final Check & Order Release releases the full order when all stations finish.",
+      "Start preparation for your station, then mark its tasks complete. Final Check & Order Release lets you release each dish as it finishes; the order is Ready with its last dish.",
     ],
     visualMockup: {
       type: "kds-ticket",
@@ -474,7 +474,7 @@ export const ownerArticles: HelpArticle[] = [
           "Green (< 10 minutes): Fresh ticket, normal prep window.",
           "Amber (10–20 minutes): Approaching target prep threshold.",
           "Red (> 20 minutes): Priority order needing immediate line attention.",
-          "Each station marks its own work complete. Once all assigned stations finish, an authorized person checks the whole order (Final Check) and releases it as Ready.",
+          "Each station marks its own work complete. As each dish finishes, an authorized person checks it (Final Check) and releases it, one dish at a time or together. The order becomes Ready when its last dish is released, and guests see “Part ready” until then.",
         ],
       },
     ],

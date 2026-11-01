@@ -477,6 +477,13 @@
       "when": 1794315600022,
       "tag": "0068_dining_floor_and_reservations",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794402000023,
+      "tag": "0069_kitchen_item_release",
+      "breakpoints": true
     }
   ]
 }
