@@ -764,12 +764,19 @@
 .dining-modal .customizer-body {
   overscroll-behavior: contain;
 }
-.dining-detail-hint {
+.dining-modal .dining-detail-hint {
   font-size: 0.85rem;
+  /* The dialog may be portaled outside .dining-canvas. Explicit fallback
+     colors retain AA contrast regardless of inherited theme variables. */
   color: var(--dc-ink, #302017);
-  border-left: 3px solid var(--dc-ember);
+  border-left: 3px solid var(--dc-ember, #a93608);
   padding: 0.5rem 0.75rem;
-  background: var(--dc-soft);
+  background: var(--dc-soft, #f9eddb);
+}
+:root[data-theme="dark"] .dining-modal .dining-detail-hint {
+  color: var(--dc-ink, #fff2df);
+  background: var(--dc-soft, #372920);
+  border-left-color: var(--dc-ember, #ffc268);
 }
 .dining-modal .option-card {
   background: var(--dc-paper);

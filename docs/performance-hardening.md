@@ -23,8 +23,9 @@ synthetic browser scenarios and test database fixtures.
 ## Phase-by-phase acceptance
 
 - A: reproducible safe baseline available, no production setup changed.
-- B: dragging/repositioning a table does not update unchanged physical table
-  metadata; all create/archive/rename/capacity paths retain validation and revisions.
+- B: the original floor autosave path was replaced by the production Dining
+  Floor redesign merged in PR #265. Keep the new chair/section state and
+  occupancy behavior unchanged; do not reintroduce the legacy floor service.
 - C: dashboard account/admin and outlet lookups overlap; same navigation and QR
   preview behavior, including deny/error fallbacks.
 - D: hidden/inactive clients avoid unnecessary refresh traffic; reconnect and
@@ -41,8 +42,9 @@ floor autosave/concurrency/create/archive, published QR, menu browsing and check
 Compare timings from the same environment. If any process regresses, revert the
 single phase commit instead of disabling the operational workflow.
 
-Do not merge this performance branch until the concurrent Dining Floor redesign
-PR has been reconciled and its integration tests are green.
+Dining Floor PR #265 has been merged. This branch integrates current main and
+drops the obsolete floor-autosave helper and tests; rerun the new floor
+integration/browser suite with the combined code before merging.
 
 ## Phase G — report index review and safe SQL improvements
 

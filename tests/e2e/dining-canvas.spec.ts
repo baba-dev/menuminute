@@ -9,9 +9,13 @@ test("Dining Canvas displays the public cover, illustrated navigation and browse
     "src",
     /\/assets\/public-menu\/covers\//
   );
-  await expect(
-    page.getByRole("navigation", { name: "Menu categories" }).locator("img").first()
-  ).toHaveAttribute("src", /\/assets\/public-menu\/categories\//);
+  const thumbnail = page.getByRole("navigation", { name: "Menu categories" }).locator("img").first();
+  // next/image rewrites src to its optimized endpoint. Verify the actual
+  // network image loaded rather than freezing an implementation-specific URL.
+  await expect(thumbnail).toHaveAttribute("sizes", "36px");
+  await expect
+    .poll(() => thumbnail.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0))
+    .toBe(true);
   await page.getByRole("button", { name: "View Paneer Tikka details" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Paneer Tikka" });
   await expect(dialog).toBeVisible();

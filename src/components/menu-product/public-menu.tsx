@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import "@/styles/dining-concierge.css";
 import { ConciergeEntry } from "./concierge-entry";
@@ -253,10 +253,16 @@ export function PublicMenu({
     }
   };
 
-  const docs = data.menus.map((m) => ({
-    ...m,
-    view: projectMenu(m.document, data.outlet.timezone, new Date(data.now), m.overrides),
-  }));
+  // Menu projection is expensive for large catalogs. Cart edits, modal state,
+  // search and scroll cues must not reproject every dish in every category.
+  const docs = useMemo(
+    () =>
+      data.menus.map((m) => ({
+        ...m,
+        view: projectMenu(m.document, data.outlet.timezone, new Date(data.now), m.overrides),
+      })),
+    [data]
+  );
 
   const normalizedSearch = search.trim().toLowerCase();
   const matches = (item: CustomizerDish, categoryName: string) => {
