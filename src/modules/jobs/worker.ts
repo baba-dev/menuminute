@@ -9,6 +9,10 @@ import {
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
+import {
+  MEDIA_RECONCILE_INTERVAL_MS,
+  OUTBOX_DISPATCH_INTERVAL_MS,
+} from "./schedule-policy";
 const queueData = z
   .object({
     eventId: z.uuid(),
@@ -354,16 +358,30 @@ export async function startWorker(
   const tick = () => {
     if (stopping || pending) return;
     pending = pool
-      .query("select app_private.reconcile_media_uploads()")
-      .then(() => pool.query("select app_private.expire_pending_orders()"))
+      .query("select app_private.expire_pending_orders()")
       .then(() => dispatchOnce(pool, producer, importProducer))
       .catch(() => console.error("Durable dispatcher unavailable"))
       .finally(() => {
         pending = undefined;
       });
   };
-  const timer = setInterval(tick, 1000);
+  const timer = setInterval(tick, OUTBOX_DISPATCH_INTERVAL_MS);
   tick();
+  // Upload reconciliation is a repair sweep, not a per-second domain event.
+  // Keep the first pass at startup, and perform the subsequent passes separately
+  // so a slow media cleanup cannot stall critical kitchen/order dispatch.
+  let mediaPending: Promise<unknown> | undefined;
+  const reconcileMedia = () => {
+    if (stopping || mediaPending) return;
+    mediaPending = pool
+      .query("select app_private.reconcile_media_uploads()")
+      .catch(() => console.error("Media reconciliation unavailable"))
+      .finally(() => {
+        mediaPending = undefined;
+      });
+  };
+  const mediaTimer = setInterval(reconcileMedia, MEDIA_RECONCILE_INTERVAL_MS);
+  reconcileMedia();
   // Fixed policy: prune kitchen event/receipt history on startup and once per
   // six hours. Never block the durable outbox dispatcher on maintenance work.
   let maintenance: Promise<unknown> | undefined;
@@ -410,10 +428,11 @@ export async function startWorker(
     async close() {
       stopping = true;
       clearInterval(timer);
+      clearInterval(mediaTimer);
       clearInterval(maintenanceTimer);
       if (demoAlign) clearTimeout(demoAlign);
       if (demoTimer) clearInterval(demoTimer);
-      await Promise.all([pending, maintenance, demoReset]);
+      await Promise.all([pending, mediaPending, maintenance, demoReset]);
       await Promise.all([worker.close(), importWorker.close()]);
       await Promise.all([producer.close(), importProducer.close()]);
       await pool.end();

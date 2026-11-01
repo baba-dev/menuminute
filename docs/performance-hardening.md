@@ -62,3 +62,18 @@ Before additional indexes, run `EXPLAIN (ANALYZE, BUFFERS)` with synthetic
 1k/10k/100k order histories and compare equal-workload timings. Inspect the
 existing partial business-date index, created_at index and
 `order_items_order_idx` join, and avoid additional write amplification.
+
+## Phase H — idle worker SQL and regression safeguards
+
+Order expiry and durable outbox dispatch retain their **1-second cadence**.
+The media-upload repair sweep now executes independently at startup and then
+every 5 seconds, with non-overlap protection and graceful-shutdown draining.
+The queue's two domain workers and separately reserved AI-import worker are
+unchanged. This reduces idle media-repair polling from approximately 3,600
+per hour to 720 per hour, without slowing order/notification dispatch.
+
+Regression checks cover the cadence constants, public-menu first-read fence,
+revocation tombstones and conditional-response ETags. All POS refunds, order
+expiration, kitchen queue delivery, and publication permissions must still
+pass their existing integration and browser tests. Benchmark the actual
+production-like PostgreSQL/Redis environment before promising throughput gains.

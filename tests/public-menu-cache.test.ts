@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import {
   getCachedPublicProduct,
+  primePublicMenuCacheToken,
   invalidateOutletMenuCache,
   invalidateOutletMenuCaches,
   revokeCachedQrToken,
@@ -84,4 +85,20 @@ it("invalidates all assigned outlets while retaining independent locale keys", a
   expect((await getCachedPublicProduct(ta, null)).data).toBeNull();
   expect((await getCachedPublicProduct(ta, "hi")).data).toBeNull();
   expect((await getCachedPublicProduct(tb, null)).data).toBeNull();
+});
+
+it("primes a generation fence after a committed QR without caching unverified content", async () => {
+  const token = crypto.randomUUID();
+  const outletId = crypto.randomUUID();
+  await primePublicMenuCacheToken(outletId, token);
+  const initial = await getCachedPublicProduct(token, null);
+  expect(initial.data).toBeNull();
+  expect(initial.fence).toEqual({ outletId, version: "0" });
+  await setCachedPublicProduct(token, null, menu(outletId), initial.fence);
+  expect((await getCachedPublicProduct(token, null)).data?.outlet.id).toBe(outletId);
+  await invalidateOutletMenuCache(outletId);
+  expect((await getCachedPublicProduct(token, null)).data).toBeNull();
+  await revokeCachedQrToken(outletId, token);
+  await primePublicMenuCacheToken(outletId, token);
+  expect((await getCachedPublicProduct(token, null)).fence).toBeNull();
 });
