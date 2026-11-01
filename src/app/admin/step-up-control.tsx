@@ -71,7 +71,7 @@ export function AdminStepUpControl() {
         >
           <form onSubmit={confirm} className="space-y-4 p-6">
             <h2 className="font-display text-xl font-semibold text-stone-900 dark:text-stone-100">
-              Confirm it's you
+              Confirm it&apos;s you
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400">
               Enter your account password and current authenticator code. This approval is valid for
