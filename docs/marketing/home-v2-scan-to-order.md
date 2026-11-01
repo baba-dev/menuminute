@@ -38,7 +38,8 @@ never set React state per move. Loops pause when the section is off-screen (`dat
   sell in their local currency; USD and INR restrict platform subscription billing only.
 - **No outbound effects.** "Send to kitchen" is local component state. Nothing calls an API, a paid
   provider or order submission.
-- **Copy** says "preview" and "in development"; it makes no availability promise. Links are
+- **Copy** says this is a sample preview where no real order is placed; ordering itself is live, so it
+  is not described as "in development". Links are
   `/help/owner`, `/demo`, `/pricing`, and a test checks each exists.
 - **QR.** Generated server-side from `STICKER_DEMO_URL` with `qrcode` at render time, like `/`.
 

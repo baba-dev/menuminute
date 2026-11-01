@@ -87,6 +87,11 @@ describe("scan-to-order fixture", () => {
     expect(arrangeDishes("mains", "popular").every((d) => d.category === "mains")).toBe(true);
   });
 
+  it("does not call live ordering 'in development'", () => {
+    const text = CAPABILITY_CARDS.map((card) => `${card.title} ${card.body}`).join(" ");
+    expect(text).not.toMatch(/in development|coming soon|planned/i);
+  });
+
   it("has distinct currency samples", () => {
     expect(new Set(CURRENCY_SAMPLES.map((c) => c.code)).size).toBe(CURRENCY_SAMPLES.length);
   });

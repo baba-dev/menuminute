@@ -117,7 +117,7 @@ export const CAPABILITY_CARDS: readonly CapabilityCard[] = [
   },
   {
     title: "Requests you control",
-    body: "Ordering is in development. A guest's order is a request, and the restaurant accepts or declines it.",
+    body: "Guests send an order request from the menu, and the restaurant accepts or declines it.",
     href: "/demo",
     cta: "Try the live demo",
   },

@@ -147,7 +147,7 @@ export const isAutoplayDone = (tickets: readonly Ticket[]) =>
 
 export type TrackerStep = { id: string; label: string; state: "done" | "current" | "todo" };
 
-/** Guest-facing progress for the focus ticket (illustrative; a planned guest journey). */
+/** Guest-facing progress for the focus ticket (illustrative guest view). */
 export function trackerSteps(stage: Stage): { steps: TrackerStep[]; message: string } {
   const order = ["sent", "accepted", "preparing", "ready", "served"] as const;
   const labels = {
