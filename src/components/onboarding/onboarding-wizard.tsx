@@ -138,6 +138,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [quickStart, setQuickStart] = useState(initialQuick);
+  const quickLinkRequested = useRef(initialQuick);
   const [draft, setDraft] = useState<WizardDraft>(initialWizardDraft);
   const [ready, setReady] = useState(false);
   const [restoreFailed, setRestoreFailed] = useState(false);
@@ -201,7 +202,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
       const goal = data.draft?.onboardingGoal ?? "qr_menu";
       // An explicit Quick Start link takes precedence over an earlier full-wizard
       // preference from this browser session.
-      const shouldQuick = goal === "qr_menu" && (initialQuick || savedQuick === "true");
+      const shouldQuick = goal === "qr_menu" && (quickLinkRequested.current || savedQuick === "true");
       setQuickStart(shouldQuick);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
@@ -459,7 +460,13 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
             disabled={!ready || busy}
             onClick={() => {
               if (quickStart) {
+                quickLinkRequested.current = false;
                 setQuickStart(false);
+                try {
+                  window.sessionStorage.setItem(progressStorageKey.current + ".quick", "false");
+                } catch {
+                  // State still works without session storage.
+                }
                 // Switching back to the full wizard must stay full on reload.
                 if (window.location.search.includes("quick=1")) {
                   window.history.replaceState(window.history.state, "", "/onboarding");
