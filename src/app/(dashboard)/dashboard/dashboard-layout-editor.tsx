@@ -355,7 +355,7 @@ export function DashboardLayoutEditor({
               {announcement}
             </p>
           </section>,
-          panelTarget,
+          panelTarget
         )}
     </>
   );

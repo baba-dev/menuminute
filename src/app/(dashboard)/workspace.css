@@ -1170,7 +1170,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .mm-dashboard-hero-actions > .mm-dashboard-button {
+  .mm-dashboard .mm-dashboard-hero-actions > .mm-dashboard-button {
     min-width: 0;
     gap: 6px;
     padding: 10px 8px;
