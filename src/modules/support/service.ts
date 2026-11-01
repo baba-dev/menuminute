@@ -1,3 +1,4 @@
+import { trustedAuditIp } from "@/lib/trusted-audit-source";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { adminAuditLogs } from "@/db/schema";
@@ -243,7 +244,7 @@ async function audit(
   try {
     const { headers } = await import("next/headers");
     const h = await headers();
-    ip = h.get("x-forwarded-for") || h.get("x-real-ip") || "unknown";
+    ip = trustedAuditIp(h);
     agent = h.get("user-agent") || "unknown";
   } catch {
     /* outside a request (tests) */
@@ -307,6 +308,12 @@ export async function adminReplyTicket(actor: AdminActor, id: string, raw: unkno
 export async function adminArchiveTicket(actor: AdminActor, id: string, archived: boolean) {
   z.string().uuid().parse(id);
   return run(adminActor(actor), async (tx) => {
+    // Archiving and restoration change visibility: require one-use MFA proof
+    // within the same transaction so failed operations do not consume it.
+    const proof = await tx.execute<{ approved: boolean }>(
+      sql`select app_private.require_step_up() as approved`
+    );
+    if (!proof.rows[0]?.approved) throw new ForbiddenError("Confirm a privileged action first.");
     const r = await tx.execute<{ result: Record<string, unknown> }>(
       sql`select app_private.support_admin_archive(${id}::uuid,${archived}) as result`
     );
