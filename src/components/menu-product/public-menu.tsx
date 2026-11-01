@@ -59,6 +59,7 @@ export function PublicMenu({
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
+  const responseEtag = useRef<string | null>(null);
   const [search, setSearch] = useState("");
   const [diet, setDiet] = useState("all");
   const [status, setStatus] = useState("");
@@ -173,9 +174,12 @@ export function PublicMenu({
         const r = await fetch(`/api/public-menu/${encodeURIComponent(token)}${language}`, {
           cache: "no-store",
           signal: controller.signal,
+          headers: responseEtag.current ? { "if-none-match": responseEtag.current } : {},
         });
         if (stopped || controller.signal.aborted) return;
+        if (r.status === 304) return;
         if (!r.ok) {
+          responseEtag.current = null;
           if (r.status === 404 || r.status === 410) {
             setData((previous) => ({ ...previous, menus: [] }));
             setCartItems([]);
@@ -192,6 +196,7 @@ export function PublicMenu({
         }
         const next = (await r.json()) as PublicProduct;
         if (stopped || controller.signal.aborted) return;
+        responseEtag.current = r.headers.get("etag");
         setData(next);
         const currentDishes = next.menus.flatMap((menu) =>
           projectMenu(

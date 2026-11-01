@@ -18,6 +18,7 @@ import {
   invalidateOutletMenuCache,
   invalidateOutletMenuCaches,
   revokeCachedQrToken,
+  primePublicMenuCacheToken,
 } from "./cache";
 
 export { invalidateOutletMenuCache };
@@ -277,6 +278,11 @@ export async function qrCommand(actor: Actor, outletId: string, raw: unknown) {
     });
     if (mutation.oldToken) await revokeCachedQrToken(outletId, mutation.oldToken);
     else await invalidateOutletMenuCache(outletId);
+    // Association only, after the committed QR mutation and invalidation.
+    // A first public read now has a generation fence before loading menus.
+    if (input.action !== "revoke" && mutation.value.token) {
+      await primePublicMenuCacheToken(outletId, mutation.value.token);
+    }
     return mutation.value;
   } catch (e) {
     domainError(e);

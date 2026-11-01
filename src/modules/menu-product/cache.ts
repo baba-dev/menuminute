@@ -47,6 +47,24 @@ function logCacheFailure(operation: string, error: unknown) {
   logger.error("[public-menu-cache] operation failed", error, { operation });
 }
 
+/** Establish an outlet/generation fence after a committed QR creation.
+ * Never write a public payload: first authorized reader must load PostgreSQL
+ * after observing this fence. Redis failures remain safe cache misses.
+ */
+export async function primePublicMenuCacheToken(outletId: string, token: string): Promise<void> {
+  if (!outletId || !token) return;
+  try {
+    const redis = await redisClient("cache");
+    await redis.eval(rememberScript, {
+      keys: [tokenOutletKey(token), revokedTokenKey(token)],
+      arguments: [outletId, String(TOKEN_OUTLET_TTL_SECONDS)],
+    });
+  } catch (error) {
+    telemetry.recordCacheError();
+    logCacheFailure("prime", error);
+  }
+}
+
 export async function getCachedPublicProduct(
   token: string,
   locale: string | null
