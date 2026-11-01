@@ -199,8 +199,9 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
         // Session storage is optional; server-owned form data remains authoritative.
       }
       const goal = data.draft?.onboardingGoal ?? "qr_menu";
-      const shouldQuick =
-        goal === "qr_menu" && (savedQuick === null ? initialQuick : savedQuick === "true");
+      // An explicit Quick Start link takes precedence over an earlier full-wizard
+      // preference from this browser session.
+      const shouldQuick = goal === "qr_menu" && (initialQuick || savedQuick === "true");
       setQuickStart(shouldQuick);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
@@ -459,6 +460,10 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
             onClick={() => {
               if (quickStart) {
                 setQuickStart(false);
+                // Switching back to the full wizard must stay full on reload.
+                if (window.location.search.includes("quick=1")) {
+                  window.history.replaceState(window.history.state, "", "/onboarding");
+                }
               } else {
                 setDraft((previous) => quickStartDraft(previous));
                 draftRevision.current += 1;
