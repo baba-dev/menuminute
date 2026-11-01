@@ -35,6 +35,7 @@ import {
 import "./workspace.css";
 import "./workspace-delight.css";
 import { env } from "@/lib/config/env";
+import { EmberPopups } from "@/components/intelligence/ember-popups";
 import { EmberLauncher } from "@/components/intelligence/ember-launcher";
 
 export const metadata: Metadata = {
@@ -186,6 +187,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <WorkspaceBottomBar isSuperAdmin={isSuperAdmin} />
         <CommandPalette />
         <NotificationDrawer />
+        <EmberPopups />
       </div>
     </WorkspaceShellProvider>
   );

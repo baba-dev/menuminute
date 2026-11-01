@@ -14,6 +14,8 @@ export type ClientShellSnapshot = {
   pulse: Section<ClientPulse>;
   requests: Section<RequestSummary>;
   till: Section<TillSummary>;
+  /** Orders on the live rail whose payment is recorded as paid. Optional: older servers omit it. */
+  payments?: Section<{ paid: { id: string; orderNumber: number }[] }>;
 };
 
 export type ConnectionState = "live" | "reconnecting" | "offline";

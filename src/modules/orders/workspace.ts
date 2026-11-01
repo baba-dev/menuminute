@@ -160,6 +160,28 @@ export async function listServiceRail(actor: Actor, organizationId: string, outl
   });
 }
 
+/**
+ * Ids and numbers only of live orders whose recorded payment is "paid". Feeds the transient
+ * payment pop-up; it is not a payment ledger and says nothing about settlement.
+ */
+export async function listPaidRailOrders(actor: Actor, organizationId: string, outletId: string) {
+  return withOutlet(actor, outletId, "orders.read", async (tx) => {
+    await verify(tx, organizationId, outletId);
+    return tx
+      .select({ id: orders.id, orderNumber: orders.orderNumber })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.restaurantId, outletId),
+          inArray(orders.status, active),
+          eq(orders.paymentStatus, "paid")
+        )
+      )
+      .orderBy(asc(orders.createdAt), asc(orders.id))
+      .limit(400);
+  });
+}
+
 // Aggregate from all authorized rows, never from the capped rail or history response.
 export async function servicePulse(actor: Actor, organizationId: string, outletId: string) {
   return withOutlet(actor, outletId, "orders.read", async (tx) => {

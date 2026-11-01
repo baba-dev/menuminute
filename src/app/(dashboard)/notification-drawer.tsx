@@ -21,6 +21,8 @@ import { ageLabel, formatMinor, type AlertSeverity } from "@/modules/dashboard/n
 import { playKitchenBell } from "@/lib/sound-effects";
 import { useReturnFocus } from "@/lib/use-return-focus";
 import { useSoundPreference } from "@/lib/use-sound-preference";
+import { usePopupPreference } from "@/lib/use-popup-preference";
+import { POPUP_KINDS, POPUP_META } from "@/modules/dashboard/ember-popups";
 import { useWorkspaceShell } from "./workspace-shell";
 
 const severityMeta: Record<AlertSeverity, { label: string; Icon: typeof Info }> = {
@@ -58,6 +60,7 @@ export function NotificationDrawer() {
     refresh,
   } = useWorkspaceShell();
   const { preference, setEnabled, snooze, clearSnooze } = useSoundPreference();
+  const popups = usePopupPreference();
   const returnFocus = useReturnFocus();
   const snoozed =
     preference.enabled && preference.mutedUntil !== null && preference.mutedUntil > now;
@@ -212,6 +215,59 @@ export function NotificationDrawer() {
             \n{" "}
           </section>
           \n\n{" "}
+          <section className="mm-notify-section" aria-labelledby="mm-notify-popups">
+            <h3 id="mm-notify-popups" className="mm-notify-heading">
+              Ember pop-ups
+            </h3>
+            <div className="mm-notify-row">
+              <Bell size={18} aria-hidden="true" />
+              <div>
+                <label htmlFor="mm-popup-switch">
+                  <strong>Brief pop-ups for service events</strong>
+                </label>
+                <small>
+                  Hide on their own after a few seconds. Alerts above stay until resolved.
+                </small>
+              </div>
+              <Switch.Root
+                id="mm-popup-switch"
+                className="mm-switch"
+                checked={popups.preference.enabled}
+                onCheckedChange={popups.setEnabled}
+              >
+                <Switch.Thumb className="mm-switch-thumb" />
+              </Switch.Root>
+            </div>
+            {popups.preference.enabled &&
+              POPUP_KINDS.map((kind) => (
+                <div className="mm-notify-row" key={kind} data-popup-kind={kind}>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background:
+                        "var(--ember-popup-" + POPUP_META[kind].colour + ", currentColor)",
+                    }}
+                  />
+                  <div>
+                    <label htmlFor={"mm-popup-" + kind}>
+                      <strong>{POPUP_META[kind].label}</strong>
+                    </label>
+                    <small>{POPUP_META[kind].legend}</small>
+                  </div>
+                  <Switch.Root
+                    id={"mm-popup-" + kind}
+                    className="mm-switch"
+                    checked={popups.preference.kinds[kind]}
+                    onCheckedChange={(on) => popups.setKind(kind, on)}
+                  >
+                    <Switch.Thumb className="mm-switch-thumb" />
+                  </Switch.Root>
+                </div>
+              ))}
+          </section>
           <section className="mm-notify-section" aria-labelledby="mm-notify-sound">
             <h3 id="mm-notify-sound" className="mm-notify-heading">
               Sound

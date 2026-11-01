@@ -897,3 +897,172 @@
     opacity: 0;
   }
 }
+
+/* ---- Ember pop-ups: subtle, colour-coded by kind (colour + icon + label) ---- */
+.mm-ember-popups {
+  --ember-popup-orange: #c2570c;
+  --ember-popup-amber: #b45309;
+  --ember-popup-blue: #1d5fd1;
+  --ember-popup-green: #15803d;
+  position: fixed;
+  z-index: 60;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  width: min(340px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  .mm-ember-popups {
+    right: 16px;
+    left: 16px;
+    width: auto;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mm-ember-popups {
+    --ember-popup-orange: #fb923c;
+    --ember-popup-amber: #fbbf24;
+    --ember-popup-blue: #7aa7ff;
+    --ember-popup-green: #4ade80;
+  }
+}
+:root[data-theme="dark"] .mm-ember-popups {
+  --ember-popup-orange: #fb923c;
+  --ember-popup-amber: #fbbf24;
+  --ember-popup-blue: #7aa7ff;
+  --ember-popup-green: #4ade80;
+}
+.mm-ember-popup {
+  --accent: var(--ember-popup-orange);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 8px 12px 14px;
+  overflow: hidden;
+  pointer-events: auto;
+  color: var(--foreground, #1c1917);
+  background: var(--card, #fff);
+  border: 1px solid var(--border, rgba(120, 113, 108, 0.3));
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(28, 25, 23, 0.14);
+  animation: mm-ember-popup-in 160ms ease-out both;
+}
+.mm-ember-popup[data-kind="cooking"] {
+  --accent: var(--ember-popup-amber);
+}
+.mm-ember-popup[data-kind="delivery"] {
+  --accent: var(--ember-popup-blue);
+}
+.mm-ember-popup[data-kind="payment"] {
+  --accent: var(--ember-popup-green);
+}
+.mm-ember-popup[data-leaving="true"] {
+  animation: mm-ember-popup-out 140ms ease-in both;
+}
+.mm-ember-popup-chip {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 8px;
+}
+.mm-ember-popup-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+.mm-ember-popup-kind {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.mm-ember-popup-copy small {
+  opacity: 0.75;
+}
+.mm-ember-popup-link {
+  justify-self: start;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mm-ember-popup-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -4px 0 0;
+  color: inherit;
+  opacity: 0.65;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.mm-ember-popup-close:hover,
+.mm-ember-popup-close:focus-visible {
+  opacity: 1;
+}
+.mm-ember-popup-timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.55;
+  transform-origin: left;
+  animation: mm-ember-popup-timer linear both;
+}
+.mm-ember-popup[data-paused="true"] .mm-ember-popup-timer {
+  animation-play-state: paused;
+}
+@keyframes mm-ember-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes mm-ember-popup-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes mm-ember-popup-timer {
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-ember-popup {
+    animation: mm-ember-popup-fade 1ms both;
+  }
+  .mm-ember-popup[data-leaving="true"] {
+    animation: mm-ember-popup-out 1ms both;
+  }
+  .mm-ember-popup-timer {
+    animation: none;
+  }
+  @keyframes mm-ember-popup-fade {
+    from {
+      opacity: 0;
+    }
+  }
+}

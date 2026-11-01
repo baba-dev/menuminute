@@ -62,11 +62,24 @@ export function parseShellSnapshot(body: unknown, outletId: string): ClientShell
       : null
   );
   if (!pulse || !requests || !till) return null;
+  // Optional: an absent or malformed payments section only disables payment pop-ups.
+  const payments = section(body["payments"], (d) =>
+    Array.isArray(d["paid"]) &&
+    d["paid"].every((o) => isObject(o) && typeof o["id"] === "string" && num(o["orderNumber"]))
+      ? {
+          paid: (d["paid"] as Raw[]).map((o) => ({
+            id: o["id"] as string,
+            orderNumber: o["orderNumber"] as number,
+          })),
+        }
+      : null
+  );
   return {
     outletId,
     checkedAt: body["checkedAt"],
     pulse,
     requests,
     till,
+    ...(payments ? { payments } : {}),
   } as ClientShellSnapshot;
 }
