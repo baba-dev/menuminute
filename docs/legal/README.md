@@ -1,6 +1,6 @@
-# Terms of Service — release and legal review
+# Terms of Service — published web policy and legal follow-ups
 
-**Status:** Terms v2026-10-24 published by product-owner decision; Privacy Policy remains effective 20 October 2026. Account deletion remains a contact-based process pending full lifecycle automation.
+**Status (2 November 2026):** Product owner approved Terms v2026-11-02 and Privacy Policy dated 2 November 2026 as the operative, publicly indexable web policies. `/delete-account` publishes the current contact-based request path; it does **not** claim automated erasure. This publication is not an independent counsel review, global regulatory certification, approval for paid/fiscal functions or native-store readiness.
 
 ## Scope and identity
 
@@ -8,15 +8,15 @@ Operator: **BabaBuilds**, an Indian **sole proprietorship**, based in **Pilani, 
 
 > © 2026 BabaBuilds. MenuMinute is a product operated by BabaBuilds, a sole proprietorship in Pilani, Rajasthan, India.
 
-This is an identity correction, **not** evidence that all the remaining mandatory disclosures have been verified. Confirm full service/correspondence address, any registration/tax particulars, required grievance officer contact, and any native app contact telephone before issuing final legal copy.
+BabaBuilds' published contact is verified here as an email and Pilani locality; a complete postal correspondence address, jurisdiction-specific grievance contact, relevant registration/tax particulars and native-app telephone details remain separately required before entering any market or enabling a capability that mandates them. Publication must not be represented as independent legal verification.
 
-## What has been drafted
+## Published web documents
 
 `src/content/terms.ts` is the source for 24 anchored sections. `src/app/terms/page.tsx` and `terms.css` reuse the privacy document's shell with original 'The Shared Table' SVG. The Terms route is public and indexable; new registration records the accepted version and timestamp. This repository does not claim external legal certification. Existing generic /terms placeholder is removed from `(information)/[slug]` to avoid duplicate routing/copy.
 
 The Terms allocate the software/restaurant/guest relationship, age and eligibility, business licenses, merchant content rights, published menu links, permission boundaries, order submission versus restaurant acceptance, restaurant safety and allergen statements, payment separation, restrictions, optional AI, data/retention, suspension, cancellation, liability, indemnity, governing law and future mobile-app distribution. A zero-fee QR menu does not create a subscription charge, and the document does not claim a live diner gateway, courier delivery or native binary.
 
-## Critical counsel and launch decisions
+## Independent legal and future product launch follow-ups
 
 | Issue                       | Proposed approach and required verification                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -30,7 +30,7 @@ The Terms allocate the software/restaurant/guest relationship, age and eligibili
 | Worldwide availability      | Country-specific consumer, food, tax, contract, privacy, refunds and digital commerce constraints require validation as markets and features launch. Contract's Rajasthan forum expressly preserves mandatory consumer and regulator jurisdictions.                                                                                                                                                                                                                                                |
 | 2026 India amendments       | Review the 2026 amendment to the Consumer Protection (E-Commerce) Rules, announced for commencement 1 January 2027, before relevant functions go live; classify MenuMinute's actual role and revise necessary disclosures/consumer workflows.                                                                                                                                                                                                                                                      |
 | App Store/Google Play       | These are web/PWA service terms, **not currently a custom Apple EULA**. Apple applies its standard EULA by default when no custom EULA is submitted; any chosen custom EULA must contain its minimum terms (Apple acknowledgments, permitted license, support, warranty, product/IP claims, legal compliance, company name/address and contact incl. telephone, third-party terms/beneficiary). Google Play payments rules need separate review for any native sale of digital SaaS subscriptions. |
-| Document release            | Obtain counsel approval of exact copy, acceptance and consumer-facing disclosures; replace draft date with accurate effective/updated date; remove review banner and noindex and footer Soon labels only after all gates pass. Snapshot approved version and maintain change history.                                                                                                                                                                                                              |
+| Document release            | Product-owner-approved web policies are effective 2 November 2026, canonical and indexable. Keep dated/versioned copies and re-review on material changes; counsel, consumer-facing specifics and additional jurisdictions remain separate follow-ups.                                                                                                                                                                                                              |
 
 ### Verified official references (review, not certification)
 
@@ -45,7 +45,7 @@ The Terms allocate the software/restaurant/guest relationship, age and eligibili
 ## QA and acceptance
 
 - Verify /terms, /privacy, /delete-account all render exactly one public footer; only current deployed pages and verified policies may lose draft indicators.
-- Verify noindex, metadata, 24 sections and links/anchors, contact email, keyboard accessibility, SVG accessibility and prefers-reduced-motion.
+- Verify indexable canonical metadata, 24 sections, working links/anchors, contact email, keyboard accessibility, SVG accessibility and prefers-reduced-motion on the deployed version.
 - Check at 375px, tablet, desktop, print and dark mode; avoid legal-content truncation or overflowing sticky contents navigation.
 - Ensure shared footer copyright cannot suggest a separate incorporated subsidiary, and preserve illustrative payment/badge disclaimers.
-- Typecheck, lint, Prettier, integration, production build and E2E must complete; do not merge a draft policy into production as finalized content.
+- Typecheck, lint, Prettier, integration, production build and E2E must pass the exact final commit before release. Verify deploy SHA and public routes; successful CI is not legal advice or a counsel sign-off.
