@@ -56,9 +56,9 @@ export default function DeleteAccountPage() {
             <div>
               <strong>How to request deletion</strong>
               <p>
-                You can request deletion of your account or personal information using the
-                email contact below. Requests are reviewed after appropriate verification; this
-                page does not offer instant or automated deletion.
+                You can request deletion of your account or personal information using the email
+                contact below. Requests are reviewed after appropriate verification; this page does
+                not offer instant or automated deletion.
               </p>
             </div>
           </div>
@@ -78,10 +78,10 @@ export default function DeleteAccountPage() {
               </h1>
               <p>
                 MenuMinute is operated by BabaBuilds, a sole proprietorship based in Pilani,
-                Rajasthan, India. To begin a privacy-related deletion request, please
-                contact us using the email address below and include the email associated with your
-                account. Do not send a password, authentication code or sensitive identity document
-                in the initial message.
+                Rajasthan, India. To begin a privacy-related deletion request, please contact us
+                using the email address below and include the email associated with your account. Do
+                not send a password, authentication code or sensitive identity document in the
+                initial message.
               </p>
               <a
                 className="privacy-aside-contact"
@@ -109,9 +109,9 @@ export default function DeleteAccountPage() {
                 Account deletion is intended to remove the account and associated personal data,
                 subject only to information that must be retained for applicable legal, security,
                 dispute or financial-record purposes. Merely disabling an account is not equivalent
-                to deletion. The extent and timing of removal depend on the verified request, information
-                held by the relevant restaurant and lawful retention requirements. We will
-                explain any limits when responding.
+                to deletion. The extent and timing of removal depend on the verified request,
+                information held by the relevant restaurant and lawful retention requirements. We
+                will explain any limits when responding.
               </p>
             </section>
             <section className="privacy-section">
@@ -119,8 +119,8 @@ export default function DeleteAccountPage() {
               <p>
                 Use the same email to ask for access, correction, an available export, marketing
                 preferences or information about the data we hold. Review the{" "}
-                <Link href="/privacy">Privacy Policy</Link> for the scope of data
-                categories and rights.
+                <Link href="/privacy">Privacy Policy</Link> for the scope of data categories and
+                rights.
               </p>
               <p>
                 Do not assume that emailing this address immediately and automatically removes a
