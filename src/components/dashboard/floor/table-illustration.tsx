@@ -107,7 +107,8 @@ export function TableIllustration({
         const slot = g.slots[i];
         if (!slot) return null;
         const pending = pendingChairIds.has(chair.id);
-        const name = `${chair.label ?? `Chair ${i + 1}`}, ${KIND_LABEL[chair.kind]}`;
+        const base = chair.label ?? `Chair ${i + 1}`;
+        const name = chair.kind === "standard" ? base : `${base}, ${KIND_LABEL[chair.kind]}`;
         const toggle = () => canSeat && !pending && onChairToggle(chair);
         return (
           <g

@@ -65,7 +65,7 @@ test("owner builds a dining room: table, chairs, one-tap occupancy, edit and arc
   await signIn(page, owner);
   await page.goto("/dashboard/floor");
 
-  const floor = page.getByTestId("dining-floor");
+  const floor = page.locator("#workspace-main").getByTestId("dining-floor");
   await expect(floor).toBeVisible();
   await expect(floor.getByRole("heading", { level: 1 })).toHaveText(/build your dining room/i);
   await expect(page.getByRole("heading", { name: "Your dining room is empty" })).toBeVisible();
@@ -91,13 +91,14 @@ test("owner builds a dining room: table, chairs, one-tap occupancy, edit and arc
   await expect(floor.locator("section[aria-label='Floor at a glance']")).toContainText("6");
 
   // One tap on a chair marks it taken; totals and copy follow immediately.
-  const chairs = card.getByRole("button", { name: /Window booth, Chair \d, standard chair, free/ });
+  const chairs = card.getByRole("button", { name: /Window booth, Chair \d, free/ });
   await expect(chairs).toHaveCount(6);
   await chairs.first().click();
   await expect(floor.getByRole("heading", { level: 1 })).toHaveText(/1 of 6 seats taken, 5 free/);
-  await expect(
-    card.getByRole("button", { name: /Chair 1, standard chair, taken/ })
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(card.getByRole("button", { name: /Chair 1, taken/ })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
   // The server really recorded it.
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/1 of 6 seats taken/);
