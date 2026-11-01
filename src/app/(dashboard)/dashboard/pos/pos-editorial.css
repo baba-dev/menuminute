@@ -699,19 +699,12 @@
   }
 }
 
-/* Phase B: merchant seller configuration remains reachable, outside the hero. */
+/* Seller settings uses the same hero secondary treatment as other POS actions. */
 .till-page.pos-editorial .pos-seller-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 10px 0 0 auto;
-  padding: 7px 12px;
-  color: var(--pos-ink, inherit);
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 12px;
-  background: transparent;
   cursor: pointer;
+}
+.till-page.pos-editorial #pos-seller-settings {
+  scroll-margin-top: 20px;
 }
 
 /* Phase D: customization belongs to the catalog, not a blocking full-screen dialog. */
