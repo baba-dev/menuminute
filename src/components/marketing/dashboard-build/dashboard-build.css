@@ -1,0 +1,511 @@
+/* Scroll-assembled dashboard (home-v2).
+   The stage is a fixed-size virtual screen, scaled to fit, so the real workspace CSS renders at its
+   true pixel sizes. The real page is taller than the screen, so a "camera" pans down it as it
+   builds. The product's CSS switches layout by viewport width; the pinned blocks below keep the
+   replica on its fixed desktop (or phone) layout whatever the visitor's window size. */
+.db {
+  --db-cw: 1440px; /* virtual screen width */
+  --db-wh: 900px; /* virtual window height */
+  position: relative;
+  color: var(--ink);
+}
+
+/* Pin only when script can run and motion is welcome; otherwise the section is one screen. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .db {
+    height: 500vh;
+  }
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (max-width: 680px) {
+  .db {
+    height: 400vh;
+  }
+}
+@media (max-width: 680px) {
+  .db {
+    --db-cw: 390px;
+    --db-wh: 800px;
+  }
+}
+
+/* `clip`, not `hidden`: hidden would create a scroll container and break sticky. */
+.db__sticky {
+  position: sticky;
+  top: 0;
+  display: grid;
+  height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 1rem;
+  overflow: clip;
+}
+
+.db__title {
+  margin: 0;
+  max-width: 40rem;
+  text-align: center;
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+  line-height: 1.15;
+}
+
+/* Size container: the scale below is derived from the room this cell actually has. */
+.db__perspective {
+  container-type: size;
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  place-items: center;
+  perspective: 1600px;
+  perspective-origin: 50% 40%;
+}
+
+.db__fit {
+  --db-scale: 0.7; /* fallback where trigonometric functions are unsupported */
+  position: relative;
+  transform-style: preserve-3d;
+}
+@supports (scale: tan(atan2(1px, 1px))) {
+  .db__fit {
+    --db-scale: min(tan(atan2(100cqw, var(--db-cw))), tan(atan2(100cqh, var(--db-wh))));
+  }
+}
+.db__fit {
+  width: calc(var(--db-cw) * var(--db-scale));
+  height: calc(var(--db-wh) * var(--db-scale));
+}
+
+/* The stage is the window onto the page: it clips whatever the camera has panned out of view.
+   `overflow: clip` (unlike `hidden`) keeps the 3D build effect intact. */
+.db__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--db-cw);
+  height: var(--db-wh);
+  margin: calc(var(--db-wh) / -2) 0 0 calc(var(--db-cw) / -2);
+  scale: var(--db-scale);
+  overflow: clip;
+  border-radius: 18px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  font-family: var(--font-dm), sans-serif;
+  color: var(--ink);
+}
+
+.db__shell {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--decorative);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 0 40px 100px -30px rgb(0 0 0 / 0.35);
+}
+
+/* ── Real-component placement (desktop) ─────────────────────────────── */
+.db-replica-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 216px;
+  height: 100%;
+  border-radius: 18px 0 0 18px;
+}
+/* The real sidebar is sticky and viewport-tall; here it simply fills its slot. */
+.db .mm-workspace-sidebar {
+  position: absolute;
+  display: flex;
+  height: 100%;
+  overflow: clip;
+  border-right: 1px solid var(--decorative);
+  border-bottom: 0;
+}
+.db__camera {
+  position: absolute;
+  top: 0;
+  left: 216px;
+  width: 1224px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.db-replica-dashboard {
+  min-height: 0;
+  transform-style: preserve-3d;
+}
+.db .mm-dashboard-body,
+.db .mm-widget-grid,
+.db .mm-widget {
+  transform-style: preserve-3d;
+}
+.db-replica-bottombar {
+  display: none;
+}
+.db .mm-dashboard-breadcrumb {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.db .mm-dashboard-top-actions {
+  gap: 10px;
+}
+
+/* Per-cell bottom rule instead of one grid rule, so each KPI assembles with its own underline. */
+.db .mm-dashboard-kpis {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.db .mm-dashboard-kpi {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--editorial-line);
+}
+
+/* ── Pin the desktop layout (the product re-flows at these viewport widths) ── */
+@media (min-width: 681px) and (max-width: 1320px) {
+  .db .mm-dashboard-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    row-gap: 0;
+  }
+  .db .mm-dashboard-kpi:nth-child(3) {
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-kpi:nth-child(4) {
+    padding-left: clamp(10px, 1.3vw, 20px);
+  }
+}
+@media (min-width: 681px) and (max-width: 1280px) {
+  .db .mm-topbar-search {
+    width: auto;
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+  .db .mm-topbar-search-label,
+  .db .mm-topbar-kbd {
+    display: inline;
+  }
+}
+@media (min-width: 681px) and (max-width: 1160px) {
+  .db .mm-widget {
+    grid-column: span 6;
+  }
+  .db .mm-widget[data-widget="kpis"],
+  .db .mm-widget[data-widget="health"] {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 681px) and (max-width: 1150px) {
+  /* dashboard-operations.css collapses the four-across health row here. */
+  .db .mm-dashboard-health-rows {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .db .mm-dashboard-health-row:nth-child(2) {
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-health-row:nth-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+@media (min-width: 681px) and (max-width: 1100px) {
+  .db .mm-topbar-connection-label,
+  .db .mm-topbar-chip span:not(.sr-only):not(:first-child) {
+    display: inline;
+  }
+}
+@media (min-width: 681px) and (max-width: 850px) {
+  /* dashboard-operations.css re-flows the KPI row here as well. */
+  .db .mm-dashboard-kpi:nth-child(n) {
+    padding-inline: clamp(10px, 1.3vw, 20px);
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-kpi:first-child {
+    padding-left: 0;
+  }
+  .db .mm-dashboard-kpi:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .db .mm-dashboard-operations-heading {
+    flex-wrap: nowrap;
+  }
+}
+@media (min-width: 681px) and (max-width: 900px) {
+  .db .mm-workspace-nav {
+    display: block;
+  }
+  .db .mm-workspace-brand {
+    min-height: 80px;
+    margin: 0 18px;
+  }
+  .db .mm-dashboard-topbar {
+    min-height: 68px;
+    padding: 10px clamp(20px, 3.3vw, 46px);
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+  .db .mm-dashboard-top-actions {
+    max-width: none;
+    margin-left: 0;
+  }
+  .db .mm-dashboard-preview {
+    min-height: 38px;
+    max-width: none;
+    padding: 8px 17px;
+    font-size: 12px;
+    text-align: left;
+    overflow-wrap: normal;
+  }
+  .db .mm-dashboard-breadcrumb {
+    gap: 13px;
+    font-size: 10px;
+  }
+  .db .mm-dashboard-top-actions .mm-theme-toggle {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+  }
+  .db .mm-dashboard-user {
+    width: 37px;
+    height: 37px;
+  }
+}
+
+/* ── Phone: bottom bar replaces the sidebar, as in the product ──────── */
+@media (max-width: 680px) {
+  .db .db-replica-sidebar {
+    display: none;
+  }
+  .db__stage,
+  .db__shell {
+    border-radius: 22px;
+  }
+  .db__camera {
+    left: 0;
+    width: 390px;
+    /* Room so the last content can clear the 64px bottom bar. */
+    padding-bottom: 64px;
+  }
+  .db__rail-item {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.72rem;
+  }
+  .db-replica-bottombar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    height: 64px;
+    border-radius: 0 0 22px 22px;
+  }
+}
+
+/* ── Captions: one per chapter, all in one grid cell so the layout never jumps ── */
+.db__captions {
+  display: grid;
+  width: min(100%, 44rem);
+}
+.db__caption {
+  display: grid;
+  grid-area: 1 / 1;
+  justify-items: center;
+  gap: 0.2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    visibility 180ms;
+}
+.db__caption strong {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 1rem;
+}
+.db__caption span {
+  color: var(--muted);
+}
+.db__caption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 24px;
+  color: var(--ember);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.db__caption a:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+.db[data-chapter="navigate"] [data-for="navigate"],
+.db[data-chapter="overview"] [data-for="overview"],
+.db[data-chapter="priorities"] [data-for="priorities"],
+.db[data-chapter="health"] [data-for="health"],
+.db[data-chapter="live-service"] [data-for="live-service"] {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ── New-order beat: scroll-driven (--beat 0..1), so it reverses with the scroll ── */
+.db .mm-topbar-bell[data-beat] {
+  rotate: calc(sin(var(--beat, 0) * 12.566) * 16deg * (1 - var(--beat, 0)));
+  transform-origin: 50% 0;
+}
+.db .mm-topbar-bell-badge[data-beat],
+.db .mm-bottom-badge[data-beat] {
+  scale: calc(1 + sin(var(--beat, 0) * 3.14159) * 0.45);
+}
+.db .mm-ops-item[data-beat][data-on="true"],
+.db .mm-dashboard-operations-grid a[data-beat][data-on="true"] {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 22%, transparent);
+}
+.db .db-beat-reveal[data-on="false"] {
+  display: none;
+}
+
+/* ── Chapter rail ───────────────────────────────────────────────────── */
+.db__rail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.db__rail-item {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--decorative);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.db[data-chapter="navigate"] [data-chapter-id="navigate"],
+.db[data-chapter="overview"] [data-chapter-id="overview"],
+.db[data-chapter="priorities"] [data-chapter-id="priorities"],
+.db[data-chapter="health"] [data-chapter-id="health"],
+.db[data-chapter="live-service"] [data-chapter-id="live-service"] {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: var(--paper);
+}
+.db__rail-item:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+
+/* ── Finished, unpinned page: no script, or reduced motion ──────────────
+   The whole page is shown at its own height (no window, no camera), scaled to the width. The
+   inline p = 0 pose exists only for scripted pages. */
+@media (scripting: none), (prefers-reduced-motion: reduce) {
+  .db .db__stage,
+  .db [data-piece],
+  .db [data-stagger],
+  .db [data-camera] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .db__sticky {
+    position: static;
+    height: auto;
+  }
+  .db__perspective {
+    container-type: inline-size;
+    perspective: none;
+  }
+  .db__fit {
+    --db-scale: 0.7;
+    width: 100%;
+    height: auto;
+  }
+  @supports (scale: tan(atan2(1px, 1px))) {
+    .db__fit {
+      --db-scale: tan(atan2(100cqw, var(--db-cw)));
+    }
+  }
+  .db__stage {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: var(--db-cw);
+    height: auto;
+    margin: 0;
+    scale: none;
+    zoom: var(--db-scale);
+    overflow: visible;
+  }
+  .db__camera {
+    position: relative;
+    left: auto;
+    margin-left: 216px;
+  }
+  /* No pinned stage to caption: list every caption. */
+  .db__captions {
+    gap: 1rem;
+  }
+  .db__caption {
+    grid-area: auto;
+    visibility: visible;
+    opacity: 1;
+  }
+}
+@media (max-width: 680px) and ((scripting: none) or (prefers-reduced-motion: reduce)) {
+  .db__camera {
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .db__rail {
+    display: none;
+  }
+}
+
+/* ── Closing call to action (rendered by the page, below the pinned section) ── */
+.db-cta {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem 5rem;
+  text-align: center;
+  color: var(--ink);
+}
+.db-cta h2 {
+  margin: 0;
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+.db-cta p {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--muted);
+}
+.db-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.db-cta__primary,
+.db-cta__secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 1.4rem;
+  border: 1px solid var(--ember);
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.db-cta__primary {
+  background: var(--ember);
+  color: var(--paper);
+}
+.db-cta__secondary {
+  color: var(--ember);
+}
+.db-cta a:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+}
