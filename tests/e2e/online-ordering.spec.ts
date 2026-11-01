@@ -121,6 +121,23 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     .getByRole("button", { name: /Add to Order/ })
     .click();
   await page.getByRole("button", { name: /^View Your Order/ }).click();
+  const cart = page.getByRole("dialog", { name: "Your order" });
+  await expect(cart.getByRole("textbox", { name: "Guest name (optional)" })).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Phone number (optional)" })).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Order instructions (optional)" })).toBeVisible();
+  const orderType = cart.getByRole("group", { name: "Choose order type" });
+  await expect(orderType.getByRole("button", { name: /Dine In/i })).toHaveAttribute("aria-pressed", "true");
+  await orderType.getByRole("button", { name: /Takeaway \/ Pickup/i }).click();
+  await expect(orderType.getByRole("button", { name: /Takeaway \/ Pickup/i })).toHaveAttribute("aria-pressed", "true");
+  await expect(cart.getByLabel("Pickup time")).toBeVisible();
+  await orderType.getByRole("button", { name: /Dine In/i }).click();
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `cart overflow at ${width}px`).toBeLessThanOrEqual(1);
+    const close = await cart.getByRole("button", { name: "Close cart" }).boundingBox();
+    expect(close?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(close?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
   const receipt = page.locator(".ticket-receipt-card");
   await expect(receipt).toBeVisible();
   await expect(receipt).toContainText("Estimated item subtotal");
