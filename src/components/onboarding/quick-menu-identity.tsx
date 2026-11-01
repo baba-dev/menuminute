@@ -23,10 +23,15 @@ export function QuickMenuIdentity({
       <div className="wizard-header">
         <span className="wizard-eyebrow">Step 01 / Your Restaurant</span>
         <h2 className="wizard-title">What should we call your menu?</h2>
-        <p className="wizard-desc">Start with a name and type of business. Photos, branding, address and tables can come later.</p>
+        <p className="wizard-desc">
+          Start with a name and type of business. Photos, branding, address and tables can come
+          later.
+        </p>
       </div>
       <div className="wizard-field-group">
-        <label className="wizard-label" htmlFor="wz-name">Restaurant name *</label>
+        <label className="wizard-label" htmlFor="wz-name">
+          Restaurant name *
+        </label>
         <input
           className="wizard-input"
           id="wz-name"
@@ -40,7 +45,9 @@ export function QuickMenuIdentity({
         />
       </div>
       <div className="wizard-field-group">
-        <label className="wizard-label" htmlFor="wz-quick-type">Type of food business</label>
+        <label className="wizard-label" htmlFor="wz-quick-type">
+          Type of food business
+        </label>
         <select
           className="wizard-select"
           id="wz-quick-type"
@@ -52,10 +59,17 @@ export function QuickMenuIdentity({
             onChange("fulfillmentModes", [type.mode]);
           }}
         >
-          {outletTypes.map((type) => <option value={type.id} key={type.id}>{type.label}</option>)}
+          {outletTypes.map((type) => (
+            <option value={type.id} key={type.id}>
+              {type.label}
+            </option>
+          ))}
         </select>
       </div>
-      <p className="wizard-counter">No payment card required. This creates a private menu draft; guests will not see it until you publish.</p>
+      <p className="wizard-counter">
+        No payment card required. This creates a private menu draft; guests will not see it until
+        you publish.
+      </p>
     </div>
   );
 }

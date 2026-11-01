@@ -16,9 +16,23 @@ describe("first menu quick start", () => {
     expect(nextOnboardingStep(1, false)).toBe(2);
   });
   it("preserves user settings but never pre-creates tables or grants a paid goal", () => {
-    const source = { ...initialWizardDraft, name: "Quick Café", country: "OM", currency: "OMR", timezone: "Asia/Muscat", onboardingGoal: "full_operations" as const };
+    const source = {
+      ...initialWizardDraft,
+      name: "Quick Café",
+      country: "OM",
+      currency: "OMR",
+      timezone: "Asia/Muscat",
+      onboardingGoal: "full_operations" as const,
+    };
     const target = quickStartDraft(source);
-    expect(target).toMatchObject({ name: "Quick Café", country: "OM", currency: "OMR", timezone: "Asia/Muscat", onboardingGoal: "qr_menu", tableCount: 0 });
+    expect(target).toMatchObject({
+      name: "Quick Café",
+      country: "OM",
+      currency: "OMR",
+      timezone: "Asia/Muscat",
+      onboardingGoal: "qr_menu",
+      tableCount: 0,
+    });
     expect(source.tableCount).toBe(10);
   });
 });

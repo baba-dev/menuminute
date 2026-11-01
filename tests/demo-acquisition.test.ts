@@ -13,7 +13,14 @@ describe("public demo acquisition", () => {
     expect(demoEntryDestination("kitchen")).toBe("/kitchen");
     expect(demoEntryDestination("floor")).toBe("/dashboard/floor");
     expect(demoEntryDestination("menu")).toBe("/dashboard/menu");
-    for (const value of [null, "", "https://attacker.invalid", "//attacker.invalid", "../admin", "__proto__"]) {
+    for (const value of [
+      null,
+      "",
+      "https://attacker.invalid",
+      "//attacker.invalid",
+      "../admin",
+      "__proto__",
+    ]) {
       expect(demoEntryDestination(value)).toBe("/dashboard");
     }
   });

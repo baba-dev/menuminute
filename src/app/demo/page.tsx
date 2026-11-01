@@ -27,7 +27,8 @@ export const metadata = {
 const entryNotice: Record<string, string> = {
   unavailable: "The live demo is switched off right now. Please try again later.",
   busy: "The shared demo is temporarily at its entry limit. Try again shortly, or explore the guest menu instead.",
-  service: "Dashboard entry is temporarily unavailable. The guest menu and guides remain available.",
+  service:
+    "Dashboard entry is temporarily unavailable. The guest menu and guides remain available.",
   denied: "That request could not be verified. Please use the button below.",
   error: "The demo could not start. Please try again in a moment.",
 };
@@ -81,11 +82,18 @@ export default async function DemoPage({
               </p>
               {live ? (
                 <form action="/demo/enter?to=dashboard" method="post">
-                  <button type="submit" className="bg-brand-600 hover:bg-brand-700 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white">
+                  <button
+                    type="submit"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
+                  >
                     Explore the merchant dashboard <ArrowRight className="h-4 w-4" />
                   </button>
                 </form>
-              ) : <p className="text-muted-foreground text-sm">The dashboard is temporarily unavailable.</p>}
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  The dashboard is temporarily unavailable.
+                </p>
+              )}
               <Link
                 href={`/m/${DEMO_PUBLIC_ID}`}
                 className="text-brand-700 dark:text-brand-400 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
@@ -143,14 +151,47 @@ export default async function DemoPage({
           </h2>
           <ol className="mt-4 grid gap-3 sm:grid-cols-2">
             {[
-              { title: "Browse and order", detail: "Send a sample request from the guest menu.", guide: "/docs/public-menu", to: null },
-              { title: "Accept an order", detail: "View the live order queue.", guide: "/docs/orders", to: "orders" },
-              { title: "Prepare a dish", detail: "Explore the kitchen station board.", guide: "/docs/kitchen", to: "kitchen" },
-              { title: "Check the dining floor", detail: "Explore tables and guest service calls.", guide: "/docs/floor", to: "floor" },
-              { title: "Edit a dish", detail: "Visit Menu Studio.", guide: "/docs/menu-studio", to: "menu" },
-              { title: "Ask Ember", detail: "Try the read-only AI assistant.", guide: "/docs/ember", to: "ember" },
+              {
+                title: "Browse and order",
+                detail: "Send a sample request from the guest menu.",
+                guide: "/docs/public-menu",
+                to: null,
+              },
+              {
+                title: "Accept an order",
+                detail: "View the live order queue.",
+                guide: "/docs/orders",
+                to: "orders",
+              },
+              {
+                title: "Prepare a dish",
+                detail: "Explore the kitchen station board.",
+                guide: "/docs/kitchen",
+                to: "kitchen",
+              },
+              {
+                title: "Check the dining floor",
+                detail: "Explore tables and guest service calls.",
+                guide: "/docs/floor",
+                to: "floor",
+              },
+              {
+                title: "Edit a dish",
+                detail: "Visit Menu Studio.",
+                guide: "/docs/menu-studio",
+                to: "menu",
+              },
+              {
+                title: "Ask Ember",
+                detail: "Try the read-only AI assistant.",
+                guide: "/docs/ember",
+                to: "ember",
+              },
             ].map((task, index) => (
-              <li key={task.title} className="border-border bg-card flex gap-3 rounded-xl border p-4">
+              <li
+                key={task.title}
+                className="border-border bg-card flex gap-3 rounded-xl border p-4"
+              >
                 <span className="bg-brand-600 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
                   {index + 1}
                 </span>
@@ -159,15 +200,28 @@ export default async function DemoPage({
                   <span className="text-muted-foreground">{task.detail}</span>
                   <div className="flex flex-wrap items-center gap-4">
                     {!task.to ? (
-                      <Link href={`/m/${DEMO_PUBLIC_ID}`} className="text-brand-700 dark:text-brand-400 font-semibold underline-offset-2 hover:underline">Try now</Link>
+                      <Link
+                        href={`/m/${DEMO_PUBLIC_ID}`}
+                        className="text-brand-700 dark:text-brand-400 font-semibold underline-offset-2 hover:underline"
+                      >
+                        Try now
+                      </Link>
                     ) : live ? (
                       <form action={`/demo/enter?to=${task.to}`} method="post">
-                        <button type="submit" className="text-brand-700 dark:text-brand-400 font-semibold underline-offset-2 hover:underline">
+                        <button
+                          type="submit"
+                          className="text-brand-700 dark:text-brand-400 font-semibold underline-offset-2 hover:underline"
+                        >
                           Open {task.title.toLowerCase()}
                         </button>
                       </form>
                     ) : null}
-                    <Link href={task.guide} className="text-muted-foreground underline-offset-2 hover:underline">Read guide</Link>
+                    <Link
+                      href={task.guide}
+                      className="text-muted-foreground underline-offset-2 hover:underline"
+                    >
+                      Read guide
+                    </Link>
                   </div>
                 </div>
               </li>

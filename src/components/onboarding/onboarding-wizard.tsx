@@ -13,7 +13,12 @@ import { StepContactTables } from "./wizard-steps/step-contact-tables";
 import { StepLaunch } from "./wizard-steps/step-launch";
 import { QuickMenuIdentity } from "./quick-menu-identity";
 import { QuickMenuRegion } from "./quick-menu-region";
-import { quickStartDraft, nextOnboardingStep, previousOnboardingStep, visibleOnboardingSteps } from "./quick-menu-flow";
+import {
+  quickStartDraft,
+  nextOnboardingStep,
+  previousOnboardingStep,
+  visibleOnboardingSteps,
+} from "./quick-menu-flow";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
 import { regions } from "@/modules/onboarding/locales";
@@ -194,7 +199,8 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
         // Session storage is optional; server-owned form data remains authoritative.
       }
       const goal = data.draft?.onboardingGoal ?? "qr_menu";
-      const shouldQuick = goal === "qr_menu" && (savedQuick === null ? initialQuick : savedQuick === "true");
+      const shouldQuick =
+        goal === "qr_menu" && (savedQuick === null ? initialQuick : savedQuick === "true");
       setQuickStart(shouldQuick);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
@@ -224,7 +230,9 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
         storedStep >= 0 &&
         storedStep < STEPS.length
       )
-        setCurrentStep(shouldQuick && !visibleOnboardingSteps(true).includes(storedStep) ? 0 : storedStep);
+        setCurrentStep(
+          shouldQuick && !visibleOnboardingSteps(true).includes(storedStep) ? 0 : storedStep
+        );
       setReady(true);
     } catch {
       // Do not enable autosave with unverified defaults: a failed GET must
@@ -410,7 +418,9 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
       {currentStep === 0 && !provisioning && (
         <div className="wizard-quick-choice" aria-label="Setup journey">
           <div>
-            <strong>{quickStart ? "Free QR menu quick start" : "Want to publish a QR menu sooner?"}</strong>
+            <strong>
+              {quickStart ? "Free QR menu quick start" : "Want to publish a QR menu sooner?"}
+            </strong>
             <p className="wizard-desc">
               {quickStart
                 ? "Three short steps, then straight to Menu Studio. You can configure tables, address and opening hours later."
@@ -511,11 +521,12 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
           aria-busy={!ready}
         >
           <legend className="sr-only">{activeStepMeta.label}</legend>
-          {currentStep === 0 && (quickStart ? (
-            <QuickMenuIdentity draft={draft} onChange={updateDraft} />
-          ) : (
-            <StepIdentity draft={draft} onChange={updateDraft} />
-          ))}
+          {currentStep === 0 &&
+            (quickStart ? (
+              <QuickMenuIdentity draft={draft} onChange={updateDraft} />
+            ) : (
+              <StepIdentity draft={draft} onChange={updateDraft} />
+            ))}
           {currentStep === 1 && quickStart && (
             <QuickMenuRegion
               draft={draft}

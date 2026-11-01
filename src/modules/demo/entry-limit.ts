@@ -22,7 +22,8 @@ export async function demoEntryDecision(req: Request): Promise<DemoEntryDecision
       keys: [sourceKey, "demo:entry:global"],
     })) as number[];
     return Number(perSource) <= PER_SOURCE && Number(global) <= GLOBAL_PER_WINDOW
-      ? "allowed" : "busy";
+      ? "allowed"
+      : "busy";
   } catch {
     // Fail closed, but distinguish service failure from a real entry limit.
     return "service";
