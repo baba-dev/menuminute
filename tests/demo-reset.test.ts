@@ -30,7 +30,7 @@ const PRESERVED: Record<string, string> = {
   dining_floor_plans: "legacy floor layout configuration (no longer read)",
   dining_sections: "floor configuration; the demo section is re-asserted when tables are restored",
   restaurant_chairs:
-    "removed with their table by ON DELETE CASCADE; trigger restaurant_tables_demo_seed re-seeds them (migration 0070)",
+    "removed with their table by ON DELETE CASCADE; trigger restaurant_tables_demo_seed re-seeds them (migration 0073)",
   dining_reservations: "reservations ledger",
   domain_audit: "audit trail",
   domain_projections: "projection",

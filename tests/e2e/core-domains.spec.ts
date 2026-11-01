@@ -165,9 +165,8 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await expect(page.getByLabel("Email address")).toBeVisible();
   await login(page, f.memberEmail, f.password);
   await page.goto("/dashboard/organization");
-  await expect(
-    page.getByRole("heading", { name: "Settings: Scoped Pickup", exact: true })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Settings:/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Outlet settings" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Invite a teammate" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Billing entitlements" })).toHaveCount(0);
   await expect(

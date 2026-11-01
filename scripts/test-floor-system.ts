@@ -104,16 +104,16 @@ const journal = JSON.parse(
   fs.readFileSync(path.resolve("src/db/migrations/meta/_journal.json"), "utf8")
 ) as { entries: Array<{ tag: string }> };
 assert(
-  journal.entries.some((e) => e.tag === "0070_floor_chairs_and_sections"),
-  "Migration 0070 is registered in the journal"
+  journal.entries.some((e) => e.tag === "0073_floor_chairs_and_sections"),
+  "Migration 0073 is registered in the journal"
 );
 const sql = fs.readFileSync(
-  path.resolve("src/db/migrations/0070_floor_chairs_and_sections.sql"),
+  path.resolve("src/db/migrations/0073_floor_chairs_and_sections.sql"),
   "utf8"
 );
 assert(
   !/\bDROP\s+TABLE\b|\bTRUNCATE\b|\bDELETE\s+FROM\b/i.test(sql),
-  "Migration 0070 deletes no data"
+  "Migration 0073 deletes no data"
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);

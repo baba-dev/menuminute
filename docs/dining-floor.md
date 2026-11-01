@@ -1,6 +1,6 @@
 # Dining floor (tables, chairs, sections, occupancy)
 
-Status: **implemented in code; not deployed.** Migration `0070_floor_chairs_and_sections` ships with this
+Status: **implemented in code; not deployed.** Migration `0073_floor_chairs_and_sections` ships with this
 change and reaches production only through the normal gates in [production-runbook.md](production-runbook.md).
 
 ## What the owner sees
@@ -29,7 +29,7 @@ the next booking and the permanent system ID. It reuses the dashboard shell toke
 - **System ID** (`restaurant_tables.id`) never changes. `display_number` is the human number, unique among
   active tables. `table_number` mirrors it so QR codes, orders and POS keep working.
 
-## Migration 0070 (additive)
+## Migration 0073 (additive)
 
 Adds `dining_sections`, `restaurant_chairs`, and `name`, `display_number`, `section_id`, `shape` on
 `restaurant_tables`; replaces the all-rows unique index on `(restaurant_id, table_number)` with the same index

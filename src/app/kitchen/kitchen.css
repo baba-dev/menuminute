@@ -76,7 +76,7 @@
   background: #e8ad5e;
   color: #27190c;
 }
-.kk-identity h2 {
+.kk-identity .kk-outlet {
   margin: 2px 0 0;
   font-family: var(--font-display), sans-serif;
   font-size: 17px;
@@ -801,7 +801,7 @@
   .kk-topbar-inner {
     padding: 12px 16px;
   }
-  .kk-identity h2 {
+  .kk-identity .kk-outlet {
     font-size: 15px;
   }
   .kk-tools {
@@ -2022,5 +2022,748 @@
 @media (prefers-reduced-motion: reduce) {
   .kk-overview-card {
     transition: none;
+  }
+}
+
+/* Page order: hero (with station panel) > pulse > preparation rail > Final Check. */
+.kk-hero-has-stations {
+  gap: clamp(16px, 3vw, 40px);
+  justify-content: space-between;
+}
+.kk-hero-has-stations .kk-pass-art {
+  display: none;
+}
+.kk-hero-has-stations .kk-hero-content {
+  width: min(48%, 640px);
+  flex: 1 1 auto;
+}
+.kk-hero-stations {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 460px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--kk-line) 70%, transparent);
+  background: color-mix(in srgb, var(--kk-panel) 62%, transparent);
+  backdrop-filter: blur(10px);
+}
+.kk-hero-stations-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.kk-hero-stations-head h2 {
+  margin: 2px 0 0;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+.kk-hero-stations-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.kk-hero-station {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid var(--kk-line);
+  background: color-mix(in srgb, var(--kk-panel) 85%, transparent);
+  color: inherit;
+  transition:
+    border-color 0.16s,
+    box-shadow 0.16s;
+}
+.kk-hero-station strong {
+  font-size: 14px;
+  font-weight: 850;
+}
+.kk-hero-station span {
+  font-size: 12px;
+  font-weight: 650;
+}
+.kk-hero-station small {
+  font-size: 11px;
+  color: var(--kk-quiet);
+}
+.kk-hero-station:hover {
+  border-color: #b97238;
+}
+.kk-hero-station.is-selected,
+.kk-hero-station:focus-visible {
+  border-color: #d76c22;
+  box-shadow: 0 0 0 2px rgba(215, 108, 34, 0.25);
+}
+.kk-hero-station.is-overdue small {
+  color: #b42318;
+  font-weight: 800;
+}
+:root[data-theme="dark"] .kk-hero-station.is-overdue small {
+  color: #ffb4a8;
+}
+.kk-tab-overdue {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 850;
+  background: #b42318;
+  color: #fff;
+}
+/* Final Check cues */
+.kk-check-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  background: #fff1d6;
+  color: #7a3b00;
+  border: 1px solid #e9954c;
+}
+:root[data-theme="dark"] .kk-check-banner {
+  background: #4a3017;
+  color: #ffd9a3;
+  border-color: #a76528;
+}
+.kk-check-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  background: #fff1d6;
+  color: #7a3b00;
+  border: 1px solid #e9954c;
+}
+:root[data-theme="dark"] .kk-check-pill {
+  background: #4a3017;
+  color: #ffd9a3;
+  border-color: #a76528;
+}
+.kk-expo-card-check {
+  border-color: #e9954c;
+  box-shadow: 0 0 0 2px rgba(233, 149, 76, 0.28);
+}
+@media (max-width: 900px) {
+  .kk-hero-has-stations {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .kk-hero-has-stations .kk-hero-content {
+    width: 100%;
+  }
+  .kk-hero-stations {
+    flex: none;
+    padding: 12px;
+  }
+  /* Phone: horizontal chip row for stations instead of a stacked list. */
+  .kk-hero-stations-list {
+    display: flex;
+    overflow-x: auto;
+    max-height: none;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px;
+  }
+  .kk-hero-stations-list li {
+    flex: 0 0 min(72%, 240px);
+    scroll-snap-align: start;
+  }
+  .kk-stations {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 8px 0;
+    background: inherit;
+    background-color: var(--kk-panel);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kk-hero-station {
+    transition: none;
+  }
+}
+
+/* Final Check: per-dish release rows */
+.kk-expo-order-note {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff1d6;
+  color: #7a3b00;
+}
+:root[data-theme="dark"] .kk-expo-order-note {
+  background: #4a3017;
+  color: #ffd9a3;
+}
+.kk-expo-items {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.kk-expo-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--kk-line);
+  border-radius: 12px;
+  background: var(--kk-panel);
+}
+.kk-expo-item.is-ready {
+  border-color: #e9954c;
+}
+.kk-expo-item.is-released {
+  opacity: 0.7;
+}
+.kk-expo-item-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.kk-expo-item-main strong {
+  flex: 1 1 100%;
+  font-size: 14px;
+  font-weight: 850;
+}
+.kk-expo-item-main small {
+  flex: 1 1 100%;
+  font-size: 11px;
+  color: var(--kk-quiet);
+}
+.kk-expo-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--kk-soft);
+  border: 1px solid var(--kk-line);
+}
+.kk-expo-item-note {
+  flex: 1 1 100%;
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a3b00;
+}
+:root[data-theme="dark"] .kk-expo-item-note {
+  color: #ffd9a3;
+}
+.kk-expo-release {
+  flex: none;
+  min-height: 44px;
+  min-width: 84px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 850;
+  color: #fff2dc;
+  background: #42291c;
+}
+:root[data-theme="dark"] .kk-expo-release {
+  background: #ffbd6d;
+  color: #291907;
+}
+.kk-expo-release:disabled {
+  opacity: 0.5;
+}
+.kk-expo-waiting {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--kk-quiet);
+}
+
+/* Ticket card redesign: allergens first, then customisations, then the guest's words. */
+.kk-ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.kk-ticket-where,
+.kk-ticket-source {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid var(--kk-line);
+  background: var(--kk-soft);
+}
+.kk-ticket-source {
+  background: transparent;
+}
+.kk-ticket-special {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  background: #2f1d12;
+  color: #ffd9a3;
+}
+:root[data-theme="dark"] .kk-ticket-special {
+  background: #ffbd6d;
+  color: #291907;
+}
+.kk-ticket-has-special {
+  box-shadow: inset 4px 0 0 #d76c22;
+}
+.kk-ticket-qty {
+  display: inline-block;
+  min-width: 2ch;
+  margin-right: 2px;
+  color: #b74712;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme="dark"] .kk-ticket-qty {
+  color: #ffbb67;
+}
+.kk-dish {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+.kk-dish-compact {
+  gap: 5px;
+  margin-top: 4px;
+  flex: 1 1 100%;
+}
+.kk-allergen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  border: 1px solid #c2410c;
+  background: #fff1e8;
+  color: #7c2d12;
+}
+:root[data-theme="dark"] .kk-allergen {
+  background: #3b1d12;
+  border-color: #ea8a52;
+  color: #ffd9c2;
+}
+.kk-allergen-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.kk-allergen-chip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  background: #c2410c;
+  color: #fff;
+}
+:root[data-theme="dark"] .kk-allergen-chip {
+  background: #ffb88c;
+  color: #3b1d12;
+}
+.kk-allergen-cross,
+.kk-allergen-source {
+  flex: 1 1 100%;
+  font-size: 11px;
+  font-weight: 650;
+}
+.kk-allergen-source {
+  opacity: 0.8;
+}
+.kk-mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kk-mod {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--kk-line);
+  background: var(--kk-soft);
+  font-size: 13px;
+}
+.kk-mod span {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kk-quiet);
+}
+.kk-mod strong {
+  font-weight: 850;
+}
+.kk-guest-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border-left: 4px solid #e9954c;
+  background: #fff1d6;
+  color: #5a2c00;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.kk-guest-note small {
+  display: block;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+:root[data-theme="dark"] .kk-guest-note {
+  background: #4a3017;
+  color: #ffe2b8;
+  border-left-color: #ffbd6d;
+}
+.kk-dietary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--kk-quiet);
+}
+.kk-ticket-order-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--kk-line);
+  font-size: 13px;
+  font-weight: 700;
+}
+.kk-ticket-order-note small {
+  display: block;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--kk-quiet);
+}
+.kk-dish-compact .kk-guest-note {
+  font-size: 13px;
+  padding: 6px 9px;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion layer. Inspired by Magic UI (border beam, number ticker, animated list,
+   circular progress, pulsating/shimmer button, blur fade, dot pattern); each is an
+   independent, dependency-free CSS/React implementation. Rules: subtle, never the
+   only signal, tuned for light AND dark themes, cheap on tablets and phones, and
+   fully static under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+.mm-kitchen {
+  --kk-beam-wait-a: #d76c22;
+  --kk-beam-wait-b: #f3c48a;
+  --kk-beam-late-a: #b42318;
+  --kk-beam-late-b: #ee8f84;
+  --kk-dot: rgba(120, 70, 30, 0.26);
+  --kk-sheen: rgba(255, 255, 255, 0.2);
+  --kk-pulse-ring: rgba(215, 108, 34, 0.32);
+}
+:root[data-theme="dark"] .mm-kitchen {
+  --kk-beam-wait-a: #ffbd6d;
+  --kk-beam-wait-b: #ffe3b8;
+  --kk-beam-late-a: #ff8a7a;
+  --kk-beam-late-b: #ffc9c0;
+  --kk-dot: rgba(255, 220, 170, 0.14);
+  --kk-sheen: rgba(255, 255, 255, 0.28);
+  --kk-pulse-ring: rgba(255, 189, 109, 0.3);
+}
+.kk-ticket,
+.kk-expo-card {
+  position: relative;
+}
+
+/* Border beam: unstarted tickets (5+ min) and orders waiting at Final Check. */
+.kk-beam {
+  --size: 64px;
+  --dur: 9s;
+  --a: var(--kk-beam-wait-a);
+  --b: var(--kk-beam-wait-b);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+  mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+}
+.kk-beam-late {
+  --dur: 5.5s;
+  --a: var(--kk-beam-late-a);
+  --b: var(--kk-beam-late-b);
+}
+.kk-beam::after {
+  content: "";
+  position: absolute;
+  aspect-ratio: 1;
+  width: var(--size);
+  background: linear-gradient(to left, var(--a), var(--b), transparent);
+  offset-anchor: 90% 50%;
+  offset-path: rect(0 auto auto 0 round 12px);
+  animation: kk-beam var(--dur) linear infinite;
+  opacity: 0.9;
+}
+.kk-beam[data-active="false"]::after {
+  animation-play-state: paused;
+}
+@keyframes kk-beam {
+  to {
+    offset-distance: 100%;
+  }
+}
+/* Budget spent, reduced motion or no offset-path support: a calm static ring. */
+.kk-beam-static {
+  mask-image: none;
+  border-color: color-mix(in srgb, var(--a) 55%, transparent);
+}
+.kk-beam-static::after {
+  display: none;
+}
+@supports not (offset-path: rect(0 auto auto 0 round 12px)) {
+  .kk-beam {
+    mask-image: none;
+    border-color: color-mix(in srgb, var(--a) 55%, transparent);
+  }
+  .kk-beam::after {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .kk-beam {
+    --size: 44px;
+  }
+}
+
+/* Number ticker */
+.kk-ticker {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animated list: new tickets ease in once. */
+.kk-enter {
+  animation: kk-enter 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+@keyframes kk-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+/* Blur fade on first paint only (the elements mount once). */
+.kk-fade {
+  animation: kk-blur-fade 0.5s ease-out backwards;
+  animation-delay: var(--kk-delay, 0s);
+}
+@keyframes kk-blur-fade {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+  }
+}
+
+/* Dot pattern behind the hero, fading toward the text side. */
+.kk-hero-dots {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--kk-dot) 1px, transparent 1.3px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to right, transparent 0%, #000 60%);
+  opacity: 0.8;
+}
+@media (max-width: 900px) {
+  .kk-hero-dots {
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 70%);
+    opacity: 0.6;
+  }
+}
+
+/* Circular progress in the hero station panel */
+.kk-hero-station {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+.kk-hero-station-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.kk-ring {
+  flex: none;
+}
+.kk-ring-track {
+  stroke: var(--kk-line);
+}
+.kk-ring-value {
+  stroke: var(--kk-accent);
+  transition: stroke-dashoffset 0.6s ease;
+}
+.kk-hero-station.is-overdue .kk-ring-value {
+  stroke: #b42318;
+}
+:root[data-theme="dark"] .kk-hero-station.is-overdue .kk-ring-value {
+  stroke: #ff8a7a;
+}
+
+/* Pulsating button: the one thing to do at Final Check (and intake Accept). */
+.kk-pulse-btn:not(:disabled),
+.kk-intake-accept:not(:disabled) {
+  animation: kk-pulse 2.8s ease-out infinite;
+}
+@keyframes kk-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--kk-pulse-ring);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* Shimmer: only on the oldest unstarted ticket's action. */
+.kk-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.kk-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, var(--kk-sheen) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: kk-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes kk-shimmer {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kk-beam {
+    mask-image: none;
+    border-color: color-mix(in srgb, var(--a) 55%, transparent);
+  }
+  .kk-beam::after,
+  .kk-shimmer::after {
+    display: none;
+  }
+  .kk-enter,
+  .kk-fade,
+  .kk-pulse-btn,
+  .kk-intake-accept {
+    animation: none;
+  }
+  .kk-ring-value {
+    transition: none;
+  }
+}
+
+.kk-station-tab {
+  min-width: 44px;
+}
+.kk-sound-blocked,
+.kk-stale {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e9954c;
+  background: #fff1d6;
+  color: #5a2c00;
+  font-size: 13px;
+  font-weight: 700;
+}
+:root[data-theme="dark"] .kk-sound-blocked,
+:root[data-theme="dark"] .kk-stale {
+  background: #4a3017;
+  color: #ffe2b8;
+  border-color: #a76528;
+}
+.kk-sound-blocked button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 850;
+  background: #42291c;
+  color: #fff2dc;
+}
+:root[data-theme="dark"] .kk-sound-blocked button {
+  background: #ffbd6d;
+  color: #291907;
+}
+/* New tickets glow briefly: a visual new-order cue that works with sound off. */
+.kk-enter {
+  animation:
+    kk-enter 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) backwards,
+    kk-newglow 2.4s ease-out;
+}
+@keyframes kk-newglow {
+  0% {
+    box-shadow: 0 0 0 3px var(--kk-pulse-ring);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
   }
 }

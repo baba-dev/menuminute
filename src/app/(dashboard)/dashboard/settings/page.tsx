@@ -2,16 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { ForbiddenError } from "@/lib/errors";
-import { billingState } from "@/modules/billing/service";
+import { listOrganizations } from "@/modules/organizations/service";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { canManageOutletProfile, editableOutletProfile } from "@/modules/restaurants/profile";
 import { OutletAtelier } from "./outlet-atelier";
 import "./settings.css";
 export const metadata: Metadata = {
-  title: "The Outlet Atelier | Restaurant Settings",
-  description:
-    "Private outlet-specific profile, branding, operational identity and access settings.",
+  title: "Outlet settings | MenuMinute",
+  description: "Operational and guest-facing settings for the active outlet.",
   robots: { index: false, follow: false },
 };
 export default async function SettingsPage() {
@@ -30,52 +28,33 @@ export default async function SettingsPage() {
       </main>
     );
   const actor = { userId: session.user.id, sessionId: session.session.id };
-  const canManage = await canManageOutletProfile(actor, outlet.id);
-  let billing: {
-    freeMenu: boolean;
-    ordering: boolean;
-    kitchen: boolean;
-    isCommunityEdition?: boolean;
-  } | null = null;
-  try {
-    const result = await billingState(actor, outlet.organizationId);
-    billing = {
-      freeMenu: result.freeMenu,
-      ordering: result.ordering,
-      kitchen: result.kitchen,
-      isCommunityEdition: result.isCommunityEdition,
-    };
-  } catch (error) {
-    if (!(error instanceof ForbiddenError)) throw error;
-  }
+  const [canManage, organizations] = await Promise.all([
+    canManageOutletProfile(actor, outlet.id),
+    listOrganizations(actor),
+  ]);
+  const organizationVersion =
+    organizations.find((organization) => organization.id === outlet.organizationId)?.version ?? 0;
   return (
-    <>
-      <div style={{ padding: "1rem", display: "flex", justifyContent: "flex-end" }}>
-        <Link href="/dashboard/settings/device" className="os-action os-action-primary">
-          Device &amp; app settings →
-        </Link>
-      </div>
-      <OutletAtelier
-        key={outlet.id}
-        organizationId={outlet.organizationId}
-        outletId={outlet.id}
-        outlet={{
-          name: outlet.name,
-          slug: outlet.slug,
-          publicId: outlet.publicId,
-          country: outlet.country || "IN",
-          currency: outlet.currency,
-          timezone: outlet.timezone,
-          outletType: outlet.outletType,
-          fulfillmentModes: outlet.fulfillmentModes,
-          isActive: outlet.isActive,
-          isDemoData: outlet.isDemoData,
-          profileVersion: outlet.profileVersion,
-        }}
-        initial={editableOutletProfile(outlet)}
-        canManage={canManage}
-        billing={billing}
-      />
-    </>
+    <OutletAtelier
+      key={outlet.id}
+      organizationId={outlet.organizationId}
+      organizationVersion={organizationVersion}
+      outletId={outlet.id}
+      outlet={{
+        name: outlet.name,
+        slug: outlet.slug,
+        publicId: outlet.publicId,
+        country: outlet.country || "IN",
+        currency: outlet.currency,
+        timezone: outlet.timezone,
+        outletType: outlet.outletType,
+        fulfillmentModes: outlet.fulfillmentModes,
+        isActive: outlet.isActive,
+        isDemoData: outlet.isDemoData,
+        profileVersion: outlet.profileVersion,
+      }}
+      initial={editableOutletProfile(outlet)}
+      canManage={canManage}
+    />
   );
 }

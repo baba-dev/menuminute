@@ -83,7 +83,8 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await setup.getByRole("button", { name: "Close kitchen setup" }).click();
   await expect(setup).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  // The outlet name is plain text (not a heading) so the hero is the page's first heading.
+  await expect(page.locator(".kk-outlet", { hasText: "Browser Kitchen" })).toBeVisible();
   await expect(page.getByTestId("chefs-pass")).toBeVisible();
   await expect(page.getByRole("heading", { name: "The Chef’s Pass." })).toBeVisible();
   await expect(page.getByRole("region", { name: "Visible kitchen workload" })).toBeVisible();
@@ -173,10 +174,12 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   await expect(intro).toBeVisible({ timeout: 15000 });
   await intro.getByRole("button", { name: "Close kitchen setup" }).click();
   await expect(intro).toHaveCount(0);
-  const expo = page.getByRole("region", { name: "Expeditor" });
+  const expo = page.getByRole("region", { name: "Final Check & Order Release" });
   await expect(expo.getByText("#1042")).toBeVisible();
-  await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
-  await expect(expo.getByRole("button", { name: "Waiting for remaining stations" })).toBeDisabled();
+  await expect(expo.getByText("0 / 2 dishes ready · 0 released")).toBeVisible();
+  // Nothing has finished yet: no dish can be released, and the order is not Ready.
+  await expect(expo.getByText(/Nothing new to release/)).toBeVisible();
+  await expect(expo.getByRole("button", { name: /Release|release/ })).toHaveCount(0);
   for (const name of ["Grill", "Tandoor"]) {
     await page
       .getByRole("navigation", { name: "Kitchen stations" })
@@ -185,10 +188,11 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
     await page.getByRole("button", { name: "Start preparing", exact: true }).click();
     await expect(page.getByRole("button", { name: "Complete item" })).toBeVisible();
     await page.getByRole("button", { name: "Complete item" }).click();
-    await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
+    await expect(page.getByText("Completed · Awaiting final check")).toBeVisible();
   }
-  await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
-  await expo.getByRole("button", { name: "Release order as Ready" }).click();
+  await expect(expo.getByText("2 / 2 dishes ready · 0 released")).toBeVisible();
+  await expo.getByRole("button", { name: "Final check, then release all" }).click();
+  await expo.getByRole("button", { name: "Checked — release 2 now" }).click();
   await expect(expo.getByText("#1042")).toHaveCount(0);
   const db = new Pool({ connectionString: url, max: 1 });
   try {
@@ -246,7 +250,8 @@ test("Kitchen Pro recovers a failed snapshot without losing its keyboard-accessi
   await sync.click();
   await expect(transportError).toHaveCount(0, { timeout: 15000 });
   await expect(page.getByRole("status").filter({ hasText: /Connected/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  // The outlet name is plain text (not a heading) so the hero is the page's first heading.
+  await expect(page.locator(".kk-outlet", { hasText: "Browser Kitchen" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
     "aria-pressed",
     "false"

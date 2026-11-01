@@ -1,4 +1,9 @@
 /* Organization 2.0 — The Hospitality House. Scoped to authenticated Organization only. */
+.oh-scope-nav {
+  padding: 16px clamp(17px, 3.2vw, 48px);
+  background: var(--paper);
+  border-bottom: 1px solid var(--oh-line, #e5d7c7);
+}
 .mm-workspace-main:has(.mm-organization) {
   max-width: none;
   padding: 0;

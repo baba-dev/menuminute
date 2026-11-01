@@ -55,9 +55,11 @@ function validateIncoming(payload: unknown): PendingOrder[] {
 export function KitchenIntake({
   organizationId,
   outletId,
+  timezone,
 }: {
   organizationId: string;
   outletId: string;
+  timezone?: string;
 }) {
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/orders`;
   const [orders, setOrders] = useState<PendingOrder[]>([]);
@@ -198,7 +200,11 @@ export function KitchenIntake({
         <strong>Order #{order.orderNumber}</strong>
         <span>
           <Clock3 size={14} aria-hidden="true" />{" "}
-          {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {new Intl.DateTimeFormat(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            ...(timezone ? { timeZone: timezone } : {}),
+          }).format(new Date(order.createdAt))}
         </span>
       </div>
       <p className="kk-live-order-meta">

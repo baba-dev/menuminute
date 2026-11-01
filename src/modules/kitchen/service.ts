@@ -36,6 +36,15 @@ const workSchema = z
     key: z.uuid().optional(),
   })
   .strict();
+/** Merchant-entered dish safety data snapshotted when the order item was created. */
+export type DishSafetySnapshot = {
+  /** False when the dish had no safety profile; absence is never "allergen free". */
+  declared?: boolean;
+  allergens?: string[];
+  crossContact?: string | null;
+  verified?: boolean;
+  dietary?: string[];
+};
 export type KitchenWorkView = {
   id: string;
   stationId: string;
@@ -50,8 +59,12 @@ export type KitchenWorkView = {
   selectedOptions: Array<{ groupName: string; optionName: string }>;
   notes: string | null;
   orderNotes: string | null;
+  dishSafety?: DishSafetySnapshot | null;
+  intakeSource?: "unknown" | "staff_pos" | "guest_menu" | "online";
   status: "queued" | "preparing" | "complete" | "cancelled";
   version: number;
+  /** Set when the dish has been released at Final Check. */
+  releasedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -196,15 +209,40 @@ export type KitchenExpoOrder = {
   version: number;
   fulfillmentMode: string;
   tableLabel: string | null;
+  orderNotes?: string | null;
   total: number;
   done: number;
+  /** Items already released at Final Check (a subset of `done`). */
+  released: number;
   started: number;
   createdAt: string;
+  items: KitchenExpoItem[];
+};
+export type KitchenExpoItem = {
+  workId: string;
+  version: number;
+  stationId: string;
+  stationName: string;
+  dishName: string;
+  quantity: number;
+  variantName: string | null;
+  selectedOptions: Array<{ groupName: string; optionName: string }>;
+  notes: string | null;
+  dishSafety?: DishSafetySnapshot | null;
+  status: "queued" | "preparing" | "complete" | "cancelled";
+  releasedAt: string | null;
 };
 export type KitchenExpoSnapshot = { cursor: number; overflow: boolean; orders: KitchenExpoOrder[] };
 const expoCommandSchema = z
   .object({
     orderId: id,
+    expectedVersion: z.number().int().nonnegative(),
+    key: z.uuid(),
+  })
+  .strict();
+const itemReleaseSchema = z
+  .object({
+    workId: id,
     expectedVersion: z.number().int().nonnegative(),
     key: z.uuid(),
   })
@@ -254,6 +292,37 @@ export async function kitchenExpoRelease(
         data: { orderId: string; currentStatus: "ready"; version: number; seq: number };
       }>(
         sql`select app_private.kitchen_expo_release(${outletId},${input.orderId},${input.expectedVersion},${input.key}::uuid) as data`
+      );
+      return r.rows[0]!.data;
+    });
+  } catch (e) {
+    mapError(e);
+  }
+}
+/** Release one completed dish at Final Check. The order becomes Ready only with its last item. */
+export async function kitchenWorkRelease(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
+) {
+  id.parse(organizationId);
+  id.parse(outletId);
+  const input = itemReleaseSchema.parse(raw);
+  try {
+    return await withOutlet(actor, outletId, "orders.complete", async (tx) => {
+      await ensureOrganization(tx, outletId, organizationId);
+      const r = await tx.execute<{
+        data: {
+          workId: string;
+          released: true;
+          orderId: string;
+          orderReady: boolean;
+          version: number;
+          seq: number;
+        };
+      }>(
+        sql`select app_private.kitchen_work_release(${outletId},${input.workId},${input.expectedVersion},${input.key}::uuid) as data`
       );
       return r.rows[0]!.data;
     });

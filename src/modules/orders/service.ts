@@ -359,7 +359,16 @@ export async function getGuestOrderTracking(token: string, orderId: string, trac
   );
   const data = result.rows[0]?.data;
   if (!data) throw new NotFoundError("Order tracking capability not found");
-  return data;
+  // "Part ready": counts only, re-validated against the same tracking capability.
+  const progress = await getPool().query<{ data: { released: number; total: number } | null }>(
+    "select app_private.guest_order_release_progress($1,$2,$3) as data",
+    [token, orderId, trackingToken]
+  );
+  const tracked: Record<string, unknown> = {
+    ...(data as Record<string, unknown>),
+    partReady: progress.rows[0]?.data ?? null,
+  };
+  return tracked;
 }
 
 // ─── Merchant Order Management ────────────────────────────────────────────────
@@ -406,6 +415,10 @@ export async function listOutletOrders(
       sql`select app_private.kitchen_managed_orders(${outletId}) as data`
     );
     const kitchenManaged = new Set(managed.rows[0]?.data ?? []);
+    const progress = await tx.execute<{
+      data: Record<string, { released: number; total: number }>;
+    }>(sql`select app_private.kitchen_release_progress(${outletId}) as data`);
+    const partReady = progress.rows[0]?.data ?? {};
     const byOrder = new Map<string, typeof items>();
     for (const item of items) {
       const group = byOrder.get(item.orderId) ?? [];
@@ -416,6 +429,7 @@ export async function listOutletOrders(
       id: order.id,
       canManagePayment: canPay.rows[0]?.allowed ?? false,
       kitchenManaged: kitchenManaged.has(order.id),
+      partReady: partReady[order.id] ?? null,
       restaurantId: order.restaurantId,
       tableId: order.tableId,
       customerName: order.customerName,

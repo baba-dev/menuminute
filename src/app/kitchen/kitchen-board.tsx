@@ -19,12 +19,20 @@ import {
   ArrowRight,
   ClipboardList,
   Maximize2,
+  Sparkles,
+  Sun,
 } from "lucide-react";
-import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
+import { playWoodenTap, playKitchenBell, isAudioSuspended, unlockAudio } from "@/lib/sound-effects";
 import { useSoundPreference } from "@/lib/use-sound-preference";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
+import { DishDetails } from "./dish-details";
+import { BorderBeam } from "./fx/border-beam";
+import { NumberTicker } from "./fx/number-ticker";
+import { ProgressRing } from "./fx/progress-ring";
+import { useEnteringIds } from "./fx/use-entering";
+import { useWakeLock } from "./use-wake-lock";
 import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import {
@@ -32,6 +40,14 @@ import {
   stationGroups,
   outstandingDishes,
   stationOverview,
+  KITCHEN_OVERDUE_MINUTES,
+  KITCHEN_WAIT_ALERT_MINUTES,
+  intakeSourceLabel,
+  needsAttention,
+  assignBeams,
+  formatClock,
+  secondsSince,
+  KITCHEN_STALE_SECONDS,
 } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
@@ -41,6 +57,8 @@ type Props = {
   initial: KitchenSnapshot;
   canManage: boolean;
   menuDishes: Dish[];
+  /** IANA timezone of the outlet; clocks on the board follow it, not the device. */
+  timezone?: string;
 };
 type Connection = "connecting" | "live" | "recovering" | "revoked";
 function Ticket({
@@ -49,13 +67,23 @@ function Ticket({
   busy,
   now,
   stationName,
+  beam,
+  entering,
+  shimmer,
 }: {
+  /** Border beam for unstarted tickets (5+ min); `animate` is false once the budget is spent. */
+  beam?: { level: "wait" | "late"; animate: boolean };
+  entering?: boolean;
+  /** The oldest unstarted ticket: its action gets a gentle sheen. */
+  shimmer?: boolean;
   work: KitchenWorkView;
   stationName: string;
   onAction: (work: KitchenWorkView, action: "start" | "complete") => void;
   busy: boolean;
   now: number | null;
 }) {
+  const special = needsAttention(work);
+  const source = intakeSourceLabel(work.intakeSource);
   const age =
     now === null
       ? null
@@ -65,10 +93,18 @@ function Ticket({
       className={
         "kk-ticket kk-ticket-" +
         work.status +
-        (age !== null && age >= 20 && work.status !== "complete" ? " kk-ticket-aging" : "")
+        (age !== null && age >= KITCHEN_OVERDUE_MINUTES && work.status !== "complete"
+          ? " kk-ticket-aging"
+          : "") +
+        (age !== null && age >= KITCHEN_WAIT_ALERT_MINUTES && work.status === "queued"
+          ? " kk-ticket-waiting"
+          : "") +
+        (special && work.status !== "complete" ? " kk-ticket-has-special" : "") +
+        (entering ? " kk-enter" : "")
       }
       aria-label={`Order ${work.orderNumber}: ${work.dishName}`}
     >
+      {beam && <BorderBeam level={beam.level} animate={beam.animate} />}
       <div className="flex items-center justify-between gap-2">
         <span className="kk-ticket-number">#{work.orderNumber}</span>
         <span className="kk-ticket-age">
@@ -77,28 +113,39 @@ function Ticket({
         </span>
       </div>
       <p className="kk-ticket-meta">
-        {work.fulfillmentMode === "pickup"
-          ? "Pickup"
-          : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
-            ? "Table " + work.tableLabel
-            : "Dine-in"}{" "}
-        · {stationName}
+        <span className="kk-ticket-where">
+          {work.fulfillmentMode === "pickup"
+            ? "Pickup"
+            : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
+              ? "Table " + work.tableLabel
+              : "Dine-in"}
+        </span>
+        {source && <span className="kk-ticket-source">{source}</span>}
+        <span>{stationName}</span>
       </p>
-      <h4 className="kk-ticket-dish">
-        {work.quantity} × {work.dishName}
-      </h4>
-      {work.variantName && <p className="kk-ticket-variant">{work.variantName}</p>}
-      {work.selectedOptions.length > 0 && (
-        <ul className="kk-ticket-addons">
-          {work.selectedOptions.map((o, i) => (
-            <li key={i}>
-              {o.groupName}: {o.optionName}
-            </li>
-          ))}
-        </ul>
+      {special && work.status !== "complete" && (
+        <p className="kk-ticket-special">
+          <Sparkles size={13} aria-hidden="true" /> Special request — read before cooking
+        </p>
       )}
-      {work.notes && <p className="kk-ticket-note">Item note: {work.notes}</p>}
-      {work.orderNotes && <p className="kk-ticket-order-note">Order note: {work.orderNotes}</p>}
+      <h4 className="kk-ticket-dish">
+        <span className="kk-ticket-qty">{work.quantity}×</span> {work.dishName}
+      </h4>
+      <DishDetails
+        variantName={work.variantName}
+        selectedOptions={work.selectedOptions}
+        notes={work.notes}
+        dishSafety={work.dishSafety}
+      />
+      {work.orderNotes && (
+        <p className="kk-ticket-order-note">
+          <ClipboardList size={14} aria-hidden="true" />
+          <span>
+            <small>Whole-order note</small>
+            {work.orderNotes}
+          </span>
+        </p>
+      )}
       {work.status !== "complete" && (
         <button
           type="button"
@@ -107,7 +154,7 @@ function Ticket({
             playWoodenTap("kitchen");
             onAction(work, work.status === "queued" ? "start" : "complete");
           }}
-          className="kk-ticket-action btn-ink-press"
+          className={"kk-ticket-action btn-ink-press" + (shimmer ? " kk-shimmer" : "")}
         >
           {busy ? (
             <LoaderCircle className="animate-spin" size={17} />
@@ -121,7 +168,9 @@ function Ticket({
       )}
       {work.status === "complete" && (
         <div className="flex items-center justify-between gap-2 border-t border-stone-200 pt-2 dark:border-stone-800">
-          <span className="text-xs text-stone-500">Completed · Awaiting expeditor</span>
+          <span className="text-xs text-stone-500">
+            {work.releasedAt ? "Released at Final Check" : "Completed · Awaiting final check"}
+          </span>
           <RubberStamp text="STATION COMPLETE" variant="complete" />
         </div>
       )}
@@ -136,6 +185,7 @@ export function KitchenBoard({
   initial,
   canManage,
   menuDishes,
+  timezone,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [selected, setSelected] = useState(
@@ -144,6 +194,10 @@ export function KitchenBoard({
   const [connection, setConnection] = useState<Connection>("connecting");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [now, setNow] = useState<number | null>(null);
+  const [lastContact, setLastContact] = useState<number | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const [keepAwake, setKeepAwake] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
@@ -164,31 +218,57 @@ export function KitchenBoard({
   const revoked = useRef(false);
   const stream = useRef<EventSource | null>(null);
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/kitchen`;
-  const apply = useCallback((data: KitchenSnapshot) => {
-    if (revoked.current || data.cursor < cursorRef.current) return;
-    cursorRef.current = data.cursor;
-    const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
-    seen.current = new Set(data.work.map((w) => w.id));
-    setSnapshot(data);
-    setLastSync(new Date());
-    setConnection("live");
-    // A confirmed resync clears only transport errors. Never hide an uncertain
-    // staff command merely because a later snapshot was successfully fetched.
-    setError((previous) =>
-      /^(?:Error: )?(?:Kitchen connection interrupted|Unable to reconcile kitchen tickets)/.test(
-        previous
-      )
-        ? ""
-        : previous
-    );
-    if (soundRef.current && newcomers.length) {
-      try {
-        playKitchenBell("kitchen");
-      } catch {
-        /* Browser audio may require a gesture. */
-      }
-    }
+  /** Polite screen-reader announcement; cleared so an identical message can repeat. */
+  const say = useCallback((message: string) => {
+    setAnnouncement(message);
+    setTimeout(() => setAnnouncement((current) => (current === message ? "" : current)), 6000);
   }, []);
+  const apply = useCallback(
+    (data: KitchenSnapshot) => {
+      if (revoked.current || data.cursor < cursorRef.current) return;
+      cursorRef.current = data.cursor;
+      const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
+      seen.current = new Set(data.work.map((w) => w.id));
+      setSnapshot(data);
+      setLastSync(new Date());
+      setLastContact(Date.now());
+      setConnection("live");
+      // A confirmed resync clears only transport errors. Never hide an uncertain
+      // staff command merely because a later snapshot was successfully fetched.
+      setError((previous) =>
+        /^(?:Error: )?(?:Kitchen connection interrupted|Unable to reconcile kitchen tickets)/.test(
+          previous
+        )
+          ? ""
+          : previous
+      );
+      if (newcomers.length) {
+        const first = newcomers[0]!;
+        say(
+          newcomers.length === 1
+            ? `New ticket: ${first.quantity} ${first.dishName}, order ${first.orderNumber}`
+            : `${newcomers.length} new tickets`
+        );
+        if (soundRef.current) {
+          try {
+            playKitchenBell("kitchen");
+          } catch {
+            /* Browser audio may require a gesture. */
+          }
+          // The bell can be silently refused until the first tap: tell staff instead of failing quietly.
+          setTimeout(() => setSoundBlocked(isAudioSuspended()), 400);
+        } else {
+          // Sound is off: a short buzz (where the device supports it) is the non-audio cue.
+          try {
+            navigator.vibrate?.(120);
+          } catch {
+            /* Not supported. */
+          }
+        }
+      }
+    },
+    [say]
+  );
   const refresh = useCallback(async () => {
     if (revoked.current) return;
     const res = await fetch(base, { cache: "no-store" });
@@ -206,7 +286,7 @@ export function KitchenBoard({
     const initial = requestAnimationFrame(() => {
       setNow(Date.now());
     });
-    const clock = setInterval(() => setNow(Date.now()), 15000);
+    const clock = setInterval(() => setNow(Date.now()), 10000);
     return () => {
       cancelAnimationFrame(initial);
       clearInterval(clock);
@@ -226,7 +306,10 @@ export function KitchenBoard({
       }
     });
     source.addEventListener("heartbeat", () => {
-      if (alive && !revoked.current) setConnection("live");
+      if (alive && !revoked.current) {
+        setConnection("live");
+        setLastContact(Date.now());
+      }
     });
     source.addEventListener("unavailable", () => {
       if (alive && !revoked.current) {
@@ -257,6 +340,23 @@ export function KitchenBoard({
       clearInterval(timer);
     };
   }, [base, apply, refresh]);
+  const wake = useWakeLock(keepAwake);
+  const queuedCount = snapshot.work.filter((w) => w.status === "queued").length;
+  const baseTitle = useRef<string | null>(null);
+  useEffect(() => {
+    // Waiting tickets show in the browser tab, a cue that works with sound off.
+    if (baseTitle.current === null) baseTitle.current = document.title.replace(/^\(\d+\) /, "");
+    document.title = (queuedCount > 0 ? `(${queuedCount}) ` : "") + baseTitle.current;
+  }, [queuedCount]);
+  useEffect(
+    () => () => {
+      if (baseTitle.current !== null) document.title = baseTitle.current;
+    },
+    []
+  );
+  const contactAge = secondsSince(now, lastContact);
+  const stale =
+    contactAge !== null && contactAge >= KITCHEN_STALE_SECONDS && connection !== "revoked";
   const station =
     selected === "all"
       ? undefined
@@ -276,7 +376,16 @@ export function KitchenBoard({
     () => stationOverview(snapshot.stations, snapshot.work, now),
     [snapshot.stations, snapshot.work, now]
   );
+  const beams = useMemo(() => assignBeams(snapshot.work, now), [snapshot.work, now]);
+  const entering = useEnteringIds(useMemo(() => snapshot.work.map((w) => w.id), [snapshot.work]));
   const allPending = overview.reduce((sum, item) => sum + item.queued + item.preparing, 0);
+  const overdueStations = overview.filter(
+    (item) => item.oldestMinutes !== null && item.oldestMinutes >= KITCHEN_OVERDUE_MINUTES
+  ).length;
+  function openStation(id: string) {
+    setSelected(id);
+    document.getElementById("station-rail")?.scrollIntoView({ block: "start" });
+  }
 
   async function command(url: string, body: unknown) {
     const res = await fetch(url, {
@@ -304,6 +413,11 @@ export function KitchenBoard({
         expectedVersion: work.version,
         key: crypto.randomUUID(),
       });
+      say(
+        op === "start"
+          ? `Started preparing ${work.dishName}, order ${work.orderNumber}`
+          : `Completed ${work.dishName}, order ${work.orderNumber}`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action could not be saved");
       void refresh().catch(() => {});
@@ -373,6 +487,9 @@ export function KitchenBoard({
   ];
   return (
     <main className="product mm-kitchen" data-testid="chefs-pass">
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <header className="kk-topbar">
         <div className="kk-topbar-inner">
           <div className="kk-identity">
@@ -381,7 +498,7 @@ export function KitchenBoard({
             </span>
             <div>
               <span className="kk-eyebrow">MENUMINUTE / KITCHEN PRO</span>
-              <h2>{outletName}</h2>
+              <p className="kk-outlet">{outletName}</p>
             </div>
           </div>
           <div className="kk-tools">
@@ -419,6 +536,18 @@ export function KitchenBoard({
               {sound ? <Volume2 size={17} /> : <VolumeX size={17} />}{" "}
               <span>Sound {sound ? "on" : "off"}</span>
             </button>
+            {wake.supported && (
+              <button
+                type="button"
+                aria-pressed={keepAwake}
+                className="kk-tool"
+                title="Keep this screen from sleeping during service"
+                onClick={() => setKeepAwake((value) => !value)}
+              >
+                <Sun size={17} aria-hidden="true" />{" "}
+                <span>{keepAwake && wake.held ? "Screen stays on" : "Screen may sleep"}</span>
+              </button>
+            )}
             <button
               type="button"
               className="kk-tool"
@@ -453,10 +582,15 @@ export function KitchenBoard({
         </div>
       </header>
       <section
-        className={"kk-hero" + (snapshot.enabled ? " kk-hero-live" : "")}
+        className={
+          "kk-hero" +
+          (snapshot.enabled ? " kk-hero-live" : "") +
+          (snapshot.stations.length > 0 ? " kk-hero-has-stations" : "")
+        }
         aria-labelledby="kk-title"
       >
-        <div className="kk-hero-content">
+        <div className="kk-hero-dots" aria-hidden="true" />
+        <div className="kk-hero-content kk-fade">
           <span className="kk-eyebrow">01 / THE KITCHEN WORKSPACE</span>
           <h1 id="kk-title">{snapshot.enabled ? "Kitchen live service." : "The Chef’s Pass."}</h1>
           <p className="kk-tagline">
@@ -465,8 +599,8 @@ export function KitchenBoard({
               : "Every dish has its place. Every ticket moves with purpose."}
           </p>
           <p className="kk-hero-note">
-            From first fire to final handoff. Your preparation stations, live queue, and
-            expeditor—together on one focused surface.
+            From first fire to final handoff. Your preparation stations, live queue, and final
+            check—together on one focused surface.
           </p>
           <div className="kk-hero-actions">
             <a href="#station-rail" className="kk-hero-primary">
@@ -474,11 +608,64 @@ export function KitchenBoard({
             </a>
             {canManage && (
               <a href="#expeditor" className="kk-hero-outline">
-                Go to expeditor <ClipboardList size={16} aria-hidden="true" />
+                Go to final check <ClipboardList size={16} aria-hidden="true" />
               </a>
             )}
           </div>
         </div>
+        {snapshot.stations.length > 0 && (
+          <aside className="kk-hero-stations" aria-labelledby="kk-stations-title">
+            <div className="kk-hero-stations-head">
+              <div>
+                <span className="kk-eyebrow">LIVE / PREPARATION OVERVIEW</span>
+                <h2 id="kk-stations-title">Every station in sight.</h2>
+              </div>
+              <span className="kk-overview-total">
+                {allPending} active
+                {overdueStations > 0 ? ` · ${overdueStations} overdue` : ""}
+              </span>
+            </div>
+            <ul className="kk-hero-stations-list">
+              {overview.map((item) => {
+                const overdue =
+                  item.oldestMinutes !== null && item.oldestMinutes >= KITCHEN_OVERDUE_MINUTES;
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      aria-pressed={selected === item.id}
+                      onClick={() => openStation(item.id)}
+                      className={
+                        "kk-hero-station" +
+                        (selected === item.id ? " is-selected" : "") +
+                        (overdue ? " is-overdue" : "")
+                      }
+                    >
+                      <ProgressRing
+                        done={item.completed}
+                        total={item.queued + item.preparing + item.completed}
+                      />
+                      <span className="kk-hero-station-text">
+                        <strong>{item.name}</strong>
+                        <span>
+                          {item.queued} to prepare · {item.preparing} cooking · {item.completed}{" "}
+                          done
+                        </span>
+                        <small>
+                          {item.oldestMinutes === null
+                            ? "All caught up"
+                            : overdue
+                              ? `Overdue · ${item.oldestMinutes} min oldest`
+                              : `Oldest open task · ${item.oldestMinutes} min`}
+                        </small>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        )}
         <div className="kk-pass-art" aria-hidden="true">
           <span className="kk-pass-hanger" />
           <span className="kk-pass-ticket kk-pass-ticket-one" />
@@ -489,7 +676,11 @@ export function KitchenBoard({
         </div>
       </section>
       <div className="kk-content">
-        <section className="kk-pulse" aria-label="Visible kitchen workload">
+        <section
+          className="kk-pulse kk-fade"
+          style={{ "--kk-delay": "0.08s" } as React.CSSProperties}
+          aria-label="Visible kitchen workload"
+        >
           <div className="kk-section-heading">
             <div>
               <span className="kk-eyebrow">LIVE / ON THIS DEVICE</span>
@@ -508,7 +699,9 @@ export function KitchenBoard({
                 <span>
                   <Icon size={19} aria-hidden="true" /> {title}
                 </span>
-                <strong>{count}</strong>
+                <strong>
+                  <NumberTicker value={count} />
+                </strong>
               </div>
             ))}
           </div>
@@ -532,6 +725,30 @@ export function KitchenBoard({
             entitlements are approved. You can configure stations without activating sales.
           </section>
         )}
+        {soundBlocked && sound && (
+          <div role="status" className="kk-sound-blocked">
+            <VolumeX size={18} aria-hidden="true" />
+            <span>The browser is blocking the new-ticket bell until you tap once.</span>
+            <button
+              type="button"
+              onClick={() =>
+                void unlockAudio().then((ok) => {
+                  setSoundBlocked(!ok);
+                  if (ok) playKitchenBell("kitchen");
+                })
+              }
+            >
+              Enable sound
+            </button>
+          </div>
+        )}
+        {stale && connection === "live" && (
+          <p role="status" className="kk-stale">
+            <WifiOff size={16} aria-hidden="true" /> Nothing heard from the kitchen server for{" "}
+            {contactAge} seconds. Tickets may be out of date — use Sync before relying on this
+            screen.
+          </p>
+        )}
         {connection !== "live" && (
           <p
             role="alert"
@@ -552,42 +769,6 @@ export function KitchenBoard({
             </button>
           </div>
         )}
-        <section className="kk-overview" aria-label="All authorized preparation stations">
-          <div className="kk-overview-heading">
-            <div>
-              <span className="kk-eyebrow">LIVE / PREPARATION OVERVIEW</span>
-              <h2>Every station in sight.</h2>
-              <p>
-                Counts reflect stations you are authorized to view. Incoming orders stay in the
-                attention dock above.
-              </p>
-            </div>
-            <div className="kk-overview-total">{allPending} active station tasks</div>
-          </div>
-          <div className="kk-overview-grid">
-            {overview.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={selected === item.id}
-                onClick={() => setSelected(item.id)}
-                className={"kk-overview-card" + (selected === item.id ? " is-selected" : "")}
-              >
-                <strong>{item.name}</strong>
-                <span>
-                  {item.queued} to prepare · {item.preparing} cooking · {item.completed} done
-                </span>
-                <small>
-                  {item.oldestMinutes === null
-                    ? "All caught up"
-                    : item.oldestMinutes >= 20
-                      ? `Overdue · ${item.oldestMinutes} min oldest`
-                      : `Oldest open task · ${item.oldestMinutes} min`}
-                </small>
-              </button>
-            ))}
-          </div>
-        </section>
         <div className="kk-section-heading kk-station-heading">
           <div>
             <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-amber-400">
@@ -599,8 +780,8 @@ export function KitchenBoard({
                 : (station?.name ?? "Station assignment required")}
             </h2>
             <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
-              Last reconciled: {lastSync?.toLocaleTimeString() ?? "Not connected"} · All changes
-              saved on the server
+              Last reconciled: {lastSync ? formatClock(lastSync, timezone) : "Not connected"} · All
+              changes saved on the server
             </p>
           </div>
           {canManage && (
@@ -619,7 +800,7 @@ export function KitchenBoard({
             {canManage && (
               <button
                 type="button"
-                aria-current={selected === "all" ? "page" : undefined}
+                aria-pressed={selected === "all"}
                 onClick={() => setSelected("all")}
                 className={"kk-station-tab" + (selected === "all" ? " is-selected" : "")}
               >
@@ -630,13 +811,14 @@ export function KitchenBoard({
               <button
                 type="button"
                 key={s.id}
-                aria-label={s.name}
-                aria-current={station?.id === s.id ? "page" : undefined}
+                aria-pressed={station?.id === s.id}
                 onClick={() => setSelected(s.id)}
                 className={"kk-station-tab" + (station?.id === s.id ? " is-selected" : "")}
               >
                 {s.name}
                 <span>{overview.find((item) => item.id === s.id)?.queued ?? 0} queued</span>
+                {(overview.find((item) => item.id === s.id)?.oldestMinutes ?? 0) >=
+                  KITCHEN_OVERDUE_MINUTES && <em className="kk-tab-overdue">Overdue</em>}
               </button>
             ))}
           </nav>
@@ -659,6 +841,88 @@ export function KitchenBoard({
             </ul>
           </section>
         )}
+        <section
+          aria-label="Station ticket board"
+          className="kk-workspace kk-fade"
+          style={{ "--kk-delay": "0.16s" } as React.CSSProperties}
+        >
+          <div className="kk-section-heading">
+            <div>
+              <span className="kk-eyebrow">02 / STATION TICKETS</span>
+              <h2>Preparation rail.</h2>
+            </div>
+            <span>
+              {selected === "all"
+                ? "All authorized stations"
+                : (station?.name ?? "Choose a station")}{" "}
+              · oldest ticket first
+            </span>
+          </div>
+          <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
+            {(
+              [
+                { key: "all", label: "All" },
+                { key: "queued", label: "To prepare" },
+                { key: "preparing", label: "Preparing" },
+                { key: "complete", label: "Completed" },
+              ] as const
+            ).map((lane) => (
+              <button
+                type="button"
+                key={lane.key}
+                aria-pressed={mobileLane === lane.key}
+                onClick={() => setMobileLane(lane.key)}
+              >
+                {lane.label}
+                {lane.key !== "all" && <span>{groups[lane.key].length}</span>}
+              </button>
+            ))}
+          </div>
+          <div className="kk-lanes">
+            {lanes.map((lane) => {
+              const Icon = lane.icon;
+              return (
+                <div
+                  key={lane.key}
+                  className={
+                    "kk-lane kk-lane-" +
+                    lane.key +
+                    (mobileLane !== "all" && mobileLane !== lane.key ? " kk-mobile-hidden" : "")
+                  }
+                >
+                  <h3 className="kk-lane-heading">
+                    <span className="kk-lane-label">
+                      <Icon size={20} className="text-orange-600 dark:text-amber-400" />
+                      {lane.title}
+                    </span>
+                    <span className="kk-lane-count">{groups[lane.key].length}</span>
+                  </h3>
+                  <div className="kk-ticket-list">
+                    {groups[lane.key].map((w) => (
+                      <Ticket
+                        key={w.id}
+                        work={w}
+                        stationName={
+                          snapshot.stations.find((entry) => entry.id === w.stationId)?.name ??
+                          "Assigned station"
+                        }
+                        now={now}
+                        busy={busy === w.id}
+                        onAction={action}
+                        beam={beams.get(w.id)}
+                        entering={entering.has(w.id)}
+                        shimmer={lane.key === "queued" && w.id === groups.queued[0]?.id}
+                      />
+                    ))}
+                    {groups[lane.key].length === 0 && (
+                      <p className="kk-lane-empty">No {lane.title.toLowerCase()} items</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
         {canManage && (
           <KitchenExpeditor
             base={base}
@@ -666,6 +930,7 @@ export function KitchenBoard({
             cursor={snapshot.cursor}
             work={snapshot.work}
             stations={snapshot.stations}
+            timezone={timezone}
           />
         )}
         {canManage &&
@@ -750,85 +1015,9 @@ export function KitchenBoard({
               </form>
             </details>
           )}
-        <section aria-label="Station ticket board" className="kk-workspace">
-          <div className="kk-section-heading">
-            <div>
-              <span className="kk-eyebrow">02 / STATION TICKETS</span>
-              <h2>Preparation rail.</h2>
-            </div>
-            <span>
-              {selected === "all"
-                ? "All authorized stations"
-                : (station?.name ?? "Choose a station")}{" "}
-              · oldest ticket first
-            </span>
-          </div>
-          <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
-            {(
-              [
-                { key: "all", label: "All" },
-                { key: "queued", label: "To prepare" },
-                { key: "preparing", label: "Preparing" },
-                { key: "complete", label: "Completed" },
-              ] as const
-            ).map((lane) => (
-              <button
-                type="button"
-                key={lane.key}
-                aria-pressed={mobileLane === lane.key}
-                onClick={() => setMobileLane(lane.key)}
-              >
-                {lane.label}
-                {lane.key !== "all" && <span>{groups[lane.key].length}</span>}
-              </button>
-            ))}
-          </div>
-          <div className="kk-lanes">
-            {lanes.map((lane) => {
-              const Icon = lane.icon;
-              return (
-                <div
-                  key={lane.key}
-                  className={
-                    "kk-lane kk-lane-" +
-                    lane.key +
-                    (mobileLane !== "all" && mobileLane !== lane.key ? " kk-mobile-hidden" : "")
-                  }
-                >
-                  <h3 className="kk-lane-heading">
-                    <span className="kk-lane-label">
-                      <Icon size={20} className="text-orange-600 dark:text-amber-400" />
-                      {lane.title}
-                    </span>
-                    <span className="kk-lane-count">{groups[lane.key].length}</span>
-                  </h3>
-                  <div className="kk-ticket-list">
-                    {groups[lane.key].map((w) => (
-                      <Ticket
-                        key={w.id}
-                        work={w}
-                        stationName={
-                          snapshot.stations.find((entry) => entry.id === w.stationId)?.name ??
-                          "Assigned station"
-                        }
-                        now={now}
-                        busy={busy === w.id}
-                        onAction={action}
-                      />
-                    ))}
-                    {groups[lane.key].length === 0 && (
-                      <p className="kk-lane-empty">No {lane.title.toLowerCase()} items</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
         <p className="kk-footnote">
-          Station completion does not mark an order Ready for guests. Only an authorized expeditor
-          can release an eligible, fully completed order. All live actions are verified by the
-          server.
+          Station completion does not mark an order Ready for guests. Only an authorized person can
+          release an order after its Final Check. All live actions are verified by the server.
         </p>
       </div>
       {canManage && (

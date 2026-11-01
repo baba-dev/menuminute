@@ -5,6 +5,12 @@ import {
   stationGroups,
   outstandingDishes,
   stationOverview,
+  describeDishSafety,
+  needsAttention,
+  intakeSourceLabel,
+  assignBeams,
+  formatClock,
+  secondsSince,
 } from "../src/modules/kitchen/presentation";
 const base: KitchenWorkView = {
   id: "one",
@@ -82,5 +88,99 @@ describe("The Chef's Pass read-only presentation", () => {
         make({ id: "four", quantity: 60, status: "cancelled" }),
       ])
     ).toEqual([["Paneer Tikka", 5]]);
+  });
+});
+
+describe("dish safety presentation", () => {
+  it("shows only what the restaurant declared and never claims allergen-free", () => {
+    expect(describeDishSafety(null)).toMatchObject({ allergens: [], hasAny: false });
+    // A dish with no declared allergens is unknown, not safe: no chip, no claim.
+    expect(describeDishSafety({ declared: false, allergens: [] }).hasAny).toBe(false);
+    expect(describeDishSafety({ declared: true, allergens: [], verified: true }).allergens).toEqual(
+      []
+    );
+    const declared = describeDishSafety({
+      declared: true,
+      allergens: ["dairy", "nuts", "dairy", "not-a-real-code"],
+      crossContact: " Shared tandoor ",
+      verified: false,
+      dietary: ["vegetarian"],
+    });
+    expect(declared.allergens).toEqual(["Dairy", "Tree nuts"]);
+    expect(declared.crossContact).toBe("Shared tandoor");
+    expect(declared.dietary).toEqual(["Veg"]);
+    expect(declared.unverified).toBe(true);
+    expect(describeDishSafety({ allergens: ["soy"], verified: true }).unverified).toBe(false);
+  });
+  it("flags tickets with customisations, notes or allergens for attention", () => {
+    expect(needsAttention(base)).toBe(false);
+    expect(needsAttention({ ...base, notes: "less spicy" })).toBe(true);
+    expect(needsAttention({ ...base, orderNotes: "birthday" })).toBe(true);
+    expect(
+      needsAttention({ ...base, selectedOptions: [{ groupName: "Spice", optionName: "Mild" }] })
+    ).toBe(true);
+    expect(needsAttention({ ...base, dishSafety: { allergens: ["peanuts"] } })).toBe(true);
+    expect(needsAttention({ ...base, dishSafety: { dietary: ["vegan"] } })).toBe(false);
+  });
+  it("labels the intake source and hides unknown ones", () => {
+    expect(intakeSourceLabel("staff_pos")).toBe("POS");
+    expect(intakeSourceLabel("guest_menu")).toBe("QR menu");
+    expect(intakeSourceLabel("unknown")).toBeNull();
+    expect(intakeSourceLabel(undefined)).toBeNull();
+  });
+});
+
+describe("border beam assignment", () => {
+  const now = Date.parse("2026-01-01T12:00:00Z");
+  const at = (minutesAgo: number) => new Date(now - minutesAgo * 60000).toISOString();
+  const item = (id: string, minutesAgo: number, status: KitchenWorkView["status"] = "queued") => ({
+    id,
+    status,
+    createdAt: at(minutesAgo),
+  });
+  it("only flags queued work waiting 5+ minutes and escalates at 10", () => {
+    const beams = assignBeams(
+      [
+        item("fresh", 4),
+        item("wait", 5),
+        item("late", 12),
+        item("started", 30, "preparing"),
+        item("done", 30, "complete"),
+      ],
+      now
+    );
+    expect([...beams.keys()].sort()).toEqual(["late", "wait"]);
+    expect(beams.get("wait")?.level).toBe("wait");
+    expect(beams.get("late")?.level).toBe("late");
+  });
+  it("gives the animation budget to the oldest tickets and keeps the rest static", () => {
+    const work = Array.from({ length: 7 }, (_, i) => item("t" + i, 6 + i));
+    const beams = assignBeams(work, now, 3);
+    expect(beams.size).toBe(7);
+    // Oldest is t6 (12 min). Exactly three animate.
+    expect([...beams.values()].filter((b) => b.animate)).toHaveLength(3);
+    expect(beams.get("t6")?.animate).toBe(true);
+    expect(beams.get("t0")?.animate).toBe(false);
+  });
+  it("does nothing before the clock is known", () => {
+    expect(assignBeams([item("a", 30)], null).size).toBe(0);
+  });
+});
+
+describe("clock helpers", () => {
+  it("formats times in the outlet timezone, not the device's", () => {
+    const instant = "2026-01-01T12:00:00Z";
+    expect(formatClock(instant, "Asia/Kolkata")).toMatch(/5:30:00|17:30:00/);
+    expect(formatClock(instant, "America/New_York")).toMatch(/7:00:00|07:00:00/);
+  });
+  it("survives an unsupported zone and bad input", () => {
+    expect(formatClock("2026-01-01T12:00:00Z", "Not/AZone")).not.toBe("—");
+    expect(formatClock("not a date", "Asia/Kolkata")).toBe("—");
+  });
+  it("measures seconds since the last contact", () => {
+    expect(secondsSince(10_000, 4_000)).toBe(6);
+    expect(secondsSince(1_000, 4_000)).toBe(0);
+    expect(secondsSince(null, 4_000)).toBeNull();
+    expect(secondsSince(10_000, null)).toBeNull();
   });
 });

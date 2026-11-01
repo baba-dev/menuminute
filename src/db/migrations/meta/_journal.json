@@ -489,7 +489,28 @@
       "idx": 69,
       "version": "7",
       "when": 1794488400024,
-      "tag": "0070_floor_chairs_and_sections",
+      "tag": "0070_kitchen_item_release",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1794574800025,
+      "tag": "0071_kitchen_ticket_safety",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1794661200026,
+      "tag": "0072_pos_line_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794747600027,
+      "tag": "0073_floor_chairs_and_sections",
       "breakpoints": true
     }
   ]

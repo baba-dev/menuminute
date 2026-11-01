@@ -1,7 +1,7 @@
 # Dining floor release verification
 
 PR #259 added the first visual dining floor (drag canvas). It is superseded by the chairs-and-sections floor
-described in [dining-floor.md](dining-floor.md) (migration 0070); the evidence below applies to the new floor.
+described in [dining-floor.md](dining-floor.md) (migration 0073); the evidence below applies to the new floor.
 
 ## Required evidence
 
@@ -11,7 +11,7 @@ described in [dining-floor.md](dining-floor.md) (migration 0070); the evidence b
 - Test one real dine-in QR scan through menu, ordering, kitchen and POS against the correct table.
 - Create a table with chairs, tap chairs and "Seat party", and confirm totals and the hero copy update.
 - Confirm a table with seated guests, open orders, bookings or a live QR cannot be archived.
-- Confirm legacy tables created before migration 0070 are absent from the floor but their QR codes and
+- Confirm legacy tables created before migration 0073 are absent from the floor but their QR codes and
   historical orders still resolve.
 - Test a date boundary in the restaurant timezone and concurrent booking requests.
 - Capture desktop and mobile screenshots (light and dark) for the floor, the add-table dialog and the booking dialog.

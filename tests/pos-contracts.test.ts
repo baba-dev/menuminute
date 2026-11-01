@@ -34,6 +34,22 @@ describe("POS A/C strict financial contracts", () => {
     expect(parsed.paymentMethod).toBe(null);
     expect("taxMinor" in parsed).toBe(false);
   });
+  it("accepts an optional trimmed per-dish note up to 200 characters", () => {
+    const line = validSelection.lines[0];
+    const parse = (note: unknown) =>
+      posSubmissionSchema.parse({
+        key: "00000000-0000-4000-8000-000000000001",
+        selection: { ...validSelection, lines: [{ ...line, note }] },
+        fulfillmentMode: "pickup",
+        tableId: null,
+        expectedSubtotalMinor: "14000",
+      }).selection.lines[0]?.note;
+    expect(parse("  no onion ")).toBe("no onion");
+    expect(parse("x".repeat(200))).toHaveLength(200);
+    expect(() => parse("x".repeat(201))).toThrow();
+    expect(() => parse(42)).toThrow();
+    expect(() => parse({ text: "a" })).toThrow();
+  });
   it("rejects bad keys, negative money, unknown financial fields and quantity overflow", () => {
     const valid = {
       key: "00000000-0000-4000-8000-000000000001",

@@ -91,7 +91,7 @@ export const restaurantTables = pgTable(
       .references(() => restaurants.id, { onDelete: "cascade" }),
     tableNumber: text("table_number").notNull(),
     label: text("label"), // "Window Seat", "Rooftop", etc.
-    /** Floor v2: operator-facing name, human table number and section (migration 0070). */
+    /** Floor v2: operator-facing name, human table number and section (migration 0073). */
     name: text("name"),
     displayNumber: integer("display_number"),
     sectionId: text("section_id"),
