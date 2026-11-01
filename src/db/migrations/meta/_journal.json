@@ -512,6 +512,20 @@
       "when": 1794747600027,
       "tag": "0073_floor_chairs_and_sections",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1794834000028,
+      "tag": "0074_auth_step_up_replay_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794920400029,
+      "tag": "0075_demo_provisioning_boundary",
+      "breakpoints": true
     }
   ]
 }
