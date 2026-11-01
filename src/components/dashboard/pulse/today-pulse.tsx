@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useTransition } from "react";
+import { useEffect, useMemo, useTransition, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownRight,
@@ -29,6 +29,9 @@ export function barWindow(hourly: readonly number[], hour: number): number[] {
   return Array.from({ length: hour - start + 1 }, (_, i) => start + i);
 }
 
+/** How a figure is shown. The live dashboard counts up over time; the marketing page swaps in a scroll-driven one. */
+export type PulseFigure = ComponentType<{ value: number; format?: (n: number) => string }>;
+
 /**
  * Bento summary for the dashboard: sales with an hourly rhythm, top sellers, how long guests
  * have been waiting, and new guests. Read-only; every figure comes from this outlet's orders.
@@ -43,18 +46,37 @@ export function TodayPulseBento({ pulse }: { pulse: TodayPulse | null }) {
     return () => window.clearInterval(id);
   }, [router]);
 
+  return <TodayPulsePanel pulse={pulse} refreshing={refreshing} />;
+}
+
+/**
+ * The bento as a pure view: no router or timers. The live dashboard wraps it in
+ * `TodayPulseBento`; the marketing page renders the same panel with sample data.
+ */
+export function TodayPulsePanel({
+  pulse,
+  refreshing = false,
+  Figure = PulseTicker,
+  locale,
+}: {
+  pulse: TodayPulse | null;
+  refreshing?: boolean;
+  Figure?: PulseFigure;
+  /** Defaults to the visitor's locale. A public page pins one so server and client text match. */
+  locale?: string;
+}) {
   const currency = pulse?.currency ?? "INR";
   const money = useMemo(() => {
     const dec =
       new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
         .maximumFractionDigits ?? 2;
-    const f = new Intl.NumberFormat(undefined, {
+    const f = new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: dec,
     });
     return (minor: number) => f.format(minor / 10 ** dec);
-  }, [currency]);
+  }, [currency, locale]);
 
   return (
     <section
@@ -79,7 +101,7 @@ export function TodayPulseBento({ pulse }: { pulse: TodayPulse | null }) {
           <p>Today’s figures are unavailable or order access is restricted.</p>
         </div>
       ) : (
-        <PulseGrid pulse={pulse} money={money} />
+        <PulseGrid pulse={pulse} money={money} Figure={Figure} />
       )}
 
       <p className="mm-ops-disclaimer">
@@ -90,7 +112,15 @@ export function TodayPulseBento({ pulse }: { pulse: TodayPulse | null }) {
   );
 }
 
-function PulseGrid({ pulse, money }: { pulse: TodayPulse; money: (minor: number) => string }) {
+function PulseGrid({
+  pulse,
+  money,
+  Figure,
+}: {
+  pulse: TodayPulse;
+  money: (minor: number) => string;
+  Figure: PulseFigure;
+}) {
   const { sales, topSellers, wait, guests } = pulse;
   const hours = barWindow(sales.hourlyMinor, pulse.hour);
   const peak = Math.max(0, ...hours.map((h) => sales.hourlyMinor[h] ?? 0));
@@ -127,7 +157,7 @@ function PulseGrid({ pulse, money }: { pulse: TodayPulse; money: (minor: number)
             )}
           </header>
           <p className={styles.big}>
-            <PulseTicker value={sales.grossMinor} format={money} />
+            <Figure value={sales.grossMinor} format={money} />
           </p>
           <p className={styles.sub}>
             {sales.orders === 0 ? (
@@ -197,7 +227,7 @@ function PulseGrid({ pulse, money }: { pulse: TodayPulse; money: (minor: number)
                     {dish.name}
                   </span>
                   <span className={styles.qty}>
-                    ×<PulseTicker value={dish.quantity} />
+                    ×<Figure value={dish.quantity} />
                   </span>
                   <span className={styles.share} aria-hidden="true">
                     <span
@@ -232,7 +262,7 @@ function PulseGrid({ pulse, money }: { pulse: TodayPulse; money: (minor: number)
           ) : (
             <>
               <p className={styles.big}>
-                <PulseTicker value={wait.averageMinutes ?? 0} />
+                <Figure value={wait.averageMinutes ?? 0} />
                 <small> min avg</small>
               </p>
               <p className={styles.sub}>
@@ -253,7 +283,7 @@ function PulseGrid({ pulse, money }: { pulse: TodayPulse; money: (minor: number)
             <h3>New guests</h3>
           </header>
           <p className={styles.big}>
-            <PulseTicker value={guests.newGuests} />
+            <Figure value={guests.newGuests} />
           </p>
           <div className={styles.avatars} aria-hidden="true">
             {Array.from({ length: Math.min(MAX_AVATARS, guestTotal) }, (_, i) => (

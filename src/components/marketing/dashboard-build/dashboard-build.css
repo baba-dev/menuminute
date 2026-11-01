@@ -13,27 +13,53 @@
 /* Pin only when script can run and motion is welcome; otherwise the section is one screen. */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .db {
-    height: 500vh;
+    height: 600vh;
   }
 }
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (max-width: 680px) {
   .db {
-    height: 400vh;
+    height: 450vh;
   }
 }
 @media (max-width: 680px) {
   .db {
     --db-cw: 390px;
-    --db-wh: 800px;
+    --db-wh: 700px;
+  }
+  /* A phone has little height: keep the chrome around the stage to a minimum. */
+  .db__sticky {
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+  }
+  .db__title {
+    font-size: 0.95rem;
+  }
+  .db__caption {
+    font-size: 0.78rem;
+  }
+  .db__caption span {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .db__rail {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+  .db__rail-item {
+    padding: 0.22rem 0.5rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
   }
 }
 
 /* `clip`, not `hidden`: hidden would create a scroll container and break sticky. */
 .db__sticky {
   position: sticky;
-  top: 0;
+  top: var(--db-nav, 0px);
   display: grid;
-  height: 100dvh;
+  height: calc(100dvh - var(--db-nav, 0px));
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   justify-items: center;
   gap: 0.75rem;
@@ -52,6 +78,7 @@
 
 /* Size container: the scale below is derived from the room this cell actually has. */
 .db__perspective {
+  position: relative;
   container-type: size;
   display: grid;
   width: 100%;
@@ -131,6 +158,8 @@
 }
 .db-replica-dashboard {
   min-height: 0;
+  /* The shell piece supplies the page background; an opaque wrapper would hide the first-frame ghost. */
+  background: transparent;
   transform-style: preserve-3d;
 }
 .db .mm-dashboard-body,
@@ -184,6 +213,19 @@
   }
 }
 @media (min-width: 681px) and (max-width: 1160px) {
+  /* workspace-delight.css applies these at >= 1161px: the floor spans two rows beside the
+     stacked service-requests and pulse widgets, which stretch to meet its bottom edge. */
+  .db .mm-widget[data-widget="floor"] {
+    grid-row: span 2;
+  }
+  .db .mm-widget[data-widget="serviceRequests"],
+  .db .mm-widget[data-widget="pulse"] {
+    align-self: stretch;
+  }
+  .db .mm-widget[data-widget="serviceRequests"] > section,
+  .db .mm-widget[data-widget="pulse"] > section {
+    height: 100%;
+  }
   .db .mm-widget {
     grid-column: span 6;
   }
@@ -277,6 +319,34 @@
   .db__shell {
     border-radius: 22px;
   }
+  .db .db__ghost-side,
+  .db .db__ghost-card {
+    display: none;
+  }
+  .db .db__ghost-top {
+    top: 8px;
+    left: 12px;
+    width: 366px;
+    height: 46px;
+  }
+  .db .db__ghost-hero {
+    top: 62px;
+    left: 12px;
+    width: 366px;
+    height: 330px;
+  }
+  .db .db__ghost-kpis {
+    top: 410px;
+    left: 18px;
+    width: 354px;
+    height: 220px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .db .db__cue {
+    bottom: 3%;
+  }
   .db__camera {
     left: 0;
     width: 390px;
@@ -295,6 +365,155 @@
     display: flex;
     height: 64px;
     border-radius: 0 0 22px 22px;
+  }
+}
+
+/* ── Sticky homepage nav (the shared HomeNav, wrapped by the page) ── */
+.db-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--decorative);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* ── First frame: a faint wireframe of the dashboard-to-be, and the scroll cue ── */
+.db__ghost {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.db__ghost > span {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.db__ghost-side {
+  top: 0;
+  left: 0;
+  width: 216px;
+  height: 100%;
+  border-radius: 18px 0 0 18px !important;
+}
+.db__ghost-top {
+  top: 10px;
+  left: 232px;
+  width: 1192px;
+  height: 48px;
+}
+.db__ghost-hero {
+  top: 68px;
+  left: 232px;
+  width: 1192px;
+  height: 392px;
+}
+.db__ghost-kpis {
+  top: 484px;
+  left: 258px;
+  display: grid;
+  width: 1140px;
+  height: 150px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  border: 0 !important;
+  background: none !important;
+}
+.db__ghost-kpis i {
+  border: 2px dashed color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 12px;
+}
+.db__ghost-card {
+  top: 664px;
+  width: 560px;
+  height: 200px;
+}
+.db__ghost-card[data-n="1"] {
+  left: 258px;
+}
+.db__ghost-card[data-n="2"] {
+  left: 838px;
+}
+
+.db__cue {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 0.7rem 1.1rem 0.5rem;
+  border: 1px solid var(--decorative);
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+  translate: -50% 0;
+}
+.db__cue-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.db__cue-mouse {
+  display: block;
+  width: 22px;
+  height: 34px;
+  padding-top: 6px;
+  border: 2px solid var(--ember);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.db__cue-mouse i {
+  display: block;
+  width: 3px;
+  height: 7px;
+  margin: 0 auto;
+  border-radius: 2px;
+  background: var(--ember);
+  animation: db-wheel 1.6s ease-in-out infinite;
+}
+.db__cue-chevrons {
+  display: grid;
+  margin-top: -2px;
+  color: var(--ember);
+}
+.db__cue-chevrons svg {
+  margin-top: -9px;
+  animation: db-bob 1.6s ease-in-out infinite;
+}
+.db__cue-chevrons svg:last-child {
+  animation-delay: 0.2s;
+}
+@keyframes db-wheel {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  70%,
+  100% {
+    opacity: 0;
+    translate: 0 9px;
+  }
+}
+@keyframes db-bob {
+  0%,
+  100% {
+    opacity: 0.3;
+    translate: 0 0;
+  }
+  50% {
+    opacity: 1;
+    translate: 0 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .db__cue-mouse i,
+  .db__cue-chevrons svg {
+    animation: none;
   }
 }
 
@@ -355,13 +574,9 @@
 .db .mm-bottom-badge[data-beat] {
   scale: calc(1 + sin(var(--beat, 0) * 3.14159) * 0.45);
 }
-.db .mm-ops-item[data-beat][data-on="true"],
 .db .mm-dashboard-operations-grid a[data-beat][data-on="true"] {
   border-color: var(--ember);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 22%, transparent);
-}
-.db .db-beat-reveal[data-on="false"] {
-  display: none;
 }
 
 /* ── Chapter rail ───────────────────────────────────────────────────── */
@@ -409,6 +624,10 @@
   .db__sticky {
     position: static;
     height: auto;
+  }
+  .db__cue,
+  .db__ghost {
+    display: none;
   }
   .db__perspective {
     container-type: inline-size;

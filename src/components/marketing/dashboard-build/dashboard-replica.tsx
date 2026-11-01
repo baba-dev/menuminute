@@ -1,3 +1,4 @@
+import { useCallback, useContext, useMemo, type AnchorHTMLAttributes } from "react";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -24,17 +25,25 @@ import {
   REPLICA_DISH_COUNT,
   REPLICA_DISPATCH,
   REPLICA_HEALTH_ROWS,
-  REPLICA_NEW_ORDER,
   REPLICA_KPIS,
   REPLICA_OUTLET_NAME,
   REPLICA_PRIORITIES,
   REPLICA_REQUESTS,
   REPLICA_SERVICE_PERIOD,
   REPLICA_SETUP,
-  REPLICA_TABLES,
   REPLICA_TILL_LABEL,
+  REPLICA_LOCALE,
+  buildReplicaFloor,
+  buildReplicaPulse,
+  formatReplicaMinor,
+  REPLICA_NEW_ORDER_TABLE,
 } from "./dashboard-build-fixture";
-import { pieceById, pieceStyle, staggerStyle } from "./dashboard-build-timeline";
+import { NewOrderContext } from "./dashboard-build-beats";
+import { FloorGlanceView } from "@/components/dashboard/floor/floor-glance-view";
+import { TodayPulsePanel } from "@/components/dashboard/pulse/today-pulse";
+import { buildFloorGlance } from "@/modules/hospitality/floor-glance";
+import type { DashboardWidgetId } from "@/modules/dashboard/layout";
+import { countFormats, pieceById, pieceStyle, staggerStyle } from "./dashboard-build-timeline";
 
 /**
  * Presentational replicas of the real workspace sidebar, top bar, hero, KPI row, priorities and outlet health. They reuse the real
@@ -414,10 +423,10 @@ function ReplicaHealth() {
 
 /** The real "Service Dispatch" panel with sample counters. The four tiles stagger in and count up. */
 function ReplicaDispatch() {
-  const piece = pieceById("pulse");
+  const piece = pieceById("dispatch");
   const { counters, snapshot } = REPLICA_DISPATCH;
   return (
-    <section className="mm-dashboard-operations" data-piece="pulse" style={pieceStyle(0, piece)}>
+    <section className="mm-dashboard-operations">
       <div className="mm-dashboard-operations-heading">
         <div className="mm-dashboard-service-heading">
           <div>
@@ -472,131 +481,69 @@ function ReplicaDispatch() {
   );
 }
 
-/** The real "Your dining floor" panel over the demo outlet's 12 tables (sample order activity). */
+/** A link that looks like one but goes nowhere: the preview stage is a picture. */
+function PreviewLink({
+  href: _href,
+  ...rest
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  return <a {...rest} />;
+}
+
+/**
+ * The product's own miniature dining floor (`FloorGlanceView`), fed with the demo outlet's tables.
+ * While the new-order beat is on, the new order's table is highlighted and its order count goes up.
+ */
 function ReplicaFloor() {
-  const piece = pieceById("floor");
-  const tables = REPLICA_TABLES;
-  const activeCount = tables.filter((table) => table.active > 0).length;
-  const unpaidCount = tables.filter((table) => table.unpaid > 0).length;
-  const filters = [
-    ["All tables", tables.length],
-    ["Active orders", activeCount],
-    ["Unpaid tabs", unpaidCount],
-  ] as const;
+  const newOrder = useContext(NewOrderContext);
+  const { overview, glance } = useMemo(() => {
+    const floor = buildReplicaFloor(newOrder);
+    return {
+      overview: floor.overview,
+      glance: buildFloorGlance(floor.overview, new Map(Object.entries(floor.dueByTable))),
+    };
+  }, [newOrder]);
   return (
-    <section className="mm-dashboard-ops-panel" data-piece="floor" style={pieceStyle(0, piece)}>
-      <div className="mm-ops-head">
-        <div>
-          <span className="mm-dashboard-eyebrow">DINING ROOM</span>
-          <h2>Your dining floor</h2>
-          <p>
-            Outstanding table orders and unpaid balances. Updated approximately every 20 seconds.
-          </p>
-        </div>
-        <div className="mm-ops-art-wrap">
-          <Image
-            className="mm-ops-art mm-ops-art--light"
-            src={ARTWORK + "dining-room-empty-light.svg"}
-            alt=""
-            width={110}
-            height={83}
-          />
-          <Image
-            className="mm-ops-art mm-ops-art--dark"
-            src={ARTWORK + "dining-room-empty-dark.svg"}
-            alt=""
-            width={110}
-            height={83}
-          />
-        </div>
-      </div>
-      <div className="mm-ops-actions">
-        <button type="button">
-          <RefreshCw size={15} aria-hidden="true" /> Refresh floor
-        </button>
-        <a>
-          Manage service points <ArrowRight size={14} aria-hidden="true" />
-        </a>
-      </div>
-      <div className="mm-ops-actions">
-        {filters.map(([label, count], index) => (
-          <button key={label} type="button" aria-pressed={index === 0}>
-            {label} ({count})
-          </button>
-        ))}
-      </div>
-      <ul className="mm-ops-items">
-        {tables.map((table, index) => {
-          const isNew = table.id === REPLICA_NEW_ORDER.tableId;
-          const idle = table.unpaid === 0 && table.active === 0;
-          // The new-order table server-renders its final ("after") state, like the counters.
-          const status = isNew
-            ? REPLICA_NEW_ORDER.after.status
-            : table.unpaid > 0
-              ? "Unpaid"
-              : table.active > 0
-                ? "Order active"
-                : "No open tickets";
-          const counts = isNew
-            ? REPLICA_NEW_ORDER.after.counts
-            : `${table.active} active orders · ${table.unpaid} unpaid`;
-          return (
-            <li
-              className="mm-ops-item"
-              key={table.id}
-              data-stagger={index}
-              data-stagger-count={tables.length}
-              data-beat={isNew ? "table" : undefined}
-              style={staggerStyle(0, piece, index, tables.length)}
-            >
-              <strong>Table {table.number}</strong>
-              {isNew ? (
-                <span
-                  data-beat="table"
-                  data-beat-from={REPLICA_NEW_ORDER.before.status}
-                  data-beat-to={REPLICA_NEW_ORDER.after.status}
-                >
-                  {status}
-                </span>
-              ) : (
-                <span>{status}</span>
-              )}
-              <p>{table.label}</p>
-              {isNew ? (
-                <p
-                  data-beat="table"
-                  data-beat-from={REPLICA_NEW_ORDER.before.counts}
-                  data-beat-to={REPLICA_NEW_ORDER.after.counts}
-                >
-                  {counts}
-                </p>
-              ) : (
-                <p>{counts}</p>
-              )}
-              {table.due && <strong>Due: {table.due}</strong>}
-              {(!idle || isNew) && (
-                <div
-                  className="mm-ops-actions db-beat-reveal"
-                  data-beat={isNew ? "table" : undefined}
-                >
-                  <a>View in Till</a>
-                  <a>Orders Rail</a>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <p className="mm-ops-disclaimer">Order activity is not a physical occupancy sensor.</p>
-    </section>
+    <FloorGlanceView
+      overview={overview}
+      glance={glance}
+      filter="all"
+      refreshing={false}
+      fmt={formatReplicaMinor}
+      formatTime={() => ""}
+      focusTableId={newOrder ? REPLICA_NEW_ORDER_TABLE : undefined}
+      LinkComponent={PreviewLink}
+    />
   );
+}
+
+/** Scroll-driven stand-in for the live ticker: the timeline sets the text; the final value renders first. */
+function ScrollFigure({ value, format }: { value: number; format?: (n: number) => string }) {
+  const fmt = format ?? String;
+  const register = useCallback(
+    (element: HTMLElement | null) => {
+      if (element) countFormats.set(element, fmt);
+    },
+    [fmt]
+  );
+  return (
+    <span ref={register} data-count-to={value}>
+      {fmt(value)}
+    </span>
+  );
+}
+
+/** The product's own Today's pulse bento, fed with sample figures and scroll-driven numbers. */
+function ReplicaToday() {
+  const newOrder = useContext(NewOrderContext);
+  const pulse = useMemo(() => buildReplicaPulse(newOrder), [newOrder]);
+  return <TodayPulsePanel pulse={pulse} Figure={ScrollFigure} locale={REPLICA_LOCALE} />;
 }
 
 /** The real "At your service" panel with two sample guest requests. */
 function ReplicaRequests() {
   const piece = pieceById("requests");
   return (
-    <section className="mm-dashboard-ops-panel" data-piece="requests" style={pieceStyle(0, piece)}>
+    <section className="mm-dashboard-ops-panel">
       <div className="mm-ops-head">
         <div>
           <span className="mm-dashboard-eyebrow">GUEST SERVICE</span>
@@ -640,31 +587,74 @@ function ReplicaRequests() {
 }
 
 /**
- * The dashboard body in the real widget order (kpis, priorities, dispatch, health, floor, service
- * requests), laid out by the real `mm-widget-grid`.
+ * The widgets the replica renders, in the product's order. A test compares this with
+ * `dashboardWidgetIds`, so a widget added to (or reordered in) the product fails CI until the
+ * replica follows.
+ */
+export const REPLICA_WIDGETS: readonly DashboardWidgetId[] = [
+  "kpis",
+  "priorities",
+  "dispatch",
+  "health",
+  "floor",
+  "serviceRequests",
+  "pulse",
+];
+
+/** A product widget wrapper. Panels that fill their grid cell carry the scroll piece on the wrapper. */
+function Widget({
+  id,
+  piece,
+  autoStagger,
+  children,
+}: {
+  id: DashboardWidgetId;
+  piece?: "dispatch" | "floor" | "requests" | "today";
+  autoStagger?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="mm-widget"
+      data-widget={id}
+      data-piece={piece}
+      data-stagger-auto={autoStagger}
+      style={piece ? pieceStyle(0, pieceById(piece)) : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The dashboard body in the product's widget order, laid out by the real `mm-widget-grid`
+ * (including the rule that makes the floor span two rows beside the stacked requests and pulse).
  */
 export function ReplicaBody() {
   return (
     <div className="mm-dashboard-body">
       <div className="mm-widget-grid">
-        <div className="mm-widget" data-widget="kpis">
+        <Widget id="kpis">
           <ReplicaGlance />
-        </div>
-        <div className="mm-widget" data-widget="priorities">
+        </Widget>
+        <Widget id="priorities">
           <ReplicaPriorities />
-        </div>
-        <div className="mm-widget" data-widget="dispatch">
+        </Widget>
+        <Widget id="dispatch" piece="dispatch">
           <ReplicaDispatch />
-        </div>
-        <div className="mm-widget" data-widget="health">
+        </Widget>
+        <Widget id="health">
           <ReplicaHealth />
-        </div>
-        <div className="mm-widget" data-widget="floor">
+        </Widget>
+        <Widget id="floor" piece="floor" autoStagger="li">
           <ReplicaFloor />
-        </div>
-        <div className="mm-widget" data-widget="serviceRequests">
+        </Widget>
+        <Widget id="serviceRequests" piece="requests">
           <ReplicaRequests />
-        </div>
+        </Widget>
+        <Widget id="pulse" piece="today">
+          <ReplicaToday />
+        </Widget>
       </div>
     </div>
   );
