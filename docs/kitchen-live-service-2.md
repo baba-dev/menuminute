@@ -105,3 +105,25 @@ Completed station items are released individually at Final Check:
 - **No inference.** A dish with no declared allergens shows no chip: absence is never "allergen free". Unknown allergen codes are ignored. Dietary tags are shown only as entered.
 - **Safe failure.** The trigger swallows any error and leaves the column NULL; it can never block an order. Orders created before 0070 have no snapshot and show no chips (no backfill).
 - Allergen data is advisory kitchen information, not a safety guarantee; staff must still follow the restaurant's allergen procedure.
+
+## Motion layer (subtle, theme-aware)
+
+Independent, dependency-free implementations inspired by [Magic UI](https://magicui.design) components (no Magic UI code or package was added; its licence was not reviewed because nothing was copied). Source: `src/app/kitchen/fx/*` and the "Motion layer" section of `kitchen.css`.
+
+| Effect                 | Where                                                                                                           | Rule                                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Border beam            | Queued tickets unstarted 5+ min (amber), 10+ min (red, faster); Final Check orders with finished dishes waiting | At most 4 animate at once (`KITCHEN_BEAM_BUDGET`, oldest first); the rest keep a static ring. Paused off-screen. |
+| Number ticker          | The four pulse KPIs                                                                                             | Screen readers get the final number only.                                                                        |
+| Animated list          | New tickets ease in once                                                                                        | CSS only.                                                                                                        |
+| Progress ring          | Hero station panel                                                                                              | Decorative; text states the numbers.                                                                             |
+| Pulsating button       | Final Check release, intake Accept                                                                              | Stops when disabled.                                                                                             |
+| Shimmer                | The oldest unstarted ticket's action                                                                            | One at a time.                                                                                                   |
+| Blur fade, dot pattern | Hero, pulse and rail on first paint; hero background                                                            | First paint only.                                                                                                |
+
+Not used on purpose: animated borders on allergen panels (safety information stays steady), confetti, meteors, particles and pointer effects. Every effect is static under `prefers-reduced-motion`, has light and dark tokens, and never carries meaning alone (the wait is also written as text).
+
+## POS per-dish notes and "Part ready" (migration 0071)
+
+- POS lines accept an optional `note` (trimmed, max 200). `app_private.pos_submit_order` stores it in `order_items.notes`, the column guest orders already use, so the kitchen ticket, Final Check, POS register and incoming-order views show it without further change. It never affects price, the catalogue fingerprint or the quote; a different note is a different request for idempotency. `pos_sale_lines`, receipts and finance documents are unchanged (kitchen instructions are not financial data).
+- The till cart has "Add dish note" per line; empty notes are not sent. Identical dishes with different notes stay separate lines.
+- The POS order register shows "Part ready · N of M dishes" next to the status (same `kitchen_release_progress` data and transaction as the register page) and in the order detail.

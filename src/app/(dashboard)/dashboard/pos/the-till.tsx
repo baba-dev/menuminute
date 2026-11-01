@@ -244,6 +244,7 @@ export function TheTill({
           (c) =>
             c.line.dishId === line.dishId &&
             c.line.variantId === line.variantId &&
+            !c.line.note &&
             JSON.stringify(c.line.groups) === JSON.stringify(line.groups)
         );
         if (match)
@@ -329,7 +330,11 @@ export function TheTill({
             entry.id === editingLineId
               ? {
                   ...entry,
-                  line: { ...line, quantity: entry.line.quantity },
+                  line: {
+                    ...line,
+                    quantity: entry.line.quantity,
+                    ...(entry.line.note !== undefined ? { note: entry.line.note } : {}),
+                  },
                   name: dish.name,
                   variantName: selectedVariant?.name ?? null,
                   unitMinor,
@@ -353,6 +358,18 @@ export function TheTill({
     setDish(null);
     setEditingLineId(null);
     setMessage("");
+  }
+  /** `undefined` closes the dish-note editor; an empty string opens it. */
+  function setLineNote(id: string, value: string | undefined) {
+    setCart((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+        const { note: _previous, ...rest } = c.line;
+        void _previous;
+        return { ...c, line: value === undefined ? rest : { ...rest, note: value.slice(0, 200) } };
+      })
+    );
+    commandRef.current = null;
   }
   function changeQty(id: string, delta: number) {
     setCart((prev) =>
@@ -378,7 +395,11 @@ export function TheTill({
       selection: {
         menuId: menu.id,
         expectedRevision: menu.revision,
-        lines: cart.map((c) => c.line),
+        // Empty dish notes are dropped so they never change the request fingerprint.
+        lines: cart.map(({ line }) => {
+          const { note, ...rest } = line;
+          return note?.trim() ? { ...rest, note: note.trim() } : rest;
+        }),
       },
       fulfillmentMode: mode,
       tableId: mode === "dine_in" ? tableId || null : null,
@@ -898,6 +919,29 @@ export function TheTill({
                       >
                         Edit options
                       </button>
+                      {entry.line.note !== undefined ? (
+                        <input
+                          className="pos-linenote"
+                          maxLength={200}
+                          value={entry.line.note}
+                          autoFocus={entry.line.note === ""}
+                          aria-label={"Kitchen note for " + entry.name}
+                          placeholder="e.g. less oil, no onion"
+                          onChange={(e) => setLineNote(entry.id, e.target.value)}
+                          onBlur={(e) => {
+                            if (!e.target.value.trim()) setLineNote(entry.id, undefined);
+                          }}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className="pos-customize-line pos-linenote-add"
+                          onClick={() => setLineNote(entry.id, "")}
+                          aria-label={"Add kitchen note for " + entry.name}
+                        >
+                          Add dish note
+                        </button>
+                      )}
                     </div>
                     <div className="till-quantity">
                       <button

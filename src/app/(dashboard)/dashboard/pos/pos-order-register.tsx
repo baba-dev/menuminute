@@ -195,6 +195,11 @@ export function PosOrderRegister({
             </div>
             <div className="pos-register-state">
               <span>{serviceName(row.status)}</span>
+              {row.partReady && (
+                <span className="pos-partready">
+                  Part ready · {row.partReady.released} of {row.partReady.total} dishes
+                </span>
+              )}
               <small>
                 {row.paymentStatus === "paid"
                   ? row.paymentEvidence === "staff_recorded"
@@ -259,8 +264,11 @@ export function PosOrderRegister({
               </button>
             </header>
             <p>
-              {serviceName(selected.status)} ·{" "}
-              {selected.paymentStatus === "paid" ? "Paid" : "Payment " + selected.paymentStatus}
+              {serviceName(selected.status)}
+              {selected.partReady
+                ? ` (part ready: ${selected.partReady.released} of ${selected.partReady.total} dishes released)`
+                : ""}{" "}
+              · {selected.paymentStatus === "paid" ? "Paid" : "Payment " + selected.paymentStatus}
             </p>
             <div className="pos-order-detail-items">
               {selected.items.map((item, index) => (

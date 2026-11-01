@@ -8,6 +8,7 @@ import {
   describeDishSafety,
   needsAttention,
   intakeSourceLabel,
+  assignBeams,
 } from "../src/modules/kitchen/presentation";
 const base: KitchenWorkView = {
   id: "one",
@@ -124,5 +125,42 @@ describe("dish safety presentation", () => {
     expect(intakeSourceLabel("guest_menu")).toBe("QR menu");
     expect(intakeSourceLabel("unknown")).toBeNull();
     expect(intakeSourceLabel(undefined)).toBeNull();
+  });
+});
+
+describe("border beam assignment", () => {
+  const now = Date.parse("2026-01-01T12:00:00Z");
+  const at = (minutesAgo: number) => new Date(now - minutesAgo * 60000).toISOString();
+  const item = (id: string, minutesAgo: number, status: KitchenWorkView["status"] = "queued") => ({
+    id,
+    status,
+    createdAt: at(minutesAgo),
+  });
+  it("only flags queued work waiting 5+ minutes and escalates at 10", () => {
+    const beams = assignBeams(
+      [
+        item("fresh", 4),
+        item("wait", 5),
+        item("late", 12),
+        item("started", 30, "preparing"),
+        item("done", 30, "complete"),
+      ],
+      now
+    );
+    expect([...beams.keys()].sort()).toEqual(["late", "wait"]);
+    expect(beams.get("wait")?.level).toBe("wait");
+    expect(beams.get("late")?.level).toBe("late");
+  });
+  it("gives the animation budget to the oldest tickets and keeps the rest static", () => {
+    const work = Array.from({ length: 7 }, (_, i) => item("t" + i, 6 + i));
+    const beams = assignBeams(work, now, 3);
+    expect(beams.size).toBe(7);
+    // Oldest is t6 (12 min). Exactly three animate.
+    expect([...beams.values()].filter((b) => b.animate)).toHaveLength(3);
+    expect(beams.get("t6")?.animate).toBe(true);
+    expect(beams.get("t0")?.animate).toBe(false);
+  });
+  it("does nothing before the clock is known", () => {
+    expect(assignBeams([item("a", 30)], null).size).toBe(0);
   });
 });

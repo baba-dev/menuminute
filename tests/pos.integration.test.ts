@@ -290,6 +290,66 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     ).rejects.toThrow();
   });
 
+  it("stores a per-dish note on the order item and shows it in the register", async () => {
+    const f = await ready();
+    const base = input(f.menuId);
+    const withNote = {
+      ...base,
+      selection: {
+        ...base.selection,
+        lines: [{ ...base.selection.lines[0]!, note: "  less oil, no onion  " }],
+      },
+    };
+    const result = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, withNote);
+    // The note never changes the price.
+    expect(result.subtotalMinor).toBe("28000");
+    const stored = await admin(async (_db, pool) =>
+      pool.query<{ notes: string | null }>("select notes from order_items where order_id=$1", [
+        result.orderId,
+      ])
+    );
+    expect(stored.rows.map((r) => r.notes)).toEqual(["less oil, no onion"]);
+    // A different note is a different request: the same key must not replay it.
+    await expect(
+      posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        ...withNote,
+        selection: {
+          ...withNote.selection,
+          lines: [{ ...withNote.selection.lines[0]!, note: "extra spicy" }],
+        },
+      })
+    ).rejects.toMatchObject({ statusCode: 409 });
+    // Too long is rejected before anything is written; blank notes store NULL.
+    await expect(
+      posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+        ...base,
+        key: crypto.randomUUID(),
+        selection: {
+          ...base.selection,
+          lines: [{ ...base.selection.lines[0]!, note: "x".repeat(201) }],
+        },
+      })
+    ).rejects.toThrow();
+    const blank = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      ...base,
+      key: crypto.randomUUID(),
+      selection: { ...base.selection, lines: [{ ...base.selection.lines[0]!, note: "   " }] },
+    });
+    const none = await admin(async (_db, pool) =>
+      pool.query<{ notes: string | null }>("select notes from order_items where order_id=$1", [
+        blank.orderId,
+      ])
+    );
+    expect(none.rows[0]?.notes).toBeNull();
+    const register = await posOrderRegister(f.actor, f.outlet.organizationId, f.outlet.id, {
+      period: "all",
+      search: String(result.orderNumber),
+    });
+    const row = register.items.find((r) => r.orderId === result.orderId)!;
+    expect(row.items[0]?.notes).toBe("less oil, no onion");
+    // Not kitchen-managed here, so nothing has been released: no "Part ready".
+    expect(row.partReady).toBeNull();
+  });
   it("keeps provisional unpaid bills separate from fiscal issue and paginates past 30", async () => {
     const f = await ready();
     const refs: string[] = [];

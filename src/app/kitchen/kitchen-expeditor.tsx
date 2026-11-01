@@ -8,7 +8,8 @@ import type {
   KitchenWorkView,
   KitchenSnapshot,
 } from "@/modules/kitchen/service";
-import { KITCHEN_WAIT_ALERT_MINUTES } from "@/modules/kitchen/presentation";
+import { assignBeams } from "@/modules/kitchen/presentation";
+import { BorderBeam } from "./fx/border-beam";
 import { DishDetails } from "./dish-details";
 type Props = {
   base: string;
@@ -133,9 +134,16 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
   });
   const readyOf = (order: KitchenExpoOrder) =>
     order.items.filter((item) => item.status === "complete" && !item.releasedAt);
+  // Orders with finished dishes waiting for a check; the oldest win the animated beam.
+  const beams = assignBeams(
+    data.orders
+      .filter((order) => readyOf(order).length > 0)
+      .map((order) => ({ id: order.id, status: "queued" as const, createdAt: order.createdAt })),
+    now
+  );
   const needsCheck = data.orders.filter((order) => readyOf(order).length > 0).length;
   const primaryButton =
-    "mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45";
+    "kk-pulse-btn mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45";
   return (
     <section
       id="expeditor"
@@ -206,19 +214,17 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
         {data.orders.map((order) => {
           const ready = readyOf(order);
           const allDone = order.total > 0 && order.done === order.total;
-          const late =
-            now !== null &&
-            ready.length > 0 &&
-            now - new Date(order.createdAt).getTime() >= KITCHEN_WAIT_ALERT_MINUTES * 60000;
           return (
             <article
               key={order.id}
-              className={
-                "kk-expo-card p-4" +
-                (ready.length > 0 ? " kk-expo-card-check" : "") +
-                (late ? " kk-expo-card-late" : "")
-              }
+              className={"kk-expo-card p-4" + (ready.length > 0 ? " kk-expo-card-check" : "")}
             >
+              {beams.get(order.id) && (
+                <BorderBeam
+                  level={beams.get(order.id)!.level}
+                  animate={beams.get(order.id)!.animate}
+                />
+              )}
               <div className="flex justify-between gap-2">
                 <h4 className="text-lg font-black">#{order.orderNumber}</h4>
                 <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">

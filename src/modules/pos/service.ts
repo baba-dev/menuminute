@@ -299,6 +299,8 @@ export type PosRegisterRow = {
   currency: string;
   totalMinor: string;
   saleId: string | null;
+  /** Dishes the kitchen has released at Final Check while the order is still being completed. */
+  partReady?: { released: number; total: number } | null;
   items: {
     name: string;
     quantity: number;
@@ -347,14 +349,23 @@ export async function posOrderRegister(
     payment: query.payment,
     search: query.search,
   };
-  const response = (await posCall(actor, outletId, (run) =>
-    run(sql`select app_private.pos_register_v2(
-      ${outletId},${JSON.stringify(filter)}::jsonb,${cursorAt}::timestamptz,${cursorId}) as data`)
-  )) as { rows: { data: { items: PosRegisterRow[]; total: number } }[] };
+  // One transaction, so the status and the "Part ready" counts describe the same instant.
+  const { response, progress } = await posCall(actor, outletId, async (run) => ({
+    response: (await run(sql`select app_private.pos_register_v2(
+      ${outletId},${JSON.stringify(filter)}::jsonb,${cursorAt}::timestamptz,${cursorId}) as data`)) as {
+      rows: { data: { items: PosRegisterRow[]; total: number } }[];
+    },
+    progress: (await run(
+      sql`select app_private.kitchen_release_progress(${outletId}) as data`
+    )) as { rows: { data: Record<string, { released: number; total: number }> | null }[] },
+  }));
   const value = response.rows[0]?.data;
   if (!value) throw new ValidationError("Register query did not produce an authorized result");
+  const partReady = progress.rows[0]?.data ?? {};
   const hasMore = value.items.length > 10;
-  const items = value.items.slice(0, 10);
+  const items = value.items
+    .slice(0, 10)
+    .map((row) => ({ ...row, partReady: partReady[row.orderId] ?? null }));
   const last = items.at(-1);
   const nextCursor =
     hasMore && last

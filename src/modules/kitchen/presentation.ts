@@ -4,6 +4,10 @@ import type { DishSafetySnapshot, KitchenWorkView } from "./service";
 export const KITCHEN_OVERDUE_MINUTES = 20;
 /** Minutes a queued ticket may wait unstarted before the board draws attention to it. */
 export const KITCHEN_WAIT_ALERT_MINUTES = 5;
+/** Unstarted this long and the cue escalates from amber to red. */
+export const KITCHEN_LATE_WAIT_MINUTES = 10;
+/** At most this many tickets animate a border beam at once (tablet performance, calm UI). */
+export const KITCHEN_BEAM_BUDGET = 4;
 
 /** Only rows returned by the authorized kitchen snapshot are included. These are
  * visible-device metrics, not unsupported claims about the entire organization. */
@@ -133,4 +137,33 @@ export function needsAttention(work: {
     safety.allergens.length > 0 ||
     safety.crossContact !== null
   );
+}
+
+export type BeamLevel = "wait" | "late";
+/**
+ * Which unstarted tickets get a border beam. Only QUEUED work that nobody has acted
+ * on qualifies; the oldest tickets win the animation budget and the rest keep a calm
+ * static ring, so a rush never turns the board into a light show.
+ */
+export function assignBeams(
+  work: readonly Pick<KitchenWorkView, "id" | "status" | "createdAt">[],
+  now: number | null,
+  budget: number = KITCHEN_BEAM_BUDGET
+): Map<string, { level: BeamLevel; animate: boolean }> {
+  const result = new Map<string, { level: BeamLevel; animate: boolean }>();
+  if (now === null) return result;
+  const waiting = work
+    .filter((item) => item.status === "queued")
+    .map((item) => ({ id: item.id, created: Date.parse(item.createdAt) }))
+    .filter((item) => Number.isFinite(item.created))
+    .map((item) => ({ ...item, minutes: Math.floor((now - item.created) / 60000) }))
+    .filter((item) => item.minutes >= KITCHEN_WAIT_ALERT_MINUTES)
+    .sort((a, b) => a.created - b.created || a.id.localeCompare(b.id));
+  waiting.forEach((item, index) => {
+    result.set(item.id, {
+      level: item.minutes >= KITCHEN_LATE_WAIT_MINUTES ? "late" : "wait",
+      animate: index < budget,
+    });
+  });
+  return result;
 }

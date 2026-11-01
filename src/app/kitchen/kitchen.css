@@ -2122,13 +2122,6 @@
   background: #b42318;
   color: #fff;
 }
-/* Unstarted for 5+ minutes: static cue (text age + edge). Animated beam is a later slice. */
-.kk-ticket-waiting {
-  box-shadow: inset 4px 0 0 #e9954c;
-}
-.kk-ticket-waiting.kk-ticket-aging {
-  box-shadow: inset 4px 0 0 #b42318;
-}
 /* Final Check cues */
 .kk-check-banner {
   display: inline-flex;
@@ -2169,10 +2162,6 @@
 .kk-expo-card-check {
   border-color: #e9954c;
   box-shadow: 0 0 0 2px rgba(233, 149, 76, 0.28);
-}
-.kk-expo-card-late {
-  border-color: #b42318;
-  box-shadow: 0 0 0 2px rgba(180, 35, 24, 0.28);
 }
 @media (max-width: 900px) {
   .kk-hero-has-stations {
@@ -2499,4 +2488,231 @@
 .kk-dish-compact .kk-guest-note {
   font-size: 13px;
   padding: 6px 9px;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion layer. Inspired by Magic UI (border beam, number ticker, animated list,
+   circular progress, pulsating/shimmer button, blur fade, dot pattern); each is an
+   independent, dependency-free CSS/React implementation. Rules: subtle, never the
+   only signal, tuned for light AND dark themes, cheap on tablets and phones, and
+   fully static under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+.mm-kitchen {
+  --kk-beam-wait-a: #d76c22;
+  --kk-beam-wait-b: #f3c48a;
+  --kk-beam-late-a: #b42318;
+  --kk-beam-late-b: #ee8f84;
+  --kk-dot: rgba(120, 70, 30, 0.26);
+  --kk-sheen: rgba(255, 255, 255, 0.2);
+  --kk-pulse-ring: rgba(215, 108, 34, 0.32);
+}
+:root[data-theme="dark"] .mm-kitchen {
+  --kk-beam-wait-a: #ffbd6d;
+  --kk-beam-wait-b: #ffe3b8;
+  --kk-beam-late-a: #ff8a7a;
+  --kk-beam-late-b: #ffc9c0;
+  --kk-dot: rgba(255, 220, 170, 0.14);
+  --kk-sheen: rgba(255, 255, 255, 0.28);
+  --kk-pulse-ring: rgba(255, 189, 109, 0.3);
+}
+.kk-ticket,
+.kk-expo-card {
+  position: relative;
+}
+
+/* Border beam: unstarted tickets (5+ min) and orders waiting at Final Check. */
+.kk-beam {
+  --size: 64px;
+  --dur: 9s;
+  --a: var(--kk-beam-wait-a);
+  --b: var(--kk-beam-wait-b);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+  mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+}
+.kk-beam-late {
+  --dur: 5.5s;
+  --a: var(--kk-beam-late-a);
+  --b: var(--kk-beam-late-b);
+}
+.kk-beam::after {
+  content: "";
+  position: absolute;
+  aspect-ratio: 1;
+  width: var(--size);
+  background: linear-gradient(to left, var(--a), var(--b), transparent);
+  offset-anchor: 90% 50%;
+  offset-path: rect(0 auto auto 0 round 12px);
+  animation: kk-beam var(--dur) linear infinite;
+  opacity: 0.9;
+}
+.kk-beam[data-active="false"]::after {
+  animation-play-state: paused;
+}
+@keyframes kk-beam {
+  to {
+    offset-distance: 100%;
+  }
+}
+/* Budget spent, reduced motion or no offset-path support: a calm static ring. */
+.kk-beam-static {
+  mask-image: none;
+  border-color: color-mix(in srgb, var(--a) 55%, transparent);
+}
+.kk-beam-static::after {
+  display: none;
+}
+@supports not (offset-path: rect(0 auto auto 0 round 12px)) {
+  .kk-beam {
+    mask-image: none;
+    border-color: color-mix(in srgb, var(--a) 55%, transparent);
+  }
+  .kk-beam::after {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .kk-beam {
+    --size: 44px;
+  }
+}
+
+/* Number ticker */
+.kk-ticker {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animated list: new tickets ease in once. */
+.kk-enter {
+  animation: kk-enter 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+@keyframes kk-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+/* Blur fade on first paint only (the elements mount once). */
+.kk-fade {
+  animation: kk-blur-fade 0.5s ease-out backwards;
+  animation-delay: var(--kk-delay, 0s);
+}
+@keyframes kk-blur-fade {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+  }
+}
+
+/* Dot pattern behind the hero, fading toward the text side. */
+.kk-hero-dots {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--kk-dot) 1px, transparent 1.3px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to right, transparent 0%, #000 60%);
+  opacity: 0.8;
+}
+@media (max-width: 900px) {
+  .kk-hero-dots {
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 70%);
+    opacity: 0.6;
+  }
+}
+
+/* Circular progress in the hero station panel */
+.kk-hero-station {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+.kk-hero-station-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.kk-ring {
+  flex: none;
+}
+.kk-ring-track {
+  stroke: var(--kk-line);
+}
+.kk-ring-value {
+  stroke: var(--kk-accent);
+  transition: stroke-dashoffset 0.6s ease;
+}
+.kk-hero-station.is-overdue .kk-ring-value {
+  stroke: #b42318;
+}
+:root[data-theme="dark"] .kk-hero-station.is-overdue .kk-ring-value {
+  stroke: #ff8a7a;
+}
+
+/* Pulsating button: the one thing to do at Final Check (and intake Accept). */
+.kk-pulse-btn:not(:disabled),
+.kk-intake-accept:not(:disabled) {
+  animation: kk-pulse 2.8s ease-out infinite;
+}
+@keyframes kk-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--kk-pulse-ring);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* Shimmer: only on the oldest unstarted ticket's action. */
+.kk-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.kk-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, var(--kk-sheen) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: kk-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes kk-shimmer {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kk-beam {
+    mask-image: none;
+    border-color: color-mix(in srgb, var(--a) 55%, transparent);
+  }
+  .kk-beam::after,
+  .kk-shimmer::after {
+    display: none;
+  }
+  .kk-enter,
+  .kk-fade,
+  .kk-pulse-btn,
+  .kk-intake-accept {
+    animation: none;
+  }
+  .kk-ring-value {
+    transition: none;
+  }
 }

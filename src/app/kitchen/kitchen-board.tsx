@@ -27,6 +27,10 @@ import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
 import { DishDetails } from "./dish-details";
+import { BorderBeam } from "./fx/border-beam";
+import { NumberTicker } from "./fx/number-ticker";
+import { ProgressRing } from "./fx/progress-ring";
+import { useEnteringIds } from "./fx/use-entering";
 import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import {
@@ -38,6 +42,7 @@ import {
   KITCHEN_WAIT_ALERT_MINUTES,
   intakeSourceLabel,
   needsAttention,
+  assignBeams,
 } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
@@ -55,7 +60,15 @@ function Ticket({
   busy,
   now,
   stationName,
+  beam,
+  entering,
+  shimmer,
 }: {
+  /** Border beam for unstarted tickets (5+ min); `animate` is false once the budget is spent. */
+  beam?: { level: "wait" | "late"; animate: boolean };
+  entering?: boolean;
+  /** The oldest unstarted ticket: its action gets a gentle sheen. */
+  shimmer?: boolean;
   work: KitchenWorkView;
   stationName: string;
   onAction: (work: KitchenWorkView, action: "start" | "complete") => void;
@@ -79,10 +92,12 @@ function Ticket({
         (age !== null && age >= KITCHEN_WAIT_ALERT_MINUTES && work.status === "queued"
           ? " kk-ticket-waiting"
           : "") +
-        (special && work.status !== "complete" ? " kk-ticket-has-special" : "")
+        (special && work.status !== "complete" ? " kk-ticket-has-special" : "") +
+        (entering ? " kk-enter" : "")
       }
       aria-label={`Order ${work.orderNumber}: ${work.dishName}`}
     >
+      {beam && <BorderBeam level={beam.level} animate={beam.animate} />}
       <div className="flex items-center justify-between gap-2">
         <span className="kk-ticket-number">#{work.orderNumber}</span>
         <span className="kk-ticket-age">
@@ -132,7 +147,7 @@ function Ticket({
             playWoodenTap("kitchen");
             onAction(work, work.status === "queued" ? "start" : "complete");
           }}
-          className="kk-ticket-action btn-ink-press"
+          className={"kk-ticket-action btn-ink-press" + (shimmer ? " kk-shimmer" : "")}
         >
           {busy ? (
             <LoaderCircle className="animate-spin" size={17} />
@@ -303,6 +318,8 @@ export function KitchenBoard({
     () => stationOverview(snapshot.stations, snapshot.work, now),
     [snapshot.stations, snapshot.work, now]
   );
+  const beams = useMemo(() => assignBeams(snapshot.work, now), [snapshot.work, now]);
+  const entering = useEnteringIds(useMemo(() => snapshot.work.map((w) => w.id), [snapshot.work]));
   const allPending = overview.reduce((sum, item) => sum + item.queued + item.preparing, 0);
   const overdueStations = overview.filter(
     (item) => item.oldestMinutes !== null && item.oldestMinutes >= KITCHEN_OVERDUE_MINUTES
@@ -494,7 +511,8 @@ export function KitchenBoard({
         }
         aria-labelledby="kk-title"
       >
-        <div className="kk-hero-content">
+        <div className="kk-hero-dots" aria-hidden="true" />
+        <div className="kk-hero-content kk-fade">
           <span className="kk-eyebrow">01 / THE KITCHEN WORKSPACE</span>
           <h1 id="kk-title">{snapshot.enabled ? "Kitchen live service." : "The Chef’s Pass."}</h1>
           <p className="kk-tagline">
@@ -545,17 +563,24 @@ export function KitchenBoard({
                         (overdue ? " is-overdue" : "")
                       }
                     >
-                      <strong>{item.name}</strong>
-                      <span>
-                        {item.queued} to prepare · {item.preparing} cooking · {item.completed} done
+                      <ProgressRing
+                        done={item.completed}
+                        total={item.queued + item.preparing + item.completed}
+                      />
+                      <span className="kk-hero-station-text">
+                        <strong>{item.name}</strong>
+                        <span>
+                          {item.queued} to prepare · {item.preparing} cooking · {item.completed}{" "}
+                          done
+                        </span>
+                        <small>
+                          {item.oldestMinutes === null
+                            ? "All caught up"
+                            : overdue
+                              ? `Overdue · ${item.oldestMinutes} min oldest`
+                              : `Oldest open task · ${item.oldestMinutes} min`}
+                        </small>
                       </span>
-                      <small>
-                        {item.oldestMinutes === null
-                          ? "All caught up"
-                          : overdue
-                            ? `Overdue · ${item.oldestMinutes} min oldest`
-                            : `Oldest open task · ${item.oldestMinutes} min`}
-                      </small>
                     </button>
                   </li>
                 );
@@ -573,7 +598,11 @@ export function KitchenBoard({
         </div>
       </section>
       <div className="kk-content">
-        <section className="kk-pulse" aria-label="Visible kitchen workload">
+        <section
+          className="kk-pulse kk-fade"
+          style={{ "--kk-delay": "0.08s" } as React.CSSProperties}
+          aria-label="Visible kitchen workload"
+        >
           <div className="kk-section-heading">
             <div>
               <span className="kk-eyebrow">LIVE / ON THIS DEVICE</span>
@@ -592,7 +621,9 @@ export function KitchenBoard({
                 <span>
                   <Icon size={19} aria-hidden="true" /> {title}
                 </span>
-                <strong>{count}</strong>
+                <strong>
+                  <NumberTicker value={count} />
+                </strong>
               </div>
             ))}
           </div>
@@ -708,7 +739,11 @@ export function KitchenBoard({
             </ul>
           </section>
         )}
-        <section aria-label="Station ticket board" className="kk-workspace">
+        <section
+          aria-label="Station ticket board"
+          className="kk-workspace kk-fade"
+          style={{ "--kk-delay": "0.16s" } as React.CSSProperties}
+        >
           <div className="kk-section-heading">
             <div>
               <span className="kk-eyebrow">02 / STATION TICKETS</span>
@@ -772,6 +807,9 @@ export function KitchenBoard({
                         now={now}
                         busy={busy === w.id}
                         onAction={action}
+                        beam={beams.get(w.id)}
+                        entering={entering.has(w.id)}
+                        shimmer={lane.key === "queued" && w.id === groups.queued[0]?.id}
                       />
                     ))}
                     {groups[lane.key].length === 0 && (
