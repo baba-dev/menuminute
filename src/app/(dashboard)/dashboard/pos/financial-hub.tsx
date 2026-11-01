@@ -226,30 +226,33 @@ export function FinancialHub({
       setReconciliationBusy(false);
     }
   }
-  const selectSale = useCallback(async (id: string) => {
-    const request = ++saleSelectionSequence.current;
-    // A finance correction requires fresh, sale-specific user acknowledgement.
-    setStaffCorrectionReason("");
-    setStaffCorrectionConfirmed(false);
-    setSelected(null);
-    setSettlement(null);
-    setFiscalReadiness(null);
-    setPreview(null);
-    try {
-      const [detail, projection, fiscal] = await Promise.all([
-        get<Detail>("sale", id),
-        get<SettlementDetail>("settlement", id),
-        finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
-      ]);
-      if (request !== saleSelectionSequence.current) return;
-      setSelected(detail);
-      setSettlement(projection);
-      setFiscalReadiness(fiscal);
-    } catch (error) {
-      if (request === saleSelectionSequence.current)
-        setNotice(error instanceof Error ? error.message : "Unable to read sale details");
-    }
-  }, [get, finance.canIssue]);
+  const selectSale = useCallback(
+    async (id: string) => {
+      const request = ++saleSelectionSequence.current;
+      // A finance correction requires fresh, sale-specific user acknowledgement.
+      setStaffCorrectionReason("");
+      setStaffCorrectionConfirmed(false);
+      setSelected(null);
+      setSettlement(null);
+      setFiscalReadiness(null);
+      setPreview(null);
+      try {
+        const [detail, projection, fiscal] = await Promise.all([
+          get<Detail>("sale", id),
+          get<SettlementDetail>("settlement", id),
+          finance.canIssue ? get<FiscalReadiness>("fiscal_readiness", id) : Promise.resolve(null),
+        ]);
+        if (request !== saleSelectionSequence.current) return;
+        setSelected(detail);
+        setSettlement(projection);
+        setFiscalReadiness(fiscal);
+      } catch (error) {
+        if (request === saleSelectionSequence.current)
+          setNotice(error instanceof Error ? error.message : "Unable to read sale details");
+      }
+    },
+    [get, finance.canIssue]
+  );
   // A POS refund shortcut selects the exact sale without bypassing any ledger permissions.
   useEffect(() => {
     if (!initialSaleId || initialSaleProcessed.current) return;
