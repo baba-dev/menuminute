@@ -119,6 +119,7 @@ export function TheTill({
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [success, setSuccess] = useState<PosSaleResult | null>(null);
   const [editingSettings, setEditingSettings] = useState(!initial.context.enabled);
+  const sellerTriggerUsed = useRef(false);
   useEffect(() => {
     if (mobileTicketOpen) mobileTicketRef.current?.focus();
   }, [mobileTicketOpen]);
@@ -144,7 +145,7 @@ export function TheTill({
   );
   // The seller trigger lives in the hero; reveal the form below the POS navigation.
   useEffect(() => {
-    if (editingSettings)
+    if (editingSettings && sellerTriggerUsed.current)
       document.getElementById("pos-seller-settings")?.scrollIntoView({ block: "start" });
   }, [editingSettings]);
   const incomingOrder = workspace.attachable.find((o) => o.orderId === incomingOrderId);
@@ -579,7 +580,10 @@ export function TheTill({
               className="pos-seller-link"
               aria-expanded={editingSettings}
               aria-controls="pos-seller-settings"
-              onClick={() => setEditingSettings((value) => !value)}
+              onClick={() => {
+                sellerTriggerUsed.current = true;
+                setEditingSettings((value) => !value);
+              }}
             >
               <Settings2 size={15} aria-hidden="true" /> Seller details
             </button>
