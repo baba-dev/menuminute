@@ -17,7 +17,12 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import type { PosWorkspace, PosSaleResult, PosRegisterRow, PosRepeatSelection } from "@/modules/pos/service";
+import type {
+  PosWorkspace,
+  PosSaleResult,
+  PosRegisterRow,
+  PosRepeatSelection,
+} from "@/modules/pos/service";
 import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
@@ -228,12 +233,15 @@ export function TheTill({
       setPrintFallback(null);
       commandRef.current = null;
       setMessage(
-        "Order #" + order.orderNumber +
+        "Order #" +
+          order.orderNumber +
           " copied to a NEW draft. Current menu prices apply. Review the ticket before placing it; no new order or payment has been recorded."
       );
       if (window.innerWidth < 760) setMobileTicketOpen(true);
       window.requestAnimationFrame(() => {
-        document.querySelector(".till-cart")?.scrollIntoView({ block: "start", behavior: "smooth" });
+        document
+          .querySelector(".till-cart")
+          ?.scrollIntoView({ block: "start", behavior: "smooth" });
       });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to repeat this order.");
