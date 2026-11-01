@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -160,19 +160,18 @@ export function FinancialHub({
   const dishes = workspace.menus
     .flatMap((m) => m.categories.flatMap((c) => c.items))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i);
-  async function get<T>(
-    view: string,
-    id?: string,
-    cursor?: { at: string; id: string }
-  ): Promise<T> {
-    const qs = new URLSearchParams({ view });
-    if (id) qs.set("id", id);
-    if (cursor) {
-      qs.set("cursorAt", cursor.at);
-      qs.set("cursorId", cursor.id);
-    }
-    return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
-  }
+  const get = useCallback(
+    async <T,>(view: string, id?: string, cursor?: { at: string; id: string }): Promise<T> => {
+      const qs = new URLSearchParams({ view });
+      if (id) qs.set("id", id);
+      if (cursor) {
+        qs.set("cursorAt", cursor.at);
+        qs.set("cursorId", cursor.id);
+      }
+      return response<T>(await fetch(endpoint + "?" + qs.toString(), { cache: "no-store" }));
+    },
+    [endpoint]
+  );
   async function refresh() {
     const [f, l, s] = await Promise.all([
       get<FinanceContext>("context"),
@@ -227,7 +226,7 @@ export function FinancialHub({
       setReconciliationBusy(false);
     }
   }
-  async function selectSale(id: string) {
+  const selectSale = useCallback(async (id: string) => {
     const request = ++saleSelectionSequence.current;
     // A finance correction requires fresh, sale-specific user acknowledgement.
     setStaffCorrectionReason("");
@@ -250,7 +249,7 @@ export function FinancialHub({
       if (request === saleSelectionSequence.current)
         setNotice(error instanceof Error ? error.message : "Unable to read sale details");
     }
-  }
+  }, [get, finance.canIssue]);
   // A POS refund shortcut selects the exact sale without bypassing any ledger permissions.
   useEffect(() => {
     if (!initialSaleId || initialSaleProcessed.current) return;
