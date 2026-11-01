@@ -43,3 +43,22 @@ single phase commit instead of disabling the operational workflow.
 
 Do not merge this performance branch until the concurrent Dining Floor redesign
 PR has been reconciled and its integration tests are green.
+
+## Phase G — report index review and safe SQL improvements
+
+Migration `0042_reports_query_indexes.sql` already defines the partial index
+`orders_outlet_business_date_report_idx` on `(restaurant_id,business_date)`
+for non-NULL dates. The order schema also defines `orders_created_idx` on
+`(restaurant_id,created_at)`. No duplicate migration is appropriate.
+
+The report date filter now uses the business-date index for normal rows and
+a timezone-correct UTC instant range on `created_at` **only** when
+`business_date IS NULL`. Assigned business dates remain authoritative;
+legacy records retain outlet-local date semantics across overnight/DST shifts.
+The hourly benchmark retains its created-at local date period using UTC
+instant boundaries for indexed scans.
+
+Before additional indexes, run `EXPLAIN (ANALYZE, BUFFERS)` with synthetic
+1k/10k/100k order histories and compare equal-workload timings. Inspect the
+existing partial business-date index, created_at index and
+`order_items_order_idx` join, and avoid additional write amplification.

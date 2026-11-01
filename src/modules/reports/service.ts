@@ -4,6 +4,7 @@ import { restaurants } from "@/db/schema";
 import { withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { calculateDelta, formatMoneyAmount, serializeCsv } from "./formatters";
 import { classifyMenuDish } from "./menu-classification";
+import { reportOrderDateFilter } from "./date-filter";
 import type {
   DailyZReportData,
   ExecutiveSummary,
@@ -183,8 +184,7 @@ export async function getReportsWorkspace(
           count(*) filter (where fulfillment_mode = 'pickup')::int as pickup_orders
         from orders
         where restaurant_id = ${outletId}
-          and coalesce(business_date, (created_at at time zone ${timezone})::date) >= ${range.from}::date
-          and coalesce(business_date, (created_at at time zone ${timezone})::date) <= ${range.to}::date
+          and ${reportOrderDateFilter("orders", range.from, range.to, timezone)}
           ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       `),
 
@@ -201,8 +201,7 @@ export async function getReportsWorkspace(
           coalesce(sum(subtotal_minor) filter (where status not in ('cancelled','rejected','expired')), 0)::bigint as net_sales
         from orders
         where restaurant_id = ${outletId}
-          and coalesce(business_date, (created_at at time zone ${timezone})::date) >= ${range.baselineFrom}::date
-          and coalesce(business_date, (created_at at time zone ${timezone})::date) <= ${range.baselineTo}::date
+          and ${reportOrderDateFilter("orders", range.baselineFrom, range.baselineTo, timezone)}
           ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       `),
 
@@ -213,8 +212,7 @@ export async function getReportsWorkspace(
         where oi.restaurant_id = ${outletId}
           and o.status not in ('cancelled','rejected','expired')
           ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
-          and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) >= ${range.from}::date
-          and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) <= ${range.to}::date
+          and ${reportOrderDateFilter("joined", range.from, range.to, timezone)}
       `),
     ]);
 
@@ -288,8 +286,7 @@ export async function getReportsWorkspace(
         count(*)::int as order_count
       from orders
       where restaurant_id = ${outletId}
-        and coalesce(business_date, (created_at at time zone ${timezone})::date) >= ${range.from}::date
-        and coalesce(business_date, (created_at at time zone ${timezone})::date) <= ${range.to}::date
+        and ${reportOrderDateFilter("orders", range.from, range.to, timezone)}
         and status not in ('cancelled','rejected','expired')
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
@@ -308,8 +305,8 @@ export async function getReportsWorkspace(
         coalesce(sum(total_minor) / 14, 0)::bigint as avg_sales_minor
       from orders
       where restaurant_id = ${outletId}
-        and (created_at at time zone ${timezone})::date >= (${range.from}::date - interval '14 days')::date
-        and (created_at at time zone ${timezone})::date < ${range.from}::date
+        and created_at >= ((${range.from}::date - 14)::timestamp at time zone ${timezone})
+        and created_at < (${range.from}::date::timestamp at time zone ${timezone})
         and status not in ('cancelled','rejected','expired')
         ${query.fulfillmentMode !== "all" ? sql`and fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by hr
@@ -362,8 +359,7 @@ export async function getReportsWorkspace(
       left join menu_categories c on c.id = mi.category_id and c.restaurant_id = oi.restaurant_id
       where oi.restaurant_id = ${outletId}
         and o.status not in ('cancelled','rejected','expired')
-        and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) >= ${range.from}::date
-        and coalesce(o.business_date, (o.created_at at time zone ${timezone})::date) <= ${range.to}::date
+        and ${reportOrderDateFilter("joined", range.from, range.to, timezone)}
       ${query.fulfillmentMode !== "all" ? sql`and o.fulfillment_mode = ${query.fulfillmentMode}` : sql``}
       group by oi.dish_id
       order by total_revenue desc
