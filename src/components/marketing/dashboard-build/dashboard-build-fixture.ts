@@ -1,12 +1,16 @@
 import {
   BookOpen,
+  CheckCircle2,
   ChefHat,
   FilePenLine,
   Globe2,
   Layers3,
+  Plus,
   QrCode,
+  UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
+import { getServicePeriodText } from "@/lib/service-period";
 import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import type { PieceId } from "./dashboard-build-timeline";
 
@@ -88,3 +92,67 @@ export const REPLICA_KPIS: readonly ReplicaKpi[] = [
 /** Sample till figure for the top-bar chip. */
 export const REPLICA_TILL_LABEL = "Till open · ₹8,420";
 export const REPLICA_BELL_COUNT = 3;
+
+/** Midday copy from the real `getServicePeriodText`, so the wording cannot drift from the product. */
+export const REPLICA_SERVICE_PERIOD = getServicePeriodText(12);
+
+export const REPLICA_DISH_COUNT = 236;
+
+/** The real dashboard's "published menu" priorities (dashboard/page.tsx). */
+export const REPLICA_PRIORITIES: readonly {
+  title: string;
+  detail: string;
+  action: string;
+  Icon: LucideIcon;
+}[] = [
+  {
+    title: "Add a new dish",
+    detail: "Grow your menu with something special.",
+    action: "Add dish",
+    Icon: Plus,
+  },
+  {
+    title: "Refine your menu",
+    detail: "Update descriptions, prices or availability.",
+    action: "Edit menu",
+    Icon: UtensilsCrossed,
+  },
+  {
+    title: "Share your QR",
+    detail: "Download or print a permanent menu link.",
+    action: "View QR",
+    Icon: QrCode,
+  },
+];
+
+export type ReplicaHealthRow = {
+  Icon: LucideIcon;
+  title: string;
+  detail: string;
+  badge: string;
+};
+
+/** Real labels for an outlet with a published menu and one active QR code. */
+export const REPLICA_HEALTH_ROWS: readonly ReplicaHealthRow[] = [
+  {
+    Icon: BookOpen,
+    title: "Menu publish status",
+    detail: "A committed public release is available",
+    badge: "Live",
+  },
+  {
+    Icon: QrCode,
+    title: "QR codes",
+    detail: "1 active permanent link",
+    badge: "Active",
+  },
+  {
+    Icon: Globe2,
+    title: "Menu visibility",
+    detail: "Accessible through your active menu link",
+    badge: "Public",
+  },
+];
+
+/** Setup completion: sample figures for a fully launched outlet. */
+export const REPLICA_SETUP = { completed: 4, total: 4, percent: 100, Icon: CheckCircle2 } as const;

@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 import {
   CHAPTERS,
+  cameraFraction,
+  cameraStyle,
   HOLD_START,
   PIECES,
   chapterAt,
@@ -22,6 +24,9 @@ const stage = () => {
     const el = document.createElement("div");
     el.dataset["piece"] = piece.id;
     if (piece.id === "kpi-3") el.innerHTML = '<span data-count-to="236">0</span>';
+    if (piece.id === "health")
+      el.innerHTML =
+        '<span data-count-to="4">0</span><progress max="4" value="0" data-progress-to="4"></progress><span data-count-to="100">0</span>';
     root.append(el);
   }
   return root;
@@ -95,6 +100,38 @@ describe("dashboard build timeline", () => {
         opacity: "1",
       });
     }
+  });
+
+  it("pans the camera down the tall page and back up", () => {
+    expect(cameraFraction(0)).toBe(0);
+    expect(cameraFraction(0.3)).toBe(0);
+    expect(cameraFraction(HOLD_START)).toBe(1);
+    expect(cameraFraction(1)).toBe(1);
+    let previous = 0;
+    for (let i = 0; i <= 100; i++) {
+      const value = cameraFraction(i / 100);
+      expect(value).toBeGreaterThanOrEqual(previous);
+      previous = value;
+    }
+    expect(cameraStyle(0, 800)).toEqual({ transform: "none" });
+    expect(cameraStyle(1, 800)).toEqual({ transform: "translate3d(0, -800px, 0)" });
+    expect(cameraStyle(1, 0)).toEqual({ transform: "none" });
+    expect(cameraStyle(0.58, -50)).toEqual({ transform: "none" });
+  });
+
+  it("drives every counter and progress bar in a piece, and reverses them", () => {
+    const root = stage();
+    root.dataset["travel"] = "700";
+    renderDashboardBuild(root, 1);
+    const health = root.querySelector('[data-piece="health"]')!;
+    expect([...health.querySelectorAll("[data-count-to]")].map((e) => e.textContent)).toEqual([
+      "4",
+      "100",
+    ]);
+    expect(health.querySelector("progress")?.value).toBe(4);
+    renderDashboardBuild(root, 0);
+    expect(health.querySelector("progress")?.value).toBe(0);
+    expect(health.querySelector("[data-count-to]")?.textContent).toBe("0");
   });
 
   it("maps pinned-section geometry to progress", () => {

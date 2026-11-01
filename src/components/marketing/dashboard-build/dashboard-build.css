@@ -1,9 +1,11 @@
 /* Scroll-assembled dashboard (home-v2).
    The stage is a fixed-size virtual screen, scaled to fit, so the real workspace CSS renders at its
-   true pixel sizes and the whole composition scales as one image. */
+   true pixel sizes. The real page is taller than the screen, so a "camera" pans down it as it
+   builds. The product's CSS switches layout by viewport width; the pinned blocks below keep the
+   replica on its fixed desktop (or phone) layout whatever the visitor's window size. */
 .db {
-  --db-cw: 1440px;
-  --db-ch: 960px;
+  --db-cw: 1440px; /* virtual screen width */
+  --db-wh: 900px; /* virtual window height */
   position: relative;
   color: var(--ink);
 }
@@ -11,18 +13,18 @@
 /* Pin only when script can run and motion is welcome; otherwise the section is one screen. */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .db {
-    height: 400vh;
+    height: 500vh;
   }
 }
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (max-width: 680px) {
   .db {
-    height: 300vh;
+    height: 400vh;
   }
 }
 @media (max-width: 680px) {
   .db {
     --db-cw: 390px;
-    --db-ch: 800px;
+    --db-wh: 800px;
   }
 }
 
@@ -66,22 +68,26 @@
 }
 @supports (scale: tan(atan2(1px, 1px))) {
   .db__fit {
-    --db-scale: min(tan(atan2(100cqw, var(--db-cw))), tan(atan2(100cqh, var(--db-ch))));
+    --db-scale: min(tan(atan2(100cqw, var(--db-cw))), tan(atan2(100cqh, var(--db-wh))));
   }
 }
 .db__fit {
   width: calc(var(--db-cw) * var(--db-scale));
-  height: calc(var(--db-ch) * var(--db-scale));
+  height: calc(var(--db-wh) * var(--db-scale));
 }
 
+/* The stage is the window onto the page: it clips whatever the camera has panned out of view.
+   `overflow: clip` (unlike `hidden`) keeps the 3D build effect intact. */
 .db__stage {
   position: absolute;
   top: 50%;
   left: 50%;
   width: var(--db-cw);
-  height: var(--db-ch);
-  margin: calc(var(--db-ch) / -2) 0 0 calc(var(--db-cw) / -2);
+  height: var(--db-wh);
+  margin: calc(var(--db-wh) / -2) 0 0 calc(var(--db-cw) / -2);
   scale: var(--db-scale);
+  overflow: clip;
+  border-radius: 18px;
   transform-style: preserve-3d;
   will-change: transform;
   font-family: var(--font-dm), sans-serif;
@@ -98,10 +104,8 @@
 }
 
 /* ── Real-component placement (desktop) ─────────────────────────────── */
-.db__stage > * {
-  position: absolute;
-}
 .db-replica-sidebar {
+  position: absolute;
   top: 0;
   left: 0;
   width: 216px;
@@ -114,42 +118,45 @@
   display: flex;
   height: 100%;
   overflow: clip;
+  border-right: 1px solid var(--decorative);
+  border-bottom: 0;
 }
-.db-replica-topbar {
+.db__camera {
+  position: absolute;
   top: 0;
   left: 216px;
   width: 1224px;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
-.db-replica-glance {
-  top: 330px;
-  left: 216px;
-  width: 1224px;
+.db-replica-dashboard {
   min-height: 0;
-  padding: 0 42px;
-  background: transparent;
+  transform-style: preserve-3d;
 }
-/* Per-cell bottom rule instead of one grid rule, so each KPI assembles with its own underline. */
-.db-replica-glance .mm-dashboard-kpis {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-.db-replica-glance .mm-dashboard-kpi {
-  padding-bottom: 30px;
-  border-bottom: 1px solid var(--editorial-line);
+.db .mm-dashboard-body,
+.db .mm-widget-grid,
+.db .mm-widget {
+  transform-style: preserve-3d;
 }
 .db-replica-bottombar {
   display: none;
 }
-/* Keep the breadcrumb on one line; the action buttons otherwise squeeze it into two. */
 .db .mm-dashboard-breadcrumb {
   flex-wrap: nowrap;
   white-space: nowrap;
 }
-.db .mm-topbar-search {
-  min-width: 0;
-}
 .db .mm-dashboard-top-actions {
   gap: 10px;
+}
+
+/* Per-cell bottom rule instead of one grid rule, so each KPI assembles with its own underline. */
+.db .mm-dashboard-kpis {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.db .mm-dashboard-kpi {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--editorial-line);
 }
 
 /* Remaining placeholders (later slices replace these with real panels). */
@@ -166,45 +173,100 @@
   font-weight: 700;
   opacity: 0.6;
 }
-.db-ph--hero {
-  top: 68px;
-  left: 216px;
-  width: 1224px;
-  height: 250px;
-  border-radius: 0;
-  border-inline: 0;
+.db-ph--dispatch {
+  height: 440px;
 }
-.db-ph--priorities {
-  top: 598px;
-  left: 258px;
-  width: 560px;
-  height: 160px;
-}
-.db-ph--health {
-  top: 598px;
-  left: 836px;
-  width: 562px;
-  height: 160px;
-}
-.db-ph--pulse {
-  top: 778px;
-  left: 258px;
-  width: 560px;
-  height: 150px;
-}
-.db-ph--floor {
-  top: 778px;
-  left: 836px;
-  width: 562px;
-  height: 150px;
+.db-ph--tall {
+  height: 260px;
 }
 .db-ph--order {
-  top: 92px;
-  left: 1130px;
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
   width: 270px;
   height: 80px;
   border-style: solid;
   border-color: var(--ember);
+}
+
+/* ── Pin the desktop layout (the product re-flows at these viewport widths) ── */
+@media (min-width: 681px) and (max-width: 1320px) {
+  .db .mm-dashboard-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    row-gap: 0;
+  }
+  .db .mm-dashboard-kpi:nth-child(3) {
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-kpi:nth-child(4) {
+    padding-left: clamp(10px, 1.3vw, 20px);
+  }
+}
+@media (min-width: 681px) and (max-width: 1280px) {
+  .db .mm-topbar-search {
+    width: auto;
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+  .db .mm-topbar-search-label,
+  .db .mm-topbar-kbd {
+    display: inline;
+  }
+}
+@media (min-width: 681px) and (max-width: 1160px) {
+  .db .mm-widget {
+    grid-column: span 6;
+  }
+  .db .mm-widget[data-widget="kpis"],
+  .db .mm-widget[data-widget="health"] {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 681px) and (max-width: 1100px) {
+  .db .mm-topbar-connection-label,
+  .db .mm-topbar-chip span:not(.sr-only):not(:first-child) {
+    display: inline;
+  }
+}
+@media (min-width: 681px) and (max-width: 900px) {
+  .db .mm-workspace-nav {
+    display: block;
+  }
+  .db .mm-workspace-brand {
+    min-height: 80px;
+    margin: 0 18px;
+  }
+  .db .mm-dashboard-topbar {
+    min-height: 68px;
+    padding: 10px clamp(20px, 3.3vw, 46px);
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+  .db .mm-dashboard-top-actions {
+    max-width: none;
+    margin-left: 0;
+  }
+  .db .mm-dashboard-preview {
+    min-height: 38px;
+    max-width: none;
+    padding: 8px 17px;
+    font-size: 12px;
+    text-align: left;
+    overflow-wrap: normal;
+  }
+  .db .mm-dashboard-breadcrumb {
+    gap: 13px;
+    font-size: 10px;
+  }
+  .db .mm-dashboard-top-actions .mm-theme-toggle {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+  }
+  .db .mm-dashboard-user {
+    width: 37px;
+    height: 37px;
+  }
 }
 
 /* ── Phone: bottom bar replaces the sidebar, as in the product ──────── */
@@ -212,36 +274,28 @@
   .db .db-replica-sidebar {
     display: none;
   }
+  .db__stage,
   .db__shell {
     border-radius: 22px;
   }
-  .db-replica-topbar {
+  .db__camera {
     left: 0;
     width: 390px;
+    /* Room so the last content can clear the 64px bottom bar. */
+    padding-bottom: 64px;
   }
-  .db-ph--hero {
-    top: 76px;
-    left: 0;
-    width: 390px;
-    height: 112px;
-  }
-  .db-replica-glance {
-    top: 198px;
-    left: 0;
-    width: 390px;
-    padding: 0 18px;
-  }
-  .db-ph--priorities,
-  .db-ph--health,
-  .db-ph--pulse,
-  .db-ph--floor {
-    display: none;
+  .db-ph--dispatch {
+    height: 300px;
   }
   .db-ph--order {
-    top: 92px;
-    left: 204px;
-    width: 170px;
+    right: 14px;
+    bottom: 78px;
+    width: 190px;
     height: 56px;
+  }
+  .db__rail-item {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.72rem;
   }
   .db-replica-bottombar {
     position: absolute;
@@ -273,7 +327,8 @@
 }
 .db[data-chapter="navigate"] [data-chapter-id="navigate"],
 .db[data-chapter="overview"] [data-chapter-id="overview"],
-.db[data-chapter="menu-health"] [data-chapter-id="menu-health"],
+.db[data-chapter="priorities"] [data-chapter-id="priorities"],
+.db[data-chapter="health"] [data-chapter-id="health"],
 .db[data-chapter="live-service"] [data-chapter-id="live-service"] {
   border-color: var(--ember);
   background: var(--ember);
@@ -284,24 +339,61 @@
   outline-offset: 2px;
 }
 
-/* Without script, show the finished dashboard. The inline p = 0 pose is only for scripted pages. */
-@media (scripting: none) {
+/* ── Finished, unpinned page: no script, or reduced motion ──────────────
+   The whole page is shown at its own height (no window, no camera), scaled to the width. The
+   inline p = 0 pose exists only for scripted pages. */
+@media (scripting: none), (prefers-reduced-motion: reduce) {
   .db .db__stage,
   .db [data-piece],
-  .db [data-stagger] {
+  .db [data-stagger],
+  .db [data-camera] {
     transform: none !important;
     opacity: 1 !important;
+  }
+  .db__sticky {
+    position: static;
+    height: auto;
+  }
+  .db__perspective {
+    container-type: inline-size;
+    perspective: none;
+  }
+  .db__fit {
+    --db-scale: 0.7;
+    width: 100%;
+    height: auto;
+  }
+  @supports (scale: tan(atan2(1px, 1px))) {
+    .db__fit {
+      --db-scale: tan(atan2(100cqw, var(--db-cw)));
+    }
+  }
+  .db__stage {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: var(--db-cw);
+    height: auto;
+    margin: 0;
+    scale: none;
+    zoom: var(--db-scale);
+    overflow: visible;
+  }
+  .db__camera {
+    position: relative;
+    left: auto;
+    margin-left: 216px;
+  }
+  .db-ph--order {
+    display: none;
   }
 }
-
-/* Reduced motion: no pin, no travel. The finished dashboard, same information. */
-@media (prefers-reduced-motion: reduce) {
-  .db .db__stage,
-  .db [data-piece],
-  .db [data-stagger] {
-    transform: none !important;
-    opacity: 1 !important;
+@media (max-width: 680px) and ((scripting: none) or (prefers-reduced-motion: reduce)) {
+  .db__camera {
+    margin-left: 0;
   }
+}
+@media (prefers-reduced-motion: reduce) {
   .db__rail {
     display: none;
   }

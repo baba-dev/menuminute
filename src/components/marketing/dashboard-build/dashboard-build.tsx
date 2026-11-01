@@ -13,8 +13,9 @@ import {
   type PieceId,
 } from "./dashboard-build-timeline";
 import {
+  ReplicaBody,
   ReplicaBottomBar,
-  ReplicaGlance,
+  ReplicaHero,
   ReplicaSidebar,
   ReplicaTopbar,
 } from "./dashboard-replica";
@@ -23,9 +24,10 @@ import "@/app/(dashboard)/workspace-delight.css";
 import "./dashboard-build.css";
 
 /**
- * Pinned, scroll-assembled dashboard. The sidebar, top bar and KPI row are faithful replicas of
- * the real workspace (real class names, nav model and icons). The remaining panels are still
- * PLACEHOLDERS and arrive in later slices. Marketing fixture: no API calls, no auth, no tenant data.
+ * Pinned, scroll-assembled dashboard. The sidebar, top bar, hero, KPI row, priorities and outlet
+ * health are faithful replicas of the real workspace (real class names, nav model, icons and
+ * artwork). Dispatch, floor, service requests and the new-order toast are still PLACEHOLDERS that
+ * arrive in later slices. Marketing fixture: no API calls, no auth, no tenant data.
  */
 
 function Placeholder({ id, label, className }: { id: PieceId; label: string; className: string }) {
@@ -57,6 +59,13 @@ export function DashboardBuild(): ReactNode {
       const rect = root.getBoundingClientRect();
       return scrollProgress(rect.top, rect.height, window.innerHeight);
     };
+    const camera = stage.querySelector<HTMLElement>("[data-camera]");
+    // The page is taller than the window; the camera pans by the difference (unscaled px).
+    const measureTravel = () => {
+      if (!camera) return;
+      const travel = String(Math.max(0, camera.offsetHeight - stage.clientHeight));
+      if (stage.dataset["travel"] !== travel) stage.dataset["travel"] = travel;
+    };
     const apply = (p: number) => {
       renderDashboardBuild(stage, p);
       const chapter = chapterAt(p).id;
@@ -81,9 +90,14 @@ export function DashboardBuild(): ReactNode {
     };
 
     // First paint lands directly on the right state, e.g. after a mid-page reload.
+    measureTravel();
     target = measure();
     displayed = target;
     apply(displayed);
+
+    // Fonts and images change the page height after mount; re-measure and repaint when they do.
+    const observer = camera ? new ResizeObserver(() => (measureTravel(), apply(displayed))) : null;
+    if (camera) observer?.observe(camera);
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -92,6 +106,7 @@ export function DashboardBuild(): ReactNode {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       motion.removeEventListener("change", onScroll);
+      observer?.disconnect();
       window.cancelAnimationFrame(frame);
     };
   }, []);
@@ -116,8 +131,8 @@ export function DashboardBuild(): ReactNode {
         </h2>
         <p className="sr-only">
           Animated preview of the MenuMinute dashboard for a sample restaurant: workspace
-          navigation, a top bar with search, till status and notifications, and six at-a-glance menu
-          statistics.
+          navigation, a top bar with search, till status and notifications, a welcome banner, six
+          at-a-glance menu statistics, today’s priorities and outlet health with setup progress.
         </p>
         <div className="db__perspective">
           <div className="db__fit">
@@ -127,26 +142,14 @@ export function DashboardBuild(): ReactNode {
                 data-piece="shell"
                 style={pieceStyle(0, pieceById("shell"))}
               />
+              <div className="db__camera" data-camera>
+                <ReplicaTopbar />
+                <div className="mm-dashboard db-replica-dashboard">
+                  <ReplicaHero />
+                  <ReplicaBody />
+                </div>
+              </div>
               <ReplicaSidebar />
-              <ReplicaTopbar />
-              <Placeholder id="hero" label="Overview hero (placeholder)" className="db-ph--hero" />
-              <ReplicaGlance />
-              <Placeholder
-                id="priorities"
-                label="Priorities (placeholder)"
-                className="db-ph--priorities"
-              />
-              <Placeholder
-                id="health"
-                label="Outlet health (placeholder)"
-                className="db-ph--health"
-              />
-              <Placeholder
-                id="pulse"
-                label="Service pulse (placeholder)"
-                className="db-ph--pulse"
-              />
-              <Placeholder id="floor" label="Floor map (placeholder)" className="db-ph--floor" />
               <Placeholder id="order" label="New order (placeholder)" className="db-ph--order" />
               <ReplicaBottomBar />
             </div>

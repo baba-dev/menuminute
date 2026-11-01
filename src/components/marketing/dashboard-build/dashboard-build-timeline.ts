@@ -9,7 +9,7 @@
  */
 
 /** Scroll distance of the pinned section, in viewport heights (stage height included). */
-export const SCROLL_LENGTH_VH = { desktop: 400, mobile: 300 } as const;
+export const SCROLL_LENGTH_VH = { desktop: 500, mobile: 400 } as const;
 
 /** From here to 1 the finished dashboard holds still so it can be read and clicked. */
 export const HOLD_START = 0.9;
@@ -46,8 +46,8 @@ export type Piece = {
 
 const kpi = (index: number, x: number, y: number): Piece => ({
   id: `kpi-${index + 1}` as PieceId,
-  start: 0.34 + index * 0.025,
-  end: 0.43 + index * 0.025,
+  start: 0.34 + index * 0.02,
+  end: 0.42 + index * 0.02,
   from: { x, y, z: -160, rotateY: 0 },
 });
 
@@ -55,8 +55,8 @@ const kpi = (index: number, x: number, y: number): Piece => ({
 export const PIECES: readonly Piece[] = [
   { id: "shell", start: 0, end: 0.1, from: { x: 0, y: 0, z: -260, rotateY: 0 } },
   { id: "sidebar", start: 0.02, end: 0.12, from: { x: -90, y: 0, z: -120, rotateY: 14 } },
-  { id: "topbar", start: 0.1, end: 0.22, from: { x: 0, y: -70, z: -80, rotateY: 0 } },
-  { id: "hero", start: 0.2, end: 0.36, from: { x: 0, y: 70, z: 140, rotateY: 0 } },
+  { id: "topbar", start: 0.1, end: 0.2, from: { x: 0, y: -70, z: -80, rotateY: 0 } },
+  { id: "hero", start: 0.18, end: 0.34, from: { x: 0, y: 70, z: 140, rotateY: 0 } },
   { id: "glance", start: 0.3, end: 0.4, from: { x: 0, y: 40, z: -60, rotateY: 0 } },
   kpi(0, -60, 90),
   kpi(1, -20, 100),
@@ -64,20 +64,21 @@ export const PIECES: readonly Piece[] = [
   kpi(3, 60, 100),
   kpi(4, 100, 90),
   kpi(5, 140, 100),
-  { id: "priorities", start: 0.52, end: 0.68, from: { x: -80, y: 70, z: 100, rotateY: -10 } },
-  { id: "health", start: 0.56, end: 0.7, from: { x: 80, y: 70, z: 100, rotateY: 10 } },
-  { id: "pulse", start: 0.66, end: 0.8, from: { x: -60, y: 90, z: 120, rotateY: 0 } },
-  { id: "floor", start: 0.7, end: 0.82, from: { x: 60, y: 90, z: 120, rotateY: 0 } },
-  { id: "order", start: 0.8, end: 0.9, from: { x: 120, y: -40, z: 220, rotateY: -8 } },
+  { id: "priorities", start: 0.56, end: 0.7, from: { x: -80, y: 70, z: 100, rotateY: -10 } },
+  { id: "pulse", start: 0.6, end: 0.72, from: { x: 80, y: 70, z: 100, rotateY: 10 } },
+  { id: "health", start: 0.7, end: 0.84, from: { x: 0, y: 90, z: 120, rotateY: 0 } },
+  { id: "floor", start: 0.78, end: 0.88, from: { x: 60, y: 90, z: 120, rotateY: 0 } },
+  { id: "order", start: 0.84, end: 0.9, from: { x: 120, y: -40, z: 220, rotateY: -8 } },
 ];
 
 export type Chapter = { id: string; label: string; at: number };
 
 /** Rail entries. `at` is the progress a click scrolls to, just after the chapter completes. */
 export const CHAPTERS: readonly Chapter[] = [
-  { id: "navigate", label: "Navigate", at: 0.24 },
-  { id: "overview", label: "Overview", at: 0.56 },
-  { id: "menu-health", label: "Menu health", at: 0.72 },
+  { id: "navigate", label: "Navigate", at: 0.22 },
+  { id: "overview", label: "Overview", at: 0.52 },
+  { id: "priorities", label: "Priorities", at: 0.7 },
+  { id: "health", label: "Outlet health", at: 0.86 },
   { id: "live-service", label: "Live service", at: 1 },
 ];
 
@@ -164,6 +165,20 @@ export function staggerStyle(p: number, piece: Piece, index: number, count: numb
   };
 }
 
+/**
+ * The real dashboard is much taller than a screen, so the stage acts as a camera that pans down
+ * the page as it builds, like scrolling the product. 0 = top of the page, 1 = bottom.
+ */
+export function cameraFraction(p: number) {
+  return 0.45 * rangeProgress(p, 0.5, 0.66) + 0.55 * rangeProgress(p, 0.66, 0.88);
+}
+
+/** `travel` is the scrollable height of the page inside the window, in unscaled px. */
+export function cameraStyle(p: number, travel: number) {
+  const offset = Math.max(0, travel) * cameraFraction(p);
+  return { transform: offset === 0 ? "none" : `translate3d(0, ${round(-offset)}px, 0)` };
+}
+
 /** Count-up for a number that belongs to a piece; reverses when the user scrolls back. */
 export function countValue(p: number, piece: Piece, target: number) {
   return Math.round(
@@ -183,6 +198,12 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
   const frame = stageStyle(value);
   if (stage.style.transform !== frame.transform) stage.style.transform = frame.transform;
 
+  const camera = stage.querySelector<HTMLElement>("[data-camera]");
+  if (camera) {
+    const view = cameraStyle(value, Number(stage.dataset["travel"]) || 0);
+    if (camera.style.transform !== view.transform) camera.style.transform = view.transform;
+  }
+
   for (const element of stage.querySelectorAll<HTMLElement>("[data-piece]")) {
     const piece = PIECE_BY_ID.get(element.dataset["piece"] as PieceId);
     if (!piece) continue;
@@ -201,11 +222,13 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
       if (item.style.opacity !== itemStyle.opacity) item.style.opacity = itemStyle.opacity;
     }
 
-    const counter = element.querySelector<HTMLElement>("[data-count-to]");
-    if (counter) {
-      const target = Number(counter.dataset["countTo"]);
-      const text = String(countValue(value, piece, target));
+    for (const counter of element.querySelectorAll<HTMLElement>("[data-count-to]")) {
+      const text = String(countValue(value, piece, Number(counter.dataset["countTo"])));
       if (counter.textContent !== text) counter.textContent = text;
+    }
+    for (const bar of element.querySelectorAll<HTMLProgressElement>("progress[data-progress-to]")) {
+      const next = countValue(value, piece, Number(bar.dataset["progressTo"]));
+      if (bar.value !== next) bar.value = next;
     }
   }
 }
