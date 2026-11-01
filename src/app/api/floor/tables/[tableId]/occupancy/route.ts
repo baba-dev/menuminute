@@ -11,7 +11,9 @@ async function observed_POST(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
     const { guests } = seatTableInputSchema.parse(await req.json());
-    return NextResponse.json(await seatTable(actor, restaurant.id, (await c.params).tableId, guests));
+    return NextResponse.json(
+      await seatTable(actor, restaurant.id, (await c.params).tableId, guests)
+    );
   } catch (e) {
     return errorResponse(e, req);
   }

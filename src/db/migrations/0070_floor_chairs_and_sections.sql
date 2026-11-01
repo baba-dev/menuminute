@@ -137,14 +137,32 @@ CREATE TRIGGER restaurant_tables_defaults BEFORE INSERT ON restaurant_tables
 
 CREATE FUNCTION app_private.restaurant_tables_demo_seed() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
-DECLARE sec text := 'demo-section-main'; i integer;
+DECLARE sec text; shp text; i integer;
 BEGIN
   IF NOT EXISTS(SELECT 1 FROM restaurants WHERE id = NEW.restaurant_id AND is_demo_data) THEN
     RETURN NULL;
   END IF;
-  INSERT INTO dining_sections(id, outlet_id, name, sort_order)
-  VALUES (sec, NEW.restaurant_id, 'Main Dining', 0) ON CONFLICT DO NOTHING;
-  UPDATE restaurant_tables SET section_id = sec WHERE id = NEW.id AND section_id IS NULL;
+  INSERT INTO dining_sections(id, outlet_id, name, color, sort_order) VALUES
+    ('demo-section-main',    NEW.restaurant_id, 'Main Dining',    '#f59e0b', 0),
+    ('demo-section-window',  NEW.restaurant_id, 'Window Room',    '#06b6d4', 1),
+    ('demo-section-counter', NEW.restaurant_id, 'Chef''s Counter', '#8b5cf6', 2),
+    ('demo-section-terrace', NEW.restaurant_id, 'Garden Terrace', '#10b981', 3),
+    ('demo-section-private', NEW.restaurant_id, 'Private Dining', '#ec4899', 4)
+  ON CONFLICT DO NOTHING;
+  sec := CASE NEW.id
+    WHEN 'demo-table-9'  THEN 'demo-section-window'
+    WHEN 'demo-table-10' THEN 'demo-section-counter'
+    WHEN 'demo-table-11' THEN 'demo-section-terrace'
+    WHEN 'demo-table-12' THEN 'demo-section-private'
+    ELSE 'demo-section-main' END;
+  shp := CASE NEW.id
+    WHEN 'demo-table-1' THEN 'round' WHEN 'demo-table-2' THEN 'round'
+    WHEN 'demo-table-3' THEN 'round' WHEN 'demo-table-4' THEN 'round'
+    WHEN 'demo-table-5' THEN 'square' WHEN 'demo-table-6' THEN 'square'
+    WHEN 'demo-table-7' THEN 'square' WHEN 'demo-table-8' THEN 'square'
+    WHEN 'demo-table-9' THEN 'booth'
+    ELSE 'rectangle' END;
+  UPDATE restaurant_tables SET section_id = sec, shape = shp WHERE id = NEW.id;
   FOR i IN 1..LEAST(COALESCE(NEW.capacity, 0), 30) LOOP
     INSERT INTO restaurant_chairs(id, outlet_id, table_id, label)
     VALUES (NEW.id || '-c' || i, NEW.restaurant_id, NEW.id, 'Chair ' || i);
