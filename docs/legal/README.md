@@ -10,6 +10,12 @@ Operator: **BabaBuilds**, an Indian **sole proprietorship**, based in **Pilani, 
 
 BabaBuilds' published contact is verified here as an email and Pilani locality; a complete postal correspondence address, jurisdiction-specific grievance contact, relevant registration/tax particulars and native-app telephone details remain separately required before entering any market or enabling a capability that mandates them. Publication must not be represented as independent legal verification.
 
+## Safe database and acceptance rollout
+
+- The new server-owned signup version is `2026-11-02`. Additive migration `0076_legal_policy_versions` extends the PostgreSQL `users_terms_version_check` allowlist to **both** `2026-10-24` and `2026-11-02`, preserving existing records and compatibility with an older web process during deployment.
+- Apply the migration through the approved backup/owner-only migration release path **before** activating the updated web process. A code merge without its migration must not be represented as a live legal-page rollout, since signup otherwise fails closed.
+- Existing user acceptance remains attributed to its original version and server timestamp; no existing user is automatically deemed to have consented to revised text. A separately reviewed notification or re-acceptance flow is required if a material change makes that necessary under applicable law.
+
 ## Published web documents
 
 `src/content/terms.ts` is the source for 24 anchored sections. `src/app/terms/page.tsx` and `terms.css` reuse the privacy document's shell with original 'The Shared Table' SVG. The Terms route is public and indexable; new registration records the accepted version and timestamp. This repository does not claim external legal certification. Existing generic /terms placeholder is removed from `(information)/[slug]` to avoid duplicate routing/copy.
