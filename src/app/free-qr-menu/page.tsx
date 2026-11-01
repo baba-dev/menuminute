@@ -6,7 +6,8 @@ import { marketingMetadata } from "@/lib/marketing/seo";
 const feature = marketingFeatureBySlug("free-qr-menu");
 export const metadata = marketingMetadata({
   title: "Free QR Menu Maker for Restaurants",
-  description: "Create a free restaurant QR menu. Add dishes, categories and prices, publish a mobile-friendly menu and download permanent QR codes.",
+  description:
+    "Create a free restaurant QR menu. Add dishes, categories and prices, publish a mobile-friendly menu and download permanent QR codes.",
   pathname: "/free-qr-menu",
 });
 export default function FreeQrMenuPage() {

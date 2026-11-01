@@ -18,7 +18,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const guide = guideBySlug((await params).slug);
   return guide
-    ? { title: `${guide.title} — MenuMinute documentation`, description: guide.summary, alternates: { canonical: "/docs/" + guide.slug } }
+    ? {
+        title: `${guide.title} — MenuMinute documentation`,
+        description: guide.summary,
+        alternates: { canonical: "/docs/" + guide.slug },
+      }
     : {};
 }
 

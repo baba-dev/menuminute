@@ -5,7 +5,9 @@ export function MarketingPageShell({ children }: { children: ReactNode }) {
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
       <MarketingSubpageNav />
-      <main id="main-content" className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
       <PublicFooter />
     </div>
   );

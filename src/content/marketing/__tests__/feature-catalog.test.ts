@@ -29,7 +29,19 @@ describe("marketing feature coverage", () => {
   });
   it("includes every indexable marketing and documentation page exactly once", () => {
     const urls = sitemap().map((entry) => entry.url);
-    const expected = ["/", "/about", "/contact", "/docs", "/features", "/free-qr-menu", "/ordering", "/pricing", "/demo", ...marketingFeatures.map((feature) => feature.path), ...GUIDES.map((guide) => "/docs/" + guide.slug)];
+    const expected = [
+      "/",
+      "/about",
+      "/contact",
+      "/docs",
+      "/features",
+      "/free-qr-menu",
+      "/ordering",
+      "/pricing",
+      "/demo",
+      ...marketingFeatures.map((feature) => feature.path),
+      ...GUIDES.map((guide) => "/docs/" + guide.slug),
+    ];
     for (const path of expected) {
       const url = "https://food.bababuilds.com" + (path === "/" ? "" : path);
       expect(urls.filter((value) => value === url)).toHaveLength(1);
@@ -38,7 +50,11 @@ describe("marketing feature coverage", () => {
     expect(urls.some((url) => url.includes("/home-v2"))).toBe(false);
   });
   it("sets a canonical and OG path for marketing pages", () => {
-    const metadata = marketingMetadata({ pathname: "/features/restaurant-pos", title: "Restaurant POS", description: "Restaurant POS overview" });
+    const metadata = marketingMetadata({
+      pathname: "/features/restaurant-pos",
+      title: "Restaurant POS",
+      description: "Restaurant POS overview",
+    });
     expect(metadata.alternates).toEqual({ canonical: "/features/restaurant-pos" });
     expect(metadata.openGraph).toMatchObject({ url: "/features/restaurant-pos" });
   });

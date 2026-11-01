@@ -68,16 +68,35 @@ export function MarketingSubpageNav() {
 
           {/* Desktop Nav Items */}
           <div className="hidden items-center gap-5 md:flex lg:gap-7">
-            {subpageLinks.filter((link) => link.href !== "/").map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={pathname === link.href || (link.href === "/features" && (pathname?.startsWith("/features/") || pathname === "/free-qr-menu" || pathname === "/ordering")) ? "page" : undefined}
-                className={"text-sm font-medium transition-colors " + ((pathname === link.href || (link.href === "/features" && (pathname?.startsWith("/features/") || pathname === "/free-qr-menu" || pathname === "/ordering"))) ? "text-brand-800 dark:text-brand-200 font-semibold" : "text-muted-foreground hover:text-foreground")}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {subpageLinks
+              .filter((link) => link.href !== "/")
+              .map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={
+                    pathname === link.href ||
+                    (link.href === "/features" &&
+                      (pathname?.startsWith("/features/") ||
+                        pathname === "/free-qr-menu" ||
+                        pathname === "/ordering"))
+                      ? "page"
+                      : undefined
+                  }
+                  className={
+                    "text-sm font-medium transition-colors " +
+                    (pathname === link.href ||
+                    (link.href === "/features" &&
+                      (pathname?.startsWith("/features/") ||
+                        pathname === "/free-qr-menu" ||
+                        pathname === "/ordering"))
+                      ? "text-brand-800 dark:text-brand-200 font-semibold"
+                      : "text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {link.label}
+                </Link>
+              ))}
             <HomeAuthActions surface="subpage" />
             <ThemeControl />
           </div>
