@@ -329,7 +329,17 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
     }
 
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep(nextOnboardingStep(currentStep, quickStart));
+      setBusy(true);
+      try {
+        // A fast tap followed by a reload must not lose the prior screen's edits.
+        // Preserve the same ordered, server-owned draft write path used by autosave.
+        await save(draft);
+        setCurrentStep(nextOnboardingStep(currentStep, quickStart));
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to save your progress.");
+      } finally {
+        setBusy(false);
+      }
     }
   };
 
