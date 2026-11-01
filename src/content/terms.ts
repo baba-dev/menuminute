@@ -1,5 +1,5 @@
 /**
- * TERMS OF SERVICE — effective 24 October 2026.
+ * TERMS OF SERVICE — effective 2 November 2026.
  * Keep reviewed copy aligned with /privacy, /delete-account and actual billing UX.
  */
 export type TermsSection = {
@@ -141,8 +141,8 @@ export const termsSections: TermsSection[] = [
     id: "privacy",
     title: "15. Privacy, confidentiality and service records",
     paragraphs: [
-      "Our separate Privacy Policy describes our proposed information practices and available privacy request channels. Confidential business information that is not intentionally published should only be accessed and used to deliver, secure and support the Service or as otherwise agreed or lawfully required. Public menus and content that a Merchant intentionally publishes are not confidential to their viewers.",
-      "We may keep proportionate records necessary for security, dispute investigation, compliance and service operation. The data categories, provider contracts, retention periods and deletion mechanisms must be verified in the production Privacy Policy and operational inventory before final release. A Merchant must not use the Service as the sole legal archive for its own mandatory business records.",
+      "Our separate Privacy Policy describes our information practices and available privacy request channels. Confidential business information that is not intentionally published should only be accessed and used to deliver, secure and support the Service or as otherwise agreed or lawfully required. Public menus and content that a Merchant intentionally publishes are not confidential to their viewers.",
+      "We may keep proportionate records necessary for security, dispute investigation, compliance and service operation. The Privacy Policy explains current retention criteria and the contact-based deletion process. Additional automated retention, deletion and third-party processing controls are introduced only after they are implemented and verified. A Merchant must not use the Service as the sole legal archive for its own mandatory business records.",
     ],
   },
   {
@@ -177,7 +177,7 @@ export const termsSections: TermsSection[] = [
     paragraphs: [
       "Each party remains responsible for its own acts and legally imposed obligations. We are not a guarantor of a Merchant's food preparation, fulfillment, business licensing or independent customer representations, nor of a Guest's misuse of another person's QR link or device. We are responsible for our own Service-related obligations to the extent imposed by these Terms and law.",
       "To the maximum extent permitted by law, neither party is liable to the other for remote or unforeseeable indirect business losses, such as loss of prospective profits, arising solely from the Service, except where an exclusion is not legally effective. For a Merchant's ordinary contractual claim concerning a particular Service, BabaBuilds' aggregate liability is capped at the greater of (a) the fees actually paid to BabaBuilds for that Service in the 12 months before the event giving rise to the claim, or (b) INR 5,000, unless applicable law requires a higher amount or does not permit that limitation.",
-      "The proposed cap and exclusions do not apply to liability that cannot lawfully be limited, including fraud, wilful misconduct, or legally non-excludable consumer, privacy, confidentiality, bodily injury, death or statutory obligations where applicable. No term limits a Guest's mandatory rights in relation to a food transaction or limits remedies required by applicable law.",
+      "The cap and exclusions do not apply to liability that cannot lawfully be limited, including fraud, wilful misconduct, or legally non-excludable consumer, privacy, confidentiality, bodily injury, death or statutory obligations where applicable. No term limits a Guest's mandatory rights in relation to a food transaction or limits remedies required by applicable law.",
     ],
   },
   {
@@ -192,15 +192,15 @@ export const termsSections: TermsSection[] = [
     id: "changes",
     title: "21. Updates to features and these Terms",
     paragraphs: [
-      "We may improve or amend the Service and revise finalized Terms for valid operational, security, regulatory or commercial reasons. For material changes adversely affecting existing contracted use, we intend to give appropriate prior notice and, where law or contract requires, obtain fresh acceptance or provide a lawful termination or remedy. An unannounced future change does not retroactively create a fee, waive an accrued right or convert an optional feature into permission for unrelated processing.",
-      "An approved Terms page will identify its effective and last-updated dates, and relevant acceptance records will be kept as required. Important account notices may be sent to the registered email or shown in the Service.",
+      "We may improve or amend the Service and revise these Terms for valid operational, security, regulatory or commercial reasons. For material changes adversely affecting existing contracted use, we intend to give appropriate prior notice and, where law or contract requires, obtain fresh acceptance or provide a lawful termination or remedy. An unannounced future change does not retroactively create a fee, waive an accrued right or convert an optional feature into permission for unrelated processing.",
+      "The published Terms page identifies the effective date and we retain registration acceptance version and receipt timestamp. Important account notices may be sent to the registered email or shown in the Service.",
     ],
   },
   {
     id: "disputes",
     title: "22. Governing law, questions and disputes",
     paragraphs: [
-      "Subject to the mandatory laws and forums protecting users in their own jurisdiction, these Terms and disputes with BabaBuilds are proposed to be governed by the laws of India, with courts of competent jurisdiction in Rajasthan for claims where an exclusive forum can lawfully be agreed. This clause does not take away the right to approach a competent consumer commission, regulator, data-protection authority or another forum that mandatory law makes available.",
+      "Subject to the mandatory laws and forums protecting users in their own jurisdiction, these Terms and disputes with BabaBuilds are governed by the laws of India, with courts of competent jurisdiction in Rajasthan for claims where an exclusive forum can lawfully be agreed. This clause does not take away the right to approach a competent consumer commission, regulator, data-protection authority or another forum that mandatory law makes available.",
       "For a Service-related problem, please contact admin@bababuilds.com with sufficient details to investigate. We aim to resolve concerns informally where possible; requesting informal discussion does not suspend a statutory deadline, make arbitration compulsory, or prevent a complaint to an appropriate authority. Complaints about a Merchant's food and restaurant obligations should also be sent directly to that Merchant.",
     ],
   },
@@ -218,7 +218,7 @@ export const termsSections: TermsSection[] = [
     paragraphs: [
       "If part of these Terms is held invalid or unenforceable, the rest continues to the extent legally possible without defeating a mandatory user right. Failure to enforce a clause once is not an automatic waiver. Neither party is liable for delay caused by events beyond its reasonable control to the extent permitted by law, but payment and statutory consumer obligations are not erased by a general force-majeure statement.",
       "A Merchant may not transfer its contract or account to another legal operator without our reasonable written consent where the transfer materially affects obligations or security; we may transfer the Service in a legitimate business reorganization subject to appropriate notice, continued obligations and applicable privacy law. These Terms, the effective Privacy Policy, applicable accepted checkout/plan terms and any properly executed supplemental agreement form the relevant agreement for their scopes.",
-      "Operator: BabaBuilds (sole proprietorship), Pilani, Rajasthan, India. General legal and support contact: admin@bababuilds.com. The complete correspondence address, any required telephone contact and grievance/representative details must be confirmed by the operator before final publication or a custom native-app EULA is adopted.",
+      "Operator: BabaBuilds (sole proprietorship), Pilani, Rajasthan, India. General legal and support contact: admin@bababuilds.com. For a written legal or privacy notice, email the published contact address with the subject “MenuMinute Legal Notice” and request the appropriate correspondence details. This is not a substitute for additional disclosures where law requires a full postal address, telephone contact or designated grievance representative; those must be provided before launching a feature or market for which they are mandatory.",
     ],
   },
 ];
