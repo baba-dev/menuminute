@@ -58,7 +58,7 @@ type Props = {
   outletName: string;
   initial: KitchenSnapshot;
   canManage: boolean;
-  intakeEnabled: boolean;
+  intakeEnabled?: boolean;
   menuDishes: Dish[];
   /** IANA timezone of the outlet; clocks on the board follow it, not the device. */
   timezone?: string;
@@ -187,7 +187,7 @@ export function KitchenBoard({
   outletName,
   initial,
   canManage,
-  intakeEnabled,
+  intakeEnabled = false,
   menuDishes,
   timezone,
 }: Props) {

@@ -144,7 +144,8 @@ export function TheTill({
   );
   // The seller trigger lives in the hero; reveal the form below the POS navigation.
   useEffect(() => {
-    if (editingSettings) document.getElementById("pos-seller-settings")?.scrollIntoView({ block: "start" });
+    if (editingSettings)
+      document.getElementById("pos-seller-settings")?.scrollIntoView({ block: "start" });
   }, [editingSettings]);
   const incomingOrder = workspace.attachable.find((o) => o.orderId === incomingOrderId);
   const seller = workspace.context.seller;
@@ -678,7 +679,11 @@ export function TheTill({
           </div>
         )}
         {editingSettings && workspace.context.canConfigure && (
-          <form id="pos-seller-settings" className="till-settings" onSubmit={(e) => void configure(e)}>
+          <form
+            id="pos-seller-settings"
+            className="till-settings"
+            onSubmit={(e) => void configure(e)}
+          >
             <div>
               <span className="till-eyebrow">SELLER IDENTITY · OWNER / ADMIN</span>
               <h2>Activate Point of Sale</h2>
