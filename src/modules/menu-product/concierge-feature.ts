@@ -1,8 +1,29 @@
-import { env } from "@/lib/config/env";
+import { env, type Env } from "@/lib/config/env";
 
-/** Explicit per-outlet rollout. No guest request can enable the feature. */
-export function conciergeEnabledForOutlet(outletId: string) {
-  return env.AI_DINING_CONCIERGE_ENABLED && env.AI_DINING_CONCIERGE_OUTLET_IDS.includes(outletId);
+type ConciergeRollout = Pick<
+  Env,
+  | "AI_DINING_CONCIERGE_ENABLED"
+  | "AI_DINING_CONCIERGE_ALL_OUTLETS"
+  | "AI_DINING_CONCIERGE_OUTLET_IDS"
+>;
+
+/**
+ * Shared authorization predicate for both the public menu projection and guest API.
+ * A publicProduct lookup remains mandatory: this only selects outlets, never publishes
+ * drafts or makes revoked QR tokens valid.
+ */
+export function conciergeOutletAllowed(config: ConciergeRollout, outletId: string): boolean {
+  return (
+    outletId.length > 0 &&
+    config.AI_DINING_CONCIERGE_ENABLED &&
+    (config.AI_DINING_CONCIERGE_ALL_OUTLETS ||
+      config.AI_DINING_CONCIERGE_OUTLET_IDS.includes(outletId))
+  );
+}
+
+/** Operator-only rollout; a guest request cannot change the policy. */
+export function conciergeEnabledForOutlet(outletId: string): boolean {
+  return conciergeOutletAllowed(env, outletId);
 }
 
 /** A distinct NVIDIA-only route; Cloudflare capacity remains reserved for Ember. */
