@@ -47,16 +47,43 @@ export default function FeaturesPage() {
             >
               <div className="flex aspect-[8/5] items-center justify-center overflow-hidden bg-gradient-to-br from-orange-500/10 to-stone-500/10">
                 {feature.image ? (
-                  <Image
-                    src={"/docs-media/" + feature.image + "-desktop-light.webp"}
-                    width={720}
-                    height={450}
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    alt={feature.imageAlt || feature.title}
-                    className="h-full w-full object-contain object-center dark:brightness-90"
-                  />
+                  <>
+                    <Image
+                      src={"/docs-media/" + feature.image + "-desktop-light.webp"}
+                      width={720}
+                      height={450}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      alt={feature.imageAlt || feature.title}
+                      className="h-full w-full object-contain object-center dark:hidden"
+                    />
+                    <Image
+                      src={"/docs-media/" + feature.image + "-desktop-dark.webp"}
+                      width={720}
+                      height={450}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      alt={feature.imageAlt || feature.title}
+                      className="hidden h-full w-full object-contain object-center dark:block"
+                    />
+                  </>
                 ) : (
-                  <Image src={feature.heroArtwork.desktopLight} width={720} height={450} sizes="(max-width: 768px) 100vw, 50vw" alt={feature.heroArtwork.alt} className="h-full w-full object-cover object-center dark:brightness-90" />
+                  <>
+                    <Image
+                      src={feature.heroArtwork.desktopLight}
+                      width={720}
+                      height={450}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      alt={feature.heroArtwork.alt}
+                      className="h-full w-full object-cover object-center dark:hidden"
+                    />
+                    <Image
+                      src={feature.heroArtwork.desktopDark}
+                      width={720}
+                      height={450}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      alt={feature.heroArtwork.alt}
+                      className="hidden h-full w-full object-cover object-center dark:block"
+                    />
+                  </>
                 )}
               </div>
               <div className="flex flex-1 flex-col p-7">
