@@ -11,6 +11,7 @@ import "@/components/marketing/brand/brand-nav-logo.css";
 
 const subpageLinks = [
   { href: "/", label: "Home" },
+  { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
   { href: "/help", label: "Guides" },
@@ -67,39 +68,16 @@ export function MarketingSubpageNav() {
 
           {/* Desktop Nav Items */}
           <div className="hidden items-center gap-5 md:flex lg:gap-7">
-            <Link
-              href="/pricing"
-              aria-current={pathname === "/pricing" ? "page" : undefined}
-              className={`text-sm font-medium transition-colors ${
-                pathname === "/pricing"
-                  ? "text-brand-800 dark:text-brand-200 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/demo"
-              aria-current={pathname === "/demo" ? "page" : undefined}
-              className={`text-sm font-medium transition-colors ${
-                pathname === "/demo"
-                  ? "text-brand-800 dark:text-brand-200 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Demo
-            </Link>
-            <Link
-              href="/help"
-              aria-current={pathname?.startsWith("/help") ? "page" : undefined}
-              className={`text-sm font-medium transition-colors ${
-                pathname?.startsWith("/help")
-                  ? "text-brand-800 dark:text-brand-200 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Guides
-            </Link>
+            {subpageLinks.filter((link) => link.href !== "/").map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={pathname === link.href || (link.href === "/features" && (pathname?.startsWith("/features/") || pathname === "/free-qr-menu" || pathname === "/ordering")) ? "page" : undefined}
+                className={"text-sm font-medium transition-colors " + ((pathname === link.href || (link.href === "/features" && (pathname?.startsWith("/features/") || pathname === "/free-qr-menu" || pathname === "/ordering"))) ? "text-brand-800 dark:text-brand-200 font-semibold" : "text-muted-foreground hover:text-foreground")}
+              >
+                {link.label}
+              </Link>
+            ))}
             <HomeAuthActions surface="subpage" />
             <ThemeControl />
           </div>

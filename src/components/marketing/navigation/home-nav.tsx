@@ -20,6 +20,9 @@ export function HomeNav() {
           <BrandNavLogo />
         </Link>
         <div className="hidden items-center gap-5 md:flex lg:gap-7">
+          <Link href="/features" className="food-orbit-hero__nav-link text-sm font-medium">
+            Features
+          </Link>
           <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">
             Pricing
           </Link>

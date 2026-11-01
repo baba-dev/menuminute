@@ -7,6 +7,8 @@ import { ThemeControl } from "@/components/menu-product/theme-control";
 import { HomeAuthActions } from "./home-auth-actions";
 
 const links = [
+  { href: "/features", label: "Features" },
+  { href: "/free-qr-menu", label: "Free QR menu" },
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
   { href: "/help", label: "Guides & Help" },
