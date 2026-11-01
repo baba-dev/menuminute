@@ -7,6 +7,7 @@ import { DocShot } from "@/components/docs/doc-shot";
 import { guidesByGroup } from "@/content/docs/guides";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/docs" },
   title: "Documentation — MenuMinute",
   description:
     "Guides with screenshots for every part of MenuMinute: menus, QR codes, orders, kitchen, reports and the Ember assistant.",

@@ -7,7 +7,17 @@ const groups = [
   {
     title: "Explore",
     links: [
-      { label: "Features", href: "/#features" },
+      { label: "All features", href: "/features" },
+      { label: "Industry solutions", href: "/solutions" },
+      { label: "Restaurants", href: "/solutions/restaurants" },
+      { label: "Cafés", href: "/solutions/cafes" },
+      { label: "Bakeries", href: "/solutions/bakeries" },
+      { label: "Cloud kitchens", href: "/solutions/cloud-kitchens" },
+      { label: "Free QR menu", href: "/free-qr-menu" },
+      { label: "Digital menu builder", href: "/features/digital-menu-builder" },
+      { label: "Kitchen Pro", href: "/features/kitchen-display-system" },
+      { label: "Point of Sale", href: "/features/restaurant-pos" },
+      { label: "AI menu import", href: "/features/ai-menu-import" },
       { label: "Pricing", href: "/pricing" },
       { label: "Interactive demo", href: "/demo" },
       { label: "Online ordering", href: "/ordering" },
@@ -17,7 +27,7 @@ const groups = [
   {
     title: "Company & ecosystem",
     links: [
-      { label: "About Menu Minute", href: "/about", soon: true },
+      { label: "About Menu Minute", href: "/about" },
       { label: "BabaBuilds website", href: "https://bababuilds.com/", external: true },
       { label: "BabaBuilds ERP", href: "https://erp.bababuilds.com/", external: true },
       { label: "Contact", href: "/contact" },

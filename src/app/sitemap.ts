@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 import { ownerArticles, customerArticles } from "@/content/help";
+import { GUIDES } from "@/content/docs/guides";
+import { marketingFeatures } from "@/content/marketing/features";
+import { industrySolutions } from "@/content/marketing/solutions";
 
 const BASE_URL = "https://food.bababuilds.com";
 
@@ -32,6 +35,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ];
+
+  for (const path of ["/about", "/contact", "/docs"]) {
+    staticRoutes.push({ url: BASE_URL + path, changeFrequency: "monthly", priority: 0.6 });
+  }
+
+  staticRoutes.push({ url: BASE_URL + "/features", changeFrequency: "monthly", priority: 0.9 });
+  for (const feature of marketingFeatures) {
+    staticRoutes.push({ url: BASE_URL + feature.path, changeFrequency: "monthly", priority: 0.8 });
+  }
+
+  staticRoutes.push({ url: BASE_URL + "/solutions", changeFrequency: "monthly", priority: 0.85 });
+  for (const solution of industrySolutions) {
+    staticRoutes.push({
+      url: BASE_URL + "/solutions/" + solution.slug,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    });
+  }
 
   // Help center hubs
   const helpHubs: MetadataRoute.Sitemap = [
@@ -73,5 +94,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...helpHubs, ...ownerGuideRoutes, ...customerGuideRoutes];
+  const docsRoutes: MetadataRoute.Sitemap = GUIDES.map((guide) => ({
+    url: BASE_URL + "/docs/" + guide.slug,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+  return [...staticRoutes, ...helpHubs, ...ownerGuideRoutes, ...customerGuideRoutes, ...docsRoutes];
 }

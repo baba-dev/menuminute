@@ -19,7 +19,13 @@ export function HomeNav() {
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="MenuMinute home">
           <BrandNavLogo />
         </Link>
-        <div className="hidden items-center gap-5 md:flex lg:gap-7">
+        <div className="hidden items-center gap-4 lg:flex xl:gap-7">
+          <Link href="/features" className="food-orbit-hero__nav-link text-sm font-medium">
+            Features
+          </Link>
+          <Link href="/solutions" className="food-orbit-hero__nav-link text-sm font-medium">
+            Solutions
+          </Link>
           <Link href="/pricing" className="food-orbit-hero__nav-link text-sm font-medium">
             Pricing
           </Link>

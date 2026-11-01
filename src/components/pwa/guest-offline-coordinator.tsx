@@ -51,6 +51,9 @@ export function GuestOfflineCoordinator({
     if (
       process.env.NODE_ENV !== "production" ||
       !("serviceWorker" in navigator) ||
+      // The hydrated connectivity store may briefly report the server
+      // snapshot on an offline reload; check the live browser state too.
+      !navigator.onLine ||
       (!online && enabled)
     ) {
       return;
@@ -86,7 +89,8 @@ export function GuestOfflineCoordinator({
 
     navigator.serviceWorker.addEventListener("message", onMessage);
     void navigator.serviceWorker.ready.then((registration) => {
-      if (disposed) return;
+      // The connection may have dropped while the registration was resolving.
+      if (disposed || !navigator.onLine) return;
       const worker = registration.active ?? navigator.serviceWorker.controller;
       worker?.postMessage({
         type: "SET_GUEST_OFFLINE",

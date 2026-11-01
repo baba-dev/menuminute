@@ -7,6 +7,9 @@ import { ThemeControl } from "@/components/menu-product/theme-control";
 import { HomeAuthActions } from "./home-auth-actions";
 
 const links = [
+  { href: "/features", label: "Features" },
+  { href: "/free-qr-menu", label: "Free QR menu" },
+  { href: "/solutions", label: "Industry solutions" },
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
   { href: "/help", label: "Guides & Help" },
@@ -38,7 +41,7 @@ export function HomeMobileNavigation() {
   }, [open]);
 
   return (
-    <div className="flex items-center gap-2 md:hidden">
+    <div className="flex items-center gap-2 lg:hidden">
       <ThemeControl />
       <div ref={rootRef} className="food-orbit-hero__mobile-menu relative">
         <button

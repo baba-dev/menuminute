@@ -40,12 +40,13 @@ const printDisplay = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://food.bababuilds.com"),
   title: {
     default: "MenuMinute — Free QR Menus for Restaurants",
     template: "%s | MenuMinute",
   },
   description:
-    "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro are in development.",
+    "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro require separate activation.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
   applicationName: "MenuMinute",
   manifest: "/manifest.webmanifest",
