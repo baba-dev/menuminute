@@ -142,6 +142,26 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await page.getByRole("button", { name: /Place Order & Send/ }).click();
   await expect(page.locator(".till-success")).toContainText("Dispatched");
   await expect(page.locator(".till-success")).toContainText("not a receipt or tax invoice");
+
+  // The searchable register exposes sale-specific actions without auto-reordering or refunding.
+  const register = page.getByRole("region", { name: "Recent Orders & Sales" });
+  await expect(register.getByRole("table", { name: /Order history/ })).toBeVisible();
+  await expect(register.getByRole("button", { name: /View order #/ })).toHaveCount(1);
+  await expect(register.getByRole("link", { name: /Reprint bill for order #/ })).toHaveAttribute(
+    "href",
+    /\\/dashboard\\/pos\\/receipts\\/[^/]+\\?auto=1/
+  );
+  await expect(register.getByRole("link", { name: /Refund or correct payment/ })).toHaveCount(0);
+  const orderSearch = register.getByPlaceholder("Order #, guest, table, dish…");
+  await orderSearch.fill("unmatched_dish_name");
+  await expect(register.getByText("No matching orders.")).toBeVisible();
+  await orderSearch.fill("Paneer Lunch");
+  await expect(register.getByRole("button", { name: /Repeat order #.*into new ticket/ })).toBeVisible();
+  await register.getByRole("button", { name: /Repeat order #.*into new ticket/ }).click();
+  await expect(page.locator(".till-cartline")).toContainText("Paneer Lunch");
+  await expect(page.getByText(/copied to a NEW draft/)).toBeVisible();
+  await expect(page.getByText(/no new order or payment has been recorded/)).toBeVisible();
+
   const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
   try {
     const result = await pool.query(
