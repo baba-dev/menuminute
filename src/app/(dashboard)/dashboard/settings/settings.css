@@ -26,6 +26,31 @@
 .mm-settings * {
   box-sizing: border-box;
 }
+.os-scope-nav {
+  padding: 16px clamp(17px, 3.2vw, 48px);
+  background: var(--paper);
+  border-bottom: 1px solid var(--os-line);
+}
+.os-form-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.os-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--os-line);
+  border-radius: 10px;
+}
+.os-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #d86224;
+}
 .mm-settings :is(button, a, input, textarea):focus-visible {
   outline: 3px solid var(--mm-focus, #d87023);
   outline-offset: 3px;

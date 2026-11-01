@@ -61,9 +61,13 @@ test("Outlet Atelier saves scoped profile and remains responsive in both themes"
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/settings");
   await expect(page.getByTestId("outlet-atelier")).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Every detail/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Atelier Kitchen", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Restaurant profile." })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Settings areas" })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await page.getByLabel("Outlet name").fill("Atelier Kitchen Updated");
+  await page.getByRole("button", { name: "Save essentials" }).click();
+  await expect(page.getByText("Outlet essentials saved.")).toBeVisible();
   await page.getByLabel("Description").fill("Bespoke neighborhood dining");
   await page.getByLabel("Public phone").fill("+91 9876543210");
   await page.getByLabel("Public email").fill("info@example.com");
@@ -73,6 +77,7 @@ test("Outlet Atelier saves scoped profile and remains responsive in both themes"
   await page.getByRole("button", { name: "Save profile" }).click();
   await expect(page.getByRole("status").getByText("Profile saved successfully.")).toBeVisible();
   await page.reload();
+  await expect(page.getByLabel("Outlet name")).toHaveValue("Atelier Kitchen Updated");
   await expect(page.getByLabel("Description")).toHaveValue("Bespoke neighborhood dining");
   await expect(page.getByLabel("Public phone")).toHaveValue("+91 9876543210");
   await expect(page.getByLabel("Primary hex color")).toHaveValue("#abcdef");
