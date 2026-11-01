@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import "@/styles/dining-concierge.css";
 import { ConciergeEntry } from "./concierge-entry";
 import { type MealItem } from "@/modules/menu-product/concierge-engine";
@@ -591,11 +592,12 @@ export function PublicMenu({
                   }
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={categoryImage(category.name)}
                     alt=""
                     width={36}
                     height={36}
+                    sizes="36px"
                     loading="lazy"
                   />
                   <span>{category.name}</span>
@@ -688,11 +690,12 @@ export function PublicMenu({
                   >
                     <div className="dining-section-head">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={categoryImage(category.name)}
                         alt=""
                         width={84}
                         height={84}
+                        sizes="84px"
                         loading="lazy"
                       />
                       <div>
