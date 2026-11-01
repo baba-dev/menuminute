@@ -83,7 +83,8 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await setup.getByRole("button", { name: "Close kitchen setup" }).click();
   await expect(setup).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  // The outlet name is plain text (not a heading) so the hero is the page's first heading.
+  await expect(page.locator(".kk-outlet", { hasText: "Browser Kitchen" })).toBeVisible();
   await expect(page.getByTestId("chefs-pass")).toBeVisible();
   await expect(page.getByRole("heading", { name: "The Chef’s Pass." })).toBeVisible();
   await expect(page.getByRole("region", { name: "Visible kitchen workload" })).toBeVisible();
@@ -249,7 +250,8 @@ test("Kitchen Pro recovers a failed snapshot without losing its keyboard-accessi
   await sync.click();
   await expect(transportError).toHaveCount(0, { timeout: 15000 });
   await expect(page.getByRole("status").filter({ hasText: /Connected/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Browser Kitchen" })).toBeVisible();
+  // The outlet name is plain text (not a heading) so the hero is the page's first heading.
+  await expect(page.locator(".kk-outlet", { hasText: "Browser Kitchen" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
     "aria-pressed",
     "false"
