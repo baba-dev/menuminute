@@ -295,6 +295,13 @@ async function setGuestOffline(event) {
     source.postMessage({ type: "GUEST_OFFLINE_REMOVED", pageUrl: policy.pageUrl });
     return;
   }
+
+  // A refresh can race with an offline transition. Remember the previously
+  // enrolled snapshot so a *network* failure cannot erase the saved menu.
+  // A 404/410 or an uncacheable response still revokes it as before.
+  const previous = (await listGuestPolicies()).find(
+    (entry) => entry.pageUrl === policy.pageUrl && entry.apiUrl === policy.apiUrl
+  );
   try {
     await putGuestPolicy(policy);
     const [, apiResponse] = await Promise.all([
@@ -312,7 +319,25 @@ async function setGuestOffline(event) {
       pageUrl: policy.pageUrl,
       syncedAt: policy.syncedAt,
     });
-  } catch {
+  } catch (error) {
+    // Only retain the *already authorized* anonymous snapshot on a transport
+    // failure, and only if both the cached page and API response still exist.
+    // Do not preserve stale content after 404/410, revocation or unsafe headers.
+    if (previous && error instanceof TypeError) {
+      const [savedPage, savedRead] = await Promise.all([
+        caches.open(GUEST_PAGE_CACHE).then((cache) => cache.match(previous.pageUrl)),
+        caches.open(GUEST_READ_CACHE).then((cache) => cache.match(previous.apiUrl)),
+      ]);
+      if (savedPage?.ok && savedRead?.ok) {
+        await putGuestPolicy(previous);
+        source.postMessage({
+          type: "GUEST_OFFLINE_READY",
+          pageUrl: previous.pageUrl,
+          syncedAt: previous.syncedAt,
+        });
+        return;
+      }
+    }
     await removeGuestPolicy(policy);
     source.postMessage({ type: "GUEST_OFFLINE_ERROR", pageUrl: policy.pageUrl });
   }
