@@ -117,7 +117,10 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               </p>
               {feature.availability !== "free" && (
                 <a
-                  href={"mailto:admin@bababuilds.com?subject=" + encodeURIComponent("MenuMinute " + feature.title + " availability enquiry")}
+                  href={
+                    "mailto:admin@bababuilds.com?subject=" +
+                    encodeURIComponent("MenuMinute " + feature.title + " availability enquiry")
+                  }
                   className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-orange-700 underline underline-offset-4 hover:text-orange-600 dark:text-orange-300"
                 >
                   Email us about {feature.title}
@@ -259,12 +262,8 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
             <h2 className="font-display mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
               {feature.editorial.title}
             </h2>
-            <p className="mt-6 text-base leading-8 text-stone-200">
-              {feature.editorial.situation}
-            </p>
-            <p className="mt-4 text-base leading-8 text-stone-200">
-              {feature.editorial.approach}
-            </p>
+            <p className="mt-6 text-base leading-8 text-stone-200">{feature.editorial.situation}</p>
+            <p className="mt-4 text-base leading-8 text-stone-200">{feature.editorial.approach}</p>
             <p className="mt-4 border-l-2 border-orange-400 pl-5 text-base leading-8 text-orange-100">
               {feature.editorial.outcome}
             </p>
@@ -288,9 +287,7 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
             <p className="text-xs font-bold tracking-widest text-orange-300 uppercase">
               {feature.editorial.eyebrow}
             </p>
-            <h3 className="font-display mt-4 text-xl font-bold">
-              What to explore next
-            </h3>
+            <h3 className="font-display mt-4 text-xl font-bold">What to explore next</h3>
             <ul className="mt-6 space-y-5">
               {feature.editorial.checklist.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm leading-7 text-stone-100">

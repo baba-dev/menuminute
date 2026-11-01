@@ -19,7 +19,9 @@ export async function generateMetadata({ params }: PageProps) {
     title: feature.seoTitle,
     description: feature.seoDescription,
     pathname: feature.path,
-    image: feature.image ? "/docs-media/" + feature.image + "-desktop-light.webp" : feature.heroArtwork.desktopLight,
+    image: feature.image
+      ? "/docs-media/" + feature.image + "-desktop-light.webp"
+      : feature.heroArtwork.desktopLight,
     imageAlt: feature.imageAlt || feature.heroArtwork.alt,
   });
 }

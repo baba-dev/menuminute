@@ -38,7 +38,9 @@ describe("marketing feature coverage", () => {
       if (feature.image) {
         for (const theme of ["light", "dark"]) {
           const screenshot = "/docs-media/" + feature.image + "-desktop-" + theme + ".webp";
-          expect(existsSync(join(process.cwd(), "public", screenshot.slice(1))), screenshot).toBe(true);
+          expect(existsSync(join(process.cwd(), "public", screenshot.slice(1))), screenshot).toBe(
+            true
+          );
         }
       }
       expect(feature.editorial.title.length).toBeGreaterThan(20);
@@ -58,7 +60,9 @@ describe("marketing feature coverage", () => {
       imageAlt: "Actual kitchen demo screen",
     });
     expect(metadata.openGraph).toMatchObject({
-      images: [{ url: "/docs-media/kitchen-desktop-light.webp", alt: "Actual kitchen demo screen" }],
+      images: [
+        { url: "/docs-media/kitchen-desktop-light.webp", alt: "Actual kitchen demo screen" },
+      ],
     });
   });
   it("never claims gated functionality is available automatically", () => {

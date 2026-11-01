@@ -10,8 +10,24 @@ export type MarketingFeature = {
   availability: "free" | "limited" | "provider";
   availabilityText: string;
   image?: string;
-  heroArtwork: { desktopLight: string; desktopDark: string; mobileLight: string; mobileDark: string; label: string; alt: string };
-  editorial: { eyebrow: string; title: string; situation: string; approach: string; outcome: string; actionLabel: string; actionHref: string; checklist: string[] };
+  heroArtwork: {
+    desktopLight: string;
+    desktopDark: string;
+    mobileLight: string;
+    mobileDark: string;
+    label: string;
+    alt: string;
+  };
+  editorial: {
+    eyebrow: string;
+    title: string;
+    situation: string;
+    approach: string;
+    outcome: string;
+    actionLabel: string;
+    actionHref: string;
+    checklist: string[];
+  };
   imageAlt?: string;
   screenshotCaption?: string;
   cta: string;
@@ -40,12 +56,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "From printed menus to one permanent code",
       title: "A busy table should never mean outdated information",
-      situation: "When prices change or a dish sells out, printed menus and static PDF files can quickly become inconsistent. A QR menu gives guests a single page that can reflect the restaurant’s latest published information.",
-      approach: "Build dish categories in Menu Studio, publish the public menu, and create a permanent QR code from QR Studio. Download it for table cards and check the guest view on your own phone.",
-      outcome: "The same QR code can continue to work while the menu behind it evolves. Online ordering and Kitchen Pro are separate, optional capabilities.",
+      situation:
+        "When prices change or a dish sells out, printed menus and static PDF files can quickly become inconsistent. A QR menu gives guests a single page that can reflect the restaurant’s latest published information.",
+      approach:
+        "Build dish categories in Menu Studio, publish the public menu, and create a permanent QR code from QR Studio. Download it for table cards and check the guest view on your own phone.",
+      outcome:
+        "The same QR code can continue to work while the menu behind it evolves. Online ordering and Kitchen Pro are separate, optional capabilities.",
       actionLabel: "See the live guest menu",
       actionHref: "/m/demo-spice-route-kitchen-v2",
-      checklist: ["Browse the sample guest menu without an account","See real QR Studio controls in the walkthrough","Create your own free menu and print your own code"],
+      checklist: [
+        "Browse the sample guest menu without an account",
+        "See real QR Studio controls in the walkthrough",
+        "Create your own free menu and print your own code",
+      ],
     },
     path: "/free-qr-menu",
     title: "Free QR Menu",
@@ -139,12 +162,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "Turn a list of dishes into a dining experience",
       title: "Every change deserves a place to live",
-      situation: "Restaurant menus change throughout the week: seasonal dishes appear, portion options change and some ingredients run out. Updating one controlled menu is simpler than rebuilding a file and sending it everywhere.",
-      approach: "Manage categories, item names, descriptions, prices and available variants in Menu Studio. Review your public menu as a guest would, then publish the right version.",
-      outcome: "Guests get a consistent browser-based menu while your team keeps control of edits and publishing.",
+      situation:
+        "Restaurant menus change throughout the week: seasonal dishes appear, portion options change and some ingredients run out. Updating one controlled menu is simpler than rebuilding a file and sending it everywhere.",
+      approach:
+        "Manage categories, item names, descriptions, prices and available variants in Menu Studio. Review your public menu as a guest would, then publish the right version.",
+      outcome:
+        "Guests get a consistent browser-based menu while your team keeps control of edits and publishing.",
       actionLabel: "Open the sample restaurant menu",
       actionHref: "/m/demo-spice-route-kitchen-v2",
-      checklist: ["Plan categories diners recognize","Use descriptions and variants to answer common questions","Check availability and publication before service"],
+      checklist: [
+        "Plan categories diners recognize",
+        "Use descriptions and variants to answer common questions",
+        "Check availability and publication before service",
+      ],
     },
     path: "/features/digital-menu-builder",
     title: "Digital Menu Builder",
@@ -236,12 +266,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "A guest request is not yet an accepted order",
       title: "Keep the handoff between guest and restaurant clear",
-      situation: "Guests scanning a menu may expect immediate confirmation, but a restaurant still needs to check capacity and availability. MenuMinute distinguishes submitting an order request from staff acceptance.",
-      approach: "For approved outlets, a guest chooses dishes and sends a dine-in or pickup request. The restaurant accepts or declines the ticket and the guest can follow its status. Prices are calculated on the server.",
-      outcome: "Keep ownership of acceptance and preparation decisions with the team. Payment capture, settlement and availability depend on separate configuration.",
+      situation:
+        "Guests scanning a menu may expect immediate confirmation, but a restaurant still needs to check capacity and availability. MenuMinute distinguishes submitting an order request from staff acceptance.",
+      approach:
+        "For approved outlets, a guest chooses dishes and sends a dine-in or pickup request. The restaurant accepts or declines the ticket and the guest can follow its status. Prices are calculated on the server.",
+      outcome:
+        "Keep ownership of acceptance and preparation decisions with the team. Payment capture, settlement and availability depend on separate configuration.",
       actionLabel: "Explore the live ordering demo",
       actionHref: "/demo",
-      checklist: ["Guest submits an order request from the published menu","Staff confirm the ticket and manage service states","Guests can check tracking after submission"],
+      checklist: [
+        "Guest submits an order request from the published menu",
+        "Staff confirm the ticket and manage service states",
+        "Guests can check tracking after submission",
+      ],
     },
     path: "/ordering",
     title: "Restaurant Online Ordering",
@@ -332,12 +369,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "The right dish. The right station. The right moment.",
       title: "Let the ticket lead the service",
-      situation: "During a rush, kitchen staff need to know what to prepare, who is responsible and what is ready to pass. Unclear paper handoffs can make that harder across stations.",
-      approach: "Kitchen Pro organizes incoming tickets for configured preparation stations and helps authorized staff move work through preparation and final release. The publicly documented kitchen screenshots show the actual interface.",
-      outcome: "The kitchen has a coordinated view of work, but Kitchen Pro remains separately approved and configured per outlet.",
+      situation:
+        "During a rush, kitchen staff need to know what to prepare, who is responsible and what is ready to pass. Unclear paper handoffs can make that harder across stations.",
+      approach:
+        "Kitchen Pro organizes incoming tickets for configured preparation stations and helps authorized staff move work through preparation and final release. The publicly documented kitchen screenshots show the actual interface.",
+      outcome:
+        "The kitchen has a coordinated view of work, but Kitchen Pro remains separately approved and configured per outlet.",
       actionLabel: "Explore the kitchen walkthrough",
       actionHref: "/docs/kitchen",
-      checklist: ["Review the station layout before activation","Understand ticket stages from preparation to release","Confirm outlet, device and staff readiness"],
+      checklist: [
+        "Review the station layout before activation",
+        "Understand ticket stages from preparation to release",
+        "Confirm outlet, device and staff readiness",
+      ],
     },
     path: "/features/kitchen-display-system",
     title: "Kitchen Display System",
@@ -429,12 +473,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "From the counter to the register",
       title: "Counter work deserves clear records",
-      situation: "A cashier may need to record menu items, mark a payment received and reprint a receipt. Those tasks should be understandable even when no online payment provider is connected.",
-      approach: "MenuMinute’s controlled POS workspace includes supported order-entry, recording and document workflows. Staff-recorded payment status is a manual record, not a card charge or bank settlement.",
-      outcome: "A documented cashier journey helps operators distinguish order records from regulated payments, tax calculations and fiscal invoicing. Access depends on outlet readiness.",
+      situation:
+        "A cashier may need to record menu items, mark a payment received and reprint a receipt. Those tasks should be understandable even when no online payment provider is connected.",
+      approach:
+        "MenuMinute’s controlled POS workspace includes supported order-entry, recording and document workflows. Staff-recorded payment status is a manual record, not a card charge or bank settlement.",
+      outcome:
+        "A documented cashier journey helps operators distinguish order records from regulated payments, tax calculations and fiscal invoicing. Access depends on outlet readiness.",
       actionLabel: "Read the POS capabilities guide",
       actionHref: "/docs/point-of-sale",
-      checklist: ["Understand manual payment state versus payment collection","Review order and receipt workflows","Check fiscal and settlement readiness before rollout"],
+      checklist: [
+        "Understand manual payment state versus payment collection",
+        "Review order and receipt workflows",
+        "Check fiscal and settlement readiness before rollout",
+      ],
     },
     path: "/features/restaurant-pos",
     title: "Restaurant Point of Sale",
@@ -523,12 +574,19 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     editorial: {
       eyebrow: "A photograph can be a starting point—not the final menu",
       title: "Read first, review always",
-      situation: "Typing a long printed menu can be repetitive. AI-assisted extraction may help prepare candidates, but printed prices, headings and images can be misread.",
-      approach: "Where a supported provider is configured and the feature is approved, upload a clear image, review the extracted candidates beside the original, correct each important detail and apply the approved changes to Menu Studio.",
-      outcome: "Restaurant staff remain responsible for accuracy. No AI-generated price or dish should silently publish to the guest menu.",
+      situation:
+        "Typing a long printed menu can be repetitive. AI-assisted extraction may help prepare candidates, but printed prices, headings and images can be misread.",
+      approach:
+        "Where a supported provider is configured and the feature is approved, upload a clear image, review the extracted candidates beside the original, correct each important detail and apply the approved changes to Menu Studio.",
+      outcome:
+        "Restaurant staff remain responsible for accuracy. No AI-generated price or dish should silently publish to the guest menu.",
       actionLabel: "Read the import review guide",
       actionHref: "/docs/menu-import",
-      checklist: ["Capture a legible menu image","Correct extracted dish names and prices","Approve changes before applying or publishing"],
+      checklist: [
+        "Capture a legible menu image",
+        "Correct extracted dish names and prices",
+        "Approve changes before applying or publishing",
+      ],
     },
     path: "/features/ai-menu-import",
     title: "AI Menu Import",
