@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsScopeNav } from "../src/components/settings/settings-scope-nav";
