@@ -613,8 +613,8 @@ export function KitchenBoard({
               : "Every dish has its place. Every ticket moves with purpose."}
           </p>
           <p className="kk-hero-note">
-            Prepare routed dishes and complete station tickets here. Accept incoming guest
-            requests in Orders; record cashier sales and payments in Point of Sale.
+            Prepare routed dishes and complete station tickets here. Accept incoming guest requests
+            in Orders; record cashier sales and payments in Point of Sale.
           </p>
           <div className="kk-hero-actions">
             {!snapshot.enabled && (

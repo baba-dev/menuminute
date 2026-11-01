@@ -356,7 +356,12 @@ export function CartDrawer({
                 className="icon-btn"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close cart"
-                style={{ borderRadius: "50%", padding: "0.4rem", minHeight: "44px", minWidth: "44px" }}
+                style={{
+                  borderRadius: "50%",
+                  padding: "0.4rem",
+                  minHeight: "44px",
+                  minWidth: "44px",
+                }}
               >
                 <X size={18} />
               </button>
@@ -366,7 +371,12 @@ export function CartDrawer({
             <div className="cart-section stack" style={{ gap: "0.5rem" }}>
               <span className="section-title">Order Type</span>
               {fulfillmentModes.length > 1 ? (
-                <div className="row" role="group" aria-label="Choose order type" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+                <div
+                  className="row"
+                  role="group"
+                  aria-label="Choose order type"
+                  style={{ gap: "0.5rem", flexWrap: "wrap" }}
+                >
                   {fulfillmentModes.includes("dine_in") && (
                     <button
                       type="button"
@@ -571,7 +581,10 @@ export function CartDrawer({
               <div className="cart-section stack" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
                 <span className="section-title">Your Details (Optional)</span>
                 <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
-                  <label className="stack" style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}>
+                  <label
+                    className="stack"
+                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
+                  >
                     <span>Guest name (optional)</span>
                     <input
                       type="text"
@@ -583,7 +596,10 @@ export function CartDrawer({
                       className="field-input"
                     />
                   </label>
-                  <label className="stack" style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}>
+                  <label
+                    className="stack"
+                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
+                  >
                     <span>Phone number (optional)</span>
                     <input
                       type="tel"
