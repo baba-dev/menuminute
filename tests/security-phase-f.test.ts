@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 describe("A–F security regression contracts", () => {
   it("rejects the shared demo principal at the database provisioning boundary", () => {
     const sql = readFileSync("src/db/migrations/0075_demo_provisioning_boundary.sql", "utf8");
-    expect(sql).toContain("IF actor = 'demo-owner'");
+    expect(sql).toContain("IF actor = 'demo-owner' AND session_user = 'menuminute_app'");
     expect(sql).toContain("ERRCODE = '42501'");
   });
   it("preserves signed edge guest orders and 5 MiB media upload support", () => {

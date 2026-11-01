@@ -1,5 +1,7 @@
 -- Persistent provisioning must reject the shared public-demo identity at the DB gateway.
 -- Retains the 0056 first-workspace onboarding and idempotency semantics unchanged.
+-- SECURITY DEFINER changes current_user, so test session_user to refuse app-role calls
+-- while retaining the migration-owner's authorized demo setup script.
 CREATE OR REPLACE FUNCTION app_private.provision_organization(outlet text, token text, request_input jsonb)
 RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
@@ -7,7 +9,9 @@ DECLARE
   actor text := current_setting('app.actor_id', true);
   org text := 'org-' || outlet;
 BEGIN
-  IF actor = 'demo-owner' THEN RAISE EXCEPTION 'Demo provisioning denied' USING ERRCODE = '42501'; END IF;
+  IF actor = 'demo-owner' AND session_user = 'menuminute_app' THEN
+    RAISE EXCEPTION 'Demo provisioning denied' USING ERRCODE = '42501';
+  END IF;
   IF actor IS NULL OR NOT EXISTS(SELECT 1 FROM users WHERE id = actor) THEN
     RAISE EXCEPTION 'Unknown actor';
   END IF;
