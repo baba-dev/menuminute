@@ -143,7 +143,7 @@ export function IndustrySolutionPage({ solution }: { solution: IndustrySolution 
               </p>
               <p className="text-muted-foreground mt-5 flex gap-2 text-sm leading-6">
                 <Check className="mt-1 size-4 shrink-0 text-orange-600" aria-hidden="true" />
-                Start with MenuMinute's free QR menu. Advanced service features are activated
+                Start with MenuMinute’s free QR menu. Advanced service features are activated
                 separately.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -179,7 +179,7 @@ export function IndustrySolutionPage({ solution }: { solution: IndustrySolution 
                 </div>
               </div>
               <figcaption className="text-muted-foreground px-5 py-3 text-xs">
-                Illustrative food photography from MenuMinute's bundled public menu artwork
+                Illustrative food photography from MenuMinute’s bundled public menu artwork
               </figcaption>
             </figure>
           </div>
