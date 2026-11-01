@@ -86,25 +86,26 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
       .where(and(eq(restaurants.id, outletId), eq(restaurants.organizationId, organizationId)))
       .limit(1);
     if (!outlet) throw new Error("Dashboard outlet scope mismatch");
+    // One capability snapshot in a single SQL round trip. Both entitlement
+    // and kitchen-navigation checks retain the existing live database authority.
     const result = await tx.execute<{
       ordering: boolean;
       kitchen: boolean;
       ordersRead: boolean;
       kitchenRead: boolean;
-    }>(sql`select
-      app_private.entitlement_allowed(${organizationId}, 'ordering.new') as ordering,
-      app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
-      app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
-      app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead"`);
-    const kitchenResult = await tx.execute<{
-      data: {
+      kitchenState: {
         canSetup: boolean;
         canWork: boolean;
         operational: boolean;
         draining: boolean;
       };
-    }>(sql`select app_private.kitchen_navigation(${outletId}) as data`);
-    const kitchenState = kitchenResult.rows[0]?.data;
+    }>(sql`select
+      app_private.entitlement_allowed(${organizationId}, 'ordering.new') as ordering,
+      app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
+      app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
+      app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead",
+      app_private.kitchen_navigation(${outletId}) as "kitchenState"`);
+    const kitchenState = result.rows[0]?.kitchenState;
     const status = result.rows[0];
     return {
       ordering: status?.ordering === true,

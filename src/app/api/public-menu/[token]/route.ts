@@ -1,6 +1,7 @@
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { publicProduct } from "@/modules/menu-product/service";
+import { etagMatches, publicMenuEtag } from "@/modules/menu-product/conditional-response";
 import { reserveOrderSource, verifiedOrderSource } from "@/modules/orders/rate-limit";
 const headers = { "cache-control": "no-store" };
 async function observed_GET(req: Request, c: { params: Promise<{ token: string }> }) {
@@ -17,10 +18,13 @@ async function observed_GET(req: Request, c: { params: Promise<{ token: string }
     (await c.params).token,
     new URL(req.url).searchParams.get("lang")
   );
-  return NextResponse.json(data ?? { message: "Menu unavailable" }, {
-    status: data ? 200 : 404,
-    headers,
-  });
+  if (!data) return NextResponse.json({ message: "Menu unavailable" }, { status: 404, headers });
+  const etag = publicMenuEtag(data);
+  const responseHeaders = { ...headers, etag };
+  if (etagMatches(req.headers.get("if-none-match"), etag)) {
+    return new Response(null, { status: 304, headers: responseHeaders });
+  }
+  return NextResponse.json(data, { status: 200, headers: responseHeaders });
 }
 
 export const GET = observedRoute(observed_GET);

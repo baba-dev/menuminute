@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { shouldReconcileKitchen } from "@/modules/kitchen/reconciliation-policy";
 import Link from "next/link";
 import {
   ChefHat,
@@ -295,10 +296,13 @@ export function KitchenBoard({
   useEffect(() => {
     let alive = true;
     if (revoked.current) return;
+    let lastStreamContact = 0;
+    let lastFullReconciliation = Date.now();
     const source = new EventSource(base + "/stream");
     stream.current = source;
     source.addEventListener("snapshot", (event) => {
       if (!alive || revoked.current) return;
+      lastStreamContact = Date.now();
       try {
         apply(JSON.parse((event as MessageEvent<string>).data) as KitchenSnapshot);
       } catch {
@@ -307,6 +311,7 @@ export function KitchenBoard({
     });
     source.addEventListener("heartbeat", () => {
       if (alive && !revoked.current) {
+        lastStreamContact = Date.now();
         setConnection("live");
         setLastContact(Date.now());
       }
@@ -330,8 +335,14 @@ export function KitchenBoard({
       if (alive) setConnection((c) => (c === "revoked" ? c : "recovering"));
     };
     const timer = setInterval(() => {
-      if (alive && !revoked.current)
-        void refresh().catch(() => setConnection((c) => (c === "revoked" ? c : "recovering")));
+      if (!alive || revoked.current) return;
+      const now = Date.now();
+      const healthy = source.readyState === EventSource.OPEN && now - lastStreamContact < 10_000;
+      // SSE still owns immediate updates. Keep a full GET at least every 30s
+      // even with heartbeats, and every 15s when the stream is unhealthy.
+      if (!shouldReconcileKitchen(healthy, now - lastFullReconciliation)) return;
+      lastFullReconciliation = now;
+      void refresh().catch(() => setConnection((c) => (c === "revoked" ? c : "recovering")));
     }, 15000);
     return () => {
       alive = false;

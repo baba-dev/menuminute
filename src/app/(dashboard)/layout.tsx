@@ -44,14 +44,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth();
   if (!session?.user.id) redirect("/login");
 
-  const [restaurant, outlets] = await Promise.all([
+  // The superadmin flag is independent of active-outlet discovery: avoid a
+  // separate blocking database waterfall on every dashboard navigation.
+  const [restaurant, outlets, adminRole] = await Promise.all([
     getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId),
     getRestaurantsByUserId(session.user.id),
+    getDb().query.users.findFirst({
+      where: eq(users.id, session.user.id),
+      columns: { isSuperAdmin: true },
+    }),
   ]);
-  const adminRole = await getDb().query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: { isSuperAdmin: true },
-  });
   const isSuperAdmin = Boolean(adminRole?.isSuperAdmin);
   let capabilities: DashboardNavigation | undefined;
   let menuWrite = false;
@@ -61,14 +63,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (restaurant) {
     // Preview and optional paid navigation must not make menu, POS, orders or
     // settings inaccessible during unrelated dependency failures.
-    const [navigationResult, qrResult, extraResult] = await Promise.allSettled([
+    const [navigationResult, extraResult, previewResult] = await Promise.allSettled([
       dashboardNavigation(
         { userId: session.user.id, sessionId: session.session.id },
         restaurant.organizationId,
         restaurant.id
       ),
-      dashboardQrRows(session.user.id, restaurant.id),
       shellCapabilities({ userId: session.user.id, sessionId: session.session.id }, restaurant.id),
+      (async () => {
+        // QR lookup and public projection can run while capabilities are loading.
+        // Preserve live public-projection semantics and independent failure handling.
+        const qr = preferredMenuQr(await dashboardQrRows(session.user.id, restaurant.id));
+        if (!qr) return null;
+        const projection = await dashboardPublicProjection(qr.destinationToken);
+        return projection?.menus.length ? "/m/" + encodeURIComponent(qr.destinationToken) : null;
+      })(),
     ]);
     // Extra flags only decide which shortcuts to offer; the server re-checks every action.
     if (extraResult.status === "fulfilled") {
@@ -80,22 +89,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     } else {
       reportOptionalShellFailure("navigation", navigationResult.reason);
     }
-    if (qrResult.status === "fulfilled") {
-      const qr = preferredMenuQr(qrResult.value);
-      if (qr) {
-        try {
-          const projection = await dashboardPublicProjection(qr.destinationToken);
-          if (projection?.menus.length) {
-            publicHref = "/m/" + encodeURIComponent(qr.destinationToken);
-          }
-        } catch (error) {
-          previewError = true;
-          reportOptionalShellFailure("preview", error);
-        }
-      }
+    if (previewResult.status === "fulfilled") {
+      publicHref = previewResult.value;
     } else {
       previewError = true;
-      reportOptionalShellFailure("preview", qrResult.reason);
+      reportOptionalShellFailure("preview", previewResult.reason);
     }
   }
   const name = session.user.name || "Restaurant admin";

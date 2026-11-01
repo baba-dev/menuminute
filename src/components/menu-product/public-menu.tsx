@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import "@/styles/dining-concierge.css";
 import { ConciergeEntry } from "./concierge-entry";
 import { type MealItem } from "@/modules/menu-product/concierge-engine";
@@ -58,6 +59,7 @@ export function PublicMenu({
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
+  const responseEtag = useRef<string | null>(null);
   const [search, setSearch] = useState("");
   const [diet, setDiet] = useState("all");
   const [status, setStatus] = useState("");
@@ -172,9 +174,22 @@ export function PublicMenu({
         const r = await fetch(`/api/public-menu/${encodeURIComponent(token)}${language}`, {
           cache: "no-store",
           signal: controller.signal,
+          headers: responseEtag.current ? { "if-none-match": responseEtag.current } : {},
         });
         if (stopped || controller.signal.aborted) return;
+        if (r.status === 304) {
+          // A successful revalidation clears stale connection notices, but not
+          // cart-change messages or other actionable guest feedback.
+          setStatus((current) =>
+            current.startsWith("Menu updates could not be checked.") ||
+            current.startsWith("You are offline.")
+              ? ""
+              : current
+          );
+          return;
+        }
         if (!r.ok) {
+          responseEtag.current = null;
           if (r.status === 404 || r.status === 410) {
             setData((previous) => ({ ...previous, menus: [] }));
             setCartItems([]);
@@ -191,6 +206,7 @@ export function PublicMenu({
         }
         const next = (await r.json()) as PublicProduct;
         if (stopped || controller.signal.aborted) return;
+        responseEtag.current = r.headers.get("etag");
         setData(next);
         const currentDishes = next.menus.flatMap((menu) =>
           projectMenu(
@@ -247,10 +263,16 @@ export function PublicMenu({
     }
   };
 
-  const docs = data.menus.map((m) => ({
-    ...m,
-    view: projectMenu(m.document, data.outlet.timezone, new Date(data.now), m.overrides),
-  }));
+  // Menu projection is expensive for large catalogs. Cart edits, modal state,
+  // search and scroll cues must not reproject every dish in every category.
+  const docs = useMemo(
+    () =>
+      data.menus.map((m) => ({
+        ...m,
+        view: projectMenu(m.document, data.outlet.timezone, new Date(data.now), m.overrides),
+      })),
+    [data]
+  );
 
   const normalizedSearch = search.trim().toLowerCase();
   const matches = (item: CustomizerDish, categoryName: string) => {
@@ -590,12 +612,12 @@ export function PublicMenu({
                     activeSection === "c-" + menu.id + "-" + category.id ? "location" : undefined
                   }
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={categoryImage(category.name)}
                     alt=""
                     width={36}
                     height={36}
+                    sizes="36px"
                     loading="lazy"
                   />
                   <span>{category.name}</span>
@@ -687,12 +709,12 @@ export function PublicMenu({
                     aria-labelledby={"title-" + menu.id + "-" + category.id}
                   >
                     <div className="dining-section-head">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={categoryImage(category.name)}
                         alt=""
                         width={84}
                         height={84}
+                        sizes="84px"
                         loading="lazy"
                       />
                       <div>

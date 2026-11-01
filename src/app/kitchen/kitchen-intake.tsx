@@ -79,6 +79,7 @@ export function KitchenIntake({
   }, [sound]);
   const latestRequest = useRef(0);
   const active = useRef(true);
+  const pollRunning = useRef(false);
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       const requestId = ++latestRequest.current;
@@ -128,22 +129,29 @@ export function KitchenIntake({
         }
       });
     });
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-      // A bounded GET to server-owned pending orders is authoritative. Every
-      // display reconciles on reconnect rather than relying on volatile toasts.
-      void refresh(controller.signal).catch((cause) => {
-        if (!controller.signal.aborted)
-          setError(cause instanceof Error ? cause.message : "Intake connection lost.");
-      });
-    }, 6000);
-    const onVisible = () => {
-      if (document.visibilityState === "visible")
-        void refresh(controller.signal).catch((cause) => {
-          if (!controller.signal.aborted) setError(String(cause));
+    // Suppress overlapping scheduled GETs without touching manual post-action
+    // reconciliation or the existing six-second audible intake cadence.
+    const poll = () => {
+      if (controller.signal.aborted || pollRunning.current || !navigator.onLine) return;
+      pollRunning.current = true;
+      void refresh(controller.signal)
+        .catch((cause) => {
+          if (!controller.signal.aborted)
+            setError(cause instanceof Error ? cause.message : "Intake connection lost.");
+        })
+        .finally(() => {
+          pollRunning.current = false;
         });
     };
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+      poll();
+    }, 6000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") poll();
+    };
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onVisible);
     return () => {
       active.current = false;
       latestRequest.current += 1;
@@ -151,6 +159,7 @@ export function KitchenIntake({
       window.clearInterval(timer);
       window.cancelAnimationFrame(frame);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onVisible);
     };
   }, [refresh]);
 

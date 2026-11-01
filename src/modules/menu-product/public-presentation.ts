@@ -63,17 +63,26 @@ const approved = approvedArt as readonly {
   category: string;
 }[];
 const canonicalArt = /^\/assets\/food\/dishes\/[a-z0-9-]+\/[a-z0-9-]+\.png$/;
+// Index approved manifest entries only once. Preserve ambiguity-based fallbacks.
+const approvedById = new Map<string, string[]>();
+const approvedByName = new Map<string, string[]>();
+for (const asset of approved) {
+  if (
+    asset.state !== "approved" ||
+    !canonicalArt.test(asset.path) ||
+    asset.path !== `/assets/food/dishes/${asset.category}/${asset.slug}.png`
+  )
+    continue;
+  const id = `${asset.category}__${asset.slug}`;
+  const name = normalizeDishText(asset.label);
+  approvedById.set(id, [...(approvedById.get(id) ?? []), asset.path]);
+  approvedByName.set(name, [...(approvedByName.get(name) ?? []), asset.path]);
+}
 function artworkFor(dish: VisualDish): string | null {
-  const chosen = approved.filter(
-    (a) =>
-      a.state === "approved" &&
-      canonicalArt.test(a.path) &&
-      a.path === `/assets/food/dishes/${a.category}/${a.slug}.png` &&
-      (dish.artworkId
-        ? dish.artworkId === `${a.category}__${a.slug}`
-        : normalizeDishText(a.label) === normalizeDishText(dish.name))
-  );
-  return chosen.length === 1 ? chosen[0]!.path : null;
+  const matches = dish.artworkId
+    ? approvedById.get(dish.artworkId)
+    : approvedByName.get(normalizeDishText(dish.name));
+  return matches?.length === 1 ? matches[0]! : null;
 }
 export function dishVisual(dish: VisualDish, category: string, preview = false): DiningVisual {
   const fallback = categoryImage(category);

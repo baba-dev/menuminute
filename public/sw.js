@@ -227,9 +227,32 @@ async function networkFirst(request, cacheName, maximumEntries, offlineFallback 
 async function guestNetworkFirst(request, kind, cacheName, maximumEntries) {
   const policy = await findGuestPolicy(kind, request);
   if (!policy) return fetch(request);
-  const response = await networkFirst(request, cacheName, maximumEntries);
-  if (response.status === 404 || response.status === 410) await removePolicyForRequest(request);
-  return response;
+  if (kind !== "api") {
+    const response = await networkFirst(request, cacheName, maximumEntries);
+    if (response.status === 404 || response.status === 410) await removePolicyForRequest(request);
+    return response;
+  }
+  // Conditional ETags add headers to online menu GETs. Offline snapshots are
+  // enrolled by exact token+locale URL, not by changing request headers.
+  // This is limited to opted-in, anonymous guest reads; private responses and
+  // unapproved query parameters never enter this cache.
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response.status === 404 || response.status === 410) {
+      await removePolicyForRequest(request);
+      return response;
+    }
+    if (responseCanBeCached(response)) {
+      await cache.put(request.url, response.clone());
+      await trimCache(cacheName, maximumEntries);
+    }
+    return response; // Keep 304 responses unmodified for the live menu client.
+  } catch (error) {
+    const snapshot = await cache.match(request.url, { ignoreVary: true });
+    if (snapshot) return snapshot;
+    throw error;
+  }
 }
 
 async function cacheFirst(request) {
