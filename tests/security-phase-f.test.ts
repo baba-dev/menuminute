@@ -15,6 +15,10 @@ describe("A–F security regression contracts", () => {
     expect(nginx).toContain("location ^~ /api/media/ {");
     expect(nginx).toContain("client_max_body_size 6m;");
   });
+  it("admits public SSR menus before metadata and page database lookups", () => {
+    const source = readFileSync("src/app/(public-menu)/m/[publicMenuId]/page.tsx", "utf8");
+    expect(source.match(/admitPublicMenuRender\(\)/g)?.length).toBe(2);
+  });
   it("preserves a single-use step-up proof for administrative writes", () => {
     const sql = readFileSync("src/db/migrations/0015_superadmin_control.sql", "utf8");
     expect(sql).toContain("app_private.require_step_up()");
