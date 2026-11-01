@@ -766,7 +766,7 @@
 }
 .dining-detail-hint {
   font-size: 0.85rem;
-  color: var(--dc-muted);
+  color: var(--dc-ink, #302017);
   border-left: 3px solid var(--dc-ember);
   padding: 0.5rem 0.75rem;
   background: var(--dc-soft);
