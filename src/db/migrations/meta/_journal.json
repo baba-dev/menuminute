@@ -505,6 +505,13 @@
       "when": 1794661200026,
       "tag": "0072_pos_line_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794747600027,
+      "tag": "0073_floor_chairs_and_sections",
+      "breakpoints": true
     }
   ]
 }

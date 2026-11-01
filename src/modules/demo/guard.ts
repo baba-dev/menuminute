@@ -20,6 +20,10 @@ const ALLOWED: ReadonlyArray<readonly [method: string, pattern: RegExp]> = [
   ["POST", new RegExp(`${outletScope}/service-requests$`)],
   ["POST", new RegExp(`${outletScope}/menu/quick-availability$`)],
   ["POST", new RegExp(`${outletScope}/kitchen/(work|release|reassign)$`)],
+  // Floor occupancy (tap a chair, seat or clear a table). Reset rebuilds the demo tables and chairs.
+  ["PUT", /^\/api\/floor\/chairs\/[^/]+\/occupancy$/],
+  ["POST", /^\/api\/floor\/tables\/[^/]+\/occupancy$/],
+  ["DELETE", /^\/api\/floor\/tables\/[^/]+\/occupancy$/],
 ];
 
 export function isDemoActor(userId: string, enabled: boolean = demoModeEnabled()): boolean {

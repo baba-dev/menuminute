@@ -295,8 +295,10 @@ test.describe("desktop shell", () => {
     await signIn(page, await seed({ ordering: true }));
     await page.getByRole("link", { name: "Dining floor" }).click();
     await expect(page).toHaveURL(/\/dashboard\/floor/);
-    await expect(page.getByRole("heading", { name: "Dining floor", level: 1 })).toBeVisible();
-    await expect(page.getByTestId("floor-page")).toBeVisible();
+    const floor = page.locator("#workspace-main").getByTestId("dining-floor");
+    await expect(floor).toBeVisible();
+    await expect(floor.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(floor.getByText(/^Dining floor/i).first()).toBeVisible();
   });
 });
 
@@ -422,40 +424,31 @@ test("floor lifecycle keeps one physical table, QR association, and reservation 
   const fixture = await seed({ ordering: true });
   await signIn(page, fixture);
   await page.goto("/dashboard/floor");
-  await expect(page.getByRole("heading", { name: "Dining floor", level: 1 })).toBeVisible();
-  await expect(page.getByTestId("floor-page")).toBeVisible();
-  await page.getByRole("tab", { name: /Bookings/ }).click();
-  await expect(page.getByLabel("Booking date")).toBeVisible();
+  const floor = page.locator("#workspace-main").getByTestId("dining-floor");
+  await expect(floor).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your dining room is empty" })).toBeVisible();
 
   const headers = { "x-outlet-id": fixture.outletId, origin: "https://localhost:3443" };
   const response = await page.request.get("/api/floor", { headers });
   expect(response.ok()).toBe(true);
   const initial = await response.json();
-  const table = {
-    id: crypto.randomUUID(),
-    tableNumber: "QA-1",
-    label: "QR test",
-    capacity: 4,
-    shape: "square",
-    x: 200,
-    y: 200,
-    width: 100,
-    height: 100,
-    rotation: 0,
-    section: initial.layout.sections[0].name,
-    assignedStaff: null,
-  };
+  expect(initial.tables).toEqual([]);
+
   const created = await page.request.post("/api/floor/tables", {
     headers,
-    data: { table, layout: { ...initial.layout, tables: [...initial.layout.tables, table] } },
+    data: { name: "QR test", shape: "square", chairCount: 4, sectionId: null },
   });
-  const savedLayout = await created.json();
-  expect(created.status(), JSON.stringify(savedLayout)).toBe(200);
-  const floor = await page.request.get("/api/floor", { headers });
-  expect(floor.ok()).toBe(true);
-  expect(
-    (await floor.json()).layout.tables.filter((item: { id: string }) => item.id === table.id)
-  ).toHaveLength(1);
+  const table = await created.json();
+  expect(created.status(), JSON.stringify(table)).toBe(201);
+  const floorAfter = await page.request.get("/api/floor", { headers });
+  expect(floorAfter.ok()).toBe(true);
+  const overview = await floorAfter.json();
+  expect(overview.tables.filter((item: { id: string }) => item.id === table.id)).toHaveLength(1);
+  expect(overview.totals).toMatchObject({ tables: 1, chairs: 4, maxOccupancy: 4 });
+
+  await page.reload();
+  await expect(floor.getByRole("article", { name: /QR test/ })).toBeVisible();
+  await expect(floor.getByRole("button", { name: "Reserve" })).toBeVisible();
 
   const qr = await page.request.post("/api/floor/tables/qr", {
     headers,
@@ -485,15 +478,10 @@ test("floor lifecycle keeps one physical table, QR association, and reservation 
   expect(
     (await page.request.post("/api/floor/reservations", { headers, data: booking })).status()
   ).toBe(409);
-  const archive = await page.request.delete("/api/floor/tables", {
+  // A table with a live QR code and an upcoming booking cannot be archived.
+  const archive = await page.request.delete(`/api/floor/tables/${table.id}`, {
     headers,
-    data: {
-      tableId: table.id,
-      layout: {
-        ...savedLayout,
-        tables: savedLayout.tables.filter((item: { id: string }) => item.id !== table.id),
-      },
-    },
+    data: {},
   });
   expect(archive.status()).toBe(409);
 });
