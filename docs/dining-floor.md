@@ -39,6 +39,16 @@ miniature of this page. It reads the same `getFloorOverview` (permission `orders
 reuse `layoutTable` so shapes and chair positions match the floor page. Tables link to `/dashboard/floor#table-<id>`.
 The widget never changes chair state, and keeps the "not a physical occupancy sensor" disclaimer.
 
+## Dashboard "Today's pulse" bento
+
+A second Overview widget (`pulse`, label "Today's pulse") fills the right-hand column under "Guest service".
+`getTodayPulse` (`src/modules/dashboard/today-pulse.ts`, permission `orders.read`) reads only this outlet's orders and
+order items for the outlet-local business day: sales and an hourly rhythm (with change versus the same elapsed time
+yesterday), the top three dishes by quantity, guests currently waiting (average and oldest age of open orders), and
+new versus returning guests. A "new guest" is a phone number with no earlier order at the outlet; numbers are only
+counted, never returned. Orders carry no per-status timestamps, so the waiting tile is the age of open orders, not a
+kitchen preparation time. The widget is read-only and refreshes about every minute.
+
 ## Migration 0073 (additive)
 
 Adds `dining_sections`, `restaurant_chairs`, and `name`, `display_number`, `section_id`, `shape` on

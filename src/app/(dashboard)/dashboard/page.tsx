@@ -40,6 +40,8 @@ import { withOutlet } from "@/modules/tenancy/service";
 import { ForbiddenError } from "@/lib/errors";
 import { getOutletFloorMatrix } from "@/modules/hospitality/floor-matrix";
 import { getFloorOverview } from "@/modules/hospitality/floor-service";
+import { getTodayPulse } from "@/modules/dashboard/today-pulse";
+import { TodayPulseBento } from "@/components/dashboard/pulse/today-pulse";
 import { TableFloorMatrix } from "@/components/dashboard/table-floor-matrix";
 import { ServiceRequestsPanel } from "@/components/dashboard/service-requests-panel";
 import { env } from "@/lib/config/env";
@@ -231,6 +233,15 @@ export default async function DashboardPage() {
         getOutletFloorMatrix(actor, outlet.organizationId, outlet.id).catch(() => null),
       ])
     : [null, null];
+  // The pulse bento is read-only and degrades to a restricted notice if its query fails.
+  const todayPulse = isVisible("pulse")
+    ? await getTodayPulse(
+        actor,
+        outlet.id,
+        outlet.timezone ?? "UTC",
+        outlet.currency ?? "INR"
+      ).catch(() => null)
+    : null;
   const floorDueByTable = Object.fromEntries(
     (floorMatrix ?? []).map((row) => [
       row.id,
@@ -490,6 +501,7 @@ export default async function DashboardPage() {
         timezone={outlet.timezone ?? undefined}
       />
     ),
+    pulse: <TodayPulseBento pulse={todayPulse} />,
     serviceRequests: (
       <ServiceRequestsPanel
         organizationId={outlet.organizationId}

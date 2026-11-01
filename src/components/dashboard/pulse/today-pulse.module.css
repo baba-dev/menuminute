@@ -1,0 +1,427 @@
+/* Today's pulse: a bento of four tiles. Sized by the widget's own width (container queries),
+   so it stays tidy whether the widget is half-width, full-width or on a phone. */
+@property --pulse-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  --pulse-accent: var(--ember);
+  --pulse-tile: var(--paper);
+  --pulse-line: var(--editorial-line);
+  --pulse-glow: color-mix(in srgb, var(--ember) 16%, transparent);
+  --pulse-track: color-mix(in srgb, var(--ink) 9%, transparent);
+}
+
+.live {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--pulse-line);
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1f9d55;
+  box-shadow: 0 0 0 0 color-mix(in srgb, #1f9d55 55%, transparent);
+  animation: ping 2.4s ease-out infinite;
+}
+:root[data-theme="dark"] .liveDot {
+  background: #5ad08a;
+}
+
+.bento {
+  container-type: inline-size;
+  flex: 1;
+  margin-top: 16px;
+}
+.panel > :global(.mm-ops-disclaimer) {
+  margin-top: auto;
+  padding-top: 14px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.sales {
+  grid-column: span 4;
+}
+.sellers {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.wait,
+.guests {
+  grid-column: span 2;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid var(--pulse-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--pulse-glow), transparent 55%), var(--pulse-tile);
+  color: var(--ink);
+  animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+.tile:hover {
+  border-color: color-mix(in srgb, var(--ink) 38%, var(--pulse-line));
+  transform: translateY(-1px);
+}
+.tileHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tileHead h3 {
+  margin: 0;
+  font-family: var(--font-dm), sans-serif;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.chip {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ember) 14%, transparent);
+  color: var(--ember);
+}
+.panel .big {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 6cqi, 40px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.panel .big small {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.42em;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.panel .sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.panel .sub strong {
+  color: var(--ink);
+  font-weight: 800;
+}
+.panel .empty {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Delta pill */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding: 3px 8px 3px 6px;
+  border-radius: 99px;
+  background: var(--pulse-track);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.delta[data-tone="up"] {
+  background: #e1f3e6;
+  color: #14532d;
+}
+.delta[data-tone="down"] {
+  background: #ffe2da;
+  color: #8f1d0c;
+}
+:root[data-theme="dark"] .delta[data-tone="up"] {
+  background: #17331f;
+  color: #9be2b0;
+}
+:root[data-theme="dark"] .delta[data-tone="down"] {
+  background: #55231b;
+  color: #ffb4a6;
+}
+
+/* Hourly bars */
+.bars {
+  display: flex;
+  height: 54px;
+  align-items: flex-end;
+  gap: 5px;
+  margin-top: 8px;
+}
+.bar {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 6px;
+  height: var(--h, 8%);
+  border-radius: 6px 6px 3px 3px;
+  background: color-mix(in srgb, var(--ember) 38%, transparent);
+  transform-origin: bottom;
+  animation: grow 640ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(200ms + var(--n, 0) * 45ms);
+}
+.bar[data-empty="true"] {
+  background: var(--pulse-track);
+}
+.bar[data-now="true"] {
+  background: linear-gradient(180deg, var(--ember), color-mix(in srgb, var(--ember) 70%, #ff7a3d));
+}
+.barAxis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Top sellers */
+.rank {
+  display: grid;
+  flex: 1;
+  align-content: space-around;
+  gap: 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.rankRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+}
+.badge {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1.5px solid var(--pulse-line);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.badge[data-first="true"] {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: var(--paper);
+}
+.dish {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qty {
+  color: var(--ink);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.share {
+  grid-column: 2 / -1;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--pulse-track);
+}
+.share > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ember);
+  transform-origin: left;
+  animation: sweep 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms both;
+}
+
+/* Shine border: a soft ember beam travels around the top-sellers tile. */
+.sellers[data-beam="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--pulse-angle),
+    transparent 0 68%,
+    color-mix(in srgb, var(--ember) 30%, transparent) 80%,
+    var(--ember) 92%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: orbit 7s linear infinite;
+  pointer-events: none;
+}
+
+/* Waiting */
+.wait[data-attention="true"] {
+  --pulse-glow: color-mix(in srgb, #d9480f 22%, transparent);
+  border-color: color-mix(in srgb, #d9480f 55%, var(--pulse-line));
+}
+.wait[data-attention="true"] .chip {
+  background: color-mix(in srgb, #d9480f 16%, transparent);
+  color: #c2410c;
+}
+:root[data-theme="dark"] .wait[data-attention="true"] .chip {
+  color: #ff9a62;
+}
+
+/* Guests: overlapping decorative circles, accent for new, outline for returning */
+.avatars {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+}
+.avatars > span {
+  width: 26px;
+  height: 26px;
+  margin-left: -8px;
+  border: 2px solid var(--pulse-tile);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 20%, var(--pulse-tile));
+  animation: pop 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.avatars > span:first-child {
+  margin-left: 0;
+}
+.avatars > span[data-new="true"] {
+  background: var(--ember);
+}
+.avatars > span:nth-child(2) {
+  animation-delay: 60ms;
+}
+.avatars > span:nth-child(3) {
+  animation-delay: 120ms;
+}
+.avatars > span:nth-child(4) {
+  animation-delay: 180ms;
+}
+.avatars > span:nth-child(5) {
+  animation-delay: 240ms;
+}
+.avatars > span:nth-child(6) {
+  animation-delay: 300ms;
+}
+.avatars > em {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+/* Narrower widget (half-width on small laptops, phones): 2 columns, then 1. */
+@container (max-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sales,
+  .sellers {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .wait,
+  .guests {
+    grid-column: span 1;
+  }
+}
+@container (max-width: 360px) {
+  .wait,
+  .guests {
+    grid-column: 1 / -1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes sweep {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes orbit {
+  to {
+    --pulse-angle: 360deg;
+  }
+}
+@keyframes ping {
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .bar,
+  .share > span,
+  .avatars > span,
+  .liveDot,
+  .sellers[data-beam="true"]::after {
+    animation: none;
+  }
+  .tile {
+    transition: none;
+  }
+}
