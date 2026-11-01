@@ -34,7 +34,7 @@
   top: 0;
   display: grid;
   height: 100dvh;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   justify-items: center;
   gap: 0.75rem;
   padding: 1.25rem 1rem 1rem;
@@ -157,24 +157,6 @@
 .db .mm-dashboard-kpi {
   padding-bottom: 30px;
   border-bottom: 1px solid var(--editorial-line);
-}
-
-/* Remaining placeholders (later slices replace these with real panels). */
-.db-ph {
-  display: flex;
-  box-sizing: border-box;
-  padding: 14px 18px;
-  border: 1px dashed var(--decorative);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--paper) 93%, var(--ember) 7%);
-}
-.db-ph__label {
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.6;
-}
-.db-ph--tall {
-  height: 260px;
 }
 
 /* ── Pin the desktop layout (the product re-flows at these viewport widths) ── */
@@ -316,6 +298,72 @@
   }
 }
 
+/* ── Captions: one per chapter, all in one grid cell so the layout never jumps ── */
+.db__captions {
+  display: grid;
+  width: min(100%, 44rem);
+}
+.db__caption {
+  display: grid;
+  grid-area: 1 / 1;
+  justify-items: center;
+  gap: 0.2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    visibility 180ms;
+}
+.db__caption strong {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 1rem;
+}
+.db__caption span {
+  color: var(--muted);
+}
+.db__caption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 24px;
+  color: var(--ember);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.db__caption a:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+.db[data-chapter="navigate"] [data-for="navigate"],
+.db[data-chapter="overview"] [data-for="overview"],
+.db[data-chapter="priorities"] [data-for="priorities"],
+.db[data-chapter="health"] [data-for="health"],
+.db[data-chapter="live-service"] [data-for="live-service"] {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ── New-order beat: scroll-driven (--beat 0..1), so it reverses with the scroll ── */
+.db .mm-topbar-bell[data-beat] {
+  rotate: calc(sin(var(--beat, 0) * 12.566) * 16deg * (1 - var(--beat, 0)));
+  transform-origin: 50% 0;
+}
+.db .mm-topbar-bell-badge[data-beat],
+.db .mm-bottom-badge[data-beat] {
+  scale: calc(1 + sin(var(--beat, 0) * 3.14159) * 0.45);
+}
+.db .mm-ops-item[data-beat][data-on="true"],
+.db .mm-dashboard-operations-grid a[data-beat][data-on="true"] {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 22%, transparent);
+}
+.db .db-beat-reveal[data-on="false"] {
+  display: none;
+}
+
 /* ── Chapter rail ───────────────────────────────────────────────────── */
 .db__rail {
   display: flex;
@@ -392,6 +440,15 @@
     left: auto;
     margin-left: 216px;
   }
+  /* No pinned stage to caption: list every caption. */
+  .db__captions {
+    gap: 1rem;
+  }
+  .db__caption {
+    grid-area: auto;
+    visibility: visible;
+    opacity: 1;
+  }
 }
 @media (max-width: 680px) and ((scripting: none) or (prefers-reduced-motion: reduce)) {
   .db__camera {
@@ -402,4 +459,53 @@
   .db__rail {
     display: none;
   }
+}
+
+/* ── Closing call to action (rendered by the page, below the pinned section) ── */
+.db-cta {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem 5rem;
+  text-align: center;
+  color: var(--ink);
+}
+.db-cta h2 {
+  margin: 0;
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+.db-cta p {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--muted);
+}
+.db-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.db-cta__primary,
+.db-cta__secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 1.4rem;
+  border: 1px solid var(--ember);
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.db-cta__primary {
+  background: var(--ember);
+  color: var(--paper);
+}
+.db-cta__secondary {
+  color: var(--ember);
+}
+.db-cta a:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
 }

@@ -196,3 +196,77 @@ export const REPLICA_TABLES: readonly ReplicaTable[] = [
   { id: "11", number: "11", label: "Garden terrace", active: 0, unpaid: 0 },
   { id: "12", number: "12", label: "Private dining", active: 3, unpaid: 0 },
 ];
+
+/** Sample guest requests for "At your service" (shape of `GuestServiceRequest`). */
+export const REPLICA_REQUESTS: readonly {
+  id: string;
+  title: string;
+  signal: string;
+  status: "requested" | "acknowledged";
+  time: string;
+}[] = [
+  {
+    id: "r1",
+    title: "Table 5 · Order #1042",
+    signal: "Call server",
+    status: "requested",
+    time: "12:01 PM",
+  },
+  {
+    id: "r2",
+    title: "Table 12 · Order #1038",
+    signal: "Bill request",
+    status: "acknowledged",
+    time: "11:58 AM",
+  },
+];
+
+/**
+ * The new-order beat. The floor card flips from `before` to `after`; the Dispatch tile and the bell
+ * badge each count one more (their "before" numbers are the figures above).
+ */
+export const REPLICA_NEW_ORDER = {
+  tableId: "11",
+  before: { status: "No open tickets", counts: "0 active orders · 0 unpaid" },
+  after: { status: "Order active", counts: "1 active orders · 0 unpaid" },
+} as const;
+
+export type ChapterCaption = { title: string; body: string; href: string; cta: string };
+
+/**
+ * One caption and one link per chapter. The statements describe what the replica shows and what the
+ * product code does (refresh intervals, plan-dependent areas); none promises availability.
+ * Every `href` is an existing public page (checked by tests/dashboard-build-timeline.test.ts).
+ */
+export const CHAPTER_CAPTIONS: Record<string, ChapterCaption> = {
+  navigate: {
+    title: "One workspace for the whole outlet",
+    body: "Run service, menu, insights and admin sit in one sidebar. Ordering and Kitchen areas appear when your plan includes them.",
+    href: "/pricing",
+    cta: "See plans",
+  },
+  overview: {
+    title: "Your outlet at a glance",
+    body: "A welcome for the time of day and six counts for your published menus, categories, dishes and QR codes.",
+    href: "/help/owner",
+    cta: "Read the owner guide",
+  },
+  priorities: {
+    title: "Your next move, every day",
+    body: "A few quick actions to keep the menu fresh, accurate and guest-ready, with one place to publish changes.",
+    href: "/help/owner",
+    cta: "How publishing works",
+  },
+  health: {
+    title: "Publishing status you can trust",
+    body: "Menu status, QR links, visibility and setup progress. Each state is an icon and a word, never colour alone.",
+    href: "/docs",
+    cta: "Browse the documentation",
+  },
+  "live-service": {
+    title: "Live service, in one view",
+    body: "The Service Dispatch, dining floor and guest requests refresh on a short timer. Order activity is not a physical occupancy sensor.",
+    href: "/demo",
+    cta: "Try the live demo",
+  },
+};

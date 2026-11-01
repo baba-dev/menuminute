@@ -1,9 +1,9 @@
 # home-v2 — scroll-assembled dashboard
 
-Status: **scroll mechanics plus the real sidebar, top bar, hero, KPI row, priorities, outlet health,
-Service Dispatch and dining floor implemented** at `/home-v2` (`noindex`, not in the sitemap). The
-service-requests panel is still a labelled placeholder; it and the new-order arrival beat (bell badge
-and toast) are planned, not built.
+Status: **the dashboard section is complete** at `/home-v2` (`noindex`, not in the sitemap): the real
+sidebar, top bar, hero, KPI row, priorities, outlet health, Service Dispatch, dining floor and
+"At your service" panel, the new-order beat, per-chapter captions with links, and a closing call to
+action. The rest of the home-v2 page (other sections, navigation, footer) is not built.
 
 ## Real components
 
@@ -28,6 +28,17 @@ outlet, never a customer's numbers. The body uses the real widget order and `mm-
   values, so a no-JS visitor never sees zeros.
 - **Camera return:** after the build the camera glides back to the top (`CAMERA_RETURN_START`), so the
   held final frame is the hero and KPIs. The "Live service" chapter points at the bottom (the floor).
+- **New-order beat** (`BEATS`): told the way the product tells it, with no invented toast. A quiet
+  table card (Table 11) flips to "Order active" (p ≈ 0.86–0.89); as the camera returns, the Service
+  Dispatch "Awaiting acceptance" tile goes up by one (≈ 0.95–0.965); once home, the bell badge (and the
+  phone Orders badge) count one more (≈ 0.985–0.998). Each is scroll-driven (`--beat`, `data-on`), so it
+  reverses on the way up.
+- **Captions and links:** the stage is a picture, so the explanatory copy and links live beside it
+  (`CHAPTER_CAPTIONS`, one per chapter, shown with the chapter rail). Every link must be an existing
+  public page; a test checks it. Copy describes what the replica shows and what the product code does
+  (refresh intervals, plan-dependent areas) and makes no availability promises. Reduced-motion and
+  no-JS users get every caption as a list. The page ends with a "See it for yourself" CTA to `/demo`
+  and `/pricing`.
 - The stage is `inert` and `aria-hidden`, so static buttons and links inside the replicas are not
   focusable; hotspots are a later slice.
 
@@ -61,11 +72,18 @@ animation, so both directions render the same state for the same `p`.
 
 ## Marketing fixture
 
-No API calls, auth or tenant data. Counter values are placeholders (the demo catalogue has 236 dishes)
-and must not be presented as a customer's data.
+No API calls, auth or tenant data. Every number, time and request is sample data shaped like the public
+demo outlet and must not be presented as a customer's data.
 
-## Verification
+## Verification (last run)
 
-`tests/dashboard-build-timeline.test.ts` covers ranges, assembled/exploded endpoints, direction
-symmetry, count-up reversal, scroll geometry and damping. The repo's global vitest setup requires a
-migration database; the file is pure logic and was run with a DB-free config locally.
+- `tests/dashboard-build-timeline.test.ts` (14) and `tests/e2e/home-v2-dashboard-build.spec.ts` (5
+  scenarios, desktop and Pixel 5). The e2e file follows the repo's convention (relative URLs, run by
+  `pnpm test:e2e` against the infrastructure server); it was run locally against `next dev` with a
+  scratch config.
+- axe (WCAG 2 A/AA) on the section and CTA: no violations in light, dark, phone and reduced motion.
+- Full `next build` passes; `/home-v2` is prerendered static. Route CSS is about 42 KB gzipped (the
+  current homepage is about 44 KB); JS about 203 KB gzipped in total (shared chunks).
+
+The repo's global vitest setup requires a migration database; the timeline test file is pure logic and
+was run with a DB-free config locally (CI runs it under the normal setup).

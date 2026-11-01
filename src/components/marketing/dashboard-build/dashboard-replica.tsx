@@ -2,6 +2,7 @@ import Image from "next/image";
 import {
   ArrowRight,
   Bell,
+  BellRing,
   Check,
   Ellipsis,
   ExternalLink,
@@ -23,9 +24,11 @@ import {
   REPLICA_DISH_COUNT,
   REPLICA_DISPATCH,
   REPLICA_HEALTH_ROWS,
+  REPLICA_NEW_ORDER,
   REPLICA_KPIS,
   REPLICA_OUTLET_NAME,
   REPLICA_PRIORITIES,
+  REPLICA_REQUESTS,
   REPLICA_SERVICE_PERIOD,
   REPLICA_SETUP,
   REPLICA_TABLES,
@@ -113,6 +116,16 @@ export function ReplicaBottomBar() {
         <span key={item.id} className="mm-bottom-link">
           <span className="mm-bottom-icon">
             <WorkspaceIcon name={item.icon} size={21} />
+            {item.id === "orders" && (
+              <span
+                className="mm-bottom-badge"
+                data-beat="bell"
+                data-beat-from={REPLICA_DISPATCH.counters[0].value}
+                data-beat-to={REPLICA_DISPATCH.counters[0].value + 1}
+              >
+                {REPLICA_DISPATCH.counters[0].value + 1}
+              </span>
+            )}
           </span>
           <span className="mm-bottom-label">{item.shortLabel}</span>
         </span>
@@ -159,9 +172,16 @@ export function ReplicaTopbar() {
           </span>
           <span className="mm-topbar-connection-label">Live</span>
         </span>
-        <span className="mm-topbar-bell">
+        <span className="mm-topbar-bell" data-beat="bell">
           <Bell size={18} aria-hidden="true" />
-          <span className="mm-topbar-bell-badge">{REPLICA_BELL_COUNT}</span>
+          <span
+            className="mm-topbar-bell-badge"
+            data-beat="bell"
+            data-beat-from={REPLICA_BELL_COUNT}
+            data-beat-to={REPLICA_BELL_COUNT + 1}
+          >
+            {REPLICA_BELL_COUNT + 1}
+          </span>
         </span>
         <span className="mm-dashboard-preview">
           Public menu <ExternalLink size={14} aria-hidden="true" />
@@ -432,16 +452,19 @@ function ReplicaDispatch() {
             key={label}
             data-stagger={index}
             data-stagger-count={counters.length}
+            data-beat={index === 0 ? "dispatch" : undefined}
             style={staggerStyle(0, piece, index, counters.length)}
           >
-            <strong data-count-to={value}>{value}</strong>
+            <strong data-count-to={value} data-beat-add={index === 0 ? "dispatch" : undefined}>
+              {index === 0 ? value + 1 : value}
+            </strong>
             <span>{label}</span>
           </a>
         ))}
       </div>
       <div className="mm-dashboard-service-footer">
         <a>View all orders &rarr;</a>
-        <button type="button" className="mm-dashboard-operations-refresh" disabled>
+        <button type="button" className="mm-dashboard-operations-refresh">
           <RefreshCw size={16} aria-hidden="true" /> Refresh
         </button>
       </div>
@@ -488,7 +511,7 @@ function ReplicaFloor() {
         </div>
       </div>
       <div className="mm-ops-actions">
-        <button type="button" disabled>
+        <button type="button">
           <RefreshCw size={15} aria-hidden="true" /> Refresh floor
         </button>
         <a>
@@ -497,67 +520,128 @@ function ReplicaFloor() {
       </div>
       <div className="mm-ops-actions">
         {filters.map(([label, count], index) => (
-          <button key={label} type="button" aria-pressed={index === 0} disabled>
+          <button key={label} type="button" aria-pressed={index === 0}>
             {label} ({count})
           </button>
         ))}
       </div>
       <ul className="mm-ops-items">
-        {tables.map((table, index) => (
-          <li
-            className="mm-ops-item"
-            key={table.id}
-            data-stagger={index}
-            data-stagger-count={tables.length}
-            style={staggerStyle(0, piece, index, tables.length)}
-          >
-            <strong>Table {table.number}</strong>
-            <span>
-              {table.unpaid > 0 ? "Unpaid" : table.active > 0 ? "Order active" : "No open tickets"}
-            </span>
-            <p>{table.label}</p>
-            <p>
-              {table.active} active orders · {table.unpaid} unpaid
-            </p>
-            {table.due && <strong>Due: {table.due}</strong>}
-            {(table.active > 0 || table.unpaid > 0) && (
-              <div className="mm-ops-actions">
-                <a>View in Till</a>
-                <a>Orders Rail</a>
-              </div>
-            )}
-          </li>
-        ))}
+        {tables.map((table, index) => {
+          const isNew = table.id === REPLICA_NEW_ORDER.tableId;
+          const idle = table.unpaid === 0 && table.active === 0;
+          // The new-order table server-renders its final ("after") state, like the counters.
+          const status = isNew
+            ? REPLICA_NEW_ORDER.after.status
+            : table.unpaid > 0
+              ? "Unpaid"
+              : table.active > 0
+                ? "Order active"
+                : "No open tickets";
+          const counts = isNew
+            ? REPLICA_NEW_ORDER.after.counts
+            : `${table.active} active orders · ${table.unpaid} unpaid`;
+          return (
+            <li
+              className="mm-ops-item"
+              key={table.id}
+              data-stagger={index}
+              data-stagger-count={tables.length}
+              data-beat={isNew ? "table" : undefined}
+              style={staggerStyle(0, piece, index, tables.length)}
+            >
+              <strong>Table {table.number}</strong>
+              {isNew ? (
+                <span
+                  data-beat="table"
+                  data-beat-from={REPLICA_NEW_ORDER.before.status}
+                  data-beat-to={REPLICA_NEW_ORDER.after.status}
+                >
+                  {status}
+                </span>
+              ) : (
+                <span>{status}</span>
+              )}
+              <p>{table.label}</p>
+              {isNew ? (
+                <p
+                  data-beat="table"
+                  data-beat-from={REPLICA_NEW_ORDER.before.counts}
+                  data-beat-to={REPLICA_NEW_ORDER.after.counts}
+                >
+                  {counts}
+                </p>
+              ) : (
+                <p>{counts}</p>
+              )}
+              {table.due && <strong>Due: {table.due}</strong>}
+              {(!idle || isNew) && (
+                <div
+                  className="mm-ops-actions db-beat-reveal"
+                  data-beat={isNew ? "table" : undefined}
+                >
+                  <a>View in Till</a>
+                  <a>Orders Rail</a>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
       <p className="mm-ops-disclaimer">Order activity is not a physical occupancy sensor.</p>
     </section>
   );
 }
 
-function WidgetPlaceholder({
-  widget,
-  id,
-  label,
-  className,
-}: {
-  widget: string;
-  id: "floor";
-  label: string;
-  className: string;
-}) {
+/** The real "At your service" panel with two sample guest requests. */
+function ReplicaRequests() {
+  const piece = pieceById("requests");
   return (
-    <div className="mm-widget" data-widget={widget}>
-      <div className={`db-ph ${className}`} data-piece={id} style={pieceStyle(0, pieceById(id))}>
-        <span className="db-ph__label">{label}</span>
+    <section className="mm-dashboard-ops-panel" data-piece="requests" style={pieceStyle(0, piece)}>
+      <div className="mm-ops-head">
+        <div>
+          <span className="mm-dashboard-eyebrow">GUEST SERVICE</span>
+          <h2>At your service</h2>
+          <p>
+            Staff calls, water refills and bill requests · Checked approximately every 12 seconds.
+          </p>
+        </div>
+        <BellRing size={34} aria-hidden="true" className="mm-ops-bell" />
       </div>
-    </div>
+      <div className="mm-ops-actions">
+        <button type="button">
+          <RefreshCw size={15} aria-hidden="true" /> Refresh requests
+        </button>
+        <a>
+          Open Orders <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+      <ul className="mm-ops-items">
+        {REPLICA_REQUESTS.map((item, index) => (
+          <li
+            key={item.id}
+            className="mm-ops-item"
+            data-stagger={index}
+            data-stagger-count={REPLICA_REQUESTS.length}
+            style={staggerStyle(0, piece, index, REPLICA_REQUESTS.length)}
+          >
+            <strong>{item.title}</strong>
+            <p>{item.signal}</p>
+            <span>
+              {item.status} · {item.time}
+            </span>
+            <button type="button">
+              {item.status === "requested" ? "Acknowledge" : "Mark resolved"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
 /**
  * The dashboard body in the real widget order (kpis, priorities, dispatch, health, floor, service
- * requests), laid out by the real `mm-widget-grid`. Only service requests is still a labelled
- * placeholder; a later slice replaces it.
+ * requests), laid out by the real `mm-widget-grid`.
  */
 export function ReplicaBody() {
   return (
@@ -578,12 +662,9 @@ export function ReplicaBody() {
         <div className="mm-widget" data-widget="floor">
           <ReplicaFloor />
         </div>
-        <WidgetPlaceholder
-          widget="serviceRequests"
-          id="floor"
-          label="Service requests (placeholder)"
-          className="db-ph--tall"
-        />
+        <div className="mm-widget" data-widget="serviceRequests">
+          <ReplicaRequests />
+        </div>
       </div>
     </div>
   );

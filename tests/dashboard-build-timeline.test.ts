@@ -1,8 +1,18 @@
 // @vitest-environment jsdom
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  CHAPTER_CAPTIONS,
+  REPLICA_NEW_ORDER,
+  REPLICA_TABLES,
+} from "@/components/marketing/dashboard-build/dashboard-build-fixture";
+import {
   CHAPTERS,
+  BEATS,
   CAMERA_RETURN_START,
+  beatOn,
+  beatProgress,
   cameraFraction,
   cameraStyle,
   HOLD_START,
@@ -24,6 +34,9 @@ const stage = () => {
   for (const piece of PIECES) {
     const el = document.createElement("div");
     el.dataset["piece"] = piece.id;
+    if (piece.id === "topbar")
+      el.innerHTML = '<b data-beat="bell" data-beat-from="3" data-beat-to="4">4</b>';
+    if (piece.id === "pulse") el.innerHTML = '<i data-count-to="3" data-beat-add="dispatch">3</i>';
     if (piece.id === "kpi-3") el.innerHTML = '<span data-count-to="236">0</span>';
     if (piece.id === "health")
       el.innerHTML =
@@ -167,5 +180,51 @@ describe("dashboard build timeline", () => {
     expect(isInteractive(0.95)).toBe(true);
     expect(chapterAt(0).id).toBe(CHAPTERS[0]!.id);
     expect(chapterAt(1).id).toBe(CHAPTERS[CHAPTERS.length - 1]!.id);
+  });
+
+  it("keeps the new-order beats inside the build, in order, and reversible", () => {
+    const [table, dispatch, bell] = [BEATS.table, BEATS.dispatch, BEATS.bell];
+    expect(table[1]).toBeLessThanOrEqual(dispatch[0]);
+    expect(dispatch[1]).toBeLessThanOrEqual(bell[0]);
+    expect(bell[1]).toBeLessThanOrEqual(1);
+    expect(table[0]).toBeGreaterThanOrEqual(HOLD_START - 0.05);
+    expect(beatProgress(0, "bell")).toBe(0);
+    expect(beatProgress(1, "bell")).toBe(1);
+    expect(beatOn(0.5, "table")).toBe(false);
+    expect(beatOn(1, "table")).toBe(true);
+
+    const root = stage();
+    root.dataset["travel"] = "100";
+    renderDashboardBuild(root, 1);
+    const bellEl = root.querySelector<HTMLElement>('[data-beat="bell"]')!;
+    const tile = root.querySelector<HTMLElement>("[data-beat-add]")!;
+    expect(bellEl.textContent).toBe("4");
+    expect(bellEl.dataset["on"]).toBe("true");
+    expect(tile.textContent).toBe("4");
+    renderDashboardBuild(root, 0.8);
+    expect(bellEl.textContent).toBe("3");
+    expect(bellEl.dataset["on"]).toBe("false");
+    expect(bellEl.style.getPropertyValue("--beat")).toBe("0");
+    expect(tile.textContent).toBe("3");
+  });
+
+  it("gives every chapter an accurate caption that links to an existing public page", () => {
+    for (const chapter of CHAPTERS) {
+      const caption = CHAPTER_CAPTIONS[chapter.id];
+      expect(caption, chapter.id).toBeDefined();
+      expect(caption!.title.length).toBeGreaterThan(0);
+      expect(caption!.href.startsWith("/")).toBe(true);
+      const route = caption!.href.split("#")[0]!.replace(/^\//, "");
+      expect(existsSync(join(process.cwd(), "src/app", route, "page.tsx")), caption!.href).toBe(
+        true
+      );
+    }
+    expect(Object.keys(CHAPTER_CAPTIONS).sort()).toEqual(CHAPTERS.map((c) => c.id).sort());
+  });
+
+  it("flips a quiet table to active for the new order", () => {
+    const table = REPLICA_TABLES.find((t) => t.id === REPLICA_NEW_ORDER.tableId)!;
+    expect(table.active).toBe(0);
+    expect(table.unpaid).toBe(0);
   });
 });

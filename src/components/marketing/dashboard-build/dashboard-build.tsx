@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, type ReactNode } from "react";
+import { ArrowRight } from "lucide-react";
+import { CHAPTER_CAPTIONS } from "./dashboard-build-fixture";
 import {
   CHAPTERS,
   chapterAt,
@@ -26,8 +29,8 @@ import "./dashboard-build.css";
 /**
  * Pinned, scroll-assembled dashboard. The sidebar, top bar, hero, KPI row, priorities and outlet
  * health are faithful replicas of the real workspace (real class names, nav model, icons and
- * artwork). Only the service-requests panel is still a labelled PLACEHOLDER; the new-order arrival
- * beat (bell and toast) is a later slice. Marketing fixture: no API calls, no auth, no tenant data.
+ * artwork). Captions beside it carry the explanatory copy and links, because the stage itself is a
+ * non-interactive picture. Marketing fixture: no API calls, no auth, no tenant data.
  */
 
 export function DashboardBuild(): ReactNode {
@@ -150,6 +153,20 @@ export function DashboardBuild(): ReactNode {
               <ReplicaBottomBar />
             </div>
           </div>
+        </div>
+        <div className="db__captions">
+          {CHAPTERS.map((chapter) => {
+            const caption = CHAPTER_CAPTIONS[chapter.id]!;
+            return (
+              <div key={chapter.id} className="db__caption" data-for={chapter.id}>
+                <strong>{caption.title}</strong>
+                <span>{caption.body}</span>
+                <Link href={caption.href}>
+                  {caption.cta} <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              </div>
+            );
+          })}
         </div>
         <nav className="db__rail" aria-label="Dashboard build chapters">
           {CHAPTERS.map((chapter) => (

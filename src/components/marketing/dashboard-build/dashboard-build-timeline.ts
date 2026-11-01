@@ -36,7 +36,7 @@ export type PieceId =
   | "health"
   | "pulse"
   | "floor"
-  | "order";
+  | "requests";
 
 export type Piece = {
   id: PieceId;
@@ -71,7 +71,7 @@ export const PIECES: readonly Piece[] = [
   { id: "pulse", start: 0.6, end: 0.72, from: { x: 80, y: 70, z: 100, rotateY: 10 } },
   { id: "health", start: 0.7, end: 0.84, from: { x: 0, y: 90, z: 120, rotateY: 0 } },
   { id: "floor", start: 0.78, end: 0.88, from: { x: 60, y: 90, z: 120, rotateY: 0 } },
-  { id: "order", start: 0.84, end: 0.9, from: { x: 120, y: -40, z: 220, rotateY: -8 } },
+  { id: "requests", start: 0.8, end: 0.9, from: { x: 80, y: 90, z: 120, rotateY: -8 } },
 ];
 
 export type Chapter = { id: string; label: string; at: number };
@@ -84,6 +84,20 @@ export const CHAPTERS: readonly Chapter[] = [
   { id: "health", label: "Outlet health", at: 0.86 },
   { id: "live-service", label: "Live service", at: 0.9 },
 ];
+
+/**
+ * The new-order beat, told the way the product tells it: a new order lands on a quiet table, the
+ * Service Dispatch "Awaiting acceptance" tile goes up by one, and the bell badge counts one more.
+ * (The product has no order toast, so none is invented.) Each beat is a short scroll window; the
+ * dispatch beat fires while the returning camera passes the Dispatch panel, the bell beat once the
+ * camera is home.
+ */
+export const BEATS = {
+  table: [0.86, 0.89],
+  dispatch: [0.95, 0.965],
+  bell: [0.985, 0.998],
+} as const;
+export type BeatId = keyof typeof BEATS;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -185,6 +199,15 @@ export function cameraStyle(p: number, travel: number) {
   return { transform: offset === 0 ? "none" : `translate3d(0, ${round(-offset)}px, 0)` };
 }
 
+/** 0 before the beat, 1 after, eased in between. */
+export function beatProgress(p: number, id: BeatId) {
+  const [start, end] = BEATS[id];
+  return rangeProgress(p, start, end);
+}
+
+/** A beat has "happened" once it is more than half way through. */
+export const beatOn = (p: number, id: BeatId) => beatProgress(p, id) >= 0.5;
+
 /** Count-up for a number that belongs to a piece; reverses when the user scrolls back. */
 export function countValue(p: number, piece: Piece, target: number) {
   return Math.round(
@@ -210,6 +233,8 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
     if (camera.style.transform !== view.transform) camera.style.transform = view.transform;
   }
 
+  renderBeats(stage, value);
+
   for (const element of stage.querySelectorAll<HTMLElement>("[data-piece]")) {
     const piece = PIECE_BY_ID.get(element.dataset["piece"] as PieceId);
     if (!piece) continue;
@@ -229,12 +254,38 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
     }
 
     for (const counter of element.querySelectorAll<HTMLElement>("[data-count-to]")) {
-      const text = String(countValue(value, piece, Number(counter.dataset["countTo"])));
+      // A counter can also carry a beat that adds one (the Dispatch "Awaiting acceptance" tile).
+      const beat = counter.dataset["beatAdd"] as BeatId | undefined;
+      const extra = beat && beatOn(value, beat) ? 1 : 0;
+      const text = String(countValue(value, piece, Number(counter.dataset["countTo"])) + extra);
       if (counter.textContent !== text) counter.textContent = text;
     }
     for (const bar of element.querySelectorAll<HTMLProgressElement>("progress[data-progress-to]")) {
       const next = countValue(value, piece, Number(bar.dataset["progressTo"]));
       if (bar.value !== next) bar.value = next;
+    }
+  }
+}
+
+/**
+ * `[data-beat="id"]` elements get `--beat` (0..1, for CSS pulses) and `data-on`. When they also have
+ * `data-beat-from`/`data-beat-to` their text switches at the half-way point.
+ */
+function renderBeats(stage: HTMLElement, p: number) {
+  for (const element of stage.querySelectorAll<HTMLElement>("[data-beat]")) {
+    const id = element.dataset["beat"] as BeatId;
+    if (!(id in BEATS)) continue;
+    const progress = beatProgress(p, id);
+    const on = progress >= 0.5;
+    const css = round(progress);
+    if (element.style.getPropertyValue("--beat") !== css) element.style.setProperty("--beat", css);
+    const state = on ? "true" : "false";
+    if (element.dataset["on"] !== state) element.dataset["on"] = state;
+    const from = element.dataset["beatFrom"];
+    const to = element.dataset["beatTo"];
+    if (from !== undefined && to !== undefined) {
+      const text = on ? to : from;
+      if (element.textContent !== text) element.textContent = text;
     }
   }
 }
