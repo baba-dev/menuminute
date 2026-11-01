@@ -68,3 +68,5 @@ the same effect and can move to it later (not done here to keep this change scop
   axe WCAG 2 A/AA, reduced motion.
 - Sections 1 to 3 specs still pass. `tsc --noEmit`, eslint and prettier are clean for the changed files.
   The full `next build` needs real production configuration and was not run here; CI covers it.
+
+Section 5, [the trust section](home-v2-trust.md), follows it.
