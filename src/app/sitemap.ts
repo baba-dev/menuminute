@@ -47,7 +47,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   staticRoutes.push({ url: BASE_URL + "/solutions", changeFrequency: "monthly", priority: 0.85 });
   for (const solution of industrySolutions) {
-    staticRoutes.push({ url: BASE_URL + "/solutions/" + solution.slug, changeFrequency: "monthly", priority: 0.8 });
+    staticRoutes.push({
+      url: BASE_URL + "/solutions/" + solution.slug,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    });
   }
 
   // Help center hubs

@@ -31,7 +31,9 @@ describe("industry solutions", () => {
       expect(solution.steps).toHaveLength(3);
       expect(solution.facts).toHaveLength(3);
       expect(solution.faqs).toHaveLength(3);
-      expect(solution.premiumNote).toMatch(/(separately|not automatic|does not|activation|require)/i);
+      expect(solution.premiumNote).toMatch(
+        /(separately|not automatic|does not|activation|require)/i
+      );
       for (const feature of solution.needs) expect(feature.featurePath).toMatch(/^\//);
       for (const faq of solution.faqs) {
         expect(faq.question.length).toBeGreaterThan(15);
@@ -61,7 +63,10 @@ describe("industry solutions", () => {
   it("has canonical URLs and single sitemap entries without duplicates", () => {
     const urls = sitemap().map(({ url }) => url);
     expect(new Set(urls).size).toBe(urls.length);
-    for (const path of ["/solutions", ...industrySolutions.map((solution) => "/solutions/" + solution.slug)]) {
+    for (const path of [
+      "/solutions",
+      ...industrySolutions.map((solution) => "/solutions/" + solution.slug),
+    ]) {
       const url = "https://food.bababuilds.com" + path;
       expect(urls.filter((entry) => entry === url)).toHaveLength(1);
     }
@@ -83,15 +88,21 @@ describe("industry solutions", () => {
 
   it("does not advertise premium ordering or kitchen as automatically active", () => {
     const copy = industrySolutions
-      .map((solution) => [
-        solution.intro,
-        solution.premiumNote,
-        ...solution.needs.map((feature) => feature.detail),
-        ...solution.scenario.stages.map((stage) => stage.detail),
-      ].join(" "))
+      .map((solution) =>
+        [
+          solution.intro,
+          solution.premiumNote,
+          ...solution.needs.map((feature) => feature.detail),
+          ...solution.scenario.stages.map((stage) => stage.detail),
+        ].join(" ")
+      )
       .join(" ");
     expect(copy).toMatch(/approved|activation|activated|eligible|separate/i);
-    expect(industrySolutionBySlug("cloud-kitchens")?.premiumNote).toMatch(/not an automatic integration/i);
-    expect(industrySolutionBySlug("restaurants")?.premiumNote).toMatch(/do not automatically include/i);
+    expect(industrySolutionBySlug("cloud-kitchens")?.premiumNote).toMatch(
+      /not an automatic integration/i
+    );
+    expect(industrySolutionBySlug("restaurants")?.premiumNote).toMatch(
+      /do not automatically include/i
+    );
   });
 });
