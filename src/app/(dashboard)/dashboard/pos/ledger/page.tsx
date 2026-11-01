@@ -25,9 +25,7 @@ export default async function Page({
 }) {
   const requested = (await searchParams).refundSale;
   const initialSaleId =
-    typeof requested === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(requested)
-      ? requested
-      : null;
+    typeof requested === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(requested) ? requested : null;
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const actor = { userId: session.user.id, sessionId: session.session.id };
