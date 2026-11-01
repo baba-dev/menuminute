@@ -9,7 +9,10 @@
  */
 
 /** Scroll distance of the pinned section, in viewport heights (stage height included). */
-export const SCROLL_LENGTH_VH = { desktop: 500, mobile: 400 } as const;
+export const SCROLL_LENGTH_VH = { desktop: 600, mobile: 450 } as const;
+
+/** Height of the sticky homepage nav above the pinned stage (the nav's `h-20`). */
+export const NAV_PX = 80;
 
 /** From here to 1 the finished dashboard holds still so it can be read and clicked. */
 export const HOLD_START = 0.9;
@@ -34,9 +37,10 @@ export type PieceId =
   | "kpi-6"
   | "priorities"
   | "health"
-  | "pulse"
+  | "dispatch"
   | "floor"
-  | "requests";
+  | "requests"
+  | "today";
 
 export type Piece = {
   id: PieceId;
@@ -67,11 +71,12 @@ export const PIECES: readonly Piece[] = [
   kpi(3, 60, 100),
   kpi(4, 100, 90),
   kpi(5, 140, 100),
-  { id: "priorities", start: 0.56, end: 0.7, from: { x: -80, y: 70, z: 100, rotateY: -10 } },
-  { id: "pulse", start: 0.6, end: 0.72, from: { x: 80, y: 70, z: 100, rotateY: 10 } },
-  { id: "health", start: 0.7, end: 0.84, from: { x: 0, y: 90, z: 120, rotateY: 0 } },
-  { id: "floor", start: 0.78, end: 0.88, from: { x: 60, y: 90, z: 120, rotateY: 0 } },
-  { id: "requests", start: 0.8, end: 0.9, from: { x: 80, y: 90, z: 120, rotateY: -8 } },
+  { id: "priorities", start: 0.52, end: 0.64, from: { x: -80, y: 70, z: 100, rotateY: -10 } },
+  { id: "dispatch", start: 0.55, end: 0.66, from: { x: 80, y: 70, z: 100, rotateY: 10 } },
+  { id: "health", start: 0.64, end: 0.74, from: { x: 0, y: 90, z: 120, rotateY: 0 } },
+  { id: "floor", start: 0.72, end: 0.84, from: { x: -60, y: 90, z: 120, rotateY: 6 } },
+  { id: "requests", start: 0.76, end: 0.85, from: { x: 80, y: 90, z: 120, rotateY: -8 } },
+  { id: "today", start: 0.8, end: 0.89, from: { x: 80, y: 110, z: 140, rotateY: -8 } },
 ];
 
 export type Chapter = { id: string; label: string; at: number };
@@ -79,9 +84,9 @@ export type Chapter = { id: string; label: string; at: number };
 /** Rail entries. `at` is the progress a click scrolls to, just after the chapter completes. */
 export const CHAPTERS: readonly Chapter[] = [
   { id: "navigate", label: "Navigate", at: 0.22 },
-  { id: "overview", label: "Overview", at: 0.52 },
-  { id: "priorities", label: "Priorities", at: 0.7 },
-  { id: "health", label: "Outlet health", at: 0.86 },
+  { id: "overview", label: "Overview", at: 0.5 },
+  { id: "priorities", label: "Priorities", at: 0.64 },
+  { id: "health", label: "Outlet health", at: 0.74 },
   { id: "live-service", label: "Live service", at: 0.9 },
 ];
 
@@ -121,6 +126,11 @@ export function scrollProgress(top: number, height: number, viewport: number) {
   const travel = height - viewport;
   if (travel <= 0) return 1;
   return clamp01(-top / travel);
+}
+
+/** Progress of the pinned section when a sticky nav of `nav` px sits above the stage. */
+export function pinnedProgress(top: number, height: number, viewport: number, nav = NAV_PX) {
+  return scrollProgress(top - nav, height, viewport - nav);
 }
 
 /**
@@ -188,7 +198,7 @@ export function staggerStyle(p: number, piece: Piece, index: number, count: numb
  * the top at the very end.
  */
 export function cameraFraction(p: number) {
-  const down = 0.45 * rangeProgress(p, 0.5, 0.66) + 0.55 * rangeProgress(p, 0.66, 0.88);
+  const down = 0.4 * rangeProgress(p, 0.46, 0.62) + 0.6 * rangeProgress(p, 0.62, 0.88);
   // Once everything is built, glide back to the top so the held frame is the hero and KPIs.
   return down * (1 - rangeProgress(p, CAMERA_RETURN_START, 1));
 }
@@ -198,6 +208,12 @@ export function cameraStyle(p: number, travel: number) {
   const offset = Math.max(0, travel) * cameraFraction(p);
   return { transform: offset === 0 ? "none" : `translate3d(0, ${round(-offset)}px, 0)` };
 }
+
+/** The "scroll to build" cue: fully visible at the top, gone after the first few percent. */
+export const cueOpacity = (p: number) => 1 - rangeProgress(p, 0, 0.05);
+
+/** A faint wireframe of the page-to-be: visible at the top, handed over to the real pieces by 0.14. */
+export const ghostOpacity = (p: number) => 1 - rangeProgress(p, 0.02, 0.14);
 
 /** 0 before the beat, 1 after, eased in between. */
 export function beatProgress(p: number, id: BeatId) {
@@ -215,6 +231,19 @@ export function countValue(p: number, piece: Piece, target: number) {
   );
 }
 
+/** Formatters for counters whose text is not a plain integer (set by the component that renders them). */
+export const countFormats = new WeakMap<HTMLElement, (value: number) => string>();
+
+const autoStaggerCache = new WeakMap<HTMLElement, HTMLElement[]>();
+function autoStaggerItems(root: HTMLElement, selector: string) {
+  let items = autoStaggerCache.get(root);
+  if (!items || items.some((item) => !root.contains(item))) {
+    items = [...root.querySelectorAll<HTMLElement>(selector)];
+    autoStaggerCache.set(root, items);
+  }
+  return items;
+}
+
 const PIECE_BY_ID = new Map<PieceId, Piece>(PIECES.map((piece) => [piece.id, piece]));
 export const pieceById = (id: PieceId) => PIECE_BY_ID.get(id)!;
 
@@ -227,6 +256,11 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
   const frame = stageStyle(value);
   if (stage.style.transform !== frame.transform) stage.style.transform = frame.transform;
 
+  const ghost = stage.querySelector<HTMLElement>("[data-ghost]");
+  if (ghost) {
+    const opacity = round(ghostOpacity(value));
+    if (ghost.style.opacity !== opacity) ghost.style.opacity = opacity;
+  }
   const camera = stage.querySelector<HTMLElement>("[data-camera]");
   if (camera) {
     const view = cameraStyle(value, Number(stage.dataset["travel"]) || 0);
@@ -242,6 +276,17 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
     if (element.style.transform !== style.transform) element.style.transform = style.transform;
     if (element.style.opacity !== style.opacity) element.style.opacity = style.opacity;
 
+    // Tiles inside a shared product view cannot carry `data-stagger`, so the piece names a selector.
+    const auto = element.dataset["staggerAuto"];
+    if (auto) {
+      const items = autoStaggerItems(element, auto);
+      items.forEach((item, index) => {
+        const itemStyle = staggerStyle(value, piece, index, items.length);
+        if (item.style.transform !== itemStyle.transform)
+          item.style.transform = itemStyle.transform;
+        if (item.style.opacity !== itemStyle.opacity) item.style.opacity = itemStyle.opacity;
+      });
+    }
     for (const item of element.querySelectorAll<HTMLElement>("[data-stagger]")) {
       const itemStyle = staggerStyle(
         value,
@@ -257,7 +302,9 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
       // A counter can also carry a beat that adds one (the Dispatch "Awaiting acceptance" tile).
       const beat = counter.dataset["beatAdd"] as BeatId | undefined;
       const extra = beat && beatOn(value, beat) ? 1 : 0;
-      const text = String(countValue(value, piece, Number(counter.dataset["countTo"])) + extra);
+      const count = countValue(value, piece, Number(counter.dataset["countTo"])) + extra;
+      // Figures inside shared product views (money) register their own formatter.
+      const text = (countFormats.get(counter) ?? String)(count);
       if (counter.textContent !== text) counter.textContent = text;
     }
     for (const bar of element.querySelectorAll<HTMLProgressElement>("progress[data-progress-to]")) {

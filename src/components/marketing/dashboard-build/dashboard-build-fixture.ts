@@ -11,6 +11,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getServicePeriodText } from "@/lib/service-period";
+import type { TodayPulse } from "@/modules/dashboard/today-pulse";
+import type {
+  FloorChair,
+  FloorOverview,
+  FloorTableOverview,
+  TableShape,
+} from "@/modules/hospitality/floor-contracts";
+import type { TableDue } from "@/modules/hospitality/floor-glance";
 import type { DashboardNavigation } from "@/modules/menu-product/dashboard-data";
 import type { PieceId } from "./dashboard-build-timeline";
 
@@ -171,31 +179,209 @@ export const REPLICA_DISPATCH = {
   ],
 } as const;
 
-export type ReplicaTable = {
-  id: string;
-  number: string;
-  /** The demo baseline's table labels (src/modules/demo/baseline.ts). */
-  label: string;
+/**
+ * The demo outlet's 12 tables (labels and capacities from `src/modules/demo/baseline.ts`) as the
+ * product's own `FloorOverview`, so the shared floor view renders them exactly as the live
+ * dashboard would. Shapes, sections, seated guests and order activity are sample data.
+ */
+type TableSpec = {
+  n: number;
+  name: string;
+  shape: TableShape;
+  section: 0 | 1 | 2;
+  chairs: number;
+  taken: number;
   active: number;
   unpaid: number;
-  /** Pre-formatted (INR) so server and client render the same text. */
-  due?: string;
+  duePaise?: number;
 };
 
-export const REPLICA_TABLES: readonly ReplicaTable[] = [
-  { id: "1", number: "1", label: "Table 1", active: 0, unpaid: 0 },
-  { id: "2", number: "2", label: "Table 2", active: 1, unpaid: 0 },
-  { id: "3", number: "3", label: "Table 3", active: 0, unpaid: 0 },
-  { id: "4", number: "4", label: "Table 4", active: 0, unpaid: 1, due: "₹1,240.00" },
-  { id: "5", number: "5", label: "Table 5", active: 2, unpaid: 1, due: "₹2,015.00" },
-  { id: "6", number: "6", label: "Table 6", active: 0, unpaid: 0 },
-  { id: "7", number: "7", label: "Table 7", active: 1, unpaid: 0 },
-  { id: "8", number: "8", label: "Table 8", active: 0, unpaid: 0 },
-  { id: "9", number: "9", label: "Window booth", active: 1, unpaid: 0 },
-  { id: "10", number: "10", label: "Chef's counter", active: 0, unpaid: 1, due: "₹2,380.00" },
-  { id: "11", number: "11", label: "Garden terrace", active: 0, unpaid: 0 },
-  { id: "12", number: "12", label: "Private dining", active: 3, unpaid: 0 },
+const FLOOR_SECTIONS: FloorOverview["sections"] = [
+  { id: "sec-main", name: "Main hall", color: "#e0703a", sortOrder: 0 },
+  { id: "sec-window", name: "Window & counter", color: "#4a8f6b", sortOrder: 1 },
+  { id: "sec-garden", name: "Garden & private", color: "#8a6bbf", sortOrder: 2 },
 ];
+
+const TABLE_SPECS: readonly TableSpec[] = [
+  { n: 1, name: "Table 1", shape: "round", section: 0, chairs: 2, taken: 0, active: 0, unpaid: 0 },
+  { n: 2, name: "Table 2", shape: "round", section: 0, chairs: 2, taken: 2, active: 1, unpaid: 0 },
+  { n: 3, name: "Table 3", shape: "round", section: 0, chairs: 2, taken: 0, active: 0, unpaid: 0 },
+  {
+    n: 4,
+    name: "Table 4",
+    shape: "round",
+    section: 0,
+    chairs: 2,
+    taken: 1,
+    active: 0,
+    unpaid: 1,
+    duePaise: 124000,
+  },
+  {
+    n: 5,
+    name: "Table 5",
+    shape: "square",
+    section: 0,
+    chairs: 4,
+    taken: 3,
+    active: 1,
+    unpaid: 1,
+    duePaise: 201500,
+  },
+  { n: 6, name: "Table 6", shape: "square", section: 0, chairs: 4, taken: 0, active: 0, unpaid: 0 },
+  { n: 7, name: "Table 7", shape: "square", section: 0, chairs: 4, taken: 4, active: 1, unpaid: 0 },
+  { n: 8, name: "Table 8", shape: "square", section: 0, chairs: 4, taken: 0, active: 0, unpaid: 0 },
+  {
+    n: 9,
+    name: "Window booth",
+    shape: "booth",
+    section: 1,
+    chairs: 6,
+    taken: 4,
+    active: 1,
+    unpaid: 0,
+  },
+  {
+    n: 10,
+    name: "Chef's counter",
+    shape: "rectangle",
+    section: 1,
+    chairs: 4,
+    taken: 2,
+    active: 0,
+    unpaid: 1,
+    duePaise: 238000,
+  },
+  {
+    n: 11,
+    name: "Garden terrace",
+    shape: "rectangle",
+    section: 2,
+    chairs: 6,
+    taken: 0,
+    active: 0,
+    unpaid: 0,
+  },
+  {
+    n: 12,
+    name: "Private dining",
+    shape: "rectangle",
+    section: 2,
+    chairs: 10,
+    taken: 6,
+    active: 2,
+    unpaid: 0,
+  },
+];
+
+/** The new order lands on this (seated-nobody) table. Order activity never changes who is seated. */
+export const REPLICA_NEW_ORDER_TABLE = "11";
+
+/** Order activity is context only, so the new order changes `activeOrders` and nothing else. */
+export function buildReplicaFloor(newOrder: boolean): {
+  overview: FloorOverview;
+  dueByTable: Record<string, TableDue>;
+} {
+  const tables: FloorTableOverview[] = TABLE_SPECS.map((spec) => {
+    const id = String(spec.n);
+    const chairs: FloorChair[] = Array.from({ length: spec.chairs }, (_, i) => ({
+      id: `${id}-c${i + 1}`,
+      tableId: id,
+      label: null,
+      kind: "standard",
+      occupied: i < spec.taken,
+      occupiedAt: null,
+      version: 0,
+    }));
+    return {
+      id,
+      displayNumber: spec.n,
+      name: spec.name,
+      shape: spec.shape,
+      sectionId: FLOOR_SECTIONS[spec.section]!.id,
+      chairs,
+      maxOccupancy: spec.chairs,
+      currentOccupancy: spec.taken,
+      state: spec.taken === 0 ? "empty" : spec.taken >= spec.chairs ? "full" : "partial",
+      activeOrders: spec.active + (newOrder && id === REPLICA_NEW_ORDER_TABLE ? 1 : 0),
+      unpaidOrders: spec.unpaid,
+      nextReservation: null,
+      qrCode: null,
+      stale: false,
+    };
+  });
+  const dueByTable: Record<string, TableDue> = {};
+  for (const spec of TABLE_SPECS) {
+    if (!spec.duePaise) continue;
+    dueByTable[String(spec.n)] = {
+      dueMinor: String(spec.duePaise),
+      latestOrderId: `order-${spec.n}`,
+      unpaidOrders: spec.unpaid,
+    };
+  }
+  return {
+    overview: {
+      sections: FLOOR_SECTIONS,
+      tables,
+      unassignedChairs: [],
+      totals: {
+        tables: tables.length,
+        chairs: tables.reduce((n, t) => n + t.maxOccupancy, 0),
+        maxOccupancy: tables.reduce((n, t) => n + t.maxOccupancy, 0),
+        currentOccupancy: tables.reduce((n, t) => n + t.currentOccupancy, 0),
+        sections: FLOOR_SECTIONS.length,
+        tablesOccupied: tables.filter((t) => t.currentOccupancy > 0).length,
+      },
+      nextReservation: null,
+    },
+    dueByTable,
+  };
+}
+
+/** Deterministic INR formatting, so server and client render identical text. */
+export const REPLICA_LOCALE = "en-IN";
+const rupees = new Intl.NumberFormat(REPLICA_LOCALE, { style: "currency", currency: "INR" });
+export const formatReplicaMinor = (minor: string) => rupees.format(Number(minor) / 100);
+
+/**
+ * Today's pulse sample, shaped like the real read model (`TodayPulse`). Top sellers are real demo
+ * dishes and prices; the quantities, sales and guest counts are sample figures. Open orders match
+ * the Service Dispatch tiles (3 awaiting + 2 in preparation + 1 ready), and the new order adds one.
+ */
+export function buildReplicaPulse(newOrder: boolean): TodayPulse {
+  const newOrderMinor = 41200;
+  const hourlyMinor = Array.from({ length: 24 }, () => 0);
+  hourlyMinor[9] = 186400;
+  hourlyMinor[10] = 412000;
+  hourlyMinor[11] = 628000;
+  hourlyMinor[12] = 637600 + (newOrder ? newOrderMinor : 0);
+  const grossMinor = hourlyMinor.reduce((n, v) => n + v, 0);
+  const orders = 24 + (newOrder ? 1 : 0);
+  return {
+    currency: "INR",
+    hour: 12,
+    sales: {
+      grossMinor,
+      orders,
+      aovMinor: Math.round(grossMinor / orders),
+      vsYesterdayPct: 12,
+      hourlyMinor,
+    },
+    topSellers: [
+      {
+        dishId: "MM-CORE-butter-chicken",
+        name: "Butter Chicken",
+        quantity: 9,
+        revenueMinor: 359100,
+      },
+      { dishId: "MM-CORE-biryani", name: "Biryani", quantity: 7, revenueMinor: 195300 },
+      { dishId: "MM-IN-045", name: "Chettinad Chicken", quantity: 6, revenueMinor: 245400 },
+      { dishId: "MM-IN-013", name: "Amritsari Fish", quantity: 5, revenueMinor: 179500 },
+    ],
+    wait: { openOrders: 6 + (newOrder ? 1 : 0), averageMinutes: 11, oldestMinutes: 18 },
+    guests: { newGuests: 5, returningGuests: 7, ordersWithoutContact: 3 },
+  };
+}
 
 /** Sample guest requests for "At your service" (shape of `GuestServiceRequest`). */
 export const REPLICA_REQUESTS: readonly {
@@ -220,16 +406,6 @@ export const REPLICA_REQUESTS: readonly {
     time: "11:58 AM",
   },
 ];
-
-/**
- * The new-order beat. The floor card flips from `before` to `after`; the Dispatch tile and the bell
- * badge each count one more (their "before" numbers are the figures above).
- */
-export const REPLICA_NEW_ORDER = {
-  tableId: "11",
-  before: { status: "No open tickets", counts: "0 active orders · 0 unpaid" },
-  after: { status: "Order active", counts: "1 active orders · 0 unpaid" },
-} as const;
 
 export type ChapterCaption = { title: string; body: string; href: string; cta: string };
 
@@ -265,7 +441,7 @@ export const CHAPTER_CAPTIONS: Record<string, ChapterCaption> = {
   },
   "live-service": {
     title: "Live service, in one view",
-    body: "The Service Dispatch, dining floor and guest requests refresh on a short timer. Order activity is not a physical occupancy sensor.",
+    body: "The Service Dispatch, dining floor, guest requests and today’s pulse refresh on a short timer. Order activity is not a physical occupancy sensor.",
     href: "/demo",
     cta: "Try the live demo",
   },

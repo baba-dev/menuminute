@@ -4,9 +4,13 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CHAPTER_CAPTIONS,
-  REPLICA_NEW_ORDER,
-  REPLICA_TABLES,
+  REPLICA_NEW_ORDER_TABLE,
+  buildReplicaFloor,
+  buildReplicaPulse,
 } from "@/components/marketing/dashboard-build/dashboard-build-fixture";
+import { dashboardWidgetIds } from "@/modules/dashboard/layout";
+import { REPLICA_WIDGETS } from "@/components/marketing/dashboard-build/dashboard-replica";
+import { buildFloorGlance } from "@/modules/hospitality/floor-glance";
 import {
   CHAPTERS,
   BEATS,
@@ -36,7 +40,8 @@ const stage = () => {
     el.dataset["piece"] = piece.id;
     if (piece.id === "topbar")
       el.innerHTML = '<b data-beat="bell" data-beat-from="3" data-beat-to="4">4</b>';
-    if (piece.id === "pulse") el.innerHTML = '<i data-count-to="3" data-beat-add="dispatch">3</i>';
+    if (piece.id === "dispatch")
+      el.innerHTML = '<i data-count-to="3" data-beat-add="dispatch">3</i>';
     if (piece.id === "kpi-3") el.innerHTML = '<span data-count-to="236">0</span>';
     if (piece.id === "health")
       el.innerHTML =
@@ -222,9 +227,30 @@ describe("dashboard build timeline", () => {
     expect(Object.keys(CHAPTER_CAPTIONS).sort()).toEqual(CHAPTERS.map((c) => c.id).sort());
   });
 
-  it("flips a quiet table to active for the new order", () => {
-    const table = REPLICA_TABLES.find((t) => t.id === REPLICA_NEW_ORDER.tableId)!;
-    expect(table.active).toBe(0);
-    expect(table.unpaid).toBe(0);
+  it("builds the demo floor as the product's own overview, and the new order only adds an order", () => {
+    const before = buildReplicaFloor(false);
+    const after = buildReplicaFloor(true);
+    expect(before.overview.tables).toHaveLength(12);
+    const table = (floor: typeof before) =>
+      floor.overview.tables.find((t) => t.id === REPLICA_NEW_ORDER_TABLE)!;
+    expect(table(before).activeOrders).toBe(0);
+    expect(table(after).activeOrders).toBe(1);
+    // Order activity never changes who is seated.
+    expect(table(after).currentOccupancy).toBe(table(before).currentOccupancy);
+    expect(after.overview.totals).toEqual(before.overview.totals);
+    // Open orders agree with the Service Dispatch tiles (3 + 2 + 1) before, and one more after.
+    const open = (floor: typeof before) => buildFloorGlance(floor.overview, null).openOrders;
+    expect(open(before)).toBe(6);
+    expect(open(after)).toBe(7);
+    // The pulse agrees with the floor.
+    expect(buildReplicaPulse(false).wait.openOrders).toBe(6);
+    expect(buildReplicaPulse(true).wait.openOrders).toBe(7);
+    const pulse = buildReplicaPulse(false);
+    expect(pulse.sales.hourlyMinor.reduce((n, v) => n + v, 0)).toBe(pulse.sales.grossMinor);
+  });
+
+  it("replicates every dashboard widget, in the product's order", () => {
+    // Fails when a widget is added to or reordered in the product until the replica follows.
+    expect([...REPLICA_WIDGETS]).toEqual([...dashboardWidgetIds]);
   });
 });
