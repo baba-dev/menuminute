@@ -140,7 +140,9 @@ export default function PrivacyPage() {
               Clear information about what MenuMinute handles, why it matters, and the choices
               available to you.
             </p>
-            <p className="privacy-review-status">Privacy Policy · Effective {PRIVACY_EFFECTIVE_LABEL}</p>
+            <p className="privacy-review-status">
+              Privacy Policy · Effective {PRIVACY_EFFECTIVE_LABEL}
+            </p>
             <div className="privacy-hero-meta">
               <span>Last updated: {PRIVACY_EFFECTIVE_LABEL}</span>
               <span>Operator: BabaBuilds · India</span>
