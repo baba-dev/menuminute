@@ -9,10 +9,8 @@ export async function floorRequest<T = unknown>(
 ): Promise<T> {
   const response = await fetch(`/api/floor${path}`, {
     method,
-    headers: {
-      "x-outlet-id": outletId,
-      ...(body === undefined ? {} : { "content-type": "application/json" }),
-    },
+    // The server rejects any mutation without a JSON content type, including body-less DELETEs.
+    headers: { "x-outlet-id": outletId, "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
   });
