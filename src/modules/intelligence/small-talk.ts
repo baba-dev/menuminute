@@ -80,7 +80,7 @@ export function smallTalkReply(
   const allowed = new Set(authorizedTools);
   const lines = CAPABILITIES.filter((c) => allowed.has(c.tool)).map((c) => `- ${c.line}`);
   const menu = lines.length
-    ? `Here's what I can help with:\n\n${lines.join("\n")}\n- switch between light and dark mode\n\nI can change how this browser looks. Business changes still require your confirmation.`
+    ? `Here's what I can help with:\n\n${lines.join("\n")}\n- switch between light and dark mode\n\nI can change how this browser looks. Business changes always require your confirmation.`
     : "I can switch between light and dark mode, but your account doesn't have access to restaurant information I can look up yet. Ask your account owner to check your permissions.";
   if (GREETING.test(text))
     return {
