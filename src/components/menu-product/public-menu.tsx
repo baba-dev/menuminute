@@ -177,7 +177,17 @@ export function PublicMenu({
           headers: responseEtag.current ? { "if-none-match": responseEtag.current } : {},
         });
         if (stopped || controller.signal.aborted) return;
-        if (r.status === 304) return;
+        if (r.status === 304) {
+          // A successful revalidation clears stale connection notices, but not
+          // cart-change messages or other actionable guest feedback.
+          setStatus((current) =>
+            current.startsWith("Menu updates could not be checked.") ||
+            current.startsWith("You are offline.")
+              ? ""
+              : current
+          );
+          return;
+        }
         if (!r.ok) {
           responseEtag.current = null;
           if (r.status === 404 || r.status === 410) {

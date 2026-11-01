@@ -7,7 +7,8 @@ import type { PublicProduct } from "./service";
  */
 export function publicMenuEtag(data: PublicProduct): string {
   const minute = Math.floor(Date.parse(data.now) / 60_000);
-  const { now: _clock, ...stable } = data;
+  // JSON.stringify omits undefined values; no clock-second churn in this hash.
+  const stable = { ...data, now: undefined };
   const hash = createHash("sha256")
     .update(JSON.stringify([minute, stable]))
     .digest("hex");
