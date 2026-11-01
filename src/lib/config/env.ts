@@ -113,6 +113,8 @@ const envSchema = z
     // Ember provider hub: independent activation from the existing review-only import engine.
     // Independent guest-facing rollout. NVIDIA is the only inference provider for this feature.
     AI_DINING_CONCIERGE_ENABLED: strictBoolean.default(false),
+    // Explicit global mode for all active published guest menus; default remains fail-closed.
+    AI_DINING_CONCIERGE_ALL_OUTLETS: strictBoolean.default(false),
     AI_DINING_CONCIERGE_OUTLET_IDS: rolloutOutletIds,
     AI_ORCHESTRATOR_ENABLED: strictBoolean.default(false),
     AI_ASSISTANT_READ_ONLY_ENABLED: strictBoolean.default(false),
@@ -162,6 +164,24 @@ const envSchema = z
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
+    // Global publication is a deliberate, billable rollout, not an implicit consequence of
+    // setting AI_DINING_CONCIERGE_ENABLED. Refuse to boot in a partially configured state.
+    if (
+      e.AI_DINING_CONCIERGE_ALL_OUTLETS &&
+      e.AI_DINING_CONCIERGE_ENABLED &&
+      (!e.AI_FEATURES_ENABLED ||
+        !e.AI_NVIDIA_ENABLED ||
+        !e.AI_NVIDIA_COMMERCIAL_APPROVED ||
+        !e.NVIDIA_API_KEY ||
+        !e.AI_NVIDIA_MODEL ||
+        !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/i.test(e.AI_NVIDIA_MODEL))
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["AI_DINING_CONCIERGE_ALL_OUTLETS"],
+        message:
+          "Global Concierge needs the Concierge gate, AI master flag, approved NVIDIA provider, API key and valid model",
+      });
     if (
       e.PWA_PUSH_ENABLED &&
       (e.PWA_PUSH_OUTLET_IDS.length === 0 ||
