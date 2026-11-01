@@ -32,6 +32,8 @@ import {
   stationGroups,
   outstandingDishes,
   stationOverview,
+  KITCHEN_OVERDUE_MINUTES,
+  KITCHEN_WAIT_ALERT_MINUTES,
 } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
@@ -65,7 +67,12 @@ function Ticket({
       className={
         "kk-ticket kk-ticket-" +
         work.status +
-        (age !== null && age >= 20 && work.status !== "complete" ? " kk-ticket-aging" : "")
+        (age !== null && age >= KITCHEN_OVERDUE_MINUTES && work.status !== "complete"
+          ? " kk-ticket-aging"
+          : "") +
+        (age !== null && age >= KITCHEN_WAIT_ALERT_MINUTES && work.status === "queued"
+          ? " kk-ticket-waiting"
+          : "")
       }
       aria-label={`Order ${work.orderNumber}: ${work.dishName}`}
     >
@@ -121,7 +128,7 @@ function Ticket({
       )}
       {work.status === "complete" && (
         <div className="flex items-center justify-between gap-2 border-t border-stone-200 pt-2 dark:border-stone-800">
-          <span className="text-xs text-stone-500">Completed · Awaiting expeditor</span>
+          <span className="text-xs text-stone-500">Completed · Awaiting final check</span>
           <RubberStamp text="STATION COMPLETE" variant="complete" />
         </div>
       )}
@@ -277,6 +284,13 @@ export function KitchenBoard({
     [snapshot.stations, snapshot.work, now]
   );
   const allPending = overview.reduce((sum, item) => sum + item.queued + item.preparing, 0);
+  const overdueStations = overview.filter(
+    (item) => item.oldestMinutes !== null && item.oldestMinutes >= KITCHEN_OVERDUE_MINUTES
+  ).length;
+  function openStation(id: string) {
+    setSelected(id);
+    document.getElementById("station-rail")?.scrollIntoView({ block: "start" });
+  }
 
   async function command(url: string, body: unknown) {
     const res = await fetch(url, {
@@ -453,7 +467,11 @@ export function KitchenBoard({
         </div>
       </header>
       <section
-        className={"kk-hero" + (snapshot.enabled ? " kk-hero-live" : "")}
+        className={
+          "kk-hero" +
+          (snapshot.enabled ? " kk-hero-live" : "") +
+          (snapshot.stations.length > 0 ? " kk-hero-has-stations" : "")
+        }
         aria-labelledby="kk-title"
       >
         <div className="kk-hero-content">
@@ -465,8 +483,8 @@ export function KitchenBoard({
               : "Every dish has its place. Every ticket moves with purpose."}
           </p>
           <p className="kk-hero-note">
-            From first fire to final handoff. Your preparation stations, live queue, and
-            expeditor—together on one focused surface.
+            From first fire to final handoff. Your preparation stations, live queue, and final
+            check—together on one focused surface.
           </p>
           <div className="kk-hero-actions">
             <a href="#station-rail" className="kk-hero-primary">
@@ -474,11 +492,57 @@ export function KitchenBoard({
             </a>
             {canManage && (
               <a href="#expeditor" className="kk-hero-outline">
-                Go to expeditor <ClipboardList size={16} aria-hidden="true" />
+                Go to final check <ClipboardList size={16} aria-hidden="true" />
               </a>
             )}
           </div>
         </div>
+        {snapshot.stations.length > 0 && (
+          <aside className="kk-hero-stations" aria-labelledby="kk-stations-title">
+            <div className="kk-hero-stations-head">
+              <div>
+                <span className="kk-eyebrow">LIVE / PREPARATION OVERVIEW</span>
+                <h2 id="kk-stations-title">Every station in sight.</h2>
+              </div>
+              <span className="kk-overview-total">
+                {allPending} active
+                {overdueStations > 0 ? ` · ${overdueStations} overdue` : ""}
+              </span>
+            </div>
+            <ul className="kk-hero-stations-list">
+              {overview.map((item) => {
+                const overdue =
+                  item.oldestMinutes !== null && item.oldestMinutes >= KITCHEN_OVERDUE_MINUTES;
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      aria-pressed={selected === item.id}
+                      onClick={() => openStation(item.id)}
+                      className={
+                        "kk-hero-station" +
+                        (selected === item.id ? " is-selected" : "") +
+                        (overdue ? " is-overdue" : "")
+                      }
+                    >
+                      <strong>{item.name}</strong>
+                      <span>
+                        {item.queued} to prepare · {item.preparing} cooking · {item.completed} done
+                      </span>
+                      <small>
+                        {item.oldestMinutes === null
+                          ? "All caught up"
+                          : overdue
+                            ? `Overdue · ${item.oldestMinutes} min oldest`
+                            : `Oldest open task · ${item.oldestMinutes} min`}
+                      </small>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        )}
         <div className="kk-pass-art" aria-hidden="true">
           <span className="kk-pass-hanger" />
           <span className="kk-pass-ticket kk-pass-ticket-one" />
@@ -552,42 +616,6 @@ export function KitchenBoard({
             </button>
           </div>
         )}
-        <section className="kk-overview" aria-label="All authorized preparation stations">
-          <div className="kk-overview-heading">
-            <div>
-              <span className="kk-eyebrow">LIVE / PREPARATION OVERVIEW</span>
-              <h2>Every station in sight.</h2>
-              <p>
-                Counts reflect stations you are authorized to view. Incoming orders stay in the
-                attention dock above.
-              </p>
-            </div>
-            <div className="kk-overview-total">{allPending} active station tasks</div>
-          </div>
-          <div className="kk-overview-grid">
-            {overview.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={selected === item.id}
-                onClick={() => setSelected(item.id)}
-                className={"kk-overview-card" + (selected === item.id ? " is-selected" : "")}
-              >
-                <strong>{item.name}</strong>
-                <span>
-                  {item.queued} to prepare · {item.preparing} cooking · {item.completed} done
-                </span>
-                <small>
-                  {item.oldestMinutes === null
-                    ? "All caught up"
-                    : item.oldestMinutes >= 20
-                      ? `Overdue · ${item.oldestMinutes} min oldest`
-                      : `Oldest open task · ${item.oldestMinutes} min`}
-                </small>
-              </button>
-            ))}
-          </div>
-        </section>
         <div className="kk-section-heading kk-station-heading">
           <div>
             <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-amber-400">
@@ -619,7 +647,7 @@ export function KitchenBoard({
             {canManage && (
               <button
                 type="button"
-                aria-current={selected === "all" ? "page" : undefined}
+                aria-pressed={selected === "all"}
                 onClick={() => setSelected("all")}
                 className={"kk-station-tab" + (selected === "all" ? " is-selected" : "")}
               >
@@ -630,13 +658,14 @@ export function KitchenBoard({
               <button
                 type="button"
                 key={s.id}
-                aria-label={s.name}
-                aria-current={station?.id === s.id ? "page" : undefined}
+                aria-pressed={station?.id === s.id}
                 onClick={() => setSelected(s.id)}
                 className={"kk-station-tab" + (station?.id === s.id ? " is-selected" : "")}
               >
                 {s.name}
                 <span>{overview.find((item) => item.id === s.id)?.queued ?? 0} queued</span>
+                {(overview.find((item) => item.id === s.id)?.oldestMinutes ?? 0) >=
+                  KITCHEN_OVERDUE_MINUTES && <em className="kk-tab-overdue">Overdue</em>}
               </button>
             ))}
           </nav>
@@ -659,6 +688,81 @@ export function KitchenBoard({
             </ul>
           </section>
         )}
+        <section aria-label="Station ticket board" className="kk-workspace">
+          <div className="kk-section-heading">
+            <div>
+              <span className="kk-eyebrow">02 / STATION TICKETS</span>
+              <h2>Preparation rail.</h2>
+            </div>
+            <span>
+              {selected === "all"
+                ? "All authorized stations"
+                : (station?.name ?? "Choose a station")}{" "}
+              · oldest ticket first
+            </span>
+          </div>
+          <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
+            {(
+              [
+                { key: "all", label: "All" },
+                { key: "queued", label: "To prepare" },
+                { key: "preparing", label: "Preparing" },
+                { key: "complete", label: "Completed" },
+              ] as const
+            ).map((lane) => (
+              <button
+                type="button"
+                key={lane.key}
+                aria-pressed={mobileLane === lane.key}
+                onClick={() => setMobileLane(lane.key)}
+              >
+                {lane.label}
+                {lane.key !== "all" && <span>{groups[lane.key].length}</span>}
+              </button>
+            ))}
+          </div>
+          <div className="kk-lanes">
+            {lanes.map((lane) => {
+              const Icon = lane.icon;
+              return (
+                <div
+                  key={lane.key}
+                  className={
+                    "kk-lane kk-lane-" +
+                    lane.key +
+                    (mobileLane !== "all" && mobileLane !== lane.key ? " kk-mobile-hidden" : "")
+                  }
+                >
+                  <h3 className="kk-lane-heading">
+                    <span className="kk-lane-label">
+                      <Icon size={20} className="text-orange-600 dark:text-amber-400" />
+                      {lane.title}
+                    </span>
+                    <span className="kk-lane-count">{groups[lane.key].length}</span>
+                  </h3>
+                  <div className="kk-ticket-list">
+                    {groups[lane.key].map((w) => (
+                      <Ticket
+                        key={w.id}
+                        work={w}
+                        stationName={
+                          snapshot.stations.find((entry) => entry.id === w.stationId)?.name ??
+                          "Assigned station"
+                        }
+                        now={now}
+                        busy={busy === w.id}
+                        onAction={action}
+                      />
+                    ))}
+                    {groups[lane.key].length === 0 && (
+                      <p className="kk-lane-empty">No {lane.title.toLowerCase()} items</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
         {canManage && (
           <KitchenExpeditor
             base={base}
@@ -750,85 +854,9 @@ export function KitchenBoard({
               </form>
             </details>
           )}
-        <section aria-label="Station ticket board" className="kk-workspace">
-          <div className="kk-section-heading">
-            <div>
-              <span className="kk-eyebrow">02 / STATION TICKETS</span>
-              <h2>Preparation rail.</h2>
-            </div>
-            <span>
-              {selected === "all"
-                ? "All authorized stations"
-                : (station?.name ?? "Choose a station")}{" "}
-              · oldest ticket first
-            </span>
-          </div>
-          <div className="kk-mobile-lanes" role="group" aria-label="Filter preparation lanes">
-            {(
-              [
-                { key: "all", label: "All" },
-                { key: "queued", label: "To prepare" },
-                { key: "preparing", label: "Preparing" },
-                { key: "complete", label: "Completed" },
-              ] as const
-            ).map((lane) => (
-              <button
-                type="button"
-                key={lane.key}
-                aria-pressed={mobileLane === lane.key}
-                onClick={() => setMobileLane(lane.key)}
-              >
-                {lane.label}
-                {lane.key !== "all" && <span>{groups[lane.key].length}</span>}
-              </button>
-            ))}
-          </div>
-          <div className="kk-lanes">
-            {lanes.map((lane) => {
-              const Icon = lane.icon;
-              return (
-                <div
-                  key={lane.key}
-                  className={
-                    "kk-lane kk-lane-" +
-                    lane.key +
-                    (mobileLane !== "all" && mobileLane !== lane.key ? " kk-mobile-hidden" : "")
-                  }
-                >
-                  <h3 className="kk-lane-heading">
-                    <span className="kk-lane-label">
-                      <Icon size={20} className="text-orange-600 dark:text-amber-400" />
-                      {lane.title}
-                    </span>
-                    <span className="kk-lane-count">{groups[lane.key].length}</span>
-                  </h3>
-                  <div className="kk-ticket-list">
-                    {groups[lane.key].map((w) => (
-                      <Ticket
-                        key={w.id}
-                        work={w}
-                        stationName={
-                          snapshot.stations.find((entry) => entry.id === w.stationId)?.name ??
-                          "Assigned station"
-                        }
-                        now={now}
-                        busy={busy === w.id}
-                        onAction={action}
-                      />
-                    ))}
-                    {groups[lane.key].length === 0 && (
-                      <p className="kk-lane-empty">No {lane.title.toLowerCase()} items</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
         <p className="kk-footnote">
-          Station completion does not mark an order Ready for guests. Only an authorized expeditor
-          can release an eligible, fully completed order. All live actions are verified by the
-          server.
+          Station completion does not mark an order Ready for guests. Only an authorized person can
+          release an order after its Final Check. All live actions are verified by the server.
         </p>
       </div>
       {canManage && (

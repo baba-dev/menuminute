@@ -10,8 +10,6 @@ import { KitchenBoard } from "./kitchen-board";
 import { KitchenIntake } from "./kitchen-intake";
 import { withOutlet } from "@/modules/tenancy/service";
 import { sql } from "drizzle-orm";
-import { KitchenAvailabilityPanel } from "./kitchen-availability-panel";
-import { kitchenAvailableDishes } from "@/modules/hospitality/service";
 import { ForbiddenError } from "@/lib/errors";
 import { env } from "@/lib/config/env";
 import { assertAssistantScope } from "@/modules/intelligence/store";
@@ -80,9 +78,6 @@ export default async function KitchenPage() {
     for (const [id, name] of seen) dishList.push({ id, name });
     dishList.sort((a, b) => a.name.localeCompare(b.name));
   }
-  const availability = await kitchenAvailableDishes(actor, outlet.organizationId, outlet.id).catch(
-    () => []
-  );
   let showEmber = false;
   if (env.AI_ASSISTANT_READ_ONLY_ENABLED) {
     try {
@@ -109,11 +104,6 @@ export default async function KitchenPage() {
           outletName={outlet.name}
         />
       )}
-      <KitchenAvailabilityPanel
-        dishes={availability}
-        organizationId={outlet.organizationId}
-        outletId={outlet.id}
-      />
       {kitchenOperational && (
         <KitchenIntake organizationId={outlet.organizationId} outletId={outlet.id} />
       )}

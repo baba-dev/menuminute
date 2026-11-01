@@ -1,5 +1,10 @@
 import type { KitchenWorkView } from "./service";
 
+/** Minutes after which a ticket is labelled overdue (single source for UI and counts). */
+export const KITCHEN_OVERDUE_MINUTES = 20;
+/** Minutes a queued ticket may wait unstarted before the board draws attention to it. */
+export const KITCHEN_WAIT_ALERT_MINUTES = 5;
+
 /** Only rows returned by the authorized kitchen snapshot are included. These are
  * visible-device metrics, not unsupported claims about the entire organization. */
 export function kitchenPulse(work: readonly KitchenWorkView[]) {

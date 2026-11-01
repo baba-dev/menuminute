@@ -173,7 +173,7 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   await expect(intro).toBeVisible({ timeout: 15000 });
   await intro.getByRole("button", { name: "Close kitchen setup" }).click();
   await expect(intro).toHaveCount(0);
-  const expo = page.getByRole("region", { name: "Expeditor" });
+  const expo = page.getByRole("region", { name: "Final Check & Order Release" });
   await expect(expo.getByText("#1042")).toBeVisible();
   await expect(expo.getByText("0 / 2 station tasks complete")).toBeVisible();
   await expect(expo.getByRole("button", { name: "Waiting for remaining stations" })).toBeDisabled();
@@ -185,10 +185,11 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
     await page.getByRole("button", { name: "Start preparing", exact: true }).click();
     await expect(page.getByRole("button", { name: "Complete item" })).toBeVisible();
     await page.getByRole("button", { name: "Complete item" }).click();
-    await expect(page.getByText("Completed · Awaiting expeditor")).toBeVisible();
+    await expect(page.getByText("Completed · Awaiting final check")).toBeVisible();
   }
   await expect(expo.getByText("2 / 2 station tasks complete")).toBeVisible();
-  await expo.getByRole("button", { name: "Release order as Ready" }).click();
+  await expo.getByRole("button", { name: "Final check, then release" }).click();
+  await expo.getByRole("button", { name: "Checked — release now" }).click();
   await expect(expo.getByText("#1042")).toHaveCount(0);
   const db = new Pool({ connectionString: url, max: 1 });
   try {

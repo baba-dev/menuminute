@@ -78,3 +78,12 @@ were synchronized. The dock displays its own error and blocks stale actions.
   CPU/memory/database/Redis metrics before production release.
 
 No deployment or commercial entitlement is automatically changed by this PR.
+
+## Terminology
+
+The merchant-facing name for the "expeditor" step is **Final Check & Order Release**
+(Indian eateries do not use the term expeditor). Code, SQL functions, permissions and
+older docs keep the `expeditor`/`expo` identifiers; renaming them is out of scope. The
+`/kitchen` page order is: hero with the "Every station in sight" panel, pulse KPIs,
+preparation rail, then Final Check & Order Release. The Fast-Pass 86 panel was removed
+from `/kitchen`; dish availability stays in the dashboard command palette.

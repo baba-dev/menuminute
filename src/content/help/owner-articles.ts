@@ -419,7 +419,7 @@ export const ownerArticles: HelpArticle[] = [
     subtitle:
       "Streamline your kitchen ticket workflow, reduce wait times, and eliminate messy paper order slips.",
     summary:
-      "Kitchen Pro shows incoming kitchen work for each assigned station. Staff complete their own tasks, and an authorized expeditor checks and releases the whole order when all stations finish.",
+      "Kitchen Pro shows incoming kitchen work for each assigned station. Staff complete their own tasks, and an authorized person does the Final Check and releases the whole order when all stations finish.",
     readTimeMinutes: 6,
     difficulty: "Comprehensive",
     lastUpdated: "2026-10-31",
@@ -442,7 +442,7 @@ export const ownerArticles: HelpArticle[] = [
       "Select your kitchen station (e.g., Grill, Fryer, Salad & Cold, Bar, or All).",
       "Watch new orders arrive with an audible chime and clean ticket cards.",
       "Check item modifiers, special guest notes, and real-time elapsed prep timers.",
-      "Start preparation for your station, then mark its tasks complete. The expeditor releases the full order when all stations finish.",
+      "Start preparation for your station, then mark its tasks complete. Final Check & Order Release releases the full order when all stations finish.",
     ],
     visualMockup: {
       type: "kds-ticket",
@@ -458,7 +458,7 @@ export const ownerArticles: HelpArticle[] = [
           "Hot Kitchen / Grill: Steaks, burgers, pizzas, hot entrees.",
           "Cold Station / Pantry: Fresh salads, raw bar, appetizers, desserts.",
           "Bar / Beverage: Cocktails, draft beer, wines, coffee, cold beverages.",
-          "Expo / Expeditor: Shows the complete order across all stations so the kitchen pass coordinator can assemble final plates together.",
+          "Final Check & Order Release: Shows the complete order across all stations so the kitchen pass coordinator can assemble final plates together.",
         ],
         callout: {
           type: "hospitality",
@@ -474,7 +474,7 @@ export const ownerArticles: HelpArticle[] = [
           "Green (< 10 minutes): Fresh ticket, normal prep window.",
           "Amber (10–20 minutes): Approaching target prep threshold.",
           "Red (> 20 minutes): Priority order needing immediate line attention.",
-          "Each station marks its own work complete. Once all assigned stations finish, an authorized expeditor checks the whole order and releases it as Ready.",
+          "Each station marks its own work complete. Once all assigned stations finish, an authorized person checks the whole order (Final Check) and releases it as Ready.",
         ],
       },
     ],
@@ -482,7 +482,7 @@ export const ownerArticles: HelpArticle[] = [
       {
         question: "Can staff at different kitchen stations work on an order at the same time?",
         answer:
-          "Yes! Kitchen Pro synchronizes across all screens in real time. If the grill chef finishes their burger and bumps it, the expeditor screen updates immediately.",
+          "Yes! Kitchen Pro synchronizes across all screens in real time. If the grill chef finishes their burger and bumps it, the Final Check screen updates immediately.",
       },
       {
         question: "Does Kitchen Pro work on affordable Android tablets?",

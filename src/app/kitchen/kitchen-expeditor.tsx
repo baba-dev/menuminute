@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCheck, RefreshCw, ChefHat, AlertTriangle } from "lucide-react";
+import { CheckCheck, RefreshCw, ChefHat, AlertTriangle, ClipboardCheck } from "lucide-react";
 import type {
   KitchenExpoSnapshot,
   KitchenExpoOrder,
   KitchenWorkView,
   KitchenSnapshot,
 } from "@/modules/kitchen/service";
+import { KITCHEN_WAIT_ALERT_MINUTES } from "@/modules/kitchen/presentation";
 type Props = {
   base: string;
   enabled: boolean;
@@ -18,6 +19,9 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
   const [data, setData] = useState<KitchenExpoSnapshot>({ cursor: 0, overflow: false, orders: [] });
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
+  // Second step of the review gate: the order id the user is about to confirm.
+  const [confirming, setConfirming] = useState("");
+  const [now, setNow] = useState<number | null>(null);
   const active = useRef(true);
   const sequence = useRef(0);
   const sync = useCallback(async () => {
@@ -28,7 +32,7 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
       if (active.current && request === sequence.current)
         setData({ cursor: 0, overflow: false, orders: [] });
       throw new Error(
-        "Expeditor access or connection has changed. Refresh and verify permissions."
+        "Final Check access or connection has changed. Refresh and verify permissions."
       );
     }
     const latest = (await response.json()) as KitchenExpoSnapshot;
@@ -40,12 +44,12 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
   useEffect(() => {
     active.current = true;
     void Promise.resolve().then(() =>
-      sync().catch((e) => setError(e instanceof Error ? e.message : "Cannot load expeditor"))
+      sync().catch((e) => setError(e instanceof Error ? e.message : "Cannot load Final Check"))
     );
     const timer = setInterval(
       () =>
         void sync().catch((e) =>
-          setError(e instanceof Error ? e.message : "Expeditor disconnected")
+          setError(e instanceof Error ? e.message : "Final Check disconnected")
         ),
       8000
     );
@@ -58,9 +62,25 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
   useEffect(() => {
     if (!enabled) return;
     void Promise.resolve().then(() =>
-      sync().catch((e) => setError(e instanceof Error ? e.message : "Expeditor disconnected"))
+      sync().catch((e) => setError(e instanceof Error ? e.message : "Final Check disconnected"))
     );
   }, [cursor, enabled, sync]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setNow(Date.now()));
+    const clock = setInterval(() => setNow(Date.now()), 30000);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearInterval(clock);
+    };
+  }, []);
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(() => setConfirming(""), 8000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
+  const needsCheck = data.orders.filter(
+    (order) => order.total > 0 && order.done === order.total
+  ).length;
   async function release(order: KitchenExpoOrder) {
     if (
       pending ||
@@ -72,6 +92,7 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
     )
       return;
     const key = crypto.randomUUID();
+    setConfirming("");
     setPending(order.id);
     setError("");
     try {
@@ -98,19 +119,31 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
     }
   }
   return (
-    <section id="expeditor" aria-label="Expeditor" className="kk-expeditor scroll-mt-6 p-4 md:p-6">
+    <section
+      id="expeditor"
+      aria-label="Final Check & Order Release"
+      className="kk-expeditor scroll-mt-6 p-4 md:p-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-orange-400">
-            The chef’s pass
+            02 / Before it leaves the kitchen
           </p>
           <h3 className="flex items-center gap-2 text-xl font-black">
-            <ChefHat aria-hidden="true" size={23} /> Expeditor · Order release
+            <ChefHat aria-hidden="true" size={23} /> Final Check &amp; Order Release
           </h3>
           <p className="text-sm text-stone-600 dark:text-stone-300">
-            Kitchen tasks finish first. When every station is done, confirm the whole order is ready
-            for pickup or serving.
+            Check every dish against the order — items, spice level, notes and packing — then
+            release it for pickup or serving.
           </p>
+          {needsCheck > 0 && (
+            <p className="kk-check-banner" role="status">
+              <ClipboardCheck size={16} aria-hidden="true" />
+              {needsCheck === 1
+                ? "1 order needs a final check before release"
+                : `${needsCheck} orders need a final check before release`}
+            </p>
+          )}
         </div>
         <button
           type="button"
@@ -149,7 +182,19 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
       )}
       <div className="kk-expeditor-orders mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {data.orders.map((order) => (
-          <article key={order.id} className="kk-expo-card p-4">
+          <article
+            key={order.id}
+            className={
+              "kk-expo-card p-4" +
+              (order.total > 0 && order.done === order.total ? " kk-expo-card-check" : "") +
+              (now !== null &&
+              order.total > 0 &&
+              order.done === order.total &&
+              now - new Date(order.createdAt).getTime() >= KITCHEN_WAIT_ALERT_MINUTES * 60000
+                ? " kk-expo-card-late"
+                : "")
+            }
+          >
             <div className="flex justify-between gap-2">
               <h4 className="text-lg font-black">#{order.orderNumber}</h4>
               <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">
@@ -164,6 +209,11 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
                   : "Dine in"}{" "}
               · {new Date(order.createdAt).toLocaleTimeString()}
             </p>
+            {order.total > 0 && order.done === order.total && (
+              <p className="kk-check-pill">
+                <ClipboardCheck size={14} aria-hidden="true" /> Check before release
+              </p>
+            )}
             <p className="mt-3 text-sm font-semibold tabular-nums">
               {order.done} / {order.total} station tasks complete
             </p>
@@ -220,14 +270,19 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
                 order.total === 0 ||
                 order.done !== order.total
               }
-              onClick={() => void release(order)}
+              onClick={() => {
+                if (confirming === order.id) void release(order);
+                else setConfirming(order.id);
+              }}
               className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
               <CheckCheck size={18} />{" "}
               {pending === order.id
                 ? "Confirming…"
                 : order.done === order.total && order.total > 0
-                  ? "Release order as Ready"
+                  ? confirming === order.id
+                    ? "Checked — release now"
+                    : "Final check, then release"
                   : order.status === "accepted"
                     ? "Waiting for first station"
                     : "Waiting for remaining stations"}
@@ -236,7 +291,7 @@ export function KitchenExpeditor({ base, enabled, cursor, work, stations }: Prop
         ))}
         {!data.orders.length && (
           <p className="col-span-full rounded-xl border border-dashed border-stone-300 p-7 text-center text-sm text-stone-600 dark:border-stone-700 dark:text-stone-300">
-            No kitchen orders awaiting expeditor release.
+            No kitchen orders awaiting final check or release.
           </p>
         )}
       </div>

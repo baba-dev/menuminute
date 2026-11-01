@@ -73,7 +73,7 @@ const plans = [
     features: [
       "Everything in Live Ordering",
       "Live Kitchen Display System (KDS)",
-      "Kitchen, bar, and expeditor routing",
+      "Kitchen, bar, and Final Check & Order Release routing",
       "Audible incoming ticket alerts",
       "Preparation timers and completion pass",
       "POS till and cash drawer shifts",

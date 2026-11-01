@@ -235,13 +235,13 @@ export const GUIDES: Guide[] = [
     inDemo: true,
     whatItDoes: [
       "Kitchen Pro splits an accepted order into station tickets (for example Tandoor & Grill, Wok & Fry, Curry & Rice and Cold & Sweet).",
-      "Cooks move their station's items through queued, preparing and complete. An expeditor releases the finished order so the whole ticket leaves together.",
+      "Cooks move their station's items through queued, preparing and complete. Final Check & Order Release confirms and releases the finished order so the whole ticket leaves together.",
       "Updates stream to every device, and staff only see the stations and outlets they are assigned to.",
     ],
     steps: [
       "Accept an order in Orders. Its items appear on the matching stations.",
       "Start and finish items on the station screen.",
-      "Release the order from the expeditor view.",
+      "Check the dishes, then release the order from Final Check & Order Release.",
     ],
     tips: [
       "Every published dish must be routed to a staffed station before Kitchen Pro can accept orders. The demo is pre-configured.",
