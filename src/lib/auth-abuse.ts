@@ -61,7 +61,9 @@ export async function allowAuthRequest(req: Request): Promise<boolean> {
   if (!email || email.length > 254) return true;
   const emailFingerprint = fingerprint(email);
   const source = req.headers.get("x-real-ip");
-  const sourceFingerprint = source ? fingerprint(source) : null;
+  // Missing or invalid reverse-proxy identity must not share a global 120-attempt bucket.
+  if ((!source || isIP(source) === 0) && process.env.NODE_ENV === "production") return false;
+  const sourceFingerprint = source && isIP(source) ? fingerprint(source) : null;
 
   if (path === "/sign-in/email") {
     // Missing proxy identity shares one deliberately small source bucket instead

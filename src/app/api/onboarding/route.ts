@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { auth } from "@/lib/auth";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -16,7 +17,7 @@ async function observed_GET(req: Request) {
 }
 async function observed_PATCH(req: Request) {
   try {
-    return NextResponse.json(await saveOnboarding(await requestActor(req, true), await req.json()));
+    return NextResponse.json(await saveOnboarding(await requestActor(req, true), await boundedJson(req)));
   } catch (e) {
     return errorResponse(e, req);
   }

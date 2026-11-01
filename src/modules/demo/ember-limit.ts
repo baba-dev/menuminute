@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import { env } from "@/lib/config/env";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { redisClient } from "@/lib/redis";
@@ -31,7 +32,9 @@ export async function enforceDemoEmber(
     throw new ValidationError(
       `Demo questions are limited to ${DEMO_EMBER_PROMPT_CHARS} characters. Please shorten it.`
     );
-  const source = req.headers.get("x-real-ip") ?? "missing-source";
+  const source = req.headers.get("x-real-ip");
+  if (!source || isIP(source) === 0)
+    throw new ForbiddenError("Demo entry is temporarily unavailable.");
   const sourceKey = `demo:ember:${kind}:src:${createHash("sha256").update(source).digest("hex")}`;
   const day = new Date().toISOString().slice(0, 10);
   let counts: number[];

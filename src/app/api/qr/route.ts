@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -24,7 +25,7 @@ async function observed_GET(req: Request) {
 async function observed_POST(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
-    return NextResponse.json(await qrCommand(actor, restaurant.id, await req.json()));
+    return NextResponse.json(await qrCommand(actor, restaurant.id, await boundedJson(req)));
   } catch (e) {
     return errorResponse(e, req);
   }

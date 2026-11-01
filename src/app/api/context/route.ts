@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -26,7 +27,7 @@ async function observed_POST(req: Request) {
         z.object({ outletId: z.string().min(1).max(128) }).strict(),
         z.object({ organizationId: z.string().min(1).max(128) }).strict(),
       ])
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     let outletId: string | null = null;
     let organizationId: string;
     if ("outletId" in selection) {

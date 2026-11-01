@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -9,7 +10,7 @@ type C = { params: Promise<{ chairId: string }> };
 async function observed_PATCH(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
-    const input = updateChairInputSchema.parse(await req.json());
+    const input = updateChairInputSchema.parse(await boundedJson(req));
     await updateChair(actor, restaurant.id, (await c.params).chairId, input);
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -69,7 +70,7 @@ async function observed_POST(req: Request, { params }: Params) {
         z.object({ action: z.literal("attach"), input: z.unknown() }).strict(),
         z.object({ action: z.literal("accept_customer"), input: z.unknown() }).strict(),
       ])
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     const result =
       body.action === "submit"
         ? await posSubmit(actor, organizationId, outletId, body.input)

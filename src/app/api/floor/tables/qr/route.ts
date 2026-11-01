@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -10,7 +11,7 @@ async function observed_POST(req: Request) {
     const { tableId } = z
       .object({ tableId: z.string().min(1).max(128) })
       .strict()
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     return NextResponse.json(await attachExistingTableQr(actor, restaurant.id, tableId));
   } catch (error) {
     return errorResponse(error, req);

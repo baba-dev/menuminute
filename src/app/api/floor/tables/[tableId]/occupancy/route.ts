@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestContext, errorResponse } from "@/lib/request-context";
@@ -10,7 +11,7 @@ type C = { params: Promise<{ tableId: string }> };
 async function observed_POST(req: Request, c: C) {
   try {
     const { actor, restaurant } = await requestContext(req, true);
-    const { guests } = seatTableInputSchema.parse(await req.json());
+    const { guests } = seatTableInputSchema.parse(await boundedJson(req));
     return NextResponse.json(
       await seatTable(actor, restaurant.id, (await c.params).tableId, guests)
     );

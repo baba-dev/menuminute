@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -48,7 +49,7 @@ async function observed_POST(
       };
     });
 
-    const body: unknown = await req.json();
+    const body: unknown = await boundedJson(req);
     const plan =
       body !== null && typeof body === "object" && "plan" in body ? body.plan : undefined;
     if (plan !== "ordering" && plan !== "kitchen_pro") {

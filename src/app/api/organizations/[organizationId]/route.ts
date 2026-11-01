@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { requestActor, errorResponse } from "@/lib/request-context";
@@ -18,7 +19,7 @@ async function observed_PATCH(req: Request, context: Context) {
       await manageOrganization(
         await requestActor(req, true),
         (await context.params).organizationId,
-        await req.json()
+        await boundedJson(req)
       )
     );
   } catch (e) {

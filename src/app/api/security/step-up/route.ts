@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -10,7 +11,7 @@ async function observed_POST(req: Request) {
     const body = z
       .object({ password: z.string().min(1).max(128), code: z.string().regex(/^\d{6}$/) })
       .strict()
-      .parse(await req.json());
+      .parse(await boundedJson(req));
     if (!actor.sessionId)
       return NextResponse.json({ message: "Authentication failed" }, { status: 401 });
     // Check throttle before evaluating either credential. A Redis outage is fail-closed.

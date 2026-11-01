@@ -1,3 +1,4 @@
+import { boundedBytes } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -42,11 +43,14 @@ async function observed_POST(req: Request) {
   const signature = req.headers.get("x-razorpay-signature") ?? "";
   if (!/^[0-9a-f]{64}$/i.test(signature))
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-  const length = Number(req.headers.get("content-length") ?? 0);
-  if (length > 256_000) return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  const raw = await req.text();
-  if (Buffer.byteLength(raw, "utf8") > 256_000)
+  // Read at most 256 KiB, even when HTTP/2 or chunked transfer omits Content-Length.
+  // Preserve exact raw UTF-8 bytes for the provider's HMAC.
+  let raw: string;
+  try {
+    raw = (await boundedBytes(req, 256_000)).toString("utf8");
+  } catch {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
   if (!verifyRazorpayWebhookSignature(raw, signature, env.RAZORPAY_WEBHOOK_SECRET))
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 

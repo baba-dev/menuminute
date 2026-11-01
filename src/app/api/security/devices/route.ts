@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-input";
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -53,7 +54,7 @@ async function observed_POST(req: Request) {
         { message: "Session required" },
         { status: 401, headers: responseHeaders }
       );
-    const body = command.parse(await req.json());
+    const body = command.parse(await boundedJson(req));
     const revoked = await revokeDeviceSessions(
       actor.userId,
       actor.sessionId,
