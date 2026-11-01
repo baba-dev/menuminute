@@ -156,7 +156,9 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await orderSearch.fill("unmatched_dish_name");
   await expect(register.getByText("No matching orders.")).toBeVisible();
   await orderSearch.fill("Paneer Lunch");
-  await expect(register.getByRole("button", { name: /Repeat order #.*into new ticket/ })).toBeVisible();
+  await expect(
+    register.getByRole("button", { name: /Repeat order #.*into new ticket/ })
+  ).toBeVisible();
   await register.getByRole("button", { name: /Repeat order #.*into new ticket/ }).click();
   await expect(page.locator(".till-cartline")).toContainText("Paneer Lunch");
   await expect(page.getByText(/copied to a NEW draft/)).toBeVisible();
