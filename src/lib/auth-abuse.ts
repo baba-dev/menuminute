@@ -30,6 +30,12 @@ export async function allowAuthRequest(req: Request): Promise<boolean> {
     const identity = ip && isIP(ip) ? ip : "isolated-test-source";
     const cookie = req.headers.get("cookie") ?? "";
     if (cookie.length > 8192) return false;
+    // A valid challenge cannot authorize an unbounded streaming JSON body.
+    try {
+      await boundedBytes(req.clone(), 16384);
+    } catch {
+      return false;
+    }
     const token = fingerprint(cookie || identity);
     const source = fingerprint(identity);
     const redis = await redisClient("cache");

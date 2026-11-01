@@ -11,6 +11,7 @@ describe("A–F security regression contracts", () => {
     const nginx = readFileSync("infra/nginx/menuminute.conf.example", "utf8");
     expect(nginx).toContain("location ^~ /api/public-orders {");
     expect(nginx).toContain("X-MenuMinute-Edge-Key $menuminute_edge_secret;");
+    expect(nginx).toContain("location = /api/media {");
     expect(nginx).toContain("location ^~ /api/media/ {");
     expect(nginx).toContain("client_max_body_size 6m;");
   });
