@@ -1,6 +1,6 @@
-# Privacy Ledger — legal-review delivery and release gate
+# Privacy Ledger — published notice and ongoing privacy controls
 
-Status: Public Privacy Policy effective 20 October 2026 at the operator's direction. This published notice is not a claim of independent legal certification, completed data-erasure automation or native-app store readiness. Maintain an accurate vendor inventory and verify future integrations before activating them.
+Status (2 November 2026): Product owner approved the current public Privacy Policy effective 2 November 2026, with an indexable canonical URL and a separately published contact-based account-deletion request page. This does **not** assert independent legal certification, completed automatic data-erasure workflows or native-app store readiness. Maintain an accurate vendor inventory and verify future integrations before activating them.
 
 ## Approved identity and operating decisions
 
@@ -69,5 +69,5 @@ Official app-store sources:
 - Review /privacy and /delete-account at 375px, 768px, desktop; no overflow or missing content.
 - Ensure keyboard skip link, heading order, table-of-contents anchors and inline mailto work.
 - Check dark/light theme, reduced motion, zoom, no JS reading fallback, and print.
-- Check noindex until approval, and no assertions that a vendor/deletion job or security certification is deployed without evidence.
+- Check canonical/indexable production metadata for `/privacy` and `/delete-account`; never assert that an unimplemented vendor/deletion job or certification is deployed.
 - Maintain public footer exactly once; no marketing footer in merchant dashboard or diner menu.

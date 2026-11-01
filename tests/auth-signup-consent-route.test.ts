@@ -31,6 +31,17 @@ it("accepts signup via production NextRequest and stamps server-owned consent ti
   expect(new Date(row.rows[0]!.terms_accepted_at).getFullYear()).toBeGreaterThan(2025);
 });
 
+it("accepts prior and current policy versions at the database boundary", async () => {
+  const result = await admin(async (_, pool) =>
+    pool.query<{ definition: string }>(
+      "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='users'::regclass AND conname='users_terms_version_check'"
+    )
+  );
+  expect(result.rows).toHaveLength(1);
+  expect(result.rows[0]!.definition).toContain("2026-10-24");
+  expect(result.rows[0]!.definition).toContain(TERMS_VERSION);
+});
+
 it("rejects signup consent omissions before the authentication handler", async () => {
   const response = await POST(
     new NextRequest("http://localhost:3000/api/auth/sign-up/email", {

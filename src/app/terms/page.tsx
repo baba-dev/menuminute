@@ -184,6 +184,7 @@ export default function TermsPage() {
             </p>
             <div className="privacy-hero-meta">
               <span>Effective: {TERMS_EFFECTIVE_LABEL}</span>
+              <span>Last updated: {TERMS_EFFECTIVE_LABEL}</span>
               <span>BabaBuilds · India</span>
             </div>
           </div>

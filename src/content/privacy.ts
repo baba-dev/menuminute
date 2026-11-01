@@ -1,5 +1,5 @@
 /**
- * MenuMinute Privacy Policy — effective 20 October 2026.
+ * MenuMinute Privacy Policy — effective 2 November 2026.
  * Keep this disclosure aligned with production data flows and update it
  * before activating additional SDKs, advertising, payments or AI providers.
  */

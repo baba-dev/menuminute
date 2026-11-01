@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, Download, Mail, ShieldCheck } from "lucide-rea
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { policySections } from "@/content/privacy";
+import { PRIVACY_EFFECTIVE_LABEL } from "@/content/legal";
 import "./privacy.css";
 
 export const metadata: Metadata = {
@@ -139,9 +140,11 @@ export default function PrivacyPage() {
               Clear information about what MenuMinute handles, why it matters, and the choices
               available to you.
             </p>
-            <p className="privacy-review-status">Privacy Policy · Effective 20 October 2026</p>
+            <p className="privacy-review-status">
+              Privacy Policy · Effective {PRIVACY_EFFECTIVE_LABEL}
+            </p>
             <div className="privacy-hero-meta">
-              <span>Last updated: 20 October 2026</span>
+              <span>Last updated: {PRIVACY_EFFECTIVE_LABEL}</span>
               <span>Operator: BabaBuilds · India</span>
             </div>
           </div>

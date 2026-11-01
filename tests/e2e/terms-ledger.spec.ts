@@ -1,14 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Terms: The Shared Table", () => {
-  test("shows all 24 sections and the effective date", async ({ page }) => {
+  test("shows the final indexable 24-section Terms with the effective date", async ({ page }) => {
     await page.goto("/terms");
     await expect(
       page.getByRole("heading", { level: 1, name: /Good terms make better partnerships/ })
     ).toBeVisible();
     await expect(page.getByRole("main", { name: "Terms of Service" })).toBeVisible();
-    await expect(page.getByText("Effective 24 October 2026", { exact: true })).toBeVisible();
+    await expect(page.getByText("Effective 2 November 2026", { exact: true })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://food.bababuilds.com/terms"
+    );
+    await expect(page.getByText("Last updated: 2 November 2026", { exact: true })).toBeVisible();
     await expect(page.locator("main.privacy-copy > section.privacy-section")).toHaveCount(24);
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     await expect(
@@ -39,6 +44,9 @@ test.describe("Terms: The Shared Table", () => {
       .getByRole("link", { name: /View current account-deletion request information/ })
       .click();
     await expect(page).toHaveURL(/\/delete-account$/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: /Request account and data deletion/ })
+    ).toBeVisible();
   });
 
   test("mobile layout has no horizontal overflow or hidden terms sections", async ({ page }) => {
