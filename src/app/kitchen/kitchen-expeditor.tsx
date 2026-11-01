@@ -8,7 +8,7 @@ import type {
   KitchenWorkView,
   KitchenSnapshot,
 } from "@/modules/kitchen/service";
-import { assignBeams } from "@/modules/kitchen/presentation";
+import { assignBeams, formatClock } from "@/modules/kitchen/presentation";
 import { BorderBeam } from "./fx/border-beam";
 import { DishDetails } from "./dish-details";
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
   cursor: number;
   work: KitchenWorkView[];
   stations: KitchenSnapshot["stations"];
+  timezone?: string;
 };
 const stateLabel = (item: KitchenExpoItem) =>
   item.releasedAt
@@ -26,7 +27,7 @@ const stateLabel = (item: KitchenExpoItem) =>
       : item.status === "preparing"
         ? "Cooking"
         : "Waiting to start";
-export function KitchenExpeditor({ base, enabled, cursor }: Props) {
+export function KitchenExpeditor({ base, enabled, cursor, timezone }: Props) {
   const [data, setData] = useState<KitchenExpoSnapshot>({ cursor: 0, overflow: false, orders: [] });
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
@@ -155,9 +156,9 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
           <p className="text-xs font-black tracking-[.16em] text-orange-700 uppercase dark:text-orange-400">
             02 / Before it leaves the kitchen
           </p>
-          <h3 className="flex items-center gap-2 text-xl font-black">
+          <h2 className="flex items-center gap-2 text-xl font-black">
             <ChefHat aria-hidden="true" size={23} /> Final Check &amp; Order Release
-          </h3>
+          </h2>
           <p className="text-sm text-stone-600 dark:text-stone-300">
             Check each dish against the order — items, spice level, notes and packing — then release
             it. Dishes can leave one by one as they finish; the order is Ready when its last dish
@@ -226,7 +227,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
                 />
               )}
               <div className="flex justify-between gap-2">
-                <h4 className="text-lg font-black">#{order.orderNumber}</h4>
+                <h3 className="text-lg font-black">#{order.orderNumber}</h3>
                 <span className="text-xs font-bold text-stone-600 uppercase dark:text-stone-300">
                   {order.status}
                 </span>
@@ -237,7 +238,7 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
                   : order.tableLabel
                     ? "Table " + order.tableLabel
                     : "Dine in"}{" "}
-                · {new Date(order.createdAt).toLocaleTimeString()}
+                · {formatClock(order.createdAt, timezone)}
               </p>
               {ready.length > 0 && (
                 <p className="kk-check-pill">

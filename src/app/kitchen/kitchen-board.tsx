@@ -20,8 +20,9 @@ import {
   ClipboardList,
   Maximize2,
   Sparkles,
+  Sun,
 } from "lucide-react";
-import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
+import { playWoodenTap, playKitchenBell, isAudioSuspended, unlockAudio } from "@/lib/sound-effects";
 import { useSoundPreference } from "@/lib/use-sound-preference";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
@@ -31,6 +32,7 @@ import { BorderBeam } from "./fx/border-beam";
 import { NumberTicker } from "./fx/number-ticker";
 import { ProgressRing } from "./fx/progress-ring";
 import { useEnteringIds } from "./fx/use-entering";
+import { useWakeLock } from "./use-wake-lock";
 import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import {
@@ -43,6 +45,9 @@ import {
   intakeSourceLabel,
   needsAttention,
   assignBeams,
+  formatClock,
+  secondsSince,
+  KITCHEN_STALE_SECONDS,
 } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
@@ -52,6 +57,8 @@ type Props = {
   initial: KitchenSnapshot;
   canManage: boolean;
   menuDishes: Dish[];
+  /** IANA timezone of the outlet; clocks on the board follow it, not the device. */
+  timezone?: string;
 };
 type Connection = "connecting" | "live" | "recovering" | "revoked";
 function Ticket({
@@ -178,6 +185,7 @@ export function KitchenBoard({
   initial,
   canManage,
   menuDishes,
+  timezone,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [selected, setSelected] = useState(
@@ -186,6 +194,10 @@ export function KitchenBoard({
   const [connection, setConnection] = useState<Connection>("connecting");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [now, setNow] = useState<number | null>(null);
+  const [lastContact, setLastContact] = useState<number | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const [keepAwake, setKeepAwake] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   // One workspace-wide setting (see lib/sound-preference.ts), shown here as a shortcut.
@@ -206,31 +218,57 @@ export function KitchenBoard({
   const revoked = useRef(false);
   const stream = useRef<EventSource | null>(null);
   const base = `/api/organizations/${encodeURIComponent(organizationId)}/outlets/${encodeURIComponent(outletId)}/kitchen`;
-  const apply = useCallback((data: KitchenSnapshot) => {
-    if (revoked.current || data.cursor < cursorRef.current) return;
-    cursorRef.current = data.cursor;
-    const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
-    seen.current = new Set(data.work.map((w) => w.id));
-    setSnapshot(data);
-    setLastSync(new Date());
-    setConnection("live");
-    // A confirmed resync clears only transport errors. Never hide an uncertain
-    // staff command merely because a later snapshot was successfully fetched.
-    setError((previous) =>
-      /^(?:Error: )?(?:Kitchen connection interrupted|Unable to reconcile kitchen tickets)/.test(
-        previous
-      )
-        ? ""
-        : previous
-    );
-    if (soundRef.current && newcomers.length) {
-      try {
-        playKitchenBell("kitchen");
-      } catch {
-        /* Browser audio may require a gesture. */
-      }
-    }
+  /** Polite screen-reader announcement; cleared so an identical message can repeat. */
+  const say = useCallback((message: string) => {
+    setAnnouncement(message);
+    setTimeout(() => setAnnouncement((current) => (current === message ? "" : current)), 6000);
   }, []);
+  const apply = useCallback(
+    (data: KitchenSnapshot) => {
+      if (revoked.current || data.cursor < cursorRef.current) return;
+      cursorRef.current = data.cursor;
+      const newcomers = data.work.filter((w) => w.status === "queued" && !seen.current.has(w.id));
+      seen.current = new Set(data.work.map((w) => w.id));
+      setSnapshot(data);
+      setLastSync(new Date());
+      setLastContact(Date.now());
+      setConnection("live");
+      // A confirmed resync clears only transport errors. Never hide an uncertain
+      // staff command merely because a later snapshot was successfully fetched.
+      setError((previous) =>
+        /^(?:Error: )?(?:Kitchen connection interrupted|Unable to reconcile kitchen tickets)/.test(
+          previous
+        )
+          ? ""
+          : previous
+      );
+      if (newcomers.length) {
+        const first = newcomers[0]!;
+        say(
+          newcomers.length === 1
+            ? `New ticket: ${first.quantity} ${first.dishName}, order ${first.orderNumber}`
+            : `${newcomers.length} new tickets`
+        );
+        if (soundRef.current) {
+          try {
+            playKitchenBell("kitchen");
+          } catch {
+            /* Browser audio may require a gesture. */
+          }
+          // The bell can be silently refused until the first tap: tell staff instead of failing quietly.
+          setTimeout(() => setSoundBlocked(isAudioSuspended()), 400);
+        } else {
+          // Sound is off: a short buzz (where the device supports it) is the non-audio cue.
+          try {
+            navigator.vibrate?.(120);
+          } catch {
+            /* Not supported. */
+          }
+        }
+      }
+    },
+    [say]
+  );
   const refresh = useCallback(async () => {
     if (revoked.current) return;
     const res = await fetch(base, { cache: "no-store" });
@@ -248,7 +286,7 @@ export function KitchenBoard({
     const initial = requestAnimationFrame(() => {
       setNow(Date.now());
     });
-    const clock = setInterval(() => setNow(Date.now()), 15000);
+    const clock = setInterval(() => setNow(Date.now()), 10000);
     return () => {
       cancelAnimationFrame(initial);
       clearInterval(clock);
@@ -268,7 +306,10 @@ export function KitchenBoard({
       }
     });
     source.addEventListener("heartbeat", () => {
-      if (alive && !revoked.current) setConnection("live");
+      if (alive && !revoked.current) {
+        setConnection("live");
+        setLastContact(Date.now());
+      }
     });
     source.addEventListener("unavailable", () => {
       if (alive && !revoked.current) {
@@ -299,6 +340,23 @@ export function KitchenBoard({
       clearInterval(timer);
     };
   }, [base, apply, refresh]);
+  const wake = useWakeLock(keepAwake);
+  const queuedCount = snapshot.work.filter((w) => w.status === "queued").length;
+  const baseTitle = useRef<string | null>(null);
+  useEffect(() => {
+    // Waiting tickets show in the browser tab, a cue that works with sound off.
+    if (baseTitle.current === null) baseTitle.current = document.title.replace(/^\(\d+\) /, "");
+    document.title = (queuedCount > 0 ? `(${queuedCount}) ` : "") + baseTitle.current;
+  }, [queuedCount]);
+  useEffect(
+    () => () => {
+      if (baseTitle.current !== null) document.title = baseTitle.current;
+    },
+    []
+  );
+  const contactAge = secondsSince(now, lastContact);
+  const stale =
+    contactAge !== null && contactAge >= KITCHEN_STALE_SECONDS && connection !== "revoked";
   const station =
     selected === "all"
       ? undefined
@@ -355,6 +413,11 @@ export function KitchenBoard({
         expectedVersion: work.version,
         key: crypto.randomUUID(),
       });
+      say(
+        op === "start"
+          ? `Started preparing ${work.dishName}, order ${work.orderNumber}`
+          : `Completed ${work.dishName}, order ${work.orderNumber}`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action could not be saved");
       void refresh().catch(() => {});
@@ -424,6 +487,9 @@ export function KitchenBoard({
   ];
   return (
     <main className="product mm-kitchen" data-testid="chefs-pass">
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <header className="kk-topbar">
         <div className="kk-topbar-inner">
           <div className="kk-identity">
@@ -432,7 +498,7 @@ export function KitchenBoard({
             </span>
             <div>
               <span className="kk-eyebrow">MENUMINUTE / KITCHEN PRO</span>
-              <h2>{outletName}</h2>
+              <p className="kk-outlet">{outletName}</p>
             </div>
           </div>
           <div className="kk-tools">
@@ -470,6 +536,18 @@ export function KitchenBoard({
               {sound ? <Volume2 size={17} /> : <VolumeX size={17} />}{" "}
               <span>Sound {sound ? "on" : "off"}</span>
             </button>
+            {wake.supported && (
+              <button
+                type="button"
+                aria-pressed={keepAwake}
+                className="kk-tool"
+                title="Keep this screen from sleeping during service"
+                onClick={() => setKeepAwake((value) => !value)}
+              >
+                <Sun size={17} aria-hidden="true" />{" "}
+                <span>{keepAwake && wake.held ? "Screen stays on" : "Screen may sleep"}</span>
+              </button>
+            )}
             <button
               type="button"
               className="kk-tool"
@@ -647,6 +725,30 @@ export function KitchenBoard({
             entitlements are approved. You can configure stations without activating sales.
           </section>
         )}
+        {soundBlocked && sound && (
+          <div role="status" className="kk-sound-blocked">
+            <VolumeX size={18} aria-hidden="true" />
+            <span>The browser is blocking the new-ticket bell until you tap once.</span>
+            <button
+              type="button"
+              onClick={() =>
+                void unlockAudio().then((ok) => {
+                  setSoundBlocked(!ok);
+                  if (ok) playKitchenBell("kitchen");
+                })
+              }
+            >
+              Enable sound
+            </button>
+          </div>
+        )}
+        {stale && connection === "live" && (
+          <p role="status" className="kk-stale">
+            <WifiOff size={16} aria-hidden="true" /> Nothing heard from the kitchen server for{" "}
+            {contactAge} seconds. Tickets may be out of date — use Sync before relying on this
+            screen.
+          </p>
+        )}
         {connection !== "live" && (
           <p
             role="alert"
@@ -678,8 +780,8 @@ export function KitchenBoard({
                 : (station?.name ?? "Station assignment required")}
             </h2>
             <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
-              Last reconciled: {lastSync?.toLocaleTimeString() ?? "Not connected"} · All changes
-              saved on the server
+              Last reconciled: {lastSync ? formatClock(lastSync, timezone) : "Not connected"} · All
+              changes saved on the server
             </p>
           </div>
           {canManage && (
@@ -828,6 +930,7 @@ export function KitchenBoard({
             cursor={snapshot.cursor}
             work={snapshot.work}
             stations={snapshot.stations}
+            timezone={timezone}
           />
         )}
         {canManage &&

@@ -9,6 +9,8 @@ import {
   needsAttention,
   intakeSourceLabel,
   assignBeams,
+  formatClock,
+  secondsSince,
 } from "../src/modules/kitchen/presentation";
 const base: KitchenWorkView = {
   id: "one",
@@ -162,5 +164,23 @@ describe("border beam assignment", () => {
   });
   it("does nothing before the clock is known", () => {
     expect(assignBeams([item("a", 30)], null).size).toBe(0);
+  });
+});
+
+describe("clock helpers", () => {
+  it("formats times in the outlet timezone, not the device's", () => {
+    const instant = "2026-01-01T12:00:00Z";
+    expect(formatClock(instant, "Asia/Kolkata")).toMatch(/5:30:00|17:30:00/);
+    expect(formatClock(instant, "America/New_York")).toMatch(/7:00:00|07:00:00/);
+  });
+  it("survives an unsupported zone and bad input", () => {
+    expect(formatClock("2026-01-01T12:00:00Z", "Not/AZone")).not.toBe("—");
+    expect(formatClock("not a date", "Asia/Kolkata")).toBe("—");
+  });
+  it("measures seconds since the last contact", () => {
+    expect(secondsSince(10_000, 4_000)).toBe(6);
+    expect(secondsSince(1_000, 4_000)).toBe(0);
+    expect(secondsSince(null, 4_000)).toBeNull();
+    expect(secondsSince(10_000, null)).toBeNull();
   });
 });

@@ -167,3 +167,27 @@ export function assignBeams(
   });
   return result;
 }
+
+/** Clock time in the OUTLET's timezone (the device may be set to another one). */
+export function formatClock(value: Date | string | number, timezone?: string | null): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "—";
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      ...(timezone ? { timeZone: timezone } : {}),
+    }).format(date);
+  } catch {
+    // An unsupported zone must not blank the board.
+    return date.toLocaleTimeString();
+  }
+}
+/** Seconds since the kitchen server last spoke to this device, or null if unknown. */
+export function secondsSince(now: number | null, last: number | null): number | null {
+  if (now === null || last === null) return null;
+  return Math.max(0, Math.floor((now - last) / 1000));
+}
+/** Past this, the board says it may be out of date (heartbeats arrive far more often). */
+export const KITCHEN_STALE_SECONDS = 45;

@@ -127,3 +127,16 @@ Not used on purpose: animated borders on allergen panels (safety information sta
 - POS lines accept an optional `note` (trimmed, max 200). `app_private.pos_submit_order` stores it in `order_items.notes`, the column guest orders already use, so the kitchen ticket, Final Check, POS register and incoming-order views show it without further change. It never affects price, the catalogue fingerprint or the quote; a different note is a different request for idempotency. `pos_sale_lines`, receipts and finance documents are unchanged (kitchen instructions are not financial data).
 - The till cart has "Add dish note" per line; empty notes are not sent. Identical dishes with different notes stay separate lines.
 - The POS order register shows "Part ready · N of M dishes" next to the status (same `kitchen_release_progress` data and transaction as the register page) and in the order detail.
+
+## Audit fixes (accessibility, resilience, time)
+
+- **Screen readers:** a polite live region announces new tickets ("New ticket: 2 Paneer Tikka, order 1042" or "3 new tickets") and your own start/complete actions. Errors keep `role="alert"`. Heading levels no longer skip: the hero is the only `h1`, the outlet name is plain text, Final Check is an `h2` with `h3` order cards.
+- **New-order cue without sound:** waiting tickets show in the browser tab title "(N)", new tickets glow once, and devices that support it vibrate briefly when sound is off.
+- **Blocked bell:** if the browser refuses the bell until a tap, a banner says so with an "Enable sound" button (`isAudioSuspended` / `unlockAudio` in `lib/sound-effects.ts`).
+- **Keep screen on:** `useWakeLock` holds a screen wake lock while the board is open (default on, toggle in the top bar, hidden where unsupported), re-acquires it when the tab returns, and reports what is really in effect.
+- **Staleness:** the board warns when nothing (snapshot or heartbeat) has arrived for 45 s; the clock ticks every 10 s instead of 15 s.
+- **Timezone:** "Last reconciled", Final Check times and the intake dock use the outlet's timezone (`formatClock`), not the device's.
+- **Final Check resilience:** a transient refresh failure keeps the last known orders and warns; only 401/403 clears the list (done earlier with per-item release).
+- Merchant Orders ticket options now show their group ("Spice: Mild"); station tabs have a 44 px minimum width.
+
+Not done: centralising kitchen strings for translation (no i18n framework exists; a separate project), an automated axe scan in Playwright (needs a new dev dependency), and mobile access to the transfer panel.

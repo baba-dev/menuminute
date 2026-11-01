@@ -105,7 +105,11 @@ export default async function KitchenPage() {
         />
       )}
       {kitchenOperational && (
-        <KitchenIntake organizationId={outlet.organizationId} outletId={outlet.id} />
+        <KitchenIntake
+          organizationId={outlet.organizationId}
+          outletId={outlet.id}
+          timezone={outlet.timezone}
+        />
       )}
       <KitchenBoard
         organizationId={outlet.organizationId}
@@ -114,6 +118,7 @@ export default async function KitchenPage() {
         initial={initial}
         canManage={canManage}
         menuDishes={dishList}
+        timezone={outlet.timezone}
       />
     </>
   );
