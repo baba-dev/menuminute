@@ -3,7 +3,7 @@
 No new finance activation or billing behavior is part of this change.
 
 ## Deployment verification
-1. Apply forward-only migration 0074 before rolling out the web build.
+1. Apply forward-only migrations 0074 and 0075 before rolling out the web build.
 2. Review actual web/worker roles and live PostgreSQL privileges.
 3. Compare the *live* vhost with infra/nginx/menuminute.conf.example; **do not** replace the entire file or disrupt ERP/Cloudflare settings.
 4. Preserve the root-only /etc/menuminute/nginx-order-edge-secret.conf; overwrite both private identity headers.
@@ -21,3 +21,6 @@ before proposing a narrowly scoped migration. This report is a read-only invento
 Required CI lanes, concurrent throttle tests and cross-tenant negative tests must pass.
 Do not merge on an unverified rollout. Removing generated tracked files does not rewrite
 Git history; review historical blobs before deciding whether any secret needs rotation.
+
+## Security contract CI
+The quality lane runs `node scripts/security/verify-api-boundaries.mjs` to prevent unbounded route body parsing or loss of guest-order proxy attestation. This is supplementary to runtime and integration tests; it does not replace browser validation or production Nginx review.
