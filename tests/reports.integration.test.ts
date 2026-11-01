@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixture } from "./helpers";
+import { admin, fixture } from "./helpers";
 import { reportQuerySchema } from "../src/modules/reports/contracts";
 import { getReportsWorkspace } from "../src/modules/reports/service";
 
@@ -43,6 +43,48 @@ describe("Reports restricted PostgreSQL projections", () => {
       standardPct: 0,
       delayedPct: 0,
     });
+  });
+
+  it("preserves assigned business dates and timezone-local fallback for legacy orders", async () => {
+    const f = await fixture();
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const yesterday = new Date(Date.parse(`${today}T00:00:00Z`) - 86400000)
+      .toISOString()
+      .slice(0, 10);
+
+    await admin(async (_db, pool) => {
+      const rows = [
+        // Business date overrides the previous calendar day's created_at.
+        { id: crypto.randomUUID(), businessDate: today, createdAt: `${yesterday}T12:00:00Z`, total: 100 },
+        // Legacy row without business_date uses the outlet-local calendar day.
+        { id: crypto.randomUUID(), businessDate: null, createdAt: `${today}T12:00:00Z`, total: 200 },
+        // An older legacy row is excluded from the current period.
+        { id: crypto.randomUUID(), businessDate: null, createdAt: `${yesterday}T12:00:00Z`, total: 900 },
+      ];
+      for (const [index, row] of rows.entries()) {
+        await pool.query(
+          `insert into orders
+            (id, restaurant_id, status, order_number, business_date, created_at,
+             total_minor, subtotal_minor, tax_minor)
+           values ($1, $2, 'served', $3, $4, $5, $6, $6, 0)`,
+          [row.id, f.outlet.id, index + 1, row.businessDate, row.createdAt, row.total]
+        );
+      }
+    });
+
+    const result = await getReportsWorkspace(
+      f.actor,
+      f.outlet.id,
+      reportQuerySchema.parse({ range: "custom", from: today, to: today, tab: "overview" })
+    );
+    expect(result.executive.totalOrders).toBe(2);
+    expect(result.executive.grossSalesMinor).toBe(300);
+    expect(result.executive.completedOrders).toBe(2);
   });
 
   it("does not disclose data across outlet ownership boundaries", async () => {
