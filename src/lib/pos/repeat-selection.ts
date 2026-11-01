@@ -1,7 +1,6 @@
 import type { QuoteInput } from "@/modules/orders/quote";
 import type { PosRepeatSelection, PosWorkspace } from "@/modules/pos/service";
 
-type Menu = PosWorkspace["menus"][number];
 type RepeatLine = {
   line: QuoteInput["lines"][number];
   name: string;
