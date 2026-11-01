@@ -28,6 +28,7 @@ import { useSoundPreference } from "@/lib/use-sound-preference";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
+import { KitchenIntake } from "./kitchen-intake";
 import { DishDetails } from "./dish-details";
 import { BorderBeam } from "./fx/border-beam";
 import { NumberTicker } from "./fx/number-ticker";
@@ -57,6 +58,7 @@ type Props = {
   outletName: string;
   initial: KitchenSnapshot;
   canManage: boolean;
+  intakeEnabled: boolean;
   menuDishes: Dish[];
   /** IANA timezone of the outlet; clocks on the board follow it, not the device. */
   timezone?: string;
@@ -185,6 +187,7 @@ export function KitchenBoard({
   outletName,
   initial,
   canManage,
+  intakeEnabled,
   menuDishes,
   timezone,
 }: Props) {
@@ -614,13 +617,27 @@ export function KitchenBoard({
             check—together on one focused surface.
           </p>
           <div className="kk-hero-actions">
-            <a href="#station-rail" className="kk-hero-primary">
-              Open station rail <ArrowRight size={16} aria-hidden="true" />
-            </a>
+            {!snapshot.enabled && (
+              <>
+                <a href="#station-rail" className="kk-hero-primary">
+                  Open station rail <ArrowRight size={16} aria-hidden="true" />
+                </a>
+                {canManage && (
+                  <a href="#expeditor" className="kk-hero-outline">
+                    Go to final check <ClipboardList size={16} aria-hidden="true" />
+                  </a>
+                )}
+              </>
+            )}
             {canManage && (
-              <a href="#expeditor" className="kk-hero-outline">
-                Go to final check <ClipboardList size={16} aria-hidden="true" />
-              </a>
+              <button
+                type="button"
+                className="kk-hero-outline"
+                aria-haspopup="dialog"
+                onClick={() => setShowSettings(true)}
+              >
+                <Settings2 size={17} aria-hidden="true" /> Configure kitchen
+              </button>
             )}
           </div>
         </div>
@@ -687,6 +704,9 @@ export function KitchenBoard({
         </div>
       </section>
       <div className="kk-content">
+        {intakeEnabled && (
+          <KitchenIntake organizationId={organizationId} outletId={outletId} timezone={timezone} />
+        )}
         <section
           className="kk-pulse kk-fade"
           style={{ "--kk-delay": "0.08s" } as React.CSSProperties}
@@ -795,16 +815,6 @@ export function KitchenBoard({
               changes saved on the server
             </p>
           </div>
-          {canManage && (
-            <button
-              type="button"
-              onClick={() => setShowSettings(true)}
-              aria-haspopup="dialog"
-              className="kk-setup-toggle"
-            >
-              <Settings2 size={17} /> Configure kitchen
-            </button>
-          )}
         </div>
         {snapshot.stations.length > 0 && (
           <nav id="station-rail" aria-label="Kitchen stations" className="kk-stations">

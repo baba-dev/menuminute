@@ -43,8 +43,9 @@
 .kk-topbar {
   background: var(--kk-panel);
   border-bottom: 1px solid var(--kk-line);
-  position: relative;
-  z-index: 3;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 .kk-topbar-inner {
   width: min(100%, 1700px);
@@ -1718,8 +1719,7 @@
   padding: clamp(18px, 3vw, 32px) clamp(16px, 3vw, 45px);
 }
 .mm-kitchen .kk-hero-live .kk-pass-art,
-.mm-kitchen .kk-hero-live .kk-hero-note,
-.mm-kitchen .kk-hero-live .kk-hero-actions {
+.mm-kitchen .kk-hero-live .kk-hero-note {
   display: none;
 }
 .mm-kitchen .kk-hero-live h1 {
@@ -1808,22 +1808,17 @@
   display: none !important;
 }
 .kk-live-intake {
-  position: fixed;
-  top: 84px;
-  right: clamp(12px, 2vw, 28px);
-  width: min(430px, calc(100vw - 26px));
-  z-index: 90;
-  pointer-events: none;
+  width: 100%;
+  min-width: 0;
 }
 .kk-intake-dock {
-  pointer-events: auto;
-  max-height: min(72vh, 680px);
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
   background: #fffaf4;
   color: #302018;
   border: 1px solid #c9a98c;
   border-radius: 17px;
-  box-shadow: 0 12px 42px rgba(39, 21, 10, 0.25);
+  box-shadow: none;
 }
 :root[data-theme="dark"] .kk-intake-dock {
   background: #211914;
@@ -1832,9 +1827,7 @@
 }
 .kk-intake-dock.is-urgent {
   border-color: #d65b18;
-  box-shadow:
-    0 0 0 2px rgba(214, 91, 24, 0.25),
-    0 14px 42px rgba(39, 21, 10, 0.25);
+  box-shadow: 0 0 0 2px rgba(214, 91, 24, 0.25);
 }
 .kk-intake-dock-summary {
   display: flex;
@@ -1983,15 +1976,6 @@
   color: var(--kk-muted);
 }
 @media (max-width: 700px) {
-  .kk-live-intake {
-    top: auto;
-    bottom: 14px;
-    right: 10px;
-    width: calc(100vw - 20px);
-  }
-  .kk-intake-dock {
-    max-height: 53vh;
-  }
   .kk-intake-dock-summary {
     gap: 5px;
   }
@@ -2765,5 +2749,15 @@
   }
   100% {
     box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Sticky Kitchen Pro header: section anchors must clear its controls, including mobile wrap. */
+.mm-kitchen :is(#station-rail, .kk-station-heading, #expeditor, .kk-live-intake) {
+  scroll-margin-top: 100px;
+}
+@media (max-width: 680px) {
+  .mm-kitchen :is(#station-rail, .kk-station-heading, #expeditor, .kk-live-intake) {
+    scroll-margin-top: 168px;
   }
 }

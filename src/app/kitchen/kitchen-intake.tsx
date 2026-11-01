@@ -249,6 +249,9 @@ export function KitchenIntake({
       </div>
     </article>
   );
+  // No empty, always-visible notification bar; the inline panel appears for actual
+  // pending orders, connection checks, or errors and keeps acceptance actions available.
+  if (!syncing && !error && orders.length === 0) return null;
   return (
     <section className="kk-live-intake" aria-label="Incoming kitchen order attention">
       <div
