@@ -7,6 +7,7 @@ import {
   restaurantTables,
   type DiningReservation,
 } from "@/db/schema";
+import { needsTableMetadataUpdate } from "./floor-table-metadata";
 import {
   floorLayoutDocSchema,
   type FloorLayoutDoc,
@@ -152,10 +153,16 @@ export async function saveFloorLayout(
     const revision = await nextLayoutRevision(tx, outletId, validated.revision);
     const updated: FloorLayoutDoc = { ...validated, revision };
     const active = await tx
-      .select({ id: restaurantTables.id })
+      .select({
+        id: restaurantTables.id,
+        tableNumber: restaurantTables.tableNumber,
+        label: restaurantTables.label,
+        capacity: restaurantTables.capacity,
+      })
       .from(restaurantTables)
       .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
-    const ids = new Set(active.map((t) => t.id));
+    const byId = new Map(active.map((table) => [table.id, table]));
+    const ids = new Set(byId.keys());
     if (
       new Set(validated.tables.map((t) => t.id)).size !== ids.size ||
       validated.tables.some((t) => !ids.has(t.id))
@@ -163,6 +170,9 @@ export async function saveFloorLayout(
       throw new ConflictError("Table inventory changed; refresh the floor before saving.");
     }
     for (const table of validated.tables) {
+      // Drag/rotation/geometry saves must never write unchanged physical rows.
+      // Keep metadata updates and the floor revision within the same transaction.
+      if (!needsTableMetadataUpdate(byId.get(table.id)!, table)) continue;
       await tx
         .update(restaurantTables)
         .set({
