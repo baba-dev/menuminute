@@ -25,6 +25,7 @@
     .ss-container,
     .sto-container,
     .kb-container,
+    .pm-container,
     .mmf-container
   ) {
   box-sizing: border-box;

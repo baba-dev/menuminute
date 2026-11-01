@@ -67,3 +67,5 @@ CSS is self-contained (`mm-roll` classes), so a section does not depend on anoth
 - Section 2 (12 runs) and section 1 (16 runs) specs still pass after the `RollingNumber` extraction.
 - `tsc --noEmit`, eslint and prettier clean for the changed files. The full `next build` needs real
   production configuration and was not run here; CI covers it.
+
+Section 4, [PDF to live menu](home-v2-pdf-to-menu.md), follows it.
