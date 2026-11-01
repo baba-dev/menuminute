@@ -224,3 +224,108 @@ describe("PWA operational rollout configuration", () => {
     ).toThrow("PWA_OPERATIONAL_OUTLET_IDS");
   });
 });
+
+describe("PWA existing guest snapshot survives refresh failures", () => {
+  it("keeps a verified offline copy on network loss but revokes it on a deleted menu", async () => {
+    const origin = "https://food.bababuilds.com";
+    const pagePath = "/m/saved-menu";
+    const apiPath = "/api/public-menu/saved-menu";
+    const stores = new Map<string, Map<string, Response>>();
+    const messages: Array<{ type: string; syncedAt?: string }> = [];
+    const listeners = new Map<string, (event: unknown) => void>();
+    let offline = false;
+    let removed = false;
+
+    const toUrl = (value: string | Request) =>
+      new URL(typeof value === "string" ? value : value.url, origin).href;
+
+    const cacheStorage = {
+      open: async (name: string) => {
+        const records = stores.get(name) ?? new Map<string, Response>();
+        stores.set(name, records);
+        return {
+          keys: async () => [...records.keys()].map((url) => new Request(url)),
+          match: async (key: string | Request) => records.get(toUrl(key))?.clone(),
+          put: async (key: string | Request, response: Response) => {
+            records.set(toUrl(key), response.clone());
+          },
+          delete: async (key: string | Request) => records.delete(toUrl(key)),
+        };
+      },
+      keys: async () => [...stores.keys()],
+      delete: async (name: string) => stores.delete(name),
+    };
+
+    const worker = {
+      location: { origin },
+      addEventListener: (type: string, listener: (event: unknown) => void) => {
+        listeners.set(type, listener);
+      },
+    };
+
+    const code = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+    vm.runInNewContext(code, {
+      self: worker,
+      URL,
+      Headers,
+      Request,
+      Response,
+      Set,
+      Date,
+      Promise,
+      TypeError,
+      caches: cacheStorage,
+      fetch: async (request: Request) => {
+        if (offline) throw new TypeError("Offline network request");
+        if (removed && request.url === origin + apiPath)
+          return new Response("Removed", { status: 404 });
+        return new Response(
+          request.url === origin + apiPath ? '{"menus":[]}' : "<html>Saved menu</html>",
+          { status: 200 }
+        );
+      },
+    });
+
+    let pending: Promise<unknown> = Promise.resolve();
+    const sourceClient = {
+      url: origin + pagePath,
+      postMessage: (message: { type: string; syncedAt?: string }) => messages.push(message),
+    };
+    async function enroll() {
+      listeners.get("message")?.({
+        data: { type: "SET_GUEST_OFFLINE", enabled: true, pagePath, apiPath },
+        source: sourceClient,
+        waitUntil: (promise: Promise<unknown>) => { pending = promise; },
+      });
+      await pending;
+    }
+    const policyName = "menuminute-pwa-v2-guest-policy";
+    const readName = "menuminute-pwa-v2-guest-reads";
+
+    await enroll();
+    expect(messages.at(-1)?.type).toBe("GUEST_OFFLINE_READY");
+    const initialSync = messages.at(-1)?.syncedAt;
+    expect(initialSync).toBeTruthy();
+    expect((await (await cacheStorage.open(readName)).match(apiPath))?.ok).toBe(true);
+
+    // Re-enrolling while a page reload loses connectivity must not
+    // remove the snapshot a guest already consented to save.
+    offline = true;
+    await enroll();
+    expect(messages.at(-1)).toMatchObject({
+      type: "GUEST_OFFLINE_READY",
+      syncedAt: initialSync,
+    });
+    expect((await (await cacheStorage.open(readName)).match(apiPath))?.ok).toBe(true);
+    expect((await (await cacheStorage.open(policyName)).keys()).length).toBe(1);
+
+    // Genuine server-side removal, unlike transport loss, must revoke
+    // access to the old page and API snapshot.
+    offline = false;
+    removed = true;
+    await enroll();
+    expect(messages.at(-1)?.type).toBe("GUEST_OFFLINE_ERROR");
+    expect(await (await cacheStorage.open(readName)).match(apiPath)).toBeUndefined();
+    expect((await (await cacheStorage.open(policyName)).keys()).length).toBe(0);
+  });
+});
