@@ -5,7 +5,8 @@ import { env } from "@/lib/config/env";
 import { getPool } from "@/db";
 import { DEMO_IDS, demoModeEnabled } from "@/modules/demo/ids";
 import { demoPassword } from "@/modules/demo/credential";
-import { allowDemoEntry } from "@/modules/demo/entry-limit";
+import { demoEntryDecision } from "@/modules/demo/entry-limit";
+import { demoEntryDestination } from "@/modules/demo/destinations";
 
 export const dynamic = "force-dynamic";
 const SESSION_HOURS = 2;
@@ -16,7 +17,9 @@ const back = (reason: string) =>
 export async function POST(req: Request) {
   if (!demoModeEnabled()) return back("unavailable");
   if (req.headers.get("origin") !== new URL(env.APP_URL).origin) return back("denied");
-  if (!(await allowDemoEntry(req))) return back("busy");
+  const decision = await demoEntryDecision(req);
+  if (decision !== "allowed") return back(decision);
+  const destination = demoEntryDestination(new URL(req.url).searchParams.get("to"));
   try {
     const result = await authServer.api.signInEmail({
       body: {
@@ -41,7 +44,7 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: SESSION_HOURS * 3600,
     });
-    return NextResponse.redirect(new URL("/dashboard", env.APP_URL), 303);
+    return NextResponse.redirect(new URL(destination, env.APP_URL), 303);
   } catch {
     return back("error");
   }

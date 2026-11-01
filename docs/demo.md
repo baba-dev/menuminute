@@ -128,3 +128,7 @@ legacy flat menu tables. The demo outlet therefore does not enable POS or billin
 `pnpm test -- tests/demo-reset.test.ts tests/demo-menu.test.ts` (needs the isolated Postgres/Redis
 from `pnpm infra:test:up`). `tests/demo-reset.test.ts` fails if a new outlet-scoped table is added
 without being reset or explicitly preserved.
+
+## Visitor navigation and entry diagnostics
+
+Public acquisition QR stickers share the canonical public demo id from `DEMO_IDS.publicId` instead of a legacy route. The demo homepage offers one-click merchant entry and a direct task checklist; only fixed, allowlisted destination keys can be used in the POST entry redirect. Redis connection failures remain fail-closed and are reported as temporary service failures, rather than incorrectly claiming high visitor traffic. User-provided redirects are ignored.

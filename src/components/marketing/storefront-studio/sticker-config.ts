@@ -1,5 +1,7 @@
 /** Public demo only: never substitute a private tenant or an unapproved QR destination. */
-export const STICKER_DEMO_URL = "https://food.bababuilds.com/m/demo-spice-route-kitchen-v1";
+import { DEMO_IDS } from "@/modules/demo/ids";
+
+export const STICKER_DEMO_URL = `https://food.bababuilds.com/m/${DEMO_IDS.publicId}`;
 
 export const STICKER_FORMATS = [
   {
