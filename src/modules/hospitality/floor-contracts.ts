@@ -1,95 +1,137 @@
 import { z } from "zod";
 
-export const tableShapeSchema = z.enum(["round", "square", "rectangle", "booth", "bar"]);
+/** Dining floor v2 contracts: tables, real chairs, sections, derived occupancy and reservations. */
+
+export const tableShapeSchema = z.enum(["round", "square", "rectangle", "booth"]);
 export type TableShape = z.infer<typeof tableShapeSchema>;
 
-export const visualTableSchema = z.object({
-  id: z.string().min(1).max(128),
-  // Existing QR Studio tables use UUIDs as table numbers (36 characters).
-  tableNumber: z.string().trim().min(1).max(64),
-  label: z.string().trim().max(80).nullable().default(null),
-  capacity: z.number().int().min(1).max(30).default(4),
-  shape: tableShapeSchema.default("rectangle"),
-  x: z.number().int().min(0).max(4000).default(100),
-  y: z.number().int().min(0).max(4000).default(100),
-  width: z.number().int().min(40).max(800).default(120),
-  height: z.number().int().min(40).max(800).default(90),
-  rotation: z.number().int().min(0).max(360).default(0),
-  section: z.string().trim().min(1).max(64).default("Main Dining"),
-  assignedStaff: z.string().trim().max(64).nullable().default(null),
-});
-export type VisualTable = z.infer<typeof visualTableSchema>;
+export const chairKindSchema = z.enum(["standard", "high_chair", "bar_stool", "accessible"]);
+export type ChairKind = z.infer<typeof chairKindSchema>;
 
-export const diningSectionSchema = z.object({
-  id: z.string().min(1).max(64),
-  name: z.string().trim().min(1).max(64),
-  color: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/)
-    .default("#f59e0b"),
-});
-export type DiningSection = z.infer<typeof diningSectionSchema>;
+export const MAX_CHAIRS_PER_TABLE = 30;
+export const MAX_TABLES_PER_OUTLET = 200;
 
-export const floorLayoutDocSchema = z
+const idSchema = z.string().trim().min(1).max(128);
+
+export const createSectionInputSchema = z
   .object({
-    version: z.literal(1).default(1),
-    revision: z.number().int().nonnegative().default(0),
-    canvas: z.object({
-      width: z.number().int().min(600).max(4000).default(1400),
-      height: z.number().int().min(400).max(3000).default(900),
-      gridSnap: z.number().int().min(5).max(100).default(20),
-    }),
-    sections: z.array(diningSectionSchema).max(24).default([]),
-    tables: z.array(visualTableSchema).max(200).default([]),
+    name: z.string().trim().min(1).max(64),
+    color: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
   })
-  .superRefine((layout, context) => {
-    const ids = new Set<string>();
-    const numbers = new Set<string>();
-    for (const table of layout.tables) {
-      if (ids.has(table.id)) {
-        context.addIssue({
-          code: "custom",
-          path: ["tables"],
-          message: "Duplicate table identifier",
-        });
-      }
-      ids.add(table.id);
-      if (numbers.has(table.tableNumber)) {
-        context.addIssue({ code: "custom", path: ["tables"], message: "Duplicate table number" });
-      }
-      numbers.add(table.tableNumber);
-      if (!layout.sections.some((section) => section.name === table.section)) {
-        context.addIssue({ code: "custom", path: ["tables"], message: "Unknown table section" });
-      }
-    }
-  });
-export type FloorLayoutDoc = z.infer<typeof floorLayoutDocSchema>;
+  .strict();
+export type CreateSectionInput = z.infer<typeof createSectionInputSchema>;
 
-export type TableLiveStatus = {
-  state: "available" | "active" | "unpaid" | "reserved" | "maintenance";
+export const createTableInputSchema = z
+  .object({
+    name: z.string().trim().min(1, "Give the table a name").max(80),
+    /** Omit to take the next free number. */
+    displayNumber: z.number().int().min(1).max(9999).optional(),
+    sectionId: idSchema.nullable().default(null),
+    shape: tableShapeSchema.default("rectangle"),
+    chairCount: z.number().int().min(0).max(MAX_CHAIRS_PER_TABLE).default(0),
+    chairKind: chairKindSchema.default("standard"),
+  })
+  .strict();
+export type CreateTableInput = z.infer<typeof createTableInputSchema>;
+
+export const updateTableInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80).optional(),
+    displayNumber: z.number().int().min(1).max(9999).optional(),
+    sectionId: idSchema.nullable().optional(),
+    shape: tableShapeSchema.optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, "Nothing to change");
+export type UpdateTableInput = z.infer<typeof updateTableInputSchema>;
+
+export const addChairsInputSchema = z
+  .object({
+    count: z.number().int().min(1).max(MAX_CHAIRS_PER_TABLE),
+    kind: chairKindSchema.default("standard"),
+    /** Null leaves the new chairs unassigned, ready to be moved onto a table. */
+    tableId: idSchema.nullable().default(null),
+  })
+  .strict();
+export type AddChairsInput = z.infer<typeof addChairsInputSchema>;
+
+export const updateChairInputSchema = z
+  .object({
+    label: z.string().trim().min(1).max(40).nullable().optional(),
+    kind: chairKindSchema.optional(),
+    /** Move to another table, or null to unassign. */
+    tableId: idSchema.nullable().optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, "Nothing to change");
+export type UpdateChairInput = z.infer<typeof updateChairInputSchema>;
+
+/** One tap: mark a single chair taken/free. `version` guards against a stale screen. */
+export const setChairOccupiedInputSchema = z
+  .object({
+    occupied: z.boolean(),
+    version: z.number().int().min(0).optional(),
+  })
+  .strict();
+export type SetChairOccupiedInput = z.infer<typeof setChairOccupiedInputSchema>;
+
+export const seatTableInputSchema = z
+  .object({ guests: z.number().int().min(1).max(MAX_CHAIRS_PER_TABLE).optional() })
+  .strict();
+
+export type FloorChair = {
+  id: string;
+  tableId: string | null;
+  label: string | null;
+  kind: ChairKind;
+  occupied: boolean;
+  occupiedAt: string | null;
+  version: number;
+};
+
+export type FloorSection = { id: string; name: string; color: string; sortOrder: number };
+
+export type FloorTableState = "empty" | "partial" | "full" | "no_chairs";
+
+export type FloorTableOverview = {
+  /** The permanent system identifier. Never changes when a table is renamed or renumbered. */
+  id: string;
+  displayNumber: number;
+  name: string;
+  shape: TableShape;
+  sectionId: string | null;
+  chairs: FloorChair[];
+  maxOccupancy: number;
+  currentOccupancy: number;
+  state: FloorTableState;
+  /** Service signals for context only; they never change chair state. */
   activeOrders: number;
   unpaidOrders: number;
-  dueMinor: string;
-  currency: string;
-  latestOrderId: string | null;
-  hasServiceRequest?: {
-    signal: "water_refill" | "call_server" | "bill_request";
-    id: string;
-    requestedAt: string;
-  };
-  upcomingReservation?: {
-    id: string;
-    guestName: string;
-    partySize: number;
-    time: string;
-    notes?: string | null;
-  };
-  qrCode?: {
-    id: string;
-    destinationToken: string;
-    label: string;
-    isActive: boolean;
-  };
+  nextReservation: { id: string; guestName: string; partySize: number; time: string } | null;
+  qrCode: { id: string; destinationToken: string; label: string } | null;
+  /** True when guests have been seated for a long time with no open order. */
+  stale: boolean;
+};
+
+export type FloorTotals = {
+  tables: number;
+  chairs: number;
+  maxOccupancy: number;
+  currentOccupancy: number;
+  sections: number;
+  tablesOccupied: number;
+};
+
+export type FloorOverview = {
+  sections: FloorSection[];
+  tables: FloorTableOverview[];
+  unassignedChairs: FloorChair[];
+  totals: FloorTotals;
+  /** Next reservation anywhere on the floor, for the hero line. */
+  nextReservation: { guestName: string; partySize: number; time: string } | null;
 };
 
 export type ReservationItem = {

@@ -26,6 +26,22 @@ describe("public demo request guard (allowlist)", () => {
     expect(demoRequestAllowed("POST", scoped("kitchen/work"))).toBe(true);
     expect(demoRequestAllowed("POST", scoped("service-requests"))).toBe(true);
     expect(demoRequestAllowed("POST", scoped("menu/quick-availability"))).toBe(true);
+    // Floor occupancy is resettable; floor structure, QR and bookings are not.
+    expect(demoRequestAllowed("PUT", "/api/floor/chairs/c1/occupancy")).toBe(true);
+    expect(demoRequestAllowed("POST", "/api/floor/tables/t1/occupancy")).toBe(true);
+    expect(demoRequestAllowed("DELETE", "/api/floor/tables/t1/occupancy")).toBe(true);
+    for (const [m, p] of [
+      ["POST", "/api/floor/tables"],
+      ["DELETE", "/api/floor/tables/t1"],
+      ["PATCH", "/api/floor/tables/t1"],
+      ["POST", "/api/floor/chairs"],
+      ["PATCH", "/api/floor/chairs/c1"],
+      ["DELETE", "/api/floor/chairs/c1"],
+      ["POST", "/api/floor/sections"],
+      ["POST", "/api/floor/tables/qr"],
+      ["POST", "/api/floor/reservations"],
+    ] as const)
+      expect(demoRequestAllowed(m, p), `${m} ${p}`).toBe(false);
   });
   it("denies account, billing, team, upload, QR, POS, profile, AI-autofill and import mutations", () => {
     const denied: Array<[string, string]> = [

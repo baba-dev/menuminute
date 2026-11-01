@@ -27,7 +27,10 @@ const PRESERVED: Record<string, string> = {
   brand_outlets: "tenant structure",
   brands: "tenant structure",
   consumer_receipts: "worker idempotency",
-  dining_floor_plans: "floor layout configuration",
+  dining_floor_plans: "legacy floor layout configuration (no longer read)",
+  dining_sections: "floor configuration; the demo section is re-asserted when tables are restored",
+  restaurant_chairs:
+    "removed with their table by ON DELETE CASCADE; trigger restaurant_tables_demo_seed re-seeds them (migration 0073)",
   dining_reservations: "reservations ledger",
   domain_audit: "audit trail",
   domain_projections: "projection",
@@ -158,6 +161,19 @@ describe("demo outlet reset", () => {
       [DEMO_IDS.outletId]
     );
     expect(tables.rows[0]).toEqual({ n: 12, edited: false });
+    // The floor is rebuilt with sections, numbers and chairs, and visitor occupancy is wiped.
+    const floor = await owner.query(
+      `select count(*)::int tables, count(*) filter (where display_number is not null)::int numbered,
+         count(*) filter (where section_id is not null)::int sectioned,
+         (select count(*)::int from restaurant_chairs c where c.outlet_id=$1) chairs,
+         (select count(*)::int from restaurant_chairs c where c.outlet_id=$1 and c.occupied_at is not null) occupied,
+         (select coalesce(sum(capacity),0)::int from restaurant_tables where restaurant_id=$1) capacity
+       from restaurant_tables where restaurant_id=$1`,
+      [DEMO_IDS.outletId]
+    );
+    expect(floor.rows[0]).toMatchObject({ tables: 12, numbered: 12, sectioned: 12, occupied: 0 });
+    expect(floor.rows[0].chairs).toBeGreaterThan(0);
+    expect(floor.rows[0].chairs).toBe(floor.rows[0].capacity);
   });
 
   it("is deterministic and keeps the revision stable unless a visitor edited the menu", async () => {

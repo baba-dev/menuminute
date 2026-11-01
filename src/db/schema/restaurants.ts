@@ -91,6 +91,14 @@ export const restaurantTables = pgTable(
       .references(() => restaurants.id, { onDelete: "cascade" }),
     tableNumber: text("table_number").notNull(),
     label: text("label"), // "Window Seat", "Rooftop", etc.
+    /** Floor v2: operator-facing name, human table number and section (migration 0073). */
+    name: text("name"),
+    displayNumber: integer("display_number"),
+    sectionId: text("section_id"),
+    shape: text("shape", { enum: ["round", "square", "rectangle", "booth"] })
+      .notNull()
+      .default("rectangle"),
+    /** Derived from active chairs by trigger; legacy tables keep their old value. */
     capacity: integer("capacity"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -99,7 +107,12 @@ export const restaurantTables = pgTable(
   },
   (t) => [
     index("tables_restaurant_idx").on(t.restaurantId),
-    uniqueIndex("tables_number_idx").on(t.restaurantId, t.tableNumber),
+    uniqueIndex("tables_number_idx")
+      .on(t.restaurantId, t.tableNumber)
+      .where(sql`is_active`),
+    uniqueIndex("tables_display_number_idx")
+      .on(t.restaurantId, t.displayNumber)
+      .where(sql`is_active and display_number is not null`),
   ]
 );
 
