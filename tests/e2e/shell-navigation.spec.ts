@@ -131,6 +131,14 @@ test.describe("desktop shell", () => {
     for (const group of ["Run service", "Menu", "Insights", "Admin"])
       await expect(nav.getByRole("group", { name: group })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Orders" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Orders" })).toHaveAttribute(
+      "aria-description",
+      /Receive, accept and track incoming guest orders/
+    );
+    await expect(nav.getByRole("link", { name: "Point of Sale" })).toHaveAttribute(
+      "aria-description",
+      /cashier payments/
+    );
     await expect(nav.getByRole("link", { name: "Dining floor" })).toBeVisible();
     // An owner can always set up the kitchen, so it is a normal link here, and with nothing
     // unavailable there is no Add-ons section to distract from.

@@ -566,13 +566,13 @@ export function TheTill({
           <span className="till-eyebrow">MENUMINUTE / POINT OF SALE</span>
           <h1>Service, meet settlement.</h1>
           <p>
-            Every order, one counter. Create sales, manage incoming orders, prepare bills and keep
-            your restaurant moving.
+            Record counter sales, prepare bills and manage cashier payments here. Use Orders to
+            accept guest requests and Kitchen for preparation.
           </p>
         </div>
         <div className="till-heading-actions">
           <Link href="/dashboard/orders">
-            Service Counter <ArrowRight size={15} />
+            Open Orders <ArrowRight size={15} />
           </Link>
           {workspace.context.canConfigure && workspace.context.enabled && (
             <button

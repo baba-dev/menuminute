@@ -15,7 +15,7 @@ import { WorkspaceIcon } from "./workspace-icons";
 import { useWorkspaceShell } from "./workspace-shell";
 
 /**
- * Phone navigation: Orders, Till, Kitchen and Floor (whichever the user can use), then More.
+ * Phone navigation: Orders, POS, Kitchen and Floor (whichever the user can use), then More.
  * Visible text is short; the accessible name stays the full label (for example "Kitchen Setup").
  */
 export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
@@ -52,6 +52,8 @@ export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: bo
             <Link
               key={item.id}
               href={item.href}
+              title={item.description}
+              aria-description={item.description}
               className={"mm-bottom-link" + (selected ? " is-active" : "")}
               aria-current={selected ? "page" : undefined}
               aria-label={
@@ -131,6 +133,8 @@ export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: bo
                 <li key={item.id}>
                   <Link
                     href={item.href}
+                    title={item.description}
+                    aria-description={item.description}
                     className="mm-sheet-link"
                     aria-current={isNavSelected(item, pathname) ? "page" : undefined}
                     onClick={() => setMoreOpen(false)}
