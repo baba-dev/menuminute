@@ -21,6 +21,8 @@ import {
   type ConnectionState,
 } from "@/modules/dashboard/notification-model";
 import { parseShellSnapshot } from "@/modules/dashboard/shell-client";
+import { popupsFromDiff } from "@/modules/dashboard/ember-popups";
+import { EMBER_POPUP_EVENT } from "@/lib/ember-events";
 import { pageHasOwnAudio } from "@/lib/sound-preference";
 import { playKitchenBell } from "@/lib/sound-effects";
 
@@ -133,7 +135,10 @@ export function WorkspaceShellProvider({
       const next = parseShellSnapshot(await response.json(), outletId);
       if (!next) throw new Error("invalid response");
       const found = arrivals(snapshotRef.current, next);
+      const popups = popupsFromDiff(snapshotRef.current, next);
       snapshotRef.current = next;
+      if (popups.length > 0)
+        window.dispatchEvent(new CustomEvent(EMBER_POPUP_EVENT, { detail: { popups } }));
       setSnapshot(next);
       setLastSuccessAt(Date.now());
       if (found.orders + found.requests > 0) {

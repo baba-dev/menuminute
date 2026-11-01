@@ -7,7 +7,7 @@ import {
   type GuestServiceRequest,
 } from "@/modules/hospitality/service";
 import { ordersSqlState } from "@/modules/orders/diagnostics";
-import { listServiceRail, servicePulse } from "@/modules/orders/workspace";
+import { listPaidRailOrders, listServiceRail, servicePulse } from "@/modules/orders/workspace";
 import { financeRead, type ShiftRow } from "@/modules/pos/finance";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 
@@ -110,6 +110,7 @@ export type ShellSnapshot = {
   pulse: Section<Awaited<ReturnType<typeof servicePulse>>>;
   requests: Section<RequestSummary>;
   till: Section<TillSummary>;
+  payments: Section<{ paid: { id: string; orderNumber: number }[] }>;
 };
 
 export async function shellSnapshot(
@@ -118,7 +119,7 @@ export async function shellSnapshot(
   outletId: string,
   currency: string
 ): Promise<ShellSnapshot> {
-  const [pulse, requests, till] = await Promise.all([
+  const [pulse, requests, till, payments] = await Promise.all([
     section("pulse", () => servicePulse(actor, organizationId, outletId)),
     section("requests", async () =>
       summarizeRequests(await staffServiceRequests(actor, organizationId, outletId))
@@ -129,8 +130,11 @@ export async function shellSnapshot(
         currency
       )
     ),
+    section("payments", async () => ({
+      paid: await listPaidRailOrders(actor, organizationId, outletId),
+    })),
   ]);
-  return { outletId, checkedAt: new Date().toISOString(), pulse, requests, till };
+  return { outletId, checkedAt: new Date().toISOString(), pulse, requests, till, payments };
 }
 
 /** Extra flags the nav capabilities do not carry. Never throws: no grant simply means false. */

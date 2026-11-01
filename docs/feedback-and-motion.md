@@ -132,4 +132,8 @@ Verify A/B/C, alerts, toasts, forms, pending/error/success, loading/empty/offlin
 - Reduced motion and announced results that do not repeat every animation frame.
 - Duplicate activation, ambiguous submission, concurrent kitchen actions, reconnect recovery and retry behavior.
 
+## 10. Implemented: Ember service pop-ups
+
+Status: implemented in the dashboard shell (not yet on `/kitchen`). The shell's existing 30-second poll diffs successive snapshots (`src/modules/dashboard/ember-popups.ts`) and `EmberPopups` renders at most three transient notices: **orange = new order, amber = cooking, blue = ready/served, green = payment recorded**. Each also has its own icon and label; colour is never the only signal. They auto-hide after 5 s, pause on hover/focus, dismiss by button or Escape, never take focus, and use a 160 ms fade/6 px rise (fade only under reduced motion). Per-kind toggles live in the notification drawer (browser-local). Limits: they are not a ledger, a missed poll is a missed pop-up (the drawer alerts remain), "ready/served" stands in for delivery, and payment pop-ups cover only orders that stay on the live rail between polls.
+
 This document records the design contract. It does not claim that the current starter application implements these components or passes the behavior checks.
