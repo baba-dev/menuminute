@@ -29,8 +29,11 @@ export function parseAppearanceCommand(prompt: string): AppearanceCommand | null
     return "light";
   if (/^(?:turn|switch) on (?:the )?dark (?:mode|theme)$/.test(command)) return "dark";
   if (
-    /^(?:(?:switch to|change to|set(?: the)?(?: color| colour)? (?:mode|theme|appearance) to|use|follow) (?:the |my )?(?:system|device|os)(?: (?:mode|theme|appearance|settings|preference))?|(?:reset|restore) (?:the )?(?:theme|appearance|mode) to (?:system|default)|follow (?:my |the )?system (?:settings|preference))$/.test(command)
-  ) return "system";
+    /^(?:(?:switch to|change to|set(?: the)?(?: color| colour)? (?:mode|theme|appearance) to|use|follow) (?:the |my )?(?:system|device|os)(?: (?:mode|theme|appearance|settings|preference))?|(?:reset|restore) (?:the )?(?:theme|appearance|mode) to (?:system|default)|follow (?:my |the )?system (?:settings|preference))$/.test(
+      command
+    )
+  )
+    return "system";
 
   const explicit =
     /^(?:switch to|change to|change (?:my |the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set (?:the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set|use|enable|activate|turn on|go|make (?:it|the app)) (?:the )?(dark|light)(?: (?:mode|theme))?$/.exec(
