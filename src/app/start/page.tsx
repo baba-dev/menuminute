@@ -27,7 +27,7 @@ export default async function StartPage({
   // Joining another restaurant as staff must never prevent someone from
   // creating their own first independently owned restaurant.
   // A brand-new account has exactly one sensible path; skip the chooser unless asked for.
-  if (!choose && !outlets.length && !memberships.length) redirect("/onboarding");
+  if (!choose && !outlets.length && !memberships.length) redirect("/onboarding?quick=1");
   const ownsRestaurant = memberships.some((org) => org.isActive && org.role === "owner");
   const canAddOutlet = memberships.some(
     (org) => org.isActive && (org.role === "owner" || org.role === "admin")
@@ -36,7 +36,7 @@ export default async function StartPage({
     {
       title: "Create my first restaurant",
       copy: "Start your own restaurant workspace and build a free QR menu. You can complete the optional details later.",
-      href: ownsRestaurant ? "/dashboard/organization" : "/onboarding",
+      href: ownsRestaurant ? "/dashboard/organization" : "/onboarding?quick=1",
       action: ownsRestaurant ? "Manage my restaurants" : "Create my restaurant",
       Icon: Store,
     },

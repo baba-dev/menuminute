@@ -91,8 +91,17 @@ export default async function GetStartedPage() {
         )}
       </section>
       <nav className="mm-readiness-actions" aria-label="Continue your restaurant setup">
-        <Link href="/dashboard/menu" className="wizard-primary-btn">
-          Open Menu Studio <ArrowRight size={16} aria-hidden="true" />
+        <Link href={next?.href ?? "/dashboard/menu"} className="wizard-primary-btn">
+          {next?.id === "dishes"
+            ? "Add your first dish"
+            : next?.id === "publish"
+              ? "Publish your menu"
+              : next?.id === "qr"
+                ? "View your QR code"
+                : next
+                  ? next.label
+                  : "Open Menu Studio"}{" "}
+          <ArrowRight size={16} aria-hidden="true" />
         </Link>
         <Link href="/dashboard/menu/import" className="wizard-back-btn">
           Import your existing menu
