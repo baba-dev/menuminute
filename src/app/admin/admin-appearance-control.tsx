@@ -4,10 +4,10 @@ import { useSyncExternalStore } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import {
   getAppearancePreference,
-  setAppearancePreference,
   subscribeToAppearance,
   type AppearancePreference,
 } from "@/components/menu-product/appearance-store";
+import { setAppearanceWithTransition } from "@/components/menu-product/appearance-transition";
 
 /** Admin appearance is explicit: light, dark, or follow the operating system. */
 export function AdminAppearanceControl() {
@@ -30,7 +30,9 @@ export function AdminAppearanceControl() {
         aria-label="Appearance preference"
         className="max-w-20 cursor-pointer bg-transparent text-xs font-semibold outline-offset-2 sm:max-w-none"
         value={preference}
-        onChange={(event) => setAppearancePreference(event.target.value as AppearancePreference)}
+        onChange={(event) =>
+          setAppearanceWithTransition(event.target.value as AppearancePreference, event.currentTarget)
+        }
       >
         <option value="system">System</option>
         <option value="light">Light</option>

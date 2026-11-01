@@ -370,3 +370,18 @@ body {
   border-color: #6ee7b7;
   background: rgba(110, 231, 183, 0.12);
 }
+
+/* Scope the circular reveal to appearance changes; leave unrelated view transitions intact. */
+html[data-mm-theme-transition="active"]::view-transition-old(root),
+html[data-mm-theme-transition="active"]::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal;
+}
+
+html[data-mm-theme-transition="active"]::view-transition-old(root) {
+  z-index: 1;
+}
+
+html[data-mm-theme-transition="active"]::view-transition-new(root) {
+  z-index: 2;
+}
