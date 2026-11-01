@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CHAPTERS,
+  CAMERA_RETURN_START,
   cameraFraction,
   cameraStyle,
   HOLD_START,
@@ -102,20 +103,28 @@ describe("dashboard build timeline", () => {
     }
   });
 
-  it("pans the camera down the tall page and back up", () => {
+  it("pans the camera down the tall page, then returns it to the top", () => {
     expect(cameraFraction(0)).toBe(0);
     expect(cameraFraction(0.3)).toBe(0);
-    expect(cameraFraction(HOLD_START)).toBe(1);
-    expect(cameraFraction(1)).toBe(1);
+    expect(cameraFraction(0.88)).toBe(1);
+    expect(cameraFraction(CAMERA_RETURN_START)).toBe(1);
+    expect(cameraFraction(1)).toBe(0);
+    // Up to the bottom, then monotonically back home; never past either end.
     let previous = 0;
-    for (let i = 0; i <= 100; i++) {
+    for (let i = 0; i <= 92; i++) {
       const value = cameraFraction(i / 100);
       expect(value).toBeGreaterThanOrEqual(previous);
       previous = value;
     }
+    for (let i = 92; i <= 100; i++) {
+      const value = cameraFraction(i / 100);
+      expect(value).toBeLessThanOrEqual(previous);
+      expect(value).toBeGreaterThanOrEqual(0);
+      previous = value;
+    }
     expect(cameraStyle(0, 800)).toEqual({ transform: "none" });
-    expect(cameraStyle(1, 800)).toEqual({ transform: "translate3d(0, -800px, 0)" });
-    expect(cameraStyle(1, 0)).toEqual({ transform: "none" });
+    expect(cameraStyle(0.9, 800)).toEqual({ transform: "translate3d(0, -800px, 0)" });
+    expect(cameraStyle(1, 800)).toEqual({ transform: "none" });
     expect(cameraStyle(0.58, -50)).toEqual({ transform: "none" });
   });
 

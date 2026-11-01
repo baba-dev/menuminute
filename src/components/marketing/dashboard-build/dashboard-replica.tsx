@@ -8,6 +8,7 @@ import {
   FilePenLine,
   Info,
   Plus,
+  RefreshCw,
   Search,
   Sun,
   UtensilsCrossed,
@@ -20,12 +21,14 @@ import {
   REPLICA_BELL_COUNT,
   REPLICA_CAPABILITIES,
   REPLICA_DISH_COUNT,
+  REPLICA_DISPATCH,
   REPLICA_HEALTH_ROWS,
   REPLICA_KPIS,
   REPLICA_OUTLET_NAME,
   REPLICA_PRIORITIES,
   REPLICA_SERVICE_PERIOD,
   REPLICA_SETUP,
+  REPLICA_TABLES,
   REPLICA_TILL_LABEL,
 } from "./dashboard-build-fixture";
 import { pieceById, pieceStyle, staggerStyle } from "./dashboard-build-timeline";
@@ -256,7 +259,7 @@ function ReplicaGlance() {
               </span>
             </div>
             <strong className={"mm-dashboard-kpi-value" + (positive ? " is-positive" : "")}>
-              {typeof value === "number" ? <span data-count-to={value}>0</span> : value}
+              {typeof value === "number" ? <span data-count-to={value}>{value}</span> : value}
             </strong>
             <span className="mm-dashboard-kpi-detail">{detail}</span>
           </div>
@@ -363,12 +366,17 @@ function ReplicaHealth() {
               </span>
             </dt>
             <dd>
-              <span data-count-to={setup.completed}>0</span> of {setup.total} essentials completed
+              <span data-count-to={setup.completed}>{setup.completed}</span> of {setup.total}{" "}
+              essentials completed
             </dd>
-            <progress max={setup.total} value={0} data-progress-to={setup.completed} />
+            <progress
+              max={setup.total}
+              value={setup.completed}
+              data-progress-to={setup.completed}
+            />
           </div>
           <strong>
-            <span data-count-to={setup.percent}>0</span>%
+            <span data-count-to={setup.percent}>{setup.percent}</span>%
           </strong>
         </div>
       </dl>
@@ -384,6 +392,148 @@ function ReplicaHealth() {
   );
 }
 
+/** The real "Service Dispatch" panel with sample counters. The four tiles stagger in and count up. */
+function ReplicaDispatch() {
+  const piece = pieceById("pulse");
+  const { counters, snapshot } = REPLICA_DISPATCH;
+  return (
+    <section className="mm-dashboard-operations" data-piece="pulse" style={pieceStyle(0, piece)}>
+      <div className="mm-dashboard-operations-heading">
+        <div className="mm-dashboard-service-heading">
+          <div>
+            <span className="mm-dashboard-eyebrow">SERVICE ACTIVITY</span>
+            <h2>The Service Dispatch</h2>
+            <p>What needs attention now · From your live order ledger.</p>
+          </div>
+          <div className="mm-dashboard-service-art-wrap">
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--light"
+              src={ARTWORK + "service-dispatch-light.svg"}
+              alt=""
+              width={130}
+              height={91}
+            />
+            <Image
+              className="mm-dashboard-service-art mm-dashboard-service-art--dark"
+              src={ARTWORK + "service-dispatch-dark.svg"}
+              alt=""
+              width={130}
+              height={91}
+            />
+          </div>
+        </div>
+      </div>
+      <p className="mm-dashboard-operations-freshness">
+        {snapshot} · Refreshes every 30 seconds while this tab is active
+      </p>
+      <div className="mm-dashboard-operations-grid">
+        {counters.map(({ label, value }, index) => (
+          <a
+            key={label}
+            data-stagger={index}
+            data-stagger-count={counters.length}
+            style={staggerStyle(0, piece, index, counters.length)}
+          >
+            <strong data-count-to={value}>{value}</strong>
+            <span>{label}</span>
+          </a>
+        ))}
+      </div>
+      <div className="mm-dashboard-service-footer">
+        <a>View all orders &rarr;</a>
+        <button type="button" className="mm-dashboard-operations-refresh" disabled>
+          <RefreshCw size={16} aria-hidden="true" /> Refresh
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/** The real "Your dining floor" panel over the demo outlet's 12 tables (sample order activity). */
+function ReplicaFloor() {
+  const piece = pieceById("floor");
+  const tables = REPLICA_TABLES;
+  const activeCount = tables.filter((table) => table.active > 0).length;
+  const unpaidCount = tables.filter((table) => table.unpaid > 0).length;
+  const filters = [
+    ["All tables", tables.length],
+    ["Active orders", activeCount],
+    ["Unpaid tabs", unpaidCount],
+  ] as const;
+  return (
+    <section className="mm-dashboard-ops-panel" data-piece="floor" style={pieceStyle(0, piece)}>
+      <div className="mm-ops-head">
+        <div>
+          <span className="mm-dashboard-eyebrow">DINING ROOM</span>
+          <h2>Your dining floor</h2>
+          <p>
+            Outstanding table orders and unpaid balances. Updated approximately every 20 seconds.
+          </p>
+        </div>
+        <div className="mm-ops-art-wrap">
+          <Image
+            className="mm-ops-art mm-ops-art--light"
+            src={ARTWORK + "dining-room-empty-light.svg"}
+            alt=""
+            width={110}
+            height={83}
+          />
+          <Image
+            className="mm-ops-art mm-ops-art--dark"
+            src={ARTWORK + "dining-room-empty-dark.svg"}
+            alt=""
+            width={110}
+            height={83}
+          />
+        </div>
+      </div>
+      <div className="mm-ops-actions">
+        <button type="button" disabled>
+          <RefreshCw size={15} aria-hidden="true" /> Refresh floor
+        </button>
+        <a>
+          Manage service points <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+      <div className="mm-ops-actions">
+        {filters.map(([label, count], index) => (
+          <button key={label} type="button" aria-pressed={index === 0} disabled>
+            {label} ({count})
+          </button>
+        ))}
+      </div>
+      <ul className="mm-ops-items">
+        {tables.map((table, index) => (
+          <li
+            className="mm-ops-item"
+            key={table.id}
+            data-stagger={index}
+            data-stagger-count={tables.length}
+            style={staggerStyle(0, piece, index, tables.length)}
+          >
+            <strong>Table {table.number}</strong>
+            <span>
+              {table.unpaid > 0 ? "Unpaid" : table.active > 0 ? "Order active" : "No open tickets"}
+            </span>
+            <p>{table.label}</p>
+            <p>
+              {table.active} active orders · {table.unpaid} unpaid
+            </p>
+            {table.due && <strong>Due: {table.due}</strong>}
+            {(table.active > 0 || table.unpaid > 0) && (
+              <div className="mm-ops-actions">
+                <a>View in Till</a>
+                <a>Orders Rail</a>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="mm-ops-disclaimer">Order activity is not a physical occupancy sensor.</p>
+    </section>
+  );
+}
+
 function WidgetPlaceholder({
   widget,
   id,
@@ -391,7 +541,7 @@ function WidgetPlaceholder({
   className,
 }: {
   widget: string;
-  id: "pulse" | "floor";
+  id: "floor";
   label: string;
   className: string;
 }) {
@@ -406,8 +556,8 @@ function WidgetPlaceholder({
 
 /**
  * The dashboard body in the real widget order (kpis, priorities, dispatch, health, floor, service
- * requests), laid out by the real `mm-widget-grid`. Dispatch, floor and service requests are still
- * labelled placeholders; later slices replace them.
+ * requests), laid out by the real `mm-widget-grid`. Only service requests is still a labelled
+ * placeholder; a later slice replaces it.
  */
 export function ReplicaBody() {
   return (
@@ -419,21 +569,15 @@ export function ReplicaBody() {
         <div className="mm-widget" data-widget="priorities">
           <ReplicaPriorities />
         </div>
-        <WidgetPlaceholder
-          widget="dispatch"
-          id="pulse"
-          label="The Service Dispatch (placeholder)"
-          className="db-ph--dispatch"
-        />
+        <div className="mm-widget" data-widget="dispatch">
+          <ReplicaDispatch />
+        </div>
         <div className="mm-widget" data-widget="health">
           <ReplicaHealth />
         </div>
-        <WidgetPlaceholder
-          widget="floor"
-          id="floor"
-          label="Dining floor (placeholder)"
-          className="db-ph--tall"
-        />
+        <div className="mm-widget" data-widget="floor">
+          <ReplicaFloor />
+        </div>
         <WidgetPlaceholder
           widget="serviceRequests"
           id="floor"

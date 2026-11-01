@@ -14,6 +14,9 @@ export const SCROLL_LENGTH_VH = { desktop: 500, mobile: 400 } as const;
 /** From here to 1 the finished dashboard holds still so it can be read and clicked. */
 export const HOLD_START = 0.9;
 
+/** The camera starts gliding back to the top of the page here; it is home again at p = 1. */
+export const CAMERA_RETURN_START = 0.92;
+
 /** Hotspots only become interactive once the dashboard is essentially complete. */
 export const INTERACTIVE_AT = 0.95;
 
@@ -79,7 +82,7 @@ export const CHAPTERS: readonly Chapter[] = [
   { id: "overview", label: "Overview", at: 0.52 },
   { id: "priorities", label: "Priorities", at: 0.7 },
   { id: "health", label: "Outlet health", at: 0.86 },
-  { id: "live-service", label: "Live service", at: 1 },
+  { id: "live-service", label: "Live service", at: 0.9 },
 ];
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -167,10 +170,13 @@ export function staggerStyle(p: number, piece: Piece, index: number, count: numb
 
 /**
  * The real dashboard is much taller than a screen, so the stage acts as a camera that pans down
- * the page as it builds, like scrolling the product. 0 = top of the page, 1 = bottom.
+ * the page as it builds, like scrolling the product. 0 = top of the page, 1 = bottom. It returns to
+ * the top at the very end.
  */
 export function cameraFraction(p: number) {
-  return 0.45 * rangeProgress(p, 0.5, 0.66) + 0.55 * rangeProgress(p, 0.66, 0.88);
+  const down = 0.45 * rangeProgress(p, 0.5, 0.66) + 0.55 * rangeProgress(p, 0.66, 0.88);
+  // Once everything is built, glide back to the top so the held frame is the hero and KPIs.
+  return down * (1 - rangeProgress(p, CAMERA_RETURN_START, 1));
 }
 
 /** `travel` is the scrollable height of the page inside the window, in unscaled px. */

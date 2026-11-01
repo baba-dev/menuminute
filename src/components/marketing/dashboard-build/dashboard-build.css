@@ -173,20 +173,8 @@
   font-weight: 700;
   opacity: 0.6;
 }
-.db-ph--dispatch {
-  height: 440px;
-}
 .db-ph--tall {
   height: 260px;
-}
-.db-ph--order {
-  position: absolute;
-  right: 32px;
-  bottom: 32px;
-  width: 270px;
-  height: 80px;
-  border-style: solid;
-  border-color: var(--ember);
 }
 
 /* ── Pin the desktop layout (the product re-flows at these viewport widths) ── */
@@ -222,10 +210,39 @@
     grid-column: 1 / -1;
   }
 }
+@media (min-width: 681px) and (max-width: 1150px) {
+  /* dashboard-operations.css collapses the four-across health row here. */
+  .db .mm-dashboard-health-rows {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .db .mm-dashboard-health-row:nth-child(2) {
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-health-row:nth-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
 @media (min-width: 681px) and (max-width: 1100px) {
   .db .mm-topbar-connection-label,
   .db .mm-topbar-chip span:not(.sr-only):not(:first-child) {
     display: inline;
+  }
+}
+@media (min-width: 681px) and (max-width: 850px) {
+  /* dashboard-operations.css re-flows the KPI row here as well. */
+  .db .mm-dashboard-kpi:nth-child(n) {
+    padding-inline: clamp(10px, 1.3vw, 20px);
+    border-right: 1px solid var(--editorial-line);
+  }
+  .db .mm-dashboard-kpi:first-child {
+    padding-left: 0;
+  }
+  .db .mm-dashboard-kpi:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .db .mm-dashboard-operations-heading {
+    flex-wrap: nowrap;
   }
 }
 @media (min-width: 681px) and (max-width: 900px) {
@@ -283,15 +300,6 @@
     width: 390px;
     /* Room so the last content can clear the 64px bottom bar. */
     padding-bottom: 64px;
-  }
-  .db-ph--dispatch {
-    height: 300px;
-  }
-  .db-ph--order {
-    right: 14px;
-    bottom: 78px;
-    width: 190px;
-    height: 56px;
   }
   .db__rail-item {
     padding: 0.25rem 0.6rem;
@@ -383,9 +391,6 @@
     position: relative;
     left: auto;
     margin-left: 216px;
-  }
-  .db-ph--order {
-    display: none;
   }
 }
 @media (max-width: 680px) and ((scripting: none) or (prefers-reduced-motion: reduce)) {

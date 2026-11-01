@@ -10,7 +10,6 @@ import {
   renderDashboardBuild,
   scrollProgress,
   stageStyle,
-  type PieceId,
 } from "./dashboard-build-timeline";
 import {
   ReplicaBody,
@@ -21,23 +20,15 @@ import {
 } from "./dashboard-replica";
 import "@/app/(dashboard)/workspace.css";
 import "@/app/(dashboard)/workspace-delight.css";
+import "@/app/(dashboard)/dashboard/dashboard-operations.css";
 import "./dashboard-build.css";
 
 /**
  * Pinned, scroll-assembled dashboard. The sidebar, top bar, hero, KPI row, priorities and outlet
  * health are faithful replicas of the real workspace (real class names, nav model, icons and
- * artwork). Dispatch, floor, service requests and the new-order toast are still PLACEHOLDERS that
- * arrive in later slices. Marketing fixture: no API calls, no auth, no tenant data.
+ * artwork). Only the service-requests panel is still a labelled PLACEHOLDER; the new-order arrival
+ * beat (bell and toast) is a later slice. Marketing fixture: no API calls, no auth, no tenant data.
  */
-
-function Placeholder({ id, label, className }: { id: PieceId; label: string; className: string }) {
-  // Server-render the exploded (p = 0) pose so there is no assembled-then-collapsed flash.
-  return (
-    <div className={`db-ph ${className}`} data-piece={id} style={pieceStyle(0, pieceById(id))}>
-      <span className="db-ph__label">{label}</span>
-    </div>
-  );
-}
 
 export function DashboardBuild(): ReactNode {
   const rootRef = useRef<HTMLElement>(null);
@@ -136,7 +127,13 @@ export function DashboardBuild(): ReactNode {
         </p>
         <div className="db__perspective">
           <div className="db__fit">
-            <div ref={stageRef} className="db__stage" style={stageStyle(0)} aria-hidden="true">
+            <div
+              ref={stageRef}
+              className="db__stage"
+              style={stageStyle(0)}
+              aria-hidden="true"
+              inert
+            >
               <div
                 className="db__shell"
                 data-piece="shell"
@@ -150,7 +147,6 @@ export function DashboardBuild(): ReactNode {
                 </div>
               </div>
               <ReplicaSidebar />
-              <Placeholder id="order" label="New order (placeholder)" className="db-ph--order" />
               <ReplicaBottomBar />
             </div>
           </div>

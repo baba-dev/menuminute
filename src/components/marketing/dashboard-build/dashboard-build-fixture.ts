@@ -156,3 +156,43 @@ export const REPLICA_HEALTH_ROWS: readonly ReplicaHealthRow[] = [
 
 /** Setup completion: sample figures for a fully launched outlet. */
 export const REPLICA_SETUP = { completed: 4, total: 4, percent: 100, Icon: CheckCircle2 } as const;
+
+/**
+ * Service Dispatch counters. The labels are the real ones; the numbers are sample figures shaped
+ * like the demo outlet's live board (a few waiting, a few in preparation, one ready).
+ */
+export const REPLICA_DISPATCH = {
+  snapshot: "Snapshot updated at 12:04 PM (Asia/Kolkata)",
+  counters: [
+    { label: "Awaiting acceptance", value: 3 },
+    { label: "In preparation", value: 2 },
+    { label: "Ready for handoff", value: 1 },
+    { label: "Completed today", value: 18 },
+  ],
+} as const;
+
+export type ReplicaTable = {
+  id: string;
+  number: string;
+  /** The demo baseline's table labels (src/modules/demo/baseline.ts). */
+  label: string;
+  active: number;
+  unpaid: number;
+  /** Pre-formatted (INR) so server and client render the same text. */
+  due?: string;
+};
+
+export const REPLICA_TABLES: readonly ReplicaTable[] = [
+  { id: "1", number: "1", label: "Table 1", active: 0, unpaid: 0 },
+  { id: "2", number: "2", label: "Table 2", active: 1, unpaid: 0 },
+  { id: "3", number: "3", label: "Table 3", active: 0, unpaid: 0 },
+  { id: "4", number: "4", label: "Table 4", active: 0, unpaid: 1, due: "₹1,240.00" },
+  { id: "5", number: "5", label: "Table 5", active: 2, unpaid: 1, due: "₹2,015.00" },
+  { id: "6", number: "6", label: "Table 6", active: 0, unpaid: 0 },
+  { id: "7", number: "7", label: "Table 7", active: 1, unpaid: 0 },
+  { id: "8", number: "8", label: "Table 8", active: 0, unpaid: 0 },
+  { id: "9", number: "9", label: "Window booth", active: 1, unpaid: 0 },
+  { id: "10", number: "10", label: "Chef's counter", active: 0, unpaid: 1, due: "₹2,380.00" },
+  { id: "11", number: "11", label: "Garden terrace", active: 0, unpaid: 0 },
+  { id: "12", number: "12", label: "Private dining", active: 3, unpaid: 0 },
+];
