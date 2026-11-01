@@ -295,7 +295,9 @@ describe("PWA existing guest snapshot survives refresh failures", () => {
       listeners.get("message")?.({
         data: { type: "SET_GUEST_OFFLINE", enabled: true, pagePath, apiPath },
         source: sourceClient,
-        waitUntil: (promise: Promise<unknown>) => { pending = promise; },
+        waitUntil: (promise: Promise<unknown>) => {
+          pending = promise;
+        },
       });
       await pending;
     }
