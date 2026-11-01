@@ -591,7 +591,6 @@ export function PublicMenu({
                     activeSection === "c-" + menu.id + "-" + category.id ? "location" : undefined
                   }
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <Image
                     src={categoryImage(category.name)}
                     alt=""
@@ -689,7 +688,6 @@ export function PublicMenu({
                     aria-labelledby={"title-" + menu.id + "-" + category.id}
                   >
                     <div className="dining-section-head">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <Image
                         src={categoryImage(category.name)}
                         alt=""
