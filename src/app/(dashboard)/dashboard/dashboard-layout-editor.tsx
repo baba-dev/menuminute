@@ -157,12 +157,16 @@ export function DashboardLayoutEditor({
   }
 
   // Keep the editor panel in the page body: the artwork hero clips overflow.
+  // The dashboard supplies the inline portal target; isolated/component renders
+  // still need a usable editor, so fall back to the document body.
   const panelTarget =
-    typeof document === "undefined" ? null : document.getElementById("mm-dashboard-layout-panel");
+    typeof document === "undefined"
+      ? null
+      : (document.getElementById("mm-dashboard-layout-panel") ?? document.body);
 
   useEffect(() => {
     if (open) {
-      document.getElementById("mm-layout-editor")?.scrollIntoView({ block: "start" });
+      document.getElementById("mm-layout-editor")?.scrollIntoView?.({ block: "start" });
     }
   }, [open]);
 

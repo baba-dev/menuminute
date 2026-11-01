@@ -241,7 +241,9 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   await page.setViewportSize({ width: 1280, height: 800 });
   // The help control is within the role form; select the fixture with an eligible staff member.
   await page.goto(`/dashboard/organization?organization=${encodeURIComponent(f.org)}`);
-  await expect(page.getByRole("heading", { name: /Everything under one roof/ })).toBeVisible();
+  const heading = page.getByRole("heading", { name: /All Under One Roof/i });
+  await expect(heading).toBeVisible();
+  await expect(heading.locator("br")).toHaveCount(1);
   await expect(page.locator(".oh-hero")).toHaveCSS(
     "background-image",
     /Organization-Hero-Light\.png/
