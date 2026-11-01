@@ -6,19 +6,19 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * This is for step-up on an ALREADY authenticated session: the native verify-totp
  * endpoint is a sign-in/enrollment challenge and cannot start a fresh step-up there.
  */
-export function verifyStepUpTotp(uri: string, candidate: string, now = Date.now()) {
-  if (!/^\d{6}$/.test(candidate)) return false;
+export function matchingStepUpTotp(uri: string, candidate: string, now = Date.now()): number | null {
+  if (!/^\d{6}$/.test(candidate)) return null;
   const config = new URL(uri);
-  if (config.protocol !== "otpauth:" || config.hostname !== "totp") return false;
+  if (config.protocol !== "otpauth:" || config.hostname !== "totp") return null;
   const encoded = config.searchParams.get("secret");
-  if (!encoded) return false;
+  if (!encoded) return null;
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const octets: number[] = [];
   let value = 0;
   let bits = 0;
   for (const letter of encoded.toUpperCase().replace(/=+$/, "")) {
     const digit = alphabet.indexOf(letter);
-    if (digit < 0) return false;
+    if (digit < 0) return null;
     value = (value << 5) | digit;
     bits += 5;
     if (bits >= 8) {
@@ -26,7 +26,7 @@ export function verifyStepUpTotp(uri: string, candidate: string, now = Date.now(
       bits -= 8;
     }
   }
-  if (octets.length < 10) return false;
+  if (octets.length < 10) return null;
   const key = Buffer.from(octets);
   const submitted = Buffer.from(candidate, "ascii");
   const step = Math.floor(now / 30000);
@@ -39,7 +39,12 @@ export function verifyStepUpTotp(uri: string, candidate: string, now = Date.now(
     const expected = ((digest.readUInt32BE(offset) & 0x7fffffff) % 1000000)
       .toString()
       .padStart(6, "0");
-    if (timingSafeEqual(submitted, Buffer.from(expected, "ascii"))) return true;
+    if (timingSafeEqual(submitted, Buffer.from(expected, "ascii"))) return step + delta;
   }
-  return false;
+  return null;
+}
+
+/** Preserve the boolean validation contract for existing callers. */
+export function verifyStepUpTotp(uri: string, candidate: string, now = Date.now()): boolean {
+  return matchingStepUpTotp(uri, candidate, now) !== null;
 }

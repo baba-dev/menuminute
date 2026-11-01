@@ -3,11 +3,11 @@ import { listOrganizations, domainError } from "@/modules/organizations/service"
 import { requestActor } from "@/lib/request-context";
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { createRestaurant } from "@/modules/restaurants/service";
 import { env } from "@/lib/config/env";
 import { errorResponse } from "@/lib/request-context";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { boundedJson } from "@/lib/bounded-input";
+import { ForbiddenError } from "@/lib/errors";
 async function observed_POST(req: Request) {
   try {
     if (
@@ -15,11 +15,11 @@ async function observed_POST(req: Request) {
       !req.headers.get("content-type")?.startsWith("application/json")
     )
       throw new ForbiddenError();
-    const session = await auth();
-    if (!session?.user.id) throw new UnauthorizedError();
+    // Do not let the shared demo actor provision outside the resettable sandbox.
+    const actor = await requestActor(req, true);
     const outlet = await createRestaurant(
-      session.user.id,
-      await req.json(),
+      actor.userId,
+      await boundedJson(req),
       z.string().uuid().parse(req.headers.get("idempotency-key"))
     );
     return NextResponse.json({ outletId: outlet.id }, { status: 201 });
