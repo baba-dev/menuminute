@@ -176,7 +176,9 @@ test("Multi-station device and expeditor flow: no premature guest Ready", async 
   const expo = page.getByRole("region", { name: "Final Check & Order Release" });
   await expect(expo.getByText("#1042")).toBeVisible();
   await expect(expo.getByText("0 / 2 dishes ready · 0 released")).toBeVisible();
-  await expect(expo.getByText("Waiting for the first dish to finish")).toBeVisible();
+  // Nothing has finished yet: no dish can be released, and the order is not Ready.
+  await expect(expo.getByText(/Nothing new to release/)).toBeVisible();
+  await expect(expo.getByRole("button", { name: /Release|release/ })).toHaveCount(0);
   for (const name of ["Grill", "Tandoor"]) {
     await page
       .getByRole("navigation", { name: "Kitchen stations" })
