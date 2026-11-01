@@ -3,8 +3,16 @@ import { etagMatches, publicMenuEtag } from "@/modules/menu-product/conditional-
 import type { PublicProduct } from "@/modules/menu-product/service";
 
 const sample: PublicProduct = {
-  outlet: { id: "outlet", name: "Baba Bakery", currency: "INR", timezone: "Asia/Kolkata",
-    outletType: "dine_in", fulfillmentModes: ["dine_in"], isDemoData: false, versioned: true },
+  outlet: {
+    id: "outlet",
+    name: "Baba Bakery",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    outletType: "dine_in",
+    fulfillmentModes: ["dine_in"],
+    isDemoData: false,
+    versioned: true,
+  },
   point: null,
   catalogFingerprint: "released-v1",
   now: "2026-11-01T12:00:05.000Z",
@@ -20,8 +28,9 @@ describe("guest-menu conditional responses", () => {
   it("revalidates any changed public menu, outlet state and availability", () => {
     const etag = publicMenuEtag(sample);
     expect(publicMenuEtag({ ...sample, catalogFingerprint: "released-v2" })).not.toBe(etag);
-    expect(publicMenuEtag({ ...sample, outlet: { ...sample.outlet, orderingEnabled: true } }))
-      .not.toBe(etag);
+    expect(
+      publicMenuEtag({ ...sample, outlet: { ...sample.outlet, orderingEnabled: true } })
+    ).not.toBe(etag);
     expect(publicMenuEtag({ ...sample, conciergeEnabled: true })).not.toBe(etag);
   });
   it("accepts matching weak If-None-Match values and rejects unrelated values", () => {

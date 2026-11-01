@@ -9,10 +9,7 @@ import {
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
-import {
-  MEDIA_RECONCILE_INTERVAL_MS,
-  OUTBOX_DISPATCH_INTERVAL_MS,
-} from "./schedule-policy";
+import { MEDIA_RECONCILE_INTERVAL_MS, OUTBOX_DISPATCH_INTERVAL_MS } from "./schedule-policy";
 const queueData = z
   .object({
     eventId: z.uuid(),

@@ -18,8 +18,7 @@ async function observed_GET(req: Request, c: { params: Promise<{ token: string }
     (await c.params).token,
     new URL(req.url).searchParams.get("lang")
   );
-  if (!data)
-    return NextResponse.json({ message: "Menu unavailable" }, { status: 404, headers });
+  if (!data) return NextResponse.json({ message: "Menu unavailable" }, { status: 404, headers });
   const etag = publicMenuEtag(data);
   const responseHeaders = { ...headers, etag };
   if (etagMatches(req.headers.get("if-none-match"), etag)) {
