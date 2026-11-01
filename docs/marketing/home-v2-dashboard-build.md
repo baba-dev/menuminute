@@ -1,7 +1,24 @@
 # home-v2 — scroll-assembled dashboard
 
-Status: **mechanics implemented with placeholder panels** at `/home-v2` (`noindex`, not in the sitemap).
-The real dashboard styling, sample data and copy are planned, not built.
+Status: **scroll mechanics plus real sidebar, top bar and KPI row implemented** at `/home-v2`
+(`noindex`, not in the sitemap). The hero, priorities, outlet health, service pulse, floor map and
+new-order panels are still labelled placeholders; their real versions are planned, not built.
+
+## Real components (this slice)
+
+`dashboard-replica.tsx` renders static, inert replicas of the sidebar, top bar and "At a glance" KPI
+row using the product's own class names (`workspace.css`, `workspace-delight.css`), nav model
+(`src/modules/dashboard/nav-model.ts`) and icons, so they track the product. Labels and KPI detail
+strings are the real dashboard's. Values come from `dashboard-build-fixture.ts` (sample data modelled
+on the public demo outlet; never a customer's numbers).
+
+The stage is a fixed virtual screen (1440×960 desktop, 390×800 phone) scaled to fit with CSS
+`tan(atan2())`, so the real CSS renders at true pixel sizes. Phones use the real bottom bar instead of
+the sidebar. Known deviations: the top-bar Help button is omitted for room, and the till, bell and
+connection chips are static samples.
+
+Cost: the route now loads `workspace.css` and `workspace-delight.css` (both class-scoped, no global
+selectors). Extract a shared stylesheet if bundle size matters.
 
 ## Behavior
 
@@ -12,7 +29,7 @@ animation, so both directions render the same state for the same `p`.
 
 - Native scrolling only: no wheel or touch interception.
 - Displayed progress eases toward the scroll target (`dampProgress`) so flicks stay fluid.
-- `p` ≥ 0.9 holds the finished dashboard; panels are `inert` (not focusable or clickable) until `p` ≥ 0.95.
+- `p` ≥ 0.9 holds the finished dashboard. The stage is `aria-hidden` and has no focusable content yet; hotspots (gated by `INTERACTIVE_AT`) arrive with the feature-link slice.
 - Only `transform` and `opacity` are animated.
 - Phone (≤ 680px) uses a separate compact layout and a shorter scroll length (300vh vs 400vh).
 

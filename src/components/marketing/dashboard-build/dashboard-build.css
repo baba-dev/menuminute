@@ -1,5 +1,9 @@
-/* Scroll-assembled dashboard (home-v2). Placeholder panels; mechanics only. */
+/* Scroll-assembled dashboard (home-v2).
+   The stage is a fixed-size virtual screen, scaled to fit, so the real workspace CSS renders at its
+   true pixel sizes and the whole composition scales as one image. */
 .db {
+  --db-cw: 1440px;
+  --db-ch: 960px;
   position: relative;
   color: var(--ink);
 }
@@ -13,6 +17,12 @@
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (max-width: 680px) {
   .db {
     height: 300vh;
+  }
+}
+@media (max-width: 680px) {
+  .db {
+    --db-cw: 390px;
+    --db-ch: 800px;
   }
 }
 
@@ -38,204 +48,213 @@
   line-height: 1.15;
 }
 
+/* Size container: the scale below is derived from the room this cell actually has. */
 .db__perspective {
+  container-type: size;
   display: grid;
   width: 100%;
   min-height: 0;
   place-items: center;
-  perspective: 1400px;
+  perspective: 1600px;
   perspective-origin: 50% 40%;
 }
 
-.db__stage {
+.db__fit {
+  --db-scale: 0.7; /* fallback where trigonometric functions are unsupported */
   position: relative;
-  display: grid;
-  width: min(92vw, 70rem, calc((100dvh - 9rem) * 1.6));
-  aspect-ratio: 16 / 10;
-  grid-template-columns: 15% minmax(0, 1fr);
-  grid-template-rows: 11% minmax(0, 1fr);
-  gap: 0.6rem;
-  padding: 0.6rem;
-  transform-origin: 50% 60%;
+  transform-style: preserve-3d;
+}
+@supports (scale: tan(atan2(1px, 1px))) {
+  .db__fit {
+    --db-scale: min(tan(atan2(100cqw, var(--db-cw))), tan(atan2(100cqh, var(--db-ch))));
+  }
+}
+.db__fit {
+  width: calc(var(--db-cw) * var(--db-scale));
+  height: calc(var(--db-ch) * var(--db-scale));
+}
+
+.db__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--db-cw);
+  height: var(--db-ch);
+  margin: calc(var(--db-ch) / -2) 0 0 calc(var(--db-cw) / -2);
+  scale: var(--db-scale);
   transform-style: preserve-3d;
   will-change: transform;
+  font-family: var(--font-dm), sans-serif;
+  color: var(--ink);
 }
 
 .db__shell {
   position: absolute;
   inset: 0;
   border: 1px solid var(--decorative);
-  border-radius: 1rem;
+  border-radius: 18px;
   background: var(--paper);
-  box-shadow: 0 30px 80px -30px rgb(0 0 0 / 0.35);
+  box-shadow: 0 40px 100px -30px rgb(0 0 0 / 0.35);
 }
 
-.db-panel {
-  position: relative;
+/* ── Real-component placement (desktop) ─────────────────────────────── */
+.db__stage > * {
+  position: absolute;
+}
+.db-replica-sidebar {
+  top: 0;
+  left: 0;
+  width: 216px;
+  height: 100%;
+  border-radius: 18px 0 0 18px;
+}
+/* The real sidebar is sticky and viewport-tall; here it simply fills its slot. */
+.db .mm-workspace-sidebar {
+  position: absolute;
   display: flex;
-  min-width: 0;
+  height: 100%;
+  overflow: clip;
+}
+.db-replica-topbar {
+  top: 0;
+  left: 216px;
+  width: 1224px;
+}
+.db-replica-glance {
+  top: 330px;
+  left: 216px;
+  width: 1224px;
   min-height: 0;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--decorative);
-  border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--paper) 92%, var(--ember) 8%);
-  color: inherit;
-  text-decoration: none;
-  will-change: transform, opacity;
+  padding: 0 42px;
+  background: transparent;
 }
-.db-panel:focus-visible {
-  outline: 2px solid var(--ember);
-  outline-offset: 2px;
+/* Per-cell bottom rule instead of one grid rule, so each KPI assembles with its own underline. */
+.db-replica-glance .mm-dashboard-kpis {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
-
-.db-panel__label {
-  font-size: clamp(0.6rem, 1vw, 0.8rem);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  opacity: 0.75;
+.db-replica-glance .mm-dashboard-kpi {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--editorial-line);
 }
-.db-panel__value {
-  font-family: var(--font-bricolage), sans-serif;
-  font-size: clamp(1rem, 2.4vw, 1.9rem);
-  font-variant-numeric: tabular-nums;
+.db-replica-bottombar {
+  display: none;
 }
-
-/* Desktop layout */
-.db-panel--sidebar {
-  grid-column: 1;
-  grid-row: 1 / 3;
+/* Keep the breadcrumb on one line; the action buttons otherwise squeeze it into two. */
+.db .mm-dashboard-breadcrumb {
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
-.db-panel--topbar {
-  grid-column: 2;
-  grid-row: 1;
+.db .mm-topbar-search {
+  min-width: 0;
 }
-/* Main-column panels are placed explicitly inside the stage (percentages of its box). */
-.db-panel--hero,
-.db__kpis,
-.db-panel--priorities,
-.db-panel--health,
-.db-panel--pulse,
-.db-panel--floor {
-  position: absolute;
+.db .mm-dashboard-top-actions {
+  gap: 10px;
 }
 
-@media (min-width: 681px) {
-  .db-panel--hero {
-    top: calc(11% + 1.2rem);
-    right: 0.6rem;
-    left: calc(15% + 1.2rem);
-    height: 19%;
-  }
-  .db__kpis {
-    top: calc(30% + 1.8rem);
-    right: 0.6rem;
-    left: calc(15% + 1.2rem);
-    display: grid;
-    height: 16%;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-  /* Two columns under the KPI row, sharing one width calculation so both rows align. */
-  .db__stage {
-    --db-main-left: calc(15% + 1.2rem);
-    --db-main-width: calc(85% - 1.8rem);
-    --db-col-a: calc(var(--db-main-width) * 0.45 - 0.3rem);
-    --db-col-b: calc(var(--db-main-width) * 0.55 - 0.3rem);
-    --db-col-b-left: calc(var(--db-main-left) + var(--db-col-a) + 0.6rem);
-  }
-  .db-panel--priorities,
-  .db-panel--pulse {
-    left: var(--db-main-left);
-    width: var(--db-col-a);
-  }
-  .db-panel--health,
-  .db-panel--floor {
-    left: var(--db-col-b-left);
-    width: var(--db-col-b);
-  }
-  .db-panel--priorities,
-  .db-panel--health {
-    top: calc(46% + 2.4rem);
-    height: 22%;
-  }
-  .db-panel--pulse,
-  .db-panel--floor {
-    top: calc(68% + 3rem);
-    height: 20%;
-  }
+/* Remaining placeholders (later slices replace these with real panels). */
+.db-ph {
+  display: flex;
+  box-sizing: border-box;
+  padding: 14px 18px;
+  border: 1px dashed var(--decorative);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper) 93%, var(--ember) 7%);
 }
-
-.db-panel--order {
-  position: absolute;
-  top: calc(11% + 1.2rem);
-  right: 1.2rem;
-  width: 22%;
-  height: 11%;
+.db-ph__label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.6;
+}
+.db-ph--hero {
+  top: 68px;
+  left: 216px;
+  width: 1224px;
+  height: 250px;
+  border-radius: 0;
+  border-inline: 0;
+}
+.db-ph--priorities {
+  top: 598px;
+  left: 258px;
+  width: 560px;
+  height: 160px;
+}
+.db-ph--health {
+  top: 598px;
+  left: 836px;
+  width: 562px;
+  height: 160px;
+}
+.db-ph--pulse {
+  top: 778px;
+  left: 258px;
+  width: 560px;
+  height: 150px;
+}
+.db-ph--floor {
+  top: 778px;
+  left: 836px;
+  width: 562px;
+  height: 150px;
+}
+.db-ph--order {
+  top: 92px;
+  left: 1130px;
+  width: 270px;
+  height: 80px;
+  border-style: solid;
   border-color: var(--ember);
 }
 
-/* Phone: one column, compact panels. A purpose-built crop arrives with the real dashboard. */
+/* ── Phone: bottom bar replaces the sidebar, as in the product ──────── */
 @media (max-width: 680px) {
-  .db__stage {
-    width: min(92vw, calc((100dvh - 9rem) * 0.62));
-    aspect-ratio: 5 / 8;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 8% minmax(0, 1fr) 9%;
-  }
-  .db-panel--sidebar {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  .db-panel--topbar {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .db-panel--hero,
-  .db__kpis,
-  .db-panel--priorities,
-  .db-panel--health,
-  .db-panel--pulse,
-  .db-panel--floor {
-    right: 0.6rem;
-    left: 0.6rem;
-  }
-  .db-panel--hero {
-    top: calc(8% + 1.2rem);
-    height: 14%;
-  }
-  .db__kpis {
-    top: calc(22% + 1.8rem);
-    display: grid;
-    height: 22%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.4rem;
-  }
-  .db-panel--priorities {
-    top: calc(44% + 2.4rem);
-    height: 13%;
-  }
-  .db-panel--health {
-    top: calc(57% + 2.8rem);
-    height: 12%;
-  }
-  .db-panel--pulse {
-    top: calc(69% + 3.2rem);
-    height: 10%;
-  }
-  .db-panel--floor {
+  .db .db-replica-sidebar {
     display: none;
   }
-  .db-panel--order {
-    top: calc(8% + 0.8rem);
-    right: 0.9rem;
-    width: 46%;
-    height: 8%;
+  .db__shell {
+    border-radius: 22px;
+  }
+  .db-replica-topbar {
+    left: 0;
+    width: 390px;
+  }
+  .db-ph--hero {
+    top: 76px;
+    left: 0;
+    width: 390px;
+    height: 112px;
+  }
+  .db-replica-glance {
+    top: 198px;
+    left: 0;
+    width: 390px;
+    padding: 0 18px;
+  }
+  .db-ph--priorities,
+  .db-ph--health,
+  .db-ph--pulse,
+  .db-ph--floor {
+    display: none;
+  }
+  .db-ph--order {
+    top: 92px;
+    left: 204px;
+    width: 170px;
+    height: 56px;
+  }
+  .db-replica-bottombar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    height: 64px;
+    border-radius: 0 0 22px 22px;
   }
 }
 
-/* Chapter rail */
+/* ── Chapter rail ───────────────────────────────────────────────────── */
 .db__rail {
   display: flex;
   flex-wrap: wrap;
@@ -268,7 +287,8 @@
 /* Without script, show the finished dashboard. The inline p = 0 pose is only for scripted pages. */
 @media (scripting: none) {
   .db .db__stage,
-  .db [data-piece] {
+  .db [data-piece],
+  .db [data-stagger] {
     transform: none !important;
     opacity: 1 !important;
   }
@@ -277,7 +297,8 @@
 /* Reduced motion: no pin, no travel. The finished dashboard, same information. */
 @media (prefers-reduced-motion: reduce) {
   .db .db__stage,
-  .db [data-piece] {
+  .db [data-piece],
+  .db [data-stagger] {
     transform: none !important;
     opacity: 1 !important;
   }

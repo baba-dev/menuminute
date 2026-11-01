@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, type ReactNode } from "react";
 import {
   CHAPTERS,
   chapterAt,
   dampProgress,
-  isInteractive,
   pieceById,
   pieceStyle,
   renderDashboardBuild,
@@ -14,47 +12,32 @@ import {
   stageStyle,
   type PieceId,
 } from "./dashboard-build-timeline";
+import {
+  ReplicaBottomBar,
+  ReplicaGlance,
+  ReplicaSidebar,
+  ReplicaTopbar,
+} from "./dashboard-replica";
+import "@/app/(dashboard)/workspace.css";
+import "@/app/(dashboard)/workspace-delight.css";
 import "./dashboard-build.css";
 
 /**
- * Pinned, scroll-assembled dashboard. PLACEHOLDER PANELS: this slice proves the scroll
- * mechanics only. The real dashboard styling and sample data arrive in a later slice.
- * Marketing fixture: no API calls, no auth, no tenant data.
+ * Pinned, scroll-assembled dashboard. The sidebar, top bar and KPI row are faithful replicas of
+ * the real workspace (real class names, nav model and icons). The remaining panels are still
+ * PLACEHOLDERS and arrive in later slices. Marketing fixture: no API calls, no auth, no tenant data.
  */
 
-function Panel({
-  id,
-  href,
-  label,
-  className,
-  children,
-}: {
-  id: PieceId;
-  href: string;
-  label: string;
-  className: string;
-  children?: ReactNode;
-}) {
+function Placeholder({ id, label, className }: { id: PieceId; label: string; className: string }) {
   // Server-render the exploded (p = 0) pose so there is no assembled-then-collapsed flash.
-  const style = pieceStyle(0, pieceById(id));
   return (
-    <Link href={href} className={`db-panel ${className}`} data-piece={id} style={style}>
-      <span className="db-panel__label">{label}</span>
-      {children}
-    </Link>
+    <div className={`db-ph ${className}`} data-piece={id} style={pieceStyle(0, pieceById(id))}>
+      <span className="db-ph__label">{label}</span>
+    </div>
   );
 }
 
-const KPIS: readonly { id: PieceId; label: string; target?: number }[] = [
-  { id: "kpi-1", label: "Published menus", target: 3 },
-  { id: "kpi-2", label: "Categories", target: 14 },
-  { id: "kpi-3", label: "Dishes", target: 236 },
-  { id: "kpi-4", label: "Active QR codes", target: 12 },
-  { id: "kpi-5", label: "Menus to publish", target: 0 },
-  { id: "kpi-6", label: "Public menu" },
-];
-
-export function DashboardBuild() {
+export function DashboardBuild(): ReactNode {
   const rootRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -76,8 +59,6 @@ export function DashboardBuild() {
     };
     const apply = (p: number) => {
       renderDashboardBuild(stage, p);
-      const ready = isInteractive(p);
-      if (stage.hasAttribute("inert") === ready) stage.toggleAttribute("inert", !ready);
       const chapter = chapterAt(p).id;
       if (root.dataset["chapter"] !== chapter) root.dataset["chapter"] = chapter;
       root.dataset["p"] = p.toFixed(3);
@@ -133,47 +114,42 @@ export function DashboardBuild() {
         <h2 id="db-title" className="db__title">
           Your real dashboard, assembled as you scroll
         </h2>
+        <p className="sr-only">
+          Animated preview of the MenuMinute dashboard for a sample restaurant: workspace
+          navigation, a top bar with search, till status and notifications, and six at-a-glance menu
+          statistics.
+        </p>
         <div className="db__perspective">
-          <div
-            ref={stageRef}
-            className="db__stage"
-            style={stageStyle(0)}
-            role="group"
-            aria-label="Dashboard preview (placeholder panels)"
-          >
-            <div
-              className="db__shell"
-              data-piece="shell"
-              style={pieceStyle(0, pieceById("shell"))}
-            />
-            <Panel id="sidebar" href="/help" label="Sidebar" className="db-panel--sidebar" />
-            <Panel id="topbar" href="/docs" label="Top bar" className="db-panel--topbar" />
-            <Panel id="hero" href="/demo" label="Overview hero" className="db-panel--hero" />
-            <div className="db__kpis">
-              {KPIS.map((kpi) => (
-                <Panel
-                  key={kpi.id}
-                  id={kpi.id}
-                  href="/demo"
-                  label={kpi.label}
-                  className="db-panel--kpi"
-                >
-                  <strong className="db-panel__value">
-                    {kpi.target === undefined ? "Live" : <span data-count-to={kpi.target}>0</span>}
-                  </strong>
-                </Panel>
-              ))}
+          <div className="db__fit">
+            <div ref={stageRef} className="db__stage" style={stageStyle(0)} aria-hidden="true">
+              <div
+                className="db__shell"
+                data-piece="shell"
+                style={pieceStyle(0, pieceById("shell"))}
+              />
+              <ReplicaSidebar />
+              <ReplicaTopbar />
+              <Placeholder id="hero" label="Overview hero (placeholder)" className="db-ph--hero" />
+              <ReplicaGlance />
+              <Placeholder
+                id="priorities"
+                label="Priorities (placeholder)"
+                className="db-ph--priorities"
+              />
+              <Placeholder
+                id="health"
+                label="Outlet health (placeholder)"
+                className="db-ph--health"
+              />
+              <Placeholder
+                id="pulse"
+                label="Service pulse (placeholder)"
+                className="db-ph--pulse"
+              />
+              <Placeholder id="floor" label="Floor map (placeholder)" className="db-ph--floor" />
+              <Placeholder id="order" label="New order (placeholder)" className="db-ph--order" />
+              <ReplicaBottomBar />
             </div>
-            <Panel
-              id="priorities"
-              href="/help"
-              label="Priorities"
-              className="db-panel--priorities"
-            />
-            <Panel id="health" href="/help" label="Outlet health" className="db-panel--health" />
-            <Panel id="pulse" href="/demo" label="Service pulse" className="db-panel--pulse" />
-            <Panel id="floor" href="/demo" label="Floor map" className="db-panel--floor" />
-            <Panel id="order" href="/demo" label="New order" className="db-panel--order" />
           </div>
         </div>
         <nav className="db__rail" aria-label="Dashboard build chapters">

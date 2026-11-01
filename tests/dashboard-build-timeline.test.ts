@@ -12,6 +12,7 @@ import {
   pieceStyle,
   rangeProgress,
   renderDashboardBuild,
+  staggerStyle,
   scrollProgress,
 } from "@/components/marketing/dashboard-build/dashboard-build-timeline";
 
@@ -79,6 +80,21 @@ describe("dashboard build timeline", () => {
     expect(root.querySelector("[data-count-to]")?.textContent).toBe("236");
     renderDashboardBuild(root, 0);
     expect(root.querySelector("[data-count-to]")?.textContent).toBe("0");
+  });
+
+  it("staggers inner items in order, finishing inside the piece's range", () => {
+    const sidebar = pieceById("sidebar");
+    const mid = (sidebar.start + sidebar.end) / 2;
+    const first = Number(staggerStyle(mid, sidebar, 0, 10).opacity);
+    const last = Number(staggerStyle(mid, sidebar, 9, 10).opacity);
+    expect(first).toBeGreaterThan(last);
+    expect(staggerStyle(0, sidebar, 5, 10).opacity).toBe("0");
+    for (let i = 0; i < 10; i++) {
+      expect(staggerStyle(sidebar.end, sidebar, i, 10)).toEqual({
+        transform: "none",
+        opacity: "1",
+      });
+    }
   });
 
   it("maps pinned-section geometry to progress", () => {

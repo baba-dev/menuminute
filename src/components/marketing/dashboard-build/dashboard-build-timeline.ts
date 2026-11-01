@@ -22,6 +22,7 @@ export type PieceId =
   | "sidebar"
   | "topbar"
   | "hero"
+  | "glance"
   | "kpi-1"
   | "kpi-2"
   | "kpi-3"
@@ -56,6 +57,7 @@ export const PIECES: readonly Piece[] = [
   { id: "sidebar", start: 0.02, end: 0.12, from: { x: -90, y: 0, z: -120, rotateY: 14 } },
   { id: "topbar", start: 0.1, end: 0.22, from: { x: 0, y: -70, z: -80, rotateY: 0 } },
   { id: "hero", start: 0.2, end: 0.36, from: { x: 0, y: 70, z: 140, rotateY: 0 } },
+  { id: "glance", start: 0.3, end: 0.4, from: { x: 0, y: 40, z: -60, rotateY: 0 } },
   kpi(0, -60, 90),
   kpi(1, -20, 100),
   kpi(2, 20, 90),
@@ -148,6 +150,20 @@ export function stageStyle(p: number): StageStyle {
   return { transform: `rotateX(${round(16 * (1 - s))}deg) scale(${round(0.9 + 0.1 * s)})` };
 }
 
+/**
+ * Items inside a piece (for example sidebar links) arrive one after another within the piece's
+ * own range: a short slide from the left plus a fade. `index` and `count` place the item.
+ */
+export function staggerStyle(p: number, piece: Piece, index: number, count: number): PieceStyle {
+  const length = piece.end - piece.start;
+  const start = piece.start + length * (0.1 + (0.5 * index) / Math.max(1, count));
+  const t = rangeProgress(p, start, start + length * 0.4);
+  return {
+    transform: t === 1 ? "none" : `translate3d(${round(-14 * (1 - t))}px, 0, 0)`,
+    opacity: round(t),
+  };
+}
+
 /** Count-up for a number that belongs to a piece; reverses when the user scrolls back. */
 export function countValue(p: number, piece: Piece, target: number) {
   return Math.round(
@@ -173,6 +189,17 @@ export function renderDashboardBuild(stage: HTMLElement, p: number) {
     const style = pieceStyle(value, piece);
     if (element.style.transform !== style.transform) element.style.transform = style.transform;
     if (element.style.opacity !== style.opacity) element.style.opacity = style.opacity;
+
+    for (const item of element.querySelectorAll<HTMLElement>("[data-stagger]")) {
+      const itemStyle = staggerStyle(
+        value,
+        piece,
+        Number(item.dataset["stagger"]),
+        Number(item.dataset["staggerCount"])
+      );
+      if (item.style.transform !== itemStyle.transform) item.style.transform = itemStyle.transform;
+      if (item.style.opacity !== itemStyle.opacity) item.style.opacity = itemStyle.opacity;
+    }
 
     const counter = element.querySelector<HTMLElement>("[data-count-to]");
     if (counter) {
