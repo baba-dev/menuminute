@@ -103,3 +103,14 @@ describe("marketing feature coverage", () => {
     expect(metadata.openGraph).toMatchObject({ url: "/features/restaurant-pos" });
   });
 });
+
+describe("faqJsonLd", () => {
+  it("emits a FAQPage mirroring every visible FAQ", async () => {
+    const { faqJsonLd } = await import("@/lib/marketing/seo");
+    for (const feature of marketingFeatures) {
+      const ld = faqJsonLd(feature.faqs);
+      expect(ld["@type"]).toBe("FAQPage");
+      expect(ld.mainEntity).toHaveLength(feature.faqs.length);
+    }
+  });
+});

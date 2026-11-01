@@ -37,3 +37,15 @@ export function marketingMetadata({
 export function safeJsonLd(data: object): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
+
+export function faqJsonLd(faqs: ReadonlyArray<{ question: string; answer: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+}

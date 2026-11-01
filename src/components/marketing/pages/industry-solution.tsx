@@ -11,7 +11,7 @@ import {
 import type { IndustrySolution } from "@/content/marketing/solutions";
 import { industrySolutions } from "@/content/marketing/solutions";
 import { MarketingPageShell } from "@/components/marketing/pages/marketing-page-shell";
-import { PUBLIC_ORIGIN, safeJsonLd } from "@/lib/marketing/seo";
+import { PUBLIC_ORIGIN, faqJsonLd, safeJsonLd } from "@/lib/marketing/seo";
 
 function ProductScreenshot({ shot, alt, caption }: { shot: string; alt: string; caption: string }) {
   return (
@@ -112,6 +112,12 @@ export function IndustrySolutionPage({ solution }: { solution: IndustrySolution 
   return (
     <MarketingPageShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(crumbs) }} />
+      {solution.faqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd(solution.faqs)) }}
+        />
+      )}
       <section className="border-border via-background relative overflow-hidden border-b bg-gradient-to-br from-orange-500/10 to-amber-500/10">
         <div className="mx-auto max-w-7xl px-5 pt-8 pb-16 sm:px-6 sm:pb-24 lg:px-8">
           <nav

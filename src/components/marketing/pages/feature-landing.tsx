@@ -15,7 +15,7 @@ import type { MarketingFeature } from "@/content/marketing/features";
 import { marketingFeatures } from "@/content/marketing/features";
 import { MarketingPageShell } from "@/components/marketing/pages/marketing-page-shell";
 import { FeatureHeroArtwork } from "@/components/marketing/pages/feature-hero-artwork";
-import { PUBLIC_ORIGIN, safeJsonLd } from "@/lib/marketing/seo";
+import { PUBLIC_ORIGIN, faqJsonLd, safeJsonLd } from "@/lib/marketing/seo";
 
 const statusLabels = {
   free: "Free permanent QR menus",
@@ -24,7 +24,12 @@ const statusLabels = {
 } as const;
 
 export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
-  const related = marketingFeatures.filter((item) => item.slug !== feature.slug).slice(0, 3);
+  // Neighbouring features in catalogue order (wrapping), so related links differ per page.
+  const index = marketingFeatures.findIndex((item) => item.slug === feature.slug);
+  const related = [
+    ...marketingFeatures.slice(index + 1),
+    ...marketingFeatures.slice(0, index),
+  ].slice(0, 3);
   const breadcrumbs = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -40,6 +45,12 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbs) }}
       />
+      {feature.faqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd(feature.faqs)) }}
+        />
+      )}
       {feature.slug === "free-qr-menu" && (
         <script
           type="application/ld+json"
