@@ -30,6 +30,10 @@ secrets/
 *.db-shm
 *.db-wal
 db-backups/
+*.rdb
+**/dump.rdb
+__pycache__/
+*.pyc
 
 # ─── Testing ─────────────────────────────────────────────────────────────────
 coverage/

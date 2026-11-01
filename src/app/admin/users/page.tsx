@@ -20,7 +20,7 @@ interface UsersPageProps {
 }
 
 export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
-  await verifySuperAdmin();
+  const admin = await verifySuperAdmin();
   const sp = await searchParams;
 
   const page = parseInt(sp.page || "1", 10) || 1;
@@ -29,7 +29,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
   const filter2FA = sp.twoFactor ? sp.twoFactor === "true" : undefined;
   const filterSuperAdmin = sp.superAdmin ? sp.superAdmin === "true" : undefined;
 
-  const result = await listUsers({
+  const result = await listUsers(admin, {
     page,
     limit: 20,
     search,

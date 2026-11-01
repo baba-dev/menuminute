@@ -1,4 +1,3 @@
-import { getDb } from "@/db";
 import {
   users,
   sessions,
@@ -21,8 +20,8 @@ export interface ListUsersParams {
   filterSuperAdmin?: boolean;
 }
 
-export async function listUsers(params: ListUsersParams = {}) {
-  const db = getDb();
+export async function listUsers(actor: AdminActor, params: ListUsersParams = {}) {
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(100, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
@@ -82,10 +81,11 @@ export async function listUsers(params: ListUsersParams = {}) {
     limit,
     totalPages: Math.ceil(total / limit),
   };
+  });
 }
 
 export async function getUserDetails(actor: AdminActor, userId: string) {
-  const db = getDb();
+  return withActor({ userId: actor.id, sessionId: actor.sessionId }, async (db) => {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
@@ -119,8 +119,7 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
     .where(eq(accounts.userId, userId));
 
   // Get organization memberships
-  const memberships = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
-    tx
+  const memberships = await db
       .select({
         membershipId: organizationMembers.id,
         organizationId: organizationMembers.organizationId,
@@ -130,8 +129,7 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
       })
       .from(organizationMembers)
       .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-      .where(eq(organizationMembers.userId, userId))
-  );
+      .where(eq(organizationMembers.userId, userId));
 
   // Get two-factor state
   const tf = await db.query.twoFactors.findFirst({
@@ -154,6 +152,7 @@ export async function getUserDetails(actor: AdminActor, userId: string) {
         }
       : null,
   };
+  });
 }
 
 export async function toggleUserVerification(actor: AdminActor, userId: string, verified: boolean) {
