@@ -39,11 +39,11 @@ test.describe("home-v2 scan to order", () => {
     const tickets = section(page).locator(".sto-ticket");
     await expect(tickets).toHaveCount(2);
     await section(page).getByRole("button", { name: "Send to kitchen" }).click();
-    await expect(section(page).locator(".sto-kitchen strong .sto-sr")).toHaveText("1");
+    await expect(section(page).locator(".sto-kitchen strong .mm-roll__sr")).toHaveText("1");
     await expect(section(page).getByRole("button", { name: /Add Biryani/ })).toBeDisabled();
 
     await section(page).getByRole("button", { name: "Reset the preview" }).click();
-    await expect(section(page).locator(".sto-kitchen strong .sto-sr")).toHaveText("0");
+    await expect(section(page).locator(".sto-kitchen strong .mm-roll__sr")).toHaveText("0");
     await expect(tickets).toHaveCount(0);
   });
 

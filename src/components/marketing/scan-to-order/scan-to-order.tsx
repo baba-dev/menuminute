@@ -29,44 +29,12 @@ import {
   cartTotals,
   changeCart,
   flipDelta,
-  rollColumns,
   spotlightVars,
   tiltFor,
   type CartLine,
 } from "./scan-to-order-motion";
+import { RollingNumber } from "../rolling-number/rolling-number";
 import "./scan-to-order.css";
-
-const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
-
-/** Rolling number: every digit is a column that slides to its value (Magic UI "number ticker"). */
-function Roll({ text }: { text: string }) {
-  const columns = rollColumns(text);
-  return (
-    <span className="sto-roll">
-      <span className="sto-sr">{text}</span>
-      <span className="sto-roll__visual" aria-hidden="true">
-        {columns.map((column, index) => {
-          const key = columns.length - index; // right-aligned, so a longer number keeps its low digits
-          return column.kind === "digit" ? (
-            <span
-              className="sto-roll__col"
-              key={key}
-              style={{ "--d": column.digit } as CSSProperties}
-            >
-              <span className="sto-roll__strip">
-                {DIGITS.map((digit) => (
-                  <span key={digit}>{digit}</span>
-                ))}
-              </span>
-            </span>
-          ) : (
-            <span key={key}>{column.glyph}</span>
-          );
-        })}
-      </span>
-    </span>
-  );
-}
 
 function QrCorners() {
   return (
@@ -373,9 +341,9 @@ export function ScanToOrder({ qrDataUrl }: { qrDataUrl: string }) {
 
                   <div className="sto-basket">
                     <span className="sto-basket__sum">
-                      <Roll text={String(totals.count)} />
+                      <RollingNumber text={String(totals.count)} />
                       <span>{totals.count === 1 ? "item" : "items"}</span>
-                      <Roll text={formatInr(totals.totalMinor)} />
+                      <RollingNumber text={formatInr(totals.totalMinor)} />
                     </span>
                     <button
                       type="button"
@@ -425,7 +393,7 @@ export function ScanToOrder({ qrDataUrl }: { qrDataUrl: string }) {
                         >
                           <Minus size={15} aria-hidden="true" />
                         </button>
-                        <Roll text={String(quantity)} />
+                        <RollingNumber text={String(quantity)} />
                         <button
                           type="button"
                           aria-label="Increase quantity"
@@ -498,7 +466,7 @@ export function ScanToOrder({ qrDataUrl }: { qrDataUrl: string }) {
               <div>
                 <small>Awaiting acceptance</small>
                 <strong>
-                  <Roll text={sent ? "1" : "0"} />
+                  <RollingNumber text={sent ? "1" : "0"} />
                 </strong>
                 <small>{SAMPLE_TABLE} · restaurant accepts or declines</small>
               </div>
@@ -521,7 +489,7 @@ export function ScanToOrder({ qrDataUrl }: { qrDataUrl: string }) {
           <div className="sto-card sto-currency" data-reveal>
             <h3>Priced in your currency</h3>
             <div className="sto-currency__price" data-code={currency.code}>
-              <Roll text={`${currency.symbol}${currency.amount}`} />
+              <RollingNumber text={`${currency.symbol}${currency.amount}`} />
             </div>
             <div className="sto-currency__tabs" role="group" aria-label="Sample currency">
               {CURRENCY_SAMPLES.map((item, index) => (

@@ -1,0 +1,40 @@
+/* Shared rolling-number effect. Only transform animates; reduced motion turns the roll off. */
+.mm-roll {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+.mm-roll__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.mm-roll__visual {
+  display: inline-flex;
+}
+.mm-roll__col {
+  display: inline-block;
+  height: 1.2em;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.mm-roll__strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--d) * -1.2em));
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mm-roll__strip span {
+  height: 1.2em;
+}
+.mm-roll__visual > span:not(.mm-roll__col) {
+  line-height: 1.2;
+  white-space: pre;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-roll__strip {
+    transition: none;
+  }
+}

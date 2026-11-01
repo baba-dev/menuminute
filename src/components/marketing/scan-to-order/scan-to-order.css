@@ -95,8 +95,10 @@
 }
 .sto-word {
   display: inline-block;
+  margin-inline-end: 0.24em;
 }
 .sto-word:last-child {
+  margin-inline-end: 0;
   color: var(--sto-accent);
 }
 .sto-lead {
@@ -339,34 +341,6 @@
   color: var(--sto-muted);
   font-weight: 600;
   margin-right: 4px;
-}
-
-/* Rolling numbers */
-.sto-roll {
-  display: inline-flex;
-  font-variant-numeric: tabular-nums;
-}
-.sto-roll__visual {
-  display: inline-flex;
-}
-.sto-roll__col {
-  display: inline-block;
-  height: 1.2em;
-  overflow: hidden;
-  line-height: 1.2;
-}
-.sto-roll__strip {
-  display: flex;
-  flex-direction: column;
-  transform: translateY(calc(var(--d) * -1.2em));
-  transition: transform 0.7s var(--sto-ease);
-}
-.sto-roll__strip span {
-  height: 1.2em;
-}
-.sto-roll__visual > span:not(.sto-roll__col) {
-  line-height: 1.2;
-  white-space: pre;
 }
 
 /* Shimmer button */

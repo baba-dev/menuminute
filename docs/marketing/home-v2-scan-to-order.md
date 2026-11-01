@@ -18,7 +18,7 @@ acceptance" count in a kitchen tile.
 | Stage            | Border beam, dot pattern, 3D phone tilt toward the pointer (mouse or pen only)                    |
 | Scan overlay     | Real QR (server generated), corner brackets and a scan laser; scans itself once seen, or on click |
 | Phone menu       | Category pills, sort chips, FLIP reorder, dish bottom sheet with stepper, shimmer buttons         |
-| Basket bar       | Rolling-number item count and total                                                               |
+| Basket bar       | Rolling-number item count and total (shared `RollingNumber`)                                      |
 | Order flight     | Tickets slide in; "Send to kitchen" flies particles to a kitchen tile and rolls 0 to 1            |
 | Currency card    | Cycles INR / AED / USD / EUR price points with rolling digits until the visitor picks one         |
 | Marquee          | Two opposite rows of sample dishes (decorative, `aria-hidden`)                                    |
@@ -70,3 +70,5 @@ never set React state per move. Loops pause when the section is off-screen (`dat
   motion. Run against `next dev` with a scratch config and the pre-installed Chromium.
 - The 16 existing `home-v2-dashboard-build` runs still pass with the new section on the page.
 - `pnpm lint` and `tsc --noEmit` clean for the changed files.
+
+Section 3, [the kitchen board](home-v2-kitchen-board.md), follows it and shares `RollingNumber`.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeNav } from "@/components/marketing/navigation/home-nav";
 import { DashboardBuild } from "@/components/marketing/dashboard-build/dashboard-build";
+import { KitchenBoard } from "@/components/marketing/kitchen-board/kitchen-board";
 import { ScanToOrder } from "@/components/marketing/scan-to-order/scan-to-order";
 import { STICKER_DEMO_URL } from "@/components/marketing/storefront-studio/sticker-config";
 import QRCode from "qrcode";
@@ -29,6 +30,7 @@ export default async function HomeV2Page() {
       <main>
         <DashboardBuild />
         <ScanToOrder qrDataUrl={qrDataUrl} />
+        <KitchenBoard />
         <section className="db-cta" aria-labelledby="db-cta-title">
           <h2 id="db-cta-title">See it for yourself</h2>
           <p>
