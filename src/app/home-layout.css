@@ -23,6 +23,10 @@
     .cp-container,
     .mm6-container,
     .ss-container,
+    .sto-container,
+    .kb-container,
+    .pm-container,
+    .tr-container,
     .mmf-container
   ) {
   box-sizing: border-box;
