@@ -7,9 +7,10 @@ import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import "../privacy/privacy.css";
 
 export const metadata: Metadata = {
-  title: "Account deletion requests — Review draft",
+  title: "Request Account and Data Deletion",
   description: "Information about requesting deletion of a MenuMinute account and associated data.",
-  robots: { index: false, follow: true },
+  alternates: { canonical: "https://food.bababuilds.com/delete-account" },
+  robots: { index: true, follow: true },
 };
 
 export default function DeleteAccountPage() {
@@ -53,12 +54,11 @@ export default function DeleteAccountPage() {
           <div className="privacy-note">
             <UserRoundX aria-hidden="true" size={24} />
             <div>
-              <strong>Account deletion — implementation and legal review in progress</strong>
+              <strong>How to request deletion</strong>
               <p>
-                This page currently provides a contact-based privacy request channel; it is not a
-                finished automated in-app deletion feature. Do not submit a native application for
-                store approval until the in-app deletion flow, associated-data cleanup and verified
-                retention exceptions are implemented and tested.
+                You can request deletion of your account or personal information using the
+                email contact below. Requests are reviewed after appropriate verification; this
+                page does not offer instant or automated deletion.
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function DeleteAccountPage() {
               </h1>
               <p>
                 MenuMinute is operated by BabaBuilds, a sole proprietorship based in Pilani,
-                Rajasthan, India. For now, to begin a privacy-related deletion enquiry please
+                Rajasthan, India. To begin a privacy-related deletion request, please
                 contact us using the email address below and include the email associated with your
                 account. Do not send a password, authentication code or sensitive identity document
                 in the initial message.
@@ -109,9 +109,9 @@ export default function DeleteAccountPage() {
                 Account deletion is intended to remove the account and associated personal data,
                 subject only to information that must be retained for applicable legal, security,
                 dispute or financial-record purposes. Merely disabling an account is not equivalent
-                to deletion. Record-by-record retention periods, production deletion automation and
-                backup expiry must be approved and verified before this becomes a store-launch
-                capability.
+                to deletion. The extent and timing of removal depend on the verified request, information
+                held by the relevant restaurant and lawful retention requirements. We will
+                explain any limits when responding.
               </p>
             </section>
             <section className="privacy-section">
@@ -119,7 +119,7 @@ export default function DeleteAccountPage() {
               <p>
                 Use the same email to ask for access, correction, an available export, marketing
                 preferences or information about the data we hold. Review the{" "}
-                <Link href="/privacy">Privacy Policy</Link> for the full proposed scope of data
+                <Link href="/privacy">Privacy Policy</Link> for the scope of data
                 categories and rights.
               </p>
               <p>
@@ -131,11 +131,11 @@ export default function DeleteAccountPage() {
             <div className="privacy-note">
               <ShieldCheck size={22} aria-hidden="true" />
               <div>
-                <strong>Mobile store release gate</strong>
+                <strong>What happens next</strong>
                 <p>
-                  Google Play requires a discoverable in-app and external deletion route; Apple
-                  requires users to initiate deletion inside the app. A mailto link alone is not an
-                  adequate replacement for those paths.
+                  We may ask you to verify account ownership before making changes. Please do not
+                  send passwords or identity documents in your first email. We review requests
+                  according to applicable law and notify you about the outcome.
                 </p>
               </div>
             </div>
