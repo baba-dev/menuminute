@@ -9,6 +9,8 @@ export const metadata = marketingMetadata({
   description:
     "Explore MenuMinute dine-in QR ordering, pickup requests and guest tracking. Ordering requires approved outlet activation.",
   pathname: "/ordering",
+  image: "/docs-media/orders-desktop-light.webp",
+  imageAlt: "MenuMinute restaurant order tickets and status",
 });
 export default function OrderingPage() {
   if (!feature) notFound();

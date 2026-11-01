@@ -4,10 +4,14 @@ export function marketingMetadata({
   title,
   description,
   pathname,
+  image,
+  imageAlt,
 }: {
   title: string;
   description: string;
   pathname: string;
+  image?: string;
+  imageAlt?: string;
 }): Metadata {
   return {
     title,
@@ -21,10 +25,9 @@ export function marketingMetadata({
       siteName: "MenuMinute",
       images: [
         {
-          url: "/brand/social/og-light.webp",
-          width: 1200,
-          height: 630,
-          alt: "MenuMinute by BabaBuilds",
+          url: image || "/brand/social/og-light.webp",
+          ...(image ? {} : { width: 1200, height: 630 }),
+          alt: imageAlt || "MenuMinute by BabaBuilds",
         },
       ],
     },

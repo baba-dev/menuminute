@@ -115,6 +115,15 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               <p className="text-muted-foreground mt-5 max-w-xl text-sm leading-6">
                 {feature.availabilityText}
               </p>
+              {feature.availability !== "free" && (
+                <a
+                  href={"mailto:admin@bababuilds.com?subject=" + encodeURIComponent("MenuMinute " + feature.title + " availability enquiry")}
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-orange-700 underline underline-offset-4 hover:text-orange-600 dark:text-orange-300"
+                >
+                  Email us about {feature.title}
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              )}
             </div>
             <div className="min-w-0">
               {feature.image ? (

@@ -9,6 +9,8 @@ export const metadata = marketingMetadata({
   description:
     "Create a free restaurant QR menu. Add dishes, categories and prices, publish a mobile-friendly menu and download permanent QR codes.",
   pathname: "/free-qr-menu",
+  image: "/docs-media/qr-studio-desktop-light.webp",
+  imageAlt: "QR Studio in the MenuMinute sample restaurant",
 });
 export default function FreeQrMenuPage() {
   if (!feature) notFound();

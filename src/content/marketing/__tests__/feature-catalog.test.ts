@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import sitemap from "@/app/sitemap";
 import { marketingMetadata } from "@/lib/marketing/seo";
 import { marketingFeatures, marketingFeatureBySlug } from "@/content/marketing/features";
@@ -20,6 +22,44 @@ describe("marketing feature coverage", () => {
       expect(GUIDES.some((guide) => "/docs/" + guide.slug === feature.guideHref)).toBe(true);
       expect(marketingFeatureBySlug(feature.slug)).toBe(feature);
     }
+  });
+  it("references real repository artwork and screenshots on every feature", () => {
+    for (const feature of marketingFeatures) {
+      const heroAssets = [
+        feature.heroArtwork.desktopLight,
+        feature.heroArtwork.desktopDark,
+        feature.heroArtwork.mobileLight,
+        feature.heroArtwork.mobileDark,
+      ];
+      for (const asset of heroAssets) {
+        expect(asset).toMatch(/^\/brand\/.*\.(webp|png)$/);
+        expect(existsSync(join(process.cwd(), "public", asset.slice(1))), asset).toBe(true);
+      }
+      if (feature.image) {
+        for (const theme of ["light", "dark"]) {
+          const screenshot = "/docs-media/" + feature.image + "-desktop-" + theme + ".webp";
+          expect(existsSync(join(process.cwd(), "public", screenshot.slice(1))), screenshot).toBe(true);
+        }
+      }
+      expect(feature.editorial.title.length).toBeGreaterThan(20);
+      expect(feature.editorial.situation.length).toBeGreaterThan(90);
+      expect(feature.editorial.approach.length).toBeGreaterThan(90);
+      expect(feature.editorial.outcome.length).toBeGreaterThan(80);
+      expect(feature.editorial.checklist.length).toBeGreaterThanOrEqual(3);
+      expect(feature.editorial.actionHref.startsWith("/")).toBe(true);
+    }
+  });
+  it("provides a feature-specific social image when configured", () => {
+    const metadata = marketingMetadata({
+      title: "Kitchen Pro",
+      description: "Kitchen display system overview",
+      pathname: "/features/kitchen-display-system",
+      image: "/docs-media/kitchen-desktop-light.webp",
+      imageAlt: "Actual kitchen demo screen",
+    });
+    expect(metadata.openGraph).toMatchObject({
+      images: [{ url: "/docs-media/kitchen-desktop-light.webp", alt: "Actual kitchen demo screen" }],
+    });
   });
   it("never claims gated functionality is available automatically", () => {
     for (const feature of marketingFeatures.filter((item) => item.availability !== "free")) {
