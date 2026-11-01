@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, ListChecks } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { marketingFeatures } from "@/content/marketing/features";
 import { MarketingPageShell } from "@/components/marketing/pages/marketing-page-shell";
 import { marketingMetadata } from "@/lib/marketing/seo";
@@ -56,7 +56,7 @@ export default function FeaturesPage() {
                     className="h-full w-full object-contain object-center dark:brightness-90"
                   />
                 ) : (
-                  <ListChecks size={72} className="text-orange-600" aria-hidden="true" />
+                  <Image src={feature.heroArtwork.desktopLight} width={720} height={450} sizes="(max-width: 768px) 100vw, 50vw" alt={feature.heroArtwork.alt} className="h-full w-full object-cover object-center dark:brightness-90" />
                 )}
               </div>
               <div className="flex flex-1 flex-col p-7">

@@ -14,6 +14,7 @@ import {
 import type { MarketingFeature } from "@/content/marketing/features";
 import { marketingFeatures } from "@/content/marketing/features";
 import { MarketingPageShell } from "@/components/marketing/pages/marketing-page-shell";
+import { FeatureHeroArtwork } from "@/components/marketing/pages/feature-hero-artwork";
 import { PUBLIC_ORIGIN, safeJsonLd } from "@/lib/marketing/seo";
 
 const statusLabels = {
@@ -143,8 +144,15 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="hidden h-auto w-full dark:block"
                   />
-                  <figcaption className="border-border text-muted-foreground border-t px-5 py-3 text-xs">
-                    {feature.screenshotCaption}
+                  <figcaption className="border-border text-muted-foreground flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 text-xs">
+                    <span>{feature.screenshotCaption}</span>
+                    <Link
+                      href={feature.guideHref}
+                      className="inline-flex min-h-9 items-center gap-1 font-semibold text-orange-700 underline underline-offset-4 dark:text-orange-300"
+                    >
+                      View the screen walkthrough
+                      <ArrowUpRight size={14} aria-hidden="true" />
+                    </Link>
                   </figcaption>
                 </figure>
               ) : (
@@ -187,6 +195,7 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               )}
             </div>
           </div>
+          <FeatureHeroArtwork feature={feature} />
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-24 lg:px-8">
@@ -230,6 +239,65 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               </ul>
             </div>
           </div>
+        </div>
+      </section>
+      <section className="border-border border-y bg-gradient-to-br from-stone-950 via-stone-900 to-[#442315] px-5 py-16 text-stone-50 sm:py-24">
+        <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+          <article>
+            <p className="text-xs font-bold tracking-widest text-orange-300 uppercase">
+              A practical restaurant story
+            </p>
+            <h2 className="font-display mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
+              {feature.editorial.title}
+            </h2>
+            <p className="mt-6 text-base leading-8 text-stone-200">
+              {feature.editorial.situation}
+            </p>
+            <p className="mt-4 text-base leading-8 text-stone-200">
+              {feature.editorial.approach}
+            </p>
+            <p className="mt-4 border-l-2 border-orange-400 pl-5 text-base leading-8 text-orange-100">
+              {feature.editorial.outcome}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href={feature.editorial.actionHref}
+                className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-stone-950 transition hover:bg-orange-400"
+              >
+                {feature.editorial.actionLabel}
+                <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <Link
+                href={feature.ctaHref}
+                className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-orange-100/35 px-5 py-3 text-sm font-bold text-white transition hover:border-orange-300"
+              >
+                {feature.cta}
+              </Link>
+            </div>
+          </article>
+          <aside className="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-sm sm:p-8">
+            <p className="text-xs font-bold tracking-widest text-orange-300 uppercase">
+              {feature.editorial.eyebrow}
+            </p>
+            <h3 className="font-display mt-4 text-xl font-bold">
+              What to explore next
+            </h3>
+            <ul className="mt-6 space-y-5">
+              {feature.editorial.checklist.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm leading-7 text-stone-100">
+                  <Check className="mt-1 size-5 shrink-0 text-orange-300" aria-hidden="true" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={feature.guideHref}
+              className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-orange-200 underline underline-offset-4 hover:text-white"
+            >
+              {feature.guideLabel}
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </aside>
         </div>
       </section>
       <section className="border-border bg-muted/30 border-y px-5 py-16 sm:py-24">
@@ -307,6 +375,12 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-stone-600 px-6 py-3 font-bold text-white hover:border-orange-300"
             >
               Compare plans <ArrowUpRight size={17} aria-hidden="true" />
+            </Link>
+            <Link
+              href={feature.guideHref}
+              className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-stone-600 px-6 py-3 font-bold text-white hover:border-orange-300"
+            >
+              Explore screenshots <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
           </div>
         </div>
