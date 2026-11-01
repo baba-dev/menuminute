@@ -1,8 +1,8 @@
 /**
  * Copy for "Upload. Review. Live." (home-v2 section 4). Statements describe the product's existing
  * import rules (see src/modules/menu-import/review.ts and the owner help article) and this page's
- * sample. Import is enabled per outlet, as /pricing says, so the copy does not promise universal
- * availability. Every `href` is checked by tests/pdf-to-menu.test.ts.
+ * sample. Import is open to every outlet (confirmed by the owner), so the copy says so; the review
+ * rule still applies to every import. Every `href` is checked by tests/pdf-to-menu.test.ts.
  */
 export type ImportCard = { title: string; body: string; href: string; cta: string };
 
@@ -36,10 +36,10 @@ export const IMPORT_CARDS: readonly ImportCard[] = [
     cta: "Read the import guide",
   },
   {
-    title: "Enabled per outlet",
-    body: "Photo and PDF import is optional and turned on for an outlet where it is separately enabled and approved.",
-    href: "/pricing",
-    cta: "See plans",
+    title: "Open to every outlet",
+    body: "Photo and PDF import is available to every outlet. You still review everything before it goes live.",
+    href: "/register",
+    cta: "Get started free",
   },
 ];
 

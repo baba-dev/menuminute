@@ -65,16 +65,16 @@ test.describe("home-v2 pdf to menu", () => {
     await expect(sec(page).locator(".pm-hit")).toHaveCount(1);
   });
 
-  test("states what it is: a scripted sample, enabled per outlet", async ({ page }) => {
+  test("states what it is: a scripted sample, open to every outlet", async ({ page }) => {
     await open(page);
     const text = await sec(page).innerText();
     expect(text).toMatch(/no file is uploaded or processed/i);
-    expect(text).toMatch(/separately enabled and approved/i);
+    expect(text).toMatch(/available to every outlet/i);
     const hrefs = await sec(page)
       .locator("a")
       .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
     for (const href of hrefs) {
-      expect(["/help/owner/ai-menu-import", "/docs/menu-import", "/pricing"]).toContain(href);
+      expect(["/help/owner/ai-menu-import", "/docs/menu-import", "/register"]).toContain(href);
     }
   });
 

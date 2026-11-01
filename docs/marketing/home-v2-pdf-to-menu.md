@@ -29,8 +29,9 @@ finalising). They are a marketing mirror, not an import of product code.
 
 - Source claims: the owner help article (`/help/owner/ai-menu-import`) says photos or a PDF, a private
   candidate draft, never published automatically, reviewed and accepted by the owner.
-- Availability follows `/pricing` ("AI photo import where separately enabled and approved"), so the card
-  says import is enabled per outlet and the page never says it is open to everyone.
+- Availability: the owner confirmed AI import is open to every outlet, so the third card says so and links
+  to sign-up. Note that `/pricing` still says "AI photo import where separately enabled and approved";
+  that page was out of scope here and should be updated separately so the site agrees with itself.
 - The note says it is a scripted preview with no upload and no AI, and that dish details are never
   verified claims. The sample paper carries no allergen or dietary claims.
 - Prices are whole rupees from 0 to 99,999; the unreadable-price input only accepts digits.

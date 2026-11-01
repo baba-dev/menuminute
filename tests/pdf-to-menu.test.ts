@@ -133,10 +133,11 @@ describe("pdf-to-menu copy", () => {
     }
   });
 
-  it("is honest: scripted sample, enabled per outlet, no verified-dish or autonomous claims", () => {
+  it("is honest: scripted sample, open to every outlet, review always required, no autonomous claims", () => {
     const text = `${IMPORT_NOTE} ${IMPORT_CARDS.map((c) => `${c.title} ${c.body}`).join(" ")}`;
     expect(IMPORT_NOTE).toMatch(/no file is uploaded or processed/i);
-    expect(text).toMatch(/separately enabled and approved/i);
+    expect(text).toMatch(/available to every outlet/i);
+    expect(text).not.toMatch(/separately enabled|operator approval|in development/i);
     expect(text).toMatch(/only you publish/i);
     expect(text).not.toMatch(/100%|perfect|instant(ly)? publish|auto-?publish|guarantee/i);
   });
