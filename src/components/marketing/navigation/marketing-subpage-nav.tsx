@@ -12,6 +12,7 @@ import "@/components/marketing/brand/brand-nav-logo.css";
 const subpageLinks = [
   { href: "/", label: "Home" },
   { href: "/features", label: "Features" },
+  { href: "/solutions", label: "Solutions" },
   { href: "/pricing", label: "Pricing" },
   { href: "/demo", label: "Demo" },
   { href: "/help", label: "Guides" },
@@ -26,7 +27,7 @@ export function MarketingSubpageNav() {
 
   // A drawer opened on a phone must not reappear after desktop resizing.
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 768px)");
+    const desktop = window.matchMedia("(min-width: 1024px)");
     const closeOnDesktop = () => {
       if (desktop.matches) setMobileOpen(false);
     };
@@ -67,7 +68,7 @@ export function MarketingSubpageNav() {
           </Link>
 
           {/* Desktop Nav Items */}
-          <div className="hidden items-center gap-5 md:flex lg:gap-7">
+          <div className="hidden items-center gap-4 lg:flex xl:gap-7">
             {subpageLinks
               .filter((link) => link.href !== "/")
               .map((link) => (
@@ -79,7 +80,8 @@ export function MarketingSubpageNav() {
                     (link.href === "/features" &&
                       (pathname?.startsWith("/features/") ||
                         pathname === "/free-qr-menu" ||
-                        pathname === "/ordering"))
+                        pathname === "/ordering")) ||
+                    (link.href === "/solutions" && pathname?.startsWith("/solutions/"))
                       ? "page"
                       : undefined
                   }
@@ -89,7 +91,8 @@ export function MarketingSubpageNav() {
                     (link.href === "/features" &&
                       (pathname?.startsWith("/features/") ||
                         pathname === "/free-qr-menu" ||
-                        pathname === "/ordering"))
+                        pathname === "/ordering")) ||
+                    (link.href === "/solutions" && pathname?.startsWith("/solutions/"))
                       ? "text-brand-800 dark:text-brand-200 font-semibold"
                       : "text-muted-foreground hover:text-foreground")
                   }
@@ -102,7 +105,7 @@ export function MarketingSubpageNav() {
           </div>
 
           {/* Mobile Actions & Menu */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <ThemeControl />
             <div ref={menuRef} className="relative">
               <button
@@ -130,7 +133,7 @@ export function MarketingSubpageNav() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      aria-current={pathname === link.href ? "page" : undefined}
+                      aria-current={pathname === link.href || (link.href === "/solutions" && pathname?.startsWith("/solutions/")) ? "page" : undefined}
                       className={`flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                         pathname === link.href
                           ? "bg-muted text-brand-800 dark:text-brand-200"
