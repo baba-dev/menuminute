@@ -245,7 +245,12 @@ export default async function DashboardPage() {
   const floorDueByTable = Object.fromEntries(
     (floorMatrix ?? []).map((row) => [
       row.id,
-      { dueMinor: row.dueMinor, latestOrderId: row.latestOrderId },
+      {
+        dueMinor: row.dueMinor,
+        latestOrderId: row.latestOrderId,
+        unpaidOrders: row.unpaidOrders,
+        name: row.label ?? undefined,
+      },
     ])
   );
   const canManageAvailability = publicProjection

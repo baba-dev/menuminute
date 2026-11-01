@@ -122,7 +122,7 @@ export function TableFloorMatrix({
           <RefreshCw size={15} aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh floor"}
         </button>
         <Link href="/dashboard/floor">
-          Open dining floor <ArrowRight size={14} aria-hidden="true" />
+          View full floor <ArrowRight size={14} aria-hidden="true" />
         </Link>
         <Link href="/dashboard/qr-codes">Manage service points</Link>
       </div>
@@ -246,8 +246,8 @@ export function TableFloorMatrix({
           ))}
           {glance.hiddenTables > 0 && (
             <p className={styles.more}>
-              +{glance.hiddenTables} more {glance.hiddenTables === 1 ? "table" : "tables"} on the{" "}
-              <Link href="/dashboard/floor">dining floor page</Link>.
+              +{glance.hiddenTables} more {glance.hiddenTables === 1 ? "table" : "tables"} in the{" "}
+              <Link href="/dashboard/floor">full floor view</Link>.
             </p>
           )}
 

@@ -117,4 +117,24 @@ describe("buildFloorGlance", () => {
       "Table 4: 0 of 4 seats taken, 2 unpaid, due ₹167"
     );
   });
+
+  it("keeps unpaid money visible for older tables that are not on the floor page", () => {
+    const g = buildFloorGlance(
+      overview([table(1, "s1", 0, 2)]),
+      new Map([
+        ["legacy-1", { dueMinor: "16700", latestOrderId: "o9", unpaidOrders: 2, name: "Table 4" }],
+        ["legacy-2", { dueMinor: "0", latestOrderId: null, unpaidOrders: 0 }],
+      ])
+    );
+    expect(g.unpaidTabs).toBe(2);
+    expect(g.attention).toEqual([
+      {
+        kind: "unpaid",
+        tableId: "legacy-1",
+        tableName: "Table 4",
+        dueMinor: "16700",
+        latestOrderId: "o9",
+      },
+    ]);
+  });
 });

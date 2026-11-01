@@ -1,7 +1,14 @@
 import type { FloorOverview, FloorTableOverview } from "./floor-contracts";
 
 /** Order-derived money context for a table. Comes from the orders-only floor matrix. */
-export type TableDue = { dueMinor: string; latestOrderId: string | null };
+export type TableDue = {
+  dueMinor: string;
+  latestOrderId: string | null;
+  /** Unpaid orders on this table, from the orders-only matrix. */
+  unpaidOrders?: number;
+  /** Display name for tables that are not on the floor page (older tables with no display number). */
+  name?: string;
+};
 
 export type GlanceTable = {
   table: FloorTableOverview;
@@ -91,16 +98,35 @@ export function buildFloorGlance(
       tables: loose.map(toGlance),
     });
 
-  const attention: GlanceAttention[] = [...tables]
-    .filter((t) => t.unpaidOrders > 0 || t.stale)
-    .sort((a, b) => rank(a) - rank(b) || a.displayNumber - b.displayNumber)
-    .slice(0, GLANCE_MAX_ATTENTION)
-    .map((t) => ({
-      kind: t.unpaidOrders > 0 ? ("unpaid" as const) : ("stale" as const),
-      tableId: t.id,
-      tableName: t.name,
-      ...due(t.id),
-    }));
+  const onFloor = new Set(tables.map((t) => t.id));
+  const attention: GlanceAttention[] = [
+    ...[...tables]
+      .filter((t) => t.unpaidOrders > 0 || t.stale)
+      .sort((a, b) => rank(a) - rank(b) || a.displayNumber - b.displayNumber)
+      .map((t) => ({
+        kind: t.unpaidOrders > 0 ? ("unpaid" as const) : ("stale" as const),
+        tableId: t.id,
+        tableName: t.name,
+        ...due(t.id),
+      })),
+    // Older tables have no display number, so the floor page does not list them, but money owed
+    // on them must not disappear from the dashboard.
+    ...[...(dueByTable ?? [])]
+      .filter(([id, d]) => !onFloor.has(id) && (d.unpaidOrders ?? 0) > 0)
+      .map(([id, d]) => ({
+        kind: "unpaid" as const,
+        tableId: id,
+        tableName: d.name ?? "Unnumbered table",
+        dueMinor: d.dueMinor,
+        latestOrderId: d.latestOrderId,
+      })),
+  ]
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "unpaid" ? -1 : 1))
+    .slice(0, GLANCE_MAX_ATTENTION);
+  const legacyUnpaid = [...(dueByTable ?? [])].reduce(
+    (n, [id, d]) => (onFloor.has(id) ? n : n + (d.unpaidOrders ?? 0)),
+    0
+  );
 
   return {
     totals: {
@@ -110,7 +136,7 @@ export function buildFloorGlance(
       seatsTaken: totals.currentOccupancy,
     },
     openOrders: tables.reduce((n, t) => n + t.activeOrders, 0),
-    unpaidTabs: tables.reduce((n, t) => n + t.unpaidOrders, 0),
+    unpaidTabs: tables.reduce((n, t) => n + t.unpaidOrders, 0) + legacyUnpaid,
     fillPct: totals.maxOccupancy
       ? Math.round((totals.currentOccupancy / totals.maxOccupancy) * 100)
       : 0,

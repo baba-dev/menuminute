@@ -177,8 +177,10 @@ for (const size of SIZES) {
         .filter({ hasText: "Menus to publish" })
         .locator(".mm-dashboard-kpi-value")
     ).toHaveText("0");
-    // A brand-new floor of idle tables is collapsed, not ten identical cards.
-    await expect(page.locator(".mm-ops-collapsible > summary")).toBeVisible();
+    // A brand-new floor of idle tables is a compact miniature map, not ten identical text cards.
+    await expect(
+      page.locator('[data-widget="floor"] a[href^="/dashboard/floor#table-"]').first()
+    ).toBeVisible();
     expect(await overflowOffenders(page), "dashboard overflow").toEqual([]);
     await snap("07-dashboard-first-run");
 
