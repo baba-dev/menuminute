@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PRIVACY_EFFECTIVE_LABEL, TERMS_EFFECTIVE_LABEL } from "../../src/content/legal";
 
 test.describe("shared public footer", () => {
   for (const route of ["/", "/pricing", "/demo", "/privacy", "/delete-account", "/terms"]) {
@@ -52,11 +53,11 @@ test.describe("shared public footer", () => {
   test("published privacy and terms expose their effective dates", async ({ page }) => {
     await page.goto("/privacy");
     await expect(page.getByRole("heading", { level: 1, name: /Your trust matters/ })).toBeVisible();
-    await expect(page.getByText("Privacy Policy · Effective 20 October 2026")).toBeVisible();
+    await expect(page.getByText(`Privacy Policy · Effective ${PRIVACY_EFFECTIVE_LABEL}`)).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute("content", /noindex/);
     await page.goto("/terms");
     await expect(page.getByRole("heading", { level: 1, name: /Good terms make/ })).toBeVisible();
-    await expect(page.getByText("Effective 24 October 2026", { exact: true })).toBeVisible();
+    await expect(page.getByText(`Effective ${TERMS_EFFECTIVE_LABEL}`, { exact: true })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute("content", /noindex/);
   });
 
