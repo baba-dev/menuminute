@@ -1,3 +1,5 @@
+import { parseAppearanceCommand } from "./appearance-command";
+
 /**
  * Deterministic replies for greetings, thanks and "what can you do?". No provider call, no spend,
  * no business data: the capability list is derived only from the tools this person is already
@@ -51,19 +53,32 @@ const THANKS =
 const CAPABILITY =
   /^(?:help|help me|what can you do|what do you do|what can i ask(?: you)?|how can you help(?: me)?|what are you|who are you|what is ember|what can ember do|how do i use (?:this|you|ember))$/;
 
-export type SmallTalk = { kind: "greeting" | "thanks" | "capabilities"; answer: string };
+export type SmallTalk = { kind: "greeting" | "thanks" | "capabilities" | "appearance"; answer: string };
 
 export function smallTalkReply(
   prompt: string,
   authorizedTools: ReadonlyArray<string>
 ): SmallTalk | null {
+  const appearance = parseAppearanceCommand(prompt);
+  if (appearance) {
+    const instruction = {
+      dark: "Switching this browser to **dark mode**.",
+      light: "Switching this browser to **light mode**.",
+      system: "This browser will now follow **your device's appearance setting**.",
+      toggle: "Switching to the other color mode in this browser.",
+    }[appearance];
+    return {
+      kind: "appearance",
+      answer: instruction + " You can change it again with the sun/moon button.",
+    };
+  }
   const text = norm(prompt);
   if (!text || text.length > 60) return null;
   const allowed = new Set(authorizedTools);
   const lines = CAPABILITIES.filter((c) => allowed.has(c.tool)).map((c) => `- ${c.line}`);
   const menu = lines.length
-    ? `Here's what I can help with:\n\n${lines.join("\n")}\n\nI only look things up and explain them. I never change anything without you confirming it first.`
-    : "I can answer questions about your restaurant, but your account doesn't have access to any information I can look at yet. Ask your account owner to check your permissions.";
+    ? `Here's what I can help with:\n\n${lines.join("\n")}\n- switch between light and dark mode\n\nI can change how this browser looks. Business changes still require your confirmation.`
+    : "I can switch between light and dark mode, but your account doesn't have access to restaurant information I can look up yet. Ask your account owner to check your permissions.";
   if (GREETING.test(text))
     return {
       kind: "greeting",
