@@ -12,6 +12,8 @@ describe("Dining Floor metadata write guard", () => {
     expect(needsTableMetadataUpdate(current, { ...current, capacity: 6 })).toBe(true);
   });
   it("recognizes null metadata rather than masking an intentional edit", () => {
-    expect(needsTableMetadataUpdate({ ...current, label: null, capacity: null }, current)).toBe(true);
+    expect(needsTableMetadataUpdate({ ...current, label: null, capacity: null }, current)).toBe(
+      true
+    );
   });
 });
