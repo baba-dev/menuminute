@@ -11,7 +11,10 @@ test.describe("published Privacy Policy", () => {
     await expect(page.getByText("BabaBuilds", { exact: false }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /15\. Contact and complaints/ })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://food.bababuilds.com/privacy");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://food.bababuilds.com/privacy"
+    );
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     const sections = page.locator("main.privacy-copy > section.privacy-section");
     await expect(sections).toHaveCount(15);
@@ -41,7 +44,10 @@ test.describe("published Privacy Policy", () => {
       /^mailto:admin@bababuilds\.com/
     );
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://food.bababuilds.com/delete-account");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://food.bababuilds.com/delete-account"
+    );
   });
 
   test("small screen has visible contents and no horizontal overflow", async ({ page }) => {
