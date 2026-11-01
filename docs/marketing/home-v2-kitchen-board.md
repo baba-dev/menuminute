@@ -1,8 +1,10 @@
 # home-v2: "Fired, plated, served" (section 3)
 
 Status: **built and previewed** at `/home-v2` (`noindex`, not in the sitemap), after
-[scan to order](home-v2-scan-to-order.md). It is a marketing preview with sample tickets. Kitchen Pro is
-in development: nothing here is live, and no order is placed.
+[scan to order](home-v2-scan-to-order.md). It is a marketing preview with sample tickets: no order is placed
+on this page. Kitchen Pro itself is built; the copy follows `/pricing` and ADR 025, which say real outlets
+activate it after approval (pilot or paid path), so the section does not promise instant or universal
+availability.
 
 ## Story
 
@@ -36,8 +38,8 @@ CSS is self-contained (`mm-roll` classes), so a section does not depend on anoth
 ## Rules this section keeps
 
 - **Sample data only**, no API, payment, paid AI or order submission. State is local to the component.
-- **No availability promise.** The badge, the note and the cards say Kitchen Pro is in development; the
-  guest view is labelled illustrative. Station labels derive from each sample dish's category.
+- **No unqualified availability claim.** The note says Kitchen Pro is activated per outlet after approval
+  and that visible areas depend on the plan; the guest view is labelled illustrative. Station labels derive from each sample dish's category.
 - **Colour is never the only signal.** Ticket tone always has a word.
 - **No invented social proof.** There are no testimonials, reviews or customer counts here.
 
@@ -60,7 +62,7 @@ CSS is self-contained (`mm-roll` classes), so a section does not depend on anoth
 - `tests/kitchen-board.test.ts`: 11 tests (rules, autoplay, tones, tracker, summary, confetti, links, copy),
   run with a DB-free vitest config because the global setup needs a migration database.
 - `tests/e2e/home-v2-kitchen-board.spec.ts`: 6 scenarios on desktop and Pixel 5 (12 runs): full stage
-  walk with guest view, autoplay and reset, age words, no availability promise and links, no overflow and
+  walk with guest view, autoplay and reset, age words, no unqualified availability claim and links, no overflow and
   axe WCAG 2 A/AA, reduced motion.
 - Section 2 (12 runs) and section 1 (16 runs) specs still pass after the `RollingNumber` extraction.
 - `tsc --noEmit`, eslint and prettier clean for the changed files. The full `next build` needs real

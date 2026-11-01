@@ -1,7 +1,7 @@
 /**
  * Pure logic for the "Fired, plated, served" kitchen board (home-v2 section 3). Sample data only:
  * the tickets mirror the Table 11 order from section 2 plus two ambient tickets. No API, no timers
- * here, so every rule is unit-testable. Kitchen Pro is in development; this is an illustrative preview.
+ * here, so every rule is unit-testable. This is an illustrative preview.
  */
 import { SAMPLE_TABLE, sampleDish, type SampleDish } from "../scan-to-order/scan-to-order-fixture";
 

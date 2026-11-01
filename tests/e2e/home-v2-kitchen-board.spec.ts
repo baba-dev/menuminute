@@ -46,10 +46,14 @@ test.describe("home-v2 kitchen board", () => {
     await expect(ticket(page).locator(".kb-age b")).toHaveText("On time");
   });
 
-  test("makes no availability promise and links only to public pages", async ({ page }) => {
+  test("makes no unqualified availability promise and links only to public pages", async ({
+    page,
+  }) => {
     await open(page);
     const text = await board(page).innerText();
-    expect(text).toMatch(/Kitchen Pro is in development/i);
+    expect(text).toMatch(/no real orders are placed/i);
+    expect(text).toMatch(/activated per outlet after approval/i);
+    expect(text).not.toMatch(/in development/i);
     const hrefs = await board(page)
       .locator("a")
       .evaluateAll((links) => links.map((link) => link.getAttribute("href")));

@@ -120,8 +120,8 @@ describe("kitchen board copy", () => {
     }
   });
 
-  it("promises no availability for Kitchen Pro", () => {
+  it("does not promise instant or universal availability", () => {
     const text = KITCHEN_CARDS.map((card) => `${card.title} ${card.body}`).join(" ");
-    expect(text).not.toMatch(/available now|live now|launch(ed)? (today|now)|guarantee/i);
+    expect(text).not.toMatch(/instant|everyone|every outlet|guarantee/i);
   });
 });

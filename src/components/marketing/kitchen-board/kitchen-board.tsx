@@ -182,7 +182,7 @@ export function KitchenBoard() {
       <div className="kb-container">
         <header className="kb-intro" data-reveal>
           <span className="kb-eyebrow">03 / THE KITCHEN SIDE</span>
-          <span className="kb-badge">PREVIEW · KITCHEN PRO IS IN DEVELOPMENT · SAMPLE TICKETS</span>
+          <span className="kb-badge">KITCHEN PRO · SAMPLE TICKETS · NO REAL ORDERS</span>
           <h2 id="kb-heading">
             {["Fired.", "Plated.", "Served."].map((word, index) => (
               <span className="kb-word" key={word} style={{ "--i": index } as CSSProperties}>
