@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -84,8 +84,10 @@ export function FinancialHub({
   initialFinance,
   initialLedger,
   initialShifts,
+  initialSaleId = null,
 }: {
   mode: Mode;
+  initialSaleId?: string | null;
   outletId: string;
   organizationId: string;
   workspace: PosWorkspace;
@@ -141,6 +143,7 @@ export function FinancialHub({
   const [deliveryEmail, setDeliveryEmail] = useState("");
   const pending = useRef<Record<string, string>>({});
   const saleSelectionSequence = useRef(0);
+  const initialSaleProcessed = useRef(false);
   const [reconciliation, setReconciliation] = useState<{
     scannedCount: number;
     hasMore: boolean;
@@ -248,6 +251,21 @@ export function FinancialHub({
         setNotice(error instanceof Error ? error.message : "Unable to read sale details");
     }
   }
+  // A POS refund shortcut selects the exact sale without bypassing any ledger permissions.
+  useEffect(() => {
+    if (!initialSaleId || initialSaleProcessed.current) return;
+    initialSaleProcessed.current = true;
+    void selectSale(initialSaleId);
+  }, [initialSaleId, selectSale]);
+
+  useEffect(() => {
+    if (!initialSaleId || selected?.saleId !== initialSaleId) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.querySelector(".finance-detail")?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [initialSaleId, selected]);
+
   async function command(action: string, data: Record<string, unknown>) {
     if (busy) return null;
     setBusy(true);
