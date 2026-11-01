@@ -20,7 +20,7 @@ export default async function AdminOverviewPage() {
 
   const [systemHealth, usersData, orgsData, recentAudits] = await Promise.all([
     getSystemHealth(actor),
-    listUsers({ limit: 1 }),
+    listUsers(actor, { limit: 1 }),
     listOrganizations(actor, { limit: 1 }),
     listAdminAuditLogs(actor, { limit: 5 }),
   ]);
