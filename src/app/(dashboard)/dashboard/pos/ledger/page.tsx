@@ -18,7 +18,16 @@ export const metadata: Metadata = {
   title: "The Ledger | MenuMinute POS",
   robots: { index: false, follow: false },
 };
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ refundSale?: string }>;
+}) {
+  const requested = (await searchParams).refundSale;
+  const initialSaleId =
+    typeof requested === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(requested)
+      ? requested
+      : null;
   const session = await auth();
   if (!session?.user.id) redirect("/login");
   const actor = { userId: session.user.id, sessionId: session.session.id };
@@ -43,6 +52,7 @@ export default async function Page() {
   return (
     <FinancialHub
       mode="ledger"
+      initialSaleId={initialSaleId}
       outletId={outlet.id}
       organizationId={outlet.organizationId}
       workspace={workspace}
