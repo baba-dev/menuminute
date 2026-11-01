@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getResolvedAppearance, setAppearancePreference } from "./appearance-store";
-import { setAppearanceWithTransition, toggleAppearanceWithTransition } from "./appearance-transition";
+import {
+  setAppearanceWithTransition,
+  toggleAppearanceWithTransition,
+} from "./appearance-transition";
 
 let reducedMotion = false;
 beforeEach(() => {
@@ -41,7 +44,9 @@ describe("animated appearance", () => {
 
   it("reveals from the triggering element and cleans up its scoped CSS flag", async () => {
     let finish!: () => void;
-    const done = new Promise<void>((resolve) => { finish = resolve; });
+    const done = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
     const start = vi.fn((update: () => void) => {
       update();
       return { ready: Promise.resolve(), finished: done };
@@ -49,11 +54,21 @@ describe("animated appearance", () => {
     Object.defineProperty(document, "startViewTransition", { configurable: true, value: start });
     const animate = vi.fn();
     const previous = document.documentElement.animate;
-    Object.defineProperty(document.documentElement, "animate", { configurable: true, value: animate });
+    Object.defineProperty(document.documentElement, "animate", {
+      configurable: true,
+      value: animate,
+    });
     const anchor = document.createElement("button");
     vi.spyOn(anchor, "getBoundingClientRect").mockReturnValue({
-      left: 10, top: 20, width: 40, height: 30, right: 50, bottom: 50,
-      x: 10, y: 20, toJSON: () => ({}),
+      left: 10,
+      top: 20,
+      width: 40,
+      height: 30,
+      right: 50,
+      bottom: 50,
+      x: 10,
+      y: 20,
+      toJSON: () => ({}),
     });
     try {
       setAppearanceWithTransition("dark", anchor);
@@ -70,7 +85,10 @@ describe("animated appearance", () => {
       await Promise.resolve();
       expect(document.documentElement.dataset.mmThemeTransition).toBeUndefined();
     } finally {
-      Object.defineProperty(document.documentElement, "animate", { configurable: true, value: previous });
+      Object.defineProperty(document.documentElement, "animate", {
+        configurable: true,
+        value: previous,
+      });
     }
   });
 });

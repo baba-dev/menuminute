@@ -31,7 +31,10 @@ export function AdminAppearanceControl() {
         className="max-w-20 cursor-pointer bg-transparent text-xs font-semibold outline-offset-2 sm:max-w-none"
         value={preference}
         onChange={(event) =>
-          setAppearanceWithTransition(event.target.value as AppearancePreference, event.currentTarget)
+          setAppearanceWithTransition(
+            event.target.value as AppearancePreference,
+            event.currentTarget
+          )
         }
       >
         <option value="system">System</option>

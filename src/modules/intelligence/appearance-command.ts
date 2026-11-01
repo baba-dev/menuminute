@@ -16,19 +16,28 @@ export function parseAppearanceCommand(prompt: string): AppearanceCommand | null
     .replace(/^please /, "")
     .replace(/ please$/, "");
 
-  if (/^(?:toggle|flip|switch)(?: the)? (?:color |colour )?(?:theme|mode|appearance|dark mode|light mode)$/.test(command))
+  if (
+    /^(?:toggle|flip|switch)(?: the)? (?:color |colour )?(?:theme|mode|appearance|dark mode|light mode)$/.test(
+      command
+    )
+  )
     return "toggle";
   if (
     /^(?:turn|switch) off (?:the )?dark (?:mode|theme)$/.test(command) ||
     /^dark (?:mode|theme) off$/.test(command)
-  ) return "light";
+  )
+    return "light";
   if (/^(?:turn|switch) on (?:the )?dark (?:mode|theme)$/.test(command)) return "dark";
   if (
     /^(?:(?:switch to|change to|set(?: the)?(?: color| colour)? (?:mode|theme|appearance) to|use|follow) (?:the |my )?(?:system|device|os)(?: (?:mode|theme|appearance|settings|preference))?|(?:reset|restore) (?:the )?(?:theme|appearance|mode) to (?:system|default)|follow (?:my |the )?system (?:settings|preference))$/.test(command)
   ) return "system";
 
-  const explicit = /^(?:switch to|change to|change (?:my |the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set (?:the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set|use|enable|activate|turn on|go|make (?:it|the app)) (?:the )?(dark|light)(?: (?:mode|theme))?$/.exec(command);
+  const explicit =
+    /^(?:switch to|change to|change (?:my |the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set (?:the )?(?:(?:color|colour) )?(?:theme|mode|appearance) to|set|use|enable|activate|turn on|go|make (?:it|the app)) (?:the )?(dark|light)(?: (?:mode|theme))?$/.exec(
+      command
+    );
   if (explicit) return explicit[1] as "dark" | "light";
-  if (/^(?:dark|light) (?:mode|theme)$/.test(command)) return command.startsWith("dark") ? "dark" : "light";
+  if (/^(?:dark|light) (?:mode|theme)$/.test(command))
+    return command.startsWith("dark") ? "dark" : "light";
   return null;
 }

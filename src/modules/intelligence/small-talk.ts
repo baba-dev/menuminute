@@ -53,7 +53,10 @@ const THANKS =
 const CAPABILITY =
   /^(?:help|help me|what can you do|what do you do|what can i ask(?: you)?|how can you help(?: me)?|what are you|who are you|what is ember|what can ember do|how do i use (?:this|you|ember))$/;
 
-export type SmallTalk = { kind: "greeting" | "thanks" | "capabilities" | "appearance"; answer: string };
+export type SmallTalk = {
+  kind: "greeting" | "thanks" | "capabilities" | "appearance";
+  answer: string;
+};
 
 export function smallTalkReply(
   prompt: string,
