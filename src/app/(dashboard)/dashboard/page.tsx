@@ -574,6 +574,10 @@ export default async function DashboardPage() {
                 timezone={outlet.timezone}
               />
             )}
+            <DashboardLayoutEditor
+              initialLayout={layout}
+              presentWidgets={visibleWidgets.map((widget) => widget.id)}
+            />
           </div>
         </div>
       </header>
@@ -607,10 +611,7 @@ export default async function DashboardPage() {
             </div>
           </section>
         )}
-        <DashboardLayoutEditor
-          initialLayout={layout}
-          presentWidgets={visibleWidgets.map((widget) => widget.id)}
-        />
+        <div id="mm-dashboard-layout-panel" />
         <div className="mm-widget-grid">
           {visibleWidgets.map((widget) => (
             <div key={widget.id} className="mm-widget" data-widget={widget.id}>

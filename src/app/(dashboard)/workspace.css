@@ -415,8 +415,10 @@
 }
 
 .mm-dashboard-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  width: max-content;
+  max-width: 100%;
+  grid-template-columns: repeat(2, max-content);
   gap: 10px;
   margin-top: 18px;
 }
@@ -1161,6 +1163,22 @@
   .mm-dashboard-hero-copy p {
     max-width: 350px;
     font-size: 14px;
+  }
+
+  .mm-dashboard-hero-actions {
+    width: min(100%, 420px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mm-dashboard-hero-actions > .mm-dashboard-button {
+    min-width: 0;
+    gap: 6px;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .mm-dashboard-hero-actions > .mm-dashboard-button svg {
+    flex-shrink: 0;
   }
 
   .mm-dashboard-body {

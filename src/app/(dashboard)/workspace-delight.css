@@ -289,13 +289,6 @@
   font-weight: 700;
 }
 
-.mm-dashboard-hero-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
 /* ── Status chips: colour is always paired with an icon and a word ──── */
 .mm-status {
   display: inline-flex;
@@ -532,11 +525,6 @@
 
 .mm-dashboard-health-badge.is-good::before {
   content: none;
-}
-
-.mm-dashboard-body > .mm-dashboard-hero-tools {
-  justify-content: flex-end;
-  margin: 0 0 -8px;
 }
 
 /* ═══ Shell and navigation ═══════════════════════════════════════════════
