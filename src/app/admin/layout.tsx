@@ -101,9 +101,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         >
           <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <p className="min-w-0 flex-1">
-            Privileged actions require step-up authentication.{" "}
-            <AdminStepUpControl />{" "}
-            before submitting a privileged change.
+            Privileged actions require step-up authentication. <AdminStepUpControl /> before
+            submitting a privileged change.
           </p>
         </div>
 

@@ -10,7 +10,7 @@ async function walk(root) {
   const files = [];
   for (const entry of entries) {
     const p = path.join(root, entry.name);
-    if (entry.isDirectory()) files.push(...await walk(p));
+    if (entry.isDirectory()) files.push(...(await walk(p)));
     else if (entry.name === "route.ts") files.push(p);
   }
   return files;
@@ -24,12 +24,16 @@ for (const p of await walk("src/app/api")) {
   }
 }
 const nginx = await readFile("infra/nginx/menuminute.conf.example", "utf8");
-if (!nginx.includes("location ^~ /api/public-orders {") ||
-    !nginx.includes("X-MenuMinute-Edge-Key $menuminute_edge_secret;")) {
+if (
+  !nginx.includes("location ^~ /api/public-orders {") ||
+  !nginx.includes("X-MenuMinute-Edge-Key $menuminute_edge_secret;")
+) {
   violations.push("nginx: guest-order edge attestation");
 }
 if (violations.length) {
-  process.stderr.write("Unbounded or unattested public API path(s):\n" + violations.join("\n") + "\n");
+  process.stderr.write(
+    "Unbounded or unattested public API path(s):\n" + violations.join("\n") + "\n"
+  );
   process.exitCode = 1;
 } else {
   process.stdout.write("Security route boundary checks passed.\n");

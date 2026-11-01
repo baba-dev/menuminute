@@ -6,7 +6,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * This is for step-up on an ALREADY authenticated session: the native verify-totp
  * endpoint is a sign-in/enrollment challenge and cannot start a fresh step-up there.
  */
-export function matchingStepUpTotp(uri: string, candidate: string, now = Date.now()): number | null {
+export function matchingStepUpTotp(
+  uri: string,
+  candidate: string,
+  now = Date.now()
+): number | null {
   if (!/^\d{6}$/.test(candidate)) return null;
   const config = new URL(uri);
   if (config.protocol !== "otpauth:" || config.hostname !== "totp") return null;

@@ -7,6 +7,8 @@ describe("phase A security boundaries", () => {
     expect(demoRequestAllowed("POST", "/api/organizations")).toBe(false);
   });
   it("does not accept malformed one-time codes", () => {
-    expect(matchingStepUpTotp("otpauth://totp/MenuMinute?secret=JBSWY3DPEHPK3PXP", "123")).toBeNull();
+    expect(
+      matchingStepUpTotp("otpauth://totp/MenuMinute?secret=JBSWY3DPEHPK3PXP", "123")
+    ).toBeNull();
   });
 });

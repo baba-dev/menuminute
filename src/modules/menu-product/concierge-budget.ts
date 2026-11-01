@@ -27,10 +27,14 @@ return 1
 /** Source admission comes before expensive menu/QR lookups. No account identity required. */
 export async function reserveConciergeSource(source: string): Promise<boolean> {
   const redis = await redisClient("cache");
-  return Number(await redis.eval(SOURCE_SCRIPT, {
-    keys: [`concierge:admission:${digest(source)}`, "concierge:admission:global"],
-    arguments: ["30", "3000"],
-  })) === 1;
+  return (
+    Number(
+      await redis.eval(SOURCE_SCRIPT, {
+        keys: [`concierge:admission:${digest(source)}`, "concierge:admission:global"],
+        arguments: ["30", "3000"],
+      })
+    ) === 1
+  );
 }
 export type ConciergeReservation = { keys: [string, string]; reserved: number };
 export function conciergeQuote(input: unknown): number {
@@ -38,12 +42,16 @@ export function conciergeQuote(input: unknown): number {
   const inputBytes = Buffer.byteLength(JSON.stringify(input), "utf8") + 8192;
   const amount = Math.ceil(
     (inputBytes * env.AI_DINING_CONCIERGE_INPUT_MICROUSD_MTOK +
-      2048 * env.AI_DINING_CONCIERGE_OUTPUT_MICROUSD_MTOK) / 1_000_000
+      2048 * env.AI_DINING_CONCIERGE_OUTPUT_MICROUSD_MTOK) /
+      1_000_000
   );
   return Math.max(1, amount);
 }
 /** Atomically reserve both outlet and global daily budgets before provider inference. */
-export async function reserveConciergeSpend(outletId: string, amount: number): Promise<ConciergeReservation | null> {
+export async function reserveConciergeSpend(
+  outletId: string,
+  amount: number
+): Promise<ConciergeReservation | null> {
   if (!Number.isSafeInteger(amount) || amount <= 0) return null;
   const day = new Date().toISOString().slice(0, 10);
   const keys: [string, string] = [
@@ -67,11 +75,19 @@ export async function settleConciergeSpend(
   usage: { inputTokens: number | null; outputTokens: number | null }
 ): Promise<void> {
   const { inputTokens, outputTokens } = usage;
-  if (inputTokens == null || outputTokens == null || !Number.isSafeInteger(inputTokens) ||
-      !Number.isSafeInteger(outputTokens) || inputTokens < 0 || outputTokens < 0) return;
+  if (
+    inputTokens == null ||
+    outputTokens == null ||
+    !Number.isSafeInteger(inputTokens) ||
+    !Number.isSafeInteger(outputTokens) ||
+    inputTokens < 0 ||
+    outputTokens < 0
+  )
+    return;
   const actual = Math.ceil(
     (inputTokens * env.AI_DINING_CONCIERGE_INPUT_MICROUSD_MTOK +
-      outputTokens * env.AI_DINING_CONCIERGE_OUTPUT_MICROUSD_MTOK) / 1_000_000
+      outputTokens * env.AI_DINING_CONCIERGE_OUTPUT_MICROUSD_MTOK) /
+      1_000_000
   );
   const refund = reservation.reserved - Math.max(1, actual);
   if (refund <= 0) return;

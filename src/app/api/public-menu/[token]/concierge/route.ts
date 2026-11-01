@@ -4,7 +4,12 @@ import { z } from "zod";
 import { env } from "@/lib/config/env";
 import { boundedBytes } from "@/lib/bounded-input";
 import { redisClient } from "@/lib/redis";
-import { reserveConciergeSource, reserveConciergeSpend, settleConciergeSpend, conciergeQuote } from "@/modules/menu-product/concierge-budget";
+import {
+  reserveConciergeSource,
+  reserveConciergeSpend,
+  settleConciergeSpend,
+  conciergeQuote,
+} from "@/modules/menu-product/concierge-budget";
 import { verifiedOrderSource } from "@/modules/orders/rate-limit";
 import { publicProduct } from "@/modules/menu-product/service";
 import {
@@ -84,11 +89,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
   // Reserve a cheap source quota before any PostgreSQL work, including unknown QR tokens.
   try {
     if (!(await reserveConciergeSource(source)))
-      return NextResponse.json({ message: "Too many requests. Please try again later." },
-        { status: 429, headers: { ...noStore, "Retry-After": "600" } });
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429, headers: { ...noStore, "Retry-After": "600" } }
+      );
   } catch {
-    return NextResponse.json({ message: "Dining concierge temporarily unavailable." },
-      { status: 503, headers: noStore });
+    return NextResponse.json(
+      { message: "Dining concierge temporarily unavailable." },
+      { status: 503, headers: noStore }
+    );
   }
   const { token } = await ctx.params;
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(token))
@@ -157,64 +166,64 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
       if (!reservation) {
         notice = "AI recommendations reached today's allowance. Showing curated matches instead.";
       } else {
-      const result = await nvidiaAdapter(
-        {
-          provider: "nvidia",
-          model: env.AI_NVIDIA_MODEL!,
-          key: env.NVIDIA_API_KEY!,
-          supportsTools: false,
-        },
-        {
-          capability: "text",
-          tools: [],
-          responseFormat: { type: "json_object" },
-          temperature: 0.25,
-          maxOutputTokens: 2048,
-          messages: [
-            { role: "system", content: instruction },
-            {
-              role: "user",
-              content: JSON.stringify({
-                preferences: input,
-                currency: data.outlet.currency,
-                candidates: shortlisted.map(
-                  ({ dishId, name, category, role, priceMinor, heat, flavors }) => ({
-                    dishId,
-                    name,
-                    category,
-                    role,
-                    priceMinor,
-                    heat,
-                    flavors,
-                  })
-                ),
-                rule: "Prices are integer minor units; budgetMinor=0 means no fixed limit.",
-              }),
-            },
-          ],
-        },
-        { signal: req.signal, reasoningEffort: "none" }
-      );
-      try {
-        await settleConciergeSpend(reservation, result.usage);
-      } catch {
-        // Fail conservatively: an unrefunded reservation never enables excess spending.
-      }
-      if (
-        result.finishReason === "stop" &&
-        result.content &&
-        result.content.length < 12000 &&
-        !result.toolCalls.length
-      ) {
-        const parsed = nvidiaWire.safeParse(JSON.parse(result.content));
-        if (parsed.success) {
-          const checked = verifyRecommendations(parsed.data.recommendations, shortlisted, input);
-          if (checked.length) {
-            recommendations = checked;
-            sourceLabel = "nvidia";
+        const result = await nvidiaAdapter(
+          {
+            provider: "nvidia",
+            model: env.AI_NVIDIA_MODEL!,
+            key: env.NVIDIA_API_KEY!,
+            supportsTools: false,
+          },
+          {
+            capability: "text",
+            tools: [],
+            responseFormat: { type: "json_object" },
+            temperature: 0.25,
+            maxOutputTokens: 2048,
+            messages: [
+              { role: "system", content: instruction },
+              {
+                role: "user",
+                content: JSON.stringify({
+                  preferences: input,
+                  currency: data.outlet.currency,
+                  candidates: shortlisted.map(
+                    ({ dishId, name, category, role, priceMinor, heat, flavors }) => ({
+                      dishId,
+                      name,
+                      category,
+                      role,
+                      priceMinor,
+                      heat,
+                      flavors,
+                    })
+                  ),
+                  rule: "Prices are integer minor units; budgetMinor=0 means no fixed limit.",
+                }),
+              },
+            ],
+          },
+          { signal: req.signal, reasoningEffort: "none" }
+        );
+        try {
+          await settleConciergeSpend(reservation, result.usage);
+        } catch {
+          // Fail conservatively: an unrefunded reservation never enables excess spending.
+        }
+        if (
+          result.finishReason === "stop" &&
+          result.content &&
+          result.content.length < 12000 &&
+          !result.toolCalls.length
+        ) {
+          const parsed = nvidiaWire.safeParse(JSON.parse(result.content));
+          if (parsed.success) {
+            const checked = verifyRecommendations(parsed.data.recommendations, shortlisted, input);
+            if (checked.length) {
+              recommendations = checked;
+              sourceLabel = "nvidia";
+            }
           }
         }
-      }
       }
     } catch (error) {
       console.warn("[concierge] nvidia response not usable", {

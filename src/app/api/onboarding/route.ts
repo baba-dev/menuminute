@@ -17,7 +17,9 @@ async function observed_GET(req: Request) {
 }
 async function observed_PATCH(req: Request) {
   try {
-    return NextResponse.json(await saveOnboarding(await requestActor(req, true), await boundedJson(req)));
+    return NextResponse.json(
+      await saveOnboarding(await requestActor(req, true), await boundedJson(req))
+    );
   } catch (e) {
     return errorResponse(e, req);
   }

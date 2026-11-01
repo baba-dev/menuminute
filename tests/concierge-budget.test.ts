@@ -6,7 +6,8 @@ describe("public Concierge monetary admission", () => {
     expect(conciergeQuote({ preferences: "vegetarian", dishes: [] })).toBeGreaterThan(0);
   });
   it("grows reserved spend with longer untrusted input", () => {
-    expect(conciergeQuote({ body: "x".repeat(8000) }))
-      .toBeGreaterThan(conciergeQuote({ body: "x" }));
+    expect(conciergeQuote({ body: "x".repeat(8000) })).toBeGreaterThan(
+      conciergeQuote({ body: "x" })
+    );
   });
 });
