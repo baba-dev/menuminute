@@ -327,6 +327,17 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
       setErrorMessage(problem);
       return;
     }
+    // Quick Start displays currency and timezone on its second screen. The
+    // full operations validator still owns these constraints.
+    if (quickStart && currentStep === 1) {
+      const operationsError = validateStep(2, draft);
+      if (operationsError) {
+        setQuickStart(false);
+        setCurrentStep(2);
+        setErrorMessage(operationsError);
+        return;
+      }
+    }
 
     if (currentStep < STEPS.length - 1) {
       setBusy(true);
@@ -359,6 +370,10 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
       for (let step = 0; step < STEPS.length - 1; step++) {
         const problem = validateStep(step, draft);
         if (problem) {
+          if (quickStart && !visibleOnboardingSteps(true).includes(step)) {
+            // The invalid value lives on a full-setup screen, not Quick Start.
+            setQuickStart(false);
+          }
           setCurrentStep(step);
           throw new Error(problem);
         }
@@ -469,7 +484,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
               style={{
                 display: "flex",
                 alignItems: "center",
-                flex: idx === STEPS.length - 1 ? "none" : 1,
+                flex: idx === shownSteps.length - 1 ? "none" : 1,
               }}
             >
               <button
