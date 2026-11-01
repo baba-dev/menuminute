@@ -23,11 +23,15 @@ describe("isolated worker PWA configuration", () => {
   it("accepts reviewed push-only settings independent from APP_URL and AUTH_SECRET", () => {
     const ecdh = createECDH("prime256v1");
     ecdh.generateKeys();
+    // Node may omit leading zero bytes from a P-256 scalar. Encode it as the
+    // required fixed-width 32-byte value without weakening production validation.
+    const scalar = ecdh.getPrivateKey();
+    const privateKey = Buffer.concat([Buffer.alloc(32 - scalar.length), scalar]);
     const config = parsePushWorkerSettings({
       PWA_PUSH_ENABLED: "true",
       PWA_PUSH_OUTLET_IDS: "outlet-a,outlet-b",
       PWA_PUSH_VAPID_PUBLIC_KEY: ecdh.getPublicKey().toString("base64url"),
-      PWA_PUSH_VAPID_PRIVATE_KEY: ecdh.getPrivateKey().toString("base64url"),
+      PWA_PUSH_VAPID_PRIVATE_KEY: privateKey.toString("base64url"),
       PWA_PUSH_VAPID_SUBJECT: "mailto:admin@bababuilds.com",
     });
     expect(config?.outletIds).toEqual(["outlet-a", "outlet-b"]);

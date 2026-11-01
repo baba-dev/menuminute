@@ -4,10 +4,10 @@ import { useEffect, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import {
   getResolvedAppearance,
-  setResolvedAppearance,
   subscribeToAppearance,
   syncResolvedAppearance,
 } from "./appearance-store";
+import { setAppearanceWithTransition } from "./appearance-transition";
 
 const getServerAppearance = () => "light" as const;
 
@@ -26,7 +26,9 @@ export function ThemeControl() {
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={isDark}
-      onClick={() => setResolvedAppearance(isDark ? "light" : "dark")}
+      onClick={(event) =>
+        setAppearanceWithTransition(isDark ? "light" : "dark", event.currentTarget)
+      }
     >
       {isDark ? (
         <Sun className="h-5 w-5" aria-hidden="true" />

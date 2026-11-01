@@ -32,6 +32,14 @@ describe("Ember small talk", () => {
     expect(smallTalkReply("x".repeat(200), tools)).toBeNull();
     expect(smallTalkReply("hello", [])?.answer).toContain("permissions");
   });
+  it("handles appearance commands as local, provider-free answers", () => {
+    expect(smallTalkReply("Ember, switch to dark mode", [])).toMatchObject({
+      kind: "appearance",
+      answer: expect.stringContaining("dark mode"),
+    });
+    expect(smallTalkReply("Use system theme", tools)?.answer).toContain("device");
+    expect(smallTalkReply("How does dark mode work?", tools)).toBeNull();
+  });
   it("completes a greeting turn with no provider call and no spend", async () => {
     const f = await fixture();
     const scope = {

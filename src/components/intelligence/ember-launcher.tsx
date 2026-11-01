@@ -21,6 +21,11 @@ import { navigation, routesForEvidence, type RouteId } from "@/modules/intellige
 import { EmberRichAnswer } from "./ember-rich-answer";
 import { EmberActionCard, EmberThinking, type ActionRequest } from "./ember-action-card";
 import { EMBER_ASK_EVENT } from "@/lib/ember-events";
+import { parseAppearanceCommand } from "@/modules/intelligence/appearance-command";
+import {
+  setAppearanceWithTransition,
+  toggleAppearanceWithTransition,
+} from "@/components/menu-product/appearance-transition";
 import "./ember.css";
 
 type StoredTurn = {
@@ -320,10 +325,12 @@ export function EmberLauncher({
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
     const value = prompt.trim();
+    const appearance = parseAppearanceCommand(value);
+    const origin = event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (!value || value.length > (caps?.demo?.promptChars ?? 4000) || busy) return;
     setBusy(true);
     setError("");
-    setStatus("Preparing a scoped answer…");
+    setStatus(appearance ? "Changing your display…" : "Preparing a scoped answer…");
     let id = conversationId;
     try {
       if (!id) {
@@ -348,6 +355,10 @@ export function EmberLauncher({
         }
       );
       setPrompt("");
+      if (result.status === "completed" && appearance) {
+        if (appearance === "toggle") toggleAppearanceWithTransition(origin);
+        else setAppearanceWithTransition(appearance, origin);
+      }
       if (result.status === "failed")
         setError(
           failureCopy(result.errorCode).title +

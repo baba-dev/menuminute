@@ -119,6 +119,32 @@ async function signIn(page: import("@playwright/test").Page, f: Fixture) {
   await page.reload();
   await expect(page.getByRole("button", { name: "Open Ember assistant" })).toBeVisible();
 }
+test("Ember can switch browser appearance without a model request", async ({ page }) => {
+  const f = await seed();
+  await signIn(page, f);
+  await page.evaluate(() => localStorage.setItem("menuminute.appearance", "light"));
+  await page.reload();
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  await page.getByRole("button", { name: "Open Ember assistant" }).click();
+  const dialog = page.getByRole("dialog", { name: /Ember/ });
+  await dialog.getByPlaceholder("Ask about this outlet…").fill("Ember, switch to dark mode");
+  await dialog.getByRole("button", { name: "Send message" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(dialog.getByText(/Switching this browser to/)).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("menuminute.appearance"))).toBe("dark");
+
+  await dialog.getByPlaceholder("Ask about this outlet…").fill("use system theme");
+  await dialog.getByRole("button", { name: "Send message" }).click();
+  await expect(dialog.getByText(/follow.*device's appearance setting/)).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("menuminute.appearance"))).toBeNull();
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "light");
+});
+
 test("mobile bounds, keyboard trap, Escape, reduced-motion and restored focus", async ({
   page,
 }) => {
