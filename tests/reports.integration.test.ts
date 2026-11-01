@@ -60,11 +60,26 @@ describe("Reports restricted PostgreSQL projections", () => {
     await admin(async (_db, pool) => {
       const rows = [
         // Business date overrides the previous calendar day's created_at.
-        { id: crypto.randomUUID(), businessDate: today, createdAt: `${yesterday}T12:00:00Z`, total: 100 },
+        {
+          id: crypto.randomUUID(),
+          businessDate: today,
+          createdAt: `${yesterday}T12:00:00Z`,
+          total: 100,
+        },
         // Legacy row without business_date uses the outlet-local calendar day.
-        { id: crypto.randomUUID(), businessDate: null, createdAt: `${today}T12:00:00Z`, total: 200 },
+        {
+          id: crypto.randomUUID(),
+          businessDate: null,
+          createdAt: `${today}T12:00:00Z`,
+          total: 200,
+        },
         // An older legacy row is excluded from the current period.
-        { id: crypto.randomUUID(), businessDate: null, createdAt: `${yesterday}T12:00:00Z`, total: 900 },
+        {
+          id: crypto.randomUUID(),
+          businessDate: null,
+          createdAt: `${yesterday}T12:00:00Z`,
+          total: 900,
+        },
       ];
       for (const [index, row] of rows.entries()) {
         await pool.query(
