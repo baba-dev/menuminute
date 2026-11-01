@@ -33,7 +33,20 @@ async function setup(routed = true) {
           {
             id: "food",
             name: "Food",
-            items: [{ id: "paneer", name: "Paneer Tikka", priceMinor: 12000 }],
+            items: [
+              {
+                id: "paneer",
+                name: "Paneer Tikka",
+                priceMinor: 12000,
+                dietary: ["vegetarian"],
+                safety: {
+                  ingredients: ["paneer"],
+                  allergens: ["dairy"],
+                  crossContact: "Shared tandoor",
+                  verified: false,
+                },
+              },
+            ],
           },
         ],
       },
@@ -190,6 +203,30 @@ describe("Kitchen Pro restricted PostgreSQL integration", () => {
     );
     expect(state.rows[0]?.status).toBe("preparing");
   });
+  it("snapshots the declared allergen profile onto the kitchen ticket at order time", async () => {
+    const f = await setup();
+    const o = await place(f);
+    await transitionOutletOrder(f.actor, f.outlet.id, o.orderId, {
+      targetStatus: "accepted",
+      expectedVersion: 1,
+    });
+    const board = await kitchenSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    expect(board.work.length).toBeGreaterThan(0);
+    for (const w of board.work) {
+      expect(w.dishSafety).toMatchObject({
+        declared: true,
+        allergens: ["dairy"],
+        crossContact: "Shared tandoor",
+        verified: false,
+        dietary: ["vegetarian"],
+      });
+      expect(w.intakeSource).toBe("guest_menu");
+    }
+    const expo = await kitchenExpoSnapshot(f.actor, f.outlet.organizationId, f.outlet.id);
+    const items = expo.orders.find((x) => x.id === o.orderId)!.items;
+    expect(items.every((i) => i.dishSafety?.allergens?.[0] === "dairy")).toBe(true);
+  });
+
   it("releases dishes one by one and makes the order Ready only with the last dish", async () => {
     const f = await setup();
     const o = await place(f);

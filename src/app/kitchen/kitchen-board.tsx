@@ -19,12 +19,14 @@ import {
   ArrowRight,
   ClipboardList,
   Maximize2,
+  Sparkles,
 } from "lucide-react";
 import { playWoodenTap, playKitchenBell } from "@/lib/sound-effects";
 import { useSoundPreference } from "@/lib/use-sound-preference";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { KitchenSnapshot, KitchenWorkView } from "@/modules/kitchen/service";
 import { KitchenExpeditor } from "./kitchen-expeditor";
+import { DishDetails } from "./dish-details";
 import { KitchenSetupModal, kitchenSetupProgress } from "./kitchen-setup-modal";
 import { ThemeControl } from "@/components/menu-product/theme-control";
 import {
@@ -34,6 +36,8 @@ import {
   stationOverview,
   KITCHEN_OVERDUE_MINUTES,
   KITCHEN_WAIT_ALERT_MINUTES,
+  intakeSourceLabel,
+  needsAttention,
 } from "@/modules/kitchen/presentation";
 type Dish = { id: string; name: string };
 type Props = {
@@ -58,6 +62,8 @@ function Ticket({
   busy: boolean;
   now: number | null;
 }) {
+  const special = needsAttention(work);
+  const source = intakeSourceLabel(work.intakeSource);
   const age =
     now === null
       ? null
@@ -72,7 +78,8 @@ function Ticket({
           : "") +
         (age !== null && age >= KITCHEN_WAIT_ALERT_MINUTES && work.status === "queued"
           ? " kk-ticket-waiting"
-          : "")
+          : "") +
+        (special && work.status !== "complete" ? " kk-ticket-has-special" : "")
       }
       aria-label={`Order ${work.orderNumber}: ${work.dishName}`}
     >
@@ -84,28 +91,39 @@ function Ticket({
         </span>
       </div>
       <p className="kk-ticket-meta">
-        {work.fulfillmentMode === "pickup"
-          ? "Pickup"
-          : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
-            ? "Table " + work.tableLabel
-            : "Dine-in"}{" "}
-        · {stationName}
+        <span className="kk-ticket-where">
+          {work.fulfillmentMode === "pickup"
+            ? "Pickup"
+            : work.tableLabel && !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(work.tableLabel)
+              ? "Table " + work.tableLabel
+              : "Dine-in"}
+        </span>
+        {source && <span className="kk-ticket-source">{source}</span>}
+        <span>{stationName}</span>
       </p>
-      <h4 className="kk-ticket-dish">
-        {work.quantity} × {work.dishName}
-      </h4>
-      {work.variantName && <p className="kk-ticket-variant">{work.variantName}</p>}
-      {work.selectedOptions.length > 0 && (
-        <ul className="kk-ticket-addons">
-          {work.selectedOptions.map((o, i) => (
-            <li key={i}>
-              {o.groupName}: {o.optionName}
-            </li>
-          ))}
-        </ul>
+      {special && work.status !== "complete" && (
+        <p className="kk-ticket-special">
+          <Sparkles size={13} aria-hidden="true" /> Special request — read before cooking
+        </p>
       )}
-      {work.notes && <p className="kk-ticket-note">Item note: {work.notes}</p>}
-      {work.orderNotes && <p className="kk-ticket-order-note">Order note: {work.orderNotes}</p>}
+      <h4 className="kk-ticket-dish">
+        <span className="kk-ticket-qty">{work.quantity}×</span> {work.dishName}
+      </h4>
+      <DishDetails
+        variantName={work.variantName}
+        selectedOptions={work.selectedOptions}
+        notes={work.notes}
+        dishSafety={work.dishSafety}
+      />
+      {work.orderNotes && (
+        <p className="kk-ticket-order-note">
+          <ClipboardList size={14} aria-hidden="true" />
+          <span>
+            <small>Whole-order note</small>
+            {work.orderNotes}
+          </span>
+        </p>
+      )}
       {work.status !== "complete" && (
         <button
           type="button"

@@ -9,6 +9,7 @@ import type {
   KitchenSnapshot,
 } from "@/modules/kitchen/service";
 import { KITCHEN_WAIT_ALERT_MINUTES } from "@/modules/kitchen/presentation";
+import { DishDetails } from "./dish-details";
 type Props = {
   base: string;
   enabled: boolean;
@@ -260,13 +261,13 @@ export function KitchenExpeditor({ base, enabled, cursor }: Props) {
                       <strong>
                         {item.quantity} × {item.dishName}
                       </strong>
-                      {item.variantName && <span className="kk-expo-chip">{item.variantName}</span>}
-                      {item.selectedOptions.map((o, i) => (
-                        <span className="kk-expo-chip" key={i}>
-                          {o.groupName}: {o.optionName}
-                        </span>
-                      ))}
-                      {item.notes && <p className="kk-expo-item-note">Note: {item.notes}</p>}
+                      <DishDetails
+                        compact
+                        variantName={item.variantName}
+                        selectedOptions={item.selectedOptions}
+                        notes={item.notes}
+                        dishSafety={item.dishSafety}
+                      />
                       <small>
                         {item.stationName} · {stateLabel(item)}
                       </small>

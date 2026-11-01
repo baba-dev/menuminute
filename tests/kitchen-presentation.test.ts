@@ -5,6 +5,9 @@ import {
   stationGroups,
   outstandingDishes,
   stationOverview,
+  describeDishSafety,
+  needsAttention,
+  intakeSourceLabel,
 } from "../src/modules/kitchen/presentation";
 const base: KitchenWorkView = {
   id: "one",
@@ -82,5 +85,44 @@ describe("The Chef's Pass read-only presentation", () => {
         make({ id: "four", quantity: 60, status: "cancelled" }),
       ])
     ).toEqual([["Paneer Tikka", 5]]);
+  });
+});
+
+describe("dish safety presentation", () => {
+  it("shows only what the restaurant declared and never claims allergen-free", () => {
+    expect(describeDishSafety(null)).toMatchObject({ allergens: [], hasAny: false });
+    // A dish with no declared allergens is unknown, not safe: no chip, no claim.
+    expect(describeDishSafety({ declared: false, allergens: [] }).hasAny).toBe(false);
+    expect(describeDishSafety({ declared: true, allergens: [], verified: true }).allergens).toEqual(
+      []
+    );
+    const declared = describeDishSafety({
+      declared: true,
+      allergens: ["dairy", "nuts", "dairy", "not-a-real-code"],
+      crossContact: " Shared tandoor ",
+      verified: false,
+      dietary: ["vegetarian"],
+    });
+    expect(declared.allergens).toEqual(["Dairy", "Tree nuts"]);
+    expect(declared.crossContact).toBe("Shared tandoor");
+    expect(declared.dietary).toEqual(["Veg"]);
+    expect(declared.unverified).toBe(true);
+    expect(describeDishSafety({ allergens: ["soy"], verified: true }).unverified).toBe(false);
+  });
+  it("flags tickets with customisations, notes or allergens for attention", () => {
+    expect(needsAttention(base)).toBe(false);
+    expect(needsAttention({ ...base, notes: "less spicy" })).toBe(true);
+    expect(needsAttention({ ...base, orderNotes: "birthday" })).toBe(true);
+    expect(
+      needsAttention({ ...base, selectedOptions: [{ groupName: "Spice", optionName: "Mild" }] })
+    ).toBe(true);
+    expect(needsAttention({ ...base, dishSafety: { allergens: ["peanuts"] } })).toBe(true);
+    expect(needsAttention({ ...base, dishSafety: { dietary: ["vegan"] } })).toBe(false);
+  });
+  it("labels the intake source and hides unknown ones", () => {
+    expect(intakeSourceLabel("staff_pos")).toBe("POS");
+    expect(intakeSourceLabel("guest_menu")).toBe("QR menu");
+    expect(intakeSourceLabel("unknown")).toBeNull();
+    expect(intakeSourceLabel(undefined)).toBeNull();
   });
 });

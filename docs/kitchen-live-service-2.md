@@ -97,3 +97,11 @@ Completed station items are released individually at Final Check:
 - `kitchen_expo_release` ("release all") still requires every non-cancelled item to be complete; cancelled work no longer blocks or inflates counts. It marks remaining items released.
 - Guests and the Orders desk see "Part ready" (`released of total`) via `guest_order_release_progress` (re-validates the tracking capability, returns counts only) and `kitchen_release_progress`. The order `status` enum is unchanged (still `preparing`).
 - Rollback: the application can be rolled back without data repair; new columns are nullable and older code ignores them. SQL is append-only and is not rolled back.
+
+## Ticket cards and allergen chips (migration 0070)
+
+- **Layout** (`dish-details.tsx`, shared by the rail and Final Check): allergens first, then customisations (size/option chips labelled by group), then a large "Guest note" callout, then a separate "Whole-order note". Tickets with options, notes, an order note or declared allergens get a "Special request" cue and an accent edge. Every cue pairs an icon and text, so colour is never the only signal. The card also shows the intake source (POS, QR menu, Online).
+- **Allergen data is only what the restaurant declared.** `order_items.dish_safety` is snapshotted by a `BEFORE INSERT` trigger from the outlet's published menu release (`safety.allergens`, `crossContact`, `verified`, and `dietary`), so it covers guest, POS and demo orders without changing those functions and reflects the menu at order time. Chips read "Contains … as listed by the restaurant", with "not verified" unless the profile is marked verified.
+- **No inference.** A dish with no declared allergens shows no chip: absence is never "allergen free". Unknown allergen codes are ignored. Dietary tags are shown only as entered.
+- **Safe failure.** The trigger swallows any error and leaves the column NULL; it can never block an order. Orders created before 0070 have no snapshot and show no chips (no backfill).
+- Allergen data is advisory kitchen information, not a safety guarantee; staff must still follow the restaurant's allergen procedure.

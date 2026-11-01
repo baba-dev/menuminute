@@ -36,6 +36,15 @@ const workSchema = z
     key: z.uuid().optional(),
   })
   .strict();
+/** Merchant-entered dish safety data snapshotted when the order item was created. */
+export type DishSafetySnapshot = {
+  /** False when the dish had no safety profile; absence is never "allergen free". */
+  declared?: boolean;
+  allergens?: string[];
+  crossContact?: string | null;
+  verified?: boolean;
+  dietary?: string[];
+};
 export type KitchenWorkView = {
   id: string;
   stationId: string;
@@ -50,6 +59,8 @@ export type KitchenWorkView = {
   selectedOptions: Array<{ groupName: string; optionName: string }>;
   notes: string | null;
   orderNotes: string | null;
+  dishSafety?: DishSafetySnapshot | null;
+  intakeSource?: "unknown" | "staff_pos" | "guest_menu" | "online";
   status: "queued" | "preparing" | "complete" | "cancelled";
   version: number;
   /** Set when the dish has been released at Final Check. */
@@ -217,6 +228,7 @@ export type KitchenExpoItem = {
   variantName: string | null;
   selectedOptions: Array<{ groupName: string; optionName: string }>;
   notes: string | null;
+  dishSafety?: DishSafetySnapshot | null;
   status: "queued" | "preparing" | "complete" | "cancelled";
   releasedAt: string | null;
 };

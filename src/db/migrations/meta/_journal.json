@@ -484,6 +484,13 @@
       "when": 1794402000023,
       "tag": "0069_kitchen_item_release",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1794488400024,
+      "tag": "0070_kitchen_ticket_safety",
+      "breakpoints": true
     }
   ]
 }
