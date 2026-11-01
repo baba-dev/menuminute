@@ -25,8 +25,7 @@ export const admitPublicMenuRender = cache(async (): Promise<boolean> => {
         if n==1 then redis.call('EXPIRE',KEYS[i],60) end
        end
        return 1`,
-      { keys: [`public-menu:ssr:ip:${hash}`, "public-menu:ssr:global"],
-        arguments: ["240", "8000"] }
+      { keys: [`public-menu:ssr:ip:${hash}`, "public-menu:ssr:global"], arguments: ["240", "8000"] }
     );
     return Number(decision) === 1;
   } catch {
