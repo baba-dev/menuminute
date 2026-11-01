@@ -1,0 +1,32 @@
+name: Marketing PR formatter (temporary)
+on:
+  push:
+    branches:
+      - feat/marketing-seo-and-feature-pages-20261101
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.19.0"
+      - name: Install formatting dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Format only modified TypeScript and TSX files
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          git diff --name-only --diff-filter=ACM -z FETCH_HEAD HEAD -- '*.ts' '*.tsx' | xargs -0 -r pnpm exec prettier --write
+          git add -u -- src
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style(marketing): apply repository Prettier formatting'
+            git push origin HEAD:feat/marketing-seo-and-feature-pages-20261101
+          fi
