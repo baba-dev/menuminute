@@ -8,7 +8,6 @@ import { policySections } from "@/content/privacy";
 import "./privacy.css";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/privacy" },
   title: "Privacy Policy",
   description:
     "How MenuMinute and BabaBuilds handle account, restaurant, guest and ordering information, AI features and privacy rights.",
