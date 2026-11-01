@@ -1,279 +1,552 @@
-import { and, eq, gte, sql } from "drizzle-orm";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { and, asc, eq, gte, sql } from "drizzle-orm";
+import {
+  AppError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors";
 import { withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import {
-  diningFloorPlans,
   diningReservations,
+  diningSections,
+  restaurantChairs,
   restaurantTables,
   type DiningReservation,
 } from "@/db/schema";
 import {
-  floorLayoutDocSchema,
-  type FloorLayoutDoc,
-  type VisualTable,
-  type ReservationItem,
+  MAX_TABLES_PER_OUTLET,
+  type AddChairsInput,
   type CreateReservationInput,
+  type CreateSectionInput,
+  type CreateTableInput,
+  type FloorChair,
+  type FloorOverview,
+  type FloorSection,
+  type FloorTableOverview,
+  type ReservationItem,
+  type UpdateChairInput,
+  type UpdateTableInput,
 } from "./floor-contracts";
 
+/** Hours after which seated guests with no open order are flagged "still occupied?". */
+const STALE_OCCUPANCY_HOURS = 4;
+
+/** Translate database constraint failures into friendly, typed application errors. */
+async function guard<T>(work: () => Promise<T>): Promise<T> {
+  try {
+    return await work();
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    const e = error as {
+      code?: string;
+      message?: string;
+      cause?: { code?: string; message?: string };
+    };
+    const code = e.cause?.code ?? e.code;
+    const message = e.cause?.message ?? e.message ?? "";
+    if (code === "23505") throw new ConflictError("That table number or name is already in use.");
+    if (code === "40001")
+      throw new ConflictError("Someone else just changed this. The floor has been refreshed.");
+    if (code === "22023") throw new ValidationError(message);
+    if (code === "42501") throw new ForbiddenError();
+    throw error;
+  }
+}
+
+const iso = (value: unknown): string => new Date(value as string | Date).toISOString();
+
+function chairId(index: number): string {
+  // Time-ordered prefix keeps chairs in creation order; the suffix keeps ids unique.
+  return `chr_${Date.now().toString(36)}${index.toString(36).padStart(2, "0")}${crypto
+    .randomUUID()
+    .replaceAll("-", "")
+    .slice(0, 10)}`;
+}
+
+function toChair(row: {
+  id: string;
+  tableId: string | null;
+  label: string | null;
+  kind: string;
+  occupiedAt: Date | string | null;
+  version: number;
+}): FloorChair {
+  return {
+    id: row.id,
+    tableId: row.tableId,
+    label: row.label,
+    kind: row.kind as FloorChair["kind"],
+    occupied: row.occupiedAt !== null,
+    occupiedAt: row.occupiedAt ? iso(row.occupiedAt) : null,
+    version: row.version,
+  };
+}
+
 /**
- * Retrieves the dining floor layout for an outlet, merging physical restaurant_tables
- * with the visual layout coordinates and sections.
+ * Everything the floor page renders, in one read. Occupancy comes only from chair state set by
+ * staff; orders and reservations are shown as context and never change it.
  */
-export async function getFloorLayout(actor: Actor, outletId: string): Promise<FloorLayoutDoc> {
+export async function getFloorOverview(actor: Actor, outletId: string): Promise<FloorOverview> {
   return withOutletRead(actor, outletId, "orders.read", async (tx) => {
-    // 1. Fetch physical tables
-    const dbTables = await tx
-      .select({
-        id: restaurantTables.id,
-        tableNumber: restaurantTables.tableNumber,
-        label: restaurantTables.label,
-        capacity: restaurantTables.capacity,
-        isActive: restaurantTables.isActive,
-      })
-      .from(restaurantTables)
-      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)))
-      .orderBy(restaurantTables.tableNumber);
+    const [sectionRows, tableRows, chairRows] = await Promise.all([
+      tx
+        .select()
+        .from(diningSections)
+        .where(eq(diningSections.outletId, outletId))
+        .orderBy(asc(diningSections.sortOrder), asc(diningSections.name)),
+      tx
+        .select()
+        .from(restaurantTables)
+        .where(
+          and(
+            eq(restaurantTables.restaurantId, outletId),
+            eq(restaurantTables.isActive, true),
+            sql`${restaurantTables.displayNumber} is not null`
+          )
+        )
+        .orderBy(asc(restaurantTables.displayNumber))
+        .limit(MAX_TABLES_PER_OUTLET),
+      tx
+        .select({
+          id: restaurantChairs.id,
+          tableId: restaurantChairs.tableId,
+          label: restaurantChairs.label,
+          kind: restaurantChairs.kind,
+          occupiedAt: restaurantChairs.occupiedAt,
+          version: restaurantChairs.version,
+        })
+        .from(restaurantChairs)
+        .where(and(eq(restaurantChairs.outletId, outletId), eq(restaurantChairs.isActive, true)))
+        .orderBy(asc(restaurantChairs.createdAt), asc(restaurantChairs.id)),
+    ]);
 
-    // 2. Fetch saved visual layout plan
-    const planRows = await tx
-      .select({
-        layout: diningFloorPlans.layout,
-      })
-      .from(diningFloorPlans)
-      .where(eq(diningFloorPlans.outletId, outletId))
-      .limit(1);
+    const orderRows = await tx.execute<{ table_id: string; active: number; unpaid: number }>(sql`
+      select table_id,
+        count(*) filter (where status in ('pending','accepted','preparing','ready'))::int as active,
+        count(*) filter (where payment_status='unpaid')::int as unpaid
+      from orders
+      where restaurant_id=${outletId} and table_id is not null
+        and (status in ('pending','accepted','preparing','ready')
+          or (payment_status='unpaid' and status in ('served','collected','delivered')))
+      group by table_id`);
+    const reservationRows = await tx.execute<{
+      id: string;
+      table_id: string | null;
+      guest_name: string;
+      party_size: number;
+      reservation_time: string | Date;
+    }>(sql`
+      select id, table_id, guest_name, party_size, reservation_time
+      from dining_reservations
+      where outlet_id=${outletId} and status='confirmed'
+        and reservation_time >= now() - interval '30 minutes'
+        and reservation_time < now() + interval '24 hours'
+      order by reservation_time, id`);
+    const qrRows = await tx.execute<{
+      id: string;
+      table_id: string;
+      destination_token: string;
+      label: string;
+    }>(sql`
+      select distinct on (table_id) id, table_id, destination_token, label
+      from qr_codes
+      where restaurant_id=${outletId} and table_id is not null and is_active
+      order by table_id, created_at, id`);
 
-    const savedPlan = planRows[0]?.layout;
-    const parsedPlan = floorLayoutDocSchema.safeParse(savedPlan);
+    const orders = new Map(orderRows.rows.map((r) => [r.table_id, r]));
+    const qrs = new Map(qrRows.rows.map((r) => [r.table_id, r]));
+    const nextByTable = new Map<string, (typeof reservationRows.rows)[number]>();
+    for (const r of reservationRows.rows)
+      if (r.table_id && !nextByTable.has(r.table_id)) nextByTable.set(r.table_id, r);
 
-    const defaultSections = [
-      { id: "sec-main", name: "Main Dining", color: "#f59e0b" },
-      { id: "sec-terrace", name: "Terrace", color: "#10b981" },
-      { id: "sec-bar", name: "Bar & Lounge", color: "#8b5cf6" },
-    ];
+    const chairs = chairRows.map(toChair);
+    const byTable = new Map<string, FloorChair[]>();
+    const unassignedChairs: FloorChair[] = [];
+    for (const chair of chairs) {
+      if (!chair.tableId) unassignedChairs.push(chair);
+      else byTable.set(chair.tableId, [...(byTable.get(chair.tableId) ?? []), chair]);
+    }
 
-    let layout: FloorLayoutDoc;
-
-    if (parsedPlan.success) {
-      layout = parsedPlan.data;
-      if (!layout.sections || layout.sections.length === 0) {
-        layout.sections = defaultSections;
-      }
-    } else {
-      layout = {
-        version: 1,
-        revision: 0,
-        canvas: { width: 1400, height: 900, gridSnap: 20 },
-        sections: defaultSections,
-        tables: [],
+    const staleBefore = Date.now() - STALE_OCCUPANCY_HOURS * 3_600_000;
+    const tables: FloorTableOverview[] = tableRows.map((t) => {
+      const own = byTable.get(t.id) ?? [];
+      const taken = own.filter((c) => c.occupied);
+      const o = orders.get(t.id);
+      const next = nextByTable.get(t.id);
+      const qr = qrs.get(t.id);
+      return {
+        id: t.id,
+        displayNumber: t.displayNumber!,
+        name: t.name ?? t.label ?? `Table ${t.displayNumber}`,
+        shape: t.shape,
+        sectionId: t.sectionId,
+        chairs: own,
+        maxOccupancy: own.length,
+        currentOccupancy: taken.length,
+        state:
+          own.length === 0
+            ? "no_chairs"
+            : taken.length === 0
+              ? "empty"
+              : taken.length === own.length
+                ? "full"
+                : "partial",
+        activeOrders: o?.active ?? 0,
+        unpaidOrders: o?.unpaid ?? 0,
+        nextReservation: next
+          ? {
+              id: next.id,
+              guestName: next.guest_name,
+              partySize: next.party_size,
+              time: iso(next.reservation_time),
+            }
+          : null,
+        qrCode: qr ? { id: qr.id, destinationToken: qr.destination_token, label: qr.label } : null,
+        stale:
+          taken.length > 0 &&
+          (o?.active ?? 0) === 0 &&
+          (o?.unpaid ?? 0) === 0 &&
+          taken.every((c) => c.occupiedAt && new Date(c.occupiedAt).getTime() < staleBefore),
       };
-    }
+    });
 
-    // 3. Reconcile tables: ensure every physical table from DB is represented in layout
-    const visualTablesMap = new Map<string, VisualTable>();
-    for (const vt of layout.tables) {
-      visualTablesMap.set(vt.id, vt);
-    }
-
-    const mergedTables: VisualTable[] = [];
-    let autoX = 140;
-    let autoY = 140;
-
-    for (const dt of dbTables) {
-      const existing = visualTablesMap.get(dt.id);
-      if (existing) {
-        mergedTables.push({
-          ...existing,
-          tableNumber: dt.tableNumber,
-          label: dt.label,
-          capacity: dt.capacity || existing.capacity || 4,
-        });
-      } else {
-        // Auto-arrange new unplaced table
-        mergedTables.push({
-          id: dt.id,
-          tableNumber: dt.tableNumber,
-          label: dt.label,
-          capacity: dt.capacity || 4,
-          shape:
-            (dt.capacity || 4) <= 2 ? "round" : (dt.capacity || 4) <= 4 ? "square" : "rectangle",
-          x: autoX,
-          y: autoY,
-          width: (dt.capacity || 4) <= 2 ? 85 : (dt.capacity || 4) <= 4 ? 100 : 140,
-          height: (dt.capacity || 4) <= 2 ? 85 : 95,
-          rotation: 0,
-          section: layout.sections[0]?.name || "Main Dining",
-          assignedStaff: null,
-        });
-        autoX += 160;
-        if (autoX > 1000) {
-          autoX = 140;
-          autoY += 160;
-        }
-      }
-    }
-
+    const first = reservationRows.rows[0];
     return {
-      ...layout,
-      tables: mergedTables,
+      sections: sectionRows.map<FloorSection>((s) => ({
+        id: s.id,
+        name: s.name,
+        color: s.color,
+        sortOrder: s.sortOrder,
+      })),
+      tables,
+      unassignedChairs,
+      totals: {
+        tables: tables.length,
+        chairs: tables.reduce((n, t) => n + t.maxOccupancy, 0),
+        maxOccupancy: tables.reduce((n, t) => n + t.maxOccupancy, 0),
+        currentOccupancy: tables.reduce((n, t) => n + t.currentOccupancy, 0),
+        sections: sectionRows.length,
+        tablesOccupied: tables.filter((t) => t.currentOccupancy > 0).length,
+      },
+      nextReservation: first
+        ? {
+            guestName: first.guest_name,
+            partySize: first.party_size,
+            time: iso(first.reservation_time),
+          }
+        : null,
     };
   });
 }
 
-/** Check the layout revision while holding the same outlet write lock. */
-async function nextLayoutRevision(
+export async function createSection(
+  actor: Actor,
+  outletId: string,
+  input: CreateSectionInput
+): Promise<FloorSection> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      const count = await tx.execute<{ n: number }>(
+        sql`select count(*)::int n from dining_sections where outlet_id=${outletId}`
+      );
+      if ((count.rows[0]?.n ?? 0) >= 24)
+        throw new ValidationError("An outlet can have 24 sections.");
+      const row = {
+        id: crypto.randomUUID(),
+        outletId,
+        name: input.name,
+        color: input.color ?? "#f59e0b",
+        sortOrder: count.rows[0]?.n ?? 0,
+      };
+      await tx.insert(diningSections).values(row);
+      return { id: row.id, name: row.name, color: row.color, sortOrder: row.sortOrder };
+    })
+  );
+}
+
+async function assertSection(tx: import("@/db").Transaction, outletId: string, sectionId: string) {
+  const [found] = await tx
+    .select({ id: diningSections.id })
+    .from(diningSections)
+    .where(and(eq(diningSections.id, sectionId), eq(diningSections.outletId, outletId)))
+    .limit(1);
+  if (!found) throw new ValidationError("Choose a section that exists.");
+}
+
+async function insertChairs(
   tx: import("@/db").Transaction,
   outletId: string,
-  expected: number
+  tableId: string | null,
+  kind: string,
+  count: number
 ) {
-  // Serialize the first save as well as later revisions (there may be no plan row yet).
-  await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${outletId}, 87314))`);
-  const [stored] = await tx
-    .select({ layout: diningFloorPlans.layout })
-    .from(diningFloorPlans)
-    .where(eq(diningFloorPlans.outletId, outletId))
-    .for("update")
-    .limit(1);
-  const actual = stored ? floorLayoutDocSchema.safeParse(stored.layout) : null;
-  const revision = actual?.success ? actual.data.revision : 0;
-  if (revision !== expected)
-    throw new ConflictError("Floor was edited elsewhere. Refresh and retry.");
-  return revision + 1;
+  if (count < 1) return;
+  const rows = Array.from(
+    { length: count },
+    (_, i) => sql`(${chairId(i)}, ${outletId}, ${tableId}, ${kind})`
+  );
+  // Explicit column list: occupancy columns are not writable by the application role.
+  await tx.execute(
+    sql`insert into restaurant_chairs(id, outlet_id, table_id, kind) values ${sql.join(rows, sql`, `)}`
+  );
 }
 
-/** The floor document cannot invent or delete physical tables. */
-export async function saveFloorLayout(
+/** Create a table (name, number, section, shape) with its first chairs in one transaction. */
+export async function createTable(
   actor: Actor,
   outletId: string,
-  doc: FloorLayoutDoc
-): Promise<FloorLayoutDoc> {
-  const validated = floorLayoutDocSchema.parse(doc);
-  return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    const revision = await nextLayoutRevision(tx, outletId, validated.revision);
-    const updated: FloorLayoutDoc = { ...validated, revision };
-    const active = await tx
-      .select({ id: restaurantTables.id })
-      .from(restaurantTables)
-      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
-    const ids = new Set(active.map((t) => t.id));
-    if (
-      new Set(validated.tables.map((t) => t.id)).size !== ids.size ||
-      validated.tables.some((t) => !ids.has(t.id))
-    ) {
-      throw new ConflictError("Table inventory changed; refresh the floor before saving.");
-    }
-    for (const table of validated.tables) {
-      await tx
-        .update(restaurantTables)
-        .set({
-          tableNumber: table.tableNumber,
-          label: table.label,
-          capacity: table.capacity,
-        })
-        .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.id, table.id)));
-    }
-    await tx
-      .insert(diningFloorPlans)
-      .values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({
-        target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() },
+  input: CreateTableInput
+): Promise<{ id: string; displayNumber: number }> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${outletId}, 87316))`);
+      const total = await tx.execute<{ n: number }>(sql`
+        select count(*)::int n from restaurant_tables
+        where restaurant_id=${outletId} and is_active and display_number is not null`);
+      if ((total.rows[0]?.n ?? 0) >= MAX_TABLES_PER_OUTLET)
+        throw new ValidationError(`An outlet can have ${MAX_TABLES_PER_OUTLET} tables.`);
+      if (input.sectionId) await assertSection(tx, outletId, input.sectionId);
+      let displayNumber = input.displayNumber;
+      if (!displayNumber) {
+        const free = await tx.execute<{ n: number }>(sql`
+          select g::int n from generate_series(1, 9999) g
+          where not exists(select 1 from restaurant_tables
+            where restaurant_id=${outletId} and is_active and display_number=g)
+          order by g limit 1`);
+        displayNumber = free.rows[0]?.n;
+        if (!displayNumber) throw new ValidationError("No table numbers are left.");
+      }
+      const id = crypto.randomUUID();
+      await tx.insert(restaurantTables).values({
+        id,
+        restaurantId: outletId,
+        tableNumber: String(displayNumber),
+        label: input.name,
+        name: input.name,
+        displayNumber,
+        sectionId: input.sectionId,
+        shape: input.shape,
+        capacity: 0,
+        isActive: true,
       });
-    return updated;
-  });
+      await insertChairs(tx, outletId, id, input.chairKind, input.chairCount);
+      return { id, displayNumber };
+    })
+  );
 }
 
-/** Create a physical table and visual placement in one transaction. */
-export async function createFloorTable(
-  actor: Actor,
-  outletId: string,
-  table: VisualTable,
-  doc: FloorLayoutDoc
-): Promise<FloorLayoutDoc> {
-  const layout = floorLayoutDocSchema.parse(doc);
-  return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    const revision = await nextLayoutRevision(tx, outletId, layout.revision);
-    const updated: FloorLayoutDoc = { ...layout, revision };
-    const active = await tx
-      .select({ id: restaurantTables.id })
-      .from(restaurantTables)
-      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
-    const existing = new Set(active.map((t) => t.id));
-    const incoming = new Set(layout.tables.map((t) => t.id));
-    if (
-      existing.has(table.id) ||
-      incoming.size !== existing.size + 1 ||
-      !incoming.has(table.id) ||
-      [...existing].some((id) => !incoming.has(id))
-    ) {
-      throw new ConflictError("Table inventory changed; refresh before creating a table.");
-    }
-    await tx.insert(restaurantTables).values({
-      id: table.id,
-      restaurantId: outletId,
-      tableNumber: table.tableNumber,
-      label: table.label,
-      capacity: table.capacity,
-      isActive: true,
-    });
-    await tx
-      .insert(diningFloorPlans)
-      .values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({
-        target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() },
-      });
-    return updated;
-  });
-}
-
-/** Never archive an actively used table or its associated QR code. */
-export async function deleteTable(
+export async function updateTable(
   actor: Actor,
   outletId: string,
   tableId: string,
-  doc: FloorLayoutDoc
-): Promise<FloorLayoutDoc> {
-  const layout = floorLayoutDocSchema.parse(doc);
-  return withOutlet(actor, outletId, "menu.write", async (tx) => {
-    const revision = await nextLayoutRevision(tx, outletId, layout.revision);
-    const updated: FloorLayoutDoc = { ...layout, revision };
-    const active = await tx
-      .select({ id: restaurantTables.id })
-      .from(restaurantTables)
-      .where(and(eq(restaurantTables.restaurantId, outletId), eq(restaurantTables.isActive, true)));
-    const existing = new Set(active.map((t) => t.id));
-    const expected = new Set([...existing].filter((id) => id !== tableId));
-    if (!existing.has(tableId)) throw new NotFoundError("Active table");
-    if (
-      new Set(layout.tables.map((t) => t.id)).size !== expected.size ||
-      layout.tables.some((t) => !expected.has(t.id))
-    ) {
-      throw new ConflictError("Table inventory changed; refresh before archiving.");
-    }
-    const blocked = await tx.execute<{ blocked: boolean }>(sql`
-      select (exists(select 1 from orders where restaurant_id=${outletId} and table_id=${tableId}
-        and (status in ('pending','accepted','preparing','ready') or payment_status='unpaid'))
-      or exists(select 1 from dining_reservations where outlet_id=${outletId} and table_id=${tableId}
-        and status in ('confirmed','seated'))
-      or exists(select 1 from qr_codes where restaurant_id=${outletId} and table_id=${tableId} and is_active)) as blocked`);
-    if (blocked.rows[0]?.blocked)
-      throw new ConflictError(
-        "Table has active orders, bookings or QR codes. Resolve them before archiving."
+  input: UpdateTableInput
+): Promise<void> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      if (input.sectionId) await assertSection(tx, outletId, input.sectionId);
+      const set: Partial<typeof restaurantTables.$inferInsert> = {};
+      if (input.name !== undefined) {
+        set.name = input.name;
+        set.label = input.name;
+      }
+      if (input.displayNumber !== undefined) {
+        set.displayNumber = input.displayNumber;
+        set.tableNumber = String(input.displayNumber);
+      }
+      if (input.sectionId !== undefined) set.sectionId = input.sectionId;
+      if (input.shape !== undefined) set.shape = input.shape;
+      const updated = await tx
+        .update(restaurantTables)
+        .set(set)
+        .where(
+          and(
+            eq(restaurantTables.id, tableId),
+            eq(restaurantTables.restaurantId, outletId),
+            eq(restaurantTables.isActive, true),
+            sql`${restaurantTables.displayNumber} is not null`
+          )
+        )
+        .returning({ id: restaurantTables.id });
+      if (!updated[0]) throw new NotFoundError("Table");
+    })
+  );
+}
+
+/**
+ * Archive a table. Never an actively used one: open orders, bookings, a live QR or seated guests
+ * block it. Its chairs are released to the unassigned tray, not deleted.
+ */
+export async function archiveTable(actor: Actor, outletId: string, tableId: string): Promise<void> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      const [table] = await tx
+        .select({ id: restaurantTables.id })
+        .from(restaurantTables)
+        .where(
+          and(
+            eq(restaurantTables.id, tableId),
+            eq(restaurantTables.restaurantId, outletId),
+            eq(restaurantTables.isActive, true)
+          )
+        )
+        .for("update")
+        .limit(1);
+      if (!table) throw new NotFoundError("Table");
+      const blocked = await tx.execute<{ blocked: boolean; seated: boolean }>(sql`
+        select (exists(select 1 from orders where restaurant_id=${outletId} and table_id=${tableId}
+          and (status in ('pending','accepted','preparing','ready') or payment_status='unpaid'))
+        or exists(select 1 from dining_reservations where outlet_id=${outletId} and table_id=${tableId}
+          and status in ('confirmed','seated'))
+        or exists(select 1 from qr_codes where restaurant_id=${outletId} and table_id=${tableId} and is_active)) as blocked,
+        exists(select 1 from restaurant_chairs where outlet_id=${outletId} and table_id=${tableId}
+          and occupied_at is not null) as seated`);
+      if (blocked.rows[0]?.seated)
+        throw new ConflictError("Guests are seated here. Clear the table before archiving it.");
+      if (blocked.rows[0]?.blocked)
+        throw new ConflictError(
+          "This table has active orders, bookings or a QR code. Resolve them before archiving."
+        );
+      await tx
+        .update(restaurantChairs)
+        .set({ tableId: null })
+        .where(and(eq(restaurantChairs.outletId, outletId), eq(restaurantChairs.tableId, tableId)));
+      await tx
+        .update(restaurantTables)
+        .set({ isActive: false })
+        .where(and(eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId)));
+    })
+  );
+}
+
+async function assertFloorTable(tx: import("@/db").Transaction, outletId: string, tableId: string) {
+  const [t] = await tx
+    .select({ id: restaurantTables.id })
+    .from(restaurantTables)
+    .where(
+      and(
+        eq(restaurantTables.id, tableId),
+        eq(restaurantTables.restaurantId, outletId),
+        eq(restaurantTables.isActive, true),
+        sql`${restaurantTables.displayNumber} is not null`
+      )
+    )
+    .limit(1);
+  if (!t) throw new NotFoundError("Table");
+}
+
+export async function addChairs(
+  actor: Actor,
+  outletId: string,
+  input: AddChairsInput
+): Promise<{ added: number }> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      if (input.tableId) await assertFloorTable(tx, outletId, input.tableId);
+      await insertChairs(tx, outletId, input.tableId, input.kind, input.count);
+      return { added: input.count };
+    })
+  );
+}
+
+export async function updateChair(
+  actor: Actor,
+  outletId: string,
+  chairIdValue: string,
+  input: UpdateChairInput
+): Promise<void> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      if (input.tableId) await assertFloorTable(tx, outletId, input.tableId);
+      const set: Partial<typeof restaurantChairs.$inferInsert> = {};
+      if (input.label !== undefined) set.label = input.label;
+      if (input.kind !== undefined) set.kind = input.kind;
+      if (input.tableId !== undefined) set.tableId = input.tableId;
+      const updated = await tx
+        .update(restaurantChairs)
+        .set(set)
+        .where(
+          and(
+            eq(restaurantChairs.id, chairIdValue),
+            eq(restaurantChairs.outletId, outletId),
+            eq(restaurantChairs.isActive, true)
+          )
+        )
+        .returning({ id: restaurantChairs.id });
+      if (!updated[0]) throw new NotFoundError("Chair");
+    })
+  );
+}
+
+export async function removeChair(
+  actor: Actor,
+  outletId: string,
+  chairIdValue: string
+): Promise<void> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      const [chair] = await tx
+        .select({ occupiedAt: restaurantChairs.occupiedAt })
+        .from(restaurantChairs)
+        .where(and(eq(restaurantChairs.id, chairIdValue), eq(restaurantChairs.outletId, outletId)))
+        .for("update")
+        .limit(1);
+      if (!chair) throw new NotFoundError("Chair");
+      if (chair.occupiedAt) throw new ConflictError("Mark this chair free before removing it.");
+      await tx
+        .delete(restaurantChairs)
+        .where(and(eq(restaurantChairs.id, chairIdValue), eq(restaurantChairs.outletId, outletId)));
+    })
+  );
+}
+
+/** One tap on a chair. Repeating the same state is a no-op; a stale version is a conflict. */
+export async function setChairOccupied(
+  actor: Actor,
+  outletId: string,
+  chairIdValue: string,
+  occupied: boolean,
+  version?: number
+): Promise<{ id: string; occupied: boolean; version: number }> {
+  return guard(() =>
+    withOutlet(actor, outletId, "orders.accept", async (tx) => {
+      const r = await tx.execute<{ r: { id: string; occupied: boolean; version: number } }>(sql`
+        select app_private.floor_set_chair_occupied(${outletId}, ${chairIdValue}, ${occupied},
+          ${version ?? null}::integer) as r`);
+      return r.rows[0]!.r;
+    })
+  );
+}
+
+/** Seat a party: occupy up to `guests` free chairs (all free chairs when omitted). */
+export async function seatTable(
+  actor: Actor,
+  outletId: string,
+  tableId: string,
+  guests?: number
+): Promise<{ seated: number }> {
+  return guard(() =>
+    withOutlet(actor, outletId, "orders.accept", async (tx) => {
+      const r = await tx.execute<{ n: number }>(sql`
+        select app_private.floor_seat_table(${outletId}, ${tableId}, ${guests ?? null}::integer) as n`);
+      return { seated: r.rows[0]!.n };
+    })
+  );
+}
+
+export async function clearTable(
+  actor: Actor,
+  outletId: string,
+  tableId: string
+): Promise<{ cleared: number }> {
+  return guard(() =>
+    withOutlet(actor, outletId, "orders.accept", async (tx) => {
+      const r = await tx.execute<{ n: number }>(
+        sql`select app_private.floor_clear_table(${outletId}, ${tableId}) as n`
       );
-    await tx
-      .update(restaurantTables)
-      .set({ isActive: false })
-      .where(and(eq(restaurantTables.id, tableId), eq(restaurantTables.restaurantId, outletId)));
-    await tx
-      .insert(diningFloorPlans)
-      .values({ outletId, layout: updated, updatedAt: new Date() })
-      .onConflictDoUpdate({
-        target: diningFloorPlans.outletId,
-        set: { layout: updated, updatedAt: new Date() },
-      });
-    return updated;
-  });
+      return { cleared: r.rows[0]!.n };
+    })
+  );
 }
 
 /** Reservations are fetched for the outlet's business day, never the server's day. */
