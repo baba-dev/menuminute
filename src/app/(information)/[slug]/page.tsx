@@ -6,32 +6,11 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 
 const pages = {
-  about: {
-    title: "About Menu Minute",
-    category: "Company",
-    description: "Our story and the people behind the product.",
-    detail:
-      "This page is being prepared. Menu Minute is a BabaBuilds product designed for beautiful digital restaurant menus.",
-  },
-  ordering: {
-    title: "Online ordering",
-    category: "Optional outlet capability",
-    description: "Dine-in and scheduled pickup ordering for enabled restaurants.",
-    detail:
-      "Restaurants with an active ordering entitlement can receive server-priced dine-in and scheduled pickup requests from a published menu. Submission is not acceptance: guests receive a tracking page and the restaurant confirms each order. Payment availability is shown separately and staff-recorded payment is not represented as a provider-confirmed online charge.",
-  },
   careers: {
     title: "Careers",
     category: "Company",
     description: "Future opportunities to build for the hospitality industry.",
     detail: "Our careers page is being prepared. No open positions are advertised here yet.",
-  },
-  contact: {
-    title: "Contact us",
-    category: "Get in touch",
-    description: "Contact BabaBuilds about MenuMinute accounts, privacy or product support.",
-    detail:
-      "Email admin@bababuilds.com. Include the outlet name and a concise description of the issue, but never send passwords, one-time codes, payment credentials or private API keys.",
   },
   help: {
     title: "Help centre",

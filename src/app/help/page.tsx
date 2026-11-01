@@ -10,6 +10,7 @@ import { ownerArticles, customerArticles } from "@/content/help";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/help" },
   title: "Help Center & Guides — MenuMinute",
   description:
     "Explore friendly, step-by-step guides for restaurant owners, kitchen teams, and dining guests. Learn how to craft digital menus, print permanent table QR codes, run Kitchen Pro, and browse effortlessly.",

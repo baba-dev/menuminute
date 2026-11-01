@@ -6,6 +6,7 @@ import { CheckCircle, Sparkles, Terminal } from "lucide-react";
 import { inrMonthlyPrice } from "@/modules/billing/catalog";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/pricing" },
   title: "Pricing",
   description:
     "Free permanent QR menus. AI import, ordering and Kitchen Pro require separate availability and operator approval.",

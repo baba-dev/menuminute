@@ -13,9 +13,10 @@ import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import "./home-layout.css";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/" },
   title: "MenuMinute — Free QR Menus for Restaurants",
   description:
-    "Create and publish a free digital menu with permanent QR codes. Online ordering and Kitchen Pro are in development.",
+    "Create and publish a free digital menu with permanent QR codes. Ordering and Kitchen Pro availability require separate approval.",
 };
 
 export default async function HomePage() {
