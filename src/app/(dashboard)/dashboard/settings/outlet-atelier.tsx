@@ -1,29 +1,26 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  BookOpen,
   Check,
-  ChevronRight,
   ClipboardList,
-  Globe2,
-  LockKeyhole,
   MapPin,
   Palette,
   RefreshCw,
   Save,
   Settings2,
-  ShieldCheck,
   Store,
-  UsersRound,
-  Wallet,
   Mail,
   Clock3,
   Navigation,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
+import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
+import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
+import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
+import { localeOptions } from "@/modules/onboarding/locales";
 type Outlet = {
   name: string;
   slug: string;
@@ -39,16 +36,11 @@ type Outlet = {
 };
 type Props = {
   organizationId: string;
+  organizationVersion: number;
   outletId: string;
   outlet: Outlet;
   initial: OutletProfileFields;
   canManage: boolean;
-  billing: {
-    freeMenu: boolean;
-    ordering: boolean;
-    kitchen: boolean;
-    isCommunityEdition?: boolean;
-  } | null;
 };
 const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
   ...fields,
@@ -77,21 +69,244 @@ const normalize = (fields: OutletProfileFields): OutletProfileFields => ({
 const safeColor = (v: string | null | undefined, fallback: string) =>
   /^#[0-9a-fA-F]{6}$/.test(v || "") ? v! : fallback;
 const anchors = [
+  { id: "operations", label: "Outlet essentials", Icon: ClipboardList },
   { id: "profile", label: "Restaurant profile", Icon: Store },
   { id: "contact", label: "Contact & location", Icon: MapPin },
   { id: "branding", label: "Brand appearance", Icon: Palette },
   { id: "pickup", label: "Pickup scheduling", Icon: Clock3 },
-  { id: "operations", label: "Operational identity", Icon: ClipboardList },
-  { id: "plan", label: "Plan & capabilities", Icon: Wallet },
-  { id: "access", label: "People & security", Icon: ShieldCheck },
 ];
+
+type OperationalDraft = Pick<
+  Outlet,
+  "name" | "country" | "currency" | "timezone" | "outletType" | "fulfillmentModes"
+>;
+
+function OutletOperationsForm({
+  organizationId,
+  organizationVersion,
+  outletId,
+  outlet,
+  canManage,
+}: {
+  organizationId: string;
+  organizationVersion: number;
+  outletId: string;
+  outlet: Outlet;
+  canManage: boolean;
+}) {
+  const router = useRouter();
+  const initial = useMemo<OperationalDraft>(
+    () => ({
+      name: outlet.name,
+      country: outlet.country,
+      currency: outlet.currency,
+      timezone: canonicalOutletTimezone(outlet.timezone),
+      outletType: outlet.outletType,
+      fulfillmentModes: outlet.fulfillmentModes,
+    }),
+    [outlet]
+  );
+  const [draft, setDraft] = useState(initial);
+  const [version, setVersion] = useState(organizationVersion);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const countries = useMemo(() => localeOptions(), []);
+  const currencies = useMemo(() => Intl.supportedValuesOf("currency"), []);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
+  const setTimezone = useCallback(
+    (timezone: string) => setDraft((current) => ({ ...current, timezone })),
+    []
+  );
+  const toggleMode = (mode: string, checked: boolean) =>
+    setDraft((current) => ({
+      ...current,
+      fulfillmentModes: checked
+        ? [...new Set([...current.fulfillmentModes, mode])]
+        : current.fulfillmentModes.filter((entry) => entry !== mode),
+    }));
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canManage || busy || !dirty || draft.fulfillmentModes.length === 0) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/organizations/${encodeURIComponent(organizationId)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          key: crypto.randomUUID(),
+          expectedVersion: version,
+          command: {
+            action: "outlet.update",
+            data: { outletId, ...draft },
+          },
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        if (response.status === 409)
+          throw new Error("These outlet settings changed elsewhere. Reload before saving again.");
+        throw new Error(body?.message || "Unable to save outlet essentials.");
+      }
+      setVersion(typeof body?.version === "number" ? body.version : version + 1);
+      setMessage("Outlet essentials saved.");
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save outlet essentials.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={save} className="os-edit-form">
+      <fieldset disabled={!canManage || busy} className="os-form-fields">
+        <label className="os-field">
+          <span>Outlet name</span>
+          <input
+            value={draft.name}
+            minLength={2}
+            maxLength={100}
+            required
+            onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+          />
+        </label>
+        <div className="os-fields-two">
+          <label className="os-field">
+            <span>Country code</span>
+            <select
+              value={draft.country}
+              required
+              onChange={(event) => setDraft({ ...draft, country: event.target.value })}
+            >
+              {countries.map(({ code, label }) => (
+                <option key={code} value={code}>
+                  {label} ({code})
+                </option>
+              ))}
+            </select>
+            <small>The operating country is separate from currency and timezone.</small>
+          </label>
+          <label className="os-field">
+            <span>Transaction currency</span>
+            <select
+              value={draft.currency}
+              required
+              onChange={(event) => setDraft({ ...draft, currency: event.target.value })}
+            >
+              {currencies.map((currency) => (
+                <option key={currency}>{currency}</option>
+              ))}
+            </select>
+            <small>Changing currency may require menu repricing.</small>
+          </label>
+        </div>
+        <div className="os-field">
+          <OutletTimezonePicker
+            id="settings-outlet-timezone"
+            value={draft.timezone}
+            onChange={setTimezone}
+          />
+          <small>Used for future schedules, service days and reports; history is unchanged.</small>
+        </div>
+        <label className="os-field">
+          <span>Outlet type</span>
+          <select
+            value={draft.outletType}
+            onChange={(event) => {
+              const outletType = event.target.value;
+              setDraft({
+                ...draft,
+                outletType,
+                fulfillmentModes: ["takeout", "cloud_kitchen"].includes(outletType)
+                  ? ["pickup"]
+                  : draft.fulfillmentModes,
+              });
+            }}
+          >
+            {[
+              ["restaurant", "Restaurant / diner"],
+              ["cafe", "Cafe / quick service"],
+              ["takeout", "Takeout"],
+              ["cloud_kitchen", "Cloud kitchen"],
+              ["hotel", "Hotel / food service"],
+              ["mixed", "Other / mixed"],
+            ].map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <fieldset className="os-field">
+          <legend>Fulfillment modes</legend>
+          <div className="os-fields-two">
+            {(
+              [
+                ["dine_in", "Dine-in"],
+                ["pickup", "Pickup / takeout"],
+              ] as const
+            ).map(([value, label]) => (
+              <label key={value} className="os-check">
+                <input
+                  type="checkbox"
+                  checked={draft.fulfillmentModes.includes(value)}
+                  onChange={(event) => toggleMode(value, event.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          {draft.fulfillmentModes.length === 0 && (
+            <small role="alert">Choose at least one mode.</small>
+          )}
+        </fieldset>
+      </fieldset>
+      <div className="os-savebar">
+        <div>
+          <strong>
+            {canManage
+              ? dirty
+                ? "Unsaved operational changes"
+                : "Outlet essentials saved"
+              : "View only"}
+          </strong>
+          <small>Public profile fields are saved separately below.</small>
+        </div>
+        {canManage && (
+          <button
+            className="os-save"
+            type="submit"
+            disabled={!dirty || busy || draft.fulfillmentModes.length === 0}
+          >
+            <Save size={16} /> {busy ? "Saving…" : "Save essentials"}
+          </button>
+        )}
+      </div>
+      {message && (
+        <p className="os-success" role="status">
+          <Check size={16} />
+          {message}
+        </p>
+      )}
+      {error && (
+        <p className="os-error" role="alert">
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
 export function OutletAtelier({
   organizationId,
+  organizationVersion,
   outletId,
   outlet,
   initial,
   canManage,
-  billing,
 }: Props) {
   const [saved, setSaved] = useState<OutletProfileFields>(() => normalize(initial));
   const [draft, setDraft] = useState<OutletProfileFields>(() => normalize(initial));
@@ -196,24 +411,18 @@ export function OutletAtelier({
   );
   return (
     <div className="product mm-settings" data-testid="outlet-atelier">
+      <div className="os-scope-nav">
+        <SettingsScopeNav />
+      </div>
       <header className="os-hero">
         <div className="os-hero-copy">
-          <span className="os-eyebrow">THE OUTLET ATELIER / SETTINGS</span>
-          <h1>
-            Every detail,
-            <br /> beautifully yours.
-          </h1>
-          <p>
-            Make <strong>{outlet.name}</strong> feel like your restaurant, wherever your guests
-            discover it.
-          </p>
+          <span className="os-eyebrow">OUTLET SETTINGS</span>
+          <h1>{outlet.name}</h1>
+          <p>Operational essentials and the public details guests see for this location.</p>
           <div className="os-hero-actions">
             <a className="os-action os-action-primary" href="#profile">
-              Personalize outlet <ArrowRight size={17} aria-hidden="true" />
+              Edit public profile <ArrowRight size={17} aria-hidden="true" />
             </a>
-            <Link className="os-action os-action-outline" href="/dashboard/organization">
-              Organization settings <UsersRound size={16} aria-hidden="true" />
-            </Link>
           </div>
         </div>
         <div className="os-hero-art" aria-hidden="true">
@@ -281,6 +490,35 @@ export function OutletAtelier({
             </div>
           </nav>
           <div className="os-sections">
+            <section id="operations" className="os-panel" aria-labelledby="os-operations-title">
+              <div className="os-panel-head">
+                <span className="os-panel-icon">
+                  <ClipboardList size={20} />
+                </span>
+                <div>
+                  <span className="os-eyebrow">01 / OUTLET ESSENTIALS</span>
+                  <h2 id="os-operations-title">Operational identity.</h2>
+                  <p>Name, geography and service model for this location.</p>
+                </div>
+              </div>
+              <OutletOperationsForm
+                organizationId={organizationId}
+                organizationVersion={organizationVersion}
+                outletId={outletId}
+                outlet={outlet}
+                canManage={canManage}
+              />
+              <dl className="os-info-grid">
+                <div>
+                  <dt>Permanent public ID</dt>
+                  <dd>{outlet.publicId}</dd>
+                </div>
+                <div>
+                  <dt>URL slug</dt>
+                  <dd>{outlet.slug}</dd>
+                </div>
+              </dl>
+            </section>
             <form onSubmit={save} className="os-edit-form">
               <section id="profile" className="os-panel" aria-labelledby="os-profile-title">
                 <div className="os-panel-head">
@@ -293,13 +531,9 @@ export function OutletAtelier({
                     <p>The details your guests recognize.</p>
                   </div>
                 </div>
-                <label className="os-field">
-                  <span>Restaurant name</span>
-                  <input value={outlet.name} readOnly aria-describedby="os-name-help" />
-                  <small id="os-name-help">
-                    Name and outlet identity are changed through the audited organization workflow.
-                  </small>
-                </label>
+                <p className="os-fine">
+                  Outlet name: <strong>{outlet.name}</strong>. Change it in Outlet essentials above.
+                </p>
                 <div className="os-field">
                   <label htmlFor="os-description">Description</label>
                   <textarea
@@ -317,9 +551,6 @@ export function OutletAtelier({
                     public menu.
                   </small>
                 </div>
-                <Link className="os-inline-link" href="/dashboard/organization">
-                  Change outlet name <ArrowRight size={15} />
-                </Link>
               </section>
               <section id="contact" className="os-panel" aria-labelledby="os-contact-title">
                 <div className="os-panel-head">
@@ -593,123 +824,6 @@ export function OutletAtelier({
                 </div>
               )}
             </form>
-            <section id="operations" className="os-panel" aria-labelledby="os-operations-title">
-              <div className="os-panel-head">
-                <span className="os-panel-icon">
-                  <ClipboardList size={20} />
-                </span>
-                <div>
-                  <span className="os-eyebrow">04 / OPERATIONAL CONTROLS</span>
-                  <h2 id="os-operations-title">Operational identity.</h2>
-                  <p>Stable, auditable configuration for this outlet.</p>
-                </div>
-              </div>
-              <dl className="os-info-grid">
-                {[
-                  ["URL slug", outlet.slug],
-                  ["Country", outlet.country],
-                  ["Currency", outlet.currency],
-                  ["Timezone", outlet.timezone],
-                  ["Outlet type", outlet.outletType.replaceAll("_", " ")],
-                  ["Fulfillment", outlet.fulfillmentModes.join(" + ").replaceAll("_", "-")],
-                ].map(([name, value]) => (
-                  <div key={name}>
-                    <dt>{name}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="os-fine">
-                <LockKeyhole size={16} /> Currency changes with existing prices or orders require
-                the guarded repricing workflow.
-              </p>
-              <Link className="os-card-link" href="/dashboard/organization">
-                Manage outlet configuration <ChevronRight size={18} />
-              </Link>
-            </section>
-            <section id="plan" className="os-panel" aria-labelledby="os-plan-title">
-              <div className="os-panel-head">
-                <span className="os-panel-icon">
-                  <Wallet size={20} />
-                </span>
-                <div>
-                  <span className="os-eyebrow">05 / CAPABILITIES</span>
-                  <h2 id="os-plan-title">Plan & access.</h2>
-                  <p>Actual organization entitlements, not estimated subscription labels.</p>
-                </div>
-              </div>
-              {billing ? (
-                <div className="os-plan-list">
-                  <div>
-                    <BookOpen size={18} />
-                    <span>Public QR menus</span>
-                    <strong>{billing.freeMenu ? "Available" : "Unavailable"}</strong>
-                  </div>
-                  <div>
-                    <Globe2 size={18} />
-                    <span>Live online ordering</span>
-                    <strong>
-                      {billing.isCommunityEdition
-                        ? "Unlocked (Community Edition)"
-                        : billing.ordering
-                          ? "Enabled"
-                          : "Available (₹119/mo)"}
-                    </strong>
-                  </div>
-                  <div>
-                    <ClipboardList size={18} />
-                    <span>Kitchen Pro work</span>
-                    <strong>
-                      {billing.isCommunityEdition
-                        ? "Unlocked (Community Edition)"
-                        : billing.kitchen
-                          ? "Enabled"
-                          : "Available (₹299/mo)"}
-                    </strong>
-                  </div>
-                </div>
-              ) : (
-                <p className="os-fine">
-                  Subscription and commercial entitlement details are available to authorized
-                  organization administrators.
-                </p>
-              )}
-              <Link className="os-card-link" href="/dashboard/organization">
-                Organization & billing <ChevronRight size={18} />
-              </Link>
-            </section>
-            <section id="access" className="os-panel" aria-labelledby="os-access-title">
-              <div className="os-panel-head">
-                <span className="os-panel-icon">
-                  <ShieldCheck size={20} />
-                </span>
-                <div>
-                  <span className="os-eyebrow">06 / SAFETY & PEOPLE</span>
-                  <h2 id="os-access-title">People & security.</h2>
-                  <p>Keep outlet operations and account protections distinct.</p>
-                </div>
-              </div>
-              <div className="os-link-grid">
-                <Link href="/dashboard/organization">
-                  <UsersRound size={21} />
-                  <strong>Organization & roles</strong>
-                  <small>Team members, outlet grants and ownership</small>
-                  <ArrowRight size={17} />
-                </Link>
-                <Link href="/account/security">
-                  <ShieldCheck size={21} />
-                  <strong>Account security</strong>
-                  <small>Sign-in, MFA and active devices</small>
-                  <ArrowRight size={17} />
-                </Link>
-                <Link href="/dashboard/qr-codes">
-                  <Globe2 size={21} />
-                  <strong>QR & guest access</strong>
-                  <small>Permanent links and printable QR codes</small>
-                  <ArrowRight size={17} />
-                </Link>
-              </div>
-            </section>
           </div>
         </div>
       </div>

@@ -20,6 +20,7 @@ import {
   ChefHat,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
   organization: Organization;
@@ -521,11 +522,11 @@ export function OrganizationManager({
   }
   const org = detail?.organization.id === selected ? detail.organization : undefined;
   const canAdmin = selectedOrg?.role === "owner" || selectedOrg?.role === "admin";
-  const [editingOutletId, setEditingOutletId] = useState("");
-  const editingOutlet =
-    detail?.outlets.find((outlet) => outlet.id === editingOutletId) ?? detail?.outlets[0];
   return (
     <div className="mm-organization" data-testid="hospitality-house">
+      <div className="oh-scope-nav">
+        <SettingsScopeNav />
+      </div>
       <header className="oh-hero">
         <div className="oh-hero-copy">
           <span className="oh-kicker">THE HOSPITALITY HOUSE / ORGANIZATION</span>
@@ -535,10 +536,7 @@ export function OrganizationManager({
             <br />
             one roof.
           </h1>
-          <p>
-            One beautiful home for your restaurants, people and brands. Every important decision,
-            thoughtfully organized.
-          </p>
+          <p>Business structure, team access, brands, billing and owner controls.</p>
           <div className="oh-hero-buttons">
             <a href="#outlets" className="oh-primary">
               Explore your outlets →
@@ -697,8 +695,8 @@ export function OrganizationManager({
                       <span className="oh-kicker">02 / THE OUTLET COLLECTION</span>
                       <h2>Every restaurant. One home.</h2>
                       <p>
-                        Explore your outlets and edit their operational identity without leaving
-                        this workspace.
+                        Create and review locations here. Edit the active location from Outlet
+                        settings.
                       </p>
                     </div>
                     <div aria-hidden="true" className="oh-art oh-art-outlet-collection" />
@@ -740,51 +738,11 @@ export function OrganizationManager({
                         </Form>
                       </>
                     )}
-                    {editingOutlet && (
-                      <div className="oh-edit-outlet">
-                        <label className="oh-field">
-                          Choose outlet to edit
-                          <select
-                            aria-label="Choose outlet to edit"
-                            className="oh-control"
-                            value={editingOutlet.id}
-                            onChange={(event) => setEditingOutletId(event.target.value)}
-                          >
-                            {detail.outlets.map((outlet) => (
-                              <option key={outlet.id} value={outlet.id}>
-                                {outlet.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <Form
-                          key={selected + ":" + editingOutlet.id}
-                          title={"Settings: " + editingOutlet.name}
-                          button="Save outlet settings"
-                          disabled={!org.isActive}
-                          onSave={(form) =>
-                            send("outlet.update", {
-                              outletId: editingOutlet.id,
-                              name: String(form.get("name")),
-                              country: String(form.get("country")),
-                              currency: String(form.get("currency")),
-                              timezone: String(form.get("timezone")),
-                              outletType: String(form.get("outletType")),
-                              fulfillmentModes: form.getAll("modes"),
-                            })
-                          }
-                        >
-                          <OutletFields outlet={editingOutlet} />
-                          <p className="oh-hint">
-                            Changing currency with existing prices or orders requires a separate
-                            repricing workflow.
-                          </p>
-                          <Link href="/dashboard/settings" className="oh-inline-link">
-                            Public profile and guest-facing branding are managed in Outlet Atelier →
-                          </Link>
-                        </Form>
-                      </div>
-                    )}
+                    <p className="oh-hint">
+                      Outlet identity, currency, timezone, fulfillment and public profile are kept
+                      together in <Link href="/dashboard/settings">Outlet settings</Link> for the
+                      active location.
+                    </p>
                   </div>
                 </section>
                 <section id="people" className="oh-panel" aria-label="THE TEAM HALL">
