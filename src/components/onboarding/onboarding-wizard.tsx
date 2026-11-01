@@ -248,7 +248,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
     } finally {
       reconciliation.current = false;
     }
-  }, [router, onSuccess, initialQuick]);
+  }, [router, onSuccess]);
 
   useEffect(() => {
     void Promise.resolve().then(reconcile);
