@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ownerArticles, customerArticles } from "@/content/help";
 import { GUIDES } from "@/content/docs/guides";
+import { marketingFeatures } from "@/content/marketing/features";
 
 const BASE_URL = "https://food.bababuilds.com";
 
@@ -36,6 +37,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   for (const path of ["/about", "/contact", "/docs"]) {
     staticRoutes.push({ url: BASE_URL + path, changeFrequency: "monthly", priority: 0.6 });
+  }
+
+  staticRoutes.push({ url: BASE_URL + "/features", changeFrequency: "monthly", priority: 0.9 });
+  for (const feature of marketingFeatures) {
+    staticRoutes.push({ url: BASE_URL + feature.path, changeFrequency: "monthly", priority: 0.8 });
   }
 
   // Help center hubs
