@@ -1,4 +1,4 @@
--- 0079: Plan overflow after a downgrade (docs/plans-and-limits.md, slice 3).
+-- 0081: Plan overflow after a downgrade (docs/plans-and-limits.md, slice 3).
 -- When an outlet has more live dishes than its plan allows, it first gets a grace period, then the
 -- dishes beyond the cap (in menu order) are HIDDEN from guests. Nothing is ever deleted: the owner's
 -- menu, drafts and releases are untouched and the dishes return the moment the plan allows them.

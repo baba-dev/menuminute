@@ -198,23 +198,18 @@ export function NotificationDrawer() {
             )}
           </section>
           <section className="mm-notify-section" aria-label="Device alerts">
-            \n{" "}
             <Link
               href="/dashboard/settings/device"
               className="mm-notify-row mm-notify-link"
               onClick={() => setDrawerOpen(false)}
             >
-              \n <Bell size={18} aria-hidden="true" />
-              \n{" "}
+              <Bell size={18} aria-hidden="true" />
               <div>
                 <strong>Device &amp; app settings</strong>
                 <small>Optional background alerts, installed app and offline storage</small>
               </div>
-              \n{" "}
             </Link>
-            \n{" "}
           </section>
-          \n\n{" "}
           <section className="mm-notify-section" aria-labelledby="mm-notify-popups">
             <h3 id="mm-notify-popups" className="mm-notify-heading">
               Ember pop-ups

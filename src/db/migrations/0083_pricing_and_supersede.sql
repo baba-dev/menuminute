@@ -1,4 +1,4 @@
--- 0081: Four-tier pricing and no double billing.
+-- 0083: Four-tier pricing and no double billing.
 --  * Kitchen Pro is now INR 499 per month (3 outlets included). The seeded plan catalog row is brought
 --    in line; the provider plan itself is created by the operator (see docs/operations/razorpay-billing.md)
 --    and existing INR 299 subscriptions keep renewing on their original provider plan.

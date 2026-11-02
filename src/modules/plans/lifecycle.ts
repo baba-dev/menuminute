@@ -3,7 +3,7 @@ import { benefitsBetween, buildNextUp, planPrice, planTagline, type NextUp } fro
 import { fmtDate, type IntakeSnapshot } from "./view";
 
 /**
- * Trial and payment-failure state (migration 0080), turned into plain notices. Pure: no I/O, no
+ * Trial and payment-failure state (migration 0082), turned into plain notices. Pure: no I/O, no
  * React. The facts come from `app_private.plan_lifecycle_snapshot`; dunning is only ever present for
  * organization owners and admins.
  */

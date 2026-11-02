@@ -105,7 +105,7 @@ const grant = (f: F, capability: "ordering.new" | "kitchen.new") =>
     });
   });
 
-describe("plan overflow: hide, never delete (migration 0079)", () => {
+describe("plan overflow: hide, never delete (migration 0081)", () => {
   it("does nothing while the owner switch is off", async () => {
     await setSwitch(false);
     const f = await publishedOutlet();

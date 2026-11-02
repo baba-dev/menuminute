@@ -36,13 +36,12 @@ test.describe("published Privacy Policy", () => {
     await page.getByRole("link", { name: /View the account-deletion request information/ }).click();
     await expect(page).toHaveURL(/\/delete-account$/);
     await expect(
-      page.getByRole("heading", { level: 1, name: /Request account and data deletion/ })
+      page.getByRole("heading", { level: 1, name: /Delete your MenuMinute account/ })
     ).toBeVisible();
     await expect(page.getByText(/does not offer instant or automated deletion/)).toBeVisible();
-    await expect(page.getByRole("link", { name: /Email admin@bababuilds.com/ })).toHaveAttribute(
-      "href",
-      /^mailto:admin@bababuilds\.com/
-    );
+    await expect(
+      page.getByRole("link", { name: /Request account deletion/ }).first()
+    ).toHaveAttribute("href", /^mailto:admin@bababuilds\.com/);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",

@@ -47,20 +47,6 @@ const pages = {
     detail:
       "This is a placeholder, not a real-time uptime or incident report. No availability guarantee is implied.",
   },
-  cookies: {
-    title: "Cookie Policy",
-    category: "Legal · publication pending",
-    description: "Our cookie notice is being prepared.",
-    detail:
-      "This placeholder is not a published cookie inventory or consent notice. A reviewed notice must replace it before publication.",
-  },
-  "refund-policy": {
-    title: "Refund Policy",
-    category: "Legal · publication pending",
-    description: "Information on future paid plans and refunds.",
-    detail:
-      "Paid subscription pricing and refund terms are not finalized. This placeholder does not set any purchase or refund conditions.",
-  },
   accessibility: {
     title: "Accessibility",
     category: "Legal & inclusion · publication pending",

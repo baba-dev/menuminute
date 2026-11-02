@@ -1,4 +1,4 @@
--- 0078: read-only Free-intake snapshot for the plan usage meters (slice 2c).
+-- 0080: read-only Free-intake snapshot for the plan usage meters (slice 2c).
 -- The application role cannot read app_private.plan_settings, so the dashboard gets exactly three
 -- facts through this function: whether free intake is on, this month's count and the cap.
 -- Returns NULL to callers who cannot read the outlet's menu; changes no data.

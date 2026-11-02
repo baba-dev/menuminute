@@ -1,4 +1,4 @@
--- 0080: Automatic trial and payment-failure grace (docs/plans-and-limits.md).
+-- 0082: Automatic trial and payment-failure grace (docs/plans-and-limits.md).
 -- Two owner-controlled features, both OFF by default:
 --   * auto trial: the first time an organization owner publishes a menu, the organization receives a
 --     one-time N-day Ordering trial (a normal entitlement grant, operator 'auto-trial');

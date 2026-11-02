@@ -201,9 +201,9 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
 | 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                                                                   | This sign-off             |
 | 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI                                               | 1                         |
-| 2b  | Free order intake, 100 guest orders a month; done in migration 0077 behind an owner-only database switch (default OFF)                                      | 2                         |
+| 2b  | Free order intake, 100 guest orders a month; done in migration 0079 behind an owner-only database switch (default OFF)                                      | 2                         |
 | 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                                                            | 2                         |
-| 3   | Downgrade grace and hiding of extra dishes (hide, not delete), instant restore on upgrade; done in migration 0079 behind an owner-only switch (default OFF) | 2                         |
+| 3   | Downgrade grace and hiding of extra dishes (hide, not delete), instant restore on upgrade; done in migration 0081 behind an owner-only switch (default OFF) | 2                         |
 | 4   | AI credit accounting per org per month                                                                                                                      | 1, AI spend accounting    |
 | 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                     | Billing gates             |
 | 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                              | Kitchen Pro release gates |
@@ -260,7 +260,7 @@ The audit has not yet been run against production; this PR cannot access product
 
 ## Slice 2b as built: Free order intake
 
-Migration `0077_free_order_intake.sql` (forward-only). It changes nothing until the switch is turned on.
+Migration `0079_free_order_intake.sql` (forward-only). It changes nothing until the switch is turned on.
 
 - **Switch:** `app_private.plan_settings` (one row, owner-only; no application role can read or write
   it): `free_intake_enabled` (default `false`) and `free_intake_monthly_cap` (default `100`, matching
@@ -311,7 +311,7 @@ itself is not reversed; use a new forward migration if it ever needs removing.
 ## Slice 2c as built: usage meters and plan panel
 
 Nothing is visible until `PLAN_LIMITS_ENFORCED=true`; with the default (off) every page renders
-exactly as before. Migration `0078_plan_usage_snapshot.sql` adds one read-only function so the
+exactly as before. Migration `0080_plan_usage_snapshot.sql` adds one read-only function so the
 dashboard can see the Free order count without reading the owner-only settings table.
 
 | Where                                | What the owner sees                                                                          |
@@ -414,7 +414,7 @@ not been exercised against the provider sandbox).
 
 ## Slice 3 as built: downgrade grace and hiding extra dishes
 
-Migration `0079_plan_overflow.sql` (forward-only). Inert until the owner-only switch
+Migration `0081_plan_overflow.sql` (forward-only). Inert until the owner-only switch
 `app_private.plan_settings.overflow_hiding_enabled` is turned on (default OFF), and the worker sweep
 additionally needs `PLAN_LIMITS_ENFORCED=true` in the **worker's** environment (set it on web and
 worker together, like the other shared flags).
@@ -467,7 +467,7 @@ dishes, while the creation guard counts every dish in the draft, so the guard ca
 stricter than the hiding rule. Hidden dishes are also unavailable at the till, because the POS reads
 the same catalog.
 
-## Auto-trial and payment-failure grace (migration 0080)
+## Auto-trial and payment-failure grace (migration 0082)
 
 Two owner-controlled features, both **off by default**, built on ordinary time-boxed entitlement
 grants so every existing gate (ordering, plan caps, overflow) keeps working unchanged.

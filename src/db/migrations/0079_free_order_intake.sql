@@ -1,4 +1,4 @@
--- 0077: Free order intake (docs/plans-and-limits.md, slice 2b).
+-- 0079: Free order intake (docs/plans-and-limits.md, slice 2b).
 -- Lets an outlet without a paid ordering grant accept guest orders up to a monthly cap, controlled by
 -- an owner-only switch that defaults OFF. With the switch off every function below behaves exactly
 -- as before (paid ordering.new grant required). Forward-only; to disable, set free_intake_enabled=false.
@@ -100,7 +100,7 @@ BEGIN
    'currency',prior.currency,'requestedFulfillmentAt',prior.requested_fulfillment_at,'isDuplicate',true);
  END IF;
  IF NOT app_private.paid_ordering_active(o.id) THEN
-   -- Free intake (0077): serialize per outlet so concurrent guests cannot overshoot the cap.
+   -- Free intake (0079): serialize per outlet so concurrent guests cannot overshoot the cap.
    PERFORM pg_advisory_xact_lock(hashtextextended('free-intake:'||r.id,0));
    v_intake:=app_private.free_intake_state(r.id);
    IF v_intake='full' THEN

@@ -65,7 +65,7 @@ afterAll(async () => {
   await setIntake(false, 100);
 });
 
-describe("Free order intake (migration 0077)", () => {
+describe("Free order intake (migration 0079)", () => {
   it("ships OFF with the approved cap and is invisible to application roles", async () => {
     expect(defaultCap).toBe(PLAN_LIMITS.free.ordersPerMonth);
     await expect(getPool().query("select * from app_private.plan_settings")).rejects.toThrow();

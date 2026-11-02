@@ -24,6 +24,8 @@ import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
 import { PlanUsagePanel } from "@/components/plans/plan-usage";
 import { inrMonthlyPrice } from "@/modules/billing/catalog";
 import type { PlanUsageView } from "@/modules/plans/view";
+import { OperationsHistory } from "./operations-history";
+import { AccountDeletionPanel } from "./account-deletion-panel";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
   organization: Organization;
@@ -40,8 +42,6 @@ type Detail = {
   brands: { id: string; name: string }[];
   links: { brandId: string; outletId: string }[];
   grants: { memberId: string; outletId: string; roles: string[] }[];
-  audit: { id: string; action: string; createdAt: string }[];
-  jobs: { id: string; status: string; attempts: number; lastError: string | null }[];
   projection: { version: number } | null;
 };
 const inputClass = "oh-control";
@@ -362,9 +362,6 @@ export function OrganizationManager({
   const [selected, setSelected] = useState(initiallySelected);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
-  const [jobRetry, setJobRetry] = useState("");
-  const [retryMessage, setRetryMessage] = useState("");
-  const retryRef = useRef(false);
   const [billing, setBilling] = useState<{
     freeMenu: boolean;
     ordering: boolean;
@@ -575,7 +572,6 @@ export function OrganizationManager({
                   requestGeneration.current++;
                   setDetail(null);
                   setBilling(null);
-                  setRetryMessage("");
                   setError("");
                   const url = new URL(window.location.href);
                   url.searchParams.set("organization", e.target.value);
@@ -657,7 +653,7 @@ export function OrganizationManager({
                   <Wallet size={17} aria-hidden="true" /> <span>Capabilities</span>
                 </a>
                 <a href="#activity">
-                  <Activity size={17} aria-hidden="true" /> <span>Activity & delivery</span>
+                  <Activity size={17} aria-hidden="true" /> <span>Operations history</span>
                 </a>
                 <a href="#governance">
                   <ShieldCheck size={17} aria-hidden="true" /> <span>Owner&apos;s office</span>
@@ -1069,112 +1065,26 @@ export function OrganizationManager({
                     )}
                   </div>
                 </section>
-                <section id="activity" className="oh-panel" aria-label="ACTIVITY & DELIVERY">
+                <section id="activity" className="oh-panel" aria-label="OPERATIONS HISTORY">
                   <header className="oh-panel-heading">
                     <div>
-                      <span className="oh-kicker">06 / ACTIVITY & DELIVERY</span>
-                      <h2>Every detail in motion.</h2>
-                      <p>Follow recent events and recover failed delivery with confidence.</p>
+                      <span className="oh-kicker">06 / OPERATIONS HISTORY</span>
+                      <h2>A clear record of changes.</h2>
+                      <p>Keep track of what changed, who changed it, and when.</p>
                     </div>
-                    <div aria-hidden="true" className="oh-art oh-art-activity" />
                   </header>
                   <div className="oh-panel-content">
-                    {" "}
-                    <section className="oh-activity-list" aria-label="Recent activity">
-                      <h2 className="oh-subtitle">Recent activity</h2>
-                      {detail.audit.length ? (
-                        <ol className="oh-timeline">
-                          {detail.audit.map((event) => (
-                            <li key={event.id}>
-                              <span className="oh-timeline-marker" aria-hidden="true" />
-                              <div>
-                                <strong>{event.action.replaceAll("_", " ")}</strong>
-                                <time dateTime={event.createdAt}>
-                                  {new Date(event.createdAt).toLocaleString()}
-                                </time>
-                              </div>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : (
-                        <p className="oh-hint">There are no recent organization events.</p>
-                      )}
-                    </section>
-                    <section className="oh-inset">
-                      <div className="oh-row-head">
-                        <div className="oh-help-line">
-                          <h2 className="oh-subtitle">Background delivery</h2>
-                          <Help label="background delivery">
-                            A successful retry request means the event was queued for another
-                            attempt, not that delivery has completed. Check its updated status.
-                          </Help>
-                        </div>
-                        <button className="text-sm underline" onClick={() => void load()}>
-                          Refresh status
-                        </button>
-                      </div>
-                      <p className="text-xs">
-                        Recent 30 events. Pending and dispatched events recover automatically;
-                        failed events require review.
+                    {canAdmin ? (
+                      <OperationsHistory
+                        key={selected}
+                        organizationId={selected}
+                        revision={org.version}
+                      />
+                    ) : (
+                      <p className="oh-hint">
+                        Operations history is available to organization owners and administrators.
                       </p>
-                      <p className="oh-retry-message" role="status" aria-live="polite">
-                        {retryMessage}
-                      </p>
-                      <ul className="oh-event-list">
-                        {detail.jobs.map((j) => (
-                          <li key={j.id} className="break-all">
-                            {j.id.slice(0, 8)} · {j.status} · attempts {j.attempts}{" "}
-                            {j.lastError && `· ${j.lastError}`}{" "}
-                            {j.status === "failed" && (
-                              <button
-                                type="button"
-                                className="oh-retry-button"
-                                disabled={Boolean(jobRetry)}
-                                onClick={async () => {
-                                  if (retryRef.current) return;
-                                  retryRef.current = true;
-                                  const organizationId = selected;
-                                  setJobRetry(j.id);
-                                  setRetryMessage("");
-                                  try {
-                                    const r = await fetch(
-                                      `/api/organizations/${encodeURIComponent(organizationId)}/jobs`,
-                                      {
-                                        method: "POST",
-                                        headers: { "content-type": "application/json" },
-                                        body: JSON.stringify({ eventId: j.id }),
-                                      }
-                                    );
-                                    const result = await r.json().catch(() => ({}));
-                                    if (!r.ok)
-                                      throw new Error(result.message || "Retry request failed.");
-                                    if (activeSelection.current === organizationId) {
-                                      setRetryMessage(
-                                        "Retry requested. Check the updated delivery state to confirm completion."
-                                      );
-                                      await load();
-                                    }
-                                  } catch (cause) {
-                                    if (activeSelection.current === organizationId) {
-                                      setRetryMessage(
-                                        cause instanceof Error
-                                          ? cause.message
-                                          : "Unable to confirm retry. Refresh the delivery status."
-                                      );
-                                    }
-                                  } finally {
-                                    retryRef.current = false;
-                                    setJobRetry("");
-                                  }
-                                }}
-                              >
-                                {jobRetry === j.id ? "Requesting…" : "Retry failed event"}
-                              </button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
+                    )}
                   </div>
                 </section>
                 <section id="governance" className="oh-panel" aria-label="THE OWNER'S OFFICE">
@@ -1243,6 +1153,11 @@ export function OrganizationManager({
                         </Form>
                       </>
                     )}
+                    <AccountDeletionPanel
+                      key={selected}
+                      organizationId={selected}
+                      outletId={detail.outlets[0]?.id}
+                    />
                   </div>
                 </section>
               </div>
