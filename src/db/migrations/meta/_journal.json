@@ -694,6 +694,13 @@
       "when": 1796648400035,
       "tag": "0099_pos_existing_activation",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1796734800036,
+      "tag": "0100_kitchen_catalog_reactivation",
+      "breakpoints": true
     }
   ]
 }
