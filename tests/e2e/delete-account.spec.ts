@@ -38,7 +38,9 @@ test.describe("account deletion public page", () => {
       "href",
       "/account#privacy"
     );
-    await expect(page.getByRole("heading", { name: /Restaurant organizations and guest orders/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Restaurant organizations and guest orders/ })
+    ).toBeVisible();
   });
 
   test("has keyboard navigation and a small-screen table of contents without overflow", async ({
