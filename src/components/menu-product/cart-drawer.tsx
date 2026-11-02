@@ -382,6 +382,7 @@ export function CartDrawer({
                       type="button"
                       className={`action ${fulfillmentMode === "dine_in" ? "ink-press" : ""}`}
                       aria-pressed={fulfillmentMode === "dine_in"}
+                      aria-label={point ? `Dine in at ${point}` : "Dine in"}
                       style={{ flex: "1 1 9rem", minHeight: "44px" }}
                       onClick={() => setFulfillmentMode("dine_in")}
                     >
