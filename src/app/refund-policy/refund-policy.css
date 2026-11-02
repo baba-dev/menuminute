@@ -1,0 +1,60 @@
+/* Refund Ledger: scoped visual extensions of the public Privacy Ledger shell. */
+.refund-page .privacy-hero h1 { max-width: 670px; }
+.refund-page .privacy-copy strong { color: var(--p-ink); }
+.refund-page .privacy-section h2 { text-wrap: balance; }
+.refund-steps {
+  border: 1px solid var(--p-line);
+  background: var(--p-card);
+  border-radius: 1.2rem;
+  padding: 0 1.4rem;
+  margin: 1.6rem 0;
+}
+.refund-steps > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding: 1.2rem 0;
+}
+.refund-steps > div + div {
+  border-top: 1px solid var(--p-line);
+}
+.refund-steps > div > span {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: var(--p-soft);
+  border: 1px solid var(--p-line);
+  color: var(--p-ember);
+  font-size: 0.78rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.refund-steps > div > div { min-width: 0; }
+.refund-steps strong { font-size: 0.95rem; }
+.refund-steps p { margin: 0.35rem 0 0; }
+.refund-related, .refund-version {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--p-muted);
+  font-size: 0.83rem;
+  margin-top: 1.4rem;
+}
+.refund-related a { color: var(--p-ember); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+.refund-version { font-size: 0.76rem; line-height: 1.65; }
+.refund-page a:focus-visible,
+.refund-page summary:focus-visible {
+  outline: 3px solid var(--p-ember);
+  outline-offset: 4px;
+}
+@media (max-width: 450px) {
+  .refund-steps { padding: 0 0.95rem; }
+  .refund-steps > div { gap: 0.8rem; }
+}
+@media print {
+  .refund-steps { break-inside: avoid; background: #fff; }
+  .refund-page .privacy-hero { break-inside: avoid; }
+}
