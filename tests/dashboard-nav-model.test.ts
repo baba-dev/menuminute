@@ -79,7 +79,9 @@ describe("grouped sidebar", () => {
   });
 
   it("collapses known-unavailable items into Add-ons and drops empty groups", () => {
-    const grouped = groupNavigation(caps({ ordering: false, crm: false, kitchenOperational: false }));
+    const grouped = groupNavigation(
+      caps({ ordering: false, crm: false, kitchenOperational: false })
+    );
     expect(ids(grouped.addOns)).toEqual(["orders", "kitchen", "floor", "guests", "reports"]);
     expect(grouped.groups.map((g) => [g.id, ids(g.items)])).toEqual([
       ["run", ["pos"]],
@@ -139,7 +141,15 @@ describe("mobile bottom bar", () => {
 
   it("lists everything else that is available in More, with no duplicates of the bar", () => {
     const more = ids(moreItems(caps()));
-    expect(more).toEqual(["overview", "menu", "qr", "guests", "reports", "organization", "settings"]);
+    expect(more).toEqual([
+      "overview",
+      "menu",
+      "qr",
+      "guests",
+      "reports",
+      "organization",
+      "settings",
+    ]);
     const bar = ids(bottomBarItems(caps()));
     expect(more.filter((id) => bar.includes(id))).toEqual([]);
   });

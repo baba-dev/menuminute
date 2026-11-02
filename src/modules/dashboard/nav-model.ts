@@ -189,7 +189,8 @@ export function navState(item: NavItem, capabilities: DashboardNavigation | unde
   if (item.gate === null) return { state: "available", label: item.label };
   if (item.gate === "crm") {
     if (!capabilities) return { state: "unavailable", reason: "unknown", label: item.label };
-    if (!capabilities.crm) return { state: "unavailable", reason: "not-enabled", label: item.label };
+    if (!capabilities.crm)
+      return { state: "unavailable", reason: "not-enabled", label: item.label };
     return capabilities.ordersRead
       ? { state: "available", label: item.label }
       : { state: "unavailable", reason: "access-required", label: item.label };

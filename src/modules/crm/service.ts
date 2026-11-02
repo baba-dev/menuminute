@@ -9,12 +9,14 @@ const ident = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
 const search = z.string().trim().max(80);
 const phone = z.string().trim().min(8).max(32);
 const page = z.number().int().min(0).max(1000);
-const save = z.object({
-  id: ident.nullable().default(null),
-  phone: z.string().max(32).default(""),
-  name: z.string().trim().max(80).default(""),
-  notes: z.string().trim().max(1000).default(""),
-}).strict();
+const save = z
+  .object({
+    id: ident.nullable().default(null),
+    phone: z.string().max(32).default(""),
+    name: z.string().trim().max(80).default(""),
+    notes: z.string().trim().max(1000).default(""),
+  })
+  .strict();
 
 export type GuestMatch = {
   id: string;
@@ -25,14 +27,26 @@ export type GuestMatch = {
 };
 export type GuestList = { total: number; items: GuestMatch[] };
 export type GuestDetail = {
-  id: string; name: string; phone: string; notes: string; marketingConsent: boolean;
+  id: string;
+  name: string;
+  phone: string;
+  notes: string;
+  marketingConsent: boolean;
   orders: Array<{
-    id: string; number: number; createdAt: string; status: string; paymentStatus: string;
-    currency: string; totalMinor: string;
+    id: string;
+    number: number;
+    createdAt: string;
+    status: string;
+    paymentStatus: string;
+    currency: string;
+    totalMinor: string;
   }>;
 };
 
-async function scoped<T>(actor: Actor, organizationId: string, outletId: string,
+async function scoped<T>(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
   permission: "orders.read" | "orders.accept" | "outlet.manage",
   work: (run: (query: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }>) => Promise<T>
 ): Promise<T> {
@@ -67,8 +81,13 @@ export async function lookupGuest(actor: Actor, org: string, outlet: string, raw
     return (r.rows[0] as { data: GuestMatch | null } | undefined)?.data ?? null;
   });
 }
-export async function listGuests(actor: Actor, org: string, outlet: string,
-  query: string, offsetPage: number): Promise<GuestList> {
+export async function listGuests(
+  actor: Actor,
+  org: string,
+  outlet: string,
+  query: string,
+  offsetPage: number
+): Promise<GuestList> {
   const q = search.parse(query);
   const p = page.parse(offsetPage);
   return scoped(actor, org, outlet, "orders.read", async (run) => {

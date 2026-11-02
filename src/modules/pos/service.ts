@@ -624,8 +624,7 @@ export async function posSubmit(
     paymentMethod: input.markAsPaid ? input.paymentMethod : null,
   };
   return posCall(actor, outletId, async (run) => {
-    const r =
-      (await run(sql`select app_private.crm_pos_submit(${outletId},${input.key},${hash},
+    const r = (await run(sql`select app_private.crm_pos_submit(${outletId},${input.key},${hash},
       ${JSON.stringify(payload)}::jsonb) as data`)) as { rows: { data: PosSaleResult }[] };
     return r.rows[0]!.data;
   });
