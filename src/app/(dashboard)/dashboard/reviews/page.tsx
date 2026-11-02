@@ -4,10 +4,10 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { ReviewsWorkspace } from "./reviews-workspace";
 
+// noindex is inherited from the private workspace layout; do not repeat it here.
 export const metadata: Metadata = {
   title: "Guest reviews | MenuMinute",
   description: "Approve diner comments and manage dish ratings.",
-  robots: { index: false, follow: false },
 };
 
 export default async function ReviewsPage() {
