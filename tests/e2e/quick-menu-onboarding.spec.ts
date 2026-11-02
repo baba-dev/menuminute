@@ -37,6 +37,7 @@ test("QR-only Quick Start resumes its compact flow and reaches the first menu mi
   await page.getByLabel("Restaurant country *").selectOption("BW");
   await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("");
   await page.getByLabel("Menu pricing currency *").selectOption("BWP");
+  await expect(page.getByText("Auto-saved")).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Restaurant country *")).toHaveValue("BW");
   await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("BWP");
