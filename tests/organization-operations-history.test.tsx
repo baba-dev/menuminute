@@ -60,10 +60,13 @@ describe("organization operations history", () => {
   });
 
   it("shows an empty state when no history is recorded", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ items: [], page: 1, pageSize: 5, total: 0, totalPages: 1 }),
-    })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ items: [], page: 1, pageSize: 5, total: 0, totalPages: 1 }),
+      }))
+    );
 
     render(<OperationsHistory organizationId="empty-org" revision={1} />);
     expect(await screen.findByText("No organization operations recorded yet.")).toBeInTheDocument();
