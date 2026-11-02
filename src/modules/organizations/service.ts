@@ -9,6 +9,7 @@ import {
   outletGrants,
   users,
   domainAudit,
+  outboxEvents,
   domainProjections,
 } from "@/db/schema";
 import { withActor, type Actor } from "@/modules/tenancy/service";
@@ -239,6 +240,24 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
       .select()
       .from(outletGrants)
       .where(eq(outletGrants.organizationId, organizationId));
+    const audit = await tx
+      .select()
+      .from(domainAudit)
+      .where(eq(domainAudit.organizationId, organizationId))
+      .orderBy(desc(domainAudit.createdAt))
+      .limit(30);
+    const jobs = await tx
+      .select({
+        id: outboxEvents.id,
+        status: outboxEvents.status,
+        attempts: outboxEvents.attempts,
+        lastError: outboxEvents.lastError,
+        createdAt: outboxEvents.createdAt,
+      })
+      .from(outboxEvents)
+      .where(eq(outboxEvents.organizationId, organizationId))
+      .orderBy(desc(outboxEvents.createdAt))
+      .limit(30);
     const projection =
       (
         await tx
@@ -253,10 +272,8 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
       brands: brandList,
       links,
       grants,
-      // Operations history now has its own paginated, scoped endpoint.
-      // Keep the legacy keys for consumers that still expect the detail shape.
-      audit: [],
-      jobs: [],
+      audit,
+      jobs,
       projection,
     };
   });
