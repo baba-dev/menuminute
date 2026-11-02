@@ -7,6 +7,8 @@
   --dc-line: #e9d9c8;
   --dc-ember: #a93608;
   --dc-soft: #f9eddb;
+  --dining-content-width: 1180px;
+  --dining-gutter: clamp(1rem, 3vw, 2rem);
   background: var(--dc-paper);
   color: var(--dc-ink);
   min-height: 100dvh;
@@ -66,9 +68,10 @@
   pointer-events: none;
 }
 .dining-cover-content {
-  width: min(1180px, 100%);
-  padding: clamp(1.5rem, 5vw, 5rem) clamp(1.25rem, 6vw, 5rem);
+  width: min(var(--dining-content-width), 100%);
+  padding: clamp(1.5rem, 5vw, 5rem) var(--dining-gutter);
   margin: auto;
+  text-align: left;
 }
 .dining-cover-content h1 {
   max-width: 13ch;
@@ -124,9 +127,9 @@
   font-weight: 800;
 }
 .dining-shell {
-  max-width: 1180px;
+  max-width: var(--dining-content-width);
   margin: auto;
-  padding: clamp(1.2rem, 4vw, 3.2rem) clamp(1rem, 3vw, 2rem);
+  padding: clamp(1.2rem, 4vw, 3.2rem) var(--dining-gutter);
 }
 .dining-notice {
   padding: 1rem 1.25rem;

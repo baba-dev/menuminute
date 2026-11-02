@@ -490,12 +490,11 @@ export function PublicMenu({
           fetchPriority="high"
         />
         <div className="dining-cover-content">
-          <span className="dining-kicker">
-            THE DINING CANVAS <span aria-hidden="true">✳</span> YOUR DIGITAL MENU
-          </span>
+          <span className="dining-kicker">WELCOME TO OUR KITCHEN</span>
           <h1>{data.outlet.name}</h1>
           <p>
             {docs[0]?.view.presentation?.headline ||
+              data.outlet.profile?.description ||
               "Made with care. Served with joy. Find something delicious."}
           </p>
           <div className="dining-cover-details">
