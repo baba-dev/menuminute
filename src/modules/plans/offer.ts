@@ -1,6 +1,6 @@
 import {
   DEDICATED_MONTHLY_PAISE,
-  DEDICATED_MONTHLY_USD_CENTS,
+  DEDICATED_ON_PREMISE_USD_CENTS,
   formatInr,
   formatUsd,
   formatSubscriptionMonthlyPrice,
@@ -19,7 +19,7 @@ import { fmt, NEXT_PLAN, type IntakeSnapshot } from "./view";
 export type PricePoint = {
   /** "Free", "₹119", "Custom" */
   label: string;
-  /** "forever", "per month" */
+  /** "forever", "per month", "by contract" */
   note: string;
   paid: boolean;
   /** Extra pricing fact shown under the price, e.g. what is included. */
@@ -29,16 +29,16 @@ export type PricePoint = {
 export function planPrice(plan: PlanKey, currency: BillingCurrency = "INR"): PricePoint {
   if (plan === "free")
     return { label: currency === "USD" ? "$0" : "₹0", note: "forever", paid: false };
-  // Dedicated is sold by contract. USD is an indicative contract catalog rate, not self-serve checkout.
+  // Dedicated is not self-serve: USD is a private on-premise contract quote, not a monthly plan.
   if (plan === "dedicated")
-    return {
-      label:
-        currency === "USD"
-          ? formatUsd(DEDICATED_MONTHLY_USD_CENTS)
-          : formatInr(DEDICATED_MONTHLY_PAISE),
-      note: "per month",
-      paid: false,
-    };
+    return currency === "USD"
+      ? {
+          label: formatUsd(DEDICATED_ON_PREMISE_USD_CENTS),
+          note: "by contract",
+          detail: "Private on-premise deployment",
+          paid: false,
+        }
+      : { label: formatInr(DEDICATED_MONTHLY_PAISE), note: "per month", paid: false };
   const price: PricePoint = {
     label: formatSubscriptionMonthlyPrice(plan, currency),
     note: "per month",
@@ -144,7 +144,12 @@ export function planHighlights(plan: PlanKey, opts: Opts = {}): string[] {
     );
   } else list.push("Online ordering with no monthly cap");
   if (plan === "kitchen_pro" || plan === "dedicated") list.push("Kitchen display and stations");
-  if (plan === "dedicated") list.push("Your own domain and branding, set up with our team");
+  if (plan === "dedicated")
+    list.push(
+      opts.currency === "USD"
+        ? "Private on-premise deployment, scoped by contract"
+        : "Your own domain and branding, set up with our team"
+    );
   return list;
 }
 
@@ -152,7 +157,10 @@ export function planHighlights(plan: PlanKey, opts: Opts = {}): string[] {
 export function planLadder(opts: Opts = {}): PlanOffer[] {
   return (["free", "ordering", "kitchen_pro", "dedicated"] as const).map((key) => ({
     key,
-    label: PLAN_LABELS[key],
+    label:
+      key === "dedicated" && opts.currency === "USD"
+        ? "Dedicated · On-premise Private"
+        : PLAN_LABELS[key],
     price: planPrice(key, opts.currency),
     tagline: TAGLINE[key],
     highlights: planHighlights(key, opts),
