@@ -15,6 +15,7 @@ import {
   setChairOccupied,
   updateChair,
   updateReservationStatus,
+  updateSignalSettings,
   updateTable,
 } from "../src/modules/hospitality/floor-service";
 
@@ -306,5 +307,33 @@ describe("floor v2 (tables, chairs, occupancy) against real PostgreSQL", () => {
     expect(
       (await getReservations(actor, outletId, localDate)).some((r) => r.id === reservation.id)
     ).toBe(true);
+  });
+
+  it("keeps live table signals optional, outlet-scoped and permission-guarded", async () => {
+    // Default: off, no journey computed.
+    let overview = await getFloorOverview(actor, outletId);
+    expect(overview.signalSettings?.enabled ?? false).toBe(false);
+    expect(overview.tables.every((t) => !t.journey)).toBe(true);
+
+    // A stranger cannot switch it on for this outlet.
+    await expect(updateSignalSettings(stranger, outletId, { enabled: true })).rejects.toThrow();
+
+    const settings = await updateSignalSettings(actor, outletId, { enabled: true });
+    expect(settings).toMatchObject({ enabled: true, showKitchen: true });
+    overview = await getFloorOverview(actor, outletId);
+    expect(overview.tables.every((t) => t.journey && t.journey.steps.length > 0)).toBe(true);
+
+    // Turning one source off hides just that indicator.
+    await updateSignalSettings(actor, outletId, { guestWaterButton: false });
+    overview = await getFloorOverview(actor, outletId);
+    expect(overview.tables[0]!.journey!.steps.some((s) => s.key === "water")).toBe(false);
+
+    // The other outlet is untouched.
+    const other = await getFloorOverview(stranger, strangerOutletId);
+    expect(other.signalSettings?.enabled ?? false).toBe(false);
+
+    await updateSignalSettings(actor, outletId, { enabled: false });
+    overview = await getFloorOverview(actor, outletId);
+    expect(overview.tables.every((t) => !t.journey)).toBe(true);
   });
 });

@@ -31,16 +31,15 @@ import { floorHeadline } from "@/modules/hospitality/floor-headline";
 import {
   ArchiveDialog,
   ChairsDialog,
-  CopyId,
   ReservationDialog,
   SECTIONS_HELP,
   SeatDialog,
-  SYSTEM_ID_HELP,
   TableDialog,
   type TableFormValues,
 } from "./floor-dialogs";
 import { fetchOverview, floorRequest } from "./floor-api";
 import { groupBySection, withChair } from "./floor-state";
+import { JourneyStrip } from "./journey-strip";
 import { TableIllustration } from "./table-illustration";
 import styles from "./floor.module.css";
 import { PlanMeterStrip } from "@/components/plans/plan-usage";
@@ -112,6 +111,20 @@ export function FloorBoard({
       return await work();
     } finally {
       inFlight.current--;
+    }
+  }
+
+  const signalsOn = overview.signalSettings?.enabled === true;
+  const [signalsBusy, setSignalsBusy] = useState(false);
+  async function setSignals(enabled: boolean) {
+    setSignalsBusy(true);
+    try {
+      await mutate(() => floorRequest(outlet.id, "/signals", "PUT", { enabled }));
+      setOverview(await fetchOverview(outlet.id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not change live table signals.");
+    } finally {
+      setSignalsBusy(false);
     }
   }
 
@@ -426,6 +439,29 @@ export function FloorBoard({
             <span className={styles.kpiDetail}>Areas such as Main Dining or Patio</span>
           </div>
         </section>
+
+        {canManage && (
+          <section className={styles.signalsCard} aria-labelledby="signals-title">
+            <div>
+              <h2 id="signals-title">Live table signals</h2>
+              <p>
+                Optional. Shows each table&apos;s guest journey: QR scanned, order sent, cooking,
+                handoff, delivered, bill and payment. Skip it and the floor stays as it is.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={signalsOn}
+              className={styles.switch}
+              disabled={signalsBusy}
+              onClick={() => void setSignals(!signalsOn)}
+            >
+              <span className={styles.switchKnob} aria-hidden="true" />
+              <span>{signalsOn ? "On" : "Off"}</span>
+            </button>
+          </section>
+        )}
 
         {totals.tables === 0 ? (
           <div className={styles.empty}>
@@ -827,70 +863,64 @@ function TableCard({
             />
           )}
         </div>
-        <dl className={styles.facts}>
-          <div className={styles.fact}>
-            <dt>Seated now</dt>
-            <dd>
-              <span className={styles.big}>
-                {table.currentOccupancy}
-                <small className={styles.mono}> / {table.maxOccupancy}</small>
-              </span>
-            </dd>
-          </div>
-          {table.stale && (
-            <div className={styles.hint} data-tone="warn" role="status">
-              <CalendarClock size={16} aria-hidden="true" />
-              <span>Still occupied? No open order for a few hours.</span>
-              {canSeat && (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnQuiet}`}
-                  onClick={onClearStale}
-                >
-                  Clear
-                </button>
-              )}
+        <div className={styles.facts}>
+          <dl className={styles.factList}>
+            <div className={styles.fact}>
+              <dt>Seated now</dt>
+              <dd>
+                <span className={styles.big}>
+                  {table.currentOccupancy}
+                  <small className={styles.mono}> / {table.maxOccupancy}</small>
+                </span>
+              </dd>
             </div>
-          )}
-          {(table.activeOrders > 0 || table.unpaidOrders > 0) && (
-            <div className={styles.hint}>
-              <Receipt size={16} aria-hidden="true" />
-              <span>
-                {table.activeOrders > 0 &&
-                  `${table.activeOrders} open order${table.activeOrders === 1 ? "" : "s"}`}
-                {table.activeOrders > 0 && table.unpaidOrders > 0 && " · "}
-                {table.unpaidOrders > 0 && `${table.unpaidOrders} unpaid`}
-              </span>
-            </div>
-          )}
-          {table.nextReservation && (
-            <div className={styles.hint}>
-              <CalendarClock size={16} aria-hidden="true" />
-              <span>
-                {formatTime(table.nextReservation.time)} · {table.nextReservation.guestName} (
-                {table.nextReservation.partySize})
-              </span>
-              {canSeat && free > 0 && (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnQuiet}`}
-                  onClick={onSeatBooking}
-                >
-                  Seat them
-                </button>
-              )}
-            </div>
-          )}
-          <div className={styles.fact}>
-            <dt>
-              System ID <DashboardTooltip label="system ID">{SYSTEM_ID_HELP}</DashboardTooltip>
-            </dt>
-            <dd>
-              <code className={styles.mono}>{table.id}</code>
-              <CopyId id={table.id} />
-            </dd>
-          </div>
-        </dl>
+            {table.stale && (
+              <div className={styles.hint} data-tone="warn" role="status">
+                <CalendarClock size={16} aria-hidden="true" />
+                <span>Still occupied? No open order for a few hours.</span>
+                {canSeat && (
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnQuiet}`}
+                    onClick={onClearStale}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+            {(table.activeOrders > 0 || table.unpaidOrders > 0) && (
+              <div className={styles.hint}>
+                <Receipt size={16} aria-hidden="true" />
+                <span>
+                  {table.activeOrders > 0 &&
+                    `${table.activeOrders} open order${table.activeOrders === 1 ? "" : "s"}`}
+                  {table.activeOrders > 0 && table.unpaidOrders > 0 && " · "}
+                  {table.unpaidOrders > 0 && `${table.unpaidOrders} unpaid`}
+                </span>
+              </div>
+            )}
+            {table.nextReservation && (
+              <div className={styles.hint}>
+                <CalendarClock size={16} aria-hidden="true" />
+                <span>
+                  {formatTime(table.nextReservation.time)} · {table.nextReservation.guestName} (
+                  {table.nextReservation.partySize})
+                </span>
+                {canSeat && free > 0 && (
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnQuiet}`}
+                    onClick={onSeatBooking}
+                  >
+                    Seat them
+                  </button>
+                )}
+              </div>
+            )}
+          </dl>
+          {table.journey && <JourneyStrip journey={table.journey} tableName={table.name} />}
+        </div>
       </div>
     </article>
   );

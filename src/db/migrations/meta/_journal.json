@@ -617,6 +617,13 @@
       "when": 1795957200032,
       "tag": "0088_ai_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1796043600032,
+      "tag": "0089_table_signals",
+      "breakpoints": true
     }
   ]
 }

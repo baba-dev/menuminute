@@ -321,6 +321,13 @@ export function buildReplicaFloor(newOrder: boolean): {
   }
   return {
     overview: {
+      signalSettings: {
+        enabled: false,
+        qrScanPings: true,
+        guestWaterButton: true,
+        showKitchen: true,
+        showPosBill: true,
+      },
       sections: FLOOR_SECTIONS,
       tables,
       unassignedChairs: [],
