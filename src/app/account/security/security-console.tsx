@@ -134,9 +134,27 @@ function SecurityActivity() {
   }, []);
   useEffect(() => {
     const abort = new AbortController();
-    void load(abort.signal);
+    // Resolve the network request before updating React state. Calling a
+    // stateful loader directly inside an effect violates react-hooks/set-state-in-effect.
+    void fetch("/api/security/events", { cache: "no-store", signal: abort.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Security activity could not be loaded.");
+        return (await response.json()) as SecurityEvent[];
+      })
+      .then((entries) => {
+        if (abort.signal.aborted) return;
+        setError("");
+        setEvents(entries);
+        setPage(0);
+        setLoading(false);
+      })
+      .catch((cause: unknown) => {
+        if (abort.signal.aborted) return;
+        setError(cause instanceof Error ? cause.message : "Unable to load activity.");
+        setLoading(false);
+      });
     return () => abort.abort();
-  }, [load]);
+  }, []);
   const pages = Math.max(1, Math.ceil(events.length / 5));
   return (
     <section id="activity" className="oh-panel" aria-labelledby="sec-activity-title">
