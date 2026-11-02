@@ -13,7 +13,7 @@ the next booking and the permanent system ID. It reuses the dashboard shell toke
 
 ## Live table signals (optional, slices 1-2 of 6)
 
-Status: **implemented in code; not deployed.** Migration `0089_table_signals` (additive, forward-only).
+Status: **implemented in code; not deployed.** Migration `0090_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
 on each table card: QR scanned, order sent (with dish count), cooking, ready for handoff, delivered, bill shown,
 paid and water. It is **off by default**; with it off no signal query runs and the card is unchanged. Sub-toggles
@@ -26,7 +26,7 @@ paid and water. It is **off by default**; with it off no signal query runs and t
   slices, so water and bill indicators stay idle until then.
 - `buildJourney` (`src/modules/hospitality/floor-signals.ts`) is the pure view-model; `JourneyStrip` renders inline SVG
   icons with text states (idle / active / done) and honours `prefers-reduced-motion`.
-- **QR scan ping (slice 2, migration `0090_qr_scan_signal`).** The public menu sends one beacon per browser session
+- **QR scan ping (slice 2, migration `0091_qr_scan_signal`).** The public menu sends one beacon per browser session
   per table QR (`POST /api/public-orders/scan`, under the Nginx prefix that already attaches the signed client
   identity; same origin check and Redis limits as other guest calls). `app_private.record_qr_scan(token)` records a
   `qr_scanned` event only for an active QR tied to an active table, only when the outlet enabled signals and the QR

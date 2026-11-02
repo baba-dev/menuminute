@@ -38,7 +38,7 @@ const PRESERVED: Record<string, string> = {
   dining_sections: "floor configuration; the demo section is re-asserted when tables are restored",
   restaurant_chairs:
     "removed with their table by ON DELETE CASCADE; trigger restaurant_tables_demo_seed re-seeds them (migration 0073)",
-  floor_signal_settings: "configuration (optional live table signals; default off, migration 0089)",
+  floor_signal_settings: "configuration (optional live table signals; default off, migration 0090)",
   table_signal_events:
     "ephemeral telemetry ledger, no producers yet; demo sample events arrive with the demo slice",
   dining_reservations: "reservations ledger",

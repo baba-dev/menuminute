@@ -1,4 +1,4 @@
--- Live table signals, slice 2: the QR scan ping. Forward-only, after 0089.
+-- Live table signals, slice 2: the QR scan ping. Forward-only, after 0090.
 -- A scan is only a phone opening the table QR, never proof that a guest is seated.
 -- Recorded only when the outlet opted in (floor_signal_settings.enabled AND qr_scan_pings),
 -- only for an active QR tied to an active table, and at most once per QR per minute (dedupe_key).

@@ -97,6 +97,26 @@ export default async function ReceiptPage({
               <dd>{receipt.customerName}</dd>
             </div>
           )}
+          {receipt.customerPhone && (
+            <div>
+              <dt>Mobile</dt>
+              <dd>{receipt.customerPhone}</dd>
+            </div>
+          )}
+          {receipt.fulfillmentMode === "dine_in" && (
+            <div>
+              <dt>Table</dt>
+              <dd>
+                {receipt.tableNumber
+                  ? receipt.tableLabel &&
+                    receipt.tableLabel !== "Table " + receipt.tableNumber &&
+                    receipt.tableLabel !== receipt.tableNumber
+                    ? receipt.tableNumber + " · " + receipt.tableLabel
+                    : receipt.tableNumber
+                  : receipt.tableLabel || "Not assigned"}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>Payment</dt>
             <dd className="receipt-payment-status">

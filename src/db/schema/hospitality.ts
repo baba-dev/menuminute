@@ -105,7 +105,7 @@ export type RestaurantChair = typeof restaurantChairs.$inferSelect;
 export type DiningFloorPlan = typeof diningFloorPlans.$inferSelect;
 export type DiningReservation = typeof diningReservations.$inferSelect;
 
-/** Optional live table signals for an outlet. Default off; see migration 0089. */
+/** Optional live table signals for an outlet. Default off; see migration 0090. */
 export const floorSignalSettings = pgTable("floor_signal_settings", {
   outletId: text("outlet_id")
     .primaryKey()

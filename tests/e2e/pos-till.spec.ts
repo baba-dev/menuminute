@@ -138,6 +138,7 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
     await expect(mobileTicket).toBeVisible();
     await mobileTicket.click();
   }
+  await page.getByLabel("Mobile number (optional)").fill("9876543210");
   await expect(page.getByText("Pre-tax subtotal")).toBeVisible();
   await page.getByRole("button", { name: /Place Order & Send/ }).click();
   await expect(page.locator(".till-success")).toContainText("Dispatched");
@@ -151,6 +152,10 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
     "href",
     /receipts/
   );
+  const reprintHref = await register
+    .getByRole("link", { name: /Reprint bill for order #/ })
+    .getAttribute("href");
+  expect(reprintHref?.startsWith("/dashboard/pos/receipts/")).toBe(true);
   await expect(register.getByRole("link", { name: /Refund or correct payment/ })).toHaveCount(0);
   const orderSearch = register.getByPlaceholder("Order #, guest, table, dish…");
   await orderSearch.fill("unmatched_dish_name");
@@ -210,6 +215,33 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
       .getByRole("link", { name: /Closing Desk/ })
   ).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
+
+  // Exercise the real receipt route under both screen and print media. A browser
+  // print preview must contain only the bill, never the authenticated workspace.
+  const receiptPath = reprintHref!.split("?")[0];
+  await page.goto(receiptPath + "?paper=80");
+  await expect(page.locator(".receipt-paper")).toContainText("Paneer Lunch");
+  await expect(page.locator(".receipt-details")).toContainText("+919876543210");
+  await expect(page.locator(".receipt-details dt").filter({ hasText: "Table" })).toHaveCount(0);
+  await expect(page.locator(".mm-workspace-sidebar")).toBeVisible();
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".mm-workspace-sidebar")).toBeHidden();
+  await expect(page.locator(".mm-shared-topbar")).toBeHidden();
+  await expect(page.locator(".receipt-toolbar")).toBeHidden();
+  await expect(page.locator(".receipt-paper")).toBeVisible();
+  await expect(page.locator(".mm-workspace-shell")).toHaveCSS("display", "block");
+  await expect(page.locator(".mm-workspace-main")).toHaveCSS("padding", "0px");
+  const width80 = await page
+    .locator(".receipt-paper")
+    .evaluate((el) => el.getBoundingClientRect().width);
+
+  await page.goto(receiptPath + "?paper=58");
+  await expect(page.locator(".receipt-paper")).toBeVisible();
+  await expect(page.locator(".mm-workspace-sidebar")).toBeHidden();
+  const width58 = await page
+    .locator(".receipt-paper")
+    .evaluate((el) => el.getBoundingClientRect().width);
+  expect(width58).toBeLessThan(width80);
 });
 
 test("POS merchant Ledger and Closing Desk stay usable at 390px", async ({ page }) => {
