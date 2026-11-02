@@ -39,19 +39,21 @@ export function AccountDeletionPanel({
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
 
-  const reload = useCallback(async (signal?: AbortSignal) => {
+  const loadStatus = useCallback(async (signal?: AbortSignal): Promise<DeletionStatus | null> => {
     const response = await fetch("/api/account/deletion-request", {
       cache: "no-store",
       signal,
     });
     if (!response.ok) throw new Error("Unable to check your account deletion request.");
-    const result = (await response.json()) as DeletionStatus | null;
-    if (!signal?.aborted) setStatus(result);
+    return (await response.json()) as DeletionStatus | null;
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    void reload(controller.signal)
+    void loadStatus(controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setStatus(result);
+      })
       .catch(() => {
         if (!controller.signal.aborted)
           setError("Unable to check deletion requests. Please retry.");
@@ -60,7 +62,7 @@ export function AccountDeletionPanel({
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [reload]);
+  }, [loadStatus]);
 
   async function submit(method: "POST" | "DELETE") {
     if (busy) return;
@@ -79,7 +81,7 @@ export function AccountDeletionPanel({
       if (!response.ok) throw new Error(body.message || "Unable to update your request.");
       setConfirm(false);
       setConfirming(false);
-      await reload();
+      setStatus(await loadStatus());
       setFeedback(
         method === "POST"
           ? "Your deletion request has been sent to the admin team."
@@ -235,7 +237,8 @@ export function AccountDeletionPanel({
           onClick={() => {
             setError("");
             setLoading(true);
-            void reload()
+            void loadStatus()
+              .then(setStatus)
               .catch(() => setError("Unable to load request status."))
               .finally(() => setLoading(false));
           }}
