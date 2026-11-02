@@ -13,6 +13,7 @@ import {
 import { PaymentsConsole } from "./payments-console";
 import type { GrantListResult, TargetSearchResult } from "./grant-studio";
 import { grantFailureMessage, type GrantActionResult } from "@/modules/admin/grant-feedback";
+import { planFailureMessage, type PlanActionResult } from "@/modules/admin/plan-feedback";
 
 export default async function AdminPaymentsPage() {
   const actor = await verifySuperAdmin();
@@ -24,10 +25,18 @@ export default async function AdminPaymentsPage() {
     getFinancialAnalytics(actor),
   ]);
 
-  async function handleUpdatePlan(planId: string, data: any) {
+  async function handleUpdatePlan(
+    planId: string,
+    data: { displayName: string; isActive: boolean; sortOrder: number }
+  ): Promise<PlanActionResult> {
     "use server";
     const currentActor = await verifySuperAdmin();
-    return updateSubscriptionPlan(currentActor, planId, data);
+    try {
+      await updateSubscriptionPlan(currentActor, planId, data);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, message: planFailureMessage(error) };
+    }
   }
 
   async function handleIssueGrant(data: {

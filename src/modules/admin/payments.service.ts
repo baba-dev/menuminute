@@ -77,6 +77,23 @@ export async function updateSubscriptionPlan(
     (!Number.isSafeInteger(data.sortOrder) || data.sortOrder < 0 || data.sortOrder > 999999)
   )
     throw new ValidationError("Invalid sort order");
+  // The historic administrative dispatcher predates Kitchen's approved
+  // commercial-release control and unconditionally refuses reactivation.
+  // Keep its old safeguards intact. Use a narrowly scoped, audited command
+  // for Kitchen catalog edits that independently re-checks global approval.
+  if (planId === "plan_kitchen_pro") {
+    if (!actor.sessionId) throw new ValidationError("An active operator session is required");
+    const result = await withActor({ userId: actor.id, sessionId: actor.sessionId }, (tx) =>
+      tx.execute<{ result: { id: string; success: boolean } }>(
+        sql`select app_private.kitchen_catalog_update(
+          ${planId},${JSON.stringify(data)}::jsonb,${crypto.randomUUID()}
+        ) as result`
+      )
+    );
+    if (!result.rows[0]?.result?.success)
+      throw new Error("Kitchen catalog command did not return confirmation");
+    return result.rows[0].result;
+  }
   return runAdminCommand(actor, "billing.plan.update", planId, data);
 }
 

@@ -34,7 +34,7 @@ describe("admin appearance and privileged workflows", () => {
   });
 
   it("saves a plan without transmitting the prohibited pricing field", async () => {
-    const onUpdatePlan = vi.fn(async () => ({}));
+    const onUpdatePlan = vi.fn(async () => ({ ok: true as const }));
     const noop = vi.fn(async () => ({ ok: true as const }));
     render(
       <PaymentsConsole
@@ -72,6 +72,48 @@ describe("admin appearance and privileged workflows", () => {
         sortOrder: 0,
       });
     });
+  });
+
+  it("keeps the plan editor open and shows a safe message when release approval is missing", async () => {
+    const onUpdatePlan = vi.fn(async () => ({
+      ok: false as const,
+      message: "Kitchen Pro requires the approved platform release.",
+    }));
+    const noop = vi.fn(async () => ({ ok: true as const }));
+    render(
+      <PaymentsConsole
+        plans={[
+          {
+            id: "plan_kitchen_pro",
+            name: "kitchen_pro",
+            displayName: "Kitchen Pro",
+            monthlyPricePaise: 49900,
+            features: null,
+            isActive: false,
+            sortOrder: 3,
+          },
+        ]}
+        subscriptions={[]}
+        grants={[]}
+        grantsTotal={0}
+        financials={{ byCurrency: [], planSubscriptions: [] }}
+        onUpdatePlan={onUpdatePlan}
+        onIssueGrant={noop}
+        onRevokeGrant={noop}
+        onRenewGrant={noop}
+        onSearchTargets={async () => ({ ok: true, targets: [] })}
+        onListGrants={async () => ({ ok: true, grants: [], total: 0, page: 1 })}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Subscription Plans Catalog" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit Plan Settings" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Plan is Active and Selectable" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    await waitFor(() => {
+      expect(screen.getByText("Kitchen Pro requires the approved platform release.")).toBeTruthy();
+      expect(screen.getByRole("dialog", { name: "Edit subscription plan" })).toBeTruthy();
+    });
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("reactivates a tenant with a fresh, explicit audit reason", async () => {
