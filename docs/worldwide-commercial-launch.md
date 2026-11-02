@@ -18,25 +18,25 @@ foreign payment acquisition, fiscal invoicing, bank settlement or sanctions exem
   Examples of currency math (pre-tax; not statutory totals):
 
   | Currency | Display amount | Exact minor units | Fraction digits |
-  | --- | ---: | ---: | ---: |
-  | JPY | 120 | 120 | 0 |
-  | INR | 120.50 | 12050 | 2 |
-  | USD | 120.50 | 12050 | 2 |
-  | OMR | 1.250 | 1250 | 3 |
+  | -------- | -------------: | ----------------: | --------------: |
+  | JPY      |            120 |               120 |               0 |
+  | INR      |         120.50 |             12050 |               2 |
+  | USD      |         120.50 |             12050 |               2 |
+  | OMR      |          1.250 |              1250 |               3 |
 
 - Do not combine outlet-level totals in different currencies without an approved FX
   conversion and effective-rate policy. Historical orders retain their recorded currency.
 
 ## Revenue surface and activation boundary
 
-| Stream | Global product availability | Payment/legal limitation |
-| --- | --- | --- |
-| Free QR menus and published catalogues | Geographic access is approved | Must still follow laws and platform abuse rules |
-| Merchant POS and internal receipts | Existing non-fiscal flows continue | Staff-recorded external tenders do not prove settlement; internal receipts are not statutory invoices |
-| Guest ordering and Kitchen Pro | Existing plan entitlements, rate limits, outlet rules and order state machines still apply | Region-specific food-sale taxes, mandatory receipts and guest policies require review; paid Kitchen commercial approval remains separate |
-| SaaS Ordering/Kitchen subscriptions | Current provider integration and INR plan catalogue remain unchanged | Cross-border cards require provider/account/issuer eligibility; no untested gateway switching or automatic global charges |
-| Dedicated/custom plans | Contact-led commercial availability | Contract, invoicing, tax and settlement are negotiated and reviewed separately |
-| AI features | Existing consent, quota, budget and provider gates remain | No automatic provider enablement or paid fallback |
+| Stream                                 | Global product availability                                                                | Payment/legal limitation                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Free QR menus and published catalogues | Geographic access is approved                                                              | Must still follow laws and platform abuse rules                                                                                          |
+| Merchant POS and internal receipts     | Existing non-fiscal flows continue                                                         | Staff-recorded external tenders do not prove settlement; internal receipts are not statutory invoices                                    |
+| Guest ordering and Kitchen Pro         | Existing plan entitlements, rate limits, outlet rules and order state machines still apply | Region-specific food-sale taxes, mandatory receipts and guest policies require review; paid Kitchen commercial approval remains separate |
+| SaaS Ordering/Kitchen subscriptions    | Current provider integration and INR plan catalogue remain unchanged                       | Cross-border cards require provider/account/issuer eligibility; no untested gateway switching or automatic global charges                |
+| Dedicated/custom plans                 | Contact-led commercial availability                                                        | Contract, invoicing, tax and settlement are negotiated and reviewed separately                                                           |
+| AI features                            | Existing consent, quota, budget and provider gates remain                                  | No automatic provider enablement or paid fallback                                                                                        |
 
 The **platform charges** and a **restaurant's customer sales** are separate transactions
 and separate tax/compliance responsibilities. Using a currency does not establish an
