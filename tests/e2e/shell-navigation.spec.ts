@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { hashPassword } from "better-auth/crypto";
 import { Pool } from "pg";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
+import { setFreeIntake } from "./plan-settings";
 
 async function seed(options: { ordering: boolean; outlets?: number }) {
   const url = process.env["MIGRATION_DATABASE_URL"];
@@ -191,19 +192,35 @@ test.describe("desktop shell", () => {
     await expect(selector).toHaveValue(target);
   });
 
+  test("a free outlet sees Orders while free order intake is on (the shipped default)", async ({
+    page,
+  }) => {
+    await setFreeIntake(true);
+    await signIn(page, await seed({ ordering: false }));
+    const nav = page.getByRole("navigation", { name: "Workspace" });
+    await expect(nav.getByRole("link", { name: "Orders" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Menu Studio" })).toBeVisible();
+  });
+
   test("a menu-only outlet keeps ordering pages out of the sidebar, with an upgrade hint", async ({
     page,
   }) => {
-    await signIn(page, await seed({ ordering: false }));
-    const nav = page.getByRole("navigation", { name: "Workspace" });
-    await expect(nav.getByRole("link", { name: "Orders" })).toHaveCount(0);
-    await nav.getByRole("button", { name: /Add-ons/ }).click();
-    await expect(nav.getByText(/Upgrade to enable it/).first()).toBeVisible();
-    await expect(nav.getByRole("link", { name: "See plans" }).first()).toHaveAttribute(
-      "href",
-      "/pricing"
-    );
-    await expect(nav.getByRole("link", { name: "Menu Studio" })).toBeVisible();
+    // Free order intake ships on, which shows Orders to Free outlets; this is the QR-menu-only presentation.
+    await setFreeIntake(false);
+    try {
+      await signIn(page, await seed({ ordering: false }));
+      const nav = page.getByRole("navigation", { name: "Workspace" });
+      await expect(nav.getByRole("link", { name: "Orders" })).toHaveCount(0);
+      await nav.getByRole("button", { name: /Add-ons/ }).click();
+      await expect(nav.getByText(/Upgrade to enable it/).first()).toBeVisible();
+      await expect(nav.getByRole("link", { name: "See plans" }).first()).toHaveAttribute(
+        "href",
+        "/pricing"
+      );
+      await expect(nav.getByRole("link", { name: "Menu Studio" })).toBeVisible();
+    } finally {
+      await setFreeIntake(true);
+    }
   });
 
   test("the palette finds a dish, marks it sold out for real, and returns focus", async ({
