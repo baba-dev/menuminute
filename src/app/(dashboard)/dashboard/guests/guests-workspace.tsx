@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -59,7 +59,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
 
-  async function refresh(nextPage: number, nextQuery: string, abort?: AbortSignal) {
+  const refresh = useCallback(async (nextPage: number, nextQuery: string, abort?: AbortSignal) => {
     const res = await fetch(
       endpoint + "?view=list&page=" + nextPage + "&search=" + encodeURIComponent(nextQuery),
       {
@@ -69,7 +69,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
     );
     if (!res.ok) throw new Error("Could not refresh guests");
     return res.json() as Promise<GuestList>;
-  }
+  }, [endpoint]);
   useEffect(() => {
     const abort = new AbortController();
     const timer = window.setTimeout(() => {
@@ -84,7 +84,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
       abort.abort();
     };
     // Initial server data is shown without requesting it twice.
-  }, [page, query, endpoint]);
+  }, [page, query, refresh]);
   useEffect(() => {
     if (!selected || selected === "new") return;
     const abort = new AbortController();
