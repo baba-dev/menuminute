@@ -182,6 +182,10 @@ export type PosReceipt = {
   sellerName: string | null;
   sellerAddress: string | null;
   customerName: string | null;
+  customerPhone: string | null;
+  /** A human table number, not the internal QR/table identifier. */
+  tableNumber: string | null;
+  tableLabel: string | null;
   fulfillmentMode: string;
   issuedDocumentId: string | null;
   items: Array<{
