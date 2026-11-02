@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import { provisionDemo } from "../src/modules/demo/provision";
+import { clearDemoConsumerReceipts } from "./helpers/demo-receipts";
 import { demoPassword } from "../src/modules/demo/credential";
 import { DEMO_IDS } from "../src/modules/demo/ids";
 
@@ -13,6 +14,7 @@ describe("demo entry credential", () => {
     vi.stubEnv("DEMO_MODE_ENABLED", "true");
     const c = await owner.connect();
     try {
+      await clearDemoConsumerReceipts(c);
       await provisionDemo(c, await hashPassword(demoPassword(secret)));
     } finally {
       c.release();

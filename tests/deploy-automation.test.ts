@@ -10,7 +10,9 @@ const packageScript = readFileSync(path.resolve("infra/deploy/package-release.sh
 describe("provenance-bound main-only production delivery", () => {
   it("parallelizes six mandatory CI lanes and fails closed at the final gate", () => {
     expect(ci).toContain("Required CI quality gate");
-    expect(ci).toContain("needs: [quality, typecheck, test, build, ember_browser, security]");
+    expect(ci).toContain(
+      "needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security]"
+    );
     expect(ci).toContain('test "$result" = success');
     expect(ci).toContain("Ember Enabled Browser (ARM64)");
     expect(ci).toContain("Dependency, Secret & Code Scanning");
@@ -22,10 +24,13 @@ describe("provenance-bound main-only production delivery", () => {
   });
 
   it("keeps optional cache/evidence failures separate from mandatory archive upload", () => {
-    expect(ci.match(/uses: actions\/cache@[0-9a-f]{40}/g)).toHaveLength(5);
-    expect(ci.match(/continue-on-error: true/g)).toHaveLength(7);
+    // Every cache step (eleven: pnpm store in each installing lane, Next.js build cache, Chromium in the
+    // shards and Ember) is optional; the three failure-evidence uploads are optional too. Nothing else may be.
+    expect(ci.match(/uses: actions\/cache@[0-9a-f]{40}/g)).toHaveLength(11);
+    expect(ci.match(/continue-on-error: true/g)).toHaveLength(14);
     expect(ci).toContain("name: Cache Playwright Chromium\n        continue-on-error: true");
-    expect(ci).toContain("name: browser-failure-evidence");
+    expect(ci).toContain("name: browser-failure-evidence-${{ matrix.shard }}");
+    expect(ci).toContain("name: browser-failure-evidence-merged");
     expect(ci).toContain("name: ember-browser-failure-evidence");
 
     const requiredArchive = ci
@@ -48,6 +53,37 @@ describe("provenance-bound main-only production delivery", () => {
     expect(packageScript).toContain("sha256sum --check --strict");
     expect(publisher).not.toContain("pnpm build");
     expect(publisher).toContain("run-id: ${{ github.event.workflow_run.id }}");
+  });
+
+  it("shards tests and browsers while packaging the single tested compilation", () => {
+    expect(ci).toContain("shard: [1, 2, 3, 4]");
+    expect(ci).toContain("vitest run --shard=${{ matrix.shard }}/4");
+    expect(ci).toContain("shard: [1, 2, 3, 4, 5, 6]");
+    expect(ci).toContain("--shard=${{ matrix.shard }}/6 --reporter=blob,github");
+    expect(ci).toContain("--project=chromium");
+    // One production compilation: only compile and the isolated Ember fixture invoke the Next build.
+    expect(ci.match(/run: pnpm build\n/g)).toHaveLength(2);
+    const compile = ci.split("\n  compile:\n")[1]!.split("\n  e2e:\n")[0]!;
+    expect(compile).toContain("pnpm build\n");
+    expect(compile).toContain("compiled-build-${{ github.sha }}");
+    // Generated, git-ignored public/ assets are part of the compiled output and must be shared.
+    expect(compile).toContain("git ls-files --others --ignored --exclude-standard -- public");
+    expect(compile).toContain("-T generated-public-files.txt");
+    const build = ci.split("\n  build:\n")[1]!.split("\n  evidence:\n")[0]!;
+    const evidence = ci.split("\n  evidence:\n")[1]!.split("\n  ember_browser:\n")[0]!;
+    expect(build).toContain("needs: compile");
+    expect(evidence).toContain("needs: [e2e, build]");
+    expect(evidence).toContain("playwright merge-reports --reporter=json");
+    // The releasable artifact name is produced only after every browser shard passed.
+    expect(evidence).toContain("name: menuminute-release-${{ github.sha }}");
+    expect(build).not.toContain("name: menuminute-release-${{ github.sha }}");
+    expect(build).toContain("name: Production Build & Browser (ARM64)");
+    expect(build).toContain("sha256sum --check --strict compiled-build.tar.gz.sha256");
+    expect(build).not.toContain("pnpm build\n");
+    // The publisher reads this exact job and step name for packaging timing.
+    expect(build).toContain("name: Package exact tested ARM64 build");
+    expect(publisher).toContain('select(.name == "Production Build & Browser (ARM64)")');
+    expect(publisher).toContain('select(.name == "Package exact tested ARM64 build")');
   });
 
   it("ships a production demo provisioner without development-time TS dependencies", () => {

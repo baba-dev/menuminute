@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { provisionDemo } from "../src/modules/demo/provision";
+import { clearDemoConsumerReceipts } from "./helpers/demo-receipts";
 import { buildDemoBaseline, DEMO_IDS } from "../src/modules/demo/baseline";
 import { resetDemoOutlet } from "../src/modules/demo/reset";
 
@@ -101,6 +102,7 @@ describe("demo outlet reset", () => {
   beforeAll(async () => {
     const c = await owner.connect();
     try {
+      await clearDemoConsumerReceipts(c);
       await provisionDemo(c);
     } finally {
       c.release();
