@@ -821,6 +821,12 @@ export function FinancialHub({
                       No bill snapshot is frozen. Tax calculation re-reads the seller profile and
                       every dish classification.
                     </p>
+                    {!finance.paymentsEnabled && (
+                      <p role="status">
+                        Advanced finance calculation is not active for this outlet. Use the
+                        ordinary POS for staff-recorded payments and non-fiscal receipts.
+                      </p>
+                    )}
                     <button
                       disabled={!finance.paymentsEnabled || busy}
                       onClick={async () => {
@@ -985,6 +991,12 @@ export function FinancialHub({
                         </label>
                       )}
                     </div>
+                    {!finance.paymentsEnabled && (
+                      <p role="status">
+                        This advanced tender ledger is restricted; cashiers can still record
+                        ordinary sales and payments on the Point of Sale screen.
+                      </p>
+                    )}
                     <button
                       className="till-primary"
                       disabled={!finance.paymentsEnabled || !finance.canCollect || !shiftId || busy}

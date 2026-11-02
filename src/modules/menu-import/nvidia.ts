@@ -71,6 +71,18 @@ export function importEngineEnabled(vars: Partial<NodeJS.ProcessEnv> = process.e
     )
   );
 }
+/** Operator-safe readiness: never expose models, tokens or exact rollout IDs. */
+export function importEngineDiagnostic(vars: Partial<NodeJS.ProcessEnv> = process.env) {
+  if (vars["MENU_IMPORT_NVIDIA_ENABLED"] !== "true")
+    return { enabled: false, reason: "rollout_disabled" as const };
+  if (vars["NVIDIA_IMPORT_COMMERCIAL_APPROVED"] !== "true")
+    return { enabled: false, reason: "provider_approval_required" as const };
+  if (!importEngineEnabled(vars))
+    return { enabled: false, reason: "model_unconfigured" as const };
+  // The worker has its own env and must validate keys at execution time.
+  return { enabled: true, reason: "worker_not_verified" as const };
+}
+
 type Source = { id: string; pageIndex: number; bytes: Buffer };
 /** Avoid requesting more output tokens than a configured vision NIM supports. */
 export function importOutputTokenBudget(vars: Partial<NodeJS.ProcessEnv> = process.env) {
