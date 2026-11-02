@@ -1355,8 +1355,9 @@
   }
 }
 
-/* ── Responsive shell ─────────────────────────────────────────────────── */
-@media (max-width: 1280px) {
+/* Keep the command search compact before it can crowd breadcrumb and actions.
+   The workspace sidebar occupies 216px until the tablet layout takes over. */
+@media (max-width: 1480px) {
   .mm-topbar-search {
     min-width: 0;
   }
