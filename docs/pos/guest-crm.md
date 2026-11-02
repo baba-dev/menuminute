@@ -12,7 +12,7 @@ The Guests destination in the Insights navigation opens the private guest direct
 
 ## Security and deployment
 
-The 0084_guest_crm migration adds organization-scoped profiles, outlet-aware order associations, private functions and historical backfill. Public, online and POS orders are recognized automatically when the number can be safely normalized. Invalid or ambiguous numbers are not linked.
+The 0085_guest_crm migration adds organization-scoped profiles, outlet-aware order associations, private functions and historical backfill. Public, online and POS orders are recognized automatically when the number can be safely normalized. Invalid or ambiguous numbers are not linked.
 
 Every API request checks an authenticated user, outlet permission, organization, and live paid entitlement; direct table privileges are revoked. Phone lookups have per-user Redis budgets. All response bodies are private and no-store.
 
