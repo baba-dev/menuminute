@@ -219,6 +219,14 @@ export default function PrivacyPage() {
                     ))}
                   </ul>
                 )}
+                {section.id === "cookies" && (
+                  <p>
+                    <Link href="/cookies">
+                      Read the Cookie Policy and browser-storage inventory{" "}
+                      <ArrowUpRight size={15} aria-hidden="true" className="inline" />
+                    </Link>
+                  </p>
+                )}
                 {section.id === "rights" && (
                   <p>
                     <Link href="/delete-account">
