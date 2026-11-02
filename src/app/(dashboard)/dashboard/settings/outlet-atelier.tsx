@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowRight,
   Check,
@@ -424,9 +425,9 @@ export function OutletAtelier({
             <a className="os-action os-action-primary" href="#profile">
               Edit public profile <ArrowRight size={17} aria-hidden="true" />
             </a>
-            <a className="os-action" href="/dashboard/settings/tax">
+            <Link className="os-action" href="/dashboard/settings/tax">
               Sales tax preferences <ReceiptText size={17} aria-hidden="true" />
-            </a>
+            </Link>
           </div>
         </div>
         <div className="os-hero-art" aria-hidden="true">
