@@ -9,7 +9,6 @@ import {
   outletGrants,
   users,
   domainAudit,
-  outboxEvents,
   domainProjections,
 } from "@/db/schema";
 import { withActor, type Actor } from "@/modules/tenancy/service";
@@ -240,24 +239,6 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
       .select()
       .from(outletGrants)
       .where(eq(outletGrants.organizationId, organizationId));
-    const audit = await tx
-      .select()
-      .from(domainAudit)
-      .where(eq(domainAudit.organizationId, organizationId))
-      .orderBy(desc(domainAudit.createdAt))
-      .limit(30);
-    const jobs = await tx
-      .select({
-        id: outboxEvents.id,
-        status: outboxEvents.status,
-        attempts: outboxEvents.attempts,
-        lastError: outboxEvents.lastError,
-        createdAt: outboxEvents.createdAt,
-      })
-      .from(outboxEvents)
-      .where(eq(outboxEvents.organizationId, organizationId))
-      .orderBy(desc(outboxEvents.createdAt))
-      .limit(30);
     const projection =
       (
         await tx
@@ -272,9 +253,57 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
       brands: brandList,
       links,
       grants,
-      audit,
-      jobs,
+      // Operations history now has its own paginated, scoped endpoint.
+      // Keep the legacy keys for consumers that still expect the detail shape.
+      audit: [],
+      jobs: [],
       projection,
+    };
+  });
+}
+/** A bounded, organization-scoped history of completed domain operations. */
+export async function organizationActivity(actor: Actor, organizationId: string, requestedPage = 1) {
+  id.parse(organizationId);
+  const pageInput = z.number().int().min(1).max(10000).parse(requestedPage);
+  const pageSize = 5;
+  return withActor(actor, async (tx) => {
+    const permission = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.org_admin(${organizationId},false,true) as allowed`
+    );
+    if (!permission.rows[0]?.allowed) throw new ForbiddenError();
+
+    const [countRow] = await tx
+      .select({ total: sql<number>`count(*)::int` })
+      .from(domainAudit)
+      .where(eq(domainAudit.organizationId, organizationId));
+    const total = countRow?.total ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(pageInput, totalPages);
+    const rows = await tx
+      .select({
+        id: domainAudit.id,
+        action: domainAudit.action,
+        actorId: domainAudit.actorId,
+        actorName: users.name,
+        createdAt: domainAudit.createdAt,
+      })
+      .from(domainAudit)
+      .leftJoin(users, eq(users.id, domainAudit.actorId))
+      .where(eq(domainAudit.organizationId, organizationId))
+      .orderBy(desc(domainAudit.createdAt), desc(domainAudit.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        action: row.action,
+        actorName: row.actorId ? (row.actorName ?? "Former member") : "System",
+        createdAt: row.createdAt.toISOString(),
+      })),
+      page,
+      pageSize,
+      total,
+      totalPages,
     };
   });
 }
