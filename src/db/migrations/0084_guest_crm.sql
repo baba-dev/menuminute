@@ -88,7 +88,8 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $
 DECLARE org_id text; outlet_country text; phone text; guest_id text;
 BEGIN
   SELECT r.organization_id,r.country INTO org_id,outlet_country FROM restaurants r WHERE r.id=NEW.restaurant_id;
-  IF org_id IS NULL OR NOT app_private.crm_entitled(org_id) THEN RETURN NEW; END IF;
+  IF org_id IS NULL OR (SELECT is_demo_data FROM restaurants WHERE id=NEW.restaurant_id)
+    OR NOT app_private.crm_entitled(org_id) THEN RETURN NEW; END IF;
   phone:=app_private.crm_phone(NEW.customer_phone,outlet_country);
   IF TG_OP='UPDATE' THEN
     DELETE FROM crm_guest_orders WHERE order_id=NEW.id;
@@ -149,7 +150,7 @@ BEGIN
   SELECT count(*)::int n,max(o.created_at) last_at
   FROM crm_guest_orders link JOIN orders o ON o.id=link.order_id AND o.restaurant_id=link.outlet_id
   WHERE link.guest_id=g.id AND link.outlet_id=p_outlet
-   AND o.status NOT IN ('cancelled','rejected','expired')
+   AND o.status IN ('accepted','preparing','ready','served','collected','confirmed','delivered')
  ) history ON true
  WHERE g.organization_id=v_org AND g.phone_e164=v_phone;
  RETURN result;
@@ -187,10 +188,10 @@ BEGIN
  SELECT organization_id INTO v_org FROM restaurants WHERE id=p_outlet;
  SELECT jsonb_build_object('id',g.id,'name',g.display_name,'phone',g.phone_e164,'notes',g.staff_notes,
   'marketingConsent',g.marketing_consent,'orders',coalesce((
-   SELECT jsonb_agg(row ORDER BY (row->>'createdAt') DESC) FROM (
+   SELECT jsonb_agg(payload ORDER BY (payload->>'createdAt') DESC) FROM (
       SELECT jsonb_build_object('id',o.id,'number',o.order_number,'createdAt',o.created_at,
        'status',o.status,'paymentStatus',o.payment_status,'currency',o.currency,
-       'totalMinor',o.total_minor::text) AS row
+       'totalMinor',o.total_minor::text) AS payload
       FROM crm_guest_orders link JOIN orders o ON o.id=link.order_id
        AND o.restaurant_id=link.outlet_id
       WHERE link.guest_id=g.id AND link.outlet_id=p_outlet
@@ -209,6 +210,8 @@ BEGIN
  IF length(coalesce(p_name,''))>80 OR length(coalesce(p_notes,''))>1000
  THEN RAISE EXCEPTION 'Guest details too long' USING ERRCODE='22023'; END IF;
  SELECT organization_id,country INTO v_org,v_country FROM restaurants WHERE id=p_outlet;
+ IF (SELECT is_demo_data FROM restaurants WHERE id=p_outlet) THEN
+   RAISE EXCEPTION 'CRM profiles are not stored in the public demo' USING ERRCODE='42501'; END IF;
  IF p_guest IS NULL THEN
    v_phone:=app_private.crm_phone(p_phone,v_country);
    IF v_phone IS NULL THEN RAISE EXCEPTION 'Valid mobile required' USING ERRCODE='22023'; END IF;
@@ -248,7 +251,7 @@ FROM (
  SELECT r.organization_id,app_private.crm_phone(o.customer_phone,r.country) phone_e164,
   coalesce(left(o.customer_name,80),'') display_name,o.created_at
  FROM orders o JOIN restaurants r ON r.id=o.restaurant_id
- WHERE o.customer_phone IS NOT NULL AND
+ WHERE o.customer_phone IS NOT NULL AND NOT r.is_demo_data AND
   (app_private.entitlement_allowed(r.organization_id,'ordering.new')
     OR app_private.entitlement_allowed(r.organization_id,'kitchen.new')
     OR app_private.is_community_edition())
@@ -259,7 +262,7 @@ SELECT o.id,g.organization_id,o.restaurant_id,g.id
 FROM orders o JOIN restaurants r ON r.id=o.restaurant_id
 JOIN crm_guests g ON g.organization_id=r.organization_id
  AND g.phone_e164=app_private.crm_phone(o.customer_phone,r.country)
-WHERE o.customer_phone IS NOT NULL
+WHERE o.customer_phone IS NOT NULL AND NOT r.is_demo_data
 ON CONFLICT (order_id) DO NOTHING;
 
 REVOKE ALL ON FUNCTION app_private.crm_entitled(text),app_private.crm_can(text,text),

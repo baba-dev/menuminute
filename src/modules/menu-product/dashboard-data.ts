@@ -104,7 +104,9 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
       };
     }>(sql`select
       app_private.orders_workspace_allowed(${organizationId}) as ordering,
-      app_private.crm_entitled(${organizationId}) as crm,
+      (app_private.entitlement_allowed(${organizationId}, 'ordering.new')
+        OR app_private.entitlement_allowed(${organizationId}, 'kitchen.new')
+        OR app_private.is_community_edition()) as crm,
       app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
       app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
       app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead",
