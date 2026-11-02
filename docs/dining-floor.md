@@ -11,7 +11,7 @@ four KPI tiles (total tables, total chairs, maximum occupancy, sections), sectio
 the next booking and the permanent system ID. It reuses the dashboard shell tokens (`.mm-dashboard-hero`,
 `--paper`, `--ink`, `--muted`, `--ember`, `--decorative`), the `DashboardTooltip` help popover and Radix dialogs.
 
-## Live table signals (optional, slice 1 of 6)
+## Live table signals (optional, slices 1-2 of 6)
 
 Status: **implemented in code; not deployed.** Migration `0089_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
@@ -22,12 +22,19 @@ paid and water. It is **off by default**; with it off no signal query runs and t
 - Tables: `floor_signal_settings` (per outlet) and `table_signal_events` (append-only, outlet RLS, unique
   `dedupe_key`, small non-personal `meta`). Staff can read the ledger; there are no app-role write grants yet.
 - Today only order status and payment drive indicators (derived from the table's latest order in the last 6 hours).
-  The ledger has **no producers yet**: QR scan, water request, kitchen and POS bill/payment events arrive in later
-  slices, so QR, water and bill indicators stay idle until then.
+  The only ledger producer so far is the QR scan; water request, kitchen and POS bill/payment events arrive in later
+  slices, so water and bill indicators stay idle until then.
 - `buildJourney` (`src/modules/hospitality/floor-signals.ts`) is the pure view-model; `JourneyStrip` renders inline SVG
   icons with text states (idle / active / done) and honours `prefers-reduced-motion`.
+- **QR scan ping (slice 2, migration `0090_qr_scan_signal`).** The public menu sends one beacon per browser session
+  per table QR (`POST /api/public-orders/scan`, under the Nginx prefix that already attaches the signed client
+  identity; same origin check and Redis limits as other guest calls). `app_private.record_qr_scan(token)` records a
+  `qr_scanned` event only for an active QR tied to an active table, only when the outlet enabled signals and the QR
+  ping, and at most once per QR per minute. It also increments `qr_codes.scan_count`, which was never incremented
+  before, for any active QR. A scan means a phone opened the QR, not that a guest is seated. The worker prunes
+  signals older than 48 hours (`app_private.prune_table_signals`, with the six-hourly kitchen maintenance).
 - The floor card no longer shows the permanent System ID. It is still in the API and the table edit dialog.
-- Remaining slices: QR scan ping, guest water button (table QR only), order/kitchen producers, POS "Show bill" and
+- Remaining slices: guest water button (table QR only), order/kitchen producers, POS "Show bill" and
   "Record payment" register actions, demo sample events and the Ember (assistant-action) toggle.
 
 ## Domain rules

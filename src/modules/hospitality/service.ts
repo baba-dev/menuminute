@@ -143,3 +143,18 @@ export async function kitchenSetAvailability(
   await invalidateOutletMenuCache(outletId);
   return result;
 }
+
+export const qrScanSchema = z.object({ token: z.string().min(12).max(128) }).strict();
+
+/**
+ * Public, unauthenticated QR-scan ping. Authorization is the unguessable QR token; the database
+ * decides whether anything is recorded (outlet opt-in, active table QR, one per minute).
+ */
+export async function recordQrScan(raw: unknown): Promise<{ recorded: boolean }> {
+  const input = qrScanSchema.parse(raw);
+  const result = await getPool().query<{ data: { recorded: boolean } }>(
+    "select app_private.record_qr_scan($1) as data",
+    [input.token]
+  );
+  return { recorded: result.rows[0]?.data?.recorded === true };
+}
