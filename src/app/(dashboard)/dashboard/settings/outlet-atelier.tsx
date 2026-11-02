@@ -15,6 +15,7 @@ import {
   Mail,
   Clock3,
   Navigation,
+  ReceiptText,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
@@ -422,6 +423,9 @@ export function OutletAtelier({
           <div className="os-hero-actions">
             <a className="os-action os-action-primary" href="#profile">
               Edit public profile <ArrowRight size={17} aria-hidden="true" />
+            </a>
+            <a className="os-action" href="/dashboard/settings/tax">
+              Sales tax preferences <ReceiptText size={17} aria-hidden="true" />
             </a>
           </div>
         </div>
