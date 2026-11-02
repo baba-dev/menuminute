@@ -117,15 +117,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
   test:
-    # Three independent shards, each with its own PostgreSQL/Redis services and migrated database.
+    # Four independent shards, each with its own PostgreSQL/Redis services and migrated database.
     # The matrix job result is "success" only when every shard passes, so the final gate stays closed.
-    name: PostgreSQL & Redis Integration (${{ matrix.shard }}/3)
+    name: PostgreSQL & Redis Integration (${{ matrix.shard }}/4)
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     env:
       NODE_ENV: test
     steps:
@@ -151,7 +151,7 @@ jobs:
       - run: pnpm exec tsx scripts/test-bootstrap.ts
       - run: pnpm db:migrate
       - run: pnpm build:worker
-      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/3
+      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/4
       - if: always()
         run: docker compose -f infra/compose.test.yml down -v
 
@@ -180,11 +180,14 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: docker compose -f infra/compose.test.yml up -d --wait
-      - run: pnpm exec tsx scripts/test-bootstrap.ts
-        env:
-          NODE_ENV: test
-      - run: pnpm db:migrate
+      - name: Cache Next.js incremental build
+        continue-on-error: true
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - name: Compile production artifact before browser fixtures
         run: pnpm build
         env:
@@ -221,20 +224,18 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
-      - if: always()
-        run: docker compose -f infra/compose.test.yml down -v
 
   e2e:
     # Browser tests are sharded across runners. Each shard has isolated PostgreSQL/Redis services and
-    # its own seeded database; blob reports are merged by the build job before evidence is summarized.
-    name: Production Browser Shard ${{ matrix.shard }}/4
+    # its own seeded database; blob reports are merged by the evidence job before evidence is summarized.
+    name: Production Browser Shard ${{ matrix.shard }}/6
     needs: compile
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -254,6 +255,16 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright Chromium
+        continue-on-error: true
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium in the background while services start
+        run: |
+          rm -f "$RUNNER_TEMP/pw.exit"
+          nohup bash -c 'pnpm exec playwright install --with-deps chromium; echo $? > "$RUNNER_TEMP/pw.exit"' > "$RUNNER_TEMP/pw-install.log" 2>&1 &
       - run: docker compose -f infra/compose.test.yml up -d --wait
       - run: pnpm exec tsx scripts/test-bootstrap.ts
         env:
@@ -275,15 +286,17 @@ jobs:
           NODE_ENV: test
           ALLOW_DEMO_SEED: "true"
           DEMO_PASSWORD: isolated-browser-password
-      - name: Cache Playwright Chromium
-        continue-on-error: true
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Run browser shard ${{ matrix.shard }}/4
-        run: pnpm exec playwright test --shard=${{ matrix.shard }}/4 --reporter=blob,github
+      - name: Wait for Chromium installation
+        run: |
+          until [ -f "$RUNNER_TEMP/pw.exit" ]; do sleep 1; done
+          cat "$RUNNER_TEMP/pw-install.log"
+          test "$(cat "$RUNNER_TEMP/pw.exit")" = 0
+      - name: Run browser shard ${{ matrix.shard }}/6
+        # Pull requests exercise desktop Chromium; pushes to main (the only releasable path) run every project.
+        run: |
+          projects=()
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then projects=(--project=chromium); fi
+          pnpm exec playwright test "${projects[@]}" --shard=${{ matrix.shard }}/6 --reporter=blob,github
       - name: Retain shard report for exact-SHA evidence merge
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -303,12 +316,59 @@ jobs:
         run: docker compose -f infra/compose.test.yml down -v
 
   build:
-    # Keeps the historical check name consumed by publish-arm64.yml. It merges shard evidence and packages
-    # the very compilation that every browser shard exercised; it never recompiles.
+    # Keeps the historical check name consumed by publish-arm64.yml. It packages the exact compilation that
+    # every browser shard exercises, in parallel with them; promotion to the releasable artifact name
+    # happens only in `evidence`, after every shard has passed.
     name: Production Build & Browser (ARM64)
-    needs: [compile, e2e]
+    needs: compile
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - run: node -e 'if(process.arch!=="arm64")throw new Error("ARM64 required")'
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+      - name: Resolve pnpm store path
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+      - name: Cache pnpm store
+        continue-on-error: true
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node24-pnpm11.19.0-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the exact compiled output shared with the browser shards
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: compiled-build-${{ github.sha }}
+      - name: Verify and extract compiled output
+        run: |
+          set -Eeuo pipefail
+          sha256sum --check --strict compiled-build.tar.gz.sha256
+          tar -xzf compiled-build.tar.gz
+      - name: Package exact tested ARM64 build
+        run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
+      - name: Retain release candidate for promotion after browser evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-candidate-${{ github.sha }}
+          path: |
+            menuminute-*-linux-arm64.tar.gz
+            menuminute-*-linux-arm64.tar.gz.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  evidence:
+    name: Browser Evidence & Release Promotion
+    needs: [e2e, build]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -338,7 +398,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           mkdir -p test-results
-          test "$(ls all-blob-reports/*.zip | wc -l)" -eq 4
+          test "$(ls all-blob-reports/*.zip | wc -l)" -eq 6
           pnpm exec playwright merge-reports --reporter=json all-blob-reports
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/phase5-browser-report.json
@@ -352,18 +412,11 @@ jobs:
           path: test-results/phase5-browser-summary.json
           if-no-files-found: warn
           retention-days: 14
-      - name: Fetch the exact tested compiled output
+      - name: Fetch the packaged release candidate
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: compiled-build-${{ github.sha }}
-      - name: Verify and extract compiled output
-        run: |
-          set -Eeuo pipefail
-          sha256sum --check --strict compiled-build.tar.gz.sha256
-          tar -xzf compiled-build.tar.gz
-      - name: Package exact tested ARM64 build
-        if: success()
-        run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
+          name: release-candidate-${{ github.sha }}
       - name: Upload main production archive
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -510,8 +563,8 @@ jobs:
   gate:
     name: Required CI quality gate
     if: always()
-    # `build` itself needs compile and every browser shard, so a failed or skipped shard fails this gate.
-    needs: [quality, typecheck, test, build, ember_browser, security]
+    # Packaging, every browser shard and the evidence/promotion job are all mandatory lanes here.
+    needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -521,11 +574,13 @@ jobs:
           TYPECHECK: ${{ needs.typecheck.result }}
           TEST: ${{ needs.test.result }}
           BUILD: ${{ needs.build.result }}
+          E2E: ${{ needs.e2e.result }}
+          EVIDENCE: ${{ needs.evidence.result }}
           EMBER_BROWSER: ${{ needs.ember_browser.result }}
           SECURITY: ${{ needs.security.result }}
         run: |
           set -euo pipefail
-          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$EMBER_BROWSER" "$SECURITY"; do
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$E2E" "$EVIDENCE" "$EMBER_BROWSER" "$SECURITY"; do
             test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
           done
           echo "All six lanes (including isolated Ember browser and security) passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
