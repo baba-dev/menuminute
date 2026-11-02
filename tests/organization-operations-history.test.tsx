@@ -45,7 +45,7 @@ describe("organization operations history", () => {
 
     render(<OperationsHistory organizationId="test-org" revision={1} />);
 
-    expect((await screen.findAllByRole("row")).length).toBe(6); // heading + 5 rows
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(6)); // heading + 5 rows
     expect(screen.getByText("Showing 1–5 of 7")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Previous operations page" })).toBeDisabled();
 
