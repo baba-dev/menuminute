@@ -98,7 +98,7 @@ export function renderEmail(content: EmailContent, appUrl: string): RenderedEmai
           <a href="${escapeHtml(action.url)}" target="_blank" rel="noopener" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">${escapeHtml(action.label)}</a>
         </td>
       </tr></table>
-      <p class="mm-muted" style="margin:0 0 6px;font-family:${FONT};font-size:12px;line-height:1.5;color:#7a6a5d;">If the button does not work, paste this address into your browser:<br><a href="${escapeHtml(action.url)}" style="color:${tone.accent};word-break:break-all;">${escapeHtml(action.url)}</a></p>`
+      <p class="mm-muted" style="margin:0 0 6px;font-family:${FONT};font-size:12px;line-height:1.5;color:#7a6a5d;">If the button does not work, paste this address into your browser:<br><a class="mm-link" href="${escapeHtml(action.url)}" style="color:${tone.accent};word-break:break-all;">${escapeHtml(action.url)}</a></p>`
     : "";
 
   const noteHtml = content.note
@@ -119,7 +119,7 @@ export function renderEmail(content: EmailContent, appUrl: string): RenderedEmai
     .mm-bg{background:#14100d !important;} .mm-card{background:#1e1813 !important;}
     .mm-h1,.mm-strong{color:#fbeedd !important;} .mm-text{color:#e3d3c2 !important;} .mm-muted{color:#b3a090 !important;}
     .mm-panel{background:${tone.tintDark} !important;} .mm-rule{border-color:#33291f !important;}
-    .mm-eyebrow{color:${tone.accentDark} !important;}
+    .mm-eyebrow,.mm-link{color:${tone.accentDark} !important;}
   }
 </style>
 </head>

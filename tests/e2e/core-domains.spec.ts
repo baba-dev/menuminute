@@ -57,6 +57,15 @@ async function seed() {
         "insert into organization_members(id,organization_id,user_id,role,is_active) values($1,$2,$3,'member',true)",
         [crypto.randomUUID(), `org-${first}`, memberId]
       );
+      // Creating a second outlet needs a plan that allows several outlets (Free allows one).
+      await c.query(
+        `insert into entitlement_grants
+         (id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
+         select gen_random_uuid()::text,o,'kitchen.new','INR',now()-interval '1 minute',
+                now()+interval '1 day','browser-test','Multi-outlet management acceptance',gen_random_uuid()::text
+           from unnest($1::text[]) o`,
+        [[`org-${first}`, `org-${second}`]]
+      );
       await c.query("commit");
     } finally {
       c.release();

@@ -4,6 +4,12 @@ import { hashPassword } from "better-auth/crypto";
 import sharp from "sharp";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 import { formatPrice } from "../../src/lib/utils";
+import { setFreeIntake } from "./plan-settings";
+
+// This file asserts the QR-only presentation of a Free outlet, which is what guests see once free order
+// intake is off or its monthly allowance is used up. Intake ships on, so switch it off for this file.
+test.beforeAll(() => setFreeIntake(false));
+test.afterAll(() => setFreeIntake(true));
 async function seed(publish = false, culinaryMode?: "verified" | "cross-contact") {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
