@@ -190,7 +190,10 @@ export async function recordRazorpaySubscriptionStatus(params: {
   );
 }
 
-/** Owner-initiated cancellation: retain already-paid access until the provider's cycle end. */
+/**
+ * Owner-initiated cancellation: retain already-paid access until the provider's cycle end. Razorpay documents
+ * `cancel_at_cycle_end` as 0 (now) or 1 (at the end of the cycle), so the integer is sent, never a boolean.
+ */
 export async function requestRazorpayCancellation(subscriptionId: string): Promise<void> {
   if (!env.RAZORPAY_ENABLED || !env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
     throw new ValidationError("Subscriptions are not enabled");
@@ -204,7 +207,7 @@ export async function requestRazorpayCancellation(subscriptionId: string): Promi
     {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Basic ${authorization}` },
-      body: JSON.stringify({ cancel_at_cycle_end: true }),
+      body: JSON.stringify({ cancel_at_cycle_end: 1 }),
       cache: "no-store",
       signal: AbortSignal.timeout(12000),
     }
@@ -253,7 +256,7 @@ async function cancelSupersededAtProvider(subscriptionId: string): Promise<void>
   const cancel = await fetch(`${base}/cancel`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ cancel_at_cycle_end: true }),
+    body: JSON.stringify({ cancel_at_cycle_end: 1 }),
     cache: "no-store",
     signal: AbortSignal.timeout(12000),
   });

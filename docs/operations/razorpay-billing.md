@@ -80,3 +80,27 @@ An end-to-end live provider sandbox run, customer cancellation self-service,
 renewal/reconciliation retry automation, tax/invoice workflow, and Kitchen Pro
 commercial activation require separate verified release sign-off. Do not
 advertise those abilities as enabled without their corresponding evidence.
+
+## Pre-launch code audit (2026-11-02)
+
+The owner chose to go live without a Razorpay sandbox run, so the payment path was audited in code and the
+paths that can lose money were exercised against the real database functions (`tests/billing-upgrade-path.integration.test.ts`,
+`tests/double-billing.integration.test.ts`).
+
+- **Verified:** the webhook checks the HMAC over the raw body in constant time before anything else; each event
+  and each payment id is recorded once (a redelivered webhook does nothing); the organization and capability come
+  from the server-side checkout registry, never from payment notes; the plan id and a captured INR amount at or
+  above the catalog price are required; periods must be contiguous (a renewal starts where the last period ended);
+  the web role cannot reach the ledger (only the isolated billing role can).
+- **Exercised:** upgrading to Kitchen Pro in the middle of a paid Ordering month grants Kitchen Pro and keeps
+  ordering on; a normal renewal is accepted for both plans; an overlapping period is refused; a full refund of the
+  Kitchen Pro payment ends Kitchen and its bundled ordering but not a separately paid Ordering month.
+- **Changed:** cancellations now send `cancel_at_cycle_end: 1`, the value Razorpay documents, instead of a JSON boolean.
+- **Not exercised against the real provider:** the exact shape of Razorpay's live webhook payloads and the provider's
+  response to a cancellation. Watch the first live purchase: the webhook delivery in the Razorpay dashboard should be
+  HTTP 200, and the checks in the rollout section should show an active subscription and grant.
+- **Operational note:** every event Razorpay sends to this webhook for a subscription this app did not create (for
+  example another product on the same Razorpay account) is answered with an error, and Razorpay retries it. Use a
+  separate Razorpay account or webhook for anything else, or expect failed deliveries in the dashboard.
+- **Known gaps:** no GST invoices or tax handling, no emails for failed payments beyond the plan reminders, and
+  international pricing is not available.
