@@ -116,12 +116,12 @@ function SecurityActivity() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const load = useCallback(async (signal?: AbortSignal) => {
-    setError("");
     try {
       const response = await fetch("/api/security/events", { cache: "no-store", signal });
       if (!response.ok) throw new Error("Security activity could not be loaded.");
       const entries = (await response.json()) as SecurityEvent[];
       if (!signal?.aborted) {
+        setError("");
         setEvents(entries);
         setPage(0);
       }
