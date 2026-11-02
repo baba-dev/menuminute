@@ -278,6 +278,56 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
     };
   });
 }
+/** A bounded, organization-scoped history of completed domain operations. */
+export async function organizationActivity(
+  actor: Actor,
+  organizationId: string,
+  requestedPage = 1
+) {
+  id.parse(organizationId);
+  const pageInput = z.number().int().min(1).max(10000).parse(requestedPage);
+  const pageSize = 5;
+  return withActor(actor, async (tx) => {
+    const permission = await tx.execute<{ allowed: boolean }>(
+      sql`select app_private.org_admin(${organizationId},false,true) as allowed`
+    );
+    if (!permission.rows[0]?.allowed) throw new ForbiddenError();
+
+    const [countRow] = await tx
+      .select({ total: sql<number>`count(*)::int` })
+      .from(domainAudit)
+      .where(eq(domainAudit.organizationId, organizationId));
+    const total = countRow?.total ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(pageInput, totalPages);
+    const rows = await tx
+      .select({
+        id: domainAudit.id,
+        action: domainAudit.action,
+        actorId: domainAudit.actorId,
+        actorName: users.name,
+        createdAt: domainAudit.createdAt,
+      })
+      .from(domainAudit)
+      .leftJoin(users, eq(users.id, domainAudit.actorId))
+      .where(eq(domainAudit.organizationId, organizationId))
+      .orderBy(desc(domainAudit.createdAt), desc(domainAudit.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        action: row.action,
+        actorName: row.actorId ? (row.actorName ?? "Former member") : "System",
+        createdAt: row.createdAt.toISOString(),
+      })),
+      page,
+      pageSize,
+      total,
+      totalPages,
+    };
+  });
+}
 export async function retryEvent(actor: Actor, organizationId: string, eventId: string) {
   z.uuid().parse(eventId);
   try {

@@ -20,6 +20,8 @@ const app = asRole("menuminute_app", "isolated-ci-app-password");
 // Tables carrying outlet/org scope that the reset intentionally leaves alone, with the reason.
 const PRESERVED: Record<string, string> = {
   account_workspace_preferences: "user preference",
+  account_deletion_requests:
+    "personal privacy requests are blocked for demo outlets and not an outlet reset concern",
   ai_usage_records: "spend accounting",
   assistant_action_requests: "removed with its conversation by ON DELETE CASCADE (migration 0065)",
   assistant_model_daily_budget: "spend accounting",
