@@ -65,6 +65,8 @@ export const dashboardPublicProjection = cache(async (destinationToken: string) 
 
 export type DashboardNavigation = {
   ordering: boolean;
+  /** CRM is paid-only, independently of whether free guest order intake is enabled. */
+  crm?: boolean;
   kitchen: boolean;
   ordersRead: boolean;
   kitchenRead: boolean;
@@ -90,6 +92,7 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
     // and kitchen-navigation checks retain the existing live database authority.
     const result = await tx.execute<{
       ordering: boolean;
+      crm: boolean;
       kitchen: boolean;
       ordersRead: boolean;
       kitchenRead: boolean;
@@ -101,6 +104,7 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
       };
     }>(sql`select
       app_private.orders_workspace_allowed(${organizationId}) as ordering,
+      app_private.crm_entitled(${organizationId}) as crm,
       app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
       app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
       app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead",
@@ -109,6 +113,7 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
     const status = result.rows[0];
     return {
       ordering: status?.ordering === true,
+      crm: status?.crm === true,
       kitchen: status?.kitchen === true,
       ordersRead: status?.ordersRead === true,
       kitchenRead: status?.kitchenRead === true,

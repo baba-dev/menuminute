@@ -9,6 +9,7 @@ export type NavId =
   | "overview"
   | "orders"
   | "pos"
+  | "guests"
   | "kitchen"
   | "floor"
   | "menu"
@@ -22,6 +23,7 @@ export type NavIcon =
   | "layout"
   | "orders"
   | "pos"
+  | "guests"
   | "kitchen"
   | "floor"
   | "menu"
@@ -30,7 +32,7 @@ export type NavIcon =
   | "organization"
   | "settings";
 
-type Gate = "ordering" | "kitchen" | null;
+type Gate = "ordering" | "kitchen" | "crm" | null;
 
 export type NavItem = {
   id: NavId;
@@ -129,6 +131,17 @@ export const navItems: readonly NavItem[] = [
     keywords: ["print", "table tent", "scan"],
   },
   {
+    id: "guests",
+    href: "/dashboard/guests",
+    label: "Guests",
+    shortLabel: "Guests",
+    description: "Recognize returning customers and review visit history.",
+    group: "insights",
+    icon: "guests",
+    gate: "crm",
+    keywords: ["customers", "crm", "mobile", "visits", "guest directory"],
+  },
+  {
     id: "reports",
     href: "/dashboard/reports",
     label: "Reports & Insights",
@@ -174,6 +187,13 @@ export type NavState =
  */
 export function navState(item: NavItem, capabilities: DashboardNavigation | undefined): NavState {
   if (item.gate === null) return { state: "available", label: item.label };
+  if (item.gate === "crm") {
+    if (!capabilities) return { state: "unavailable", reason: "unknown", label: item.label };
+    if (!capabilities.crm) return { state: "unavailable", reason: "not-enabled", label: item.label };
+    return capabilities.ordersRead
+      ? { state: "available", label: item.label }
+      : { state: "unavailable", reason: "access-required", label: item.label };
+  }
   if (item.gate === "kitchen") {
     if (!capabilities) return { state: "unavailable", reason: "unknown", label: item.label };
     const usable = capabilities.kitchenOperational || capabilities.kitchenSetup;
