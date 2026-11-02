@@ -23,7 +23,7 @@ export default async function AccountSecurityPage() {
   const linked = await getDb()
     .select({
       id: accounts.id,
-    providerId: accounts.providerId,
+      providerId: accounts.providerId,
       password: accounts.password,
     })
     .from(accounts)

@@ -233,6 +233,7 @@ export function SecurityConsole({
   hasPassword,
   googleEnabled,
   googleLinked,
+  googleAccountId,
   emailVerified,
   isDemo,
 }: Props) {
@@ -520,7 +521,7 @@ export function SecurityConsole({
                     </small>
                   </div>
                   {linked ? (
-                    hasPassword && !mfa ? (
+                    hasPassword && !mfa && googleAccountId ? (
                       <button
                         type="button"
                         className="oh-secondary"
@@ -575,7 +576,9 @@ export function SecurityConsole({
                         disabled={busy || isDemo}
                         onClick={() =>
                           void perform(async () => {
-                            const result = await authClient.unlinkAccount({ accountId: googleAccountId! });
+                            const result = await authClient.unlinkAccount({
+                              accountId: googleAccountId!,
+                            });
                             if (result.error) {
                               setError("Google could not be disconnected.");
                               return;
