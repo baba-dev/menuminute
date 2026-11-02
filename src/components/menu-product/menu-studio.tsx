@@ -35,6 +35,7 @@ import {
 } from "./studio-chrome";
 import type { menuDetail } from "@/modules/menu-product/service";
 import { PublicMenu } from "./public-menu";
+import type { PublicOutletProfile } from "@/modules/menu-product/service";
 import { ScheduleEditor } from "./schedule-editor";
 import { TranslationEditor } from "./translation-editor";
 type Detail = Awaited<ReturnType<typeof menuDetail>>;
@@ -57,6 +58,7 @@ export function MenuStudio({
     outletType: string;
     fulfillmentModes: string[];
     publicId: string;
+    profile?: PublicOutletProfile | null;
   };
   initialList: MenuLibraryEntry[];
   initialDetail: Detail | null;

@@ -714,6 +714,12 @@
     );
   }
 }
+@media (max-width: 650px) {
+  .dining-visit { align-items: flex-start; }
+  .dining-visit-actions { width: 100%; }
+  .dining-visit-actions a { justify-content: center; flex: 1 0 auto; }
+  .dining-cover-content { padding-block: clamp(2rem, 7vw, 3rem); }
+}
 @media (max-width: 450px) {
   .dining-hero-categories { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
   .dining-hero-category { flex: 0 0 auto; }

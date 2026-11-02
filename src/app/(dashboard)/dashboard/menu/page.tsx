@@ -43,7 +43,31 @@ export default async function Page() {
   return (
     <MenuStudio
       key={outlet.id}
-      outlet={outlet}
+      outlet={{
+        id: outlet.id,
+        name: outlet.name,
+        currency: outlet.currency,
+        timezone: outlet.timezone,
+        outletType: outlet.outletType,
+        fulfillmentModes: outlet.fulfillmentModes,
+        publicId: outlet.publicId,
+        profile: {
+          description: outlet.description,
+          phone: outlet.phone,
+          email: outlet.email,
+          website: outlet.website,
+          addressLine1: outlet.addressLine1,
+          addressLine2: outlet.addressLine2,
+          city: outlet.city,
+          state: outlet.state,
+          postalCode: outlet.postalCode,
+          country: outlet.country,
+          latitude: outlet.latitude == null ? null : Number(outlet.latitude),
+          longitude: outlet.longitude == null ? null : Number(outlet.longitude),
+          primaryColor: outlet.primaryColor,
+          secondaryColor: outlet.secondaryColor,
+        },
+      }}
       initialList={list}
       initialDetail={
         list.length
