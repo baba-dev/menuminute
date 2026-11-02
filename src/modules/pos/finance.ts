@@ -539,11 +539,7 @@ export async function financeCommand(
   if (old) return old;
   // Standard cashier shifts never activate provider collection or fiscal issuance.
   // The dedicated SQL dispatcher enforces the same outlet and role permissions.
-  if (
-    cmd.action === "open_shift" ||
-    cmd.action === "cash_move" ||
-    cmd.action === "close_shift"
-  )
+  if (cmd.action === "open_shift" || cmd.action === "cash_move" || cmd.action === "close_shift")
     return run<Record<string, unknown>>(
       actor,
       outletId,
