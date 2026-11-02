@@ -7,7 +7,7 @@ import { PLAN_LABELS, PLAN_LIMITS, type PlanKey, type PlanLimits } from "./catal
  * seats are deliberately absent until something enforces them, so the UI never advertises a
  * limit that does not exist.
  */
-export type MeterKey = "dishes" | "qrCodes" | "tables" | "chairs" | "orders";
+export type MeterKey = "outlets" | "dishes" | "qrCodes" | "tables" | "chairs" | "orders";
 /** ok < 80% · near 80–99% · full = cap · over > cap (existing data above a newly applied cap). */
 export type MeterState = "ok" | "near" | "full" | "over";
 
@@ -49,7 +49,13 @@ export type PlanUsageView = {
   nextPlanLabel: string | null;
 };
 
-export type UsageCounts = { dishes: number; qrCodes: number; tables: number; chairs: number };
+export type UsageCounts = {
+  outlets: number;
+  dishes: number;
+  qrCodes: number;
+  tables: number;
+  chairs: number;
+};
 export type IntakeSnapshot = { enabled: boolean; used: number; cap: number };
 /** Present only while an outlet is over its dish cap and overflow hiding is switched on. */
 export type OverflowSnapshot = { cap: number; count: number; graceUntil: string; hidden: number };
@@ -130,10 +136,13 @@ export function buildPlanUsageView(input: {
   if (plan === "dedicated") return null;
   const nextPlan = NEXT_PLAN[plan];
   const hint = (
-    resource: "dishes" | "qrCodes" | "tables" | "chairs" | "ordersPerMonth"
+    resource: "outlets" | "dishes" | "qrCodes" | "tables" | "chairs" | "ordersPerMonth"
   ): string | undefined => {
     if (!nextPlan) return undefined;
     const cap = PLAN_LIMITS[nextPlan][resource];
+    // Only say what the next plan allows when it genuinely allows more than this one.
+    const current = limits[resource];
+    if (cap !== null && current !== null && cap <= current) return undefined;
     const label = PLAN_LABELS[nextPlan];
     if (resource === "ordersPerMonth")
       return cap === null
@@ -143,6 +152,7 @@ export function buildPlanUsageView(input: {
   };
   const meters: UsageMeterView[] = [];
   const specs = [
+    { key: "outlets", label: "Outlets", noun: "outlets" },
     { key: "dishes", label: "Dishes", noun: "dishes" },
     { key: "qrCodes", label: "QR codes", noun: "QR codes" },
     { key: "tables", label: "Tables", noun: "tables" },
@@ -150,6 +160,8 @@ export function buildPlanUsageView(input: {
   ] as const;
   for (const spec of specs) {
     const cap = limits[spec.key];
+    // A single outlet is the normal state on Free and Ordering: no meter until it means something.
+    if (spec.key === "outlets" && cap === 1 && counts.outlets <= 1) continue;
     if (cap !== null)
       meters.push(
         buildMeter(

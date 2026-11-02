@@ -11,7 +11,7 @@ const free = (dishes: number, qrCodes: number, orders?: { used: number; cap: num
   buildPlanUsageView({
     plan: "free",
     limits: PLAN_LIMITS.free,
-    counts: { dishes, qrCodes, tables: 0, chairs: 0 },
+    counts: { outlets: 1, dishes, qrCodes, tables: 0, chairs: 0 },
     intake: orders ? { enabled: true, ...orders } : null,
   })!;
 
@@ -55,7 +55,7 @@ describe("overflow notice", () => {
     const view = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
       intake: null,
       overflow: { cap: 20, count: 27, graceUntil: "2026-12-02T10:00:00Z", hidden: 0 },
     })!;
@@ -86,7 +86,7 @@ describe("PlanUsagePanel", () => {
     const pro = buildPlanUsageView({
       plan: "kitchen_pro",
       limits: PLAN_LIMITS.kitchen_pro,
-      counts: { dishes: 5, qrCodes: 2, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 5, qrCodes: 2, tables: 0, chairs: 0 },
       intake: null,
     })!;
     render(<PlanUsagePanel view={pro} />);

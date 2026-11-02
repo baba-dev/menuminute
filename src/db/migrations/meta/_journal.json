@@ -561,6 +561,13 @@
       "when": 1795352400030,
       "tag": "0080_auto_trial_and_dunning",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1795438800030,
+      "tag": "0081_pricing_and_supersede",
+      "breakpoints": true
     }
   ]
 }

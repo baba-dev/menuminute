@@ -31,9 +31,7 @@ describe("industry solutions", () => {
       expect(solution.steps).toHaveLength(3);
       expect(solution.facts).toHaveLength(3);
       expect(solution.faqs).toHaveLength(3);
-      expect(solution.premiumNote).toMatch(
-        /(separately|not automatic|does not|activation|require)/i
-      );
+      expect(solution.premiumNote).toMatch(/(separate|not automatic|does not|activation|require)/i);
       for (const feature of solution.needs) expect(feature.featurePath).toMatch(/^\//);
       for (const faq of solution.faqs) {
         expect(faq.question.length).toBeGreaterThan(15);
@@ -102,7 +100,7 @@ describe("industry solutions", () => {
       /not an automatic integration/i
     );
     expect(industrySolutionBySlug("restaurants")?.premiumNote).toMatch(
-      /do not automatically include/i
+      /does not include live order acceptance.*₹119.*₹499/i
     );
   });
 });

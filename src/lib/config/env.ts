@@ -189,6 +189,8 @@ const envSchema = z
     RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_ORDERING_ID: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_KITCHEN_ID: z.string().trim().min(1).optional(),
+    // Provider plan Kitchen Pro was first sold on (INR 299). Existing subscribers keep renewing on it.
+    RAZORPAY_PLAN_KITCHEN_LEGACY_ID: z.string().trim().min(1).optional(),
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);

@@ -38,6 +38,13 @@ export function dbPlanStore(tx: Transaction): PlanStore {
         );
         return rows.rows[0]?.n ?? 0;
       }
+      if (resource === "outlets") {
+        // Active outlets in the same organization as the given outlet.
+        const rows = await tx.execute<{ n: number }>(sql`
+          select count(*)::int as n from restaurants
+          where is_active and organization_id = (select organization_id from restaurants where id = ${outletId})`);
+        return rows.rows[0]?.n ?? 0;
+      }
       if (resource === "tables") {
         // Numbered floor tables only; legacy QR-only tables have no display number and never count.
         const rows = await tx.execute<{ n: number }>(sql`

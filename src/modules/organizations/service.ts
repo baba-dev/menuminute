@@ -1,4 +1,5 @@
 import { sql, eq, asc, desc, and, inArray } from "drizzle-orm";
+import { withPlanCap } from "@/modules/plans/store";
 import { z } from "zod";
 import {
   organizations,
@@ -125,9 +126,16 @@ export async function manageOrganization(actor: Actor, organizationId: string, r
       ) {
         commandData.timezone = await verifyOutletTimezone(tx, input.command.data.timezone);
       }
-      const r = await tx.execute<{ result: Record<string, string | number> }>(
-        sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(commandData)}::jsonb,${input.key},${input.expectedVersion}) as result`
-      );
+      const run = () =>
+        tx.execute<{ result: Record<string, string | number> }>(
+          sql`select app_private.manage_organization(${organizationId},${input.command.action},${JSON.stringify(commandData)}::jsonb,${input.key},${input.expectedVersion}) as result`
+        );
+      // Adding an outlet is capped by plan (no-op unless PLAN_LIMITS_ENFORCED). The first outlet of an
+      // organization is created at sign-up, never here, so an existing outlet always anchors the check.
+      const r =
+        input.command.action === "outlet.create" && before.rows[0]
+          ? await withPlanCap(tx, [before.rows[0].id], "outlets", run)
+          : await run();
       const after = await tx.execute<{ id: string }>(
         sql`select id from restaurants where organization_id=${organizationId}`
       );

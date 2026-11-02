@@ -62,7 +62,8 @@ export async function getPlanSnapshot(
         const over = await tx.execute<{ snap: OverflowSnapshot | null }>(
           sql`select app_private.plan_overflow_snapshot(${outletId}) as snap`
         );
-        const [dishes, qrCodes, tables, chairs] = await Promise.all([
+        const [outlets, dishes, qrCodes, tables, chairs] = await Promise.all([
+          store.count(outletId, "outlets"),
           store.count(outletId, "dishes"),
           store.count(outletId, "qrCodes"),
           store.count(outletId, "tables"),
@@ -71,7 +72,7 @@ export async function getPlanSnapshot(
         usage = buildPlanUsageView({
           plan: ctx.plan,
           limits: ctx.limits,
-          counts: { dishes, qrCodes, tables, chairs },
+          counts: { outlets, dishes, qrCodes, tables, chairs },
           intake,
           overflow: over.rows[0]?.snap ?? null,
         });

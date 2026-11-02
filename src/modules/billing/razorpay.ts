@@ -215,6 +215,67 @@ export async function requestRazorpayCancellation(subscriptionId: string): Promi
     throw new ValidationError("Unexpected provider cancellation response");
 }
 
+/**
+ * Kitchen Pro includes ordering, so once a Kitchen Pro payment is verified the organization's Ordering
+ * subscription must stop renewing. Each is cancelled at the provider at the end of its paid cycle (the
+ * days already paid for stay active) and only then marked locally. Safe to repeat: a subscription the
+ * provider has already ended, or already scheduled to end, counts as done. Any other provider failure
+ * throws so the webhook is retried.
+ */
+export async function supersedeOrderingSubscriptions(
+  kitchenSubscriptionId: string
+): Promise<string[]> {
+  if (!/^sub_[a-zA-Z0-9]{6,100}$/.test(kitchenSubscriptionId))
+    throw new ValidationError("Invalid subscription ID");
+  const found = await billingQuery<{ ids: string[] }>(
+    "SELECT app_private.subscriptions_superseded_by($1) AS ids",
+    [kitchenSubscriptionId]
+  );
+  for (const id of found.ids) {
+    if (!/^sub_[a-zA-Z0-9]{6,100}$/.test(id)) continue;
+    await cancelSupersededAtProvider(id);
+    await billingQuery<{ marked: boolean }>(
+      "SELECT app_private.mark_subscription_superseded($1,$2) AS marked",
+      [kitchenSubscriptionId, id]
+    );
+  }
+  return found.ids;
+}
+
+async function cancelSupersededAtProvider(subscriptionId: string): Promise<void> {
+  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
+    throw new ValidationError("Subscriptions are not enabled");
+  const authorization = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
+    "base64"
+  );
+  const headers = { "Content-Type": "application/json", Authorization: `Basic ${authorization}` };
+  const base = `https://api.razorpay.com/v1/subscriptions/${subscriptionId}`;
+  const cancel = await fetch(`${base}/cancel`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ cancel_at_cycle_end: true }),
+    cache: "no-store",
+    signal: AbortSignal.timeout(12000),
+  });
+  if (cancel.ok) return;
+  // Not cancellable: fine if it has already ended or is already scheduled to end.
+  const state = await fetch(base, {
+    headers,
+    cache: "no-store",
+    signal: AbortSignal.timeout(12000),
+  });
+  if (state.ok) {
+    const body: unknown = await state.json();
+    if (body && typeof body === "object") {
+      const status = (body as { status?: unknown }).status;
+      const scheduled = (body as { has_scheduled_changes?: unknown }).has_scheduled_changes;
+      if (status === "cancelled" || status === "completed" || status === "expired") return;
+      if (scheduled === true) return;
+    }
+  }
+  throw new ValidationError("Unable to stop the superseded subscription with the provider");
+}
+
 /** Refunds cannot mutate an entitlement without a verified original subscription charge. */
 export async function recordRazorpaySubscriptionRefund(params: {
   eventId: string;

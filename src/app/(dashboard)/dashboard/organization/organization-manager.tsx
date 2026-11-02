@@ -22,6 +22,7 @@ import {
 import type { ReactNode } from "react";
 import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
 import { PlanUsagePanel } from "@/components/plans/plan-usage";
+import { inrMonthlyPrice } from "@/modules/billing/catalog";
 import type { PlanUsageView } from "@/modules/plans/view";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
@@ -449,7 +450,9 @@ export function OrganizationManager({
           subscription_id: data.subscriptionId,
           name: "MenuMinute",
           description:
-            plan === "kitchen_pro" ? "Kitchen Pro KDS (₹299/mo)" : "Live Table Ordering (₹119/mo)",
+            plan === "kitchen_pro"
+              ? `Kitchen Pro (${inrMonthlyPrice("kitchen_pro")}/mo)`
+              : `Ordering (${inrMonthlyPrice("ordering")}/mo)`,
           handler: function () {
             setCheckoutMessage(
               "Payment authorization received. Access activates after secure billing confirmation."
@@ -988,7 +991,7 @@ export function OrganizationManager({
                                 >
                                   {checkoutBusy === "ordering"
                                     ? "Connecting..."
-                                    : "Upgrade to Live Ordering (₹119/mo)"}
+                                    : `Upgrade to Ordering (${inrMonthlyPrice("ordering")}/mo)`}
                                 </button>
                               )}
                               {!billing.kitchen && billing.kitchenCommerceEnabled && (
@@ -1000,7 +1003,7 @@ export function OrganizationManager({
                                 >
                                   {checkoutBusy === "kitchen_pro"
                                     ? "Connecting..."
-                                    : "Upgrade to Kitchen Pro (₹299/mo)"}
+                                    : `Upgrade to Kitchen Pro (${inrMonthlyPrice("kitchen_pro")}/mo)`}
                                 </button>
                               )}
                             </div>

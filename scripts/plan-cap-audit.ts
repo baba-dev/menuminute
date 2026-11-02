@@ -40,7 +40,8 @@ select r.id as "outletId", r.organization_id as "organizationId", r.slug,
        app_private.entitlement_allowed(r.organization_id,'kitchen.new') as kitchen,
        app_private.is_community_edition() as community,
        coalesce(d.dishes,0) as dishes, coalesce(q.qr_codes,0) as "qrCodes",
-       coalesce(t.tables,0) as tables, coalesce(c.chairs,0) as chairs
+       coalesce(t.tables,0) as tables, coalesce(c.chairs,0) as chairs,
+       (select count(*)::int from restaurants x where x.is_active and x.organization_id=r.organization_id) as outlets
 from restaurants r
 left join dish_counts d on d.outlet_id = r.id
 left join qr_counts q on q.outlet_id = r.id
@@ -77,6 +78,7 @@ async function main() {
           `qr=${e.qrCodes}/${e.qrCap}`,
           `tables=${e.tables}/${e.tablesCap}`,
           `chairs=${e.chairs}/${e.chairsCap}`,
+          `outlets=${e.outlets}/${e.outletsCap}`,
           e.demo ? "demo" : "",
         ]
           .filter(Boolean)

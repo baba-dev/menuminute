@@ -142,22 +142,22 @@ export function OrderConveyor() {
     >
       <div className="oc-container">
         <header className="oc-intro">
-          <span className="oc-eyebrow">04 / WHAT&apos;S COOKING NEXT</span>
-          <span className="oc-roadmap">ONLINE ORDERING · IN DEVELOPMENT</span>
+          <span className="oc-eyebrow">04 / FROM CRAVING TO COUNTER</span>
+          <span className="oc-roadmap">ONLINE ORDERING · AVAILABLE NOW</span>
           <h2 id="order-conveyor-heading">
             From craving to <em>counter.</em>
           </h2>
-          <p className="oc-lead">Your menu could soon do more than look delicious.</p>
+          <p className="oc-lead">Your menu can do more than look delicious.</p>
           <p className="oc-description">
-            We&apos;re building an effortless way for guests to choose their favourites, customise
-            dishes and send dine-in or pickup requests directly to your restaurant.
+            Guests choose their favourites, customise dishes and send dine-in or pickup orders
+            straight to your restaurant, which accepts, prepares and tracks every one.
           </p>
         </header>
 
         <div
           className="oc-artwork"
           data-testid="order-conveyor-stage"
-          aria-label="Illustrative future ordering journey: menu, basket, order request and restaurant acceptance"
+          aria-label="Illustrative ordering journey: menu, basket, order request and restaurant acceptance"
           role="img"
         >
           <div
@@ -187,7 +187,7 @@ export function OrderConveyor() {
           {reducedMotion && <span className="oc-reduced">Static preview for reduced motion</span>}
         </div>
 
-        <div className="oc-capabilities" aria-label="Planned ordering capabilities">
+        <div className="oc-capabilities" aria-label="Ordering capabilities">
           {capabilities.map(({ title, detail, Icon }) => (
             <div className="oc-capability" key={title}>
               <span className="oc-capability-icon">
@@ -205,13 +205,13 @@ export function OrderConveyor() {
           <div>
             <h3>Great food deserves an easier way to order.</h3>
             <p>
-              Online Ordering is in development and is not yet available for purchase. Start with a
-              free QR menu today.
+              Online ordering comes with the Ordering plan at ₹119 a month. Start with a free QR
+              menu today and upgrade whenever you&apos;re ready.
             </p>
           </div>
           <div className="oc-links">
             <Link className="oc-primary" href="/pricing">
-              Explore future plans <ArrowUpRight size={18} aria-hidden="true" />
+              See pricing <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
             <Link className="oc-secondary" href="/register">
               Create your free menu <ArrowRight size={18} aria-hidden="true" />

@@ -147,7 +147,7 @@ universal rules. Diner online payments remain deferred; merchant billing provide
 
 Free QR menus remain useful after a paid plan ends; printed links still open the menu. New orders
 are gated by entitlements while active accepted tickets can finish. Exact plans, quotas, trial/grace,
-retention and billing operations remain commercial inputs; earlier INR 149/299 figures are hypotheses.
+retention and billing operations remain commercial inputs; the owner-approved four-tier INR prices (0, 119, 499, 30,000) are in [plans-and-limits.md](plans-and-limits.md).
 
 ## Capacity and production evidence
 

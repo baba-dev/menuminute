@@ -34,8 +34,8 @@ const OPTIONS = [
     Icon: ShoppingBag,
     headline: "Your counter deserves a digital front door.",
     detail:
-      "Give your pickup-focused business a beautiful digital menu. Online pickup ordering is in development.",
-    status: "PICKUP ORDERING · IN DEVELOPMENT",
+      "Give your pickup-focused business a beautiful digital menu, with online pickup ordering on the Ordering plan.",
+    status: "PICKUP ORDERING · AVAILABLE NOW",
   },
   {
     id: "cloud",
@@ -43,8 +43,8 @@ const OPTIONS = [
     Icon: ChefHat,
     headline: "A home for your delivery-first food brand.",
     detail:
-      "Present your dishes online without a dining room. Connected ordering and kitchen experiences are planned.",
-    status: "CONNECTED WORKFLOWS · IN DEVELOPMENT",
+      "Present your dishes online without a dining room, with ordering and a kitchen display on the Kitchen Pro plan.",
+    status: "CONNECTED WORKFLOWS · AVAILABLE NOW",
   },
 ] as const;
 
@@ -97,8 +97,8 @@ export function ServiceWorlds() {
               ][step] ?? "")
             : {
                 dine: "DINE-IN  /  QR MENU AVAILABLE TODAY",
-                take: "TAKEOUT  /  PICKUP ORDERING PLANNED",
-                cloud: "CLOUD KITCHEN  /  CONNECTED WORKFLOWS PLANNED",
+                take: "TAKEOUT  /  PICKUP ORDERING AVAILABLE",
+                cloud: "CLOUD KITCHEN  /  CONNECTED WORKFLOWS AVAILABLE",
               }[selected];
       setPhase((previous) => (previous === step ? previous : step));
     };
@@ -317,8 +317,8 @@ export function ServiceWorlds() {
           <div>
             <h3>However you serve, start beautifully.</h3>
             <p>
-              Your free digital menu is the beginning. Ordering and kitchen workflows are coming
-              later.
+              Your free digital menu is the beginning. Add ordering and a kitchen display whenever
+              you&apos;re ready.
             </p>
           </div>
           <div className="mm6-links">

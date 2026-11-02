@@ -18,30 +18,33 @@ and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 4. **Never delete on downgrade.** Over-cap data is retained, hidden or read-only, and restored on upgrade.
 5. **Never trust the client.** Limits come from server-resolved plan state, not request input.
 
-## Plan matrix (hypotheses)
+## Plan matrix
 
-| Resource / feature (per outlet unless noted)        | Free            | Ordering        | Kitchen Pro                    | Dedicated         |
-| --------------------------------------------------- | --------------- | --------------- | ------------------------------ | ----------------- |
-| Price, INR / month (annual = 10 × monthly)          | 0               | 119             | 499 incl. 3 outlets, +149 each | Quote (see below) |
-| Outlets per organization                            | 1               | 1               | 10                             | By contract       |
-| Dishes                                              | 20              | 200             | 2,000                          | By contract       |
-| Permanent QR codes                                  | 2               | 25              | 200 (existing code cap)        | By contract       |
-| Dining-floor tables (numbered)                      | 2               | 10              | 20                             | Unlimited         |
-| Dining-floor chairs                                 | 6               | 30              | 60                             | Unlimited         |
-| Staff seats (org)                                   | 2               | 5               | 25                             | By contract       |
-| AI credits / month (pooled per org)                 | 10              | 150             | 1,000                          | Own key or pooled |
-| Media storage                                       | 100 MB          | 300 MB          | 500 MB                         | By contract       |
-| Accepting guest orders (QR → merchant inbox)        | Yes             | Yes             | Yes                            | Yes               |
-| Table-based ordering, counter board, order tracking | Locked, visible | Yes             | Yes                            | Yes               |
-| POS bill printing / receipts                        | Locked, visible | Yes             | Yes                            | Yes               |
-| Reports history                                     | Locked, visible | 90 days         | 24 months + export             | By contract       |
-| Kitchen Display System, stations, devices           | Locked, visible | Locked, visible | Yes (10 devices)               | Yes               |
-| POS till / cash drawer shifts                       | Locked, visible | Locked, visible | Yes                            | Yes               |
-| Multi-outlet reporting and shared menus             | n/a             | n/a             | Yes                            | Yes               |
-| Intelligence / AI concierge suite                   | Locked, visible | Limited         | Full                           | Full              |
-| Custom domain → public menu (redirect)              | Locked, visible | Locked, visible | 1 per outlet, max 10           | Own domain, full  |
-| "Powered by MenuMinute" badge                       | Shown           | Shown           | Removable                      | Removable         |
-| Support                                             | Docs            | Email           | Priority                       | Named contact     |
+The price, outlet, dish and QR rows below are **owner-approved final (2026-11-02)**; the remaining rows are
+the working plan. Where the table says "Virtually unlimited", the code has no cap (`null`).
+
+| Resource / feature (per outlet unless noted)        | Free            | Ordering        | Kitchen Pro                    | Dedicated           |
+| --------------------------------------------------- | --------------- | --------------- | ------------------------------ | ------------------- |
+| Price, INR / month                                  | 0               | 119             | 499 incl. 3 outlets, +149 each | 30,000              |
+| Outlets per organization                            | 1               | 1               | 10                             | Virtually unlimited |
+| Dishes                                              | 20              | 200             | 2,000                          | Virtually unlimited |
+| Permanent QR codes                                  | 2               | 25              | 200 (existing code cap)        | Virtually unlimited |
+| Dining-floor tables (numbered)                      | 2               | 10              | 20                             | Unlimited           |
+| Dining-floor chairs                                 | 6               | 30              | 60                             | Unlimited           |
+| Staff seats (org)                                   | 2               | 5               | 25                             | By contract         |
+| AI credits / month (pooled per org)                 | 10              | 150             | 1,000                          | Own key or pooled   |
+| Media storage                                       | 100 MB          | 300 MB          | 500 MB                         | By contract         |
+| Accepting guest orders (QR → merchant inbox)        | Yes             | Yes             | Yes                            | Yes                 |
+| Table-based ordering, counter board, order tracking | Locked, visible | Yes             | Yes                            | Yes                 |
+| POS bill printing / receipts                        | Locked, visible | Yes             | Yes                            | Yes                 |
+| Reports history                                     | Locked, visible | 90 days         | 24 months + export             | By contract         |
+| Kitchen Display System, stations, devices           | Locked, visible | Locked, visible | Yes (10 devices)               | Yes                 |
+| POS till / cash drawer shifts                       | Locked, visible | Locked, visible | Yes                            | Yes                 |
+| Multi-outlet reporting and shared menus             | n/a             | n/a             | Yes                            | Yes                 |
+| Intelligence / AI concierge suite                   | Locked, visible | Limited         | Full                           | Full                |
+| Custom domain → public menu (redirect)              | Locked, visible | Locked, visible | 1 per outlet, max 10           | Own domain, full    |
+| "Powered by MenuMinute" badge                       | Shown           | Shown           | Removable                      | Removable           |
+| Support                                             | Docs            | Email           | Priority                       | Named contact       |
 
 Notes:
 
@@ -512,3 +515,42 @@ cannot extend the provider's retries; operator-granted trials (`trial_7`, `trial
 paid charge as before and must be revoked by an operator first; enabling the trial changes who can take
 online orders, so turn it on only after the ordering release gates for your deployment and update the
 pricing-page copy in the same release.
+
+## Final four-tier pricing (owner-approved 2026-11-02)
+
+| Tier        | INR per month                            | Outlets             | Dishes per outlet   | QR codes            |
+| ----------- | ---------------------------------------- | ------------------- | ------------------- | ------------------- |
+| Free        | 0                                        | 1                   | 20                  | 2                   |
+| Ordering    | 119                                      | 1                   | 200                 | 25                  |
+| Kitchen Pro | 499 (3 outlets included, +149 per extra) | Up to 10            | 2,000               | 200                 |
+| Dedicated   | 30,000                                   | Virtually unlimited | Virtually unlimited | Virtually unlimited |
+
+All amounts live in one place, `src/modules/billing/catalog.ts` (prices) and `src/modules/plans/catalog.ts`
+(limits). The pricing page, `/billing`, the dashboard widget, the marketing copy and checkout all read
+them, so a number cannot differ between screens. The earlier INR 299 Kitchen Pro price and the
+Dedicated setup-fee placeholders are superseded.
+
+**Dedicated** is sold by contract, not checkout: its card says "Talk to us about Dedicated". The domain
+and branding setup is done by the team; the in-app custom-domain feature is not built.
+
+**Kitchen Pro price change (provider side).** The webhook refuses a charge below the catalog amount, so
+the operator creates a new INR 499 plan, sets `RAZORPAY_PLAN_KITCHEN_ID`, and keeps the old INR 299 plan
+in `RAZORPAY_PLAN_KITCHEN_LEGACY_ID` so existing subscribers keep renewing at 299. See
+`docs/operations/razorpay-billing.md`.
+
+**No double billing.** Kitchen Pro includes ordering. A verified Kitchen Pro payment now cancels the
+organization's Ordering subscription at the end of its paid cycle (paid days stay active), as a retryable
+webhook step; the billing page warns the owner before they pay. Organizations that were billed for both
+before this fix can be found with `scripts/billing-double-billing-audit.ts` (read-only).
+
+**Outlet limit.** Adding an outlet is capped per plan (Free and Ordering 1, Kitchen Pro 10) behind
+`PLAN_LIMITS_ENFORCED`, with a meter shown where it means something. Organizations already over the
+limit keep working and cannot add more; the cap audit now reports outlets too.
+
+**Open gap: extra outlets are not billed.** The ₹149 per extra outlet beyond the three included is
+**published and the 10-outlet cap is enforced, but nothing charges it**: a Kitchen Pro organization can
+add outlets 4 to 10 without paying the add-on. Charging it needs a second provider plan with per-outlet
+quantity (or a per-outlet subscription) and webhook handling, which has not been built or tested against
+the provider sandbox. Until then either (a) accept the revenue leak, (b) set the Kitchen Pro outlet cap
+to 3 in `src/modules/plans/catalog.ts` (outlets 4 to 10 are then unavailable until the add-on exists), or
+(c) build the add-on billing.

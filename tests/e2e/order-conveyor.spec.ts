@@ -5,8 +5,8 @@ test("Section 4 follows smart import and advertises only planned ordering", asyn
   const conveyor = page.getByTestId("order-conveyor");
   await expect(conveyor).toBeVisible();
   await expect(conveyor.getByRole("heading", { name: /From craving to counter/i })).toBeVisible();
-  await expect(conveyor.getByText("ONLINE ORDERING · IN DEVELOPMENT")).toBeVisible();
-  await expect(conveyor.getByRole("link", { name: /Explore future plans/i })).toHaveAttribute(
+  await expect(conveyor.getByText("ONLINE ORDERING · AVAILABLE NOW")).toBeVisible();
+  await expect(conveyor.getByRole("link", { name: /See pricing/i })).toHaveAttribute(
     "href",
     "/pricing"
   );

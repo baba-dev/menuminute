@@ -221,6 +221,13 @@
   letter-spacing: -0.04em;
   line-height: 1.1;
 }
+.pb-price-detail {
+  margin: -4px 0 0;
+  color: var(--ember);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
 .pb-tagline {
   margin: 0;
   color: var(--muted);

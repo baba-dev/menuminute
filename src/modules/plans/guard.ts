@@ -2,7 +2,7 @@ import { assertWithinLimit, resolveLimits, resolvePlan, type PlanFacts } from ".
 import type { PlanKey, PlanLimits } from "./catalog";
 
 /** Resources enforced at write time in slice 2. */
-export type GuardedResource = "dishes" | "qrCodes" | "tables" | "chairs";
+export type GuardedResource = "outlets" | "dishes" | "qrCodes" | "tables" | "chairs";
 
 export type PlanContext = { plan: PlanKey; limits: PlanLimits };
 

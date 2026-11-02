@@ -3,10 +3,11 @@ import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/lib/config/env";
-import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
+import { LEGACY_KITCHEN_PRO_MONTHLY_PAISE, PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
 import {
   providerEventId,
   recordRazorpaySubscriptionGrant,
+  supersedeOrderingSubscriptions,
   recordRazorpaySubscriptionRefund,
   recordRazorpaySubscriptionStatus,
   verifyRazorpayWebhookSignature,
@@ -139,7 +140,12 @@ async function observed_POST(req: Request) {
           ? PAID_PLAN_CATALOG.ordering.monthlyPricePaise
           : sub.plan_id === env.RAZORPAY_PLAN_KITCHEN_ID && env.RAZORPAY_KITCHEN_ENABLED
             ? PAID_PLAN_CATALOG.kitchen_pro.monthlyPricePaise
-            : null;
+            : // Existing Kitchen Pro subscribers renew on the original INR 299 provider plan.
+              env.RAZORPAY_PLAN_KITCHEN_LEGACY_ID &&
+                sub.plan_id === env.RAZORPAY_PLAN_KITCHEN_LEGACY_ID &&
+                env.RAZORPAY_KITCHEN_ENABLED
+              ? LEGACY_KITCHEN_PRO_MONTHLY_PAISE
+              : null;
       if (
         expectedAmount === null ||
         !payment ||
@@ -162,6 +168,13 @@ async function observed_POST(req: Request) {
         currentEnd: sub.current_end,
         providerCreated: createdAt,
       });
+      // Kitchen Pro includes ordering: stop any Ordering subscription from renewing. A failure here returns
+      // 503 so the provider retries; the charge above is idempotent, so the retry only repeats this step.
+      if (
+        sub.plan_id === env.RAZORPAY_PLAN_KITCHEN_ID ||
+        (env.RAZORPAY_PLAN_KITCHEN_LEGACY_ID && sub.plan_id === env.RAZORPAY_PLAN_KITCHEN_LEGACY_ID)
+      )
+        await supersedeOrderingSubscriptions(sub.id);
       return NextResponse.json({ received: true, state: "charged" });
     }
     const status =

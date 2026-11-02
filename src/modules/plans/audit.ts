@@ -10,6 +10,7 @@ export type AuditRow = {
   ordering: boolean;
   kitchen: boolean;
   community: boolean;
+  outlets: number;
   dishes: number;
   qrCodes: number;
   tables: number;
@@ -26,6 +27,8 @@ export type AuditEntry = AuditRow & {
   chairsCap: number | null;
   tablesOver: number;
   chairsOver: number;
+  outletsCap: number | null;
+  outletsOver: number;
   /** Would be unable to add more (at or over a cap). */
   atOrOver: boolean;
 };
@@ -59,6 +62,7 @@ export function buildCapAudit(rows: readonly AuditRow[]): CapAudit {
     const qrCodesOver = over(row.qrCodes, limits.qrCodes);
     const tablesOver = over(row.tables, limits.tables);
     const chairsOver = over(row.chairs, limits.chairs);
+    const outletsOver = over(row.outlets, limits.outlets);
     const atCap = (n: number, cap: number | null) => cap !== null && n >= cap;
     return {
       ...row,
@@ -71,6 +75,8 @@ export function buildCapAudit(rows: readonly AuditRow[]): CapAudit {
       chairsCap: limits.chairs,
       tablesOver,
       chairsOver,
+      outletsCap: limits.outlets,
+      outletsOver,
       atOrOver:
         atCap(row.dishes, limits.dishes) ||
         atCap(row.qrCodes, limits.qrCodes) ||
@@ -78,7 +84,8 @@ export function buildCapAudit(rows: readonly AuditRow[]): CapAudit {
         atCap(row.chairs, limits.chairs),
     };
   });
-  const total = (e: AuditEntry) => e.dishesOver + e.qrCodesOver + e.tablesOver + e.chairsOver;
+  const total = (e: AuditEntry) =>
+    e.dishesOver + e.qrCodesOver + e.tablesOver + e.chairsOver + e.outletsOver;
   const overEntries = entries.filter((e) => total(e) > 0).sort((a, b) => total(b) - total(a));
   return {
     entries,

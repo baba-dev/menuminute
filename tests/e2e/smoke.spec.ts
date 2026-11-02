@@ -12,15 +12,14 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
     await expect(page.locator('a[href="/demo"]').first()).toHaveAttribute("href", "/demo");
   });
 
-  test("Pricing page displays all 3 product tiers correctly", async ({ page }) => {
+  test("Pricing page displays all 4 product tiers correctly", async ({ page }) => {
     await page.goto("/pricing");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Simple, honest pricing.");
-    await expect(page.getByRole("heading", { name: "Free Forever" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Live Table Ordering" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Kitchen Pro KDS" })).toBeVisible();
-    await expect(page.getByText("₹119", { exact: true })).toBeVisible();
-    await expect(page.getByText("₹299", { exact: true })).toBeVisible();
-    await expect(page.getByText("Available after Kitchen Pro release approval")).toBeVisible();
+    for (const name of ["Free", "Ordering", "Kitchen Pro", "Dedicated"])
+      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+    for (const price of ["₹0", "₹119", "₹499", "₹30,000"])
+      await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("3 outlets included, +₹149 per extra outlet")).toBeVisible();
     await expect(page.getByText("TBA", { exact: true })).toHaveCount(0);
   });
 

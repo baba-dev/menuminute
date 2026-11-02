@@ -61,12 +61,17 @@ export function coerceSubscriptions(raw: unknown): SubscriptionInput[] {
 
 export const formatDate = fmtDate;
 
-export type LadderAction = { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string };
+export type LadderAction =
+  | { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string }
+  /** Dedicated is sold by contract, so its only action is a conversation. */
+  | { kind: "contact"; label: string; href: string };
 export type LadderCard = PlanOffer & {
   state: "current" | "lower" | "upgrade";
   action: LadderAction | null;
   /** Plain-language reason when an upgrade cannot be started right now. */
   note: string | null;
+  /** What happens to the current subscription if the owner switches to this plan. */
+  switchNote: string | null;
 };
 export type SubscriptionRow = {
   id: string;
@@ -195,6 +200,11 @@ export function buildBillingPageView(input: {
     };
   }
 
+  const ordersOnSubscription = subs.some(
+    (s) =>
+      s.product === "ordering" && ACTIVE_SUBSCRIPTION.includes(s.status) && !s.cancelRequestedAt
+  );
+
   // ── Plan ladder ───────────────────────────────────────────────────────────
   const ladder: LadderCard[] = planLadder({ intake }).map((offer) => {
     const state: LadderCard["state"] =
@@ -205,6 +215,8 @@ export function buildBillingPageView(input: {
       if (input.billingUnavailable)
         note = "Billing details are temporarily unavailable. Please try again shortly.";
       else if (community) note = "Self-hosted editions have every feature unlocked.";
+      else if (offer.key === "dedicated")
+        action = { kind: "contact", label: "Talk to us about Dedicated", href: "/contact" };
       else if (!canManage) note = "Only the organization owner can change the plan.";
       else if (!billingEnabled) note = "Paid upgrades are opening soon.";
       else if (offer.key === "kitchen_pro" && !kitchenCheckout)
@@ -224,7 +236,12 @@ export function buildBillingPageView(input: {
       else if (!billingEnabled) note = "Paid plans are opening soon.";
       else action = { kind: "checkout", plan: "ordering", label: "Subscribe to keep Ordering" };
     }
-    return { ...offer, state, action, note };
+    // Kitchen Pro includes ordering, so buying it ends an Ordering subscription's renewals. Say so first.
+    const switchNote =
+      offer.key === "kitchen_pro" && action?.kind === "checkout" && ordersOnSubscription
+        ? "Kitchen Pro includes Ordering. Your Ordering subscription stops renewing once Kitchen Pro starts, and the days you have already paid for stay active."
+        : null;
+    return { ...offer, state, action, note, switchNote };
   });
 
   // ── Subscriptions & history ──────────────────────────────────────────────

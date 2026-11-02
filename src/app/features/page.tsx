@@ -91,9 +91,11 @@ export default function FeaturesPage() {
                 <span className="text-xs font-bold tracking-wider text-orange-700 uppercase dark:text-orange-300">
                   {feature.availability === "free"
                     ? "Free core features"
-                    : feature.availability === "limited"
-                      ? "Limited access"
-                      : "Provider-gated"}
+                    : feature.availability === "paid"
+                      ? "Included in paid plans"
+                      : feature.availability === "limited"
+                        ? "Limited access"
+                        : "Provider-gated"}
                 </span>
                 <h2 className="font-display mt-3 text-2xl font-bold">{feature.title}</h2>
                 <p className="text-muted-foreground mt-3 flex-1 text-sm leading-7">

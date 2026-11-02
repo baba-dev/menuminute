@@ -37,8 +37,8 @@ test("Every world changes both the physical illustration and the matching phone 
   await section.scrollIntoViewIfNeeded();
   const svg = section.locator("svg[data-mm6]");
   for (const [label, mode, message] of [
-    ["Takeout", "take", "PICKUP ORDERING · IN DEVELOPMENT"],
-    ["Cloud kitchen", "cloud", "CONNECTED WORKFLOWS · IN DEVELOPMENT"],
+    ["Takeout", "take", "PICKUP ORDERING · AVAILABLE NOW"],
+    ["Cloud kitchen", "cloud", "CONNECTED WORKFLOWS · AVAILABLE NOW"],
     ["Dine-in", "dine", "FREE QR MENU · AVAILABLE TODAY"],
   ] as const) {
     await section.getByRole("radio", { name: label, exact: true }).click();

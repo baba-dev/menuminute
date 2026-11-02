@@ -9,6 +9,7 @@ const row = (over: Partial<AuditRow>): AuditRow => ({
   ordering: false,
   kitchen: false,
   community: false,
+  outlets: 1,
   dishes: 0,
   qrCodes: 0,
   tables: 0,
@@ -40,6 +41,19 @@ describe("buildCapAudit", () => {
     ]);
     expect(audit.over.map((e) => e.outletId)).toEqual(["a"]);
     expect(audit.entries[1]).toMatchObject({ plan: "kitchen_pro", dishesOver: 0, demo: true });
+  });
+
+  it("flags an organization with more outlets than its plan allows, but not a single outlet", () => {
+    const audit = buildCapAudit([
+      row({ outletId: "one", outlets: 1 }),
+      row({ outletId: "many", outlets: 3 }),
+      row({ outletId: "pro", kitchen: true, outlets: 10 }),
+      row({ outletId: "pro-over", kitchen: true, outlets: 11 }),
+    ]);
+    expect(audit.over.map((e) => [e.outletId, e.outletsOver])).toEqual([
+      ["many", 2],
+      ["pro-over", 1],
+    ]);
   });
 
   it("never flags Community Edition and counts plans", () => {

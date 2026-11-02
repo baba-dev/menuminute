@@ -596,7 +596,7 @@ const REPLICA_PLAN_VIEW = buildBentoView({
   usage: buildPlanUsageView({
     plan: "free",
     limits: PLAN_LIMITS.free,
-    counts: { dishes: 17, qrCodes: 1, tables: 1, chairs: 4 },
+    counts: { outlets: 1, dishes: 17, qrCodes: 1, tables: 1, chairs: 4 },
     intake: null,
   }),
   intake: null,

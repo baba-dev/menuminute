@@ -185,6 +185,16 @@ export function BillingConsole({
         </button>
       );
     }
+    if (card.action?.kind === "contact")
+      return (
+        <Link
+          href={card.action.href}
+          className={size === "lg" ? "bp-btn bp-btn--quiet bp-btn--lg" : "bp-btn bp-btn--quiet"}
+        >
+          {card.action.label}
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      );
     if (card.note)
       return (
         <p className="bp-note">
@@ -380,6 +390,7 @@ export function BillingConsole({
                 <strong>{card.price.label}</strong>
                 <span>{card.price.note}</span>
               </p>
+              {card.price.detail && <p className="bp-price-detail">{card.price.detail}</p>}
               <p className="bp-muted">{card.tagline}</p>
               <ul className="bp-checks">
                 {card.highlights.map((h) => (
@@ -395,6 +406,7 @@ export function BillingConsole({
                 ) : (
                   renderAction(card)
                 )}
+                {card.switchNote && <p className="bp-note bp-note--switch">{card.switchNote}</p>}
               </div>
             </article>
           ))}

@@ -9,8 +9,8 @@ test("Chef's Pass is Section 5, after Order Conveyor, and truthfully advertises 
   await expect(
     pass.getByRole("heading", { name: /One order. Every station. In sync/i })
   ).toBeVisible();
-  await expect(pass.getByText("KITCHEN PRO · IN DEVELOPMENT")).toBeVisible();
-  await expect(pass.getByRole("link", { name: /Explore future plans/i })).toHaveAttribute(
+  await expect(pass.getByText("KITCHEN PRO · AVAILABLE NOW")).toBeVisible();
+  await expect(pass.getByRole("link", { name: /See pricing/i })).toHaveAttribute(
     "href",
     "/pricing"
   );

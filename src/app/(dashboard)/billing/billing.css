@@ -352,6 +352,7 @@
 
 /* ── Plan ladder ───────────────────────────────────────────── */
 .bp-section {
+  container-type: inline-size;
   margin: clamp(26px, 3vw, 44px) 0;
 }
 .bp-section-head {
@@ -376,8 +377,29 @@
 }
 .bp-ladder {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(14px, 1.6vw, 20px);
+}
+.bp-price-detail {
+  margin: -6px 0 0;
+  color: var(--ember);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.bp-note--switch {
+  padding-top: 4px;
+}
+/* Two columns unless the section is wide enough for four comfortable cards. */
+@container (max-width: 1080px) {
+  .bp-ladder {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (max-width: 560px) {
+  .bp-ladder {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .bp-plan-card {
   display: flex;
@@ -574,9 +596,6 @@
   .bp-span-5,
   .bp-span-7 {
     grid-column: 1 / -1;
-  }
-  .bp-ladder {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (max-width: 560px) {

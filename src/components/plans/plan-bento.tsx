@@ -89,6 +89,7 @@ export function PlanBento({ view }: { view: PlanBentoView }) {
                   <span>{next.price.note}</span>
                 </p>
               </div>
+              {next.price.detail && <p className="pb-price-detail">{next.price.detail}</p>}
               <p className="pb-tagline">
                 {next.mode === "keep"
                   ? `${next.tagline}. Without a subscription you return to the Free limits.`

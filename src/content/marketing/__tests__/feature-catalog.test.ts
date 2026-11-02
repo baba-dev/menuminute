@@ -66,9 +66,23 @@ describe("marketing feature coverage", () => {
     });
   });
   it("never claims gated functionality is available automatically", () => {
-    for (const feature of marketingFeatures.filter((item) => item.availability !== "free")) {
+    for (const feature of marketingFeatures.filter(
+      (item) => item.availability === "limited" || item.availability === "provider"
+    )) {
       expect(feature.availabilityText).toMatch(/approval|approved|activation|provider/i);
       expect(feature.ctaHref).toBe("/contact");
+    }
+  });
+
+  it("describes the live paid plans plainly, with their real prices and no 'limited rollout'", () => {
+    const paid = marketingFeatures.filter((item) => item.availability === "paid");
+    expect(paid.map((item) => item.slug)).toEqual(["online-ordering", "kitchen-display-system"]);
+    for (const feature of paid) {
+      expect(feature.ctaHref).toBe("/pricing");
+      expect(feature.availabilityText).toMatch(/₹(119|499)/);
+      expect(JSON.stringify(feature)).not.toMatch(
+        /limited rollout|approved, activated|feature-gated|approved operator activation|₹299/i
+      );
     }
   });
   it("includes every indexable marketing and documentation page exactly once", () => {

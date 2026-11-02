@@ -41,7 +41,7 @@ describe("buildPlanUsageView", () => {
   const free = {
     plan: "free" as const,
     limits: PLAN_LIMITS.free,
-    counts: { dishes: 14, qrCodes: 2, tables: 0, chairs: 0 },
+    counts: { outlets: 1, dishes: 14, qrCodes: 2, tables: 0, chairs: 0 },
   };
 
   it("shows dish and QR meters for Free and only real, enforced limits", () => {
@@ -74,7 +74,7 @@ describe("buildPlanUsageView", () => {
     const view = buildPlanUsageView({
       plan: "ordering",
       limits: PLAN_LIMITS.ordering,
-      counts: { dishes: 10, qrCodes: 3, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 10, qrCodes: 3, tables: 0, chairs: 0 },
       intake: { enabled: true, used: 5, cap: 100 },
     })!;
     expect(view.meters.map((m) => m.key)).toEqual(["dishes", "qrCodes", "tables", "chairs"]);
@@ -90,7 +90,7 @@ describe("buildPlanUsageView", () => {
     const pro = buildPlanUsageView({
       plan: "kitchen_pro",
       limits: PLAN_LIMITS.kitchen_pro,
-      counts: { dishes: 1, qrCodes: 1, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 1, qrCodes: 1, tables: 0, chairs: 0 },
       intake: null,
     })!;
     expect(pro.features.every((f) => f.status === "included")).toBe(true);
@@ -99,7 +99,7 @@ describe("buildPlanUsageView", () => {
       buildPlanUsageView({
         plan: "dedicated",
         limits: PLAN_LIMITS.dedicated,
-        counts: { dishes: 9, qrCodes: 9, tables: 0, chairs: 0 },
+        counts: { outlets: 1, dishes: 9, qrCodes: 9, tables: 0, chairs: 0 },
         intake: null,
       })
     ).toBeNull();
@@ -111,14 +111,14 @@ describe("upgrade hints", () => {
     const calm = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 5, qrCodes: 0, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 5, qrCodes: 0, tables: 0, chairs: 0 },
       intake: null,
     })!;
     expect(calm.meters.every((m) => m.upgradeHint === undefined)).toBe(true);
     const hot = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 18, qrCodes: 2, tables: 2, chairs: 6 },
+      counts: { outlets: 1, dishes: 18, qrCodes: 2, tables: 2, chairs: 6 },
       intake: { enabled: true, used: 100, cap: 100 },
     })!;
     expect(hot.meters.map((m) => m.upgradeHint)).toEqual([
@@ -159,7 +159,7 @@ describe("overflow notice", () => {
     const view = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
+      counts: { outlets: 1, dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
       intake: null,
       overflow: overflow(7),
     })!;

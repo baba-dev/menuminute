@@ -12,7 +12,7 @@ const commitments = [
   {
     title: "Start without a subscription",
     detail:
-      "Create a restaurant QR menu on the free plan. Premium workflows have separate availability.",
+      "Create a restaurant QR menu on the free plan. Add online ordering from ₹119 a month and a full kitchen display from ₹499 a month when you are ready.",
     icon: QrCode,
   },
   {

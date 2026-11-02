@@ -28,7 +28,7 @@ test.describe("shared public footer", () => {
       );
       await expect(footer).not.toContainText("A Subsidiary of BabaBuilds.com");
       await expect(footer).toContainText("not external certifications");
-      await expect(footer).toContainText("Planned · not yet available");
+      await expect(footer).toContainText("Secure checkout by Razorpay");
     });
   }
 
