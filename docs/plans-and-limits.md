@@ -20,26 +20,26 @@ and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 
 ## Plan matrix (hypotheses)
 
-| Resource / feature (per outlet unless noted)         | Free             | Ordering        | Kitchen Pro                    | Dedicated          |
-| ---------------------------------------------------- | ---------------- | --------------- | ------------------------------ | ------------------ |
-| Price, INR / month (annual = 10 × monthly)           | 0                | 119             | 499 incl. 3 outlets, +149 each | Quote (see below)  |
-| Outlets per organization                             | 1                | 1               | 10                             | By contract        |
-| Dishes                                               | 20               | 200             | 2,000                          | By contract        |
-| Permanent QR codes / tables                          | 2                | 25              | 200 (existing code cap)        | By contract        |
-| Staff seats (org)                                    | 2                | 5               | 25                             | By contract        |
-| AI credits / month (pooled per org)                  | 10               | 150             | 1,000                          | Own key or pooled  |
-| Media storage                                        | 100 MB           | 300 MB          | 500 MB                         | By contract        |
-| Accepting guest orders (QR → merchant inbox)         | Yes              | Yes             | Yes                            | Yes                |
-| Table-based ordering, counter board, order tracking  | Locked, visible  | Yes             | Yes                            | Yes                |
-| POS bill printing / receipts                         | Locked, visible  | Yes             | Yes                            | Yes                |
-| Reports history                                      | Locked, visible  | 90 days         | 24 months + export             | By contract        |
-| Kitchen Display System, stations, devices            | Locked, visible  | Locked, visible | Yes (10 devices)               | Yes                |
-| POS till / cash drawer shifts                        | Locked, visible  | Locked, visible | Yes                            | Yes                |
-| Multi-outlet reporting and shared menus              | n/a              | n/a             | Yes                            | Yes                |
-| Intelligence / AI concierge suite                    | Locked, visible  | Limited         | Full                           | Full               |
-| Custom domain → public menu (redirect)               | Locked, visible  | Locked, visible | 1 per outlet, max 10           | Own domain, full   |
-| "Powered by MenuMinute" badge                        | Shown            | Shown           | Removable                      | Removable          |
-| Support                                              | Docs             | Email           | Priority                       | Named contact      |
+| Resource / feature (per outlet unless noted)        | Free            | Ordering        | Kitchen Pro                    | Dedicated         |
+| --------------------------------------------------- | --------------- | --------------- | ------------------------------ | ----------------- |
+| Price, INR / month (annual = 10 × monthly)          | 0               | 119             | 499 incl. 3 outlets, +149 each | Quote (see below) |
+| Outlets per organization                            | 1               | 1               | 10                             | By contract       |
+| Dishes                                              | 20              | 200             | 2,000                          | By contract       |
+| Permanent QR codes / tables                         | 2               | 25              | 200 (existing code cap)        | By contract       |
+| Staff seats (org)                                   | 2               | 5               | 25                             | By contract       |
+| AI credits / month (pooled per org)                 | 10              | 150             | 1,000                          | Own key or pooled |
+| Media storage                                       | 100 MB          | 300 MB          | 500 MB                         | By contract       |
+| Accepting guest orders (QR → merchant inbox)        | Yes             | Yes             | Yes                            | Yes               |
+| Table-based ordering, counter board, order tracking | Locked, visible | Yes             | Yes                            | Yes               |
+| POS bill printing / receipts                        | Locked, visible | Yes             | Yes                            | Yes               |
+| Reports history                                     | Locked, visible | 90 days         | 24 months + export             | By contract       |
+| Kitchen Display System, stations, devices           | Locked, visible | Locked, visible | Yes (10 devices)               | Yes               |
+| POS till / cash drawer shifts                       | Locked, visible | Locked, visible | Yes                            | Yes               |
+| Multi-outlet reporting and shared menus             | n/a             | n/a             | Yes                            | Yes               |
+| Intelligence / AI concierge suite                   | Locked, visible | Limited         | Full                           | Full              |
+| Custom domain → public menu (redirect)              | Locked, visible | Locked, visible | 1 per outlet, max 10           | Own domain, full  |
+| "Powered by MenuMinute" badge                       | Shown           | Shown           | Removable                      | Removable         |
+| Support                                             | Docs            | Email           | Priority                       | Named contact     |
 
 Notes:
 
@@ -50,9 +50,12 @@ Notes:
 - The badge is non-removable on Free and Ordering; only Kitchen Pro and Dedicated may remove it.
 - Kitchen Pro as "A–Z" depends on the Kitchen Pro release gates. Until they pass, sell it as early
   access; do not advertise it as generally available.
-- Ordering includes POS bill printing, but POS and the till are today tied to the Kitchen Pro
-  capability and its own safeguards. Decoupling receipts from `kitchen.new` needs a reviewed
-  migration and tests. The till/cash-drawer shift stays in Kitchen Pro until that is verified.
+- **Receipt printing is already separate from Kitchen Pro.** Checked 2026-11-02: the POS nav item
+  has `gate: null` (`src/modules/dashboard/nav-model.ts`), and no POS migration or service calls
+  `entitlement_allowed` for `kitchen.new`. So no decoupling change is needed. The consequence runs
+  the other way: POS, the till and receipts are currently available to **every** outlet, so
+  gating them behind Ordering (and the till behind Kitchen Pro) is a later, visible change. It is
+  deliberately **not** part of slice 1, which changes no UI.
 
 ## Free order intake
 
@@ -62,9 +65,9 @@ Required consequences, to confirm before building:
 
 - Introduce a distinct free intake allowance rather than granting `ordering.new` to everyone, so
   the paid grant still unlocks tables, the counter board, bill printing and reports.
-- Cap Free intake to protect cost and support load. Proposed: 100 accepted orders per month, shown
+- Cap Free intake to protect cost and support load. Owner-approved (2026-11-02): 100 accepted orders per month, shown
   as a meter, with accepted tickets always completable and a clear message when the cap is reached.
-  The number is a hypothesis; the cap mechanism matters more than the value.
+  The monthly window and reset rule are defined in slice 2.
 - Free outlets need a minimal merchant inbox (accept, reject, mark ready), since the counter board
   is paid. Ordering launch safeguards (expiry, acceptance races, tenant scope) apply unchanged.
 - Revenue impact: the ₹119 plan now sells operations tooling, not order intake. Expect a lower
@@ -72,16 +75,16 @@ Required consequences, to confirm before building:
 
 ## Cap behavior
 
-| Event                                    | Behavior                                                                                                                                                                           |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Create beyond a hard cap                 | Rejected by the service with a typed `LIMIT_REACHED` error naming the resource, cap and next plan.                                                                                 |
-| Concurrent creates at the cap            | Count and insert in one transaction under an outlet-scoped lock, so two requests cannot both pass.                                                                                 |
-| 80% and 100% usage                       | Meters turn amber then red; one dismissible upgrade prompt per resource per week.                                                                                                  |
-| Downgrade or expiry with data above cap  | 14-day grace, unchanged. After grace the owner's chosen N dishes stay published (default: oldest-created N); the rest are hidden, not deleted, and return on upgrade. Printed QR links keep working. |
-| QR codes above the cap                   | The first N by creation stay active; the rest show a "not available" page, not an error, and reactivate on upgrade.                                                                |
-| AI credits exhausted                     | Manual path only, no overage billing in v1. Credits reset monthly; no rollover.                                                                                                    |
-| Accepted orders after plan loss          | Unchanged rule: accepted tickets finish. New orders continue only within the Free intake allowance.                                                                                                                          |
-| Abuse (pay, bulk-add, downgrade)         | The grace window and hide-not-delete rule leave nothing extra live on Free.                                                                                                        |
+| Event                                   | Behavior                                                                                                                                                                                             |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create beyond a hard cap                | Rejected by the service with a typed `LIMIT_REACHED` error naming the resource, cap and next plan.                                                                                                   |
+| Concurrent creates at the cap           | Count and insert in one transaction under an outlet-scoped lock, so two requests cannot both pass.                                                                                                   |
+| 80% and 100% usage                      | Meters turn amber then red; one dismissible upgrade prompt per resource per week.                                                                                                                    |
+| Downgrade or expiry with data above cap | 14-day grace, unchanged. After grace the owner's chosen N dishes stay published (default: oldest-created N); the rest are hidden, not deleted, and return on upgrade. Printed QR links keep working. |
+| QR codes above the cap                  | The first N by creation stay active; the rest show a "not available" page, not an error, and reactivate on upgrade.                                                                                  |
+| AI credits exhausted                    | Manual path only, no overage billing in v1. Credits reset monthly; no rollover.                                                                                                                      |
+| Accepted orders after plan loss         | Unchanged rule: accepted tickets finish. New orders continue only within the Free intake allowance.                                                                                                  |
+| Abuse (pay, bulk-add, downgrade)        | The grace window and hide-not-delete rule leave nothing extra live on Free.                                                                                                                          |
 
 ## Implementation shape
 
@@ -108,19 +111,19 @@ state of the work when they were written; re-check the linked issues #76 and #77
 closed since. Per them, the remaining items are **evidence, review, operations and commercial
 gates**, not missing code for phases A–H:
 
-| Remaining item                                                                                          | Type                     |
-| ------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Independent review (security, correctness, operations, UX/accessibility) by a reviewer other than the code owner | Review                   |
-| Final-SHA native ARM64 CI (four lanes plus quality gate) and migration compatibility on that SHA        | CI evidence              |
-| Load run (`infra/load/kitchen.js`) on a disposable dataset, with owner-approved resource and SLO limits | Capacity evidence        |
-| Failure injection: Redis cache and queue loss, web/worker restart, revoked sessions, duplicate commands | Reliability evidence     |
-| Shared-ERP coexistence measurements before, during and after load                                       | Operator evidence        |
-| Fresh off-host backup and an isolated SQL plus private-media restore                                    | Operator evidence        |
-| Off-host backup timer and non-destructive alert test                                                    | Operator evidence        |
-| Exact release identity (web and worker symlinks, source CI, public SHA agree)                           | Operator evidence        |
-| Controlled live pilot on an approved disposable outlet (two-operator approval, seven-day grant)         | Owner approval           |
-| Commercial activation: owner-approved pricing, supported jurisdictions and tax, SLO, incident owner     | Product and commercial   |
-| Billing path: a Kitchen Pro plan is not published, there is no checkout or self-enablement today        | Engineering              |
+| Remaining item                                                                                                   | Type                   |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Independent review (security, correctness, operations, UX/accessibility) by a reviewer other than the code owner | Review                 |
+| Final-SHA native ARM64 CI (four lanes plus quality gate) and migration compatibility on that SHA                 | CI evidence            |
+| Load run (`infra/load/kitchen.js`) on a disposable dataset, with owner-approved resource and SLO limits          | Capacity evidence      |
+| Failure injection: Redis cache and queue loss, web/worker restart, revoked sessions, duplicate commands          | Reliability evidence   |
+| Shared-ERP coexistence measurements before, during and after load                                                | Operator evidence      |
+| Fresh off-host backup and an isolated SQL plus private-media restore                                             | Operator evidence      |
+| Off-host backup timer and non-destructive alert test                                                             | Operator evidence      |
+| Exact release identity (web and worker symlinks, source CI, public SHA agree)                                    | Operator evidence      |
+| Controlled live pilot on an approved disposable outlet (two-operator approval, seven-day grant)                  | Owner approval         |
+| Commercial activation: owner-approved pricing, supported jurisdictions and tax, SLO, incident owner              | Product and commercial |
+| Billing path: a Kitchen Pro plan is not published, there is no checkout or self-enablement today                 | Engineering            |
 
 Engineering work this plan adds on top: decouple receipt printing from the Kitchen Pro capability,
 fold multi-outlet and custom domains into the Pro plan, and add the plan/limit layer. Until the
@@ -147,10 +150,10 @@ Scope is a redirect/alias to the existing public menu, not a separate app.
 "An app dedicated to them, on their domain." Two very different products hide in that sentence;
 decide which to sell.
 
-| Option                       | What it is                                                                                    | Cost / risk                                       | Fit                                 |
-| ---------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------- |
-| **A. Branded (shared infra)** | Own domain, own brand, name, colors and logo; still the shared multi-tenant platform.         | Low. Reuses the custom-domain work.               | Most "I want my own app" requests.  |
-| **B. Isolated instance**     | Separate stack: own database, workers and Redis on a separate ARM64 host, on their domain.    | High: infra, backups, upgrades and on-call per customer. | Chains, compliance, data residency. |
+| Option                        | What it is                                                                                 | Cost / risk                                              | Fit                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ----------------------------------- |
+| **A. Branded (shared infra)** | Own domain, own brand, name, colors and logo; still the shared multi-tenant platform.      | Low. Reuses the custom-domain work.                      | Most "I want my own app" requests.  |
+| **B. Isolated instance**      | Separate stack: own database, workers and Redis on a separate ARM64 host, on their domain. | High: infra, backups, upgrades and on-call per customer. | Chains, compliance, data residency. |
 
 Recommendation: ship **A first as the Dedicated entry level**, and offer **B only by contract**.
 
@@ -179,9 +182,9 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Open decisions
 
-1. Free monthly order cap (proposed 100) and whether Free gets a basic merchant inbox.
+1. Whether Free gets a basic merchant inbox (the 100 orders a month cap is approved).
 2. Final prices and caps (this doc is a starting point; pick numbers you can afford to honor).
-3. Is receipt printing separable from the Kitchen Pro POS till (engineering check)?
+3. When to gate POS, the till and receipts by plan, given they are ungated today (a visible change).
 4. Dedicated: A only, or A plus B-by-contract?
 5. Custom-domain edge: shared Nginx or a separate edge?
 6. International billing (USD): Razorpay is INR-only here; choose a provider or merchant of record.
@@ -189,15 +192,15 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Delivery slices
 
-| #   | Slice                                                              | Depends on                |
-| --- | ------------------------------------------------------------------ | ------------------------- |
-| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests        | This sign-off             |
-| 2   | Enforce dish and QR caps in services (transactional) + meters      | 1                         |
-| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade    | 2                         |
-| 4   | AI credit accounting per org per month                             | 1, AI spend accounting    |
-| 5   | Self-serve billing, proration, GST invoices, auto-trial            | Billing gates             |
-| 6   | Kitchen Pro as the max plan; multi-outlet caps                     | Kitchen Pro release gates |
-| 7   | Custom domain verification, routing, TLS                           | Edge decision             |
-| 8   | Dedicated A (brand), then B by contract                            | 7, pricing                |
+| #   | Slice                                                                                     | Depends on                |
+| --- | ----------------------------------------------------------------------------------------- | ------------------------- |
+| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement) | This sign-off             |
+| 2   | Enforce dish and QR caps in services (transactional) + meters                             | 1                         |
+| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                           | 2                         |
+| 4   | AI credit accounting per org per month                                                    | 1, AI spend accounting    |
+| 5   | Self-serve billing, proration, GST invoices, auto-trial                                   | Billing gates             |
+| 6   | Kitchen Pro as the max plan; multi-outlet caps                                            | Kitchen Pro release gates |
+| 7   | Custom domain verification, routing, TLS                                                  | Edge decision             |
+| 8   | Dedicated A (brand), then B by contract                                                   | 7, pricing                |
 
 Each slice is one PR with an explicit migration and rollback note, tested against real PostgreSQL.

@@ -46,6 +46,24 @@ export class ValidationError extends AppError {
   }
 }
 
+/**
+ * A plan resource cap was reached. Carries only non-sensitive plan metadata so
+ * callers can render an upgrade prompt; it never reveals other tenants' data.
+ */
+export class LimitReachedError extends AppError {
+  public readonly resource: string;
+  public readonly limit: number;
+  public readonly upgradeTo: string | null;
+
+  constructor(resource: string, limit: number, upgradeTo: string | null) {
+    super(`Your plan allows ${limit} ${resource}.`, "LIMIT_REACHED", 402);
+    this.name = "LimitReachedError";
+    this.resource = resource;
+    this.limit = limit;
+    this.upgradeTo = upgradeTo;
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message: string) {
     super(message, "CONFLICT", 409);
