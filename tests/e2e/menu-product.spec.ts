@@ -4,12 +4,19 @@ import { hashPassword } from "better-auth/crypto";
 import sharp from "sharp";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 import { formatPrice } from "../../src/lib/utils";
-import { setFreeIntake } from "./plan-settings";
+import { setAutoTrial, setFreeIntake } from "./plan-settings";
 
 // This file asserts the QR-only presentation of a Free outlet, which is what guests see once free order
-// intake is off or its monthly allowance is used up. Intake ships on, so switch it off for this file.
-test.beforeAll(() => setFreeIntake(false));
-test.afterAll(() => setFreeIntake(true));
+// intake is off or its monthly allowance is used up. Intake and the automatic trial (which starts when the
+// owner first publishes) ship on, so switch both off for this file and restore them afterwards.
+test.beforeAll(async () => {
+  await setFreeIntake(false);
+  await setAutoTrial(false);
+});
+test.afterAll(async () => {
+  await setFreeIntake(true);
+  await setAutoTrial(true);
+});
 async function seed(publish = false, culinaryMode?: "verified" | "cross-contact") {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test")
