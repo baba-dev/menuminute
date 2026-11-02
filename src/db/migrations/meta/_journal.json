@@ -596,6 +596,27 @@
       "when": 1795698000032,
       "tag": "0085_guest_crm",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1795784400032,
+      "tag": "0086_plan_switches_on",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1795870800032,
+      "tag": "0087_plan_email_notices",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795957200032,
+      "tag": "0088_ai_credits",
+      "breakpoints": true
     }
   ]
 }

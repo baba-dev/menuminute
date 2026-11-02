@@ -6,10 +6,10 @@ import { getPool } from "@/db";
 import { domainError } from "@/modules/organizations/service";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { putObject, getObject } from "./storage";
-import { env } from "@/lib/config/env";
 import { createHash } from "node:crypto";
 import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
 import { mediaEnv } from "@/lib/config/media-env";
+import { mediaBudgetFor, storageLimitError } from "@/modules/plans/storage";
 export async function mediaCommand(
   actor: Actor,
   outletId: string,
@@ -44,13 +44,19 @@ export async function uploadDishPhoto(
   if (!bytes.length || bytes.length > 5242880)
     throw new ValidationError("Choose an image up to 5 MiB");
   z.string().trim().min(5).max(500).parse(rights);
-  const budget = env.MEDIA_OUTLET_BUDGET_BYTES;
+  const media = await mediaBudgetFor(actor, outletId);
   const id = crypto.randomUUID();
-  const reserved = await mediaCommand(actor, outletId, id, "reserve", {
-    sizeBytes: bytes.length,
-    rights,
-    budget,
-  });
+  let reserved;
+  try {
+    reserved = await mediaCommand(actor, outletId, id, "reserve", {
+      sizeBytes: bytes.length,
+      rights,
+      budget: media.budget,
+    });
+  } catch (error) {
+    // The database refuses with one generic message; when the plan's storage is the reason, say so.
+    throw (await storageLimitError(actor, outletId, media, bytes.length)) ?? error;
+  }
   await putObject(reserved.sourceKey, bytes);
   await mediaCommand(actor, outletId, id, "queue");
   return { id, status: "queued" };

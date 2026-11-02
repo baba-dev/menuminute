@@ -7,6 +7,7 @@ import { dbPlanStore } from "./store";
 import { NO_LIFECYCLE, type LifecycleSnapshot } from "./lifecycle";
 import {
   buildPlanUsageView,
+  type AiCreditSnapshot,
   type IntakeSnapshot,
   type OverflowSnapshot,
   type PlanUsageView,
@@ -69,12 +70,20 @@ export async function getPlanSnapshot(
           store.count(outletId, "tables"),
           store.count(outletId, "chairs"),
         ]);
+        const credit = await tx.execute<{ snap: AiCreditSnapshot | null }>(
+          sql`select app_private.ai_credit_snapshot(${outletId}) as snap`
+        );
+        const bytes = await tx.execute<{ n: string | null }>(
+          sql`select app_private.media_usage_bytes(${outletId}) as n`
+        );
         usage = buildPlanUsageView({
           plan: ctx.plan,
           limits: ctx.limits,
           counts: { outlets, dishes, qrCodes, tables, chairs },
           intake,
           overflow: over.rows[0]?.snap ?? null,
+          ai: credit.rows[0]?.snap ?? null,
+          storage: { usedBytes: Number(bytes.rows[0]?.n ?? 0) },
         });
       }
       return {

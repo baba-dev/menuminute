@@ -7,7 +7,10 @@ import { PLAN_LABELS, PLAN_LIMITS, type PlanKey, type PlanLimits } from "./catal
  * seats are deliberately absent until something enforces them, so the UI never advertises a
  * limit that does not exist.
  */
-export type MeterKey = "outlets" | "dishes" | "qrCodes" | "tables" | "chairs" | "orders";
+const MB = 1024 * 1024;
+
+export type MeterKey =
+  "outlets" | "dishes" | "qrCodes" | "tables" | "chairs" | "orders" | "aiCredits" | "storage";
 /** ok < 80% · near 80–99% · full = cap · over > cap (existing data above a newly applied cap). */
 export type MeterState = "ok" | "near" | "full" | "over";
 
@@ -57,6 +60,10 @@ export type UsageCounts = {
   chairs: number;
 };
 export type IntakeSnapshot = { enabled: boolean; used: number; cap: number };
+/** This month's AI credits spent by the organization, and when they reset (UTC month start). */
+export type AiCreditSnapshot = { used: number; resetsAt: string };
+/** Bytes of photos the outlet stores. */
+export type StorageSnapshot = { usedBytes: number };
 /** Present only while an outlet is over its dish cap and overflow hiding is switched on. */
 export type OverflowSnapshot = { cap: number; count: number; graceUntil: string; hidden: number };
 
@@ -131,12 +138,22 @@ export function buildPlanUsageView(input: {
   counts: UsageCounts;
   intake: IntakeSnapshot | null;
   overflow?: OverflowSnapshot | null;
+  ai?: AiCreditSnapshot | null;
+  storage?: StorageSnapshot | null;
 }): PlanUsageView | null {
-  const { plan, limits, counts, intake, overflow } = input;
+  const { plan, limits, counts, intake, overflow, ai, storage } = input;
   if (plan === "dedicated") return null;
   const nextPlan = NEXT_PLAN[plan];
   const hint = (
-    resource: "outlets" | "dishes" | "qrCodes" | "tables" | "chairs" | "ordersPerMonth"
+    resource:
+      | "outlets"
+      | "dishes"
+      | "qrCodes"
+      | "tables"
+      | "chairs"
+      | "ordersPerMonth"
+      | "aiCreditsPerMonth"
+      | "mediaBytes"
   ): string | undefined => {
     if (!nextPlan) return undefined;
     const cap = PLAN_LIMITS[nextPlan][resource];
@@ -144,10 +161,14 @@ export function buildPlanUsageView(input: {
     const current = limits[resource];
     if (cap !== null && current !== null && cap <= current) return undefined;
     const label = PLAN_LABELS[nextPlan];
-    if (resource === "ordersPerMonth")
+    if (resource === "ordersPerMonth" || resource === "aiCreditsPerMonth")
       return cap === null
         ? `${label} has no monthly cap`
         : `${label} allows ${cap.toLocaleString("en-US")} a month`;
+    if (resource === "mediaBytes")
+      return cap === null
+        ? `${label} has no cap`
+        : `${label} allows ${fmt(Math.floor(cap / MB))} MB`;
     return cap === null ? `${label} has no cap` : `${label} allows ${cap.toLocaleString("en-US")}`;
   };
   const meters: UsageMeterView[] = [];
@@ -189,6 +210,31 @@ export function buildPlanUsageView(input: {
         intake.cap,
         "Resets each calendar month",
         hint("ordersPerMonth")
+      )
+    );
+
+  if (ai && limits.aiCreditsPerMonth !== null)
+    meters.push(
+      buildMeter(
+        "aiCredits",
+        "AI credits",
+        "AI credits this month",
+        ai.used,
+        limits.aiCreditsPerMonth,
+        `Resets ${fmtDate(ai.resetsAt)}`,
+        hint("aiCreditsPerMonth")
+      )
+    );
+  if (storage && limits.mediaBytes !== null)
+    meters.push(
+      buildMeter(
+        "storage",
+        "Photo storage",
+        "MB of photos",
+        Math.ceil(storage.usedBytes / MB),
+        Math.floor(limits.mediaBytes / MB),
+        undefined,
+        hint("mediaBytes")
       )
     );
 

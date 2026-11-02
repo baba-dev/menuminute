@@ -35,6 +35,14 @@ async function seedOwner() {
           outletType: "restaurant",
         }),
       ]);
+      // The Free plan holds 2 tables and 6 chairs; this spec builds a larger room, so give it a plan that does.
+      await client.query(
+        `insert into entitlement_grants
+         (id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
+         values($1,$2,'ordering.new','INR',now()-interval '1 minute',now()+interval '1 day',
+                'browser-test','Dining floor acceptance',$3)`,
+        [crypto.randomUUID(), "org-" + outletId, crypto.randomUUID()]
+      );
       await client.query("commit");
     } catch (error) {
       await client.query("rollback");

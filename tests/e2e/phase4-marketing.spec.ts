@@ -10,7 +10,7 @@ test("public pricing advertises the four INR tiers without unsupported internati
 
   for (const price of ["₹0", "₹119", "₹499", "₹30,000"])
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("3 outlets included, +₹149 per extra outlet")).toBeVisible();
+  await expect(page.getByText("One flat price for up to 10 outlets")).toBeVisible();
   await expect(page.getByText(/international pricing is coming later/)).toBeVisible();
   await expect(page.getByText("Virtually unlimited").first()).toBeVisible();
   await expect(page.getByRole("table", { name: /Limits and features/ })).toBeVisible();

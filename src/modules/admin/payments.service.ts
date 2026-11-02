@@ -43,7 +43,7 @@ export async function listSubscriptionPlans() {
       displayName: "Kitchen Pro",
       monthlyPricePaise: PAID_PLAN_CATALOG.kitchen_pro.monthlyPricePaise,
       features:
-        "Up to 10 outlets (3 included), 2,000 dishes, Live KDS Station Displays, Station Routing, POS Till",
+        "Up to 10 outlets, 2,000 dishes, Live KDS Station Displays, Station Routing, POS Till",
       isActive: true,
       sortOrder: 3,
     },

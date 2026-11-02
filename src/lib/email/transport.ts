@@ -3,6 +3,8 @@ export type TransactionalEmail = Readonly<{
   to: string;
   subject: string;
   text: string;
+  /** Optional rich version; `text` is always sent too, as the plain alternative. */
+  html?: string;
 }>;
 
 export interface EmailTransport {

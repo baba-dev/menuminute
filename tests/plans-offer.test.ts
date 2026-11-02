@@ -4,14 +4,14 @@ import { buildBillingPageView, coerceSubscriptions } from "../src/modules/plans/
 import { benefitsBetween, buildNextUp, planLadder, planPrice } from "../src/modules/plans/offer";
 
 describe("prices and benefits come from the reviewed catalogs", () => {
-  it("publishes the four prices: INR 0, 119, 499 (3 outlets included, +149 each) and 30,000", () => {
+  it("publishes the four prices: INR 0, 119, a flat 499 for up to 10 outlets, and 30,000", () => {
     expect(planPrice("free")).toEqual({ label: "₹0", note: "forever", paid: false });
     expect(planPrice("ordering")).toEqual({ label: "₹119", note: "per month", paid: true });
     expect(planPrice("kitchen_pro")).toEqual({
       label: "₹499",
       note: "per month",
       paid: true,
-      detail: "3 outlets included, +₹149 per extra outlet",
+      detail: "One flat price for up to 10 outlets",
     });
     // Dedicated is sold by contract: its price is published but it is not a checkout product.
     expect(planPrice("dedicated")).toEqual({ label: "₹30,000", note: "per month", paid: false });
@@ -23,7 +23,7 @@ describe("prices and benefits come from the reviewed catalogs", () => {
     expect(rows("free").slice(0, 3)).toEqual(["1 outlet", "20 dishes", "2 QR codes"]);
     expect(rows("ordering").slice(0, 3)).toEqual(["1 outlet", "200 dishes", "25 QR codes"]);
     expect(rows("kitchen_pro").slice(0, 3)).toEqual([
-      "Up to 10 outlets (3 included)",
+      "Up to 10 outlets",
       "2,000 dishes",
       "200 QR codes",
     ]);
@@ -42,7 +42,7 @@ describe("prices and benefits come from the reviewed catalogs", () => {
     });
     expect(withIntake.find((b) => b.key === "orders")?.from).toBe("100 a month");
     expect(benefitsBetween("ordering", "kitchen_pro").map((b) => [b.key, b.from, b.to])[0]).toEqual(
-      ["outlets", "1", "10 (3 included)"]
+      ["outlets", "1", "10"]
     );
     expect(benefitsBetween("ordering", "kitchen_pro").map((b) => b.key)).toEqual([
       "outlets",

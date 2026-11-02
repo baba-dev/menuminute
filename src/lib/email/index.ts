@@ -1,21 +1,8 @@
-import { env, type Env } from "@/lib/config/env";
-import { createResendTransport } from "./providers/resend";
-import { createSmtpTransport } from "./providers/smtp";
-import { createTestTransport } from "./providers/test";
+import { env } from "@/lib/config/env";
+import { createEmailTransport } from "./factory";
 import type { EmailTransport, TransactionalEmail } from "./transport";
 
-export function createEmailTransport(config: Env): EmailTransport {
-  if (config.EMAIL_PROVIDER === "smtp")
-    return createSmtpTransport({
-      host: config.SMTP_HOST!,
-      port: config.SMTP_PORT!,
-      secure: config.SMTP_SECURE!,
-      user: config.SMTP_USER!,
-      password: config.SMTP_PASSWORD!,
-    });
-  if (config.EMAIL_PROVIDER === "resend") return createResendTransport(config.RESEND_API_KEY!);
-  return createTestTransport();
-}
+export { createEmailTransport } from "./factory";
 
 let transport: EmailTransport | undefined;
 

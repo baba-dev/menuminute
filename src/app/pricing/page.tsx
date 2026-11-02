@@ -5,14 +5,13 @@ import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing
 import { CheckCircle, Sparkles, Terminal } from "lucide-react";
 import { planLadder, type PlanOffer } from "@/modules/plans/offer";
 import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
-import { KITCHEN_PRO_INCLUDED_OUTLETS } from "@/modules/billing/catalog";
 import { fmt } from "@/modules/plans/view";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
   title: "Pricing",
   description:
-    "Free permanent QR menus. Ordering from ₹119 a month, Kitchen Pro from ₹499 a month with three outlets included, and Dedicated at ₹30,000 a month.",
+    "Free permanent QR menus. Ordering from ₹119 a month, Kitchen Pro at a flat ₹499 a month for up to ten outlets, and Dedicated at ₹30,000 a month.",
 };
 
 /** Everything below comes from the reviewed plan catalogs, the same ones checkout uses. */
@@ -64,7 +63,7 @@ const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
     label: "Outlets",
     cell: (p) =>
       p === "kitchen_pro"
-        ? `Up to ${fmt(PLAN_LIMITS.kitchen_pro.outlets ?? 10)} (${KITCHEN_PRO_INCLUDED_OUTLETS} included)`
+        ? `Up to ${fmt(PLAN_LIMITS.kitchen_pro.outlets ?? 10)}`
         : limit(PLAN_LIMITS[p].outlets),
   },
   { label: "Dishes per outlet", cell: (p) => limit(PLAN_LIMITS[p].dishes) },
@@ -72,7 +71,10 @@ const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
   { label: "Dining floor", cell: floor },
   {
     label: "Online ordering",
-    cell: (p) => (p === "free" ? "Browse-only menu" : "Included, no monthly cap"),
+    cell: (p) =>
+      p === "free"
+        ? `Up to ${fmt(PLAN_LIMITS.free.ordersPerMonth ?? 0)} orders a month`
+        : "Included, no monthly cap",
   },
   {
     label: "Kitchen display and stations",
@@ -242,9 +244,9 @@ export default function PricingPage() {
             </table>
           </div>
           <p className="text-muted-foreground mt-4 text-sm">
-            Kitchen Pro includes three outlets; each extra outlet, up to ten, is ₹149 a month.
-            Limits apply per organization and outlet as shown. Your printed QR links keep working on
-            every plan, including after a downgrade.
+            Kitchen Pro is one flat price for up to ten outlets. Limits apply per organization and
+            outlet as shown. Your printed QR links keep working on every plan, including after a
+            downgrade.
           </p>
         </section>
 

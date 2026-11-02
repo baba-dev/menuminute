@@ -7,6 +7,7 @@ import {
 } from "@/db/schema";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { NotFoundError } from "@/lib/errors";
+import { AI_CREDIT_COSTS, spendAiCredits } from "@/modules/plans/credits";
 import { domainError } from "@/modules/organizations/service";
 import { createImportSchema, importId, sourceUploadHeaders, cancelImportSchema } from "./contracts";
 import { digest, getPrivateSource, normalizeSource, putPrivateSource } from "./storage";
@@ -224,4 +225,30 @@ export async function cancelImport(
   } catch (error) {
     domainError(error);
   }
+}
+
+/**
+ * Queues an import for the AI engine. One AI credit per ready page or photo is spent from the organization's
+ * monthly allowance (a plan limit) in the same transaction as the enqueue, so a refused or failed submission
+ * keeps no credit and an import is never started once the allowance is used up. Credits are not refunded if
+ * the provider later fails a page: the request was made.
+ */
+export async function submitImportForProcessing(
+  actor: Actor,
+  outletId: string,
+  importId: string,
+  expectedRevision: number
+) {
+  return withActor(actor, async (tx) => {
+    const pages = await tx.execute<{ n: number }>(
+      sql`select count(*)::int as n from menu_import_sources where import_id=${importId} and outlet_id=${outletId} and status='ready'`
+    );
+    const n = pages.rows[0]?.n ?? 0;
+    if (n > 0) await spendAiCredits(tx, outletId, n * AI_CREDIT_COSTS.importSource);
+    return (
+      await tx.execute<{ result: { id: string; status: string; revision: number } }>(
+        sql`select app_private.import_enqueue(${outletId},${importId},${expectedRevision}) as result`
+      )
+    ).rows[0]!.result;
+  });
 }

@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
+import { setFreeIntake } from "./plan-settings";
 
 async function seedOrdering(enabled: boolean) {
   const url = process.env["MIGRATION_DATABASE_URL"];
@@ -94,18 +95,40 @@ async function seedOrdering(enabled: boolean) {
   return { outletId, publicId, tableToken, email, password };
 }
 
-test("the free QR-only outlet retains its public menu but does not offer checkout", async ({
+test("a free outlet takes orders under its monthly allowance (free intake ships on)", async ({
   page,
 }) => {
-  const fixture = await seedOrdering(false);
-  await page.goto(`/m/${fixture.tableToken}`);
-  await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
-  await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
-  const detail = page.getByRole("dialog", { name: "Paneer Curry" });
-  await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
-  await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
-  await detail.getByRole("button", { name: "Back to menu" }).click();
-  await expect(page.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
+  await setFreeIntake(true);
+  try {
+    const fixture = await seedOrdering(false);
+    await page.goto(`/m/${fixture.tableToken}`);
+    await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
+    await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
+    const detail = page.getByRole("dialog", { name: "Paneer Curry" });
+    await expect(detail.getByRole("button", { name: /Add to Order/ })).toBeVisible();
+    await expect(detail.getByText(/Browse the available options and pricing/)).toHaveCount(0);
+  } finally {
+    await setFreeIntake(false);
+  }
+});
+
+test("with free intake off, the free QR-only outlet retains its public menu but does not offer checkout", async ({
+  page,
+}) => {
+  await setFreeIntake(false);
+  try {
+    const fixture = await seedOrdering(false);
+    await page.goto(`/m/${fixture.tableToken}`);
+    await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
+    await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
+    const detail = page.getByRole("dialog", { name: "Paneer Curry" });
+    await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
+    await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
+    await detail.getByRole("button", { name: "Back to menu" }).click();
+    await expect(page.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
+  } finally {
+    await setFreeIntake(true);
+  }
 });
 
 test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking capability", async ({

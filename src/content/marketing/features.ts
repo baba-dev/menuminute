@@ -392,10 +392,10 @@ export const marketingFeatures: readonly MarketingFeature[] = [
       "See incoming tickets and coordinate preparation across configured stations. Kitchen Pro gives your kitchen a dedicated workflow once your outlet, devices and staff are set up.",
     seoTitle: "Kitchen Display System (KDS) for Restaurants",
     seoDescription:
-      "Explore Kitchen Pro, MenuMinute's restaurant kitchen display with order tickets and station routing. ₹499 a month with three outlets included.",
+      "Explore Kitchen Pro, MenuMinute's restaurant kitchen display with order tickets and station routing. ₹499 a month, flat, for up to ten outlets.",
     availability: "paid",
     availabilityText:
-      "Kitchen Pro is ₹499 a month with three outlets included (₹149 for each extra outlet, up to ten) and it includes online ordering. After you subscribe, set up stations and staff; tickets start routing once your outlet is ready. The public demo does not grant production KDS access.",
+      "Kitchen Pro is a flat ₹499 a month for up to ten outlets and it includes online ordering. After you subscribe, set up stations and staff; tickets start routing once your outlet is ready. The public demo does not grant production KDS access.",
     image: "kitchen",
     imageAlt: "MenuMinute kitchen display with incoming kitchen tickets",
     screenshotCaption: "Kitchen Pro · Actual MenuMinute interface",

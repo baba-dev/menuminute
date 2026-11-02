@@ -290,7 +290,7 @@ export function ChefPass() {
           <div>
             <h3>Less chasing tickets. More focus on the food.</h3>
             <p>
-              Kitchen Pro is ₹499 a month and includes three outlets, online ordering and the
+              Kitchen Pro is ₹499 a month and covers up to ten outlets, online ordering and the
               kitchen display. Set up your stations and staff, and tickets start routing as soon as
               your outlet is ready.
             </p>

@@ -21,6 +21,8 @@ export default defineConfig({
       MEDIA_ROOT: process.env["MEDIA_ROOT"] ?? "/tmp/menuminute-test-media",
       MEDIA_OUTLET_BUDGET_BYTES: process.env["MEDIA_OUTLET_BUDGET_BYTES"] ?? "104857600",
       AUTH_ALLOW_TEST_EMAIL: "true",
+      // Plan caps are on by default in production; suites that exercise them enable them explicitly.
+      PLAN_LIMITS_ENFORCED: "false",
     },
     testTimeout: 15000,
     fileParallelism: false,

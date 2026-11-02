@@ -19,9 +19,9 @@ export function overflowCapsJson(): string {
   return JSON.stringify(caps);
 }
 
-/** The sweep only runs where plan limits are enforced; the database switch is a second, owner-only gate. */
+/** The sweep runs unless plan limits are explicitly switched off (PLAN_LIMITS_ENFORCED=false); the database switch is a second, owner-only gate. */
 export function planOverflowSweepEnabled(env: Record<string, string | undefined> = process.env) {
-  return env["PLAN_LIMITS_ENFORCED"] === "true";
+  return env["PLAN_LIMITS_ENFORCED"] !== "false";
 }
 
 /** Returns the ids of outlets whose hidden set changed. */
