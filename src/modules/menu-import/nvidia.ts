@@ -77,8 +77,7 @@ export function importEngineDiagnostic(vars: Partial<NodeJS.ProcessEnv> = proces
     return { enabled: false, reason: "rollout_disabled" as const };
   if (vars["NVIDIA_IMPORT_COMMERCIAL_APPROVED"] !== "true")
     return { enabled: false, reason: "provider_approval_required" as const };
-  if (!importEngineEnabled(vars))
-    return { enabled: false, reason: "model_unconfigured" as const };
+  if (!importEngineEnabled(vars)) return { enabled: false, reason: "model_unconfigured" as const };
   // The worker has its own env and must validate keys at execution time.
   return { enabled: true, reason: "worker_not_verified" as const };
 }

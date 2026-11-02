@@ -823,8 +823,8 @@ export function FinancialHub({
                     </p>
                     {!finance.paymentsEnabled && (
                       <p role="status">
-                        Advanced finance calculation is not active for this outlet. Use the
-                        ordinary POS for staff-recorded payments and non-fiscal receipts.
+                        Advanced finance calculation is not active for this outlet. Use the ordinary
+                        POS for staff-recorded payments and non-fiscal receipts.
                       </p>
                     )}
                     <button

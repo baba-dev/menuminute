@@ -7,12 +7,9 @@ async function observed_GET(req: Request) {
   try {
     const { actor, restaurant } = await requestContext(req);
     await withOutlet(actor, restaurant.id, "menu.write", async () => true);
-    return NextResponse.json(
-      importEngineDiagnostic(),
-      {
-        headers: { "Cache-Control": "private, no-store" },
-      }
-    );
+    return NextResponse.json(importEngineDiagnostic(), {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     return errorResponse(error, req);
   }

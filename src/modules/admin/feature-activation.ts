@@ -47,7 +47,8 @@ export function featureActivationRows(c: ActivationInputs): ActivationEntry[] {
       title: "Standard POS and cashier shifts",
       state: "entitled",
       scope: "Eligible active outlets",
-      detail: "Normal POS and cash drawers use server-side plan and outlet permissions, not the advanced finance gate.",
+      detail:
+        "Normal POS and cash drawers use server-side plan and outlet permissions, not the advanced finance gate.",
       nextStep: "Verify entitlement and outlet access in the restaurant workspace.",
     },
     {
@@ -71,8 +72,10 @@ export function featureActivationRows(c: ActivationInputs): ActivationEntry[] {
       title: "Advanced POS finance and statutory documents",
       state: "review",
       scope: "Separately approved, per outlet",
-      detail: "Standard POS is independent. Provider settlement and regulated invoices remain subject to distinct fiscal and finance approval.",
-      nextStep: "Check the selected outlet and approved jurisdiction/provider before any fiscal activation.",
+      detail:
+        "Standard POS is independent. Provider settlement and regulated invoices remain subject to distinct fiscal and finance approval.",
+      nextStep:
+        "Check the selected outlet and approved jurisdiction/provider before any fiscal activation.",
     },
     {
       id: "import",
@@ -116,27 +119,33 @@ export function featureActivationRows(c: ActivationInputs): ActivationEntry[] {
             ? "Read, confirmed actions, and publish are configured; authorization, usage costs and confirmation remain mandatory."
             : "Read and confirmed actions are configured. Publishing remains separately disabled."
           : "Read-only inference is configured. Confirmed actions and publishing remain disabled.",
-      nextStep: "Verify approved models, per-model cost ceilings and safe tenant-scoped tool execution before expanding permissions.",
+      nextStep:
+        "Verify approved models, per-model cost ceilings and safe tenant-scoped tool execution before expanding permissions.",
     },
     {
       id: "pwa",
       title: "Operational PWA and offline guest viewing",
       state: c.pwaOperational && c.pwaOutletCount > 0 ? "limited" : "unavailable",
       scope: "Physical-device pilot",
-      detail: c.pwaOperational && c.pwaOutletCount > 0
-        ? `Enabled for ${c.pwaOutletCount} explicit outlet(s), not every paid merchant.`
-        : "Operational offline features are not enabled for an approved outlet.",
-      nextStep: "Complete device, recovery and privacy acceptance in #249 before considering a wider rollout.",
+      detail:
+        c.pwaOperational && c.pwaOutletCount > 0
+          ? `Enabled for ${c.pwaOutletCount} explicit outlet(s), not every paid merchant.`
+          : "Operational offline features are not enabled for an approved outlet.",
+      nextStep:
+        "Complete device, recovery and privacy acceptance in #249 before considering a wider rollout.",
     },
     {
       id: "push",
       title: "Opt-in Web Push",
-      state: c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured ? "limited" : "unavailable",
+      state:
+        c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured ? "limited" : "unavailable",
       scope: "Explicit outlet and device consent",
-      detail: c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured
-        ? `Configured for ${c.pwaPushOutletCount} outlet(s); a device still must opt in and delivery is best effort.`
-        : "The push rollout, outlet pilot, or VAPID configuration is incomplete.",
-      nextStep: "Keep manual permission, current-session checks, and PWA real-device acceptance; never enroll devices automatically.",
+      detail:
+        c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured
+          ? `Configured for ${c.pwaPushOutletCount} outlet(s); a device still must opt in and delivery is best effort.`
+          : "The push rollout, outlet pilot, or VAPID configuration is incomplete.",
+      nextStep:
+        "Keep manual permission, current-session checks, and PWA real-device acceptance; never enroll devices automatically.",
     },
   ];
 }

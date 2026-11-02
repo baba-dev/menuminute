@@ -11,10 +11,12 @@ describe("AI menu import feature gate explanations", () => {
       enabled: false,
       reason: "provider_approval_required",
     });
-    expect(importEngineDiagnostic({
-      MENU_IMPORT_NVIDIA_ENABLED: "true",
-      NVIDIA_IMPORT_COMMERCIAL_APPROVED: "true",
-    })).toEqual({ enabled: false, reason: "model_unconfigured" });
+    expect(
+      importEngineDiagnostic({
+        MENU_IMPORT_NVIDIA_ENABLED: "true",
+        NVIDIA_IMPORT_COMMERCIAL_APPROVED: "true",
+      })
+    ).toEqual({ enabled: false, reason: "model_unconfigured" });
   });
   it("never claims the independently configured worker has been verified", () => {
     const result = importEngineDiagnostic({

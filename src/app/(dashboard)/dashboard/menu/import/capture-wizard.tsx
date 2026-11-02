@@ -1001,7 +1001,8 @@ export function CaptureWizard({
                 {!engine ? (
                   <p className="mt-2 text-sm text-stone-600">
                     Extraction is currently unavailable. Your {totalCount} stored page(s) remain
-                    private. {engineReason === "provider_approval_required"
+                    private.{" "}
+                    {engineReason === "provider_approval_required"
                       ? "Provider commercial approval is required before extraction can start."
                       : engineReason === "model_unconfigured"
                         ? "The extraction model is not configured on this deployment."
@@ -1014,8 +1015,8 @@ export function CaptureWizard({
                     <p className="mt-2 text-sm text-stone-600">
                       This sends your saved photos to the configured AI provider for transcription.
                       A person must verify the resulting draft; it never publishes automatically.
-                      The processing worker verifies its own provider configuration when the job runs;
-                      this status does not guarantee provider availability.
+                      The processing worker verifies its own provider configuration when the job
+                      runs; this status does not guarantee provider availability.
                     </p>
                     <label className="mt-3 flex items-start gap-2 text-sm text-stone-700">
                       <input

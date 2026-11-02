@@ -71,9 +71,7 @@ export default async function AdminFeatureActivationPage() {
     pwaPush: env.PWA_PUSH_ENABLED,
     pwaPushOutletCount: env.PWA_PUSH_OUTLET_IDS.length,
     pwaVapidConfigured: Boolean(
-      env.PWA_PUSH_VAPID_PUBLIC_KEY &&
-      env.PWA_PUSH_VAPID_PRIVATE_KEY &&
-      env.PWA_PUSH_VAPID_SUBJECT
+      env.PWA_PUSH_VAPID_PUBLIC_KEY && env.PWA_PUSH_VAPID_PRIVATE_KEY && env.PWA_PUSH_VAPID_SUBJECT
     ),
   };
   const rows = featureActivationRows(config);
@@ -88,17 +86,20 @@ export default async function AdminFeatureActivationPage() {
           Feature Activation
         </h1>
         <p className="max-w-3xl text-sm text-stone-600 dark:text-stone-400">
-          A read-only overview of platform and environment prerequisites. Configured
-          does not mean a payment, AI request, worker job, or physical device has been
-          verified. Live outlet permissions and entitlements remain authoritative.
+          A read-only overview of platform and environment prerequisites. Configured does not mean a
+          payment, AI request, worker job, or physical device has been verified. Live outlet
+          permissions and entitlements remain authoritative.
         </p>
       </header>
       <div className="flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">
         <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <span>
-          This page cannot activate paid plans or relax security gates. Review merchant
-          permissions in <Link href="/admin/payments" className="font-semibold underline">Payments &amp; Grants</Link>.
-          Keep independent device and billing acceptance documented.
+          This page cannot activate paid plans or relax security gates. Review merchant permissions
+          in{" "}
+          <Link href="/admin/payments" className="font-semibold underline">
+            Payments &amp; Grants
+          </Link>
+          . Keep independent device and billing acceptance documented.
         </span>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -110,16 +111,17 @@ export default async function AdminFeatureActivationPage() {
           >
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 id={`feature-${row.id}`} className="text-base font-semibold text-stone-900 dark:text-white">
+                <h2
+                  id={`feature-${row.id}`}
+                  className="text-base font-semibold text-stone-900 dark:text-white"
+                >
                   {row.title}
                 </h2>
                 <span className={`text-xs font-semibold ${stateColor[row.state]}`}>
                   {stateText[row.state]}
                 </span>
               </div>
-              <p className="text-xs font-medium text-stone-500 dark:text-stone-400">
-                {row.scope}
-              </p>
+              <p className="text-xs font-medium text-stone-500 dark:text-stone-400">{row.scope}</p>
               <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
                 {row.detail}
               </p>
@@ -132,10 +134,12 @@ export default async function AdminFeatureActivationPage() {
         ))}
       </div>
       <p className="text-xs text-stone-500 dark:text-stone-400">
-        Sensitive API keys, credentials, exact outlet identifiers and payment tokens
-        are never included in the diagnostic output. See{" "}
-        <Link className="underline" href="/admin/system">System &amp; Queues</Link>
-        {" "}for operational health.
+        Sensitive API keys, credentials, exact outlet identifiers and payment tokens are never
+        included in the diagnostic output. See{" "}
+        <Link className="underline" href="/admin/system">
+          System &amp; Queues
+        </Link>{" "}
+        for operational health.
       </p>
     </div>
   );
