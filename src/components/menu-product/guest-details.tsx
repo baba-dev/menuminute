@@ -13,6 +13,7 @@ export function GuestDetails({
   remember,
   hasSavedProfile,
   phoneTouched,
+  savedPhoneMasked = null,
   disabled = false,
   onName,
   onPhone,
@@ -27,6 +28,7 @@ export function GuestDetails({
   remember: boolean;
   hasSavedProfile: boolean;
   phoneTouched: boolean;
+  savedPhoneMasked?: string | null;
   disabled?: boolean;
   onName: (value: string) => void;
   onPhone: (value: string) => void;
@@ -82,7 +84,10 @@ export function GuestDetails({
             className={phoneError ? "error" : "quiet"}
             role={phoneError ? "alert" : undefined}
           >
-            {phoneError ?? "Used only for this order. Not a marketing sign-up."}
+            {phoneError ??
+              (savedPhoneMasked
+                ? `Saved ${savedPhoneMasked}. Leave blank to use it, or enter a new number.`
+                : "Used only for this order. Not a marketing sign-up.")}
           </small>
         </div>
       </div>
@@ -114,7 +119,8 @@ export function GuestDetails({
         <span className="stack" style={{ gap: "0.1rem" }}>
           <span>Remember my name and phone on this device</span>
           <small className="quiet">
-            Stored only in this browser for up to 90 days. Instructions are never saved.
+            Saved for this restaurant for up to 6 months, or 90 days in this browser if saving to
+            the restaurant is off. Instructions are never saved. You can forget it anytime.
           </small>
         </span>
       </label>

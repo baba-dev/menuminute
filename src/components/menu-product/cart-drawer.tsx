@@ -102,6 +102,7 @@ export function CartDrawer({
   pickupLeadMinutes = 15,
   pickupSlotMinutes = 15,
   pickupAdvanceDays = 7,
+  deviceMemory = false,
   images = {},
   suggestions = [],
   onChooseSuggestion,
@@ -120,6 +121,8 @@ export function CartDrawer({
   pickupLeadMinutes?: number;
   pickupSlotMinutes?: number;
   pickupAdvanceDays?: number;
+  /** Server-side device profile is approved and enabled; otherwise the local fallback is used. */
+  deviceMemory?: boolean;
   images?: Record<string, DiningVisual>;
   suggestions?: {
     dish: CustomizerDish;
@@ -151,6 +154,7 @@ export function CartDrawer({
   const [orderNotes, setOrderNotes] = useState("");
   const [rememberDetails, setRememberDetails] = useState(false);
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
+  const [savedPhoneMasked, setSavedPhoneMasked] = useState<string | null>(null);
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [pickupTime, setPickupTime] = useState("");
   const [pendingRecovery, setPendingRecovery] = useState<PendingGuestOrder | null>(null);
@@ -202,6 +206,21 @@ export function CartDrawer({
         sessionStorage.getItem(pendingOrderStorageKey(token)),
         token
       );
+      if (!recovered && deviceMemory) {
+        void fetch("/api/public-orders/device?token=" + encodeURIComponent(token), {
+          cache: "no-store",
+        })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((saved: { remembered?: boolean; name?: string; phoneMasked?: string } | null) => {
+            if (!saved?.remembered) return;
+            setCustomerName((current) => current || saved.name || "");
+            setSavedPhoneMasked(saved.phoneMasked || null);
+            setRememberDetails(true);
+            setHasSavedProfile(true);
+          })
+          .catch(() => undefined);
+        return;
+      }
       if (!recovered) {
         const saved = readGuestProfile(localStorage);
         if (saved) {
@@ -224,7 +243,7 @@ export function CartDrawer({
       );
     }, 0);
     return () => clearTimeout(timer);
-  }, [token, timezone]);
+  }, [token, timezone, deviceMemory]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -265,6 +284,7 @@ export function CartDrawer({
         customerName: customerName.trim(),
         customerPhone: cleanPhoneInput(customerPhone),
         notes: orderNotes.trim(),
+        useSavedContact: deviceMemory && Boolean(savedPhoneMasked) && !customerPhone.trim(),
         items: items.map((i) => ({
           dishId: i.dishId,
           variantId: i.variantId,
@@ -628,8 +648,14 @@ export function CartDrawer({
                 onPhoneBlur={() => setPhoneTouched(true)}
                 onNotes={setOrderNotes}
                 onRemember={setRememberDetails}
+                savedPhoneMasked={savedPhoneMasked}
                 onForget={() => {
                   clearGuestProfile(localStorage);
+                  if (deviceMemory)
+                    void fetch("/api/public-orders/device", { method: "DELETE" }).catch(
+                      () => undefined
+                    );
+                  setSavedPhoneMasked(null);
                   setHasSavedProfile(false);
                   setRememberDetails(false);
                   setCustomerName("");

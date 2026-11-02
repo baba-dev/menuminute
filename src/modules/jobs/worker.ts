@@ -392,7 +392,10 @@ export async function startWorker(
     maintenance = pool
       .query("select app_private.kitchen_prune_events()")
       .then(() => pool.query("select app_private.prune_table_signals()"))
-      .catch(() => console.error("Kitchen or table-signal retention maintenance unavailable"))
+      .then(() => pool.query("select app_private.guest_device_prune()"))
+      .catch(() =>
+        console.error("Kitchen, table-signal or device retention maintenance unavailable")
+      )
       .finally(() => {
         maintenance = undefined;
       });

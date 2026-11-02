@@ -59,10 +59,12 @@ export function PublicMenu({
   initial,
   token,
   preview = false,
+  deviceMemory = false,
 }: {
   initial: PublicProduct;
   token?: string;
   preview?: boolean;
+  deviceMemory?: boolean;
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -956,6 +958,7 @@ export function PublicMenu({
           items={cartItems}
           currency={data.outlet.currency}
           token={token}
+          deviceMemory={deviceMemory && !data.outlet.isDemoData}
           outletName={data.outlet.name}
           point={data.point}
           fulfillmentModes={data.outlet.fulfillmentModes}

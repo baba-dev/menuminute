@@ -1,6 +1,8 @@
 import { sql, eq, and, desc, inArray } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { getPool } from "@/db";
+import { env } from "@/lib/config/env";
+import { lookupSavedContact } from "@/modules/guest-device/service";
 import { orders, orderItems, restaurants, type SelectedOptionSnapshot } from "@/db/schema";
 import { publicProduct } from "@/modules/menu-product/service";
 import { projectMenu } from "@/modules/menu-product/projector";
@@ -76,8 +78,26 @@ export function validatePickupInstant(input: {
 
 // ─── Guest Order Submission ───────────────────────────────────────────────────
 
-export async function submitGuestOrder(token: string, raw: unknown) {
-  const input = orderSubmissionSchema.parse(raw);
+export async function submitGuestOrder(
+  token: string,
+  raw: unknown,
+  options: { deviceCookie?: string | null } = {}
+) {
+  const { useSavedContact, ...parsed } = orderSubmissionSchema.parse(raw);
+  const input = { ...parsed };
+  // Fill blank contact fields from the device profile on the server. Hashing the resolved input
+  // keeps retries of the same submission idempotent for the same device.
+  if (
+    useSavedContact &&
+    env.PUBLIC_DINER_DEVICE_ENABLED &&
+    (!input.customerName || !input.customerPhone)
+  ) {
+    const saved = await lookupSavedContact(token, options.deviceCookie);
+    if (saved) {
+      input.customerName = input.customerName || saved.name;
+      input.customerPhone = input.customerPhone || saved.phone;
+    }
+  }
   const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   // A committed submission must be recoverable even if the menu changes after an HTTP response is lost.
   try {

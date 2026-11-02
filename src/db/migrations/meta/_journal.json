@@ -701,6 +701,13 @@
       "when": 1796734800036,
       "tag": "0100_kitchen_catalog_reactivation",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1796734800037,
+      "tag": "0101_guest_device_profile",
+      "breakpoints": true
     }
   ]
 }

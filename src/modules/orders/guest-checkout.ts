@@ -13,6 +13,7 @@ const pendingBody = z
     customerName: z.string().max(80),
     customerPhone: z.string().max(30),
     notes: z.string().max(500),
+    useSavedContact: z.boolean().optional(),
     items: z
       .array(
         z.object({
