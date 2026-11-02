@@ -407,6 +407,10 @@
   animation: guest-fade 0.18s ease-out;
 }
 .guests-drawer {
+  /* Radix portals the drawer outside .guests-shell: define its tokens locally. */
+  --guest-line: #e6d9ce;
+  --guest-ink: var(--ink, #30251d);
+  --guest-muted: #76665a;
   position: fixed;
   z-index: 101;
   right: 0;
@@ -419,6 +423,10 @@
   padding: clamp(20px, 4vw, 32px);
   box-shadow: -20px 0 100px #0002;
   animation: guest-slide 0.24s ease-out;
+}
+:root[data-theme="dark"] .guests-drawer {
+  --guest-line: #504239;
+  --guest-muted: #c5b1a1;
 }
 .guests-drawer-header {
   display: flex;
