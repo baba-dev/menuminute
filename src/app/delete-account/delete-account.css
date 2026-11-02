@@ -27,7 +27,9 @@
   font-weight: 800;
   min-height: 48px;
   border-radius: 0.85rem;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
 .delete-primary-action {
   background: #ffbd72;
