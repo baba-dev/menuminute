@@ -582,6 +582,20 @@
       "when": 1795525200032,
       "tag": "0083_pricing_and_supersede",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1795611600032,
+      "tag": "0084_plan_switches_on",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1795698000032,
+      "tag": "0085_plan_email_notices",
+      "breakpoints": true
     }
   ]
 }

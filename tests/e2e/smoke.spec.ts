@@ -19,7 +19,7 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
       await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
     for (const price of ["₹0", "₹119", "₹499", "₹30,000"])
       await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("3 outlets included, +₹149 per extra outlet")).toBeVisible();
+    await expect(page.getByText("One flat price for up to 10 outlets")).toBeVisible();
     await expect(page.getByText("TBA", { exact: true })).toHaveCount(0);
   });
 

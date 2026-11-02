@@ -14,7 +14,6 @@ vi.mock("@/lib/config/env", () => ({
     RAZORPAY_WEBHOOK_SECRET: "test-webhook-key",
     RAZORPAY_PLAN_ORDERING_ID: "plan_ORDERING_TEST",
     RAZORPAY_PLAN_KITCHEN_ID: "plan_KITCHEN_TEST",
-    RAZORPAY_PLAN_KITCHEN_LEGACY_ID: "plan_KITCHEN_LEGACY",
     RAZORPAY_KITCHEN_ENABLED: false,
   },
 }));
@@ -119,18 +118,13 @@ describe("Razorpay webhook route", () => {
       expect(m.charge).toHaveBeenCalledOnce();
     });
 
-    it("keeps accepting INR 299 only on the legacy plan existing subscribers renew on", async () => {
-      expect((await POST(request(kitchen("plan_KITCHEN_TEST", 29900)))).status).toBe(422);
-      expect((await POST(request(kitchen("plan_KITCHEN_LEGACY", 29900)))).status).toBe(200);
-      expect((await POST(request(kitchen("plan_KITCHEN_LEGACY", 29899)))).status).toBe(422);
-      expect(m.charge).toHaveBeenCalledOnce();
+    it("rejects a Kitchen Pro charge on an unknown provider plan", async () => {
+      expect((await POST(request(kitchen("plan_SOMETHING_ELSE", 49900)))).status).toBe(422);
+      expect(m.charge).not.toHaveBeenCalled();
     });
 
     it("stops any Ordering subscription from renewing after a verified Kitchen Pro payment", async () => {
       await POST(request(kitchen("plan_KITCHEN_TEST", 49900)));
-      expect(m.supersede).toHaveBeenCalledWith("sub_KITCHEN12345");
-      m.supersede.mockClear();
-      await POST(request(kitchen("plan_KITCHEN_LEGACY", 29900)));
       expect(m.supersede).toHaveBeenCalledWith("sub_KITCHEN12345");
     });
 

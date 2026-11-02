@@ -17,6 +17,7 @@ export function createResendTransport(apiKey: string): EmailTransport {
             to: [message.to],
             subject: message.subject,
             text: message.text,
+            ...(message.html ? { html: message.html } : {}),
           }),
           signal: AbortSignal.timeout(8_000),
           cache: "no-store",

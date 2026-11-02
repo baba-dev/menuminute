@@ -1,10 +1,4 @@
-import {
-  DEDICATED_MONTHLY_PAISE,
-  EXTRA_OUTLET_MONTHLY_PAISE,
-  KITCHEN_PRO_INCLUDED_OUTLETS,
-  formatInr,
-  inrMonthlyPrice,
-} from "@/modules/billing/catalog";
+import { DEDICATED_MONTHLY_PAISE, formatInr, inrMonthlyPrice } from "@/modules/billing/catalog";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanKey } from "./catalog";
 import { fmt, NEXT_PLAN, type IntakeSnapshot } from "./view";
 
@@ -31,8 +25,7 @@ export function planPrice(plan: PlanKey): PricePoint {
   if (plan === "dedicated")
     return { label: formatInr(DEDICATED_MONTHLY_PAISE), note: "per month", paid: false };
   const price: PricePoint = { label: inrMonthlyPrice(plan), note: "per month", paid: true };
-  if (plan === "kitchen_pro")
-    price.detail = `${KITCHEN_PRO_INCLUDED_OUTLETS} outlets included, +${formatInr(EXTRA_OUTLET_MONTHLY_PAISE)} per extra outlet`;
+  if (plan === "kitchen_pro") price.detail = "One flat price for up to 10 outlets";
   return price;
 }
 
@@ -49,11 +42,9 @@ export const UNLIMITED = "Virtually unlimited";
 const capText = (n: number | null) => (n === null ? UNLIMITED : fmt(n));
 const floorText = (tables: number | null, chairs: number | null) =>
   tables === null || chairs === null ? UNLIMITED : `${fmt(tables)} tables · ${fmt(chairs)} chairs`;
-/** "10 (3 included)" for Kitchen Pro, whose first outlets are included in the price. */
 const outletText = (plan: PlanKey) => {
   const n = PLAN_LIMITS[plan].outlets;
-  if (n === null) return UNLIMITED;
-  return plan === "kitchen_pro" ? `${fmt(n)} (${KITCHEN_PRO_INCLUDED_OUTLETS} included)` : fmt(n);
+  return n === null ? UNLIMITED : fmt(n);
 };
 
 /** What moving from one plan to a higher one changes. Every row is a real, enforced difference. */
@@ -116,22 +107,23 @@ export function planHighlights(plan: PlanKey, opts: Opts = {}): string[] {
     list.push("Virtually unlimited tables and chairs");
   } else {
     const outlets = l.outlets ?? 1;
-    list.push(
-      plan === "kitchen_pro"
-        ? `Up to ${fmt(outlets)} outlets (${KITCHEN_PRO_INCLUDED_OUTLETS} included)`
-        : `${fmt(outlets)} outlet`
-    );
+    list.push(plan === "kitchen_pro" ? `Up to ${fmt(outlets)} outlets` : `${fmt(outlets)} outlet`);
     if (l.dishes !== null) list.push(`${fmt(l.dishes)} dishes`);
     if (l.qrCodes !== null) list.push(`${fmt(l.qrCodes)} QR codes`);
     if (l.tables !== null && l.chairs !== null) list.push(floorText(l.tables, l.chairs));
   }
-  if (plan === "free")
+  if (plan === "free") {
+    // Free order intake ships on. Without a live snapshot (the public pricing page) show the shipped
+    // allowance; only an explicit "off" snapshot (an operator switched it off) says browse-only.
+    const cap = opts.intake
+      ? opts.intake.enabled
+        ? opts.intake.cap
+        : null
+      : PLAN_LIMITS.free.ordersPerMonth;
     list.push(
-      opts.intake?.enabled
-        ? `Up to ${fmt(opts.intake.cap)} online orders a month`
-        : "Guests browse; ordering needs a paid plan"
+      cap ? `Up to ${fmt(cap)} online orders a month` : "Guests browse; ordering needs a paid plan"
     );
-  else list.push("Online ordering with no monthly cap");
+  } else list.push("Online ordering with no monthly cap");
   if (plan === "kitchen_pro" || plan === "dedicated") list.push("Kitchen display and stations");
   if (plan === "dedicated") list.push("Your own domain and branding, set up with our team");
   return list;

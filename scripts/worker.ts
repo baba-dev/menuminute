@@ -1,12 +1,14 @@
 import { startWorker } from "../src/modules/jobs/worker";
 import { logger } from "../src/lib/logger";
 import { startPushDispatcher } from "../src/modules/pwa/push-worker";
+import { startPlanEmailDispatcher } from "../src/modules/plans/email-worker";
 const databaseUrl = process.env["WORKER_DATABASE_URL"];
 const queueUrl = process.env["REDIS_QUEUE_URL"];
 if (!databaseUrl || !queueUrl)
   throw new Error("Explicit worker database and queue configuration required");
 const runtime = await startWorker(databaseUrl, queueUrl);
 const push = startPushDispatcher(runtime.pool);
+const planEmail = startPlanEmailDispatcher(runtime.pool);
 logger.info("MenuMinute worker started", { event: "worker.started" });
 let closing = false;
 for (const signal of ["SIGTERM", "SIGINT"]) {
@@ -20,8 +22,7 @@ for (const signal of ["SIGTERM", "SIGINT"]) {
       process.exit(1);
     }, 30000);
     deadline.unref();
-    push
-      .close()
+    Promise.all([push.close(), planEmail.close()])
       .then(() => runtime.close())
       .then(() => {
         clearTimeout(deadline);
