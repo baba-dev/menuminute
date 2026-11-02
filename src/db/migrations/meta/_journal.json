@@ -659,6 +659,20 @@
       "when": 1796475600032,
       "tag": "0094_pos_bill_signal",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1796562000032,
+      "tag": "0095_assistant_floor_signals_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1796648400032,
+      "tag": "0096_demo_signals",
+      "breakpoints": true
     }
   ]
 }

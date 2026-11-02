@@ -30,6 +30,9 @@ describe("public demo request guard (allowlist)", () => {
     expect(demoRequestAllowed("PUT", "/api/floor/chairs/c1/occupancy")).toBe(true);
     expect(demoRequestAllowed("POST", "/api/floor/tables/t1/occupancy")).toBe(true);
     expect(demoRequestAllowed("DELETE", "/api/floor/tables/t1/occupancy")).toBe(true);
+    // A visitor may act on a sample water request, but never switch the live signals themselves.
+    expect(demoRequestAllowed("POST", "/api/floor/water")).toBe(true);
+    expect(demoRequestAllowed("PUT", "/api/floor/signals")).toBe(false);
     for (const [m, p] of [
       ["POST", "/api/floor/tables"],
       ["DELETE", "/api/floor/tables/t1"],

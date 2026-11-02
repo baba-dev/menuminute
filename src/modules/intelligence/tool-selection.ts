@@ -66,6 +66,14 @@ export function selectQuestionTools<T extends { name: string }>(
     if (/\b(order|#\s?\d+)\b/.test(q)) add("propose.orderStatus");
     if (/\b(ticket|kitchen|prep|start cooking)\b/.test(q)) add("propose.kitchenTicket");
   }
+  // The optional live table signals on the dining floor (turn on or off; the person confirms).
+  if (
+    /\b(live )?(table )?signals?\b|\bguest journey\b|\bwater button\b|\bqr (scan )?(ping|indicator)s?\b/.test(
+      q
+    ) &&
+    /\b(turn|switch|enable|disable|activate|deactivate|start|stop|show|hide|on|off)\b/.test(q)
+  )
+    add("propose.floorSignals");
   // Product questions (plans, pricing, features) are answered from the published Help Center.
   const productInfo =
     /\b(menuminute|kitchen pro|pricing|pricing plans?|commission|subscription|upgrade|free plan|offline|install(?:ing)? the app)\b/.test(

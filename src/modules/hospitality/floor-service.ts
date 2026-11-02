@@ -859,3 +859,31 @@ export async function updateSignalSettings(
     })
   );
 }
+
+/** Current live-signal switches for an outlet (all off when never configured). */
+export async function getSignalSettings(
+  actor: Actor,
+  outletId: string
+): Promise<FloorSignalSettings> {
+  return withOutletRead(actor, outletId, "orders.read", async (tx) => {
+    const row = (
+      await tx.execute<{
+        enabled: boolean;
+        qr_scan_pings: boolean;
+        guest_water_button: boolean;
+        show_kitchen: boolean;
+        show_pos_bill: boolean;
+      }>(sql`select enabled, qr_scan_pings, guest_water_button, show_kitchen, show_pos_bill
+        from floor_signal_settings where outlet_id=${outletId}`)
+    ).rows[0];
+    return row
+      ? {
+          enabled: row.enabled,
+          qrScanPings: row.qr_scan_pings,
+          guestWaterButton: row.guest_water_button,
+          showKitchen: row.show_kitchen,
+          showPosBill: row.show_pos_bill,
+        }
+      : DEFAULT_SIGNAL_SETTINGS;
+  });
+}

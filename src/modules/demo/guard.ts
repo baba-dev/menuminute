@@ -20,6 +20,8 @@ const ALLOWED: ReadonlyArray<readonly [method: string, pattern: RegExp]> = [
   ["POST", new RegExp(`${outletScope}/service-requests$`)],
   ["POST", new RegExp(`${outletScope}/menu/quick-availability$`)],
   ["POST", new RegExp(`${outletScope}/kitchen/(work|release|reassign)$`)],
+  // Acknowledge or resolve a (sample) water request; the live-signal switch itself stays blocked.
+  ["POST", /^\/api\/floor\/water$/],
   // Floor occupancy (tap a chair, seat or clear a table). Reset rebuilds the demo tables and chairs.
   ["PUT", /^\/api\/floor\/chairs\/[^/]+\/occupancy$/],
   ["POST", /^\/api\/floor\/tables\/[^/]+\/occupancy$/],

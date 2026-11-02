@@ -11,7 +11,7 @@ four KPI tiles (total tables, total chairs, maximum occupancy, sections), sectio
 the next booking and the permanent system ID. It reuses the dashboard shell tokens (`.mm-dashboard-hero`,
 `--paper`, `--ink`, `--muted`, `--ember`, `--decorative`), the `DashboardTooltip` help popover and Radix dialogs.
 
-## Live table signals (optional, slices 1-5 of 6)
+## Live table signals (optional, slices 1-6 of 6)
 
 Status: **implemented in code; not deployed.** Migration `0090_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
@@ -59,7 +59,14 @@ paid and water. It is **off by default**; with it off no signal query runs and t
   source only, idempotent, at the bill's own time). Paying records `paid` through the slice 4 trigger. The old
   `refundSale` link still works.
 - The floor card no longer shows the permanent System ID. It is still in the API and the table edit dialog.
-- Remaining slices: demo sample events and the Ember (assistant-action) toggle.
+- **Ember, demo and source switches (slice 6, migrations `0095` and `0096`).** The floor page switch gains four source
+  checkboxes (QR scanned, water requests, cooking and handoff, bill and payment). Ember can turn the signals on or off
+  through the existing confirm-first action flow (`propose.floorSignals`, kind `floor.signals`; see
+  [intelligence-action-requests.md](intelligence-action-requests.md)). The public demo outlet gets sample signals on every
+  reset (see [demo.md](demo.md)); `table_signal_events` and `floor_signal_settings` remain in the reset test's preserved
+  list because the dedicated seed function owns the demo outlet's rows.
+- Not built: a specific waiter assignment ("order assigned" means the kitchen accepted the order), a guest "call server"
+  indicator, and indicators on the Overview miniature. Browser/e2e checks of the new floor features are still to be added.
 
 ## Domain rules
 

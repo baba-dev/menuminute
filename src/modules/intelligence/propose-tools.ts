@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { staffServiceRequests, type GuestServiceRequest } from "@/modules/hospitality/service";
+import { getSignalSettings } from "@/modules/hospitality/floor-service";
+import { signalSettingsInputSchema } from "@/modules/hospitality/floor-contracts";
 import { listOutletOrders } from "@/modules/orders/service";
 import { kitchenSnapshot } from "@/modules/kitchen/service";
 import { ForbiddenError } from "@/lib/errors";
@@ -109,6 +111,14 @@ const menuDescriptionSchema = z
   })
   .strict();
 const menuPublishSchema = z.object({ menu: z.string().trim().min(1).max(80).optional() }).strict();
+
+const SIGNAL_SETTING_WORDS = {
+  enabled: "live table signals",
+  qrScanPings: "the QR scan indicator",
+  guestWaterButton: "the guest water button",
+  showKitchen: "kitchen indicators",
+  showPosBill: "bill and payment indicators",
+} as const;
 
 const withConversation = (context: ToolContext) => {
   if (!context.conversationId) throw new ForbiddenError("Actions need an open conversation");
@@ -508,6 +518,49 @@ export const proposeTools = [
       return prepared(summary, row.kind, row.id);
     },
   },
+  {
+    name: "propose.floorSignals",
+    description:
+      "Prepare (not perform) turning the optional live table signals on or off on the dining floor, or switching one of its sources (QR scan, guest water button, kitchen, bill and payment), for the person to confirm. Use ONLY when the person explicitly asks to turn these on or off. Never claims the change is done.",
+    parameters: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean" },
+        qrScanPings: { type: "boolean" },
+        guestWaterButton: { type: "boolean" },
+        showKitchen: { type: "boolean" },
+        showPosBill: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+    schema: signalSettingsInputSchema,
+    permissions: ["menu.write"],
+    run: async (context: ToolContext, args: z.infer<typeof signalSettingsInputSchema>) => {
+      const conversationId = withConversation(context);
+      const current = await getSignalSettings(context.actor, context.outletId);
+      // Only what would actually change is proposed, so the card never confirms a no-op.
+      const changes = Object.fromEntries(
+        Object.entries(args).filter(
+          ([key, value]) => current[key as keyof typeof current] !== value
+        )
+      ) as z.infer<typeof signalSettingsInputSchema>;
+      const keys = Object.keys(changes) as (keyof typeof SIGNAL_SETTING_WORDS)[];
+      if (!keys.length) return empty("Those live table signal settings are already set that way.");
+      const parts = keys.map(
+        (key) => `${changes[key] ? "turn on" : "turn off"} ${SIGNAL_SETTING_WORDS[key]}`
+      );
+      const summary = parts[0]!.charAt(0).toUpperCase() + parts.join(", ").slice(1);
+      const row = await proposeAction(context, {
+        conversationId,
+        key: randomUUID(),
+        kind: "floor.signals",
+        params: changes,
+        expected: {},
+        summary,
+      });
+      return prepared(summary, row.kind, row.id);
+    },
+  },
 ] as const;
 
 export type ProposeToolName = (typeof proposeTools)[number]["name"];
@@ -537,6 +590,8 @@ export async function executeProposeTool(context: ToolContext, name: string, unt
       return proposeTools[5].run(context, proposeTools[5].schema.parse(untrusted));
     case "propose.menuPublish":
       return proposeTools[6].run(context, proposeTools[6].schema.parse(untrusted));
+    case "propose.floorSignals":
+      return proposeTools[7].run(context, proposeTools[7].schema.parse(untrusted));
     default:
       throw new Error("Unknown action tool");
   }

@@ -38,9 +38,10 @@ const PRESERVED: Record<string, string> = {
   dining_sections: "floor configuration; the demo section is re-asserted when tables are restored",
   restaurant_chairs:
     "removed with their table by ON DELETE CASCADE; trigger restaurant_tables_demo_seed re-seeds them (migration 0073)",
-  floor_signal_settings: "configuration (optional live table signals; default off, migration 0090)",
+  floor_signal_settings:
+    "configuration (optional live table signals; default off, migration 0090); the demo outlet's is switched on by seed_demo_signals",
   table_signal_events:
-    "ephemeral telemetry ledger, no producers yet; demo sample events arrive with the demo slice",
+    "ephemeral telemetry ledger pruned after 48 hours; app_private.seed_demo_signals (0096) clears and re-seeds the demo outlet's after each reset",
   dining_reservations: "reservations ledger",
   domain_audit: "audit trail",
   domain_projections: "projection",
@@ -185,6 +186,46 @@ describe("demo outlet reset", () => {
     expect(floor.rows[0]).toMatchObject({ tables: 12, numbered: 12, sectioned: 12, occupied: 0 });
     expect(floor.rows[0].chairs).toBeGreaterThan(0);
     expect(floor.rows[0].chairs).toBe(floor.rows[0].capacity);
+  });
+
+  it("seeds sample live table signals for the demo outlet only, replacing them on every reset", async () => {
+    await resetDemoOutlet(worker);
+    const settings = await owner.query(
+      "select outlet_id from floor_signal_settings where enabled and outlet_id=$1",
+      [DEMO_IDS.outletId]
+    );
+    expect(settings.rowCount).toBe(1);
+    const kinds = async () =>
+      (
+        await owner.query<{ kind: string; n: number }>(
+          "select kind, count(*)::int n from table_signal_events where outlet_id=$1 group by kind",
+          [DEMO_IDS.outletId]
+        )
+      ).rows;
+    const first = await kinds();
+    expect(first.find((r) => r.kind === "qr_scanned")!.n).toBeGreaterThanOrEqual(1);
+    expect(first.some((r) => r.kind === "water_requested")).toBe(true);
+    expect(first.some((r) => r.kind === "bill_presented")).toBe(true);
+    // A visitor-style leftover event disappears with the next reset.
+    await owner.query(
+      `insert into table_signal_events(id,outlet_id,table_id,kind,source,dedupe_key)
+       values('visitor-signal',$1,'demo-table-4','qr_scanned','guest','visitor-signal')`,
+      [DEMO_IDS.outletId]
+    );
+    await resetDemoOutlet(worker);
+    expect(
+      (await owner.query("select 1 from table_signal_events where id='visitor-signal'")).rowCount
+    ).toBe(0);
+    // Nothing is seeded for any other outlet, and the function is not callable by the app role.
+    expect(
+      (
+        await owner.query(
+          "select 1 from table_signal_events where outlet_id<>$1 and dedupe_key like 'demo:%'",
+          [DEMO_IDS.outletId]
+        )
+      ).rowCount
+    ).toBe(0);
+    await expect(app.query("select app_private.seed_demo_signals()")).rejects.toThrow();
   });
 
   it("is deterministic and keeps the revision stable unless a visitor edited the menu", async () => {
