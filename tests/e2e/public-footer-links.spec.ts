@@ -17,7 +17,9 @@ const removedHrefs = [
   "/security",
 ];
 
-test("shared public footer keeps its primary links without the removed entries", async ({ page }) => {
+test("shared public footer keeps its primary links without the removed entries", async ({
+  page,
+}) => {
   await page.goto("/refund-policy");
   const footer = page.getByTestId("public-footer");
   await expect(footer).toBeVisible();
