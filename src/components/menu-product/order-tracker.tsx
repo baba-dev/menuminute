@@ -18,6 +18,20 @@ import {
 import { formatPrice } from "@/lib/utils";
 import { RubberStamp, ChefStickyNote } from "@/components/ui/tactile-elements";
 import { getGuestOrderNote, getOrderStampVariant } from "@/lib/hospitality-order-status";
+import { createSseParser } from "@/modules/orders/guest-stream";
+import { playWoodenTap } from "@/lib/sound-effects";
+import { OrderReviews } from "./order-reviews";
+
+const STATUS_ANNOUNCEMENT: Record<string, string> = {
+  accepted: "The restaurant accepted your order.",
+  preparing: "Your order is being prepared.",
+  ready: "Your order is ready!",
+  served: "Your order has been served. Enjoy!",
+  collected: "Your order was collected. Enjoy!",
+  rejected: "The restaurant could not accept your order.",
+  cancelled: "Your order was cancelled.",
+  expired: "Your order request expired.",
+};
 
 export type TrackingData = {
   order: {
@@ -73,10 +87,16 @@ export function OrderTracker({
   orderId,
   trackingToken,
   token,
+  live = false,
+  reviews = false,
 }: {
   orderId: string;
   trackingToken: string;
   token: string;
+  /** Live updates are approved and enabled; polling always remains the fallback. */
+  live?: boolean;
+  /** Verified dish ratings are approved and enabled. */
+  reviews?: boolean;
 }) {
   const snapshot = useCallback(() => {
     try {
@@ -95,6 +115,9 @@ export function OrderTracker({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const terminalRef = useRef(false);
+  const streamHealthyRef = useRef(false);
+  const lastStatusRef = useRef<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
   const [callingService, setCallingService] = useState(false);
   const [serviceError, setServiceError] = useState("");
   const [serviceRequests, setServiceRequests] = useState<
@@ -148,7 +171,7 @@ export function OrderTracker({
     const schedule = () => {
       if (!active) return;
       // 4s while healthy; exponential backoff to 60s after failures.
-      const delay = Math.min(4000 * 2 ** failures, 60000);
+      const delay = streamHealthyRef.current ? 30000 : Math.min(4000 * 2 ** failures, 60000);
       timer = setTimeout(() => void tick(), delay);
     };
     const tick = async () => {
@@ -199,6 +222,101 @@ export function OrderTracker({
     }, 12000);
     return () => window.clearInterval(id);
   }, [capability, data?.order.fulfillmentMode, refreshServices]);
+
+  // Live signals: the stream only says "something changed"; state is always re-read through the
+  // normal tracking API, and polling resumes if the stream is unavailable.
+  useEffect(() => {
+    if (!live || !capability) return;
+    let active = true;
+    let failures = 0;
+    let connectedOnce = false;
+    let controller: AbortController | null = null;
+    const url = `/api/public-orders/${encodeURIComponent(orderId)}/stream?token=${encodeURIComponent(token)}`;
+    const run = async () => {
+      while (active) {
+        if (document.visibilityState === "hidden") {
+          await new Promise<void>((resolve) => {
+            const wake = () => {
+              if (document.visibilityState === "visible") {
+                document.removeEventListener("visibilitychange", wake);
+                resolve();
+              }
+            };
+            document.addEventListener("visibilitychange", wake);
+          });
+          continue;
+        }
+        controller = new AbortController();
+        let finished = false;
+        try {
+          const res = await fetch(url, {
+            cache: "no-store",
+            headers: { "x-tracking-token": capability, accept: "text/event-stream" },
+            signal: controller.signal,
+          });
+          if (!res.ok || !res.body) throw new Error("stream unavailable");
+          failures = 0;
+          streamHealthyRef.current = true;
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          const feed = createSseParser((name) => {
+            if (name === "done") finished = true;
+            if (name === "changed" || (name === "hello" && connectedOnce)) {
+              void fetchTracking();
+              void refreshServices();
+            }
+            if (name === "hello") connectedOnce = true;
+          });
+          for (;;) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            feed(decoder.decode(value, { stream: true }));
+          }
+        } catch {
+          failures = Math.min(failures + 1, 5);
+        } finally {
+          streamHealthyRef.current = false;
+        }
+        if (finished || !active) return;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(2000 * 2 ** failures, 60000)));
+      }
+    };
+    void run();
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") controller?.abort();
+    };
+    document.addEventListener("visibilitychange", onHidden);
+    return () => {
+      active = false;
+      streamHealthyRef.current = false;
+      controller?.abort();
+      document.removeEventListener("visibilitychange", onHidden);
+    };
+  }, [live, capability, orderId, token, fetchTracking, refreshServices]);
+
+  // Tell the diner when the status moves (screen readers, tab title, a short buzz and tap sound).
+  const currentStatus = data?.order.status ?? null;
+  useEffect(() => {
+    if (!currentStatus) return;
+    const previous = lastStatusRef.current;
+    lastStatusRef.current = currentStatus;
+    if (previous === null || previous === currentStatus) return;
+    const message = STATUS_ANNOUNCEMENT[currentStatus];
+    if (!message) return;
+    const timer = window.setTimeout(() => {
+      setAnnouncement(message);
+      if (currentStatus === "ready") {
+        document.title = "Ready! · " + document.title.replace(/^Ready! · /, "");
+        try {
+          navigator.vibrate?.([12, 35, 12]);
+        } catch {
+          /* unsupported */
+        }
+        playWoodenTap("tactile");
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [currentStatus]);
   async function callService(signal: "call_server" | "water_refill" | "bill_request") {
     if (!capability || callingService) return;
     setCallingService(true);
@@ -323,6 +441,24 @@ export function OrderTracker({
         className="public-shell stack"
         style={{ maxWidth: "600px", margin: "0 auto", paddingBottom: "3rem" }}
       >
+        <p
+          role="status"
+          aria-live="polite"
+          className={announcement ? "order-announcement" : "sr-only"}
+          style={
+            announcement
+              ? {
+                  margin: "0.75rem 0 0",
+                  padding: "0.7rem 1rem",
+                  borderRadius: "12px",
+                  fontWeight: 700,
+                  background: "var(--accent-soft, #f9eddb)",
+                }
+              : undefined
+          }
+        >
+          {announcement}
+        </p>
         {/* Top bar with back to menu link */}
         <div className="row between" style={{ alignItems: "center", paddingTop: "1rem" }}>
           <Link
@@ -596,6 +732,10 @@ export function OrderTracker({
               </div>
             ))}
           </div>
+
+          {reviews && (order.status === "served" || order.status === "collected") && (
+            <OrderReviews token={token} orderId={orderId} capability={capability} />
+          )}
 
           {/* Pricing Totals */}
           <div

@@ -11,6 +11,8 @@ import {
   verifiedOrderSource,
 } from "@/modules/orders/rate-limit";
 import { env } from "@/lib/config/env";
+import { cookies } from "next/headers";
+import { DEVICE_COOKIE } from "@/modules/guest-device/service";
 
 const BODY_LIMIT = 65536;
 const tokenSchema = z
@@ -71,7 +73,9 @@ async function observed_POST(req: Request) {
         { status: 429, headers: noStore }
       );
     }
-    const result = await submitGuestOrder(token, body);
+    const result = await submitGuestOrder(token, body, {
+      deviceCookie: (await cookies()).get(DEVICE_COOKIE)?.value,
+    });
     return NextResponse.json(
       { success: true, ...result },
       { status: result.isDuplicate ? 200 : 201, headers: noStore }

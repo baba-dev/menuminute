@@ -146,6 +146,7 @@ export function ServiceRequestsPanel({
               <strong>
                 Table {item.tableNumber}
                 {item.orderNumber != null && ` · Order #${item.orderNumber}`}
+                {item.customerName ? ` · ${item.customerName}` : ""}
               </strong>
               <p>
                 {item.signal === "call_server"

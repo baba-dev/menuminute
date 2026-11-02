@@ -23,8 +23,8 @@ async function seeded() {
     );
     await pool.query(
       `insert into orders(id,restaurant_id,table_id,tracking_token,order_number,
-   status,fulfillment_mode,payment_status,currency,total_minor)
-   values($1,$2,$3,$4,77,'served','dine_in','unpaid','INR',21000)`,
+   status,fulfillment_mode,payment_status,currency,total_minor,customer_name)
+   values($1,$2,$3,$4,77,'served','dine_in','unpaid','INR',21000,'Asha')`,
       [orderId, f.outlet.id, tableId, trackingToken]
     );
   });
@@ -48,6 +48,7 @@ describe("Hospitality DB invariants (restricted application role)", () => {
     expect(list.find((x) => x.id === a.requestId)).toMatchObject({
       status: "requested",
       tableNumber: "77",
+      customerName: "Asha",
     });
     await expect(
       staffServiceRequestAction(f.actor, f.outlet.organizationId, f.outlet.id, {

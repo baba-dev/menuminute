@@ -23,6 +23,7 @@ const labels: Record<string, string> = {
   "/dashboard/organization": "Organization",
   "/dashboard/reports": "Reports & Insights",
   "/dashboard/guests": "Guests",
+  "/dashboard/reviews": "Guest reviews",
   "/billing": "Billing & plan",
   "/account": "My account",
 };

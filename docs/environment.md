@@ -29,6 +29,9 @@ fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md
 | POS_STRIPE_WEBHOOK_SECRET                                       | Server-only signing secret for the POS webhook                                                                                                      |
 | PWA_OPERATIONAL_ENABLED                                         | Default-off guest/POS/Kitchen operational PWA gate                                                                                                  |
 | PWA_OPERATIONAL_OUTLET_IDS                                      | Comma-separated exact outlet rollout allowlist                                                                                                      |
+| PUBLIC_DINER_DEVICE_ENABLED                                     | Default-off opt-in diner device profile (httpOnly cookie `menuminute.guest`, migration 0101). Needs owner privacy approval before enabling.         |
+| PUBLIC_DINER_STREAM_ENABLED                                     | Default-off live order updates over SSE with polling fallback. Requires Nginx buffering off for `/api/public-orders/*/stream`.                      |
+| PUBLIC_DINER_REVIEWS_ENABLED                                    | Default-off verified dish ratings and moderated comments (migration 0103). Needs owner approval of public user-generated content.                   |
 
 `DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
 

@@ -88,6 +88,10 @@ const backend = spawn(process.execPath, [".next/standalone/server.js"], {
     // Also gates the established localhost/menuminute_test-only MFA fixture bypass.
     AUTH_ALLOW_TEST_EMAIL: "true",
     // Exercise the explicit F-G rollout against the isolated seeded outlet only.
+    // Exercise the public diner features in the isolated browser fixture only.
+    PUBLIC_DINER_DEVICE_ENABLED: "true",
+    PUBLIC_DINER_STREAM_ENABLED: "true",
+    PUBLIC_DINER_REVIEWS_ENABLED: "true",
     PWA_OPERATIONAL_ENABLED: "true",
     PWA_OPERATIONAL_OUTLET_IDS: "demo-outlet",
     NODE_EXTRA_CA_CERTS: path.join(dir, "cert.pem"),

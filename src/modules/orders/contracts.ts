@@ -31,6 +31,9 @@ export const orderSubmissionSchema = z
     customerName: z.string().trim().max(80).optional().default(""),
     customerPhone: z.string().trim().max(30).optional().default(""),
     notes: z.string().trim().max(500).optional().default(""),
+    // The diner asked to reuse the contact saved on this device (httpOnly cookie). Resolved on
+    // the server so the full phone never round-trips through the browser.
+    useSavedContact: z.boolean().optional().default(false),
     items: z.array(orderItemSubmissionSchema).min(1).max(MAX_CART_LINES),
   })
   .superRefine((value, ctx) => {

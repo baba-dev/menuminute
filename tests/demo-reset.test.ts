@@ -23,6 +23,12 @@ const PRESERVED: Record<string, string> = {
     "public demo does not store guest mobile identities; production records are tenant-scoped",
   crm_erased_phones: "public demo does not store guest profiles or retention suppression",
   crm_guest_orders: "automatically deleted with demo orders through ON DELETE CASCADE",
+  guest_devices:
+    "never written for the demo outlet (guest_device_remember refuses is_demo_data, migration 0101)",
+  dish_reviews:
+    "never written for the demo outlet (guest_review_submit refuses is_demo_data, migration 0103)",
+  dish_rating_aggregates:
+    "only written together with dish_reviews, which the demo outlet never has",
   account_workspace_preferences: "user preference",
   account_deletion_requests:
     "personal privacy requests are blocked for demo outlets and not an outlet reset concern",
