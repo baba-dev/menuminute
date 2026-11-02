@@ -80,7 +80,7 @@ describe("Kitchen Pro replaces Ordering without double billing", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(`https://api.razorpay.com/v1/subscriptions/${ordering}/cancel`);
-    expect(JSON.parse(init.body)).toEqual({ cancel_at_cycle_end: true });
+    expect(JSON.parse(init.body)).toEqual({ cancel_at_cycle_end: 1 });
     expect(await cancelRequested(ordering)).not.toBeNull();
     // Kitchen's own subscription is never touched, and a repeat does nothing further.
     expect(await cancelRequested(kitchen)).toBeNull();
