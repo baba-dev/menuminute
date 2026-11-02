@@ -47,13 +47,6 @@ const pages = {
     detail:
       "This is a placeholder, not a real-time uptime or incident report. No availability guarantee is implied.",
   },
-  "refund-policy": {
-    title: "Refund Policy",
-    category: "Legal · publication pending",
-    description: "Information on future paid plans and refunds.",
-    detail:
-      "Paid subscription pricing and refund terms are not finalized. This placeholder does not set any purchase or refund conditions.",
-  },
   accessibility: {
     title: "Accessibility",
     category: "Legal & inclusion · publication pending",
