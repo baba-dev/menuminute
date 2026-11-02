@@ -3,7 +3,8 @@ import { REMEMBERED_SESSION_SECONDS, SESSION_REFRESH_SECONDS } from "@/lib/auth-
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { headers, cookies } from "next/headers";
-import { getDb, getPool } from "@/db";
+import { getDb } from "@/db";
+import { googleMfaBlocked } from "@/lib/google-auth-guard";
 import { users, sessions, accounts, verificationTokens, rateLimits, twoFactors } from "@/db/schema";
 import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
@@ -25,11 +26,7 @@ export const authServer = betterAuth({
       const profile = source.oauth.profile as Record<string, unknown> | undefined;
       const externalId = typeof profile?.sub === "string" ? profile.sub :
         typeof profile?.id === "string" ? profile.id : "";
-      const found = await getPool().query(
-        "select 1 from users u where u.two_factor_enabled=true and (lower(u.email)=lower($1) or exists (select 1 from accounts a where a.user_id=u.id and a.provider_id='google' and a.account_id=$2)) limit 1",
-        [user.email, externalId]
-      );
-      if (found.rowCount) return {
+      if (await googleMfaBlocked(user.email, externalId)) return {
         error: "mfa_requires_password",
         errorDescription: "This account requires password and authenticator sign-in.",
       };
