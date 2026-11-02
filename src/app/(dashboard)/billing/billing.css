@@ -97,6 +97,41 @@
   font-weight: 500;
 }
 
+/* ── Lifecycle banners (trial, payment problems) ───────────── */
+.bp-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin: 0 0 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 16px;
+  background: var(--paper);
+}
+.bp-banner[data-tone="warn"] {
+  border-color: var(--ember);
+}
+.bp-banner[data-tone="alert"] {
+  border-color: var(--danger);
+}
+.bp-banner > div {
+  display: grid;
+  gap: 3px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.bp-banner strong {
+  font-size: 15px;
+}
+.bp-banner span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 /* ── Messages ──────────────────────────────────────────────── */
 .bp-messages {
   min-height: 0;

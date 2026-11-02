@@ -41,14 +41,15 @@ describe("prices and benefits come from the reviewed catalogs", () => {
 
 describe("dashboard bento view", () => {
   const base = { usage: null, intake: null, canManageBilling: true, billingEnabled: true };
-  it("sends owners to checkout for Ordering, to a conversation for Kitchen Pro", () => {
+  it("sends owners straight to checkout for Ordering and for Kitchen Pro", () => {
     expect(buildBentoView({ ...base, plan: "free" })?.cta).toEqual({
       kind: "upgrade",
       label: "Upgrade to Ordering",
       href: "/billing?plan=ordering",
     });
-    expect(buildBentoView({ ...base, plan: "ordering" })?.cta).toMatchObject({
-      kind: "explore",
+    expect(buildBentoView({ ...base, plan: "ordering" })?.cta).toEqual({
+      kind: "upgrade",
+      label: "Upgrade to Kitchen Pro",
       href: "/billing?plan=kitchen_pro",
     });
   });
@@ -80,17 +81,29 @@ describe("billing page view", () => {
     grants: [],
   };
 
-  it("lets an owner on Free start an Ordering checkout and routes Kitchen Pro to a conversation", () => {
+  it("lets an owner on Free start an Ordering checkout, and Kitchen Pro too once its checkout is open", () => {
     const view = buildBillingPageView({ ...input, plan: "free", billing: live });
     const ordering = view.ladder.find((c) => c.key === "ordering")!;
     expect(ordering).toMatchObject({
       state: "upgrade",
       action: { kind: "checkout", plan: "ordering" },
     });
-    expect(view.ladder.find((c) => c.key === "kitchen_pro")?.action).toMatchObject({
-      kind: "contact",
-      href: "/contact",
+    // No "talk to us" path: while the server keeps Kitchen Pro checkout closed, the card says so.
+    expect(view.ladder.find((c) => c.key === "kitchen_pro")).toMatchObject({
+      action: null,
+      note: "Kitchen Pro checkout is not available on this deployment yet.",
     });
+    const open = buildBillingPageView({
+      ...input,
+      plan: "free",
+      billing: { ...live, kitchenCommerceEnabled: true },
+    });
+    expect(open.ladder.find((c) => c.key === "kitchen_pro")?.action).toEqual({
+      kind: "checkout",
+      plan: "kitchen_pro",
+      label: "Upgrade to Kitchen Pro",
+    });
+    expect(JSON.stringify(open)).not.toMatch(/Talk to us|\/contact/);
     expect(view.ladder.find((c) => c.key === "free")?.state).toBe("current");
     expect(view.cycle.headline).toBe("No subscription");
     expect(view.cycle.payment).toBe("None needed");

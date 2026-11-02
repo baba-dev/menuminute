@@ -158,8 +158,11 @@ export function BillingConsole({
 
   const current = view.ladder.find((c) => c.state === "current");
   const nextCard = view.next ? view.ladder.find((c) => c.key === view.next?.plan) : undefined;
-  const statusChip =
-    view.plan === "free"
+  const statusChip = view.trial
+    ? view.trial.daysLeft === 0
+      ? "Trial ends today"
+      : `Trial · ${view.trial.daysLeft} ${view.trial.daysLeft === 1 ? "day" : "days"} left`
+    : view.plan === "free"
       ? "Free forever"
       : view.cycle.headline.startsWith("Ends")
         ? "Ending soon"
@@ -182,16 +185,6 @@ export function BillingConsole({
         </button>
       );
     }
-    if (card.action?.kind === "contact")
-      return (
-        <Link
-          href={card.action.href}
-          className={size === "lg" ? "bp-btn bp-btn--quiet bp-btn--lg" : "bp-btn bp-btn--quiet"}
-        >
-          {card.action.label}
-          <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-      );
     if (card.note)
       return (
         <p className="bp-note">
@@ -220,6 +213,26 @@ export function BillingConsole({
           </span>
         </div>
       </header>
+
+      {view.notices.map((notice) => (
+        <div
+          key={notice.key}
+          className="bp-banner"
+          data-tone={notice.tone}
+          role={notice.tone === "alert" ? "alert" : "status"}
+        >
+          <div>
+            <strong>{notice.title}</strong>
+            <span>{notice.body}</span>
+          </div>
+          {notice.action && (
+            <Link href={notice.action.href} className="bp-btn bp-btn--quiet">
+              {notice.action.label}
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+      ))}
 
       <div className="bp-messages" aria-live="polite">
         {notice && (
@@ -303,7 +316,7 @@ export function BillingConsole({
           {view.next ? (
             <>
               <span className="bp-label" id="bp-next-title">
-                Unlock next
+                {view.next.mode === "keep" ? "Keep after your trial" : "Unlock next"}
               </span>
               <div className="bp-next-head">
                 <p className="bp-name">{view.next.label}</p>
@@ -377,11 +390,11 @@ export function BillingConsole({
                 ))}
               </ul>
               <div className="bp-action">
-                {card.state === "upgrade" ? (
-                  renderAction(card)
-                ) : card.state === "lower" ? (
+                {card.state === "lower" ? (
                   <p className="bp-note">Included in your plan</p>
-                ) : null}
+                ) : (
+                  renderAction(card)
+                )}
               </div>
             </article>
           ))}
@@ -397,7 +410,9 @@ export function BillingConsole({
             <p className="bp-muted">
               {view.plan === "free"
                 ? "No subscriptions yet. You are on the free plan."
-                : "Your access is granted by MenuMinute, so there is no subscription to manage."}
+                : view.trial
+                  ? "You are on a free trial, so there is no subscription yet."
+                  : "Your access is granted by MenuMinute, so there is no subscription to manage."}
             </p>
           ) : (
             <ul className="bp-rows">
@@ -475,7 +490,9 @@ export function BillingConsole({
                   <strong>{row.label}</strong>
                   <span className="bp-muted">{row.window}</span>
                 </div>
-                <span className="bp-chip">{row.status}</span>
+                <span className="bp-chip">
+                  {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                </span>
               </li>
             ))}
           </ul>

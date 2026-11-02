@@ -206,6 +206,10 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
       const after = await tx.execute<{ outlet_id: string }>(
         sql`select outlet_id from menu_assignments where menu_id=${id}`
       );
+      // First publish by an organization owner may start the one-time automatic trial. The database
+      // function never raises and is a no-op unless the owner switch is on, so publishing is unaffected.
+      if (input.action === "publish")
+        await tx.execute(sql`select app_private.claim_auto_trial(${outletId})`);
       return {
         value: rows.rows[0]!.result,
         affected: [...before.rows, ...after.rows].map((row) => row.outlet_id),

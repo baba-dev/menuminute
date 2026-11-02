@@ -554,6 +554,13 @@
       "when": 1795266000030,
       "tag": "0079_plan_overflow",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1795352400030,
+      "tag": "0080_auto_trial_and_dunning",
+      "breakpoints": true
     }
   ]
 }

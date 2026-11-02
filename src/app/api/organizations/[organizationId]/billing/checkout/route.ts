@@ -35,9 +35,11 @@ async function observed_POST(
       const existing = await tx.execute<{ subscriptions: unknown }>(
         sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
       );
+      // An automatic trial or a payment-retry grace window must not block paying, so they are
+      // excluded; any real paid or operator entitlement still does.
       const grants = await tx.execute<{ ordering: boolean; kitchen: boolean }>(
-        sql`SELECT app_private.entitlement_allowed(${organizationId},'ordering.new') AS ordering,
-          app_private.entitlement_allowed(${organizationId},'kitchen.new') AS kitchen`
+        sql`SELECT app_private.entitlement_blocks_checkout(${organizationId},'ordering.new') AS ordering,
+          app_private.entitlement_blocks_checkout(${organizationId},'kitchen.new') AS kitchen`
       );
       const launch = await tx.execute<{ ready: boolean }>(
         sql`SELECT app_private.kitchen_commerce_enabled() AS ready`

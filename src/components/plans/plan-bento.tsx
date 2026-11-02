@@ -25,6 +25,26 @@ export function PlanBento({ view }: { view: PlanBentoView }) {
         </Link>
       </header>
 
+      {view.notices.map((notice) => (
+        <div
+          key={notice.key}
+          className="pb-alert"
+          data-tone={notice.tone}
+          role={notice.tone === "alert" ? "alert" : "status"}
+        >
+          <div>
+            <strong>{notice.title}</strong>
+            <span>{notice.body}</span>
+          </div>
+          {notice.action && (
+            <Link href={notice.action.href} className="pb-alert-link">
+              {notice.action.label}
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+      ))}
+
       <div className="pb-grid">
         <article className="pb-tile pb-plan" aria-label="Your plan">
           <span className="pb-label">Your plan</span>
@@ -33,6 +53,7 @@ export function PlanBento({ view }: { view: PlanBentoView }) {
             <strong>{view.price.label}</strong>
             <span>{view.price.note}</span>
           </p>
+          {view.statusChip && <p className="pb-chip">{view.statusChip}</p>}
           <p className="pb-tagline">{view.tagline}</p>
         </article>
 
@@ -58,7 +79,9 @@ export function PlanBento({ view }: { view: PlanBentoView }) {
         >
           {next ? (
             <>
-              <span className="pb-label">Unlock next</span>
+              <span className="pb-label">
+                {next.mode === "keep" ? "Keep after your trial" : "Unlock next"}
+              </span>
               <div className="pb-next-head">
                 <p className="pb-next-name">{next.label}</p>
                 <p className="pb-next-price">
@@ -66,7 +89,11 @@ export function PlanBento({ view }: { view: PlanBentoView }) {
                   <span>{next.price.note}</span>
                 </p>
               </div>
-              <p className="pb-tagline">{next.tagline}</p>
+              <p className="pb-tagline">
+                {next.mode === "keep"
+                  ? `${next.tagline}. Without a subscription you return to the Free limits.`
+                  : next.tagline}
+              </p>
               <ul className="pb-benefits">
                 {next.benefits.map((b) => (
                   <li key={b.key}>

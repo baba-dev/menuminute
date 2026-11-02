@@ -1,13 +1,14 @@
 import { grantStatus, type GrantStatus } from "@/modules/admin/grant-policy";
 import { PLAN_LABELS, type PlanKey } from "./catalog";
+import { planLadder, planPrice, type NextUp, type PlanOffer, type PricePoint } from "./offer";
 import {
-  buildNextUp,
-  planLadder,
-  planPrice,
-  type NextUp,
-  type PlanOffer,
-  type PricePoint,
-} from "./offer";
+  buildLifecycleNotices,
+  NO_LIFECYCLE,
+  nextUpFor,
+  trialDaysLeft,
+  type LifecycleNotice,
+  type LifecycleSnapshot,
+} from "./lifecycle";
 import { fmtDate, type IntakeSnapshot, type PlanUsageView, type UsageMeterView } from "./view";
 
 /**
@@ -60,9 +61,7 @@ export function coerceSubscriptions(raw: unknown): SubscriptionInput[] {
 
 export const formatDate = fmtDate;
 
-export type LadderAction =
-  | { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string }
-  | { kind: "contact"; label: string; href: string };
+export type LadderAction = { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string };
 export type LadderCard = PlanOffer & {
   state: "current" | "lower" | "upgrade";
   action: LadderAction | null;
@@ -88,6 +87,9 @@ export type BillingPageView = {
   canManage: boolean;
   billingEnabled: boolean;
   billingUnavailable: boolean;
+  /** Trial and payment-problem banners, most urgent first. */
+  notices: LifecycleNotice[];
+  trial: { endsAt: string; daysLeft: number } | null;
   /** One-line billing cycle summary, e.g. "Renews 12 Dec 2026". */
   cycle: { interval: string; headline: string; detail: string | null; payment: string };
   meters: UsageMeterView[];
@@ -117,9 +119,15 @@ export function buildBillingPageView(input: {
   billing: BillingStateInput | null;
   /** True when an owner's billing details failed to load, so we never guess at availability. */
   billingUnavailable?: boolean;
+  lifecycle?: LifecycleSnapshot;
+  now?: Date;
   focus?: string | null;
 }): BillingPageView {
   const { plan, usage, intake, canManage, billing } = input;
+  const lifecycle = input.lifecycle ?? NO_LIFECYCLE;
+  const trial = lifecycle.trial
+    ? { endsAt: lifecycle.trial.endsAt, daysLeft: trialDaysLeft(lifecycle.trial.endsAt, input.now) }
+    : null;
   const community = billing?.isCommunityEdition === true;
   const billingEnabled = billing?.billingEnabled === true;
   const kitchenCheckout = billing?.kitchenCommerceEnabled === true;
@@ -170,6 +178,23 @@ export function buildBillingPageView(input: {
     }
   }
 
+  if (trial) {
+    cycle = {
+      interval: "—",
+      headline: `Trial ends ${fmtDate(trial.endsAt)}`,
+      detail:
+        "Free until then. Subscribing starts your paid month today and replaces the trial days left.",
+      payment: "None needed yet",
+    };
+  } else if (lifecycle.dunning?.status === "pending" && lifecycle.dunning.graceUntil) {
+    cycle = {
+      interval: "Monthly",
+      headline: `Payment retry until ${fmtDate(lifecycle.dunning.graceUntil)}`,
+      detail: "Your last renewal failed. Access continues while the payment is retried.",
+      payment: "Managed by Razorpay",
+    };
+  }
+
   // ── Plan ladder ───────────────────────────────────────────────────────────
   const ladder: LadderCard[] = planLadder({ intake }).map((offer) => {
     const state: LadderCard["state"] =
@@ -181,15 +206,23 @@ export function buildBillingPageView(input: {
         note = "Billing details are temporarily unavailable. Please try again shortly.";
       else if (community) note = "Self-hosted editions have every feature unlocked.";
       else if (!canManage) note = "Only the organization owner can change the plan.";
-      else if (offer.key === "kitchen_pro" && !kitchenCheckout)
-        action = { kind: "contact", label: "Talk to us about Kitchen Pro", href: "/contact" };
       else if (!billingEnabled) note = "Paid upgrades are opening soon.";
+      else if (offer.key === "kitchen_pro" && !kitchenCheckout)
+        // The server is the authority: it refuses Kitchen Pro checkout until the platform release is on.
+        note = "Kitchen Pro checkout is not available on this deployment yet.";
       else
         action = {
           kind: "checkout",
           plan: offer.key as "ordering" | "kitchen_pro",
           label: `Upgrade to ${offer.label}`,
         };
+    }
+    if (trial && offer.key === "ordering" && state === "current") {
+      if (input.billingUnavailable)
+        note = "Billing details are temporarily unavailable. Please try again shortly.";
+      else if (!canManage) note = "Only the organization owner can subscribe.";
+      else if (!billingEnabled) note = "Paid plans are opening soon.";
+      else action = { kind: "checkout", plan: "ordering", label: "Subscribe to keep Ordering" };
     }
     return { ...offer, state, action, note };
   });
@@ -230,7 +263,9 @@ export function buildBillingPageView(input: {
     cycle,
     meters: usage?.meters ?? [],
     quotasEnforced: usage !== null,
-    next: buildNextUp(plan, { intake }),
+    notices: buildLifecycleNotices(lifecycle, { canManage, billingEnabled, now: input.now }),
+    trial,
+    next: nextUpFor(plan, { intake, trialActive: trial !== null }),
     ladder,
     subscriptions,
     history,

@@ -4,6 +4,7 @@ import { withOutlet, type Actor } from "@/modules/tenancy/service";
 import type { PlanKey } from "./catalog";
 import { planContextFor } from "./guard";
 import { dbPlanStore } from "./store";
+import { NO_LIFECYCLE, type LifecycleSnapshot } from "./lifecycle";
 import {
   buildPlanUsageView,
   type IntakeSnapshot,
@@ -21,6 +22,8 @@ export type PlanSnapshot = {
   intake: IntakeSnapshot | null;
   /** Owners only: may change the plan and see payment controls. */
   canManageBilling: boolean;
+  /** Automatic trial and payment-problem state (dunning is visible to owners and admins only). */
+  lifecycle: LifecycleSnapshot;
 };
 
 /**
@@ -50,6 +53,10 @@ export async function getPlanSnapshot(
         );
         intake = snap.rows[0]?.snap ?? null;
       }
+      const life = await tx.execute<{ snap: LifecycleSnapshot | null }>(
+        sql`select app_private.plan_lifecycle_snapshot(${outletId}) as snap`
+      );
+      const lifecycle = life.rows[0]?.snap ?? NO_LIFECYCLE;
       let usage: PlanUsageView | null = null;
       if (env.PLAN_LIMITS_ENFORCED) {
         const over = await tx.execute<{ snap: OverflowSnapshot | null }>(
@@ -75,6 +82,7 @@ export async function getPlanSnapshot(
         usage,
         intake,
         canManageBilling: row.manage === true,
+        lifecycle,
       };
     });
   } catch {

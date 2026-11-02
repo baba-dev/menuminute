@@ -253,6 +253,7 @@ export default async function DashboardPage() {
         usage: planSnapshot.usage,
         intake: planSnapshot.intake,
         canManageBilling: planSnapshot.canManageBilling,
+        lifecycle: planSnapshot.lifecycle,
         billingEnabled: env.RAZORPAY_ENABLED && !env.COMMUNITY_EDITION,
       })
     : null;

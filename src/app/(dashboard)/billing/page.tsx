@@ -90,6 +90,7 @@ export default async function BillingPage({
     canManage: snapshot.canManageBilling,
     billing,
     billingUnavailable,
+    lifecycle: snapshot.lifecycle,
     focus: typeof query.plan === "string" ? query.plan : null,
   });
   return <BillingConsole view={view} organizationId={snapshot.organizationId} />;

@@ -374,8 +374,8 @@ pin and reorder it in "Customize layout". It sits under the dining floor beside 
 pulse now spans two grid rows so the two stack evenly. The marketing homepage's dashboard replica
 shows it with sample data (a test keeps the replica in step with the real widget list). It is a
 bento of three tiles: your plan and price, your two most-used meters, and what the next plan
-unlocks with a single call to action. Owners get "Upgrade to Ordering"; Kitchen Pro leads to a
-conversation; non-owners are told to ask the owner; while payments are off it says "See plans".
+unlocks with a single call to action. Owners get "Upgrade to Ordering" or "Upgrade to Kitchen Pro", both
+straight into checkout; non-owners are told to ask the owner; while payments are off it says "See plans".
 
 **`/billing`** is the main billing page, reachable from the widget, every usage strip and the
 Organization panel. It adds no new payment path: upgrades use the existing checkout API
@@ -396,8 +396,10 @@ page refreshes every 4 seconds (up to 10 times) until the new plan appears.
 
 Honesty rules: prices are the reviewed catalog amounts only (`PAID_PLAN_CATALOG`; today Ordering
 INR 119, Kitchen Pro INR 299, which are the provider plan amounts, not the proposed Kitchen Pro
-price in the matrix above). Kitchen Pro checkout opens only when the platform release is approved
-(`kitchenCommerceEnabled`); until then its button is "Talk to us about Kitchen Pro". Payment
+price in the matrix above). Kitchen Pro is sold like Ordering: its card has an "Upgrade to Kitchen
+Pro" button that opens the same checkout (there is no "talk to us" path). The server remains the
+authority: while the platform's Kitchen release flag (`kitchenCommerceEnabled`) is off, the card
+shows "Kitchen Pro checkout is not available on this deployment yet." instead of a button. Payment
 methods and invoices are not shown because the application does not hold them. A billing load
 failure says so instead of guessing. Non-owners get a read-only overview with the reason on every
 locked action.
@@ -461,3 +463,52 @@ email when the grace starts (the notice is in the dashboard); the dish count exc
 dishes, while the creation guard counts every dish in the draft, so the guard can be slightly
 stricter than the hiding rule. Hidden dishes are also unavailable at the till, because the POS reads
 the same catalog.
+
+## Auto-trial and payment-failure grace (migration 0080)
+
+Two owner-controlled features, both **off by default**, built on ordinary time-boxed entitlement
+grants so every existing gate (ordering, plan caps, overflow) keeps working unchanged.
+
+**Automatic trial.** The first time an organization **owner** publishes a menu, the organization gets a
+one-time N-day Ordering trial (default 14) as a grant with operator `auto-trial`. `claim_auto_trial` runs
+inside the publish transaction and can never raise, so publishing is never affected. It starts only when
+the switch is on, the owner has a verified email, the outlet is not the demo, the edition is not
+Community, and the organization has **never** held an ordering grant or a subscription. It is claimed
+once per organization **and once per owner account** (`trial_claims`), so extra workspaces cannot farm
+trials. When it ends the organization simply falls back to Free (and the dish-overflow grace applies).
+
+**Paying during a trial.** A verified charge first ends the trial (and any retry grace) and then records
+the paid grant, so a real payment can never be rejected for overlapping a free window. The remaining
+trial days are replaced by the paid month starting today, and the UI says so before the owner pays. The
+checkout API now asks `entitlement_blocks_checkout` instead of "is any grant active", so a trial or a
+retry grace no longer blocks subscribing; any real paid or operator grant still does.
+
+**Failed renewals.** When the provider reports a failed renewal on a previously paid, not-cancelled
+ordering subscription, a `dunning-grace` grant (default 5 days) begins where current access ends, once
+per billing cycle however many failure events arrive. It ends the moment the subscription is halted,
+paused or expired, or a payment succeeds. The provider's own retry schedule is unchanged. Kitchen Pro is
+untouched (its commerce is not enabled).
+
+**What owners see.** The dashboard widget and `/billing` show the trial ("Trial · 9 days left", the
+next-plan tile becomes "Keep after your trial" with "Subscribe to keep Ordering"), a warning in the last
+three days, and payment problems: "We could not renew your plan" with the grace date while retrying, and
+"Your subscription has stopped" (menu and QR codes keep working) once halted. Payment problems are shown
+to owners and admins only; staff see the trial but not billing trouble.
+
+Operator switches (migration-owner connection only; no deploy needed):
+
+```sql
+UPDATE app_private.plan_settings SET auto_trial_enabled = true;            -- start trials on first publish
+UPDATE app_private.plan_settings SET auto_trial_days = 14;                 -- 1 to 90
+UPDATE app_private.plan_settings SET dunning_grace_enabled = true;         -- grace on failed renewals
+UPDATE app_private.plan_settings SET dunning_grace_days = 5;               -- 1 to 30
+UPDATE app_private.plan_settings SET auto_trial_enabled = false;           -- stop new trials (existing ones run out)
+```
+
+Caveats: trials are granted per verified email owner, so a determined person with many verified
+mailboxes can still farm them (the trial only enables Ordering, with the Free caps' higher tier, and is
+revocable); there is no email or push reminder yet, only in-app notices; the grace is our own and
+cannot extend the provider's retries; operator-granted trials (`trial_7`, `trial_30`) still overlap a
+paid charge as before and must be revoked by an operator first; enabling the trial changes who can take
+online orders, so turn it on only after the ordering release gates for your deployment and update the
+pricing-page copy in the same release.

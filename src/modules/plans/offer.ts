@@ -120,6 +120,8 @@ export type NextUp = {
   price: PricePoint;
   tagline: string;
   benefits: BenefitRow[];
+  /** "keep" during a trial: the rows describe what subscribing keeps, not what upgrading adds. */
+  mode?: "keep";
 };
 
 /** The next self-serve plan and why it is worth it; null on the top plan and for contract plans. */
