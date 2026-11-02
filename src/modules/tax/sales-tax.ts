@@ -19,7 +19,11 @@ export const salesTaxPolicySchema = z
     if (value.status === "configured" && value.rateBps === 0)
       ctx.addIssue({ code: "custom", path: ["rateBps"], message: "Enter a positive tax rate" });
     if (value.status !== "configured" && value.rateBps !== 0)
-      ctx.addIssue({ code: "custom", path: ["rateBps"], message: "A no-tax declaration must not have a rate" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["rateBps"],
+        message: "A no-tax declaration must not have a rate",
+      });
   });
 export type SalesTaxPolicy = z.infer<typeof salesTaxPolicySchema>;
 export type TaxQuote = {
@@ -70,13 +74,9 @@ export function previewMerchantSalesTax(
   const lines = lineAmountsMinor.map((value) => {
     const original = minor(value);
     const base =
-      policy.inclusive && rate > 0n
-        ? roundedDivide(original * 10_000n, 10_000n + rate)
-        : original;
+      policy.inclusive && rate > 0n ? roundedDivide(original * 10_000n, 10_000n + rate) : original;
     const tax =
-      policy.inclusive && rate > 0n
-        ? original - base
-        : roundedDivide(base * rate, 10_000n);
+      policy.inclusive && rate > 0n ? original - base : roundedDivide(base * rate, 10_000n);
     const total = base + tax;
     subtotal += original;
     baseTotal += base;
