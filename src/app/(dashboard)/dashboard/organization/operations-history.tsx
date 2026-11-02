@@ -69,10 +69,10 @@ export function OperationsHistory({
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    void fetch(
-      `/api/organizations/${encodeURIComponent(organizationId)}/activity?page=${page}`,
-      { signal: controller.signal, cache: "no-store" }
-    )
+    void fetch(`/api/organizations/${encodeURIComponent(organizationId)}/activity?page=${page}`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
       .then(async (response) => {
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
@@ -123,7 +123,9 @@ export function OperationsHistory({
       ) : (
         <div className="oh-operations-table-wrap" aria-busy={loading}>
           <table className="oh-operations-table">
-            <caption className="sr-only">Organization operations history, five entries per page</caption>
+            <caption className="sr-only">
+              Organization operations history, five entries per page
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Operation</th>
@@ -144,7 +146,9 @@ export function OperationsHistory({
             </tbody>
           </table>
           {loading ? (
-            <p className="oh-operations-empty" role="status">Loading operations…</p>
+            <p className="oh-operations-empty" role="status">
+              Loading operations…
+            </p>
           ) : !data?.items.length ? (
             <p className="oh-operations-empty">No organization operations recorded yet.</p>
           ) : null}
@@ -163,7 +167,9 @@ export function OperationsHistory({
           >
             <ChevronLeft size={16} aria-hidden="true" />
           </button>
-          <span>Page {data?.page ?? page} of {data?.totalPages ?? 1}</span>
+          <span>
+            Page {data?.page ?? page} of {data?.totalPages ?? 1}
+          </span>
           <button
             type="button"
             aria-label="Next operations page"
