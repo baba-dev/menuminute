@@ -61,7 +61,6 @@ import { getPlanSnapshot } from "@/modules/plans/usage";
 export const metadata: Metadata = {
   title: "Restaurant overview",
   description: "Your private, outlet-specific menu and publishing workspace.",
-  robots: { index: false, follow: false },
 };
 
 const artwork = "/brand/dashboard/editorial/";

@@ -144,6 +144,8 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
     "committed menus"
   );
   await page.keyboard.press("Escape");
+  // One inherited private-workspace robots tag; do not emit duplicates from page metadata.
+  await expect(page.locator("meta[name='robots']")).toHaveCount(1);
   await expect(page.locator("meta[name='robots']")).toHaveAttribute("content", /noindex/);
 
   for (const width of [360, 390, 768, 1024, 1440]) {
