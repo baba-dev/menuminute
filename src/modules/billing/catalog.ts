@@ -1,6 +1,6 @@
 /**
- * Published subscription prices in exact minor units. The USD catalogue is a fixed 50%-premium
- * price book at the owner-approved reference of INR 95 per USD, not a live FX quote.
+ * Published INR and USD prices in integer minor units, independently set by the owner.
+ * USD is a fixed commercial price book, not an exchange-rate conversion of INR.
  * Only INR is currently enabled for provider checkout; USD prices must not be collected until
  * the payment integration, verified webhook, refund handling and DB ledger are currency-aware.
  * Provider plan IDs remain runtime secrets/config and must match these amounts before billing launch.
@@ -11,29 +11,24 @@ export const PAID_PLAN_CATALOG = {
     product: "ordering",
     name: "Ordering",
     monthlyPricePaise: 11900,
-    monthlyPriceUsdCents: 188,
+    monthlyPriceUsdCents: 500,
   },
   kitchen_pro: {
     product: "kitchen_pro",
     name: "Kitchen Pro",
     monthlyPricePaise: 49900,
-    monthlyPriceUsdCents: 788,
+    monthlyPriceUsdCents: 2000,
   },
 } as const;
 export type PaidPlan = keyof typeof PAID_PLAN_CATALOG;
 
-/** Dedicated is sold by contract; this is the published monthly price. */
+/** INR Dedicated remains the published monthly contract rate. */
 export const DEDICATED_MONTHLY_PAISE = 3_000_000;
-export const DEDICATED_MONTHLY_USD_CENTS = 47_368;
+/** USD Dedicated is a private on-premise deployment quote; term agreed by contract. */
+export const DEDICATED_ON_PREMISE_USD_CENTS = 300_000;
 export type BillingCurrency = "INR" | "USD";
 
-/** These price book values are immutable for active subscriptions. */
-export const USD_PRICE_REFERENCE = {
-  inrPerUsd: 95,
-  markupPercent: 50,
-  effectiveDate: "2026-11-03",
-} as const;
-
+/** Active subscriptions retain their recorded provider price and currency. */
 /** Money display only. Provider amounts are integer units from the catalog. */
 export function formatUsd(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
