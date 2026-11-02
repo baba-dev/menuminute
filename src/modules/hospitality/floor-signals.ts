@@ -18,6 +18,8 @@ export const DEFAULT_SIGNAL_SETTINGS: FloorSignalSettings = {
 export type SignalEventInput = {
   kind: string;
   occurredAt: string;
+  /** The business record the event refers to (e.g. a service request id). */
+  refId?: string | null;
 };
 
 export type JourneyOrderInput = {
@@ -96,6 +98,7 @@ export function buildJourney(input: {
   );
 
   let needsStaff = false;
+  let waterAction: TableJourney["waterAction"] = null;
   if (settings.showPosBill) {
     const requested = latest(events, "bill_requested");
     const presented = latest(events, "bill_presented");
@@ -122,6 +125,11 @@ export function buildJourney(input: {
         ? "done"
         : "active";
     if (state === "active") needsStaff = true;
+    if (state === "active" && water?.refId)
+      waterAction = {
+        requestId: water.refId,
+        action: water.kind === "water_requested" ? "acknowledge" : "resolve",
+      };
     add(
       "water",
       state,
@@ -135,5 +143,5 @@ export function buildJourney(input: {
             : null
     );
   }
-  return { steps, needsStaff };
+  return { steps, needsStaff, waterAction };
 }

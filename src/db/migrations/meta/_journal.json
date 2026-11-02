@@ -638,6 +638,13 @@
       "when": 1796216400032,
       "tag": "0091_qr_scan_signal",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1796302800032,
+      "tag": "0092_guest_table_water",
+      "breakpoints": true
     }
   ]
 }

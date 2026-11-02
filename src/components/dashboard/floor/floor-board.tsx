@@ -128,6 +128,19 @@ export function FloorBoard({
     }
   }
 
+  const [waterBusy, setWaterBusy] = useState(false);
+  async function waterAction(requestId: string, action: "acknowledge" | "resolve") {
+    setWaterBusy(true);
+    try {
+      await mutate(() => floorRequest(outlet.id, "/water", "POST", { requestId, action }));
+      setOverview(await fetchOverview(outlet.id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the water request.");
+    } finally {
+      setWaterBusy(false);
+    }
+  }
+
   const fail = (error: unknown, fallback: string) =>
     toast.error(error instanceof Error ? error.message : fallback);
 
@@ -592,6 +605,8 @@ export function FloorBoard({
                         onArchive={() => openDialog(setArchive, table.id)}
                         onSeatBooking={() => void seatBooking(table)}
                         onCreateQr={() => void createQr(table)}
+                        onWaterAction={canSeat ? waterAction : undefined}
+                        waterBusy={waterBusy}
                         onClearStale={() =>
                           void clear(table).catch((e) => fail(e, "Could not clear the table."))
                         }
@@ -712,6 +727,8 @@ function TableCard({
   onSeatBooking,
   onCreateQr,
   onClearStale,
+  onWaterAction,
+  waterBusy,
 }: {
   table: FloorTableOverview;
   sectionName: string | null;
@@ -729,6 +746,8 @@ function TableCard({
   onSeatBooking: () => void;
   onCreateQr: () => void;
   onClearStale: () => void;
+  onWaterAction?: (requestId: string, action: "acknowledge" | "resolve") => void;
+  waterBusy: boolean;
 }) {
   const free = table.maxOccupancy - table.currentOccupancy;
   const tone = table.state === "full" ? "full" : table.state === "partial" ? "busy" : "muted";
@@ -919,7 +938,14 @@ function TableCard({
               </div>
             )}
           </dl>
-          {table.journey && <JourneyStrip journey={table.journey} tableName={table.name} />}
+          {table.journey && (
+            <JourneyStrip
+              journey={table.journey}
+              tableName={table.name}
+              onWaterAction={onWaterAction}
+              busy={waterBusy}
+            />
+          )}
         </div>
       </div>
     </article>

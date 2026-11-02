@@ -81,10 +81,15 @@ export function JourneyStrip({
   journey,
   now,
   tableName,
+  onWaterAction,
+  busy = false,
 }: {
   journey: TableJourney;
   now?: number;
   tableName: string;
+  /** Present only for staff who may act on service requests. */
+  onWaterAction?: (requestId: string, action: "acknowledge" | "resolve") => void;
+  busy?: boolean;
 }) {
   return (
     <section className={styles.strip} aria-label={`Guest journey for ${tableName}`}>
@@ -125,6 +130,18 @@ export function JourneyStrip({
           );
         })}
       </ul>
+      {journey.waterAction && onWaterAction && (
+        <button
+          type="button"
+          className={styles.action}
+          disabled={busy}
+          onClick={() => onWaterAction(journey.waterAction!.requestId, journey.waterAction!.action)}
+        >
+          {journey.waterAction.action === "acknowledge"
+            ? "Acknowledge water request"
+            : "Mark water served"}
+        </button>
+      )}
     </section>
   );
 }

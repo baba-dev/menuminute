@@ -194,15 +194,16 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
         table_id: string;
         kind: string;
         occurred_at: string | Date;
+        ref_id: string | null;
       }>(
-        sql`select table_id, kind, occurred_at from table_signal_events
+        sql`select table_id, kind, occurred_at, ref_id from table_signal_events
           where outlet_id=${outletId} and occurred_at > now() - interval '6 hours'
           order by occurred_at desc limit 2000`
       );
       for (const e of events.rows)
         eventsByTable.set(e.table_id, [
           ...(eventsByTable.get(e.table_id) ?? []),
-          { kind: e.kind, occurredAt: iso(e.occurred_at) },
+          { kind: e.kind, occurredAt: iso(e.occurred_at), refId: e.ref_id },
         ]);
       const latestOrders = await tx.execute<{
         table_id: string;

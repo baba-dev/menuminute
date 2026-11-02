@@ -164,6 +164,8 @@ export type TableJourney = {
   steps: JourneyStep[];
   /** True while a guest request (water or bill) is waiting for staff. */
   needsStaff: boolean;
+  /** The next staff step on an open water request, if any. */
+  waterAction: { requestId: string; action: "acknowledge" | "resolve" } | null;
 };
 
 export type FloorOverview = {

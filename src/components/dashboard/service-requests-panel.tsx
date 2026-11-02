@@ -144,7 +144,8 @@ export function ServiceRequestsPanel({
           {items.map((item) => (
             <li key={item.id} className="mm-ops-item">
               <strong>
-                Table {item.tableNumber} · Order #{item.orderNumber}
+                Table {item.tableNumber}
+                {item.orderNumber != null && ` · Order #${item.orderNumber}`}
               </strong>
               <p>
                 {item.signal === "call_server"

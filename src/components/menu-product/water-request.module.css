@@ -1,0 +1,35 @@
+.wrap {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  margin: 12px var(--dining-gutter, 1rem) 0;
+}
+.button.button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--dc-ember, #a93608);
+  border-radius: 999px;
+  background: var(--dc-surface, #fff);
+  color: var(--dc-ember, #a93608);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button[data-state="requested"],
+.button[data-state="acknowledged"] {
+  background: var(--dc-soft, #f9eddb);
+}
+.button:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.note {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--dc-muted, #715d50);
+  font-size: 12.5px;
+}

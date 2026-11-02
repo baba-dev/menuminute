@@ -14,7 +14,8 @@ export const serviceSignalSchema = z
   .strict();
 export type GuestServiceRequest = {
   id: string;
-  orderNumber: number;
+  /** Null for a water request made from the table QR before any order exists. */
+  orderNumber: number | null;
   tableNumber: string;
   signal: "call_server" | "water_refill" | "bill_request";
   status: "requested" | "acknowledged" | "resolved";
@@ -157,4 +158,34 @@ export async function recordQrScan(raw: unknown): Promise<{ recorded: boolean }>
     [input.token]
   );
   return { recorded: result.rows[0]?.data?.recorded === true };
+}
+
+export type TableServiceState = {
+  /** True when the outlet opted in to the guest water button and this QR is tied to a table. */
+  water: boolean;
+  request: { status: GuestServiceRequest["status"]; requestedAt: string } | null;
+};
+
+/** Public: is the water button on for this table QR, and where is the latest request. */
+export async function tableServiceState(raw: unknown): Promise<TableServiceState> {
+  const input = qrScanSchema.parse(raw);
+  const result = await getPool().query<{ data: TableServiceState }>(
+    "select app_private.guest_table_service_state($1) as data",
+    [input.token]
+  );
+  return result.rows[0]?.data ?? { water: false, request: null };
+}
+
+/** Public: the guest taps "Request water". The database enforces opt-in, table scope and debounce. */
+export async function requestTableWater(raw: unknown) {
+  const input = qrScanSchema.parse(raw);
+  try {
+    const result = await getPool().query<{
+      data: { status: GuestServiceRequest["status"]; requestedAt: string; debounced: boolean };
+    }>("select app_private.guest_table_water_request($1) as data", [input.token]);
+    return result.rows[0]!.data;
+  } catch (error) {
+    if ((error as { code?: string }).code === "42501") throw new NotFoundError("Water request");
+    throw error;
+  }
 }
