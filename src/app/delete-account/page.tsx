@@ -98,14 +98,18 @@ function DeleteArtwork() {
         <circle cx="70" cy="214" r="5" />
       </g>
       <ellipse cx="241" cy="348" rx="126" ry="17" fill="#050302" opacity=".3" />
-      <rect x="115" y="97" width="249" height="233" rx="35" fill="#110d0a" stroke="#e7a66b" strokeWidth="3" />
-      <rect x="129" y="111" width="221" height="205" rx="24" fill="#2b1c13" />
-      <path
-        d="M148 160h181M148 272h181"
-        stroke="#b97d47"
-        strokeOpacity=".45"
-        strokeWidth="2"
+      <rect
+        x="115"
+        y="97"
+        width="249"
+        height="233"
+        rx="35"
+        fill="#110d0a"
+        stroke="#e7a66b"
+        strokeWidth="3"
       />
+      <rect x="129" y="111" width="221" height="205" rx="24" fill="#2b1c13" />
+      <path d="M148 160h181M148 272h181" stroke="#b97d47" strokeOpacity=".45" strokeWidth="2" />
       <g transform="rotate(-8 243 200)">
         <rect x="174" y="133" width="143" height="139" rx="18" fill="url(#delete-card-grad)" />
         <circle cx="245" cy="176" r="22" fill="#75401e" />
@@ -142,9 +146,17 @@ function DeleteArtwork() {
 }
 
 const highlights = [
-  { number: "01", title: "Make a request", detail: "Start from this public page, without signing in." },
+  {
+    number: "01",
+    title: "Make a request",
+    detail: "Start from this public page, without signing in.",
+  },
   { number: "02", title: "Verify ownership", detail: "We confirm the request belongs to you." },
-  { number: "03", title: "Review the result", detail: "We explain the outcome and any lawful retention." },
+  {
+    number: "03",
+    title: "Review the result",
+    detail: "We explain the outcome and any lawful retention.",
+  },
 ];
 
 export default function DeleteAccountPage() {
@@ -253,7 +265,8 @@ export default function DeleteAccountPage() {
                 <p>
                   This page is available without a login, including if you cannot access your
                   account. We will verify ownership before processing a deletion. You do not need to
-                  send us your password, one-time codes, or identity documents in your first message.
+                  send us your password, one-time codes, or identity documents in your first
+                  message.
                 </p>
               </div>
             </div>
@@ -272,10 +285,11 @@ export default function DeleteAccountPage() {
             <section className="privacy-section" id="request" aria-labelledby="request-heading">
               <h2 id="request-heading">01. How to request account deletion</h2>
               <p>
-                To begin, email <strong>admin@bababuilds.com</strong> from the address associated with
-                your MenuMinute account whenever possible. Put <strong>MenuMinute Account Deletion
-                Request</strong> in the subject line. If you no longer have access to that email
-                address, tell us so we can discuss another way to verify the request.
+                To begin, email <strong>admin@bababuilds.com</strong> from the address associated
+                with your MenuMinute account whenever possible. Put{" "}
+                <strong>MenuMinute Account Deletion Request</strong> in the subject line. If you no
+                longer have access to that email address, tell us so we can discuss another way to
+                verify the request.
               </p>
               <ol className="delete-step-list">
                 <li>
@@ -307,8 +321,8 @@ export default function DeleteAccountPage() {
               <p>
                 We check that the request is authorized, assess any shared restaurant access and
                 legal obligations, and communicate the outcome. We may need to clarify which data
-                belongs to your personal account and which belongs to a restaurant or its guests.
-                If we cannot complete part of the request, we will explain why.
+                belongs to your personal account and which belongs to a restaurant or its guests. If
+                we cannot complete part of the request, we will explain why.
               </p>
               <p>
                 This is not an instant self-service deletion button. The completion time depends on
@@ -327,9 +341,17 @@ export default function DeleteAccountPage() {
               </p>
               <ul>
                 <li>Personal account and profile details, and sign-in access or sessions.</li>
-                <li>Personal workspace preferences and membership information linked to the account.</li>
-                <li>Personal content or uploaded files that are no longer required for a restaurant&apos;s legitimate operations or legal obligations.</li>
-                <li>Other identifiable information where there is no continuing lawful need to retain it.</li>
+                <li>
+                  Personal workspace preferences and membership information linked to the account.
+                </li>
+                <li>
+                  Personal content or uploaded files that are no longer required for a
+                  restaurant&apos;s legitimate operations or legal obligations.
+                </li>
+                <li>
+                  Other identifiable information where there is no continuing lawful need to retain
+                  it.
+                </li>
               </ul>
               <p>
                 Restaurant-owned menus, shared team records, and orders may require separate
@@ -355,7 +377,11 @@ export default function DeleteAccountPage() {
               </p>
             </section>
 
-            <section className="privacy-section" id="organizations" aria-labelledby="organizations-heading">
+            <section
+              className="privacy-section"
+              id="organizations"
+              aria-labelledby="organizations-heading"
+            >
               <h2 id="organizations-heading">05. Restaurant organizations and guest orders</h2>
               <p>
                 If you own a restaurant workspace, we may need to confirm your authority, discuss
@@ -365,14 +391,18 @@ export default function DeleteAccountPage() {
                 restaurant.
               </p>
               <p>
-                If you are a diner who placed an order using a restaurant&apos;s QR menu, you may not
-                have a MenuMinute account to delete. You can still contact us about personal data.
-                The restaurant may independently control order information and may need to handle
-                some of your request directly.
+                If you are a diner who placed an order using a restaurant&apos;s QR menu, you may
+                not have a MenuMinute account to delete. You can still contact us about personal
+                data. The restaurant may independently control order information and may need to
+                handle some of your request directly.
               </p>
             </section>
 
-            <section className="privacy-section" id="more-choices" aria-labelledby="more-choices-heading">
+            <section
+              className="privacy-section"
+              id="more-choices"
+              aria-labelledby="more-choices-heading"
+            >
               <h2 id="more-choices-heading">06. Your other privacy choices</h2>
               <p>
                 You can also contact us about access, correction, available data export, marketing
@@ -380,8 +410,8 @@ export default function DeleteAccountPage() {
                 complete account closure to raise a privacy question.
               </p>
               <p>
-                MenuMinute is operated by <strong>BabaBuilds</strong>, a sole proprietorship based in
-                Pilani, Rajasthan, India. For further details about how personal information is
+                MenuMinute is operated by <strong>BabaBuilds</strong>, a sole proprietorship based
+                in Pilani, Rajasthan, India. For further details about how personal information is
                 handled, read our <Link href="/privacy">Privacy Policy</Link> and{" "}
                 <Link href="/terms">Terms of Service</Link>.
               </p>
@@ -401,12 +431,14 @@ export default function DeleteAccountPage() {
               </a>
             </div>
             <p className="privacy-print-hint">
-              <Download size={14} aria-hidden="true" /> You can print or save this page for your records.
+              <Download size={14} aria-hidden="true" /> You can print or save this page for your
+              records.
             </p>
             <div className="delete-privacy-link">
               <FileCheck2 size={18} aria-hidden="true" />
               <span>
-                Already signed in? Review your <Link href="/account#privacy">account privacy settings</Link>.
+                Already signed in? Review your{" "}
+                <Link href="/account#privacy">account privacy settings</Link>.
               </span>
             </div>
           </main>
