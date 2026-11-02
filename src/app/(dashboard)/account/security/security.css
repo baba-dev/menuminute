@@ -1,8 +1,57 @@
-/* Account Security 2.0: reuse the Hospitality House shell and tokens. */
+/* Account Security 2.0 — inherits the Hospitality House account tokens and dashboard shell. */
 .mm-account-security .oh-hero { min-height: clamp(320px, 25vw, 415px); }
-.mm-account-security .oh-hero-copy { width: min(710px, 66%); }
-.mm-account-security .oh-panel-content { display: grid; gap: 16px; }
-.mm-account-security .mm-device-panel { border-radius: 14px; border-color: var(--oh-line); }
+.mm-account-security .oh-hero-copy { width: min(710px, 67%); }
+.mm-account-security .oh-panel-content { display: grid; gap: 17px; }
+.mm-account-security .mm-sec-form { display: grid; gap: 14px; max-width: 560px; }
+.mm-account-security .mm-sec-field { display: grid; gap: 7px; color: var(--ink); font-size: 12px; font-weight: 750; }
+.mm-account-security .mm-sec-field .oh-control { width: 100%; min-height: 44px; }
+.mm-account-security .mm-sec-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.mm-account-security .mm-sec-actions :is(button,a) { min-height: 42px; text-decoration: none; }
+.mm-account-security .mm-sec-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.mm-account-security .mm-sec-feedback:empty { display: none; }
+.mm-account-security .mm-sec-feedback:not(:empty) { margin: 16px 0; padding: 14px 18px; border-radius: 12px; background: var(--oh-soft); color: var(--ink); font-size: 13px; }
+.mm-account-security .mm-sec-error { margin: 12px 0; padding: 14px 18px; border: 1px solid #c76456; border-radius: 12px; background: var(--oh-soft); color: #ae392a; font-size: 13px; }
+:root[data-theme="dark"] .mm-account-security .mm-sec-error { color: #ffb5a8; }
+.mm-account-security .mm-sec-note { padding: 14px 18px; color: var(--ink); border-radius: 12px; background: var(--oh-soft); font-size: 13px; }
+.mm-account-security .mm-sec-check { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 650; cursor: pointer; }
+.mm-account-security .mm-sec-check input { width: 17px; height: 17px; accent-color: var(--oh-accent); }
+.mm-account-security .mm-sec-provider { display: flex; align-items: center; gap: 13px; padding: 16px; border: 1px solid var(--oh-line); border-radius: 13px; min-width: 0; }
+.mm-account-security .mm-sec-provider-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--oh-soft); color: var(--oh-accent); }
+.mm-account-security .mm-sec-provider > div { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.mm-account-security .mm-sec-provider strong { font-size: 14px; }
+.mm-account-security .mm-sec-provider small { color: var(--oh-subtle); font-size: 12px; line-height: 1.45; }
+.mm-account-security .mm-sec-provider-state { white-space: nowrap; font-size: 12px; font-weight: 800; color: var(--oh-accent); }
+.mm-account-security .mm-sec-status { display: inline-flex; gap: 10px; align-items: center; color: var(--oh-accent); font-size: 14px; }
+.mm-account-security .mm-sec-status strong { font-weight: 800; }
+.mm-account-security .mm-sec-recovery { display: grid; gap: 14px; padding: 17px; border-radius: 13px; background: var(--oh-soft); color: var(--ink); }
+.mm-account-security .mm-sec-recovery p { font-size: 12px; line-height: 1.6; margin-top: 5px; }
+.mm-account-security .mm-sec-backup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mm-account-security .mm-sec-backup-grid code { padding: 10px; border-radius: 9px; background: var(--paper); overflow-wrap: anywhere; font-size: 12px; }
+.mm-account-security .mm-sec-manual { max-width: 100%; }
+.mm-account-security .mm-sec-manual code { display: block; overflow-wrap: anywhere; padding: 12px; font-size: 11px; }
+.mm-account-security .mm-sec-confirm, .mm-account-security .mm-sec-danger { padding: 15px; border: 1px solid #c98568; border-radius: 12px; background: var(--oh-soft); }
+.mm-account-security .mm-sec-confirm p, .mm-account-security .mm-sec-danger p { margin: 6px 0 12px; font-size: 12px; }
+.mm-account-security .mm-sec-text-danger { justify-self: start; border: 0; background: none; color: #b94934; text-decoration: underline; text-underline-offset: 3px; font-weight: 700; font-size: 12px; cursor: pointer; }
+:root[data-theme="dark"] .mm-account-security .mm-sec-text-danger { color: #ffaf97; }
+.mm-account-security .mm-sec-device-section .mm-device-panel { border-radius: 14px; border-color: var(--oh-line); }
+.mm-account-security .mm-sec-device-section .mm-device-heading h2 { font-family: var(--font-display), sans-serif; letter-spacing: -.05em; }
+.mm-account-security .mm-sec-table-wrap { width: 100%; overflow-x: auto; }
+.mm-account-security .mm-sec-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 380px; }
+.mm-account-security .mm-sec-table th { color: var(--oh-subtle); font-size: 10px; letter-spacing: .11em; text-transform: uppercase; }
+.mm-account-security .mm-sec-table :is(th,td) { padding: 13px 12px; border-bottom: 1px solid var(--oh-line); }
+.mm-account-security .mm-sec-table td { color: var(--ink); font-size: 12px; }
+.mm-account-security .mm-sec-table td:last-child { color: var(--oh-subtle); }
+.mm-account-security .mm-sec-pagination { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.mm-account-security .mm-sec-pagination small { font-size: 11px; color: var(--oh-subtle); }
+.mm-account-security .mm-sec-pagination .mm-sec-actions span { font-size: 11px; }
+.mm-account-security .mm-sec-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 16px; color: var(--oh-subtle); font-size: 12px; }
+.mm-account-security .mm-sec-footer a { color: var(--oh-accent); font-weight: 800; text-decoration: underline; }
+.mm-account-security :is(.mm-sec-form,.mm-sec-provider,.mm-sec-backup-grid) { min-width: 0; }
+.mm-account-security .mm-sec-form .oh-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 @media (max-width: 680px) {
   .mm-account-security .oh-hero-copy { width: 100%; }
+  .mm-account-security .mm-sec-provider { flex-wrap: wrap; }
+  .mm-account-security .mm-sec-provider > button { width: 100%; }
+  .mm-account-security .mm-sec-backup-grid { grid-template-columns: 1fr; }
+  .mm-account-security .mm-sec-form .oh-primary { width: 100%; }
 }
