@@ -21,8 +21,11 @@ test("security workspace preserves credential sign-in and changes password", asy
     );
   });
   await createRestaurant(id, {
-    name: "Security test kitchen", country: "IN", currency: "INR",
-    timezone: "Asia/Kolkata", outletType: "restaurant",
+    name: "Security test kitchen",
+    country: "IN",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    outletType: "restaurant",
   });
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);

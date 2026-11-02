@@ -233,7 +233,10 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
       {googleEnabled && (
         <div className="mm-auth-social">
           <p>Or sign in with a connected account</p>
-          <button type="button" className="mm-auth-google" disabled={busy || googleBusy}
+          <button
+            type="button"
+            className="mm-auth-google"
+            disabled={busy || googleBusy}
             onClick={async () => {
               if (googleBusy) return;
               setGoogleBusy(true);
@@ -244,17 +247,25 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
                   callbackURL: next || "/dashboard",
                   errorCallbackURL: "/login",
                 });
-                if (result.error) setError("Google sign-in failed. Sign in with your password to manage connected accounts.");
+                if (result.error)
+                  setError(
+                    "Google sign-in failed. Sign in with your password to manage connected accounts."
+                  );
               } catch {
                 setError("Unable to start Google sign-in. Please use your password.");
               } finally {
                 setGoogleBusy(false);
               }
-            }}>
-            <span aria-hidden="true" className="mm-auth-google-g">G</span>
+            }}
+          >
+            <span aria-hidden="true" className="mm-auth-google-g">
+              G
+            </span>
             {googleBusy ? "Connecting to Google…" : "Continue with Google"}
           </button>
-          <small>New here? Create your account with email first, then connect Google in Account Security.</small>
+          <small>
+            New here? Create your account with email first, then connect Google in Account Security.
+          </small>
         </div>
       )}
     </AuthShell>

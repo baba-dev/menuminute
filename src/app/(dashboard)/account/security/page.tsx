@@ -20,16 +20,21 @@ export const metadata = {
 export default async function AccountSecurityPage() {
   const session = await auth();
   if (!session) redirect("/login?next=%2Faccount%2Fsecurity");
-  const linked = await getDb().select({
-    id: accounts.id,
+  const linked = await getDb()
+    .select({
+      id: accounts.id,
     providerId: accounts.providerId,
-    password: accounts.password,
-  }).from(accounts).where(eq(accounts.userId, session.user.id));
+      password: accounts.password,
+    })
+    .from(accounts)
+    .where(eq(accounts.userId, session.user.id));
 
   return (
     <SecurityConsole
       initialMfa={Boolean(session.user.twoFactorEnabled)}
-      hasPassword={linked.some((account) => account.providerId === "credential" && Boolean(account.password))}
+      hasPassword={linked.some(
+        (account) => account.providerId === "credential" && Boolean(account.password)
+      )}
       googleLinked={linked.some((account) => account.providerId === "google")}
       googleAccountId={linked.find((account) => account.providerId === "google")?.id ?? null}
       googleEnabled={Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)}

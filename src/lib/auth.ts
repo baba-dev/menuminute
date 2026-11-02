@@ -24,12 +24,17 @@ export const authServer = betterAuth({
     validateUserInfo: async ({ user, source }) => {
       if (source.oauth?.providerId !== "google") return;
       const profile = source.oauth.profile as Record<string, unknown> | undefined;
-      const externalId = typeof profile?.sub === "string" ? profile.sub :
-        typeof profile?.id === "string" ? profile.id : "";
-      if (await googleMfaBlocked(user.email ?? "", externalId)) return {
-        error: "mfa_requires_password",
-        errorDescription: "This account requires password and authenticator sign-in.",
-      };
+      const externalId =
+        typeof profile?.sub === "string"
+          ? profile.sub
+          : typeof profile?.id === "string"
+            ? profile.id
+            : "";
+      if (await googleMfaBlocked(user.email ?? "", externalId))
+        return {
+          error: "mfa_requires_password",
+          errorDescription: "This account requires password and authenticator sign-in.",
+        };
     },
     additionalFields: {
       termsVersion: { type: "string", required: true, input: true },
@@ -37,15 +42,18 @@ export const authServer = betterAuth({
     },
   },
   trustedOrigins: [new URL(env.APP_URL).origin],
-  socialProviders: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET ? {
-    google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      disableSignUp: true,
-      disableIdTokenSignIn: true,
-      requireEmailVerification: true,
-    },
-  } : {},
+  socialProviders:
+    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            disableSignUp: true,
+            disableIdTokenSignIn: true,
+            requireEmailVerification: true,
+          },
+        }
+      : {},
   account: {
     accountLinking: {
       enabled: true,

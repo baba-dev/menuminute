@@ -5,9 +5,9 @@ import { googleMfaBlocked } from "../src/lib/google-auth-guard";
 
 it("rejects Google OAuth for TOTP-enabled accounts by email and linked subject", async () => {
   const user = await fixture();
-  const row = await getPool().query<{ email: string }>(
-    "select email from users where id=$1", [user.actor.userId]
-  );
+  const row = await getPool().query<{ email: string }>("select email from users where id=$1", [
+    user.actor.userId,
+  ]);
   const email = row.rows[0]!.email;
   const googleSubject = "google-security-" + crypto.randomUUID();
   expect(await googleMfaBlocked(email, googleSubject)).toBe(false);
