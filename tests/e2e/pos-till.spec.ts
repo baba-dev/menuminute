@@ -154,7 +154,7 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   const reprintHref = await register
     .getByRole("link", { name: /Reprint bill for order #/ })
     .getAttribute("href");
-  expect(reprintHref).toMatch(/^\\/dashboard\\/pos\\/receipts\\//);
+  expect(reprintHref?.startsWith("/dashboard/pos/receipts/")).toBe(true);
   await expect(register.getByRole("link", { name: /Refund or correct payment/ })).toHaveCount(0);
   const orderSearch = register.getByPlaceholder("Order #, guest, table, dish…");
   await orderSearch.fill("unmatched_dish_name");
@@ -228,12 +228,16 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await expect(page.locator(".receipt-paper")).toBeVisible();
   await expect(page.locator(".mm-workspace-shell")).toHaveCSS("display", "block");
   await expect(page.locator(".mm-workspace-main")).toHaveCSS("padding", "0px");
-  const width80 = await page.locator(".receipt-paper").evaluate((el) => el.getBoundingClientRect().width);
+  const width80 = await page
+    .locator(".receipt-paper")
+    .evaluate((el) => el.getBoundingClientRect().width);
 
   await page.goto(receiptPath + "?paper=58");
   await expect(page.locator(".receipt-paper")).toBeVisible();
   await expect(page.locator(".mm-workspace-sidebar")).toBeHidden();
-  const width58 = await page.locator(".receipt-paper").evaluate((el) => el.getBoundingClientRect().width);
+  const width58 = await page
+    .locator(".receipt-paper")
+    .evaluate((el) => el.getBoundingClientRect().width);
   expect(width58).toBeLessThan(width80);
 });
 
