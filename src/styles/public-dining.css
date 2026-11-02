@@ -1338,3 +1338,58 @@
     transition: none;
   }
 }
+
+/* Diner Delight PR-A: layered canvas background, rating chip, card polish. */
+.dining-canvas {
+  background-color: var(--dc-paper);
+  background-image:
+    radial-gradient(
+      60rem 30rem at 85% -5%,
+      color-mix(in srgb, var(--dc-ember) 9%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 26rem at -10% 40%,
+      color-mix(in srgb, var(--dc-soft) 80%, transparent),
+      transparent 70%
+    ),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><circle cx='20' cy='30' r='1.6' fill='%23a93608' fill-opacity='.07'/><circle cx='78' cy='64' r='1.2' fill='%23a93608' fill-opacity='.06'/><circle cx='104' cy='18' r='1.8' fill='%23a93608' fill-opacity='.05'/><circle cx='44' cy='100' r='1.4' fill='%23a93608' fill-opacity='.06'/></svg>");
+  background-attachment: scroll;
+}
+.dining-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--dc-ember);
+}
+.dining-rating small {
+  font-weight: 600;
+  color: var(--dc-muted);
+}
+.dining-dish {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--dc-line) 60%, transparent);
+}
+.dining-dish-cta:active:not(:disabled) {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dining-dish {
+    animation: dining-card-in 0.4s ease both;
+  }
+  .dining-dish-cta {
+    transition: transform 0.12s ease;
+  }
+  @keyframes dining-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

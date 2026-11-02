@@ -9,13 +9,11 @@ import {
   Search,
   Leaf,
   Clock,
-  Plus,
   ArrowUpRight,
   ChefHat,
   ArrowRight,
   Sparkles,
   Languages,
-  Flame,
   ShieldAlert,
   MapPin,
   Phone,
@@ -33,8 +31,9 @@ import {
   startingPriceMinor,
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
+import { DishCard } from "./dish-card";
 import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
-import { hasVerifiedNutrition, isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
+import { isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
 import type { PublicProduct } from "@/modules/menu-product/service";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -830,97 +829,16 @@ export function PublicMenu({
                     </div>
                     <div className="dining-grid">
                       {items.map((dish) => {
-                        const unavailable = dish.soldOut || !dish.open;
-                        const image = dishVisual(dish, category.name, preview);
-                        const price = startingPriceMinor(dish);
                         return (
-                          <article
+                          <DishCard
                             key={dish.id}
-                            className={"dining-dish " + (unavailable ? "is-unavailable" : "")}
-                          >
-                            <button
-                              type="button"
-                              className="dining-photo-button"
-                              onClick={() => openDish(dish, category.name)}
-                              aria-label={"View " + dish.name + " details"}
-                            >
-                              <DiningImage visual={image} />
-                              {dish.soldOut && (
-                                <RubberStamp
-                                  text="Sold Out"
-                                  variant="sold-out"
-                                  className="dining-sold !border-solid shadow-sm"
-                                />
-                              )}
-                            </button>
-                            <div className="dining-dish-content">
-                              <div className="dining-dish-title">
-                                <h3>{dish.name}</h3>
-                                <strong>
-                                  {dish.variants.length ? "From " : ""}
-                                  {formatPrice(price, menu.view.currency)}
-                                </strong>
-                              </div>
-                              {dish.description && <p>{dish.description}</p>}
-                              <div className="dining-tags">
-                                {dish.dietary.map((value) => (
-                                  <span key={value}>
-                                    <Leaf size={12} aria-hidden="true" />
-                                    {value.replaceAll("_", " ")}
-                                  </span>
-                                ))}
-                                {dish.culinary?.spiceLevel !== undefined &&
-                                  dish.culinary.spiceLevel > 0 && (
-                                    <span className="dining-spice-pill">
-                                      <Flame size={12} aria-hidden="true" className="ember-text" />
-                                      {dish.culinary.spiceLevel === 1
-                                        ? "Mild"
-                                        : dish.culinary.spiceLevel === 2
-                                          ? "Med 🔥"
-                                          : dish.culinary.spiceLevel === 3
-                                            ? "Hot 🔥🔥"
-                                            : "Fiery 🔥🔥🔥"}
-                                    </span>
-                                  )}
-                                {hasVerifiedNutrition(dish.nutrition) &&
-                                  dish.nutrition?.calories !== undefined && (
-                                    <span className="dining-calorie-pill">
-                                      {dish.nutrition.calories} kcal
-                                    </span>
-                                  )}
-                                {dish.safety?.verified && dish.safety.allergens.length > 0 && (
-                                  <span className="dining-allergen-pill-card">
-                                    <ShieldAlert size={12} aria-hidden="true" />
-                                    {dish.safety.allergens.length} allergen
-                                    {dish.safety.allergens.length === 1 ? "" : "s"}
-                                  </span>
-                                )}
-                                {dish.variants.length + dish.addOnGroups.length > 0 && (
-                                  <span>Customizable</span>
-                                )}
-                                {!dish.open && <span>Outside service time</span>}
-                              </div>
-                              <button
-                                type="button"
-                                className={
-                                  "dining-dish-cta " + (unavailable || browseOnly ? "is-quiet" : "")
-                                }
-                                disabled={unavailable && !browseOnly}
-                                onClick={() => openDish(dish, category.name)}
-                              >
-                                {browseOnly
-                                  ? "View dish"
-                                  : unavailable
-                                    ? "Unavailable"
-                                    : "Add to order"}
-                                {browseOnly ? (
-                                  <ArrowUpRight size={17} aria-hidden="true" />
-                                ) : (
-                                  <Plus size={17} aria-hidden="true" />
-                                )}
-                              </button>
-                            </div>
-                          </article>
+                            dish={dish}
+                            image={dishVisual(dish, category.name, preview)}
+                            priceMinor={startingPriceMinor(dish)}
+                            currency={menu.view.currency}
+                            browseOnly={browseOnly}
+                            onOpen={() => openDish(dish, category.name)}
+                          />
                         );
                       })}
                     </div>
