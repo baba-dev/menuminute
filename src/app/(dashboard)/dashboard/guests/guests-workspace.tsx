@@ -59,17 +59,20 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
 
-  const refresh = useCallback(async (nextPage: number, nextQuery: string, abort?: AbortSignal) => {
-    const res = await fetch(
-      endpoint + "?view=list&page=" + nextPage + "&search=" + encodeURIComponent(nextQuery),
-      {
-        cache: "no-store",
-        signal: abort,
-      }
-    );
-    if (!res.ok) throw new Error("Could not refresh guests");
-    return res.json() as Promise<GuestList>;
-  }, [endpoint]);
+  const refresh = useCallback(
+    async (nextPage: number, nextQuery: string, abort?: AbortSignal) => {
+      const res = await fetch(
+        endpoint + "?view=list&page=" + nextPage + "&search=" + encodeURIComponent(nextQuery),
+        {
+          cache: "no-store",
+          signal: abort,
+        }
+      );
+      if (!res.ok) throw new Error("Could not refresh guests");
+      return res.json() as Promise<GuestList>;
+    },
+    [endpoint]
+  );
   useEffect(() => {
     const abort = new AbortController();
     const timer = window.setTimeout(() => {
