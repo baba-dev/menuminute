@@ -182,6 +182,7 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
     const journeyOrders = new Map<
       string,
       {
+        id: string;
         status: string;
         paymentStatus: string;
         createdAt: string;
@@ -206,13 +207,14 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
           { kind: e.kind, occurredAt: iso(e.occurred_at), refId: e.ref_id },
         ]);
       const latestOrders = await tx.execute<{
+        id: string;
         table_id: string;
         status: string;
         payment_status: string;
         created_at: string | Date;
         updated_at: string | Date;
         dishes: number;
-      }>(sql`select distinct on (o.table_id) o.table_id, o.status, o.payment_status,
+      }>(sql`select distinct on (o.table_id) o.id, o.table_id, o.status, o.payment_status,
           o.created_at, o.updated_at,
           (select coalesce(sum(i.quantity),0)::int from order_items i where i.order_id=o.id) as dishes
         from orders o
@@ -221,6 +223,7 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
         order by o.table_id, o.created_at desc, o.id desc`);
       for (const o of latestOrders.rows)
         journeyOrders.set(o.table_id, {
+          id: o.id,
           status: o.status,
           paymentStatus: o.payment_status,
           createdAt: iso(o.created_at),

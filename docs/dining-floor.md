@@ -11,7 +11,7 @@ four KPI tiles (total tables, total chairs, maximum occupancy, sections), sectio
 the next booking and the permanent system ID. It reuses the dashboard shell tokens (`.mm-dashboard-hero`,
 `--paper`, `--ink`, `--muted`, `--ember`, `--decorative`), the `DashboardTooltip` help popover and Radix dialogs.
 
-## Live table signals (optional, slices 1-3 of 6)
+## Live table signals (optional, slices 1-4 of 6)
 
 Status: **implemented in code; not deployed.** Migration `0090_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
@@ -22,7 +22,7 @@ paid and water. It is **off by default**; with it off no signal query runs and t
 - Tables: `floor_signal_settings` (per outlet) and `table_signal_events` (append-only, outlet RLS, unique
   `dedupe_key`, small non-personal `meta`). Staff can read the ledger; there are no app-role write grants yet.
 - Today only order status and payment drive indicators (derived from the table's latest order in the last 6 hours).
-  Ledger producers so far: the QR scan and guest service requests (water, bill request). Order, kitchen and POS bill/payment events arrive in later slices.
+  Ledger producers so far: the QR scan, guest service requests (water, bill request), order status changes and payment. The POS bill-shown event arrives with the POS slice.
 - `buildJourney` (`src/modules/hospitality/floor-signals.ts`) is the pure view-model; `JourneyStrip` renders inline SVG
   icons with text states (idle / active / done) and honours `prefers-reduced-motion`.
 - **QR scan ping (slice 2, migration `0091_qr_scan_signal`).** The public menu sends one beacon per browser session
@@ -41,8 +41,15 @@ paid and water. It is **off by default**; with it off no signal query runs and t
   "Mark water served" (`POST /api/floor/water`, authorization in `staff_service_request_action`). A trigger writes
   `water_requested`/`water_acknowledged`/`water_served` (and `bill_requested` for existing order-bound bill requests)
   to the ledger in the same transaction, only while the outlet opted in. The button never promises a time.
+- **Order, kitchen and payment signals (slice 4, migration `0093_order_kitchen_signals`).** Every order status change
+  already writes `order_status_events` (guest, staff, kitchen, expo and POS paths), so one trigger there records
+  `order_placed`, `order_accepted`, `kitchen_preparing`, `kitchen_ready` (handoff) and `order_served` with the real status
+  time, and a second trigger records `paid` when `orders.payment_status` becomes `paid`. They write only for orders at a
+  table, only while the outlet opted in (kitchen kinds need the kitchen source, `paid` needs the POS source), idempotently
+  (`ord:<order>:<kind>`). No order, kitchen or POS code or behaviour changes. The journey takes each step's time from the
+  event for the table's latest order and falls back to the order's last update.
 - The floor card no longer shows the permanent System ID. It is still in the API and the table edit dialog.
-- Remaining slices: order/kitchen producers, POS "Show bill" and
+- Remaining slices: POS "Show bill" and
   "Record payment" register actions, demo sample events and the Ember (assistant-action) toggle.
 
 ## Domain rules

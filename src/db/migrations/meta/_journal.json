@@ -645,6 +645,13 @@
       "when": 1796302800032,
       "tag": "0092_guest_table_water",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1796389200032,
+      "tag": "0093_order_kitchen_signals",
+      "breakpoints": true
     }
   ]
 }
