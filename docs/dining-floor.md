@@ -11,7 +11,7 @@ four KPI tiles (total tables, total chairs, maximum occupancy, sections), sectio
 the next booking and the permanent system ID. It reuses the dashboard shell tokens (`.mm-dashboard-hero`,
 `--paper`, `--ink`, `--muted`, `--ember`, `--decorative`), the `DashboardTooltip` help popover and Radix dialogs.
 
-## Live table signals (optional, slices 1-4 of 6)
+## Live table signals (optional, slices 1-5 of 6)
 
 Status: **implemented in code; not deployed.** Migration `0090_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
@@ -22,7 +22,7 @@ paid and water. It is **off by default**; with it off no signal query runs and t
 - Tables: `floor_signal_settings` (per outlet) and `table_signal_events` (append-only, outlet RLS, unique
   `dedupe_key`, small non-personal `meta`). Staff can read the ledger; there are no app-role write grants yet.
 - Today only order status and payment drive indicators (derived from the table's latest order in the last 6 hours).
-  Ledger producers so far: the QR scan, guest service requests (water, bill request), order status changes and payment. The POS bill-shown event arrives with the POS slice.
+  Ledger producers so far: the QR scan, guest service requests (water, bill request), order status changes and payment. Bill shown is recorded when a POS bill is frozen.
 - `buildJourney` (`src/modules/hospitality/floor-signals.ts`) is the pure view-model; `JourneyStrip` renders inline SVG
   icons with text states (idle / active / done) and honours `prefers-reduced-motion`.
 - **QR scan ping (slice 2, migration `0091_qr_scan_signal`).** The public menu sends one beacon per browser session
@@ -48,9 +48,18 @@ paid and water. It is **off by default**; with it off no signal query runs and t
   table, only while the outlet opted in (kitchen kinds need the kitchen source, `paid` needs the POS source), idempotently
   (`ord:<order>:<kind>`). No order, kitchen or POS code or behaviour changes. The journey takes each step's time from the
   event for the table's latest order and falls back to the order's last update.
+- **POS bill and payment (slice 5, migration `0094_pos_bill_signal`).** "Place order and send" stays the only order
+  button. Recent Orders & Sales gains **Show bill** and **Record payment** on unpaid, live orders
+  (`registerBillingActions`, `src/modules/pos/register-actions.ts`). Both open The Ledger on the exact sale
+  (`/dashboard/pos/ledger?sale=<id>&focus=bill|payment`, scrolling to the bill or settlement step), so the existing
+  finance commands still decide everything: Show bill is the immutable bill freeze, Record payment is the manual
+  tender attestation, which needs an open shift and a frozen bill, and the existing permissions and entitlements
+  apply. An order with no POS sale yet opens the Till (`?attachOrder=`) to be attached first. Freezing a bill inserts
+  `pos_bills`; a trigger there records `bill_presented` for the sale's table order (opted-in outlets with the POS
+  source only, idempotent, at the bill's own time). Paying records `paid` through the slice 4 trigger. The old
+  `refundSale` link still works.
 - The floor card no longer shows the permanent System ID. It is still in the API and the table edit dialog.
-- Remaining slices: POS "Show bill" and
-  "Record payment" register actions, demo sample events and the Ember (assistant-action) toggle.
+- Remaining slices: demo sample events and the Ember (assistant-action) toggle.
 
 ## Domain rules
 

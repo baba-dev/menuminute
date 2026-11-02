@@ -21,9 +21,11 @@ export const metadata: Metadata = {
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ refundSale?: string }>;
+  searchParams: Promise<{ refundSale?: string; sale?: string; focus?: string }>;
 }) {
-  const requested = (await searchParams).refundSale;
+  const query = await searchParams;
+  const requested = query.sale ?? query.refundSale;
+  const focus = query.focus === "bill" || query.focus === "payment" ? query.focus : null;
   const initialSaleId =
     typeof requested === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(requested) ? requested : null;
   const session = await auth();
@@ -51,6 +53,7 @@ export default async function Page({
     <FinancialHub
       mode="ledger"
       initialSaleId={initialSaleId}
+      initialFocus={focus}
       outletId={outlet.id}
       organizationId={outlet.organizationId}
       workspace={workspace}

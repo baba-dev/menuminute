@@ -167,4 +167,51 @@ describe("order, kitchen and payment signals against real PostgreSQL", () => {
       (await owner.query("select 1 from table_signal_events where ref_id=$1", [noTable])).rowCount
     ).toBe(0);
   });
+
+  it("records bill shown when a POS bill is frozen, honouring the POS toggle", async () => {
+    const orgId = (
+      await owner.query<{ organization_id: string }>(
+        "select organization_id from restaurants where id=$1",
+        [outletId]
+      )
+    ).rows[0]!.organization_id;
+    const makeBill = async (n: number) => {
+      const order = `ordb${n}-${suffix}`;
+      const sale = `saleb${n}-${suffix}`;
+      await owner.query(
+        `insert into orders(id,restaurant_id,table_id,tracking_token,order_number,status,fulfillment_mode,
+           payment_status,currency,total_minor)
+         values($1,$2,$3,$4,$5,'served','dine_in','unpaid','INR',8000)`,
+        [order, outletId, tableId, `trk-${suffix}-b${n}00`, 10 + n]
+      );
+      await owner.query(
+        `insert into pos_sales(id,organization_id,outlet_id,order_id,origin,currency,subtotal_minor,actor_id)
+         values($1,$2,$3,$4,'existing_order','INR',8000,$5)`,
+        [sale, orgId, outletId, order, userId]
+      );
+      await owner.query(
+        `insert into pos_bills(sale_id,organization_id,outlet_id,currency,subtotal_minor,taxable_base_minor,
+           tax_minor,total_minor,seller_snapshot,customer_snapshot,line_snapshot,tax_profile_revision,tax_mode)
+         values($1,$2,$3,'INR',8000,8000,0,8000,'{}','{}','[]',1,'non_registered')`,
+        [sale, orgId, outletId]
+      );
+      return order;
+    };
+    const count = async (order: string) =>
+      (
+        await owner.query(
+          "select 1 from table_signal_events where ref_id=$1 and kind='bill_presented'",
+          [order]
+        )
+      ).rowCount;
+
+    await updateSignalSettings(actor, outletId, { showPosBill: false });
+    expect(await count(await makeBill(1))).toBe(0);
+
+    await updateSignalSettings(actor, outletId, { showPosBill: true });
+    const shown = await makeBill(2);
+    expect(await count(shown)).toBe(1);
+    const journey = await journeyOf();
+    expect(stateOf(journey, "bill").state).toBe("done");
+  });
 });
