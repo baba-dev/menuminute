@@ -261,7 +261,7 @@ export default async function PricingPage({
               <tbody className="divide-border divide-y">
                 <tr>
                   <th scope="row" className="text-muted-foreground px-5 py-3.5 font-medium">
-                    {currency === "USD" ? "Price / contract" : "Price per month"}
+                    {currency === "USD" ? "Price" : "Price per month"}
                   </th>
                   {plans.map((offer) => (
                     <td key={offer.key} className="px-5 py-3.5 font-semibold">
