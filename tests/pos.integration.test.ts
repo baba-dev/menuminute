@@ -21,6 +21,7 @@ import {
   recordOutletOrderPayment,
 } from "../src/modules/orders/service";
 import { applyEntitlement } from "../src/modules/billing/operator";
+import { saveGuest, eraseGuest } from "../src/modules/crm/service";
 
 async function ready() {
   const f = await fixture();
@@ -138,6 +139,77 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
       })
     ).rejects.toMatchObject({ statusCode: 409 });
   });
+  it("prints associated customer details and human dine-in table number without leaking CRM notes", async () => {
+    const f = await ready();
+    await admin(async (_db, pool) =>
+      applyEntitlement(pool, {
+        key: crypto.randomUUID(),
+        organizationId: f.outlet.organizationId,
+        operator: "pos-bill-test",
+        reason: "Guest name on the POS bill",
+        action: "grant",
+        capability: "ordering.new",
+        billingCurrency: "USD",
+        startsAt: new Date(Date.now() - 60000).toISOString(),
+        endsAt: new Date(Date.now() + 3600000).toISOString(),
+      })
+    );
+    const guest = await saveGuest(f.actor, f.outlet.organizationId, f.outlet.id, {
+      id: null,
+      phone: "9876543210",
+      name: "Priya Sharma",
+      notes: "Internal preference must never print",
+    });
+    const tableId = crypto.randomUUID();
+    await admin(async (_db, pool) =>
+      pool.query(
+        "insert into restaurant_tables(id,restaurant_id,table_number,name,display_number) values($1,$2,$3,$4,$5)",
+        [tableId, f.outlet.id, "table-7", "Window seat", 7]
+      )
+    );
+
+    const sale = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      ...input(f.menuId),
+      customerName: "",
+      customerPhone: "9876543210",
+      tableId,
+    });
+    const receipt = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, sale.saleId);
+    expect(receipt).toMatchObject({
+      customerName: "Priya Sharma",
+      customerPhone: "+919876543210",
+      fulfillmentMode: "dine_in",
+      tableNumber: "7",
+      tableLabel: "Window seat",
+    });
+    expect(JSON.stringify(receipt)).not.toContain("Internal preference");
+
+    // Removing a CRM profile must not re-insert its name into a reprinted bill.
+    expect((await eraseGuest(f.actor, f.outlet.organizationId, f.outlet.id, guest.id)).erased).toBe(
+      true
+    );
+    const afterErase = await posReceipt(f.actor, f.outlet.organizationId, f.outlet.id, sale.saleId);
+    expect(afterErase.customerName).toBeNull();
+    expect(afterErase.customerPhone).toBe("+919876543210");
+
+    const pickup = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      ...input(f.menuId),
+      fulfillmentMode: "pickup",
+      tableId: null,
+      customerName: "",
+    });
+    const pickupBill = await posReceipt(
+      f.actor,
+      f.outlet.organizationId,
+      f.outlet.id,
+      pickup.saleId
+    );
+    expect(pickupBill.tableNumber).toBeNull();
+    expect(pickupBill.tableLabel).toBeNull();
+    expect(pickupBill.customerPhone).toBeNull();
+    expect(pickupBill.customerName).toBeNull();
+  });
+
   it("deduplicates retries and rejects same key with different contents, stale totals and wrong outlet", async () => {
     const f = await ready();
     const x = input(f.menuId);
