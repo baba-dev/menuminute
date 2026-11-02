@@ -53,7 +53,8 @@ export function AccountDeletionPanel({
     const controller = new AbortController();
     void reload(controller.signal)
       .catch(() => {
-        if (!controller.signal.aborted) setError("Unable to check deletion requests. Please retry.");
+        if (!controller.signal.aborted)
+          setError("Unable to check deletion requests. Please retry.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -68,9 +69,7 @@ export function AccountDeletionPanel({
     setFeedback("");
     try {
       const payload =
-        method === "POST"
-          ? { organizationId, outletId, confirm: true }
-          : { confirm: true };
+        method === "POST" ? { organizationId, outletId, confirm: true } : { confirm: true };
       const response = await fetch("/api/account/deletion-request", {
         method,
         headers: { "Content-Type": "application/json" },
@@ -100,21 +99,23 @@ export function AccountDeletionPanel({
         <div>
           <h3 className="oh-subtitle">Delete account</h3>
           <p className="oh-hint">
-            Request deletion of your personal MenuMinute account, not just this organization.
-            An administrator reviews ownership, retained business records and the request.
+            Request deletion of your personal MenuMinute account, not just this organization. An
+            administrator reviews ownership, retained business records and the request.
           </p>
         </div>
         <Trash2 size={19} aria-hidden="true" />
       </div>
       {loading ? (
-        <p role="status" className="oh-hint">Checking deletion requests…</p>
+        <p role="status" className="oh-hint">
+          Checking deletion requests…
+        </p>
       ) : active ? (
         <div className="oh-deletion-request">
           <strong>Deletion request #{status.ticketNumber} is active</strong>
           <p>
-            Your account is scheduled for deletion review within 7 working days.
-            You can withdraw your request through <strong>{dueDate(status.dueAt)}</strong> (UTC).
-            Some records may require legal retention.
+            Your account is scheduled for deletion review within 7 working days. You can withdraw
+            your request through <strong>{dueDate(status.dueAt)}</strong> (UTC). Some records may
+            require legal retention.
           </p>
           {status.canCancel ? (
             confirming ? (
@@ -129,20 +130,29 @@ export function AccountDeletionPanel({
                   >
                     {busy ? "Withdrawing…" : "Yes, withdraw request"}
                   </button>
-                  <button type="button" className="oh-deletion-text" onClick={() => setConfirming(false)} disabled={busy}>
+                  <button
+                    type="button"
+                    className="oh-deletion-text"
+                    onClick={() => setConfirming(false)}
+                    disabled={busy}
+                  >
                     Keep request
                   </button>
                 </div>
               </div>
             ) : (
-              <button type="button" className="oh-deletion-text" onClick={() => setConfirming(true)}>
+              <button
+                type="button"
+                className="oh-deletion-text"
+                onClick={() => setConfirming(true)}
+              >
                 Withdraw deletion request
               </button>
             )
           ) : (
             <p className="oh-hint">
-              The self-service withdrawal window has ended. Contact support immediately if you
-              need help with this request.
+              The self-service withdrawal window has ended. Contact support immediately if you need
+              help with this request.
             </p>
           )}
         </div>
@@ -162,7 +172,11 @@ export function AccountDeletionPanel({
                 Public holidays or legal retention requirements may affect processing.
               </p>
               <label className="oh-deletion-check">
-                <input type="checkbox" checked={confirm} onChange={(event) => setConfirm(event.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={confirm}
+                  onChange={(event) => setConfirm(event.target.checked)}
+                />
                 I understand this concerns my entire account and may affect my restaurants and team.
               </label>
               <div className="oh-deletion-actions">
@@ -174,7 +188,15 @@ export function AccountDeletionPanel({
                 >
                   {busy ? "Submitting…" : "Submit deletion request"}
                 </button>
-                <button type="button" className="oh-deletion-text" disabled={busy} onClick={() => { setConfirming(false); setConfirm(false); }}>
+                <button
+                  type="button"
+                  className="oh-deletion-text"
+                  disabled={busy}
+                  onClick={() => {
+                    setConfirming(false);
+                    setConfirm(false);
+                  }}
+                >
                   Keep my account
                 </button>
               </div>
@@ -184,7 +206,10 @@ export function AccountDeletionPanel({
               type="button"
               className="oh-deletion-danger"
               disabled={!outletId}
-              onClick={() => { setConfirming(true); setConfirm(false); }}
+              onClick={() => {
+                setConfirming(true);
+                setConfirm(false);
+              }}
             >
               <Trash2 size={15} aria-hidden="true" />
               Delete Account
@@ -192,19 +217,35 @@ export function AccountDeletionPanel({
           )}
           {!outletId && (
             <p className="oh-hint">
-              No outlet is available for this organization. You can still request deletion from
-              our <Link href="/delete-account">privacy request page</Link>.
+              No outlet is available for this organization. You can still request deletion from our{" "}
+              <Link href="/delete-account">privacy request page</Link>.
             </p>
           )}
         </>
       )}
-      {error && <p className="oh-deletion-error" role="alert">{error}</p>}
+      {error && (
+        <p className="oh-deletion-error" role="alert">
+          {error}
+        </p>
+      )}
       {!loading && error && !confirming && (
-        <button type="button" className="oh-deletion-text" onClick={() => { setError(""); setLoading(true); void reload().catch(() => setError("Unable to load request status.")).finally(() => setLoading(false)); }}>
+        <button
+          type="button"
+          className="oh-deletion-text"
+          onClick={() => {
+            setError("");
+            setLoading(true);
+            void reload()
+              .catch(() => setError("Unable to load request status."))
+              .finally(() => setLoading(false));
+          }}
+        >
           Retry
         </button>
       )}
-      <p className="oh-deletion-feedback" aria-live="polite" role="status">{feedback}</p>
+      <p className="oh-deletion-feedback" aria-live="polite" role="status">
+        {feedback}
+      </p>
     </section>
   );
 }
