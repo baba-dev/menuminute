@@ -187,6 +187,8 @@ export type FinanceContext = {
   canCollect: boolean;
   canRefund: boolean;
   canIssue: boolean;
+  /** Shift close has its own permission, independent of document issuance. */
+  canCloseShift?: boolean;
 };
 export type LedgerRow = {
   saleId: string;
@@ -535,6 +537,16 @@ export async function financeCommand(
     sql`select app_private.pos_finance_replay(${outletId},${cmd.key},${digest},${cmd.action}) as result`
   );
   if (old) return old;
+  // Standard cashier shifts never activate provider collection or fiscal issuance.
+  // The dedicated SQL dispatcher enforces the same outlet and role permissions.
+  if (cmd.action === "open_shift" || cmd.action === "cash_move" || cmd.action === "close_shift")
+    return run<Record<string, unknown>>(
+      actor,
+      outletId,
+      sql`select app_private.pos_shift_command(
+        ${outletId},${cmd.key},${digest},${cmd.action},${JSON.stringify(cmd.data)}::jsonb
+      ) as result`
+    );
   if (cmd.action === "profile")
     return run<Record<string, unknown>>(
       actor,

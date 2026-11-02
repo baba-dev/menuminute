@@ -119,9 +119,12 @@ export async function posContext(
 ): Promise<PosContext> {
   identity.parse(outletId);
   identity.parse(organizationId);
-  const result = (await posCall(actor, outletId, async (run) =>
-    run(sql`select app_private.pos_context(${outletId}) as data`)
-  )) as { rows: { data: PosContext }[] };
+  // Entitled outlets activate on first authorized visit as well as on grant/outlet creation.
+  // This also handles grants whose start time was in the future when first written.
+  const result = (await posCall(actor, outletId, async (run) => {
+    await run(sql`select app_private.pos_ensure_active(${outletId})`);
+    return run(sql`select app_private.pos_context(${outletId}) as data`);
+  })) as { rows: { data: PosContext }[] };
   const data = result.rows[0]?.data;
   if (!data || data.organizationId !== organizationId) throw new NotFoundError("Outlet");
   return data;

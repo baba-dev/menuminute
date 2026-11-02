@@ -205,7 +205,7 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
       .getByRole("navigation", { name: "POS workspaces" })
       .getByRole("link", { name: /The Ledger/ })
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("LIVE FINANCE GATE IS CLOSED")).toBeVisible();
+  await expect(page.getByText("LIVE FINANCE GATE IS CLOSED")).toHaveCount(0);
   await expect(page.getByText("No sale records yet.")).toHaveCount(0);
   await page.goto("/dashboard/pos/closing");
   await expect(page.getByRole("heading", { name: "The Closing Desk." })).toBeVisible();
@@ -214,7 +214,10 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
       .getByRole("navigation", { name: "POS workspaces" })
       .getByRole("link", { name: /Closing Desk/ })
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("button", { name: "Open register" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Open register" })).toBeEnabled();
+  await page.getByRole("button", { name: "Open register" }).click();
+  await expect(page.getByRole("heading", { name: "counter" })).toBeVisible();
+  await expect(page.getByText("Cash collections")).toBeVisible();
 
   // Exercise the real receipt route under both screen and print media. A browser
   // print preview must contain only the bill, never the authenticated workspace.

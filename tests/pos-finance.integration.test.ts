@@ -103,13 +103,129 @@ describe("POS D–G real PostgreSQL finance integration", () => {
       taxLabel: "No tax",
       classes: [],
     });
+    const opened = (await f.cmd("open_shift", {
+      registerName: "counter",
+      openingMinor: "0",
+    })) as { shiftId: string };
+    expect(opened.shiftId).toMatch(/^shift-/);
+    await f.cmd("cash_move", {
+      shiftId: opened.shiftId,
+      direction: "in",
+      amountMinor: "5000",
+      reason: "Drawer opening cash top-up",
+    });
+    const closed = await f.cmd("close_shift", {
+      shiftId: opened.shiftId,
+      countedMinor: "4900",
+    });
+    expect(closed).toMatchObject({ expectedMinor: "5000", varianceMinor: "-100" });
+    // Ordinary drawer work is available, but invoice and provider collection are not.
     await expect(
-      f.cmd("open_shift", { registerName: "counter", openingMinor: "0" })
+      f.cmd("freeze", {
+        saleId: f.sale.saleId,
+        expectedTotalMinor: "28000",
+        expectedTaxRevision: 1,
+        customer: {},
+      })
     ).rejects.toMatchObject({ statusCode: 403 });
     await expect(getPool().query("select * from pos_tenders")).rejects.toThrow();
     await expect(
       getPool().query("update pos_finance_gates set payments_enabled=true")
     ).rejects.toThrow();
+  });
+
+  it("assigns staff cash to a unique open register and keeps the fiscal gate closed", async () => {
+    const f = await setup();
+    const opened = (await f.cmd("open_shift", {
+      registerName: "counter",
+      openingMinor: "2500",
+    })) as { shiftId: string };
+    const sale = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      key: crypto.randomUUID(),
+      selection: {
+        menuId: f.menuId,
+        expectedRevision: 2,
+        lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
+      },
+      fulfillmentMode: "dine_in",
+      tableId: null,
+      expectedSubtotalMinor: "28000",
+      markAsPaid: true,
+      paymentMethod: "cash",
+    });
+    const assignment = await admin(async (_db, pool) =>
+      pool.query("select shift_id from pos_staff_payment_attestations where sale_id=$1", [
+        sale.saleId,
+      ])
+    );
+    expect(assignment.rows[0]?.shift_id).toBe(opened.shiftId);
+    const shifts = (await f.view("shifts")) as Array<{
+      id: string;
+      cashTakenMinor: string;
+    }>;
+    expect(shifts.find((entry) => entry.id === opened.shiftId)?.cashTakenMinor).toBe("28000");
+    await f.cmd("staff_refund", {
+      saleId: sale.saleId,
+      reason: "Wrong guest cash payment",
+      externalRefundAttested: false,
+    });
+    const closing = await f.cmd("close_shift", {
+      shiftId: opened.shiftId,
+      countedMinor: "2500",
+    });
+    expect(closing).toMatchObject({ expectedMinor: "2500", varianceMinor: "0" });
+    expect(await f.view("context")).toMatchObject({
+      paymentsEnabled: false,
+      documentsEnabled: false,
+    });
+  });
+
+  it("assigns a later cash refund to its current register without changing a closed shift", async () => {
+    const f = await setup();
+    const original = (await f.cmd("open_shift", {
+      registerName: "morning",
+      openingMinor: "0",
+    })) as { shiftId: string };
+    const sale = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      key: crypto.randomUUID(),
+      selection: {
+        menuId: f.menuId,
+        expectedRevision: 2,
+        lines: [{ dishId: "plate", variantId: null, groups: [], quantity: 1 }],
+      },
+      fulfillmentMode: "dine_in",
+      tableId: null,
+      expectedSubtotalMinor: "28000",
+      markAsPaid: true,
+      paymentMethod: "cash",
+    });
+    expect(
+      await f.cmd("close_shift", {
+        shiftId: original.shiftId,
+        countedMinor: "28000",
+      })
+    ).toMatchObject({ expectedMinor: "28000", varianceMinor: "0" });
+    const later = (await f.cmd("open_shift", {
+      registerName: "evening",
+      openingMinor: "40000",
+    })) as { shiftId: string };
+    await f.cmd("staff_refund", {
+      saleId: sale.saleId,
+      reason: "Guest returned the meal later",
+      externalRefundAttested: false,
+    });
+    const refund = await admin(async (_db, pool) =>
+      pool.query("select shift_id from pos_staff_refunds where sale_id=$1", [sale.saleId])
+    );
+    expect(refund.rows[0]?.shift_id).toBe(later.shiftId);
+    expect(
+      await f.cmd("close_shift", {
+        shiftId: later.shiftId,
+        countedMinor: "12000",
+      })
+    ).toMatchObject({ expectedMinor: "12000", varianceMinor: "0" });
+    const shifts = (await f.view("shifts")) as Array<{ id: string; expectedMinor: string }>;
+    expect(shifts.find((s) => s.id === original.shiftId)?.expectedMinor).toBe("28000");
   });
   it("freezes one tax snapshot, accepts concurrent split manual tenders, issues a receipt and full credit", async () => {
     const f = await setup();
