@@ -100,6 +100,33 @@
 .dining-cover .dining-kicker {
   color: #a93608;
 }
+/* Food categories in the hero replace the outlet-type / ordering jargon badges. */
+.dining-hero-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.15rem 0 1.25rem;
+  max-width: 670px;
+}
+.dining-hero-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2ccb6;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #302017;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+.dining-hero-category:hover { border-color: #a93608; background: #fff; }
+.dining-hero-category img { width: 32px; height: 32px; flex: 0 0 32px; object-fit: contain; }
+.dining-hero-category span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dining-hero-category svg { flex: 0 0 auto; }
 .dining-cover-details {
   display: flex;
   gap: 0.5rem;
@@ -250,14 +277,26 @@
   display: flex;
   overflow-x: auto;
   gap: 0.5rem;
-  margin: 1rem calc(-1 * clamp(1rem, 3vw, 2rem)) 0.5rem;
-  padding: 0.6rem clamp(1rem, 3vw, 2rem);
+  margin: 1rem calc(-1 * var(--dining-gutter)) 0.5rem;
+  padding: 0.6rem var(--dining-gutter);
   background: color-mix(in srgb, var(--dc-paper) 92%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--dc-line);
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+}
+/* Keep filtered navigation out of the tab sequence until the hero scrolls away. */
+.dining-categories:not(.is-visible) {
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border: 0;
 }
 .dining-category-tile {
   flex: 0 0 auto;
@@ -635,6 +674,9 @@
   }
 }
 @media (max-width: 450px) {
+  .dining-hero-categories { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .dining-hero-category { flex: 0 0 auto; }
+  .dining-hero-category span { max-width: 155px; }
   .dining-cover {
     min-height: 360px;
   }

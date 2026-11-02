@@ -79,6 +79,18 @@ export function PublicMenu({
   const [cartHydrated, setCartHydrated] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const categoryNavRef = useRef<HTMLElement>(null);
+  const coverRef = useRef<HTMLElement>(null);
+  const [showStickyCategories, setShowStickyCategories] = useState(false);
+  useEffect(() => {
+    const cover = coverRef.current;
+    if (!cover || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCategories(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(cover);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
@@ -311,6 +323,17 @@ export function PublicMenu({
     0
   );
 
+  // Derive both navigators from the same filtered, published categories.
+  // IDs include their menu to avoid collisions across assigned menu releases.
+  const categoryLinks = docs.flatMap((menu) =>
+    menu.view.categories
+      .filter((category) => category.items.some((item) => matches(item, category.name)))
+      .map((category) => ({
+        id: "c-" + menu.id + "-" + category.id,
+        name: category.name,
+        key: menu.id + ":" + category.id,
+      }))
+  );
   const featured = docs.flatMap((menu) => featuredForMenu(menu.id, menu.view));
   const ordering = Boolean(
     data.outlet.orderingEnabled && !preview && token && !status.includes("no longer")
@@ -479,7 +502,7 @@ export function PublicMenu({
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>
-      <header className="dining-cover">
+      <header className="dining-cover" ref={coverRef}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="dining-cover-image"
@@ -497,13 +520,30 @@ export function PublicMenu({
               data.outlet.profile?.description ||
               "Made with care. Served with joy. Find something delicious."}
           </p>
-          <div className="dining-cover-details">
-            <span>{data.outlet.outletType.replaceAll("_", " ")}</span>
-            {data.point && <span>{data.point}</span>}
-            {data.outlet.isDemoData && <span>Sample menu</span>}
-            {preview && <strong>Draft preview — not public</strong>}
-            {ordering && <span>Order with the restaurant</span>}
-          </div>
+          {categoryLinks.length > 0 && (
+            <nav className="dining-hero-categories no-print" aria-label="Explore menu categories">
+              {categoryLinks.map((category) => (
+                <a key={category.key} href={"#" + category.id} className="dining-hero-category">
+                  <Image
+                    src={categoryImage(category.name)}
+                    alt=""
+                    width={32}
+                    height={32}
+                    sizes="32px"
+                  />
+                  <span>{category.name}</span>
+                  <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              ))}
+            </nav>
+          )}
+          {(data.point || data.outlet.isDemoData || preview) && (
+            <div className="dining-cover-details">
+              {data.point && <span>{data.point}</span>}
+              {data.outlet.isDemoData && <span>Sample menu</span>}
+              {preview && <strong>Draft preview — not public</strong>}
+            </div>
+          )}
           <a href="#dishes" className="dining-explore">
             Explore our food <ArrowRight size={16} aria-hidden="true" />
           </a>
@@ -594,37 +634,35 @@ export function PublicMenu({
             ))}
           </div>
         </div>
-        <nav
-          ref={categoryNavRef}
-          className="dining-categories no-print"
-          aria-label="Menu categories"
-        >
-          {docs.flatMap((menu) =>
-            menu.view.categories
-              .filter((category) => category.items.some((item) => matches(item, category.name)))
-              .map((category) => (
-                <a
-                  key={menu.id + category.id}
-                  href={"#c-" + menu.id + "-" + category.id}
-                  className="dining-category-tile"
-                  aria-current={
-                    activeSection === "c-" + menu.id + "-" + category.id ? "location" : undefined
-                  }
-                >
-                  <Image
-                    src={categoryImage(category.name)}
-                    alt=""
-                    width={36}
-                    height={36}
-                    sizes="36px"
-                    loading="lazy"
-                  />
-                  <span>{category.name}</span>
-                  <ArrowUpRight size={15} aria-hidden="true" />
-                </a>
-              ))
-          )}
-        </nav>
+        {categoryLinks.length > 0 && (
+          <nav
+            ref={categoryNavRef}
+            className={"dining-categories no-print" + (showStickyCategories ? " is-visible" : "")}
+            aria-label="Menu categories"
+            aria-hidden={!showStickyCategories}
+          >
+            {categoryLinks.map((category) => (
+              <a
+                key={category.key}
+                href={"#" + category.id}
+                tabIndex={showStickyCategories ? undefined : -1}
+                className="dining-category-tile"
+                aria-current={activeSection === category.id ? "location" : undefined}
+              >
+                <Image
+                  src={categoryImage(category.name)}
+                  alt=""
+                  width={36}
+                  height={36}
+                  sizes="36px"
+                  loading="lazy"
+                />
+                <span>{category.name}</span>
+                <ArrowUpRight size={15} aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+        )}
         {featured.length > 0 && !search && diet === "all" && (
           <section className="dining-featured no-print" aria-labelledby="dining-featured-title">
             <div className="rounded-2xl border border-amber-900/10 bg-amber-50/50 p-4 shadow-sm sm:p-6 dark:border-white/10 dark:bg-stone-900/80">
