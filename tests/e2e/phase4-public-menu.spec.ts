@@ -33,7 +33,7 @@ test("search hides dead category anchors and restores navigation when filters cl
   page,
 }) => {
   await page.goto("/m/demo-spice-route-kitchen-v1");
-  const links = page.getByRole("navigation", { name: "Menu categories" }).getByRole("link");
+  const links = page.locator(".dining-hero-categories a");
   await expect(links.first()).toBeVisible();
   await page.getByRole("searchbox", { name: "Search the menu" }).fill("impossible-dish-zxy-827");
   await expect(page.getByText("0 dishes shown", { exact: true })).toBeVisible();

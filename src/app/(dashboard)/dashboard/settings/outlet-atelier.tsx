@@ -547,8 +547,9 @@ export function OutletAtelier({
                     placeholder="What makes your restaurant special?"
                   />
                   <small>
-                    {(draft.description || "").length}/500 characters · This may appear on your
-                    public menu.
+                    {(draft.description || "").length}/500 characters · Public restaurant
+                    description. Your menu uses it when no custom hero headline is set, or in the
+                    About section.
                   </small>
                 </div>
               </section>
@@ -667,8 +668,9 @@ export function OutletAtelier({
                   </label>
                 </div>
                 <p className="os-fine">
-                  <Mail size={15} /> Contact details are public-facing outlet information, not your
-                  private account recovery details.
+                  <Mail size={15} /> The public phone, email, website, address and saved map pin can
+                  appear on your published menu. Only enter guest-facing business details; private
+                  operational contacts and account recovery details are not published.
                 </p>
               </section>
               <section id="branding" className="os-panel" aria-labelledby="os-brand-title">

@@ -10,12 +10,12 @@ test("Dining Canvas displays the public cover, illustrated navigation and browse
     /\/assets\/public-menu\/covers\//
   );
   const thumbnail = page
-    .getByRole("navigation", { name: "Menu categories" })
+    .getByRole("navigation", { name: "Explore menu categories" })
     .locator("img")
     .first();
   // next/image rewrites src to its optimized endpoint. Verify the actual
   // network image loaded rather than freezing an implementation-specific URL.
-  await expect(thumbnail).toHaveAttribute("sizes", "36px");
+  await expect(thumbnail).toHaveAttribute("sizes", "32px");
   await expect
     .poll(() =>
       thumbnail.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)
@@ -31,10 +31,10 @@ test("Dining Canvas displays the public cover, illustrated navigation and browse
 
 test("filtered public menu does not expose dead category links", async ({ page }) => {
   await page.goto("/m/demo-spice-route-kitchen-v1");
-  const nav = page.getByRole("navigation", { name: "Menu categories" });
+  const links = page.locator(".dining-hero-categories a");
   await page.getByRole("searchbox", { name: "Search the menu" }).fill("not-a-real-dish-xyz");
-  await expect(nav.getByRole("link")).toHaveCount(0);
+  await expect(links).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "No matching dishes" })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).click();
-  await expect(nav.getByRole("link").first()).toBeVisible();
+  await expect(links.first()).toBeVisible();
 });

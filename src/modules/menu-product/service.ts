@@ -307,6 +307,24 @@ export async function mediaList(actor: Actor, outletId: string) {
       .limit(100)
   );
 }
+/** Deliberately bounded guest-facing fields; never expose operational contacts. */
+export type PublicOutletProfile = {
+  description: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+};
+
 export type PublicProduct = {
   outlet: {
     id: string;
@@ -321,6 +339,8 @@ export type PublicProduct = {
     pickupAdvanceDays?: number;
     isDemoData: boolean;
     versioned: boolean;
+    /** Optional for rolling deploys and historical preview fixtures. */
+    profile?: PublicOutletProfile | null;
   };
   point: string | null;
   catalogFingerprint: string;

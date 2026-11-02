@@ -7,6 +7,8 @@
   --dc-line: #e9d9c8;
   --dc-ember: #a93608;
   --dc-soft: #f9eddb;
+  --dining-content-width: 1180px;
+  --dining-gutter: clamp(1rem, 3vw, 2rem);
   background: var(--dc-paper);
   color: var(--dc-ink);
   min-height: 100dvh;
@@ -66,9 +68,10 @@
   pointer-events: none;
 }
 .dining-cover-content {
-  width: min(1180px, 100%);
-  padding: clamp(1.5rem, 5vw, 5rem) clamp(1.25rem, 6vw, 5rem);
+  width: min(var(--dining-content-width), 100%);
+  padding: clamp(1.5rem, 5vw, 5rem) var(--dining-gutter);
   margin: auto;
+  text-align: left;
 }
 .dining-cover-content h1 {
   max-width: 13ch;
@@ -97,6 +100,47 @@
 .dining-cover .dining-kicker {
   color: #a93608;
 }
+/* Food categories in the hero replace the outlet-type / ordering jargon badges. */
+.dining-hero-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.15rem 0 1.25rem;
+  max-width: 670px;
+}
+.dining-hero-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2ccb6;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #302017;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+.dining-hero-category:hover {
+  border-color: #a93608;
+  background: #fff;
+}
+.dining-hero-category img {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  object-fit: contain;
+}
+.dining-hero-category span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dining-hero-category svg {
+  flex: 0 0 auto;
+}
 .dining-cover-details {
   display: flex;
   gap: 0.5rem;
@@ -124,9 +168,72 @@
   font-weight: 800;
 }
 .dining-shell {
-  max-width: 1180px;
+  max-width: var(--dining-content-width);
   margin: auto;
-  padding: clamp(1.2rem, 4vw, 3.2rem) clamp(1rem, 3vw, 2rem);
+  padding: clamp(1.2rem, 4vw, 3.2rem) var(--dining-gutter);
+}
+/* Information bar uses the same shell edges as the menu and hero. */
+.dining-visit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 0 1.5rem;
+  margin-bottom: 1.35rem;
+  border-bottom: 1px solid var(--dc-line);
+}
+.dining-visit-copy {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.dining-visit-copy p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  max-width: 650px;
+  margin-top: 0.4rem;
+  font-size: 0.94rem;
+  color: var(--dc-muted);
+}
+.dining-visit-copy p svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.dining-visit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.dining-visit-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  color: var(--dc-ink);
+  border: 1px solid var(--dc-line);
+  background: var(--dc-surface);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.dining-visit-actions a:hover {
+  border-color: var(--dc-ember);
+}
+.dining-about {
+  padding: 2rem 0;
+  border-top: 1px solid var(--dc-line);
+}
+.dining-about h2 {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  margin: 0.45rem 0 0.5rem;
+}
+.dining-about p {
+  max-width: 72ch;
+  color: var(--dc-muted);
+  white-space: pre-line;
 }
 .dining-notice {
   padding: 1rem 1.25rem;
@@ -247,14 +354,26 @@
   display: flex;
   overflow-x: auto;
   gap: 0.5rem;
-  margin: 1rem calc(-1 * clamp(1rem, 3vw, 2rem)) 0.5rem;
-  padding: 0.6rem clamp(1rem, 3vw, 2rem);
+  margin: 1rem calc(-1 * var(--dining-gutter)) 0.5rem;
+  padding: 0.6rem var(--dining-gutter);
   background: color-mix(in srgb, var(--dc-paper) 92%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--dc-line);
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+}
+/* Keep filtered navigation out of the tab sequence until the hero scrolls away. */
+.dining-categories:not(.is-visible) {
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border: 0;
 }
 .dining-category-tile {
   flex: 0 0 auto;
@@ -631,7 +750,34 @@
     );
   }
 }
+@media (max-width: 650px) {
+  .dining-visit {
+    align-items: flex-start;
+  }
+  .dining-visit-actions {
+    width: 100%;
+  }
+  .dining-visit-actions a {
+    justify-content: center;
+    flex: 1 0 auto;
+  }
+  .dining-cover-content {
+    padding-block: clamp(2rem, 7vw, 3rem);
+  }
+}
 @media (max-width: 450px) {
+  .dining-hero-categories {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .dining-hero-category {
+    flex: 0 0 auto;
+  }
+  .dining-hero-category span {
+    max-width: 155px;
+  }
   .dining-cover {
     min-height: 360px;
   }
