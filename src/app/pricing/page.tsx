@@ -91,8 +91,13 @@ function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurr
   const card = CARD[offer.key];
   const usdInterest =
     currency === "USD" && (offer.key === "ordering" || offer.key === "kitchen_pro");
+  const isPrivateDeployment = currency === "USD" && offer.key === "dedicated";
   const actionHref = usdInterest ? "/contact" : card.href;
-  const actionText = usdInterest ? "Ask about USD billing" : card.cta;
+  const actionText = isPrivateDeployment
+    ? "Discuss private deployment"
+    : usdInterest
+      ? "Ask about USD billing"
+      : card.cta;
   const primary = card.primary;
   return (
     <div
@@ -135,7 +140,9 @@ function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurr
         <p
           className={`mb-6 text-sm leading-relaxed ${primary ? "text-orange-100" : "text-muted-foreground"}`}
         >
-          {card.blurb}
+          {isPrivateDeployment
+            ? "A privately deployed MenuMinute instance, with infrastructure, setup, support and payment terms agreed in your contract."
+            : card.blurb}
         </p>
         <ul className="space-y-3 border-t border-stone-200/20 pt-6">
           {offer.highlights.map((feature) => (
@@ -190,8 +197,9 @@ export default async function PricingPage({
           </h1>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
             Your permanent QR menu is free. Add ordering when you want guests to order from the
-            table, and a full kitchen display when your service needs it. Compare fixed INR and USD
-            monthly prices below; restaurant menu prices remain independent of platform billing.
+            table, and a full kitchen display when your service needs it. Compare INR and USD
+            subscription prices and private deployment options below. Restaurant menu prices remain
+            independent of platform billing.
           </p>
           <nav
             aria-label="Subscription pricing currency"
@@ -253,7 +261,7 @@ export default async function PricingPage({
               <tbody className="divide-border divide-y">
                 <tr>
                   <th scope="row" className="text-muted-foreground px-5 py-3.5 font-medium">
-                    Price per month
+                    {currency === "USD" ? "Price / contract" : "Price per month"}
                   </th>
                   {plans.map((offer) => (
                     <td key={offer.key} className="px-5 py-3.5 font-semibold">
