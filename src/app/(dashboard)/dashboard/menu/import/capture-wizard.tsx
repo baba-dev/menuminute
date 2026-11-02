@@ -117,6 +117,7 @@ export function CaptureWizard({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [engine, setEngine] = useState(false);
+  const [engineReason, setEngineReason] = useState<string>("checking");
   const [consent, setConsent] = useState(false);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const creation = useRef<{ id: string; key: string } | null>(null);
@@ -155,12 +156,18 @@ export function CaptureWizard({
       .catch(() => {
         if (active) setError("Import history could not be loaded. Retry from this page.");
       });
-    void json<{ enabled: boolean }>("/api/menu-imports/engine")
+    void json<{ enabled: boolean; reason: string }>("/api/menu-imports/engine")
       .then((data) => {
-        if (active) setEngine(data.enabled);
+        if (active) {
+          setEngine(data.enabled);
+          setEngineReason(data.reason);
+        }
       })
       .catch(() => {
-        if (active) setEngine(false);
+        if (active) {
+          setEngine(false);
+          setEngineReason("unavailable");
+        }
       });
     const urls = localUrls.current;
     return () => {
@@ -994,13 +1001,22 @@ export function CaptureWizard({
                 {!engine ? (
                   <p className="mt-2 text-sm text-stone-600">
                     Extraction is currently unavailable. Your {totalCount} stored page(s) remain
-                    private. You can return when the licensed provider is enabled.
+                    private.{" "}
+                    {engineReason === "provider_approval_required"
+                      ? "Provider commercial approval is required before extraction can start."
+                      : engineReason === "model_unconfigured"
+                        ? "The extraction model is not configured on this deployment."
+                        : engineReason === "checking"
+                          ? "Checking availability."
+                          : "You can return when the licensed extraction service is enabled."}
                   </p>
                 ) : (
                   <>
                     <p className="mt-2 text-sm text-stone-600">
                       This sends your saved photos to the configured AI provider for transcription.
                       A person must verify the resulting draft; it never publishes automatically.
+                      The processing worker verifies its own provider configuration when the job
+                      runs; this status does not guarantee provider availability.
                     </p>
                     <label className="mt-3 flex items-start gap-2 text-sm text-stone-700">
                       <input

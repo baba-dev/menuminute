@@ -10,6 +10,7 @@ import {
   Building2,
   CreditCard,
   ChefHat,
+  SlidersHorizontal,
   Lock,
   LifeBuoy,
   ArrowLeft,
@@ -25,6 +26,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/admin", label: "Overview & KPIs", icon: Activity },
   { href: "/admin/system", label: "System & Queues", icon: Layers },
+  { href: "/admin/features", label: "Feature Activation", icon: SlidersHorizontal },
   { href: "/admin/logs", label: "Logs & Diagnostics", icon: FileText },
   { href: "/admin/users", label: "Users & Accounts", icon: Users },
   { href: "/admin/organizations", label: "Organizations & Outlets", icon: Building2 },
