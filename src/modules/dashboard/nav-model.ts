@@ -15,6 +15,7 @@ export type NavId =
   | "menu"
   | "qr"
   | "reports"
+  | "reviews"
   | "organization"
   | "settings";
 
@@ -29,10 +30,11 @@ export type NavIcon =
   | "menu"
   | "qr"
   | "reports"
+  | "star"
   | "organization"
   | "settings";
 
-type Gate = "ordering" | "kitchen" | "crm" | null;
+type Gate = "ordering" | "kitchen" | "crm" | "reviews" | null;
 
 export type NavItem = {
   id: NavId;
@@ -142,6 +144,17 @@ export const navItems: readonly NavItem[] = [
     keywords: ["customers", "crm", "mobile", "visits", "guest directory"],
   },
   {
+    id: "reviews",
+    href: "/dashboard/reviews",
+    label: "Guest reviews",
+    shortLabel: "Reviews",
+    description: "Approve diner comments and manage dish ratings.",
+    group: "insights",
+    icon: "star",
+    gate: "reviews",
+    keywords: ["ratings", "feedback", "comments", "stars", "moderate"],
+  },
+  {
     id: "reports",
     href: "/dashboard/reports",
     label: "Reports & Insights",
@@ -187,6 +200,12 @@ export type NavState =
  */
 export function navState(item: NavItem, capabilities: DashboardNavigation | undefined): NavState {
   if (item.gate === null) return { state: "available", label: item.label };
+  // Reviews are only offered where the feature is switched on AND the viewer can moderate;
+  // otherwise the destination does not exist for them (see resolveNavigation), never an add-on.
+  if (item.gate === "reviews")
+    return capabilities?.reviews === true
+      ? { state: "available", label: item.label }
+      : { state: "unavailable", reason: "not-enabled", label: item.label };
   if (item.gate === "crm") {
     if (!capabilities) return { state: "unavailable", reason: "unknown", label: item.label };
     if (!capabilities.crm)
@@ -217,7 +236,9 @@ export type ResolvedNavItem = NavItem & { nav: NavState };
 export function resolveNavigation(
   capabilities: DashboardNavigation | undefined
 ): ResolvedNavItem[] {
-  return navItems.map((item) => ({ ...item, nav: navState(item, capabilities) }));
+  return navItems
+    .filter((item) => item.gate !== "reviews" || capabilities?.reviews === true)
+    .map((item) => ({ ...item, nav: navState(item, capabilities) }));
 }
 
 export type GroupedNavigation = {

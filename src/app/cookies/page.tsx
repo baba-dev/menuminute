@@ -137,6 +137,13 @@ const storageInventory = [
       "Set only after the diner ticks “Remember my name and phone on this device”; an opaque random value, valid for up to 6 months, scoped to one restaurant group. “Forget saved details” revokes it on the server and deletes the cookie.",
   },
   {
+    purpose: "Optional order alerts (when the restaurant has enabled them)",
+    example: "menuminute-guest-push (Cache Storage)",
+    category: "Cache storage",
+    duration:
+      "Written only after the diner taps “Notify me about this order”; holds a link to that one order, is ignored after 12 hours and is deleted when the order finishes or alerts are turned off.",
+  },
+  {
     purpose: "Guest menu cart and installed web-app experience",
     example: "Restaurant-scoped browser state, service worker and offline caches where used",
     category: "Browser storage / cache",

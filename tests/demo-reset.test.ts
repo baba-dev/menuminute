@@ -29,6 +29,10 @@ const PRESERVED: Record<string, string> = {
     "never written for the demo outlet (guest_review_submit refuses is_demo_data, migration 0103)",
   dish_rating_aggregates:
     "only written together with dish_reviews, which the demo outlet never has",
+  guest_push_subscriptions:
+    "never written for the demo outlet (guest_push_subscribe refuses is_demo_data, migration 0105); also removed with their order by ON DELETE CASCADE",
+  guest_push_deliveries:
+    "removed with their subscription by ON DELETE CASCADE; only exist for non-demo outlets",
   account_workspace_preferences: "user preference",
   account_deletion_requests:
     "personal privacy requests are blocked for demo outlets and not an outlet reset concern",

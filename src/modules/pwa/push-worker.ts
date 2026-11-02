@@ -62,6 +62,21 @@ export function startPushDispatcher(pool: Pool) {
     pending = (async () => {
       // The role has no SELECT privilege on subscriptions; the SQL lease function
       // reauthorizes live sessions, memberships and outlet grants at delivery time.
+      // Diner order-status pushes share this lane and its VAPID keys and outlet allowlist; their
+      // lease re-checks that the order's outlet and organization are still live.
+      for (let i = 0; i < 3; i++) {
+        const guest = await pool.query<{
+          data: { id: string; endpoint: string; lease: string } | null;
+        }>("select app_private.guest_push_claim($1::text[]) as data", [outletIds]);
+        const guestJob = guest.rows[0]?.data;
+        if (!guestJob) break;
+        const guestOutcome = await sendEmptyPush(guestJob.endpoint, keys);
+        await pool.query("select app_private.guest_push_finish($1,$2,$3)", [
+          guestJob.id,
+          guestJob.lease,
+          guestOutcome,
+        ]);
+      }
       for (let i = 0; i < 3; i++) {
         const result = await pool.query<{ data: Lease | null }>(
           "select app_private.pwa_push_claim($1::text[]) as data",
@@ -89,6 +104,7 @@ export function startPushDispatcher(pool: Pool) {
     if (stopping || prunePending) return;
     prunePending = pool
       .query("select app_private.pwa_push_prune()")
+      .then(() => pool.query("select app_private.guest_push_prune()"))
       .catch(() => console.error("[pwa-push] Retention maintenance unavailable"))
       .finally(() => {
         prunePending = undefined;

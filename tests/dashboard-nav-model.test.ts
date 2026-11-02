@@ -154,3 +154,30 @@ describe("mobile bottom bar", () => {
     expect(more.filter((id) => bar.includes(id))).toEqual([]);
   });
 });
+
+describe("guest reviews destination", () => {
+  it("does not exist unless reviews are on and the viewer can moderate", () => {
+    for (const reviews of [undefined, false])
+      expect(ids(groupNavigation(caps({ reviews })).groups.flatMap((g) => g.items))).not.toContain(
+        "reviews"
+      );
+    expect(groupNavigation(caps({ reviews: false })).addOns.map((i) => i.id)).not.toContain(
+      "reviews"
+    );
+    expect(
+      groupNavigation(undefined).groups.flatMap((g) => g.items.map((i) => i.id))
+    ).not.toContain("reviews");
+    expect(ids(moreItems(caps()))).not.toContain("reviews");
+  });
+
+  it("appears in Insights after Guests when available", () => {
+    const insights = groupNavigation(caps({ reviews: true })).groups.find(
+      (g) => g.id === "insights"
+    )!;
+    expect(ids(insights.items)).toEqual(["guests", "reviews", "reports"]);
+    expect(navState(find("reviews"), caps({ reviews: true })).state).toBe("available");
+    expect(find("reviews")).toMatchObject({ href: "/dashboard/reviews", icon: "star" });
+    expect(ids(moreItems(caps({ reviews: true })))).toContain("reviews");
+    expect(isNavSelected(find("reviews"), "/dashboard/reviews")).toBe(true);
+  });
+});

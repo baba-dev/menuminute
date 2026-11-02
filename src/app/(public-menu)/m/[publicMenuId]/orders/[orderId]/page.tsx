@@ -19,6 +19,7 @@ export default async function OrderTrackingPage({ params, searchParams }: Props)
       trackingToken={trackingToken || ""}
       live={env.PUBLIC_DINER_STREAM_ENABLED}
       reviews={env.PUBLIC_DINER_REVIEWS_ENABLED}
+      push={env.PWA_PUSH_ENABLED}
     />
   );
 }

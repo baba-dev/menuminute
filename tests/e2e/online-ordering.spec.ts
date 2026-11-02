@@ -262,6 +262,11 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await page.getByLabel("Password", { exact: true }).fill(fixture.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
+  // The fixture switches guest reviews on; an ordering outlet's manager gets the moderation destination.
+  await expect(page.getByRole("link", { name: "Guest reviews" }).first()).toHaveAttribute(
+    "href",
+    "/dashboard/reviews"
+  );
 
   const pulsePath = "**/orders/workspace?view=pulse";
   const railPath = "**/orders/workspace?view=rail";
