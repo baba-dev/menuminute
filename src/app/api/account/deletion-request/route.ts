@@ -30,7 +30,14 @@ async function observed_DELETE(req: Request) {
   try {
     const actor = await requestActor(req, true);
     const body = await boundedJson(req);
-    if (!body || typeof body !== "object" || Array.isArray(body) || !("confirm" in body) || body.confirm !== true || Object.keys(body).length !== 1) {
+    if (
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body) ||
+      !("confirm" in body) ||
+      body.confirm !== true ||
+      Object.keys(body).length !== 1
+    ) {
       return NextResponse.json({ message: "Confirm cancellation first." }, { status: 422 });
     }
     const result = await cancelAccountDeletion(actor);
