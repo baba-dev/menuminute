@@ -211,7 +211,11 @@ jobs:
       - name: Bundle exact compiled output (symlinks and modes preserved)
         run: |
           set -Eeuo pipefail
-          tar -cf - .next/standalone .next/static dist | gzip -1 > compiled-build.tar.gz
+          # `pnpm build` also generates git-ignored files under public/ (for example the dashboard editorial
+          # images). The browser fixture and the release archive both serve public/, so they must travel too.
+          git ls-files --others --ignored --exclude-standard -- public > generated-public-files.txt
+          test -s generated-public-files.txt
+          tar -cf - .next/standalone .next/static dist -T generated-public-files.txt | gzip -1 > compiled-build.tar.gz
           sha256sum compiled-build.tar.gz > compiled-build.tar.gz.sha256
           ls -l compiled-build.tar.gz
       - name: Share compiled output with browser shards and packaging
@@ -281,6 +285,7 @@ jobs:
           tar -xzf compiled-build.tar.gz
           test -s .next/standalone/server.js
           test -s dist/worker.mjs
+          test -s public/brand/dashboard/editorial/hero-mobile-light.webp
       - run: pnpm db:seed
         env:
           NODE_ENV: test
@@ -351,6 +356,7 @@ jobs:
           set -Eeuo pipefail
           sha256sum --check --strict compiled-build.tar.gz.sha256
           tar -xzf compiled-build.tar.gz
+          test -s public/brand/dashboard/editorial/hero-mobile-light.webp
       - name: Package exact tested ARM64 build
         run: bash infra/deploy/package-release.sh "$GITHUB_SHA"
       - name: Retain release candidate for promotion after browser evidence

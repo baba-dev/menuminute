@@ -66,6 +66,9 @@ describe("provenance-bound main-only production delivery", () => {
     const compile = ci.split("\n  compile:\n")[1]!.split("\n  e2e:\n")[0]!;
     expect(compile).toContain("pnpm build\n");
     expect(compile).toContain("compiled-build-${{ github.sha }}");
+    // Generated, git-ignored public/ assets are part of the compiled output and must be shared.
+    expect(compile).toContain("git ls-files --others --ignored --exclude-standard -- public");
+    expect(compile).toContain("-T generated-public-files.txt");
     const build = ci.split("\n  build:\n")[1]!.split("\n  evidence:\n")[0]!;
     const evidence = ci.split("\n  evidence:\n")[1]!.split("\n  ember_browser:\n")[0]!;
     expect(build).toContain("needs: compile");
