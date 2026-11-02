@@ -22,10 +22,9 @@ export type AccountDeletionRequest = {
 function translate(error: unknown): never {
   const nested = error instanceof Error && error.cause ? error.cause : error;
   const code =
-    typeof nested === "object" && nested !== null && "code" in nested
-      ? nested.code
-      : undefined;
-  if (code === "42501") throw new ForbiddenError("Account deletion is unavailable for this account.");
+    typeof nested === "object" && nested !== null && "code" in nested ? nested.code : undefined;
+  if (code === "42501")
+    throw new ForbiddenError("Account deletion is unavailable for this account.");
   if (code === "22023")
     throw new ValidationError(
       nested instanceof Error ? nested.message : "Unable to update the deletion request."
@@ -42,7 +41,9 @@ async function run<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
-export async function getAccountDeletionRequest(actor: Actor): Promise<AccountDeletionRequest | null> {
+export async function getAccountDeletionRequest(
+  actor: Actor
+): Promise<AccountDeletionRequest | null> {
   return run(() =>
     withActor(actor, async (tx) => {
       const result = await tx.execute<{
@@ -79,7 +80,9 @@ export async function requestAccountDeletion(actor: Actor, raw: unknown) {
     withActor(actor, async (tx) => {
       const result = await tx.execute<{
         result: Omit<AccountDeletionRequest, "canCancel">;
-      }>(sql`select app_private.request_account_deletion(${input.organizationId},${input.outletId}) as result`);
+      }>(
+        sql`select app_private.request_account_deletion(${input.organizationId},${input.outletId}) as result`
+      );
       return result.rows[0]!.result;
     })
   );
