@@ -9,7 +9,12 @@ import {
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
-import { MEDIA_RECONCILE_INTERVAL_MS, OUTBOX_DISPATCH_INTERVAL_MS } from "./schedule-policy";
+import {
+  MEDIA_RECONCILE_INTERVAL_MS,
+  OUTBOX_DISPATCH_INTERVAL_MS,
+  PLAN_OVERFLOW_INTERVAL_MS,
+} from "./schedule-policy";
+import { planOverflowSweepEnabled, reconcilePlanOverflow } from "../plans/overflow";
 const queueData = z
   .object({
     eventId: z.uuid(),
@@ -416,6 +421,20 @@ export async function startWorker(
       )
     : undefined;
   if (demoAlign) demoTick();
+  // Plan overflow: after a downgrade, hide (never delete) dishes beyond the plan's cap once the
+  // grace period ends, and restore them when the plan allows. Inert unless plan limits are
+  // enforced here and the database switch is on. Never blocks the dispatcher; failures just retry.
+  let overflowSweep: Promise<unknown> | undefined;
+  const overflowTick = () => {
+    if (stopping || overflowSweep || !planOverflowSweepEnabled()) return;
+    overflowSweep = reconcilePlanOverflow(pool)
+      .catch(() => console.error("Plan overflow sweep unavailable"))
+      .finally(() => {
+        overflowSweep = undefined;
+      });
+  };
+  const overflowTimer = setInterval(overflowTick, PLAN_OVERFLOW_INTERVAL_MS);
+  overflowTick();
   return {
     pool,
     worker,
@@ -427,9 +446,10 @@ export async function startWorker(
       clearInterval(timer);
       clearInterval(mediaTimer);
       clearInterval(maintenanceTimer);
+      clearInterval(overflowTimer);
       if (demoAlign) clearTimeout(demoAlign);
       if (demoTimer) clearInterval(demoTimer);
-      await Promise.all([pending, mediaPending, maintenance, demoReset]);
+      await Promise.all([pending, mediaPending, maintenance, demoReset, overflowSweep]);
       await Promise.all([worker.close(), importWorker.close()]);
       await Promise.all([producer.close(), importProducer.close()]);
       await pool.end();

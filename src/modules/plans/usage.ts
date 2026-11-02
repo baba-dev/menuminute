@@ -4,7 +4,12 @@ import { withOutlet, type Actor } from "@/modules/tenancy/service";
 import type { PlanKey } from "./catalog";
 import { planContextFor } from "./guard";
 import { dbPlanStore } from "./store";
-import { buildPlanUsageView, type IntakeSnapshot, type PlanUsageView } from "./view";
+import {
+  buildPlanUsageView,
+  type IntakeSnapshot,
+  type OverflowSnapshot,
+  type PlanUsageView,
+} from "./view";
 
 /** Everything the plan UI needs about one outlet's organization, read-only and server-derived. */
 export type PlanSnapshot = {
@@ -47,6 +52,9 @@ export async function getPlanSnapshot(
       }
       let usage: PlanUsageView | null = null;
       if (env.PLAN_LIMITS_ENFORCED) {
+        const over = await tx.execute<{ snap: OverflowSnapshot | null }>(
+          sql`select app_private.plan_overflow_snapshot(${outletId}) as snap`
+        );
         const [dishes, qrCodes, tables, chairs] = await Promise.all([
           store.count(outletId, "dishes"),
           store.count(outletId, "qrCodes"),
@@ -58,6 +66,7 @@ export async function getPlanSnapshot(
           limits: ctx.limits,
           counts: { dishes, qrCodes, tables, chairs },
           intake,
+          overflow: over.rows[0]?.snap ?? null,
         });
       }
       return {

@@ -8,7 +8,7 @@ import {
   type PlanOffer,
   type PricePoint,
 } from "./offer";
-import type { IntakeSnapshot, PlanUsageView, UsageMeterView } from "./view";
+import { fmtDate, type IntakeSnapshot, type PlanUsageView, type UsageMeterView } from "./view";
 
 /**
  * View model for /billing. Pure: it turns server facts (plan snapshot, billing state) into plain
@@ -58,15 +58,7 @@ export function coerceSubscriptions(raw: unknown): SubscriptionInput[] {
   return out;
 }
 
-/** Fixed locale and zone so the server and the browser print the same text. */
-export function formatDate(value: Date | string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(value));
-}
+export const formatDate = fmtDate;
 
 export type LadderAction =
   | { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string }

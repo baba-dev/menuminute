@@ -77,16 +77,16 @@ Required consequences, to confirm before building:
 
 ## Cap behavior
 
-| Event                                   | Behavior                                                                                                                                                                                             |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Create beyond a hard cap                | Rejected by the service with a typed `LIMIT_REACHED` error naming the resource, cap and next plan.                                                                                                   |
-| Concurrent creates at the cap           | Count and insert in one transaction under an outlet-scoped lock, so two requests cannot both pass.                                                                                                   |
-| 80% and 100% usage                      | Meters turn amber then red; one dismissible upgrade prompt per resource per week.                                                                                                                    |
-| Downgrade or expiry with data above cap | 14-day grace, unchanged. After grace the owner's chosen N dishes stay published (default: oldest-created N); the rest are hidden, not deleted, and return on upgrade. Printed QR links keep working. |
-| QR codes above the cap                  | The first N by creation stay active; the rest show a "not available" page, not an error, and reactivate on upgrade.                                                                                  |
-| AI credits exhausted                    | Manual path only, no overage billing in v1. Credits reset monthly; no rollover.                                                                                                                      |
-| Accepted orders after plan loss         | Unchanged rule: accepted tickets finish. New orders continue only within the Free intake allowance.                                                                                                  |
-| Abuse (pay, bulk-add, downgrade)        | The grace window and hide-not-delete rule leave nothing extra live on Free.                                                                                                                          |
+| Event                                     | Behavior                                                                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create beyond a hard cap                  | Rejected by the service with a typed `LIMIT_REACHED` error naming the resource, cap and next plan.                                                      |
+| Concurrent creates at the cap             | Count and insert in one transaction under an outlet-scoped lock, so two requests cannot both pass.                                                      |
+| 80% and 100% usage                        | Meters turn amber then red; one dismissible upgrade prompt per resource per week.                                                                       |
+| Downgrade or expiry with dishes above cap | 14-day grace, then dishes beyond the cap (in menu order) are hidden from guests, not deleted, and return the moment the plan allows. See Slice 3 below. |
+| QR codes, tables and chairs above the cap | Never switched off. They keep working (printed QR links must survive every downgrade); only adding more is blocked.                                     |
+| AI credits exhausted                      | Manual path only, no overage billing in v1. Credits reset monthly; no rollover.                                                                         |
+| Accepted orders after plan loss           | Unchanged rule: accepted tickets finish. New orders continue only within the Free intake allowance.                                                     |
+| Abuse (pay, bulk-add, downgrade)          | The grace window and hide-not-delete rule leave nothing extra live on Free.                                                                             |
 
 ## Implementation shape
 
@@ -194,18 +194,18 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                  | Depends on                |
-| --- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                              | This sign-off             |
-| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI          | 1                         |
-| 2b  | Free order intake, 100 guest orders a month; done in migration 0077 behind an owner-only database switch (default OFF) | 2                         |
-| 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                       | 2                         |
-| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                                                        | 2                         |
-| 4   | AI credit accounting per org per month                                                                                 | 1, AI spend accounting    |
-| 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                | Billing gates             |
-| 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                         | Kitchen Pro release gates |
-| 7   | Custom domain verification, routing, TLS                                                                               | Edge decision             |
-| 8   | Dedicated A (brand), then B by contract                                                                                | 7, pricing                |
+| #   | Slice                                                                                                                                                       | Depends on                |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                                                                   | This sign-off             |
+| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI                                               | 1                         |
+| 2b  | Free order intake, 100 guest orders a month; done in migration 0077 behind an owner-only database switch (default OFF)                                      | 2                         |
+| 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                                                            | 2                         |
+| 3   | Downgrade grace and hiding of extra dishes (hide, not delete), instant restore on upgrade; done in migration 0079 behind an owner-only switch (default OFF) | 2                         |
+| 4   | AI credit accounting per org per month                                                                                                                      | 1, AI spend accounting    |
+| 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                     | Billing gates             |
+| 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                              | Kitchen Pro release gates |
+| 7   | Custom domain verification, routing, TLS                                                                                                                    | Edge decision             |
+| 8   | Dedicated A (brand), then B by contract                                                                                                                     | 7, pricing                |
 
 Each slice is one PR with an explicit migration and rollback note, tested against real PostgreSQL.
 
@@ -406,3 +406,58 @@ Not done: a sidebar entry for Billing (the navigation model is tightly tested an
 asked to change it), saved-payment-method management, GST invoices, annual billing, and live plan
 changes between paid plans (a Kitchen Pro purchase from Ordering uses the existing checkout and has
 not been exercised against the provider sandbox).
+
+## Slice 3 as built: downgrade grace and hiding extra dishes
+
+Migration `0079_plan_overflow.sql` (forward-only). Inert until the owner-only switch
+`app_private.plan_settings.overflow_hiding_enabled` is turned on (default OFF), and the worker sweep
+additionally needs `PLAN_LIMITS_ENFORCED=true` in the **worker's** environment (set it on web and
+worker together, like the other shared flags).
+
+**Decision: only dishes are hidden.** QR codes, tables and chairs are never switched off after a
+downgrade. A printed QR link is the free product (ADR 003), and shutting down table QR codes or floor
+tables in a running restaurant would be the most damaging thing a plan limit could do. They stay
+usable and only growth is blocked. This corrects the earlier draft of the cap table, which proposed
+suspending extra QR codes.
+
+How it works:
+
+1. **Detect.** Every 15 minutes the worker calls `reconcile_plan_overflow(caps)`. The caps come from
+   the reviewed catalog (`{"0":20,"1":200,"2":2000}`), never from SQL. An outlet is "over" when it has
+   more live dishes (published, non-archived, de-duplicated across its menus) than its plan allows.
+2. **Grace.** The first time an outlet is seen over its cap it gets `overflow_grace_days` (default 14).
+   Nothing is hidden. The clock starts when the switch is turned on, not before, so enabling it gives
+   every over-cap owner a full grace period. If the plan or cap changes under an overflow, the grace
+   restarts.
+3. **Hide.** After the grace, dishes beyond the first N in **menu order** (menu, then category, then
+   dish position) are recorded as hidden. Owners control which dishes stay by reordering or removing
+   dishes. Categories left empty by hiding disappear from the guest menu.
+4. **One filter, everywhere.** The filter sits inside `free_menu_public`, the function the public menu,
+   order validation and the POS catalog all use, so a hidden dish cannot be seen, quoted or ordered
+   anywhere. A test submits an order for a hidden dish and gets "is not currently on the menu".
+5. **Restore.** Hidden rows remember the plan rank they were hidden under; the filter ignores them as
+   soon as the outlet's current plan is higher, so an upgrade restores every dish immediately, before
+   the worker runs. The next sweep then clears the rows. Freeing space, or turning the switch off,
+   also restores (the switch is read live by the filter).
+6. **Never deleted.** The owner's menu, drafts and releases are untouched; the hidden list is a separate
+   table. Community Edition and uncapped plans are never affected.
+
+What owners see: the dishes meter on Menu Studio, the Plan & usage panel and `/billing` show a notice. During grace: "After 2 Dec 2026, dishes beyond the first 20 are hidden from
+guests. Nothing is deleted." Once hidden: "7 dishes are hidden from guests. They are safe and come
+back when your plan allows or you free up space."
+
+Operator notes (migration-owner connection only), after running the cap audit:
+
+```sql
+UPDATE app_private.plan_settings SET overflow_hiding_enabled = true;   -- start the grace clocks
+UPDATE app_private.plan_settings SET overflow_grace_days = 14;         -- optional
+UPDATE app_private.plan_settings SET overflow_hiding_enabled = false;  -- instant restore, no data change
+```
+
+Limits and caveats: the public menu cache (180 s) delays visibility changes by up to three minutes
+because the worker deliberately has no Redis access; with several menus the "first N" order is by
+menu id, so trim to one menu when over the cap; owners do not yet get a per-dish "hidden" badge or an
+email when the grace starts (the notice is in the dashboard); the dish count excludes archived
+dishes, while the creation guard counts every dish in the draft, so the guard can be slightly
+stricter than the hiding rule. Hidden dishes are also unavailable at the till, because the POS reads
+the same catalog.

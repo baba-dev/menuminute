@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { PLAN_LIMITS } from "../src/modules/plans/catalog";
-import { buildMeter, buildPlanUsageView, meterState } from "../src/modules/plans/view";
+import {
+  buildMeter,
+  buildPlanUsageView,
+  meterState,
+  overflowNotice,
+} from "../src/modules/plans/view";
 
 describe("meterState", () => {
   it("is ok under 80%, near from 80%, full at the cap and over above it", () => {
@@ -133,5 +138,32 @@ describe("number formatting", () => {
     expect(buildMeter("dishes", "Dishes", "dishes", 2600, 2000).statusText).toBe(
       "600 over the limit"
     );
+  });
+});
+
+describe("overflow notice", () => {
+  const overflow = (hidden: number) => ({
+    cap: 20,
+    count: 27,
+    graceUntil: "2026-12-02T10:00:00Z",
+    hidden,
+  });
+  it("explains the grace period, then what is hidden, and always that nothing is deleted or lost", () => {
+    expect(overflowNotice(overflow(0))).toBe(
+      "After 2 Dec 2026, dishes beyond the first 20 are hidden from guests. Nothing is deleted."
+    );
+    expect(overflowNotice(overflow(7))).toMatch(/^7 dishes are hidden from guests\. They are safe/);
+    expect(overflowNotice(overflow(1))).toMatch(/^1 dish is hidden from guests/);
+  });
+  it("attaches only to the dishes meter", () => {
+    const view = buildPlanUsageView({
+      plan: "free",
+      limits: PLAN_LIMITS.free,
+      counts: { dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
+      intake: null,
+      overflow: overflow(7),
+    })!;
+    expect(view.meters.find((m) => m.key === "dishes")?.notice).toMatch(/hidden from guests/);
+    expect(view.meters.filter((m) => m.notice).map((m) => m.key)).toEqual(["dishes"]);
   });
 });

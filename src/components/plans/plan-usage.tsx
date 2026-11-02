@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Check, CircleAlert, Gauge, Lock, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, Check, CircleAlert, EyeOff, Gauge, Lock, TriangleAlert } from "lucide-react";
 import { fmt, type MeterKey, type PlanUsageView, type UsageMeterView } from "@/modules/plans/view";
 import "./plan-usage.css";
 
@@ -39,6 +39,12 @@ export function UsageMeter({ meter }: { meter: UsageMeterView }) {
       >
         <span className="pu-bar-fill" style={{ width: `${meter.percent}%` }} />
       </div>
+      {meter.notice && (
+        <p className="pu-notice">
+          <EyeOff size={14} aria-hidden="true" />
+          <span>{meter.notice}</span>
+        </p>
+      )}
       <div className="pu-meter-foot">
         <span className="pu-chip">
           <StateIcon state={meter.state} />

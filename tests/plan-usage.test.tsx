@@ -50,6 +50,22 @@ describe("PlanMeterStrip", () => {
   });
 });
 
+describe("overflow notice", () => {
+  it("shows what happens to extra dishes, in words, on the dishes meter only", () => {
+    const view = buildPlanUsageView({
+      plan: "free",
+      limits: PLAN_LIMITS.free,
+      counts: { dishes: 27, qrCodes: 1, tables: 0, chairs: 0 },
+      intake: null,
+      overflow: { cap: 20, count: 27, graceUntil: "2026-12-02T10:00:00Z", hidden: 0 },
+    })!;
+    render(<PlanMeterStrip view={view} only={["dishes", "qrCodes"]} />);
+    expect(screen.getAllByText(/Nothing is deleted/)).toHaveLength(1);
+    expect(screen.getByText(/After 2 Dec 2026, dishes beyond the first 20/)).toBeInTheDocument();
+    expect(screen.getByText("7 over the limit")).toBeInTheDocument();
+  });
+});
+
 describe("PlanUsagePanel", () => {
   it("lists every meter and what each feature needs, with text status for each row", () => {
     render(<PlanUsagePanel view={free(17, 2, { used: 8, cap: 100 })} outletName="Saffron" />);

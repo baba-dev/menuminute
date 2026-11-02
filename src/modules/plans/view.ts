@@ -27,6 +27,8 @@ export type UsageMeterView = {
   period?: string;
   /** What the next plan allows, e.g. "Ordering allows 200". Only set once usage is near the cap. */
   upgradeHint?: string;
+  /** Plain-language consequence of being over the cap (grace period or hidden dishes). */
+  notice?: string;
 };
 
 export type FeatureStatus = "included" | "limited" | "locked";
@@ -49,6 +51,8 @@ export type PlanUsageView = {
 
 export type UsageCounts = { dishes: number; qrCodes: number; tables: number; chairs: number };
 export type IntakeSnapshot = { enabled: boolean; used: number; cap: number };
+/** Present only while an outlet is over its dish cap and overflow hiding is switched on. */
+export type OverflowSnapshot = { cap: number; count: number; graceUntil: string; hidden: number };
 
 export function meterState(used: number, cap: number): MeterState {
   if (used > cap) return "over";
@@ -63,6 +67,22 @@ function statusText(state: MeterState, used: number, cap: number): string {
   if (state === "full") return "Limit reached";
   if (state === "over") return `${fmt(used - cap)} over the limit`;
   return `${fmt(cap - used)} left`;
+}
+
+/** Fixed locale and zone so the server and the browser print the same text. */
+export const fmtDate = (value: Date | string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+
+/** What being over the dish cap means right now. Nothing is deleted in either state. */
+export function overflowNotice(o: OverflowSnapshot): string {
+  return o.hidden > 0
+    ? `${fmt(o.hidden)} ${o.hidden === 1 ? "dish is" : "dishes are"} hidden from guests. They are safe and come back when your plan allows or you free up space.`
+    : `After ${fmtDate(o.graceUntil)}, dishes beyond the first ${fmt(o.cap)} are hidden from guests. Nothing is deleted.`;
 }
 
 export function buildMeter(
@@ -104,8 +124,9 @@ export function buildPlanUsageView(input: {
   limits: PlanLimits;
   counts: UsageCounts;
   intake: IntakeSnapshot | null;
+  overflow?: OverflowSnapshot | null;
 }): PlanUsageView | null {
-  const { plan, limits, counts, intake } = input;
+  const { plan, limits, counts, intake, overflow } = input;
   if (plan === "dedicated") return null;
   const nextPlan = NEXT_PLAN[plan];
   const hint = (
@@ -141,6 +162,10 @@ export function buildPlanUsageView(input: {
           hint(spec.key)
         )
       );
+  }
+  if (overflow) {
+    const dishes = meters.find((m) => m.key === "dishes");
+    if (dishes) dishes.notice = overflowNotice(overflow);
   }
   if (plan === "free" && intake?.enabled && intake.cap > 0)
     meters.push(
