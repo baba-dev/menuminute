@@ -80,3 +80,13 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 | 025 | Demo-only bypass of the Kitchen Pro pilot gate           | `provision_demo_ops()` enables the demo kitchen and grants Ordering/Kitchen for ten years; owner-only, hardcoded to the demo outlet. Real outlets keep the two-operator pilot or paid path. |
 | 026 | Drop the legacy `order_items.variant_id` foreign key     | Versioned-menu variant ids are not legacy rows; the FK rejected every guest order line with a variant. Order items are immutable snapshots. Migration 0061.                                 |
 | 027 | Higher Ember daily budget for the shared demo actor only | Per-user/org budgets and table checks widened for `demo-owner`/`org-demo-outlet` (migration 0062); application-level per-source and daily caps bound real cost.                             |
+
+## Worldwide geographic scope clarified 2026-11-03
+
+Issue #8 owner direction: operate MenuMinute for restaurants worldwide. This reconfirms
+ADR 014 and ADR 017 for geographic onboarding, local outlet currency and non-fiscal
+features. It **does not** approve any country's statutory taxes or invoices, mandate
+unsupported cross-border payment processing, or override provider/entitlement gates.
+See [worldwide commercial boundaries](worldwide-commercial-launch.md) for the scoped
+implementation, versioned money fixtures, deferred payment/provider checks and
+outstanding jurisdiction-by-jurisdiction approvals. Issue #8 stays open for those decisions.
