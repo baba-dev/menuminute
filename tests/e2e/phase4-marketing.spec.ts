@@ -62,7 +62,7 @@ test("international USD price book is published but cannot open INR checkout", a
   for (const price of ["$0", "$5.00", "$20.00", "$3,000.00"])
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Dedicated · On-premise Private" })).toBeVisible();
-  await expect(page.getByText("Private on-premise deployment")).toBeVisible();
+  await expect(page.getByText("Private on-premise deployment", { exact: true })).toBeVisible();
   await expect(page.getByText(/USD checkout is not yet active/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Ask about USD billing" })).toHaveCount(2);
   for (const link of await page.getByRole("link", { name: "Ask about USD billing" }).all())
