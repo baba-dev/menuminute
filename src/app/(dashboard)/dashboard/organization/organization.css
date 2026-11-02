@@ -879,7 +879,6 @@
   text-underline-offset: 3px;
 }
 
-
 /* Compact audit table: organization operations, not queue internals. */
 #activity .oh-panel-heading {
   min-height: 0;
