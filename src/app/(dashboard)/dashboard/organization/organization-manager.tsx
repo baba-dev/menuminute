@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
+import { PlanUsagePanel } from "@/components/plans/plan-usage";
+import type { PlanUsageView } from "@/modules/plans/view";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
   organization: Organization;
@@ -346,9 +348,11 @@ function BrandLinkEditor({
 export function OrganizationManager({
   organizations,
   initialOrganizationId,
+  planUsage = null,
 }: {
   organizations: Organization[];
   initialOrganizationId?: string;
+  planUsage?: { organizationId: string; outletName: string; view: PlanUsageView } | null;
 }) {
   const router = useRouter();
   const initiallySelected = organizations.some((org) => org.id === initialOrganizationId)
@@ -911,6 +915,9 @@ export function OrganizationManager({
                                 : "Paid subscription checkout is currently unavailable. Existing free menus remain accessible."}
                             </p>
                           </>
+                        )}
+                        {planUsage && planUsage.organizationId === selected && (
+                          <PlanUsagePanel view={planUsage.view} outletName={planUsage.outletName} />
                         )}
                         <div className="oh-capability-grid" aria-label="Live capabilities">
                           <article className="oh-capability">

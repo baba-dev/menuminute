@@ -11,6 +11,7 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { listMenus, menuDetail } from "@/modules/menu-product/service";
 import { MenuStudio } from "@/components/menu-product/menu-studio";
 import { listImports } from "@/modules/menu-import/service";
+import { getPlanUsageView } from "@/modules/plans/usage";
 export const metadata: Metadata = {
   title: "Menu Studio | Recipe Atelier",
   description: "Private restaurant menu editor, draft preview and publishing workspace.",
@@ -56,6 +57,7 @@ export default async function Page() {
         tx.select({ id: brands.id, name: brands.name }).from(brands)
       )}
       imports={imports}
+      planUsage={await getPlanUsageView(actor, outlet.id)}
     />
   );
 }

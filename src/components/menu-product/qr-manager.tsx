@@ -1,5 +1,7 @@
 "use client";
 
+import { PlanMeterStrip } from "@/components/plans/plan-usage";
+import { buildMeter, type PlanUsageView } from "@/modules/plans/view";
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -35,12 +37,14 @@ export function QrManager({
   outletName,
   canRevoke,
   origin,
+  planUsage = null,
 }: {
   initial: QR[];
   outletId: string;
   outletName: string;
   canRevoke: boolean;
   origin: string;
+  planUsage?: PlanUsageView | null;
 }) {
   const [codes, setCodes] = useState(initial);
   const [selectedId, setSelectedId] = useState(
@@ -65,6 +69,17 @@ export function QrManager({
   const detailRef = useRef<HTMLElement>(null);
 
   const stats = useMemo(() => qrStatistics(codes), [codes]);
+  // Keep the QR meter live as codes are created and revoked without a page reload.
+  const qrUsage = useMemo(
+    () =>
+      planUsage && {
+        ...planUsage,
+        meters: planUsage.meters.map((m) =>
+          m.key === "qrCodes" ? buildMeter("qrCodes", m.label, m.noun, stats.active, m.cap) : m
+        ),
+      },
+    [planUsage, stats.active]
+  );
   const visible = useMemo(() => filterQrCodes(codes, query, filter), [codes, query, filter]);
   const selected = codes.find((q) => q.id === selectedId) ?? null;
   const selectedUrl = selected ? qrDestination(origin, selected.destinationToken) : "";
@@ -323,6 +338,7 @@ export function QrManager({
                   </div>
                 ))}
               </div>
+              <PlanMeterStrip view={qrUsage} only={["qrCodes"]} className="qr-plan-usage" />
             </section>
 
             {codes.length === 0 ? (

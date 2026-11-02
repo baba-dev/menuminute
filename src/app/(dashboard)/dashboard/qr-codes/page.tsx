@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant, getRestaurantQrCodes } from "@/modules/restaurants/service";
 import { listOrganizations } from "@/modules/organizations/service";
 import { QrManager } from "@/components/menu-product/qr-manager";
+import { getPlanUsageView } from "@/modules/plans/usage";
 export const metadata: Metadata = {
   title: "QR Studio | The Tabletop Press",
   description: "Private permanent QR management and restaurant print workspace.",
@@ -25,6 +26,7 @@ export default async function Page() {
     );
   const org = (await listOrganizations(actor)).find((o) => o.id === outlet.organizationId);
   const codes = await getRestaurantQrCodes(actor, outlet.id);
+  const planUsage = await getPlanUsageView(actor, outlet.id);
   return (
     <QrManager
       key={outlet.id}
@@ -40,6 +42,7 @@ export default async function Page() {
       outletName={outlet.name}
       origin={env.APP_URL}
       canRevoke={org?.role === "owner" || org?.role === "admin"}
+      planUsage={planUsage}
     />
   );
 }

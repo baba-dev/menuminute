@@ -540,6 +540,13 @@
       "when": 1795093200030,
       "tag": "0077_free_order_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1795179600030,
+      "tag": "0078_plan_usage_snapshot",
+      "breakpoints": true
     }
   ]
 }

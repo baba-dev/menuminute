@@ -197,7 +197,7 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 | 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                              | This sign-off             |
 | 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI          | 1                         |
 | 2b  | Free order intake, 100 guest orders a month; done in migration 0077 behind an owner-only database switch (default OFF) | 2                         |
-| 2c  | Usage meters and locked-feature UI (the only UI work; requires explicit sign-off)                                      | 2                         |
+| 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                       | 2                         |
 | 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                                                        | 2                         |
 | 4   | AI credit accounting per org per month                                                                                 | 1, AI spend accounting    |
 | 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                | Billing gates             |
@@ -302,3 +302,49 @@ Rolling back the switch does not delete orders, and the order APIs do not check 
 submission. But the Orders link disappears from the dashboard of Free organizations again, so
 finish or reject their pending and accepted orders **before** turning the switch off. The migration
 itself is not reversed; use a new forward migration if it ever needs removing.
+
+## Slice 2c as built: usage meters and plan panel
+
+Nothing is visible until `PLAN_LIMITS_ENFORCED=true`; with the default (off) every page renders
+exactly as before. Migration `0078_plan_usage_snapshot.sql` adds one read-only function so the
+dashboard can see the Free order count without reading the owner-only settings table.
+
+| Where                                | What the owner sees                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Menu Studio, under the hero          | A slim strip: **Dishes n / cap**                                                             |
+| QR Studio, under the inventory cards | A slim strip: **QR codes n / cap**, updating live as codes are created or revoked            |
+| Organization → Billing entitlements  | A **Plan & usage** panel: every meter plus what the plan includes, limits and what is locked |
+
+Design and accessibility decisions:
+
+- **Honest by construction.** Only limits that are really enforced get a meter: dishes, QR codes
+  and, while Free intake is on, orders this month. AI credits, storage, seats and custom domains
+  have no meter until something enforces them. Features show as locked only when they truly are
+  (online ordering without intake, and the Kitchen display). POS, reports and similar are not
+  gated today, so they are not shown as locked.
+- **State is never colour alone.** Each meter has an accessible `role="meter"` with spoken text
+  ("17 of 20 dishes used") and a visible status chip: "3 left", "Limit reached" or "2 over the
+  limit", with an icon from 80% upward. Bars cap at full for assistive tech; the text tells the truth
+  for outlets already over a cap.
+- **Calm until it matters.** Below 80% the strip is quiet and links to "Plans & usage". From 80%
+  the bar turns ember, at the cap it turns red, and a hint says what the next plan allows (for
+  example "Ordering allows 200"). No prices appear anywhere in this UI; pricing stays in the
+  existing billing buttons and on the pricing page.
+- **Ink & Ember tokens only.** Built on the shared `--paper`, `--ink`, `--panel`, `--ember`,
+  `--success`, `--danger` and `--gradient` tokens, so Light and Dark are automatic; the strip is
+  translucent so it takes the warm tone of the studio page. Bars animate only when the user has
+  not asked for reduced motion; touch targets are at least 44px on phones; numbers use a fixed
+  locale (no hydration mismatch) and tabular figures.
+- **Never breaks a page.** The reader returns nothing on any error, for non-members, for contract
+  and Community plans, and when enforcement is off.
+
+Verification: unit tests for the view model, jsdom component tests for accessibility and the
+render-nothing cases, real-PostgreSQL tests for the reader and the snapshot function's access rule,
+the full suite (209 files), and manual visual review of Free (comfortable, near, at and over the
+cap), Ordering and Kitchen Pro in Light and Dark at desktop and 390px widths, with no horizontal
+overflow. The Playwright end-to-end suite was not run for this slice.
+
+Known limits: the Menu Studio strip reflects the server count at load and refreshes after saves
+(the studio already refreshes the page on save); dish counts use the acting user's visibility;
+the "Compare plans" link goes to the public pricing page, whose copy is not yet updated for the new
+plans.
