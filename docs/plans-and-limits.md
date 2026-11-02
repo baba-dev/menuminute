@@ -225,3 +225,30 @@ Each slice is one PR with an explicit migration and rollback note, tested agains
   existing-data review: list outlets over their cap first, because they will be unable to add more.
 - Not in this slice: the Free order cap, usage meters or any UI, AI credits, media bytes, seats,
   outlets and custom domains.
+
+## Pre-enable audit: outlets over their cap
+
+Run this **before** setting `PLAN_LIMITS_ENFORCED=true`. It is read-only (one `READ ONLY`
+transaction, rolled back), uses the isolated migration-owner URL like other operator scripts, and
+prints outlet and organization ids and counts only: no emails, names, prices or credentials.
+
+```bash
+MIGRATION_DATABASE_URL=... pnpm exec tsx scripts/plan-cap-audit.ts
+MIGRATION_DATABASE_URL=... pnpm exec tsx scripts/plan-cap-audit.ts --json
+```
+
+It reports outlets per plan, how many are strictly over a cap, how many are at or over (those can
+add nothing more), and each over-cap outlet with `dishes=n/cap` and `qr=n/cap`, worst first. It uses
+the same counting rules as the write guard, but the migration owner bypasses row-level security,
+so its totals are authoritative rather than one staff member's view.
+
+How to act on the result:
+
+- **At or just under a cap:** nothing breaks; they hit `LIMIT_REACHED` on their next add.
+- **Over a cap:** they keep everything and can edit or shrink, but cannot add. Decide per outlet
+  whether to contact the owner, grant an Ordering trial, or wait for slice 3 (hide, not delete).
+- **Demo outlet:** it holds the Kitchen Pro grant, so its 236 dishes are under the 2,000 cap.
+- Record the date, commit SHA and the aggregate counts in the release evidence; do not paste
+  per-customer lists into issues.
+
+The audit has not yet been run against production; this PR cannot access production data.
