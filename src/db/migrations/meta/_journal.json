@@ -582,6 +582,13 @@
       "when": 1795525200032,
       "tag": "0083_pricing_and_supersede",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1795611600032,
+      "tag": "0084_guest_crm",
+      "breakpoints": true
     }
   ]
 }
