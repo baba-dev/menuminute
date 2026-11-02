@@ -12,7 +12,9 @@ test("public pricing advertises the four INR tiers without unsupported internati
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
   await expect(page.getByText("One flat price for up to 10 outlets")).toBeVisible();
   await expect(page.getByText(/Current self-service checkout charges in INR/)).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Subscription pricing currency" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Subscription pricing currency" })
+  ).toBeVisible();
   await expect(page.getByText("Virtually unlimited").first()).toBeVisible();
   await expect(page.getByRole("table", { name: /Limits and features/ })).toBeVisible();
   await expect(page.locator("body")).not.toContainText(
@@ -59,13 +61,14 @@ test("international USD price book is published but cannot open INR checkout", a
   await page.goto("/pricing?currency=USD");
   for (const price of ["$0", "$5.00", "$20.00", "$3,000.00"])
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Dedicated · On-premise Private" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dedicated · On-premise Private" })).toBeVisible();
   await expect(page.getByText("Private on-premise deployment")).toBeVisible();
   await expect(page.getByText(/USD checkout is not yet active/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Ask about USD billing" })).toHaveCount(2);
   for (const link of await page.getByRole("link", { name: "Ask about USD billing" }).all())
     await expect(link).toHaveAttribute("href", "/contact");
-  await expect(page.getByRole("link", { name: "Discuss private deployment" })).toHaveAttribute("href", "/contact");
+  await expect(page.getByRole("link", { name: "Discuss private deployment" })).toHaveAttribute(
+    "href",
+    "/contact"
+  );
 });
