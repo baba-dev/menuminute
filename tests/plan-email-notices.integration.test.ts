@@ -16,7 +16,7 @@ async function setSettings(values: Record<string, unknown>) {
   );
 }
 beforeAll(() => setSettings({ auto_trial_enabled: true, dunning_grace_enabled: true }));
-afterAll(() => setSettings({ auto_trial_enabled: true, dunning_grace_enabled: true }));
+afterAll(() => setSettings({ auto_trial_enabled: false, dunning_grace_enabled: false }));
 
 /** Runs the real sweep against the real database, capturing mail instead of sending it. */
 async function sweep() {
@@ -225,5 +225,21 @@ describe("delivery safety", () => {
         pool.query("set role menuminute_app; select * from app_private.plan_email_notices")
       )
     ).rejects.toThrow();
+  });
+});
+
+describe("shipped defaults", () => {
+  it("every plan switch is on by default in a fresh database (migration 0084)", async () => {
+    const rows = await owner<{ column_name: string; column_default: string }>(
+      `select column_name,column_default from information_schema.columns
+        where table_schema='app_private' and table_name='plan_settings' and column_name like '%\\_enabled'
+        order by column_name`
+    );
+    expect(rows.map((r) => [r.column_name, r.column_default])).toEqual([
+      ["auto_trial_enabled", "true"],
+      ["dunning_grace_enabled", "true"],
+      ["free_intake_enabled", "true"],
+      ["overflow_hiding_enabled", "true"],
+    ]);
   });
 });
