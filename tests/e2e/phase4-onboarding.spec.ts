@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 
+// Regional defaults must not depend on the CI runner/browser locale.
+test.use({ locale: "en-IN", timezoneId: "Asia/Kolkata" });
+
 test("first-outlet wizard resumes a saved draft, recovers from failure and opens guided setup", async ({
   page,
 }) => {

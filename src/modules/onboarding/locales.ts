@@ -82,6 +82,31 @@ export const currencyFor: Record<string, string> = {
   VN: "VND",
   ZA: "ZAR",
 };
+/** A country suggestion is not an implicit currency choice for unmapped territories. */
+export function suggestedCurrencyForCountry(country: string): string {
+  return currencyFor[country] ?? "";
+}
+
+/** Browser hints apply only to a brand-new draft, never to saved merchant settings. */
+export function browserOutletRegion(locale: string, timezone: string) {
+  let country: string | undefined;
+  try {
+    country = new Intl.Locale(locale).region?.toUpperCase();
+  } catch {
+    return null;
+  }
+  if (!country || !regions.includes(country)) return null;
+
+  let validTimezone = "UTC";
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: timezone });
+    validTimezone = timezone;
+  } catch {
+    // Browser-provided values can be missing or invalid; UTC is safe until edited.
+  }
+  return { country, currency: suggestedCurrencyForCountry(country), timezone: validTimezone };
+}
+
 export function localeOptions(locale = "en") {
   const names = new Intl.DisplayNames([locale], { type: "region" });
   return regions

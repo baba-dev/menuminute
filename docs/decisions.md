@@ -91,3 +91,13 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 
 Enabling any flag in production needs the owner's approval of the matching privacy and cookie notice;
 guest Web Push (empty-payload push bound to one order) is not implemented yet.
+
+## Worldwide geographic scope clarified 2026-11-03
+
+Issue #8 owner direction: operate MenuMinute for restaurants worldwide. This reconfirms
+ADR 014 and ADR 017 for geographic onboarding, local outlet currency and non-fiscal
+features. It **does not** approve any country's statutory taxes or invoices, mandate
+unsupported cross-border payment processing, or override provider/entitlement gates.
+See [worldwide commercial boundaries](worldwide-commercial-launch.md) for the scoped
+implementation, versioned money fixtures, deferred payment/provider checks and
+outstanding jurisdiction-by-jurisdiction approvals. Issue #8 stays open for those decisions.
