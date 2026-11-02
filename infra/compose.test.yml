@@ -2,6 +2,11 @@
 services:
   postgres:
     image: postgres:17.11-bookworm
+    # Disposable test database only: keep data in RAM and skip fsync for faster CI. Never copy to production.
+    command:
+      ["postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"]
+    tmpfs:
+      - /var/lib/postgresql/data
     environment:
       POSTGRES_DB: menuminute_test
       POSTGRES_USER: foundation_owner
