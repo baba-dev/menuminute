@@ -6,7 +6,6 @@ import {
   BookOpenText,
   ClipboardCheck,
   FileText,
-  LockKeyhole,
   Printer,
   RefreshCcw,
   ShieldCheck,
@@ -412,18 +411,6 @@ export function FinancialHub({
       </header>
       <div className="pos-body">
         <PosNavigation active={mode} />
-        <div className="finance-status" role="status">
-          {finance.paymentsEnabled ? <ShieldCheck size={18} /> : <LockKeyhole size={18} />}
-          <strong>
-            {finance.paymentsEnabled
-              ? "OPERATOR-GATED COLLECTION ENABLED"
-              : "LIVE FINANCE GATE IS CLOSED"}
-          </strong>
-          <span>
-            {finance.documentsEnabled ? "Document issue enabled" : "Document issue disabled"} ·
-            External tender entries are staff-recorded, not gateway-confirmed
-          </span>
-        </div>
         {notice && (
           <div className="till-notice" role="alert">
             {notice}
@@ -1223,6 +1210,9 @@ export function FinancialHub({
               <span className="till-eyebrow">01 / OPEN DRAWER</span>
               <h2>Start a shift</h2>
               <p>One open shift per register. A cashier’s float is not revenue.</p>
+              {!workspace.context.enabled && (
+                <p role="status">Activate Point of Sale for this outlet before starting a shift.</p>
+              )}
               <div className="finance-fields">
                 <label>
                   Register
@@ -1243,7 +1233,7 @@ export function FinancialHub({
               </div>
               <button
                 className="till-primary"
-                disabled={!finance.paymentsEnabled || busy}
+                disabled={busy || !workspace.context.enabled || !finance.canCollect}
                 onClick={() => {
                   try {
                     void command("open_shift", {
@@ -1340,7 +1330,7 @@ export function FinancialHub({
                     <strong>{money(activeShift.cashRefundMinor, currency)}</strong>
                   </div>
                 </div>
-                {finance.canIssue && (
+                {(finance.canCloseShift ?? finance.canIssue) && (
                   <div className="finance-flow">
                     <h3>Close & reconcile</h3>
                     <label>
@@ -1409,7 +1399,7 @@ export function FinancialHub({
               </p>
               <button
                 type="button"
-                disabled={!finance.canIssue || reconciliationBusy}
+                disabled={!(finance.canCloseShift ?? finance.canIssue) || reconciliationBusy}
                 onClick={() => void scanReconciliation(true)}
               >
                 {reconciliationBusy ? "Checking…" : "Start new consistency scan"}
