@@ -60,15 +60,21 @@ export function OperationsHistory({
   revision: number;
 }) {
   const [page, setPage] = useState(1);
-  const [data, setData] = useState<ActivityPage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
+  // The requested key determines loading during render; no synchronous state updates in effects.
+  // Stale responses cannot display the previous page or a different organization's audit entries.
+  const requestKey = JSON.stringify([organizationId, page, revision, reload]);
+  const [result, setResult] = useState<{
+    key: string;
+    data: ActivityPage | null;
+    error: string;
+  } | null>(null);
+  const loading = result?.key !== requestKey;
+  const data = loading ? null : (result?.data ?? null);
+  const error = loading ? "" : (result?.error ?? "");
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError("");
     void fetch(`/api/organizations/${encodeURIComponent(organizationId)}/activity?page=${page}`, {
       signal: controller.signal,
       cache: "no-store",
@@ -80,20 +86,21 @@ export function OperationsHistory({
         }
         return (await response.json()) as ActivityPage;
       })
-      .then((result) => {
+      .then((pageData) => {
         if (controller.signal.aborted) return;
-        setData(result);
-        if (result.page !== page) setPage(result.page);
+        setResult({ key: requestKey, data: pageData, error: "" });
+        if (pageData.page !== page) setPage(pageData.page);
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
-        setError(cause instanceof Error ? cause.message : "Unable to load operations history.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        setResult({
+          key: requestKey,
+          data: null,
+          error: cause instanceof Error ? cause.message : "Unable to load operations history.",
+        });
       });
     return () => controller.abort();
-  }, [organizationId, page, revision, reload]);
+  }, [organizationId, page, requestKey]);
 
   const start = data && data.total ? (data.page - 1) * data.pageSize + 1 : 0;
   const end = data ? Math.min(data.page * data.pageSize, data.total) : 0;
