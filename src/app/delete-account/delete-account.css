@@ -1,0 +1,129 @@
+/* Account deletion page — uses the Privacy Ledger's shared visual system. */
+.delete-page .privacy-hero {
+  min-height: 570px;
+}
+.delete-page .privacy-hero-copy {
+  max-width: 700px;
+}
+.delete-page .privacy-hero h1 {
+  font-size: clamp(2.65rem, 4.5vw, 4.8rem);
+}
+.delete-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.1rem;
+  margin-top: 1.8rem;
+}
+.delete-primary-action,
+.delete-secondary-action,
+.delete-inline-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+  min-height: 48px;
+  border-radius: 0.85rem;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.delete-primary-action {
+  background: #ffbd72;
+  color: #291707;
+  padding: 0.85rem 1.2rem;
+}
+.delete-primary-action:hover,
+.delete-primary-action:focus-visible {
+  background: #ffe0ad;
+}
+.delete-secondary-action {
+  color: #ffe2b7;
+  padding: 0.85rem 0.45rem;
+}
+.delete-secondary-action:hover,
+.delete-secondary-action:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.delete-page .privacy-review-status {
+  margin-top: 1.25rem;
+}
+.delete-step-list {
+  list-style: decimal;
+  padding-left: 1.3rem;
+}
+.delete-step-list li {
+  padding-left: 0.35rem;
+  margin: 0.8rem 0;
+  color: var(--p-muted);
+  line-height: 1.85;
+}
+.delete-step-list li::marker {
+  color: var(--p-ember);
+  font-weight: 800;
+}
+.delete-inline-cta {
+  margin: 1.1rem 0 0.3rem;
+  padding: 0.85rem 1.2rem;
+  background: var(--p-soft);
+  border: 1px solid var(--p-line);
+  color: var(--p-ember);
+}
+.delete-inline-cta:hover,
+.delete-inline-cta:focus-visible {
+  background: var(--p-card);
+}
+.delete-privacy-link {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  color: var(--p-muted);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+.delete-privacy-link a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--p-ember);
+  font-weight: 700;
+}
+.delete-page .privacy-copy strong {
+  color: var(--p-ink);
+}
+.delete-page .privacy-last strong {
+  color: inherit;
+}
+.delete-page :is(a, summary):focus-visible {
+  outline: 3px solid var(--p-ember);
+  outline-offset: 4px;
+}
+@media (max-width: 720px) {
+  .delete-page .privacy-hero {
+    min-height: 0;
+  }
+  .delete-page .privacy-hero h1 {
+    font-size: clamp(2.6rem, 10vw, 3.6rem);
+  }
+  .delete-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .delete-primary-action,
+  .delete-secondary-action {
+    width: 100%;
+  }
+  .delete-artwork {
+    margin-top: 0;
+  }
+}
+@media print {
+  .delete-hero-actions,
+  .delete-inline-cta,
+  .delete-privacy-link {
+    display: none !important;
+  }
+}
