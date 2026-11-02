@@ -8,8 +8,7 @@ export function planFailureMessage(error: unknown): string {
   let current: unknown = error;
   for (let i = 0; i < 4; i++) {
     if (!current || typeof current !== "object") break;
-    const msg = "message" in current && typeof current.message === "string"
-      ? current.message : "";
+    const msg = "message" in current && typeof current.message === "string" ? current.message : "";
     if (msg.includes("Confirm a recent privileged action"))
       return "Confirm a privileged action using your password and authenticator code, then save again. The confirmation is valid once.";
     if (msg.includes("global commercial release is not approved"))

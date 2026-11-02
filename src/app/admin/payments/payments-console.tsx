@@ -413,8 +413,9 @@ export function PaymentsConsole({
               release.
               {editingPlan.name === "kitchen_pro" && (
                 <>
-                  {" "}Kitchen Pro can be reactivated only after the one-time global commercial
-                  approval. Confirm a privileged action before saving.
+                  {" "}
+                  Kitchen Pro can be reactivated only after the one-time global commercial approval.
+                  Confirm a privileged action before saving.
                 </>
               )}
             </p>

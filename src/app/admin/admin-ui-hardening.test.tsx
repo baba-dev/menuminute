@@ -82,10 +82,17 @@ describe("admin appearance and privileged workflows", () => {
     const noop = vi.fn(async () => ({ ok: true as const }));
     render(
       <PaymentsConsole
-        plans={[{
-          id: "plan_kitchen_pro", name: "kitchen_pro", displayName: "Kitchen Pro",
-          monthlyPricePaise: 49900, features: null, isActive: false, sortOrder: 3,
-        }]}
+        plans={[
+          {
+            id: "plan_kitchen_pro",
+            name: "kitchen_pro",
+            displayName: "Kitchen Pro",
+            monthlyPricePaise: 49900,
+            features: null,
+            isActive: false,
+            sortOrder: 3,
+          },
+        ]}
         subscriptions={[]}
         grants={[]}
         grantsTotal={0}

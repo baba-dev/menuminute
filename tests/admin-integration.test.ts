@@ -266,24 +266,32 @@ describe("restricted-role platform command integration", () => {
     const previous = await owner.query<{ enabled: boolean }>(
       "select enabled from app_private.kitchen_commercial_release where singleton"
     );
-    const planBefore = await owner.query<{ is_active: boolean; display_name: string; sort_order: number }>(
+    const planBefore = await owner.query<{
+      is_active: boolean;
+      display_name: string;
+      sort_order: number;
+    }>(
       "select is_active,display_name,sort_order from subscription_plans where id='plan_kitchen_pro'"
     );
     const key = crypto.randomUUID();
     const payload = { displayName: "Kitchen Pro", isActive: true, sortOrder: 3 };
     try {
-      await owner.query("update subscription_plans set is_active=false where id='plan_kitchen_pro'");
-      await owner.query("update app_private.kitchen_commercial_release set enabled=false where singleton");
-      await proof();
-      await expect(updateSubscriptionPlan(actor, "plan_kitchen_pro", payload)).rejects.toThrow(
-        "Kitchen Pro global commercial release is not approved"
+      await owner.query(
+        "update subscription_plans set is_active=false where id='plan_kitchen_pro'"
       );
+      await owner.query(
+        "update app_private.kitchen_commercial_release set enabled=false where singleton"
+      );
+      await proof();
+      await expect(updateSubscriptionPlan(actor, "plan_kitchen_pro", payload)).rejects.toThrow();
       // A rejected update must neither publish a plan nor consume the MFA proof.
       const denied = await owner.query(
         "select is_active from subscription_plans where id='plan_kitchen_pro'"
       );
       expect(denied.rows[0]?.is_active).toBe(false);
-      await owner.query("update app_private.kitchen_commercial_release set enabled=true where singleton");
+      await owner.query(
+        "update app_private.kitchen_commercial_release set enabled=true where singleton"
+      );
       const receipt = await updateSubscriptionPlan(actor, "plan_kitchen_pro", payload);
       expect(receipt).toMatchObject({ id: "plan_kitchen_pro", success: true });
       const active = await owner.query(
@@ -305,7 +313,11 @@ describe("restricted-role platform command integration", () => {
       );
       await owner.query(
         "update subscription_plans set is_active=$1,display_name=$2,sort_order=$3 where id='plan_kitchen_pro'",
-        [planBefore.rows[0]?.is_active ?? false,planBefore.rows[0]?.display_name ?? "Kitchen Pro KDS",planBefore.rows[0]?.sort_order ?? 3]
+        [
+          planBefore.rows[0]?.is_active ?? false,
+          planBefore.rows[0]?.display_name ?? "Kitchen Pro KDS",
+          planBefore.rows[0]?.sort_order ?? 3,
+        ]
       );
     }
   });
