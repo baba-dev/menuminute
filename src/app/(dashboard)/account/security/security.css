@@ -1,0 +1,8 @@
+/* Account Security 2.0: reuse the Hospitality House shell and tokens. */
+.mm-account-security .oh-hero { min-height: clamp(320px, 25vw, 415px); }
+.mm-account-security .oh-hero-copy { width: min(710px, 66%); }
+.mm-account-security .oh-panel-content { display: grid; gap: 16px; }
+.mm-account-security .mm-device-panel { border-radius: 14px; border-color: var(--oh-line); }
+@media (max-width: 680px) {
+  .mm-account-security .oh-hero-copy { width: 100%; }
+}
