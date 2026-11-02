@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  Phone,
   Search,
   UserPlus,
   UsersRound,
@@ -89,7 +88,6 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
   useEffect(() => {
     if (!selected || selected === "new") return;
     const abort = new AbortController();
-    setLoading(true);
     fetch(endpoint + "?view=detail&id=" + encodeURIComponent(selected), {
       cache: "no-store",
       signal: abort.signal,
@@ -116,7 +114,13 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
   }, [selected, endpoint]);
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("guest");
-    if (id && /^[A-Za-z0-9_-]{1,128}$/.test(id)) setSelected(id);
+    if (id && /^[A-Za-z0-9_-]{1,128}$/.test(id)) {
+      const timer = window.setTimeout(() => {
+        setLoading(true);
+        setSelected(id);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
   }, []);
   async function save() {
     setSaving(true);
@@ -213,6 +217,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
               className="guests-add"
               onClick={() => {
                 setSelected("new");
+                setLoading(false);
                 setDetail(null);
                 setName("");
                 setNotes("");
@@ -282,6 +287,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
                         onClick={() => {
                           setError("");
                           setDetail(null);
+                          setLoading(true);
                           setSelected(guest.id);
                         }}
                       >

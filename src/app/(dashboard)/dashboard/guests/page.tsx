@@ -19,19 +19,13 @@ export default async function GuestsPage() {
   const outlet = await getDefaultOrActiveRestaurant(session.user.id, session.activeOutletId);
   if (!outlet) redirect("/onboarding");
   const actor = { userId: session.user.id, sessionId: session.session.id };
+  let initial: Awaited<ReturnType<typeof listGuests>> | null = null;
   try {
-    const initial = await listGuests(actor, outlet.organizationId, outlet.id, "", 0);
-    return (
-      <GuestsWorkspace
-        key={outlet.id}
-        organizationId={outlet.organizationId}
-        outletId={outlet.id}
-        outletName={outlet.name}
-        initial={initial}
-      />
-    );
+    initial = await listGuests(actor, outlet.organizationId, outlet.id, "", 0);
   } catch (error) {
     if (!(error instanceof ForbiddenError)) throw error;
+  }
+  if (!initial) {
     return (
       <main className="guests-shell">
         <span className="guests-eyebrow">GUEST RELATIONSHIPS</span>
@@ -48,4 +42,13 @@ export default async function GuestsPage() {
       </main>
     );
   }
+  return (
+    <GuestsWorkspace
+      key={outlet.id}
+      organizationId={outlet.organizationId}
+      outletId={outlet.id}
+      outletName={outlet.name}
+      initial={initial}
+    />
+  );
 }
