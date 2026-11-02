@@ -30,6 +30,7 @@ describe("POS A/C strict financial contracts", () => {
     });
     expect(parsed.selection.lines[0]?.dishId).toBe("plate");
     expect(parsed.customerName).toBe("");
+    expect(parsed.customerPhone).toBe("");
     expect(parsed.markAsPaid).toBe(false);
     expect(parsed.paymentMethod).toBe(null);
     expect("taxMinor" in parsed).toBe(false);
