@@ -1,6 +1,6 @@
 "use client";
 
-import { currencyFor, localeOptions } from "@/modules/onboarding/locales";
+import { localeOptions, suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
 import { OutletTimezonePicker } from "./timezone-picker";
 import type { WizardDraft } from "./wizard-types";
 
@@ -47,7 +47,8 @@ export function QuickMenuRegion({
           onChange={(event) => {
             const country = event.target.value;
             onChange("country", country);
-            if (currencyFor[country]) onChange("currency", currencyFor[country]);
+            // Require explicit currency selection for countries without a suggestion.
+            onChange("currency", suggestedCurrencyForCountry(country));
             if (suggestions[country]) onTimezoneSuggestion(suggestions[country]);
           }}
         >
@@ -68,6 +69,9 @@ export function QuickMenuRegion({
           value={draft.currency}
           onChange={(event) => onChange("currency", event.target.value)}
         >
+          <option value="" disabled>
+            Select a pricing currency
+          </option>
           {Intl.supportedValuesOf("currency").map((code) => (
             <option key={code} value={code}>
               {code}
