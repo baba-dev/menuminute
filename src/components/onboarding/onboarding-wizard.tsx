@@ -146,7 +146,6 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
   const [inaccessible, setInaccessible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [persisted, setPersisted] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const queue = useRef<Promise<unknown>>(Promise.resolve());
