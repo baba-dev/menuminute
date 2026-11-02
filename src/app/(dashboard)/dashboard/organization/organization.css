@@ -1032,7 +1032,6 @@
   }
 }
 
-
 /* Personal-account deletion request: understated until deliberately confirmed. */
 .oh-account-deletion {
   padding: clamp(16px, 2.4vw, 25px);
