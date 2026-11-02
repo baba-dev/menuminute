@@ -4,7 +4,13 @@ import type { PublicOutletProfile } from "./service";
 export function publicOutletDetails(profile: PublicOutletProfile | null | undefined) {
   const text = (value: string | null | undefined) => value?.trim() || null;
   const city = text(profile?.city);
-  const address = [profile?.addressLine1, profile?.addressLine2, city, profile?.state, profile?.postalCode]
+  const address = [
+    profile?.addressLine1,
+    profile?.addressLine2,
+    city,
+    profile?.state,
+    profile?.postalCode,
+  ]
     .map(text)
     .filter((value): value is string => Boolean(value))
     .join(", ");
@@ -31,8 +37,7 @@ export function publicOutletDetails(profile: PublicOutletProfile | null | undefi
       ? "tel:" + (phone.startsWith("+") ? "+" : "") + digits
       : null;
   const email = text(profile?.email);
-  const emailHref =
-    email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "mailto:" + email : null;
+  const emailHref = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "mailto:" + email : null;
   let websiteHref: string | null = null;
   try {
     if (profile?.website) {

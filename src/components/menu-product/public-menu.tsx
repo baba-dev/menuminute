@@ -91,7 +91,9 @@ export function PublicMenu({
     const cover = coverRef.current;
     if (!cover || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
-      ([entry]) => setShowStickyCategories(!entry.isIntersecting),
+      ([entry]) => {
+        if (entry) setShowStickyCategories(!entry.isIntersecting);
+      },
       { threshold: 0 }
     );
     observer.observe(cover);
@@ -555,16 +557,26 @@ export function PublicMenu({
         </div>
       </header>
       <div className="dining-shell" lang={data.locale ?? undefined}>
-        {(outletDetails.address || outletDetails.phoneHref || outletDetails.emailHref || outletDetails.websiteHref || outletDetails.directionsHref) && (
+        {(outletDetails.address ||
+          outletDetails.phoneHref ||
+          outletDetails.emailHref ||
+          outletDetails.websiteHref ||
+          outletDetails.directionsHref) && (
           <section className="dining-visit" aria-label="Restaurant contact and location">
             <div className="dining-visit-copy">
               <span className="dining-kicker">VISIT & CONNECT</span>
               {outletDetails.address && (
-                <p><MapPin size={18} aria-hidden="true" /> <span>{outletDetails.address}</span></p>
+                <p>
+                  <MapPin size={18} aria-hidden="true" /> <span>{outletDetails.address}</span>
+                </p>
               )}
             </div>
             <div className="dining-visit-actions">
-              {outletDetails.phoneHref && <a href={outletDetails.phoneHref}><Phone size={16} aria-hidden="true" /> Call</a>}
+              {outletDetails.phoneHref && (
+                <a href={outletDetails.phoneHref}>
+                  <Phone size={16} aria-hidden="true" /> Call
+                </a>
+              )}
               {outletDetails.directionsHref && (
                 <a href={outletDetails.directionsHref} target="_blank" rel="noopener noreferrer">
                   <Navigation size={16} aria-hidden="true" /> Directions
@@ -575,7 +587,11 @@ export function PublicMenu({
                   <Globe size={16} aria-hidden="true" /> Website
                 </a>
               )}
-              {outletDetails.emailHref && <a href={outletDetails.emailHref}><Mail size={16} aria-hidden="true" /> Email</a>}
+              {outletDetails.emailHref && (
+                <a href={outletDetails.emailHref}>
+                  <Mail size={16} aria-hidden="true" /> Email
+                </a>
+              )}
             </div>
           </section>
         )}

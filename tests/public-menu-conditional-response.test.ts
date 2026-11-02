@@ -32,6 +32,15 @@ describe("guest-menu conditional responses", () => {
       publicMenuEtag({ ...sample, outlet: { ...sample.outlet, orderingEnabled: true } })
     ).not.toBe(etag);
     expect(publicMenuEtag({ ...sample, conciergeEnabled: true })).not.toBe(etag);
+    expect(
+      publicMenuEtag({
+        ...sample,
+        outlet: {
+          ...sample.outlet,
+          profile: { description: "Updated" } as NonNullable<PublicProduct["outlet"]["profile"]>,
+        },
+      })
+    ).not.toBe(etag);
   });
   it("accepts matching weak If-None-Match values and rejects unrelated values", () => {
     const etag = publicMenuEtag(sample);
