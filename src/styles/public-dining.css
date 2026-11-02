@@ -158,6 +158,47 @@
   margin: auto;
   padding: clamp(1.2rem, 4vw, 3.2rem) var(--dining-gutter);
 }
+/* Information bar uses the same shell edges as the menu and hero. */
+.dining-visit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 0 1.5rem;
+  margin-bottom: 1.35rem;
+  border-bottom: 1px solid var(--dc-line);
+}
+.dining-visit-copy { min-width: 0; flex: 1 1 240px; }
+.dining-visit-copy p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  max-width: 650px;
+  margin-top: 0.4rem;
+  font-size: 0.94rem;
+  color: var(--dc-muted);
+}
+.dining-visit-copy p svg { flex: 0 0 auto; margin-top: 2px; }
+.dining-visit-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.dining-visit-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  color: var(--dc-ink);
+  border: 1px solid var(--dc-line);
+  background: var(--dc-surface);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.dining-visit-actions a:hover { border-color: var(--dc-ember); }
+.dining-about { padding: 2rem 0; border-top: 1px solid var(--dc-line); }
+.dining-about h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); margin: 0.45rem 0 0.5rem; }
+.dining-about p { max-width: 72ch; color: var(--dc-muted); white-space: pre-line; }
 .dining-notice {
   padding: 1rem 1.25rem;
   background: var(--dc-soft);

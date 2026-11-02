@@ -17,8 +17,14 @@ import {
   Languages,
   Flame,
   ShieldAlert,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Navigation,
 } from "lucide-react";
 import { projectMenu } from "@/modules/menu-product/projector";
+import { publicOutletDetails } from "@/modules/menu-product/public-outlet-profile";
 import {
   coverFor,
   categoryImage,
@@ -334,6 +340,9 @@ export function PublicMenu({
         key: menu.id + ":" + category.id,
       }))
   );
+  const outletDetails = publicOutletDetails(data.outlet.profile);
+  const profileDescription = data.outlet.profile?.description?.trim();
+  const heroDescription = docs[0]?.view.presentation?.headline || profileDescription || null;
   const featured = docs.flatMap((menu) => featuredForMenu(menu.id, menu.view));
   const ordering = Boolean(
     data.outlet.orderingEnabled && !preview && token && !status.includes("no longer")
@@ -515,11 +524,7 @@ export function PublicMenu({
         <div className="dining-cover-content">
           <span className="dining-kicker">WELCOME TO OUR KITCHEN</span>
           <h1>{data.outlet.name}</h1>
-          <p>
-            {docs[0]?.view.presentation?.headline ||
-              data.outlet.profile?.description ||
-              "Made with care. Served with joy. Find something delicious."}
-          </p>
+          <p>{heroDescription || "Made with care. Served with joy. Find something delicious."}</p>
           {categoryLinks.length > 0 && (
             <nav className="dining-hero-categories no-print" aria-label="Explore menu categories">
               {categoryLinks.map((category) => (
@@ -550,6 +555,30 @@ export function PublicMenu({
         </div>
       </header>
       <div className="dining-shell" lang={data.locale ?? undefined}>
+        {(outletDetails.address || outletDetails.phoneHref || outletDetails.emailHref || outletDetails.websiteHref || outletDetails.directionsHref) && (
+          <section className="dining-visit" aria-label="Restaurant contact and location">
+            <div className="dining-visit-copy">
+              <span className="dining-kicker">VISIT & CONNECT</span>
+              {outletDetails.address && (
+                <p><MapPin size={18} aria-hidden="true" /> <span>{outletDetails.address}</span></p>
+              )}
+            </div>
+            <div className="dining-visit-actions">
+              {outletDetails.phoneHref && <a href={outletDetails.phoneHref}><Phone size={16} aria-hidden="true" /> Call</a>}
+              {outletDetails.directionsHref && (
+                <a href={outletDetails.directionsHref} target="_blank" rel="noopener noreferrer">
+                  <Navigation size={16} aria-hidden="true" /> Directions
+                </a>
+              )}
+              {outletDetails.websiteHref && (
+                <a href={outletDetails.websiteHref} target="_blank" rel="noopener noreferrer">
+                  <Globe size={16} aria-hidden="true" /> Website
+                </a>
+              )}
+              {outletDetails.emailHref && <a href={outletDetails.emailHref}><Mail size={16} aria-hidden="true" /> Email</a>}
+            </div>
+          </section>
+        )}
         {status && (
           <p role="status" className="dining-notice">
             {status}
@@ -889,6 +918,13 @@ export function PublicMenu({
             </div>
           )}
         </main>
+        {profileDescription && profileDescription !== heroDescription && (
+          <section className="dining-about" aria-label={"About " + data.outlet.name}>
+            <span className="dining-kicker">OUR STORY</span>
+            <h2>About {data.outlet.name}</h2>
+            <p>{profileDescription}</p>
+          </section>
+        )}
         <footer className="dining-footer">
           <small>
             Dietary information is supplied by the restaurant. Ask staff about allergens.
