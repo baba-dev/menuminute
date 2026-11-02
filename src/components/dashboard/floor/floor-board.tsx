@@ -24,6 +24,7 @@ import type {
   CreateReservationInput,
   FloorChair,
   FloorOverview,
+  FloorSignalSettings,
   FloorTableOverview,
   ReservationItem,
 } from "@/modules/hospitality/floor-contracts";
@@ -116,15 +117,28 @@ export function FloorBoard({
 
   const signalsOn = overview.signalSettings?.enabled === true;
   const [signalsBusy, setSignalsBusy] = useState(false);
-  async function setSignals(enabled: boolean) {
+  async function setSignals(change: Partial<FloorSignalSettings>) {
     setSignalsBusy(true);
     try {
-      await mutate(() => floorRequest(outlet.id, "/signals", "PUT", { enabled }));
+      await mutate(() => floorRequest(outlet.id, "/signals", "PUT", change));
       setOverview(await fetchOverview(outlet.id));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not change live table signals.");
     } finally {
       setSignalsBusy(false);
+    }
+  }
+
+  const [waterBusy, setWaterBusy] = useState(false);
+  async function waterAction(requestId: string, action: "acknowledge" | "resolve") {
+    setWaterBusy(true);
+    try {
+      await mutate(() => floorRequest(outlet.id, "/water", "POST", { requestId, action }));
+      setOverview(await fetchOverview(outlet.id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the water request.");
+    } finally {
+      setWaterBusy(false);
     }
   }
 
@@ -449,13 +463,35 @@ export function FloorBoard({
                 handoff, delivered, bill and payment. Skip it and the floor stays as it is.
               </p>
             </div>
+            {signalsOn && overview.signalSettings && (
+              <fieldset className={styles.signalSources} disabled={signalsBusy}>
+                <legend>Show on the floor</legend>
+                {(
+                  [
+                    ["qrScanPings", "QR scanned"],
+                    ["guestWaterButton", "Water requests"],
+                    ["showKitchen", "Cooking and handoff"],
+                    ["showPosBill", "Bill and payment"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key}>
+                    <input
+                      type="checkbox"
+                      checked={overview.signalSettings![key]}
+                      onChange={(e) => void setSignals({ [key]: e.target.checked })}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            )}
             <button
               type="button"
               role="switch"
               aria-checked={signalsOn}
               className={styles.switch}
               disabled={signalsBusy}
-              onClick={() => void setSignals(!signalsOn)}
+              onClick={() => void setSignals({ enabled: !signalsOn })}
             >
               <span className={styles.switchKnob} aria-hidden="true" />
               <span>{signalsOn ? "On" : "Off"}</span>
@@ -592,6 +628,8 @@ export function FloorBoard({
                         onArchive={() => openDialog(setArchive, table.id)}
                         onSeatBooking={() => void seatBooking(table)}
                         onCreateQr={() => void createQr(table)}
+                        onWaterAction={canSeat ? waterAction : undefined}
+                        waterBusy={waterBusy}
                         onClearStale={() =>
                           void clear(table).catch((e) => fail(e, "Could not clear the table."))
                         }
@@ -712,6 +750,8 @@ function TableCard({
   onSeatBooking,
   onCreateQr,
   onClearStale,
+  onWaterAction,
+  waterBusy,
 }: {
   table: FloorTableOverview;
   sectionName: string | null;
@@ -729,6 +769,8 @@ function TableCard({
   onSeatBooking: () => void;
   onCreateQr: () => void;
   onClearStale: () => void;
+  onWaterAction?: (requestId: string, action: "acknowledge" | "resolve") => void;
+  waterBusy: boolean;
 }) {
   const free = table.maxOccupancy - table.currentOccupancy;
   const tone = table.state === "full" ? "full" : table.state === "partial" ? "busy" : "muted";
@@ -919,7 +961,14 @@ function TableCard({
               </div>
             )}
           </dl>
-          {table.journey && <JourneyStrip journey={table.journey} tableName={table.name} />}
+          {table.journey && (
+            <JourneyStrip
+              journey={table.journey}
+              tableName={table.name}
+              onWaterAction={onWaterAction}
+              busy={waterBusy}
+            />
+          )}
         </div>
       </div>
     </article>

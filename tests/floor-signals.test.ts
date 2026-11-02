@@ -63,6 +63,24 @@ describe("buildJourney", () => {
     })!;
     expect(state(served, "water")).toBe("done");
     expect(served.needsStaff).toBe(false);
+    expect(served.waterAction).toBeNull();
+  });
+
+  it("offers the next staff step on an open water request", () => {
+    const base = { settings: on, order: null };
+    const requested = buildJourney({
+      ...base,
+      events: [{ kind: "water_requested", occurredAt: T, refId: "req-1" }],
+    })!;
+    expect(requested.waterAction).toEqual({ requestId: "req-1", action: "acknowledge" });
+    const seen = buildJourney({
+      ...base,
+      events: [
+        { kind: "water_requested", occurredAt: T, refId: "req-1" },
+        { kind: "water_acknowledged", occurredAt: "2026-11-02T12:01:00.000Z", refId: "req-1" },
+      ],
+    })!;
+    expect(seen.waterAction).toEqual({ requestId: "req-1", action: "resolve" });
   });
 
   it("flags a guest bill request until the bill is shown or paid", () => {

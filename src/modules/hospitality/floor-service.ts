@@ -182,6 +182,7 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
     const journeyOrders = new Map<
       string,
       {
+        id: string;
         status: string;
         paymentStatus: string;
         createdAt: string;
@@ -194,24 +195,26 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
         table_id: string;
         kind: string;
         occurred_at: string | Date;
+        ref_id: string | null;
       }>(
-        sql`select table_id, kind, occurred_at from table_signal_events
+        sql`select table_id, kind, occurred_at, ref_id from table_signal_events
           where outlet_id=${outletId} and occurred_at > now() - interval '6 hours'
           order by occurred_at desc limit 2000`
       );
       for (const e of events.rows)
         eventsByTable.set(e.table_id, [
           ...(eventsByTable.get(e.table_id) ?? []),
-          { kind: e.kind, occurredAt: iso(e.occurred_at) },
+          { kind: e.kind, occurredAt: iso(e.occurred_at), refId: e.ref_id },
         ]);
       const latestOrders = await tx.execute<{
+        id: string;
         table_id: string;
         status: string;
         payment_status: string;
         created_at: string | Date;
         updated_at: string | Date;
         dishes: number;
-      }>(sql`select distinct on (o.table_id) o.table_id, o.status, o.payment_status,
+      }>(sql`select distinct on (o.table_id) o.id, o.table_id, o.status, o.payment_status,
           o.created_at, o.updated_at,
           (select coalesce(sum(i.quantity),0)::int from order_items i where i.order_id=o.id) as dishes
         from orders o
@@ -220,6 +223,7 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
         order by o.table_id, o.created_at desc, o.id desc`);
       for (const o of latestOrders.rows)
         journeyOrders.set(o.table_id, {
+          id: o.id,
           status: o.status,
           paymentStatus: o.payment_status,
           createdAt: iso(o.created_at),
@@ -854,4 +858,32 @@ export async function updateSignalSettings(
       };
     })
   );
+}
+
+/** Current live-signal switches for an outlet (all off when never configured). */
+export async function getSignalSettings(
+  actor: Actor,
+  outletId: string
+): Promise<FloorSignalSettings> {
+  return withOutletRead(actor, outletId, "orders.read", async (tx) => {
+    const row = (
+      await tx.execute<{
+        enabled: boolean;
+        qr_scan_pings: boolean;
+        guest_water_button: boolean;
+        show_kitchen: boolean;
+        show_pos_bill: boolean;
+      }>(sql`select enabled, qr_scan_pings, guest_water_button, show_kitchen, show_pos_bill
+        from floor_signal_settings where outlet_id=${outletId}`)
+    ).rows[0];
+    return row
+      ? {
+          enabled: row.enabled,
+          qrScanPings: row.qr_scan_pings,
+          guestWaterButton: row.guest_water_button,
+          showKitchen: row.show_kitchen,
+          showPosBill: row.show_pos_bill,
+        }
+      : DEFAULT_SIGNAL_SETTINGS;
+  });
 }

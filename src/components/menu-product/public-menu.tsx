@@ -41,6 +41,7 @@ import dynamic from "next/dynamic";
 import type { CustomizerDish, CartItem } from "./item-customizer";
 import { TableWelcome, RubberStamp } from "@/components/ui/tactile-elements";
 import { playWoodenTap } from "@/lib/sound-effects";
+import { WaterRequest } from "./water-request";
 const ItemCustomizer = dynamic(
   () => import("./item-customizer").then((mod) => mod.ItemCustomizer),
   { ssr: false }
@@ -528,6 +529,7 @@ export function PublicMenu({
         outletName={data.outlet.name}
         servicePeriod={undefined}
       />
+      {token && <WaterRequest token={token} enabled={Boolean(data.point)} />}
       <a className="skip-link" href="#dishes">
         Skip to dishes
       </a>

@@ -99,6 +99,16 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
   and dark (1200 px) and phone light (390 px) as WebP, and rewrites the manifest. Do not capture from a
   production deployment: use a local or staging copy.
 
+## Live table signals sample data
+
+`app_private.seed_demo_signals()` (migration `0096`) is hardcoded to the demo outlet, refuses unless it is `is_demo_data`,
+and is executable only by `menuminute_worker`. The reset (`resetDemoOutlet`) calls it after `reset_demo_outlet`. It switches
+live table signals on for the demo outlet only, clears that outlet's signal ledger, backfills order-lifecycle events from the
+demo orders' own status history, and adds sample QR scans, one waiting and one acknowledged water request (the trigger records
+their signals) and one shown bill. Visitors may acknowledge or resolve a sample water request (`POST /api/floor/water`);
+the live-signal switch (`PUT /api/floor/signals`) stays blocked for the demo actor. The data is sample data, not a claim
+about real guests; no email, payment or AI call is involved.
+
 ## What a reset never touches
 
 POS ledger (immutable), audit trail, AI spend accounting, identity, entitlements, billing, QR codes,

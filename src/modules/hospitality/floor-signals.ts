@@ -18,9 +18,13 @@ export const DEFAULT_SIGNAL_SETTINGS: FloorSignalSettings = {
 export type SignalEventInput = {
   kind: string;
   occurredAt: string;
+  /** The business record the event refers to (e.g. a service request id). */
+  refId?: string | null;
 };
 
 export type JourneyOrderInput = {
+  /** Lets ledger events for this exact order supply per-step times. */
+  id?: string;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -38,6 +42,18 @@ function latest(events: SignalEventInput[], ...kinds: string[]): SignalEventInpu
     if (!best || new Date(e.occurredAt) > new Date(best.occurredAt)) best = e;
   }
   return best;
+}
+
+/** Time of the latest event of a kind for this exact order, else the fallback. */
+function stepTime(
+  events: SignalEventInput[],
+  order: JourneyOrderInput | null,
+  kind: string,
+  fallback: string | null
+): string | null {
+  if (!order?.id) return fallback;
+  const own = events.filter((e) => e.refId === order.id);
+  return latest(own, kind)?.occurredAt ?? fallback;
 }
 
 const dishes = (n: number) => (n > 0 ? `${n} dish${n === 1 ? "" : "es"}` : null);
@@ -66,7 +82,7 @@ export function buildJourney(input: {
   add(
     "order",
     order ? "done" : "idle",
-    order?.createdAt ?? null,
+    order ? stepTime(events, order, "order_placed", order.createdAt) : null,
     order ? dishes(order.dishCount) : null
   );
 
@@ -80,22 +96,25 @@ export function buildJourney(input: {
           ? "done"
           : "idle",
       status === "preparing" || status === "ready" || DELIVERED.has(status)
-        ? (order?.updatedAt ?? null)
+        ? stepTime(events, order, "kitchen_preparing", order?.updatedAt ?? null)
         : null
     );
     add(
       "ready",
       status === "ready" ? "active" : DELIVERED.has(status) ? "done" : "idle",
-      status === "ready" || DELIVERED.has(status) ? (order?.updatedAt ?? null) : null
+      status === "ready" || DELIVERED.has(status)
+        ? stepTime(events, order, "kitchen_ready", order?.updatedAt ?? null)
+        : null
     );
   }
   add(
     "delivered",
     DELIVERED.has(status) ? "done" : "idle",
-    DELIVERED.has(status) ? (order?.updatedAt ?? null) : null
+    DELIVERED.has(status) ? stepTime(events, order, "order_served", order?.updatedAt ?? null) : null
   );
 
   let needsStaff = false;
+  let waterAction: TableJourney["waterAction"] = null;
   if (settings.showPosBill) {
     const requested = latest(events, "bill_requested");
     const presented = latest(events, "bill_presented");
@@ -111,7 +130,11 @@ export function buildJourney(input: {
       waiting ? requested.occurredAt : (presented?.occurredAt ?? null),
       waiting ? "Guest asked" : null
     );
-    add("paid", paid ? "done" : "idle", paid ? (order?.updatedAt ?? null) : null);
+    add(
+      "paid",
+      paid ? "done" : "idle",
+      paid ? stepTime(events, order, "paid", order?.updatedAt ?? null) : null
+    );
   }
 
   if (settings.guestWaterButton) {
@@ -122,6 +145,11 @@ export function buildJourney(input: {
         ? "done"
         : "active";
     if (state === "active") needsStaff = true;
+    if (state === "active" && water?.refId)
+      waterAction = {
+        requestId: water.refId,
+        action: water.kind === "water_requested" ? "acknowledge" : "resolve",
+      };
     add(
       "water",
       state,
@@ -135,5 +163,5 @@ export function buildJourney(input: {
             : null
     );
   }
-  return { steps, needsStaff };
+  return { steps, needsStaff, waterAction };
 }

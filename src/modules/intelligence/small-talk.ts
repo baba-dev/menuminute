@@ -32,6 +32,10 @@ const CAPABILITIES: Array<{ tool: string; line: string }> = [
     line: "publish your menu when you ask me to (you confirm first and see exactly what changes)",
   },
   {
+    tool: "propose.floorSignals",
+    line: "turn the live table signals on your dining floor on or off (you confirm first)",
+  },
+  {
     tool: "propose.supportTicket",
     line: "send a support request to the MenuMinute team (you confirm first)",
   },

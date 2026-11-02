@@ -949,3 +949,28 @@
     transition: none;
   }
 }
+
+.signalSources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13px;
+}
+.signalSources legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.signalSources label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}

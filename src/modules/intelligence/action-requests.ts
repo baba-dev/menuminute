@@ -4,6 +4,8 @@ import { withActor, type Actor, type Permission } from "@/modules/tenancy/servic
 import type { Transaction } from "@/db";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { staffServiceRequestAction } from "@/modules/hospitality/service";
+import { updateSignalSettings } from "@/modules/hospitality/floor-service";
+import { signalSettingsInputSchema } from "@/modules/hospitality/floor-contracts";
 import { transitionOutletOrder } from "@/modules/orders/service";
 import { kitchenWorkCommand } from "@/modules/kitchen/service";
 import { createSupportTicket, createTicketInput } from "@/modules/support/service";
@@ -47,7 +49,8 @@ type Kind =
   | "support.ticket"
   | "menu.price"
   | "menu.description"
-  | "menu.publish";
+  | "menu.publish"
+  | "floor.signals";
 type Definition<T extends z.ZodType> = {
   schema: T;
   /** Any one of these permissions lets the person propose and confirm; the domain re-checks. */
@@ -203,6 +206,25 @@ export const actionKinds: { [K in Kind]: Definition<z.ZodType> } = {
     permissions: () => ["menu.write"],
     execute: (s, raw, id) => executeMenuPublish(s, raw as z.infer<typeof menuPublishParams>, id),
   },
+  "floor.signals": {
+    schema: signalSettingsInputSchema,
+    permissions: () => ["menu.write"],
+    execute: (s, raw) =>
+      staleOnConflict(async () => {
+        const next = await updateSignalSettings(
+          s.actor,
+          s.outletId,
+          raw as z.infer<typeof signalSettingsInputSchema>
+        );
+        return {
+          status: "confirmed",
+          message: next.enabled
+            ? "Live table signals are on. The floor shows each table's guest journey."
+            : "Live table signals are off. The floor looks as it did before.",
+          detail: { enabled: next.enabled },
+        };
+      }),
+  },
 };
 
 export const proposeActionInput = z
@@ -218,6 +240,7 @@ export const proposeActionInput = z
       "menu.price",
       "menu.description",
       "menu.publish",
+      "floor.signals",
     ]),
     params: z.record(z.string(), z.unknown()),
     expected: z.record(z.string(), z.unknown()).default({}),

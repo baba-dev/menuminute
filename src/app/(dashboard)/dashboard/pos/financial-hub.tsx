@@ -85,9 +85,12 @@ export function FinancialHub({
   initialLedger,
   initialShifts,
   initialSaleId = null,
+  initialFocus = null,
 }: {
   mode: Mode;
   initialSaleId?: string | null;
+  /** Which step the register shortcut wants in view: the bill or the payment. */
+  initialFocus?: "bill" | "payment" | null;
   outletId: string;
   organizationId: string;
   workspace: PosWorkspace;
@@ -263,10 +266,13 @@ export function FinancialHub({
   useEffect(() => {
     if (!initialSaleId || selected?.saleId !== initialSaleId) return;
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector(".finance-detail")?.scrollIntoView({ block: "start" });
+      const step = initialFocus
+        ? document.getElementById("finance-" + initialFocus + "-step")
+        : null;
+      (step ?? document.querySelector(".finance-detail"))?.scrollIntoView({ block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [initialSaleId, selected]);
+  }, [initialSaleId, initialFocus, selected]);
 
   async function command(action: string, data: Record<string, unknown>) {
     if (busy) return null;
@@ -823,7 +829,7 @@ export function FinancialHub({
                     </div>
                   </>
                 ) : (
-                  <div className="finance-flow">
+                  <div className="finance-flow" id="finance-bill-step">
                     <p>
                       No bill snapshot is frozen. Tax calculation re-reads the seller profile and
                       every dish classification.
@@ -909,7 +915,7 @@ export function FinancialHub({
                   </div>
                 )}
                 {selected.bill && (
-                  <section className="finance-flow">
+                  <section className="finance-flow" id="finance-payment-step">
                     <h3>Split settlement</h3>
                     <p>
                       Each tender is independently recorded. Cash change is tracked separately;

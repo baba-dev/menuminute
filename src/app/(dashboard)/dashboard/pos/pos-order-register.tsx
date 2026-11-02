@@ -2,7 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ClipboardCopy, Eye, Printer, Repeat2, RotateCcw, Search, X } from "lucide-react";
+import {
+  Banknote,
+  ClipboardCopy,
+  Eye,
+  Printer,
+  Receipt,
+  Repeat2,
+  RotateCcw,
+  Search,
+  X,
+} from "lucide-react";
+import { registerBillingActions } from "@/modules/pos/register-actions";
 import type { PosRegisterPage, PosRegisterRow } from "@/modules/pos/service";
 
 const money = (minor: string, currency: string) => {
@@ -339,6 +350,21 @@ export function PosOrderRegister({
                           <Printer size={17} aria-hidden="true" />
                         </Link>
                       )}
+                      {registerBillingActions(row).map((action) => (
+                        <Link
+                          key={action.kind}
+                          className="pos-register-icon"
+                          aria-label={action.label + " for order #" + row.orderNumber}
+                          title={action.label}
+                          href={action.href}
+                        >
+                          {action.kind === "bill" ? (
+                            <Receipt size={17} aria-hidden="true" />
+                          ) : (
+                            <Banknote size={17} aria-hidden="true" />
+                          )}
+                        </Link>
+                      ))}
                       <button
                         type="button"
                         className="pos-register-icon"
@@ -439,6 +465,16 @@ export function PosOrderRegister({
                   <Printer size={16} aria-hidden="true" /> Reprint bill
                 </Link>
               )}
+              {registerBillingActions(selected).map((action) => (
+                <Link key={action.kind} href={action.href}>
+                  {action.kind === "bill" ? (
+                    <Receipt size={16} aria-hidden="true" />
+                  ) : (
+                    <Banknote size={16} aria-hidden="true" />
+                  )}{" "}
+                  {action.label}
+                </Link>
+              ))}
               <button
                 type="button"
                 onClick={() => {

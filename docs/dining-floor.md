@@ -11,7 +11,7 @@ four KPI tiles (total tables, total chairs, maximum occupancy, sections), sectio
 the next booking and the permanent system ID. It reuses the dashboard shell tokens (`.mm-dashboard-hero`,
 `--paper`, `--ink`, `--muted`, `--ember`, `--decorative`), the `DashboardTooltip` help popover and Radix dialogs.
 
-## Live table signals (optional, slices 1-2 of 6)
+## Live table signals (optional, slices 1-6 of 6)
 
 Status: **implemented in code; not deployed.** Migration `0090_table_signals` (additive, forward-only).
 An owner switch ("Live table signals", needs `menu.write`; `PUT /api/floor/signals`) turns on a guest-journey strip
@@ -22,8 +22,7 @@ paid and water. It is **off by default**; with it off no signal query runs and t
 - Tables: `floor_signal_settings` (per outlet) and `table_signal_events` (append-only, outlet RLS, unique
   `dedupe_key`, small non-personal `meta`). Staff can read the ledger; there are no app-role write grants yet.
 - Today only order status and payment drive indicators (derived from the table's latest order in the last 6 hours).
-  The only ledger producer so far is the QR scan; water request, kitchen and POS bill/payment events arrive in later
-  slices, so water and bill indicators stay idle until then.
+  Ledger producers so far: the QR scan, guest service requests (water, bill request), order status changes and payment. Bill shown is recorded when a POS bill is frozen.
 - `buildJourney` (`src/modules/hospitality/floor-signals.ts`) is the pure view-model; `JourneyStrip` renders inline SVG
   icons with text states (idle / active / done) and honours `prefers-reduced-motion`.
 - **QR scan ping (slice 2, migration `0091_qr_scan_signal`).** The public menu sends one beacon per browser session
@@ -33,9 +32,41 @@ paid and water. It is **off by default**; with it off no signal query runs and t
   ping, and at most once per QR per minute. It also increments `qr_codes.scan_count`, which was never incremented
   before, for any active QR. A scan means a phone opened the QR, not that a guest is seated. The worker prunes
   signals older than 48 hours (`app_private.prune_table_signals`, with the six-hourly kitchen maintenance).
+- **Guest water button (slice 3, migration `0092_guest_table_water`).** On a menu opened from a QR tied to a table, and
+  only while the outlet enabled signals and the water source, the menu shows "Request water"
+  (`GET /api/public-orders/table-service`, `POST /api/public-orders/water`; same guard as the scan beacon). One open request
+  per table, a new one allowed 60 seconds after the last. The request reuses `guest_service_requests`
+  (`order_id` is now nullable for water refills, `qr_id` added), so it appears in the existing service-requests queue
+  and staff use the existing acknowledge/resolve action; the floor card also offers "Acknowledge water request" and
+  "Mark water served" (`POST /api/floor/water`, authorization in `staff_service_request_action`). A trigger writes
+  `water_requested`/`water_acknowledged`/`water_served` (and `bill_requested` for existing order-bound bill requests)
+  to the ledger in the same transaction, only while the outlet opted in. The button never promises a time.
+- **Order, kitchen and payment signals (slice 4, migration `0093_order_kitchen_signals`).** Every order status change
+  already writes `order_status_events` (guest, staff, kitchen, expo and POS paths), so one trigger there records
+  `order_placed`, `order_accepted`, `kitchen_preparing`, `kitchen_ready` (handoff) and `order_served` with the real status
+  time, and a second trigger records `paid` when `orders.payment_status` becomes `paid`. They write only for orders at a
+  table, only while the outlet opted in (kitchen kinds need the kitchen source, `paid` needs the POS source), idempotently
+  (`ord:<order>:<kind>`). No order, kitchen or POS code or behaviour changes. The journey takes each step's time from the
+  event for the table's latest order and falls back to the order's last update.
+- **POS bill and payment (slice 5, migration `0094_pos_bill_signal`).** "Place order and send" stays the only order
+  button. Recent Orders & Sales gains **Show bill** and **Record payment** on unpaid, live orders
+  (`registerBillingActions`, `src/modules/pos/register-actions.ts`). Both open The Ledger on the exact sale
+  (`/dashboard/pos/ledger?sale=<id>&focus=bill|payment`, scrolling to the bill or settlement step), so the existing
+  finance commands still decide everything: Show bill is the immutable bill freeze, Record payment is the manual
+  tender attestation, which needs an open shift and a frozen bill, and the existing permissions and entitlements
+  apply. An order with no POS sale yet opens the Till (`?attachOrder=`) to be attached first. Freezing a bill inserts
+  `pos_bills`; a trigger there records `bill_presented` for the sale's table order (opted-in outlets with the POS
+  source only, idempotent, at the bill's own time). Paying records `paid` through the slice 4 trigger. The old
+  `refundSale` link still works.
 - The floor card no longer shows the permanent System ID. It is still in the API and the table edit dialog.
-- Remaining slices: guest water button (table QR only), order/kitchen producers, POS "Show bill" and
-  "Record payment" register actions, demo sample events and the Ember (assistant-action) toggle.
+- **Ember, demo and source switches (slice 6, migrations `0095` and `0096`).** The floor page switch gains four source
+  checkboxes (QR scanned, water requests, cooking and handoff, bill and payment). Ember can turn the signals on or off
+  through the existing confirm-first action flow (`propose.floorSignals`, kind `floor.signals`; see
+  [intelligence-action-requests.md](intelligence-action-requests.md)). The public demo outlet gets sample signals on every
+  reset (see [demo.md](demo.md)); `table_signal_events` and `floor_signal_settings` remain in the reset test's preserved
+  list because the dedicated seed function owns the demo outlet's rows.
+- Not built: a specific waiter assignment ("order assigned" means the kitchen accepted the order), a guest "call server"
+  indicator, and indicators on the Overview miniature. Browser/e2e checks of the new floor features are still to be added.
 
 ## Domain rules
 

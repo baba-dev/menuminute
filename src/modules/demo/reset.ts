@@ -14,5 +14,7 @@ export async function resetDemoOutlet(pool: Pick<Pool, "query">): Promise<Record
     "select app_private.reset_demo_outlet($1::jsonb) as summary",
     [JSON.stringify(buildDemoBaseline())]
   );
+  // Sample live table signals for the demo outlet only (hardcoded in the function; worker role).
+  await pool.query("select app_private.seed_demo_signals()");
   return rows[0]!.summary;
 }

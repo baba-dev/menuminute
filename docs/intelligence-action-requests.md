@@ -83,3 +83,8 @@ in the receipt.
 - This is **human-confirmed publishing**, not autonomous AI publishing: every publish is one explicit
   confirmation of an exact, previewed change by the same signed-in person with `menu.write`.
 - Migration `0067` only widens the request-kind check to add `menu.publish`.
+- `propose.floorSignals` prepares turning the optional live table signals on or off, or one of their sources (QR scan,
+  guest water button, kitchen, bill and payment), on the dining floor (see [dining-floor.md](dining-floor.md)). It needs
+  `menu.write`, proposes only what would change (a no-op is refused), and confirming runs the same
+  `updateSignalSettings` command as the floor page switch. Migration `0095` only widens the request-kind check to add
+  `floor.signals`.
