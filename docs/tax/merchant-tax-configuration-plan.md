@@ -99,28 +99,28 @@ For the initial one-rate implementation:
 
 Illustrative, **non-jurisdictional** examples:
 
-| Currency | Mode | Menu price | Tax rate | Base | Tax | Customer total |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| INR | Exclusive | 200.00 | 5.00% | 200.00 | 10.00 | 210.00 |
-| INR | Inclusive | 210.00 | 5.00% | 200.00 | 10.00 | 210.00 |
-| JPY | Exclusive | 100 | 8.00% | 100 | 8 | 108 |
-| OMR | Exclusive | 1.250 | 5.00% | 1.250 | 0.063 | 1.313 |
+| Currency | Mode      | Menu price | Tax rate |   Base |   Tax | Customer total |
+| -------- | --------- | ---------: | -------: | -----: | ----: | -------------: |
+| INR      | Exclusive |     200.00 |    5.00% | 200.00 | 10.00 |         210.00 |
+| INR      | Inclusive |     210.00 |    5.00% | 200.00 | 10.00 |         210.00 |
+| JPY      | Exclusive |        100 |    8.00% |    100 |     8 |            108 |
+| OMR      | Exclusive |      1.250 |    5.00% |  1.250 | 0.063 |          1.313 |
 
 These examples prove arithmetic, not that any quoted rate is appropriate for
 India, Japan, Oman or another country.
 
 ## Where the same snapshot appears
 
-| Surface | Required behavior |
-| --- | --- |
-| Public menu and cart | Show inclusive/exclusive tax label, estimated tax and **final total before confirm**; refresh quote after item/availability or tax change |
-| Guest checkout/confirmation | Capture and replay exact tax-policy version and final total; re-confirm changed prices |
-| Merchant Orders / Kitchen Pro | Display tax breakdown read-only; do not recalculate while preparing or completing |
-| POS register and till | Use same quotation; show subtotal, tax, total, tender amount, cash change and refunds; preserve original order linkage |
-| 58/80mm receipt, A4 receipt, email | Print the snapshotted tax label/rate/base/amount and final total; visibly label as an **ordinary non-fiscal receipt** |
-| Refund, void, repeat order | Refund the historic amount and allocate tax reversal; **repeat** makes a fresh quote with the current policy |
-| Reports/export | Show net sales, collected tax, refunds, gross sales by **currency** and policy/rate; never sum INR and USD; no false claim that collected tax equals statutory tax owed |
-| Audit/history | Who changed settings, prior values, effective time, affected orders, no retrospective rewriting |
+| Surface                            | Required behavior                                                                                                                                                       |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public menu and cart               | Show inclusive/exclusive tax label, estimated tax and **final total before confirm**; refresh quote after item/availability or tax change                               |
+| Guest checkout/confirmation        | Capture and replay exact tax-policy version and final total; re-confirm changed prices                                                                                  |
+| Merchant Orders / Kitchen Pro      | Display tax breakdown read-only; do not recalculate while preparing or completing                                                                                       |
+| POS register and till              | Use same quotation; show subtotal, tax, total, tender amount, cash change and refunds; preserve original order linkage                                                  |
+| 58/80mm receipt, A4 receipt, email | Print the snapshotted tax label/rate/base/amount and final total; visibly label as an **ordinary non-fiscal receipt**                                                   |
+| Refund, void, repeat order         | Refund the historic amount and allocate tax reversal; **repeat** makes a fresh quote with the current policy                                                            |
+| Reports/export                     | Show net sales, collected tax, refunds, gross sales by **currency** and policy/rate; never sum INR and USD; no false claim that collected tax equals statutory tax owed |
+| Audit/history                      | Who changed settings, prior values, effective time, affected orders, no retrospective rewriting                                                                         |
 
 ## Separately reviewable implementation phases
 
