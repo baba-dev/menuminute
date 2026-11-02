@@ -6,12 +6,12 @@ at the frozen reference of **INR 95 = USD 1**. They are rounded once to a
 cent and **do not automatically float with FX changes**. Any future repricing
 requires versioned plan IDs, notice and renewal/grandfathering decisions.
 
-| Plan | INR monthly | USD monthly | USD minor units |
-| --- | ---: | ---: | ---: |
-| Free | ₹0 | $0 | 0 |
-| Ordering | ₹119 | $1.88 | 188 |
-| Kitchen Pro | ₹499 | $7.88 | 788 |
-| Dedicated (by contract) | ₹30,000 | $473.68 | 47368 |
+| Plan                    | INR monthly | USD monthly | USD minor units |
+| ----------------------- | ----------: | ----------: | --------------: |
+| Free                    |          ₹0 |          $0 |               0 |
+| Ordering                |        ₹119 |       $1.88 |             188 |
+| Kitchen Pro             |        ₹499 |       $7.88 |             788 |
+| Dedicated (by contract) |     ₹30,000 |     $473.68 |           47368 |
 
 USD amounts are **listed but not yet payable**. The current Razorpay
 implementation is INR-only at the checkout route, webhook verification and
@@ -70,7 +70,7 @@ This price-book-only change adds **no database migration**, no secrets, no
 new provider calls and no payment or financial API changes. Rolling back the
 UI/catalog commit does not change existing subscriptions or captured charges.
 The later payment-support project requires append-only schema changes,
-staged server migrations and a replay-safe rollback that disables *new* USD
+staged server migrations and a replay-safe rollback that disables _new_ USD
 checkouts but continues to honor verified existing USD subscriptions.
 Review [Razorpay billing operations](razorpay-billing.md),
 [pricing and quotas](../plans-and-limits.md),
