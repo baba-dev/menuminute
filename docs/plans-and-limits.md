@@ -192,18 +192,18 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                                                                                                | Depends on                |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
-| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                                                                                                                                            | This sign-off             |
-| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI                                                                                                                        | 1                         |
-| 2b  | Free order intake: 100 accepted orders per month. Needs a reviewed SQL migration to the guest-order functions, a monthly counter and a basic merchant inbox; changes what the public menu offers, so it needs its own release review | 2                         |
-| 2c  | Usage meters and locked-feature UI (the only UI work; requires explicit sign-off)                                                                                                                                                    | 2                         |
-| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                                                                                                                                                                      | 2                         |
-| 4   | AI credit accounting per org per month                                                                                                                                                                                               | 1, AI spend accounting    |
-| 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                                                                                              | Billing gates             |
-| 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                                                                                                       | Kitchen Pro release gates |
-| 7   | Custom domain verification, routing, TLS                                                                                                                                                                                             | Edge decision             |
-| 8   | Dedicated A (brand), then B by contract                                                                                                                                                                                              | 7, pricing                |
+| #   | Slice                                                                                                                  | Depends on                |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                              | This sign-off             |
+| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI          | 1                         |
+| 2b  | Free order intake, 100 guest orders a month; done in migration 0077 behind an owner-only database switch (default OFF) | 2                         |
+| 2c  | Usage meters and locked-feature UI (the only UI work; requires explicit sign-off)                                      | 2                         |
+| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                                                        | 2                         |
+| 4   | AI credit accounting per org per month                                                                                 | 1, AI spend accounting    |
+| 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                | Billing gates             |
+| 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                         | Kitchen Pro release gates |
+| 7   | Custom domain verification, routing, TLS                                                                               | Edge decision             |
+| 8   | Dedicated A (brand), then B by contract                                                                                | 7, pricing                |
 
 Each slice is one PR with an explicit migration and rollback note, tested against real PostgreSQL.
 
@@ -252,3 +252,53 @@ How to act on the result:
   per-customer lists into issues.
 
 The audit has not yet been run against production; this PR cannot access production data.
+
+## Slice 2b as built: Free order intake
+
+Migration `0077_free_order_intake.sql` (forward-only). It changes nothing until the switch is turned on.
+
+- **Switch:** `app_private.plan_settings` (one row, owner-only; no application role can read or write
+  it): `free_intake_enabled` (default `false`) and `free_intake_monthly_cap` (default `100`, matching
+  `PLAN_LIMITS.free.ordersPerMonth`; a test asserts they agree).
+- **What the switch does:** an outlet **without** a paid `ordering.new` grant may accept guest orders
+  while it is under the cap. Paid outlets are never limited. Changes are limited to
+  `submit_guest_order` (copied from migration 0020 with only the entitlement check replaced and one
+  variable added), `public_ordering_enabled`, and one new dashboard capability function. Seven new
+  tests run against real PostgreSQL, and the full suite passes (206 files).
+- **What counts:** guest-menu orders (`intake_source='guest_menu'`) in the current calendar month in
+  the **outlet's timezone**, excluding rejected, cancelled and expired. Staff and POS sales never
+  consume the cap, and a rejected order frees capacity.
+- **Concurrency:** a per-outlet advisory lock serializes the count and insert, so simultaneous
+  guests cannot overshoot (tested: 6 parallel submissions against a cap of 2 admit exactly 2).
+  A retried submission of an already-accepted order stays idempotent at the cap.
+- **Diner experience:** at the cap, checkout is rejected with "This restaurant is not taking new
+  online orders right now." The QR menu keeps working. The public page reads `orderingEnabled` from
+  the 180-second menu cache (the same lag a revoked paid grant has today), so the cart can stay
+  visible for up to three minutes after the cap is reached; the server still rejects immediately.
+- **Merchant experience:** while the switch is on, members of a Free organization see the existing
+  Orders workspace (accept, reject, advance) because the dashboard `ordering` capability follows
+  `orders_workspace_allowed`. It stays available at the cap so existing orders can be finished.
+  Today that workspace is the whole Orders board; splitting a basic inbox from the paid counter
+  board is slice 2c (UI). Kitchen Pro and its gates are unaffected.
+- **Not changed:** billing screens still show "no active grant" for Free (they read the real paid
+  grant), and the public pricing page copy still says ordering is paid. Update that copy in the
+  same release that enables the switch.
+
+### Enabling and rolling back (operator, migration-owner connection only)
+
+Do this only after the cap audit above, the Phase 4 and ordering release gates for your deployment,
+and a fresh verified backup. Enabling exposes order intake on every published Free outlet.
+
+```sql
+-- enable
+UPDATE app_private.plan_settings SET free_intake_enabled = true;
+-- optional: change the cap
+UPDATE app_private.plan_settings SET free_intake_monthly_cap = 100;
+-- roll back (instant, no data change; paid ordering is untouched)
+UPDATE app_private.plan_settings SET free_intake_enabled = false;
+```
+
+Rolling back the switch does not delete orders, and the order APIs do not check it after
+submission. But the Orders link disappears from the dashboard of Free organizations again, so
+finish or reject their pending and accepted orders **before** turning the switch off. The migration
+itself is not reversed; use a new forward migration if it ever needs removing.
