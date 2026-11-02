@@ -71,3 +71,9 @@ Official app-store sources:
 - Check dark/light theme, reduced motion, zoom, no JS reading fallback, and print.
 - Check canonical/indexable production metadata for `/privacy` and `/delete-account`; never assert that an unimplemented vendor/deletion job or certification is deployed.
 - Maintain public footer exactly once; no marketing footer in merchant dashboard or diner menu.
+
+## Account-deletion public page (2 November 2026)
+
+`/delete-account` now follows the shared Privacy Ledger hero, navigation, dark/light theme, original SVG art and responsive/print treatment. It clearly identifies the operator, account and organization request types, email verification process, deletion scope, data-retention exceptions, merchant-controlled diner information and the existing `mailto:admin@bababuilds.com` request channel. Public metadata has unique title/description, canonical URL, Open Graph, Twitter cards and targeted keywords; the URL is already in sitemap and robots allowances. See `tests/e2e/delete-account.spec.ts` for navigation/SEO/mobile/keyboard evidence.
+
+**Operational limitation:** This remains a contact-based, manual workflow. The page must not be described as a live automated self-service deletion system or final Apple/Google store compliance certification. Store releases require a separately verified in-app deletion initiation path, actual processing/erasure workflow, response timeframes and record-retention inventory. Do not promise a universal 30-day period until operationally verified; the proposed schedule elsewhere in this file is not an implemented guarantee.

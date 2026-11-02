@@ -55,3 +55,7 @@ The Terms allocate the software/restaurant/guest relationship, age and eligibili
 - Check at 375px, tablet, desktop, print and dark mode; avoid legal-content truncation or overflowing sticky contents navigation.
 - Ensure shared footer copyright cannot suggest a separate incorporated subsidiary, and preserve illustrative payment/badge disclaimers.
 - Typecheck, lint, Prettier, integration, production build and E2E must pass the exact final commit before release. Verify deploy SHA and public routes; successful CI is not legal advice or a counsel sign-off.
+
+## Account deletion page review (2 November 2026)
+
+The public `/delete-account` route has been redesigned to match `/privacy`, with request steps, personalized-account and organization/guest distinctions, truthful qualified retention disclosures, a clear email request CTA and search metadata. The request is still verified manually; it is not an automatic account erasure facility. Do not claim native App Store or Google Play account deletion compliance until the corresponding in-app flow and processing are independently tested.
