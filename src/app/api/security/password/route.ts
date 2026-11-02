@@ -56,7 +56,7 @@ async function observed_POST(req: Request) {
     }
     // Notifications are best-effort; the password change itself is authoritative.
     await recordAuthEvent(actor.userId, "password.changed", actor.sessionId).catch(() => {});
-    void alertSecurityEvent(actor.userId, "Your MenuMinute password was changed");
+    void alertSecurityEvent(actor.userId, "Your MenuMinute password was changed").catch(() => {});
     return NextResponse.json({ changed: true }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     return errorResponse(error, req);
