@@ -22,6 +22,7 @@ import {
 import type { ReactNode } from "react";
 import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
 import { OperationsHistory } from "./operations-history";
+import { AccountDeletionPanel } from "./account-deletion-panel";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
 type Detail = {
   organization: Organization;
@@ -1142,6 +1143,11 @@ export function OrganizationManager({
                         </Form>
                       </>
                     )}
+                    <AccountDeletionPanel
+                      key={selected}
+                      organizationId={selected}
+                      outletId={detail.outlets[0]?.id}
+                    />
                   </div>
                 </section>
               </div>
