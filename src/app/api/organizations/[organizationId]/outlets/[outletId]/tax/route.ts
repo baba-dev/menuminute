@@ -20,7 +20,12 @@ async function observed_PATCH(req: Request, { params }: Context) {
   try {
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
-    const policy = await saveOutletSalesTax(actor, organizationId, outletId, await boundedJson(req));
+    const policy = await saveOutletSalesTax(
+      actor,
+      organizationId,
+      outletId,
+      await boundedJson(req)
+    );
     return NextResponse.json(policy, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     return errorResponse(error, req);
