@@ -79,7 +79,9 @@ test("new owner enrolls MFA, confirms privileged action, and recovers sign-in wi
   expect(codes.length).toBeGreaterThan(0);
   await page.getByLabel("Authenticator code").fill(codeFor(uri!));
   await page.getByRole("button", { name: "Verify enrollment" }).click();
-  await expect(page.locator(".mm-sec-feedback")).toContainText("Two-factor authentication enabled.");
+  await expect(page.locator(".mm-sec-feedback")).toContainText(
+    "Two-factor authentication enabled."
+  );
   await page.getByLabel("Current password").fill(password);
   await page.getByLabel("Authenticator code").fill(codeFor(uri!));
   await page.getByRole("button", { name: "Confirm privileged action" }).click();
