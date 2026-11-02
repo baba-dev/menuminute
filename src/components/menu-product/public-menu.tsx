@@ -32,6 +32,7 @@ import {
 } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
 import { DishCard } from "./dish-card";
+import { DiningBrandMark } from "./dining-brand-mark";
 import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
 import { isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
 import type { PublicProduct } from "@/modules/menu-product/service";
@@ -543,6 +544,7 @@ export function PublicMenu({
           fetchPriority="high"
         />
         <div className="dining-cover-content">
+          <DiningBrandMark />
           <span className="dining-kicker">WELCOME TO OUR KITCHEN</span>
           <h1>{data.outlet.name}</h1>
           <p>{heroDescription || "Made with care. Served with joy. Find something delicious."}</p>

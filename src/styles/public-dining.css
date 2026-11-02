@@ -1393,3 +1393,14 @@
     }
   }
 }
+.mm-brand-nav-logo.dining-brand-mark {
+  display: flex;
+  width: clamp(132px, 34vw, 176px);
+  margin-bottom: 0.75rem;
+  pointer-events: none;
+}
+@media print {
+  .dining-brand-mark {
+    display: none;
+  }
+}

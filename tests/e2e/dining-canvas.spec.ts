@@ -38,3 +38,21 @@ test("filtered public menu does not expose dead category links", async ({ page }
   await page.getByRole("button", { name: "Clear filters" }).click();
   await expect(links.first()).toBeVisible();
 });
+
+test("public cover shows the MenuMinute brand mark without CSP violations", async ({ page }) => {
+  const violations: string[] = [];
+  page.on("console", (message) => {
+    if (/Content Security Policy/i.test(message.text())) violations.push(message.text());
+  });
+  await page.goto("/m/demo-spice-route-kitchen-v1");
+  const mark = page.getByTestId("dining-brand-mark");
+  await expect(mark).toHaveAccessibleName("Powered by MenuMinute");
+  const logo = mark.locator("img");
+  await expect(logo).toHaveAttribute("src", /logo-reveal-light-nav\.svg/);
+  await expect
+    .poll(() =>
+      logo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)
+    )
+    .toBe(true);
+  expect(violations).toEqual([]);
+});
