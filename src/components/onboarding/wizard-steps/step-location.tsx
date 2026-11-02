@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MapPin, Navigation, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react";
-import { localeOptions, currencyFor } from "@/modules/onboarding/locales";
+import { localeOptions, suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
 import type { WizardDraft } from "../wizard-types";
 import { ThemedArtwork } from "../themed-artwork";
 
@@ -296,7 +296,8 @@ export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLoca
           onChange={(e) => {
             const country = e.target.value;
             onChange("country", country);
-            if (currencyFor[country]) onChange("currency", currencyFor[country]);
+            // Do not retain the previous country's currency when no suggestion exists.
+            onChange("currency", suggestedCurrencyForCountry(country));
             // Do not silently replace a timezone the operator already selected.
             if (timezoneSuggestions[country]) onTimezoneSuggestion(timezoneSuggestions[country]);
           }}
@@ -307,7 +308,7 @@ export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLoca
             </option>
           ))}
         </select>
-        {!currencyFor[draft.country] && (
+        {!suggestedCurrencyForCountry(draft.country) && (
           <p className="wizard-counter" role="status">
             No automatic currency match for this country. Select and confirm your pricing currency
             in the next step.
