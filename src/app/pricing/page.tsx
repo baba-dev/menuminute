@@ -195,7 +195,8 @@ export default function PricingPage() {
           <Link href="/billing" className="text-foreground font-semibold underline">
             Manage your plan in billing
           </Link>
-          . Billing is in INR; international pricing is coming later.
+          . Subscriptions are charged in INR. Your restaurant can price its menu in a supported
+          local currency; overseas card acceptance depends on your bank and our payment provider.
         </p>
 
         <section className="mx-auto mt-20 max-w-6xl" aria-labelledby="compare-heading">
