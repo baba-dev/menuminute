@@ -72,7 +72,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
           time: "At the table",
           title: "Keep the guest informed",
           detail:
-            "Guests scan a permanent QR code and browse the live menu. Approved outlets can separately enable order requests and tracking.",
+            "Guests scan a permanent QR code and browse the live menu. Add the Ordering plan to take orders and let guests follow their status.",
         },
       ],
     },
@@ -94,9 +94,9 @@ export const industrySolutions: readonly IndustrySolution[] = [
       {
         title: "More controlled service",
         detail:
-          "Where approved, receive dine-in requests through a separate ordering workflow, then coordinate staff acceptance and preparation.",
+          "On the Ordering plan, receive dine-in orders through a separate ordering workflow, then coordinate staff acceptance and preparation.",
         featurePath: "/ordering",
-        featureLabel: "Explore ordering access",
+        featureLabel: "Explore online ordering",
       },
     ],
     steps: [
@@ -118,10 +118,10 @@ export const industrySolutions: readonly IndustrySolution[] = [
     facts: [
       "Guest menus open in a browser without a download",
       "Permanent QR codes point to the published menu",
-      "Ordering and Kitchen Pro require separate activation",
+      "Ordering and Kitchen Pro are paid plans, from ₹119 and ₹499 a month",
     ],
     premiumNote:
-      "Free QR menus do not automatically include live order acceptance, online payments or Kitchen Pro. Those capabilities depend on approval and outlet setup.",
+      "The free QR menu does not include live order acceptance, online payments or Kitchen Pro. Ordering starts at ₹119 a month and Kitchen Pro at ₹499 a month.",
     faqs: [
       {
         question: "Can I replace printed menus for my restaurant?",
@@ -229,7 +229,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
       "Public QR menu browsing does not require customer sign-in",
     ],
     premiumNote:
-      "A published café menu is not automatically a checkout or payment system. Ordering, payment and other premium tools remain separately configured and gated.",
+      "A published café menu is not automatically a checkout or payment system. Ordering and the other paid tools are separate plans you add when you need them.",
     faqs: [
       {
         question: "Can I list different drink sizes?",
@@ -336,7 +336,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
       "Allergen claims must be supplied and verified by the bakery",
     ],
     premiumNote:
-      "MenuMinute's free QR menu is not inventory management, a stock reservation system or an automatic preorder promise. Separately activated service features have additional requirements.",
+      "MenuMinute's free QR menu is not inventory management, a stock reservation system or an automatic preorder promise. Paid service features, such as ordering and the kitchen display, are separate plans.",
     faqs: [
       {
         question: "Can I hide sold-out pastries?",
@@ -365,7 +365,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
       "Publish a mobile-friendly menu for your delivery-first brand today, and explore controlled order acceptance and preparation stations when your outlet is eligible.",
     seoTitle: "Digital QR Menus for Cloud Kitchens | MenuMinute",
     seoDescription:
-      "Build a free digital menu for cloud kitchens and delivery-first brands. Explore pickup requests, order queues and Kitchen Pro for eligible outlets.",
+      "Build a free digital menu for cloud kitchens and delivery-first brands. Explore pickup ordering, order queues and Kitchen Pro.",
     cover: "/assets/public-menu/covers/street-food-cloud-kitchen.webp",
     coverAlt: "Illustrative takeaway meals prepared by a cloud kitchen",
     artBase: "/brand/orders/service-counter",
@@ -389,7 +389,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
           time: "When an order arrives",
           title: "Accept deliberately",
           detail:
-            "With ordering separately approved, staff review an incoming pickup request rather than treating submission as instant acceptance.",
+            "With the Ordering plan, staff review an incoming pickup order rather than treating submission as instant acceptance.",
         },
         {
           time: "At preparation and handoff",
@@ -410,7 +410,7 @@ export const industrySolutions: readonly IndustrySolution[] = [
       {
         title: "A controlled pickup request flow",
         detail:
-          "Eligible outlets can let guests submit pickup requests and have staff accept or decline them in the Orders workflow.",
+          "On the Ordering plan, guests submit pickup orders and staff accept or decline them in the Orders workflow.",
         featurePath: "/ordering",
         featureLabel: "Understand online ordering",
       },
@@ -441,11 +441,11 @@ export const industrySolutions: readonly IndustrySolution[] = [
     ],
     facts: [
       "Free QR menu publishing is the starting point",
-      "Pickup order acceptance requires explicit outlet activation",
-      "Kitchen station routing and release require approved Kitchen Pro setup",
+      "Pickup ordering comes with the Ordering plan",
+      "Kitchen station routing and release come with Kitchen Pro, once your stations and staff are set up",
     ],
     premiumNote:
-      "This is not an automatic integration with food delivery marketplaces, a payment gateway or third-party couriers. Ordering and Kitchen Pro must be activated and configured separately.",
+      "This is not an automatic integration with food delivery marketplaces, a payment gateway or third-party couriers. Ordering and Kitchen Pro are separate paid plans that you set up for each outlet.",
     faqs: [
       {
         question: "Can I create a cloud kitchen menu without a dining room?",
@@ -455,12 +455,12 @@ export const industrySolutions: readonly IndustrySolution[] = [
       {
         question: "Can my team accept pickup requests?",
         answer:
-          "Only when the outlet has separately approved online-ordering access. Guest submission alone does not mean an order is accepted.",
+          "Yes, on the Ordering plan. Guest submission alone does not mean an order is accepted: your team accepts or declines each one.",
       },
       {
         question: "Does MenuMinute connect automatically to delivery platforms?",
         answer:
-          "No marketplace integration is promised on this page. MenuMinute's own menu, ordering and kitchen workflows have distinct availability.",
+          "No marketplace integration is promised on this page. MenuMinute's own menu, ordering and kitchen workflows are separate plans.",
       },
     ],
   },

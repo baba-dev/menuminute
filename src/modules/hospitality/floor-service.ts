@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, sql } from "drizzle-orm";
+import { withPlanCap } from "@/modules/plans/store";
 import {
   AppError,
   ConflictError,
@@ -299,40 +300,46 @@ export async function createTable(
   input: CreateTableInput
 ): Promise<{ id: string; displayNumber: number }> {
   return guard(() =>
-    withOutlet(actor, outletId, "menu.write", async (tx) => {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${outletId}, 87316))`);
-      const total = await tx.execute<{ n: number }>(sql`
+    withOutlet(actor, outletId, "menu.write", (tx) =>
+      // Plan caps on numbered tables and chairs (no-op unless PLAN_LIMITS_ENFORCED). The table and
+      // its first chairs commit or roll back together with the limit check.
+      withPlanCap(tx, [outletId], "tables", () =>
+        withPlanCap(tx, [outletId], "chairs", async () => {
+          await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${outletId}, 87316))`);
+          const total = await tx.execute<{ n: number }>(sql`
         select count(*)::int n from restaurant_tables
         where restaurant_id=${outletId} and is_active and display_number is not null`);
-      if ((total.rows[0]?.n ?? 0) >= MAX_TABLES_PER_OUTLET)
-        throw new ValidationError(`An outlet can have ${MAX_TABLES_PER_OUTLET} tables.`);
-      if (input.sectionId) await assertSection(tx, outletId, input.sectionId);
-      let displayNumber = input.displayNumber;
-      if (!displayNumber) {
-        const free = await tx.execute<{ n: number }>(sql`
+          if ((total.rows[0]?.n ?? 0) >= MAX_TABLES_PER_OUTLET)
+            throw new ValidationError(`An outlet can have ${MAX_TABLES_PER_OUTLET} tables.`);
+          if (input.sectionId) await assertSection(tx, outletId, input.sectionId);
+          let displayNumber = input.displayNumber;
+          if (!displayNumber) {
+            const free = await tx.execute<{ n: number }>(sql`
           select g::int n from generate_series(1, 9999) g
           where not exists(select 1 from restaurant_tables
             where restaurant_id=${outletId} and is_active and display_number=g)
           order by g limit 1`);
-        displayNumber = free.rows[0]?.n;
-        if (!displayNumber) throw new ValidationError("No table numbers are left.");
-      }
-      const id = crypto.randomUUID();
-      await tx.insert(restaurantTables).values({
-        id,
-        restaurantId: outletId,
-        tableNumber: String(displayNumber),
-        label: input.name,
-        name: input.name,
-        displayNumber,
-        sectionId: input.sectionId,
-        shape: input.shape,
-        capacity: 0,
-        isActive: true,
-      });
-      await insertChairs(tx, outletId, id, input.chairKind, input.chairCount);
-      return { id, displayNumber };
-    })
+            displayNumber = free.rows[0]?.n;
+            if (!displayNumber) throw new ValidationError("No table numbers are left.");
+          }
+          const id = crypto.randomUUID();
+          await tx.insert(restaurantTables).values({
+            id,
+            restaurantId: outletId,
+            tableNumber: String(displayNumber),
+            label: input.name,
+            name: input.name,
+            displayNumber,
+            sectionId: input.sectionId,
+            shape: input.shape,
+            capacity: 0,
+            isActive: true,
+          });
+          await insertChairs(tx, outletId, id, input.chairKind, input.chairCount);
+          return { id, displayNumber };
+        })
+      )
+    )
   );
 }
 
@@ -441,11 +448,13 @@ export async function addChairs(
   input: AddChairsInput
 ): Promise<{ added: number }> {
   return guard(() =>
-    withOutlet(actor, outletId, "menu.write", async (tx) => {
-      if (input.tableId) await assertFloorTable(tx, outletId, input.tableId);
-      await insertChairs(tx, outletId, input.tableId, input.kind, input.count);
-      return { added: input.count };
-    })
+    withOutlet(actor, outletId, "menu.write", (tx) =>
+      withPlanCap(tx, [outletId], "chairs", async () => {
+        if (input.tableId) await assertFloorTable(tx, outletId, input.tableId);
+        await insertChairs(tx, outletId, input.tableId, input.kind, input.count);
+        return { added: input.count };
+      })
+    )
   );
 }
 

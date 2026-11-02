@@ -3,87 +3,165 @@ import Link from "next/link";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
 import { CheckCircle, Sparkles, Terminal } from "lucide-react";
-import { inrMonthlyPrice } from "@/modules/billing/catalog";
+import { planLadder, type PlanOffer } from "@/modules/plans/offer";
+import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
+import { KITCHEN_PRO_INCLUDED_OUTLETS } from "@/modules/billing/catalog";
+import { fmt } from "@/modules/plans/view";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
   title: "Pricing",
   description:
-    "Free permanent QR menus. AI import, ordering and Kitchen Pro require separate availability and operator approval.",
+    "Free permanent QR menus. Ordering from ₹119 a month, Kitchen Pro from ₹499 a month with three outlets included, and Dedicated at ₹30,000 a month.",
 };
 
-const plans = [
-  {
-    name: "Free Forever",
-    price: "Free",
-    period: "forever",
-    description: "Everything needed to publish a beautiful, permanent restaurant QR menu.",
+/** Everything below comes from the reviewed plan catalogs, the same ones checkout uses. */
+const CARD: Record<
+  PlanKey,
+  { badge?: string; cta: string; href: string; primary: boolean; blurb: string }
+> = {
+  free: {
     cta: "Get started free",
-    ctaHref: "/register",
+    href: "/register",
     primary: false,
-    badge: "Acquisition Favorite",
-    availability:
-      "AI photo extraction is optional and requires a supported, approved provider; it is not part of the always-on free QR menu.",
-    features: [
-      "Categories, dishes and descriptions",
-      "Unlimited items and variants",
-      "AI photo import where separately enabled and approved",
-      "Permanent table QR codes",
-      "Mobile-optimised instant menu view",
-      "No customer registration required",
-      "Live sold-out dish controls",
-      "SVG/PNG QR downloads and browser Save as PDF printing",
-    ],
+    blurb: "Everything needed to publish a beautiful, permanent restaurant QR menu.",
   },
-  {
-    name: "Live Table Ordering",
-    price: inrMonthlyPrice("ordering"),
-    period: "/ month",
-    altPrice: "INR billing · international pricing coming later",
-    description:
-      "Let diners order directly from their phone at the table. Eliminate waiter wait times and turn tables faster.",
-    cta: "Create an account to check access",
-    ctaHref: "/register",
+  ordering: {
+    badge: "Most popular",
+    cta: "Get Ordering",
+    href: "/register",
     primary: true,
-    badge: "Limited rollout",
-    availability:
-      "Ordering is feature-gated and available only to eligible, activated outlets. Registering does not immediately enable order intake.",
-    features: [
-      "Everything in Free Forever",
-      "Table-based QR ordering & cart",
-      "Dine-in and takeaway workflows",
-      "Live Service Counter dashboard",
-      "Real-time diner order tracking",
-      "Kitchen receipt printing",
-      "Order history and sales reports",
-    ],
+    blurb:
+      "Let diners order from their phone at the table. Take dine-in and pickup orders, with the counter board and order tracking.",
+  },
+  kitchen_pro: {
+    badge: "For busy kitchens",
+    cta: "Get Kitchen Pro",
+    href: "/register",
+    primary: false,
+    blurb:
+      "Everything in Ordering, plus a kitchen display with station routing, and room for up to ten outlets.",
+  },
+  dedicated: {
+    cta: "Talk to us about Dedicated",
+    href: "/contact",
+    primary: false,
+    blurb: "Your own branded app on your own domain, set up with our team. Built around you.",
+  },
+};
+
+const limit = (n: number | null) => (n === null ? "Virtually unlimited" : fmt(n));
+const floor = (plan: PlanKey) => {
+  const { tables, chairs } = PLAN_LIMITS[plan];
+  return tables === null || chairs === null
+    ? "Virtually unlimited"
+    : `${fmt(tables)} tables · ${fmt(chairs)} chairs`;
+};
+
+/** The comparison table: one row per limit, one column per plan. */
+const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
+  {
+    label: "Outlets",
+    cell: (p) =>
+      p === "kitchen_pro"
+        ? `Up to ${fmt(PLAN_LIMITS.kitchen_pro.outlets ?? 10)} (${KITCHEN_PRO_INCLUDED_OUTLETS} included)`
+        : limit(PLAN_LIMITS[p].outlets),
+  },
+  { label: "Dishes per outlet", cell: (p) => limit(PLAN_LIMITS[p].dishes) },
+  { label: "QR codes", cell: (p) => limit(PLAN_LIMITS[p].qrCodes) },
+  { label: "Dining floor", cell: floor },
+  {
+    label: "Online ordering",
+    cell: (p) => (p === "free" ? "Browse-only menu" : "Included, no monthly cap"),
   },
   {
-    name: "Kitchen Pro KDS",
-    price: inrMonthlyPrice("kitchen_pro"),
-    period: "/ month",
-    altPrice: "Available after Kitchen Pro release approval",
-    description:
-      "Full digital Kitchen Display System replacing paper tickets with real-time station tablets and chimes.",
-    cta: "Create an account for Kitchen Pro",
-    ctaHref: "/register",
-    primary: false,
-    badge: "High Rush Kitchens",
-    availability:
-      "Kitchen Pro requires approved operator activation, staff assignment and readiness checks. This is not instant paid activation.",
-    features: [
-      "Everything in Live Ordering",
-      "Live Kitchen Display System (KDS)",
-      "Kitchen, bar, and Final Check & Order Release routing",
-      "Audible incoming ticket alerts",
-      "Preparation timers and completion pass",
-      "POS till and cash drawer shifts",
-      "Kitchen device management",
-    ],
+    label: "Kitchen display and stations",
+    cell: (p) => (p === "free" || p === "ordering" ? "—" : "Included"),
+  },
+  {
+    label: "Your own domain and branding",
+    cell: (p) => (p === "dedicated" ? "Set up with our team" : "—"),
   },
 ];
 
+function PlanCard({ offer }: { offer: PlanOffer }) {
+  const card = CARD[offer.key];
+  const primary = card.primary;
+  return (
+    <div
+      className={`relative flex flex-col justify-between rounded-2xl p-7 transition-shadow ${
+        primary
+          ? "bg-brand-600 ring-brand-600 text-white shadow-xl ring-2 dark:bg-orange-600 dark:ring-orange-600"
+          : "border-border bg-card text-card-foreground border shadow-sm hover:shadow-md"
+      }`}
+    >
+      {card.badge && (
+        <div
+          className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${
+            primary
+              ? "bg-stone-900 text-white dark:bg-stone-950"
+              : "border border-stone-200 bg-stone-100 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+          }`}
+        >
+          {card.badge}
+        </div>
+      )}
+      <div>
+        <h3 className={`mb-2 text-lg font-bold ${primary ? "text-white" : "text-foreground"}`}>
+          {offer.label}
+        </h3>
+        <div className="mb-1 flex items-baseline">
+          <span className={`text-4xl font-extrabold ${primary ? "text-white" : "text-foreground"}`}>
+            {offer.price.label}
+          </span>
+          <span
+            className={`ml-1.5 text-sm ${primary ? "text-orange-100" : "text-muted-foreground"}`}
+          >
+            {offer.price.note === "per month" ? "/ month" : offer.price.note}
+          </span>
+        </div>
+        <p
+          className={`mb-3 min-h-8 text-xs font-semibold ${primary ? "text-orange-100" : "text-orange-700 dark:text-orange-300"}`}
+        >
+          {offer.price.detail ?? ""}
+        </p>
+        <p
+          className={`mb-6 text-sm leading-relaxed ${primary ? "text-orange-100" : "text-muted-foreground"}`}
+        >
+          {card.blurb}
+        </p>
+        <ul className="space-y-3 border-t border-stone-200/20 pt-6">
+          {offer.highlights.map((feature) => (
+            <li key={feature} className="flex items-start gap-2.5 text-sm">
+              <CheckCircle
+                className={`mt-0.5 h-4 w-4 shrink-0 ${primary ? "text-orange-200" : "text-green-500"}`}
+                aria-hidden="true"
+              />
+              <span className={primary ? "text-orange-100" : "text-muted-foreground"}>
+                {feature}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="mt-8 pt-4">
+        <Link
+          href={card.href}
+          className={`block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md transition-colors ${
+            primary
+              ? "text-brand-700 bg-white hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
+              : "bg-brand-600 hover:bg-brand-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
+          }`}
+        >
+          {card.cta}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function PricingPage() {
+  const plans = planLadder();
   return (
     <div className="bg-background text-foreground min-h-screen transition-colors">
       <MarketingSubpageNav />
@@ -98,98 +176,77 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
-            Permanent QR menus are free. AI import and paid ordering or Kitchen Pro features become
-            available only after the required provider, entitlement and rollout approvals.
+            Your permanent QR menu is free. Add ordering when you want guests to order from the
+            table, and a full kitchen display when your service needs it. Prices are in INR, billed
+            monthly, and you can cancel any time.
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative flex flex-col justify-between rounded-2xl p-8 transition-shadow ${
-                plan.primary
-                  ? "bg-brand-600 ring-brand-600 text-white shadow-xl ring-2 dark:bg-orange-600 dark:ring-orange-600"
-                  : "border-border bg-card text-card-foreground border shadow-sm hover:shadow-md"
-              }`}
-            >
-              {plan.badge && (
-                <div
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold ${
-                    plan.primary
-                      ? "bg-stone-900 text-white dark:bg-stone-950"
-                      : "border border-stone-200 bg-stone-100 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                  }`}
-                >
-                  {plan.badge}
-                </div>
-              )}
-
-              <div>
-                <h3
-                  className={`mb-2 text-lg font-bold ${plan.primary ? "text-white" : "text-foreground"}`}
-                >
-                  {plan.name}
-                </h3>
-                <div className="mb-1 flex items-baseline">
-                  <span
-                    className={`text-4xl font-extrabold ${plan.primary ? "text-white" : "text-foreground"}`}
-                  >
-                    {plan.price}
-                  </span>
-                  <span
-                    className={`ml-1.5 text-sm ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
-                  >
-                    {plan.period}
-                  </span>
-                </div>
-                {plan.altPrice && (
-                  <p
-                    className={`mb-3 text-xs ${plan.primary ? "text-orange-200" : "text-muted-foreground"}`}
-                  >
-                    {plan.altPrice}
-                  </p>
-                )}
-                <p
-                  className={`mb-3 text-sm ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
-                >
-                  {plan.description}
-                </p>
-                <p
-                  className={`mb-6 text-xs leading-relaxed ${plan.primary ? "text-orange-100" : "text-muted-foreground"}`}
-                >
-                  {plan.availability}
-                </p>
-
-                <ul className="space-y-3 border-t border-stone-200/20 pt-6">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm">
-                      <CheckCircle
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${plan.primary ? "text-orange-200" : "text-green-500"}`}
-                      />
-                      <span className={plan.primary ? "text-orange-100" : "text-muted-foreground"}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-8 pt-4">
-                <Link
-                  href={plan.ctaHref}
-                  className={`block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md transition-colors ${
-                    plan.primary
-                      ? "text-brand-700 bg-white hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
-                      : "bg-brand-600 hover:bg-brand-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {plans.map((offer) => (
+            <PlanCard key={offer.key} offer={offer} />
           ))}
         </div>
+
+        <p className="text-muted-foreground mx-auto mt-8 max-w-3xl text-center text-sm">
+          Already a customer?{" "}
+          <Link href="/billing" className="text-foreground font-semibold underline">
+            Manage your plan in billing
+          </Link>
+          . Billing is in INR; international pricing is coming later.
+        </p>
+
+        <section className="mx-auto mt-20 max-w-6xl" aria-labelledby="compare-heading">
+          <h2 id="compare-heading" className="font-display mb-6 text-2xl font-bold tracking-tight">
+            Compare the plans
+          </h2>
+          <div className="border-border overflow-x-auto rounded-2xl border">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <caption className="sr-only">Limits and features of each MenuMinute plan</caption>
+              <thead className="bg-muted/60">
+                <tr>
+                  <th scope="col" className="px-5 py-4 font-semibold">
+                    <span className="sr-only">Feature</span>
+                  </th>
+                  {plans.map((offer) => (
+                    <th key={offer.key} scope="col" className="px-5 py-4 font-bold">
+                      {offer.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-border divide-y">
+                <tr>
+                  <th scope="row" className="text-muted-foreground px-5 py-3.5 font-medium">
+                    Price per month
+                  </th>
+                  {plans.map((offer) => (
+                    <td key={offer.key} className="px-5 py-3.5 font-semibold">
+                      {offer.price.label}
+                    </td>
+                  ))}
+                </tr>
+                {ROWS.map((row) => (
+                  <tr key={row.label}>
+                    <th scope="row" className="text-muted-foreground px-5 py-3.5 font-medium">
+                      {row.label}
+                    </th>
+                    {plans.map((offer) => (
+                      <td key={offer.key} className="px-5 py-3.5">
+                        {row.cell(offer.key)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-muted-foreground mt-4 text-sm">
+            Kitchen Pro includes three outlets; each extra outlet, up to ten, is ₹149 a month.
+            Limits apply per organization and outlet as shown. Your printed QR links keep working on
+            every plan, including after a downgrade.
+          </p>
+        </section>
 
         {/* Open Source & Self-Hosted Banner */}
         <div className="mx-auto mt-16 max-w-5xl rounded-2xl border border-stone-200 bg-stone-50 p-6 sm:p-8 dark:border-stone-800 dark:bg-stone-900/60">
@@ -204,9 +261,9 @@ export default function PricingPage() {
               </h2>
               <p className="max-w-2xl text-sm text-stone-600 dark:text-stone-400">
                 Prefer to run your own infrastructure? MenuMinute is open source under the MIT
-                License. Community Edition is for single-user deployments. Ordering and KDS remain
-                subject to runtime and safety gates; AI requires configured provider credentials and
-                appropriate commercial rights.
+                License. Community Edition is for single-user deployments, with ordering and kitchen
+                features available without a subscription. AI features need your own provider
+                credentials and appropriate commercial rights.
               </p>
             </div>
             <a

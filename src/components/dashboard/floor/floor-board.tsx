@@ -43,6 +43,8 @@ import { fetchOverview, floorRequest } from "./floor-api";
 import { groupBySection, withChair } from "./floor-state";
 import { TableIllustration } from "./table-illustration";
 import styles from "./floor.module.css";
+import { PlanMeterStrip } from "@/components/plans/plan-usage";
+import { buildMeter, type PlanUsageView } from "@/modules/plans/view";
 
 type Props = {
   outlet: { id: string; name: string; timezone: string; isDemo: boolean };
@@ -51,11 +53,19 @@ type Props = {
   canManage: boolean;
   /** orders.accept: seat guests and mark chairs taken or free. */
   canSeat: boolean;
+  /** Plan quotas for tables and chairs; omitted while limits are not enforced. */
+  planUsage?: PlanUsageView | null;
 };
 
 const POLL_MS = 15_000;
 
-export function FloorBoard({ outlet, initialOverview, canManage, canSeat }: Props) {
+export function FloorBoard({
+  outlet,
+  initialOverview,
+  canManage,
+  canSeat,
+  planUsage = null,
+}: Props) {
   const [overview, setOverview] = useState(initialOverview);
   const [section, setSection] = useState<string>("all");
   const [query, setQuery] = useState("");
@@ -280,6 +290,17 @@ export function FloorBoard({ outlet, initialOverview, canManage, canSeat }: Prop
   const formatTime = useCallback((iso: string) => timeFormat.format(new Date(iso)), [timeFormat]);
   const { headline, detail } = floorHeadline(overview, formatTime);
   const { totals } = overview;
+  // Keep the floor meters live as tables and chairs are added or archived.
+  const floorUsage = planUsage && {
+    ...planUsage,
+    meters: planUsage.meters.map((m) =>
+      m.key === "tables"
+        ? buildMeter("tables", m.label, m.noun, totals.tables, m.cap, undefined, m.upgradeHint)
+        : m.key === "chairs"
+          ? buildMeter("chairs", m.label, m.noun, totals.chairs, m.cap, undefined, m.upgradeHint)
+          : m
+    ),
+  };
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -343,6 +364,7 @@ export function FloorBoard({ outlet, initialOverview, canManage, canSeat }: Prop
       </header>
 
       <div className="mm-dashboard-body">
+        <PlanMeterStrip view={floorUsage} only={["tables", "chairs"]} />
         <section className={styles.kpis} aria-label="Floor at a glance">
           <div className={styles.kpi}>
             <div className={styles.kpiTop}>

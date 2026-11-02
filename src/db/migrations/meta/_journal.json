@@ -547,6 +547,41 @@
       "when": 1795093200032,
       "tag": "0078_account_deletion_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1795179600032,
+      "tag": "0079_free_order_intake",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1795266000032,
+      "tag": "0080_plan_usage_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1795352400032,
+      "tag": "0081_plan_overflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1795438800032,
+      "tag": "0082_auto_trial_and_dunning",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1795525200032,
+      "tag": "0083_pricing_and_supersede",
+      "breakpoints": true
     }
   ]
 }

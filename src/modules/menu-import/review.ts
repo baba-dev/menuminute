@@ -5,6 +5,7 @@ import { domainError } from "@/modules/organizations/service";
 import { ValidationError } from "@/lib/errors";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
 import { invalidateOutletMenuCache } from "@/modules/menu-product/service";
+import { withPlanCap } from "@/modules/plans/store";
 import { importId, parseImportCandidate, type ImportCandidate } from "./contracts";
 import { importDetail } from "./service";
 
@@ -149,17 +150,19 @@ export async function applyReview(actor: Actor, outletId: string, rawId: string,
       actor,
       async (tx) =>
         (
-          await tx.execute<{
-            result: {
-              id: string;
-              status: string;
-              revision: number;
-              menuId: string;
-              menuRevision: number;
-              duplicate: boolean;
-            };
-          }>(
-            sql`select app_private.import_apply(${outletId},${id},${input.expectedRevision},${input.menuId},${input.expectedMenuRevision}) as result`
+          await withPlanCap(tx, [outletId], "dishes", () =>
+            tx.execute<{
+              result: {
+                id: string;
+                status: string;
+                revision: number;
+                menuId: string;
+                menuRevision: number;
+                duplicate: boolean;
+              };
+            }>(
+              sql`select app_private.import_apply(${outletId},${id},${input.expectedRevision},${input.menuId},${input.expectedMenuRevision}) as result`
+            )
           )
         ).rows[0]!.result
     );

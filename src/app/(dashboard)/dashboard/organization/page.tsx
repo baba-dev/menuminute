@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { listOrganizations } from "@/modules/organizations/service";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { OrganizationManager } from "./organization-manager";
+import { getPlanUsageView } from "@/modules/plans/usage";
 import "./organization.css";
 
 export const metadata: Metadata = {
@@ -30,10 +31,17 @@ export default async function OrganizationPage({
   const initialOrganizationId =
     organizations.find((org) => org.id === requestedOrganizationId)?.id ??
     organizations.find((org) => org.id === outlet?.organizationId)?.id;
+  // Plan usage describes the active outlet, so it is shown only for that outlet's organization.
+  const view = outlet ? await getPlanUsageView({ userId: session.user.id }, outlet.id) : null;
+  const planUsage =
+    outlet && view
+      ? { organizationId: outlet.organizationId, outletName: outlet.name, view }
+      : null;
   return (
     <OrganizationManager
       organizations={organizations}
       initialOrganizationId={initialOrganizationId}
+      planUsage={planUsage}
     />
   );
 }

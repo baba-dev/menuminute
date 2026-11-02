@@ -582,9 +582,9 @@ export function MenuJourney() {
           </Link>
           <Link className="mj-link" href="/pricing">
             <span>
-              <small>THE ROAD AHEAD</small>
+              <small>WHEN YOU&apos;RE READY</small>
               <strong>Ordering &amp; kitchen plans</strong>
-              <span className="mj-soon">Planned feature</span>
+              <span className="mj-soon">Available now</span>
             </span>
             <ArrowUpRight size={21} strokeWidth={2} aria-hidden="true" />
           </Link>

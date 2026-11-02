@@ -61,3 +61,18 @@ describe("dashboard layout contract", () => {
     expect(applyLayoutAction(down, { type: "reset" })).toEqual(defaultDashboardLayout);
   });
 });
+
+describe("plan widget", () => {
+  it("is part of the layout system, appended for owners with a saved layout", () => {
+    expect(dashboardWidgetIds).toContain("plan");
+    const saved = normalizeDashboardLayout({ order: ["pulse", "kpis"], hidden: [], pinned: [] });
+    expect(saved.order).toContain("plan");
+    expect(saved.order.indexOf("plan")).toBeGreaterThan(saved.order.indexOf("pulse"));
+    // It can be hidden like any other widget.
+    expect(
+      resolveDashboardLayout({ ...defaultDashboardLayout, hidden: ["plan"] }).find(
+        (w) => w.id === "plan"
+      )?.hidden
+    ).toBe(true);
+  });
+});

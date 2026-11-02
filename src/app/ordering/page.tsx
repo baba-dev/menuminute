@@ -7,7 +7,7 @@ const feature = marketingFeatureBySlug("online-ordering");
 export const metadata = marketingMetadata({
   title: "Restaurant Online Ordering and Table QR Orders",
   description:
-    "Explore MenuMinute dine-in QR ordering, pickup requests and guest tracking. Ordering requires approved outlet activation.",
+    "Explore MenuMinute dine-in QR ordering, pickup orders and guest tracking. Included from the Ordering plan at ₹119 a month.",
   pathname: "/ordering",
   image: "/docs-media/orders-desktop-light.webp",
   imageAlt: "MenuMinute restaurant order tickets and status",

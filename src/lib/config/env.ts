@@ -88,6 +88,8 @@ const envSchema = z
     CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
     CLOUDFLARE_API_TOKEN: z.string().optional(),
     PEXELS_API_KEY: z.string().optional(),
+    // Plan caps (docs/plans-and-limits.md). Off by default: enabling is an explicit operator step.
+    PLAN_LIMITS_ENFORCED: strictBoolean.default(false),
     AI_FEATURES_ENABLED: strictBoolean.default(false),
     IMAGE_GENERATION_ENABLED: strictBoolean.default(false),
     // Operational PWA phases F-G: both the master switch and the exact outlet allowlist are
@@ -196,6 +198,8 @@ const envSchema = z
     RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_ORDERING_ID: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_KITCHEN_ID: z.string().trim().min(1).optional(),
+    // Provider plan Kitchen Pro was first sold on (INR 299). Existing subscribers keep renewing on it.
+    RAZORPAY_PLAN_KITCHEN_LEGACY_ID: z.string().trim().min(1).optional(),
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);

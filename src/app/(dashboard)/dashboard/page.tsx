@@ -54,6 +54,9 @@ import {
 import { readDashboardLayout } from "@/modules/dashboard/layout-preference";
 import { DashboardLayoutEditor } from "./dashboard-layout-editor";
 import { ShiftSummaryDialog } from "./shift-summary-dialog";
+import { PlanBento } from "@/components/plans/plan-bento";
+import { buildBentoView } from "@/modules/plans/bento";
+import { getPlanSnapshot } from "@/modules/plans/usage";
 
 export const metadata: Metadata = {
   title: "Restaurant overview",
@@ -241,6 +244,18 @@ export default async function DashboardPage() {
         outlet.timezone ?? "UTC",
         outlet.currency ?? "INR"
       ).catch(() => null)
+    : null;
+  // Plan & billing widget: read-only, degrades to nothing if the snapshot cannot be read.
+  const planSnapshot = isVisible("plan") ? await getPlanSnapshot(actor, outlet.id) : null;
+  const planView = planSnapshot
+    ? buildBentoView({
+        plan: planSnapshot.plan,
+        usage: planSnapshot.usage,
+        intake: planSnapshot.intake,
+        canManageBilling: planSnapshot.canManageBilling,
+        lifecycle: planSnapshot.lifecycle,
+        billingEnabled: env.RAZORPAY_ENABLED && !env.COMMUNITY_EDITION,
+      })
     : null;
   const floorDueByTable = Object.fromEntries(
     (floorMatrix ?? []).map((row) => [
@@ -507,6 +522,7 @@ export default async function DashboardPage() {
       />
     ),
     pulse: <TodayPulseBento pulse={todayPulse} />,
+    plan: planView ? <PlanBento view={planView} /> : null,
     serviceRequests: (
       <ServiceRequestsPanel
         organizationId={outlet.organizationId}
@@ -613,11 +629,13 @@ export default async function DashboardPage() {
         )}
         <div id="mm-dashboard-layout-panel" />
         <div className="mm-widget-grid">
-          {visibleWidgets.map((widget) => (
-            <div key={widget.id} className="mm-widget" data-widget={widget.id}>
-              {widgetNodes[widget.id]}
-            </div>
-          ))}
+          {visibleWidgets
+            .filter((widget) => widget.id !== "plan" || widgetNodes.plan)
+            .map((widget) => (
+              <div key={widget.id} className="mm-widget" data-widget={widget.id}>
+                {widgetNodes[widget.id]}
+              </div>
+            ))}
         </div>
       </div>
     </div>

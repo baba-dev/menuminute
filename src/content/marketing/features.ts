@@ -7,7 +7,7 @@ export type MarketingFeature = {
   description: string;
   seoTitle: string;
   seoDescription: string;
-  availability: "free" | "limited" | "provider";
+  availability: "free" | "paid" | "limited" | "provider";
   availabilityText: string;
   image?: string;
   heroArtwork: {
@@ -269,7 +269,7 @@ export const marketingFeatures: readonly MarketingFeature[] = [
       situation:
         "Guests scanning a menu may expect immediate confirmation, but a restaurant still needs to check capacity and availability. MenuMinute distinguishes submitting an order request from staff acceptance.",
       approach:
-        "For approved outlets, a guest chooses dishes and sends a dine-in or pickup request. The restaurant accepts or declines the ticket and the guest can follow its status. Prices are calculated on the server.",
+        "On the Ordering plan, a guest chooses dishes and sends a dine-in or pickup request. The restaurant accepts or declines the ticket and the guest can follow its status. Prices are calculated on the server.",
       outcome:
         "Keep ownership of acceptance and preparation decisions with the team. Payment capture, settlement and availability depend on separate configuration.",
       actionLabel: "Explore the live ordering demo",
@@ -282,21 +282,21 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     },
     path: "/ordering",
     title: "Restaurant Online Ordering",
-    eyebrow: "LIVE ORDERING / LIMITED ROLLOUT",
+    eyebrow: "LIVE ORDERING / ORDERING PLAN",
     headline: "From a quick scan to an organized order.",
     description:
-      "Let eligible restaurant guests browse and submit dine-in or pickup requests from a published menu. Staff review and accept orders while guests follow their status.",
+      "Let guests browse and submit dine-in or pickup orders from your published menu. Staff review and accept each order while guests follow its status.",
     seoTitle: "Restaurant Online Ordering and Table QR Orders",
     seoDescription:
-      "Explore MenuMinute dine-in QR ordering, pickup requests and guest order tracking. Ordering requires eligible outlet activation.",
-    availability: "limited",
+      "Explore MenuMinute dine-in QR ordering, pickup orders and guest order tracking. Included from the Ordering plan at ₹119 a month.",
+    availability: "paid",
     availabilityText:
-      "Ordering is in limited rollout. An eligible outlet must be approved and activated; registering does not automatically switch on orders.",
+      "Online ordering comes with the Ordering plan at ₹119 a month (and every plan above it). Your free QR menu works from day one; upgrade from your billing page when you are ready to take orders.",
     image: "orders",
     imageAlt: "MenuMinute orders workspace for restaurant staff",
     screenshotCaption: "Orders · Actual MenuMinute interface",
-    cta: "Ask about ordering access",
-    ctaHref: "/contact",
+    cta: "See ordering plans",
+    ctaHref: "/pricing",
     secondaryCta: "Explore the demo",
     secondaryHref: "/demo",
     highlights: [
@@ -324,9 +324,9 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     ],
     steps: [
       {
-        title: "Activate an eligible outlet",
+        title: "Choose the Ordering plan",
         description:
-          "Ordering requires the appropriate entitlement and approval before it becomes available to guests.",
+          "Upgrade from your billing page. Ordering switches on for your outlet as soon as the payment is confirmed.",
       },
       {
         title: "Guest submits an order",
@@ -341,7 +341,8 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     faqs: [
       {
         question: "Is online ordering available as soon as I sign up?",
-        answer: "No. Ordering is feature-gated and needs an approved, activated outlet.",
+        answer:
+          "Ordering is part of the paid Ordering plan. Start free with a QR menu, then upgrade from your billing page whenever you are ready.",
       },
       {
         question: "Does placing an order mean the restaurant accepted it?",
@@ -374,32 +375,32 @@ export const marketingFeatures: readonly MarketingFeature[] = [
       approach:
         "Kitchen Pro organizes incoming tickets for configured preparation stations and helps authorized staff move work through preparation and final release. The publicly documented kitchen screenshots show the actual interface.",
       outcome:
-        "The kitchen has a coordinated view of work, but Kitchen Pro remains separately approved and configured per outlet.",
+        "The kitchen has a coordinated view of work, set up per outlet with its own stations and staff.",
       actionLabel: "Explore the kitchen walkthrough",
       actionHref: "/docs/kitchen",
       checklist: [
-        "Review the station layout before activation",
+        "Review the station layout before going live",
         "Understand ticket stages from preparation to release",
         "Confirm outlet, device and staff readiness",
       ],
     },
     path: "/features/kitchen-display-system",
     title: "Kitchen Display System",
-    eyebrow: "KITCHEN PRO / LIMITED ROLLOUT",
+    eyebrow: "KITCHEN PRO / ₹499 A MONTH",
     headline: "A calmer view of a busy kitchen.",
     description:
-      "See incoming tickets and coordinate preparation across configured stations. Kitchen Pro provides a dedicated restaurant kitchen workflow when the outlet and devices are approved.",
+      "See incoming tickets and coordinate preparation across configured stations. Kitchen Pro gives your kitchen a dedicated workflow once your outlet, devices and staff are set up.",
     seoTitle: "Kitchen Display System (KDS) for Restaurants",
     seoDescription:
-      "Explore Kitchen Pro, MenuMinute's restaurant kitchen display with order tickets and station routing. Available to approved outlets.",
-    availability: "limited",
+      "Explore Kitchen Pro, MenuMinute's restaurant kitchen display with order tickets and station routing. ₹499 a month with three outlets included.",
+    availability: "paid",
     availabilityText:
-      "Kitchen Pro requires approved operator activation, assigned staff and readiness checks. The public demo does not grant production KDS access.",
+      "Kitchen Pro is ₹499 a month with three outlets included (₹149 for each extra outlet, up to ten) and it includes online ordering. After you subscribe, set up stations and staff; tickets start routing once your outlet is ready. The public demo does not grant production KDS access.",
     image: "kitchen",
     imageAlt: "MenuMinute kitchen display with incoming kitchen tickets",
     screenshotCaption: "Kitchen Pro · Actual MenuMinute interface",
-    cta: "Ask about Kitchen Pro",
-    ctaHref: "/contact",
+    cta: "See Kitchen Pro pricing",
+    ctaHref: "/pricing",
     secondaryCta: "View kitchen documentation",
     secondaryHref: "/docs/kitchen",
     highlights: [
@@ -442,9 +443,9 @@ export const marketingFeatures: readonly MarketingFeature[] = [
     ],
     faqs: [
       {
-        question: "Can every account enable Kitchen Pro?",
+        question: "Can every account use Kitchen Pro?",
         answer:
-          "Not immediately. Kitchen Pro is limited to eligible outlets with approved activation and configured staff.",
+          "Yes. Subscribe from your billing page, then set up stations and assign staff. Tickets start routing once your outlet is ready.",
       },
       {
         question: "Does it support multiple stations?",
@@ -454,7 +455,7 @@ export const marketingFeatures: readonly MarketingFeature[] = [
       {
         question: "Is Kitchen Pro part of the free QR menu?",
         answer:
-          "No. Kitchen Pro is a separate premium capability with its own rollout and access requirements.",
+          "No. Kitchen Pro is a paid plan at ₹499 a month, and it includes everything in Ordering.",
       },
     ],
     guideHref: "/docs/kitchen",

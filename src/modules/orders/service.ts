@@ -345,6 +345,10 @@ export async function submitGuestOrder(token: string, raw: unknown) {
       if (error.message.includes("not enabled for this outlet")) {
         throw new ForbiddenError("Online ordering is not enabled for this outlet.");
       }
+      if (error.message.includes("Free monthly order limit reached")) {
+        // Guest-safe wording: the plan and cap are the owner's concern, not the diner's.
+        throw new ForbiddenError("This restaurant is not taking new online orders right now.");
+      }
     }
     mapOrderDatabaseError(error);
   }

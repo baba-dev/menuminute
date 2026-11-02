@@ -6,27 +6,29 @@ The Phase 1 branch accepts PostgreSQL DATABASE_URL, bounded pool size, APP_URL, 
 AUTH_SECRET (32+ characters) and two distinct Redis URLs. No SQLite or default-secret runtime
 fallback remains. See [Phase 1 implementation and cutover](foundation/phase-1.md).
 
-| Target variable                                | Purpose / requirement                              |
-| ---------------------------------------------- | -------------------------------------------------- |
-| APP_URL                                        | Canonical public HTTPS origin in production        |
-| DATABASE_URL                                   | PostgreSQL runtime-role connection URL             |
-| MIGRATION_DATABASE_URL                         | Separate migration-owner URL; deploy job only      |
-| DATABASE_POOL_MAX                              | Validated per-process pool budget                  |
-| REDIS_QUEUE_URL                                | Dedicated BullMQ non-evicting instance             |
-| REDIS_CACHE_URL                                | Dedicated cache/limits instance                    |
-| AUTH_SECRET / APP_URL                          | Explicit Better Auth secret and canonical base URL |
-| TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY      | Public widget key / server-only verification key   |
-| R2_ENDPOINT / R2_BUCKET_NAME                   | Object endpoint and bucket                         |
-| R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY        | Scoped server-only credentials                     |
-| GEMINI_API_KEY / NVIDIA_API_KEY                | Optional selected-provider credentials             |
-| CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN   | Optional Workers AI credentials                    |
-| PEXELS_API_KEY / RESEND_API_KEY                | Optional stock/email provider credentials          |
-| AI_FEATURES_ENABLED / IMAGE_GENERATION_ENABLED | Default off; quota and entitlement still required  |
-| POS_STRIPE_ENABLED                             | Default-off Stripe Checkout runtime gate           |
-| POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled            |
-| POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook     |
-| PWA_OPERATIONAL_ENABLED                        | Default-off guest/POS/Kitchen operational PWA gate |
-| PWA_OPERATIONAL_OUTLET_IDS                     | Comma-separated exact outlet rollout allowlist     |
+| Target variable                                | Purpose / requirement                                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| APP_URL                                        | Canonical public HTTPS origin in production                                              |
+| DATABASE_URL                                   | PostgreSQL runtime-role connection URL                                                   |
+| MIGRATION_DATABASE_URL                         | Separate migration-owner URL; deploy job only                                            |
+| DATABASE_POOL_MAX                              | Validated per-process pool budget                                                        |
+| REDIS_QUEUE_URL                                | Dedicated BullMQ non-evicting instance                                                   |
+| REDIS_CACHE_URL                                | Dedicated cache/limits instance                                                          |
+| AUTH_SECRET / APP_URL                          | Explicit Better Auth secret and canonical base URL                                       |
+| TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY      | Public widget key / server-only verification key                                         |
+| R2_ENDPOINT / R2_BUCKET_NAME                   | Object endpoint and bucket                                                               |
+| R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY        | Scoped server-only credentials                                                           |
+| GEMINI_API_KEY / NVIDIA_API_KEY                | Optional selected-provider credentials                                                   |
+| CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN   | Optional Workers AI credentials                                                          |
+| PEXELS_API_KEY / RESEND_API_KEY                | Optional stock/email provider credentials                                                |
+| AI_FEATURES_ENABLED / IMAGE_GENERATION_ENABLED | Default off; quota and entitlement still required                                        |
+| RAZORPAY_PLAN_KITCHEN_LEGACY_ID                | Optional: original INR 299 Kitchen Pro plan id; existing subscribers keep renewing on it |
+| PLAN_LIMITS_ENFORCED                           | Default-off plan caps and overflow sweep; set on web AND worker                          |
+| POS_STRIPE_ENABLED                             | Default-off Stripe Checkout runtime gate                                                 |
+| POS_STRIPE_SECRET_KEY                          | Server-only Stripe API key when enabled                                                  |
+| POS_STRIPE_WEBHOOK_SECRET                      | Server-only signing secret for the POS webhook                                           |
+| PWA_OPERATIONAL_ENABLED                        | Default-off guest/POS/Kitchen operational PWA gate                                       |
+| PWA_OPERATIONAL_OUTLET_IDS                     | Comma-separated exact outlet rollout allowlist                                           |
 
 `DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
 

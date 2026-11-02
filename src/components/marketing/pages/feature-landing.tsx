@@ -19,6 +19,7 @@ import { PUBLIC_ORIGIN, faqJsonLd, safeJsonLd } from "@/lib/marketing/seo";
 
 const statusLabels = {
   free: "Free permanent QR menus",
+  paid: "Included in paid plans",
   limited: "Requires outlet approval",
   provider: "Provider and approval required",
 } as const;
@@ -126,7 +127,7 @@ export function FeatureLanding({ feature }: { feature: MarketingFeature }) {
               <p className="text-muted-foreground mt-5 max-w-xl text-sm leading-6">
                 {feature.availabilityText}
               </p>
-              {feature.availability !== "free" && (
+              {(feature.availability === "limited" || feature.availability === "provider") && (
                 <a
                   href={
                     "mailto:admin@bababuilds.com?subject=" +

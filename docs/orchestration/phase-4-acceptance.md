@@ -12,7 +12,7 @@ Parent [#37](https://github.com/baba-dev/menuminute/issues/37); QA package [#47]
 - [ ] Guest sees only released categories/dishes, tested search/filter, sold-out overlay, unavailable required options, overnight/outside service, no checkout/ordering CTA. Offline state labels stale data; revoked QR on refresh removes old guest dish content.
 - [ ] Permanent canonical/table QR PNG/SVG downloads and selected-code printing work with fallback URL. Edit/rename/type/plan change preserves token; owner-only revoke/regenerate invalidates just the intended old token. A copied QR is not physical-presence proof.
 - [ ] Dashboard correctly distinguishes draft, released, revoked and absent states across two outlets and two organizations; no stale legacy counts, no cross-tenant data or unauthorized actions.
-- [ ] Marketing/pricing does not show unapproved INR 149/299 prices or imply ordering/KDS is currently purchasable.
+- [ ] Marketing/pricing shows only the approved four-tier INR prices (0, 119, 499 with 3 outlets and +149 per extra outlet, 30,000) from [plans-and-limits.md](../plans-and-limits.md), and never implies a capability that is not live.
 
 ## Technical and accessibility evidence
 

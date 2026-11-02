@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
+import { PlanUsagePanel } from "@/components/plans/plan-usage";
+import { inrMonthlyPrice } from "@/modules/billing/catalog";
+import type { PlanUsageView } from "@/modules/plans/view";
 import { OperationsHistory } from "./operations-history";
 import { AccountDeletionPanel } from "./account-deletion-panel";
 type Organization = { id: string; name: string; role: string; version: number; isActive: boolean };
@@ -346,9 +349,11 @@ function BrandLinkEditor({
 export function OrganizationManager({
   organizations,
   initialOrganizationId,
+  planUsage = null,
 }: {
   organizations: Organization[];
   initialOrganizationId?: string;
+  planUsage?: { organizationId: string; outletName: string; view: PlanUsageView } | null;
 }) {
   const router = useRouter();
   const initiallySelected = organizations.some((org) => org.id === initialOrganizationId)
@@ -442,7 +447,9 @@ export function OrganizationManager({
           subscription_id: data.subscriptionId,
           name: "MenuMinute",
           description:
-            plan === "kitchen_pro" ? "Kitchen Pro KDS (₹299/mo)" : "Live Table Ordering (₹119/mo)",
+            plan === "kitchen_pro"
+              ? `Kitchen Pro (${inrMonthlyPrice("kitchen_pro")}/mo)`
+              : `Ordering (${inrMonthlyPrice("ordering")}/mo)`,
           handler: function () {
             setCheckoutMessage(
               "Payment authorization received. Access activates after secure billing confirmation."
@@ -908,6 +915,9 @@ export function OrganizationManager({
                             </p>
                           </>
                         )}
+                        {planUsage && planUsage.organizationId === selected && (
+                          <PlanUsagePanel view={planUsage.view} outletName={planUsage.outletName} />
+                        )}
                         <div className="oh-capability-grid" aria-label="Live capabilities">
                           <article className="oh-capability">
                             <QrCode size={23} aria-hidden="true" />
@@ -977,7 +987,7 @@ export function OrganizationManager({
                                 >
                                   {checkoutBusy === "ordering"
                                     ? "Connecting..."
-                                    : "Upgrade to Live Ordering (₹119/mo)"}
+                                    : `Upgrade to Ordering (${inrMonthlyPrice("ordering")}/mo)`}
                                 </button>
                               )}
                               {!billing.kitchen && billing.kitchenCommerceEnabled && (
@@ -989,7 +999,7 @@ export function OrganizationManager({
                                 >
                                   {checkoutBusy === "kitchen_pro"
                                     ? "Connecting..."
-                                    : "Upgrade to Kitchen Pro (₹299/mo)"}
+                                    : `Upgrade to Kitchen Pro (${inrMonthlyPrice("kitchen_pro")}/mo)`}
                                 </button>
                               )}
                             </div>

@@ -1,0 +1,340 @@
+/* Plan usage (slice 2c). Uses only the shared Ink & Ember tokens from menu-product.css so it
+   follows Light / Dark automatically; no hard-coded theme colours except the shared gradient. */
+.pu-meter,
+.pu-strip,
+.pu-panel {
+  --pu-fill: var(--gradient);
+  --pu-status: var(--muted);
+  font-family: var(--font-dm), system-ui, sans-serif;
+  color: var(--ink);
+  box-sizing: border-box;
+}
+.pu-meter *,
+.pu-strip *,
+.pu-panel * {
+  box-sizing: border-box;
+}
+.pu-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── One meter ─────────────────────────────────────────────── */
+.pu-meter {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.pu-meter[data-state="near"] {
+  --pu-fill: var(--ember);
+  --pu-status: var(--ember);
+}
+.pu-meter[data-state="full"],
+.pu-meter[data-state="over"] {
+  --pu-fill: var(--danger);
+  --pu-status: var(--danger);
+}
+.pu-meter-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pu-meter-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.pu-meter-count {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pu-meter-count strong {
+  color: var(--ink);
+  font-size: 1.0625rem;
+  font-weight: 800;
+}
+.pu-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--decorative);
+  overflow: hidden;
+}
+.pu-bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: var(--pu-fill);
+}
+.pu-meter-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 22px;
+}
+.pu-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  color: var(--pu-status);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.pu-meter[data-state="ok"] .pu-chip {
+  border-color: var(--decorative);
+}
+.pu-period {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.pu-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--pu-status, var(--line));
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.pu-notice svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--pu-status, var(--muted));
+}
+.pu-hint {
+  color: var(--ink);
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pu-bar-fill {
+    transition: width 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+
+/* ── Strip (inside Menu Studio / QR Studio) ────────────────── */
+.pu-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 24px;
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--decorative);
+  border-radius: 14px;
+  /* Translucent so the strip picks up the warm paper tone of the studio page it sits on. */
+  background: color-mix(in srgb, var(--panel) 45%, transparent);
+}
+.pu-strip[data-hot="true"] {
+  border-color: var(--line);
+}
+.pu-strip-meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px 28px;
+  min-width: 0;
+}
+.pu-link {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pu-strip-plan {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.pu-link-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--decorative);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+.pu-strip[data-hot="true"] .pu-link-text {
+  text-decoration-color: var(--ember);
+}
+.pu-link:hover .pu-link-text {
+  text-decoration-color: var(--ember);
+}
+.pu-link:focus-visible,
+.pu-compare:focus-visible {
+  outline: 3px solid var(--ember);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+@media (max-width: 640px) {
+  .pu-strip {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+  .pu-link {
+    justify-items: start;
+    grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pu-link,
+  .pu-link-text {
+    min-height: 44px;
+  }
+}
+
+/* ── Panel (Organization → billing) ────────────────────────── */
+.pu-panel {
+  display: grid;
+  gap: 18px;
+  margin: 0 0 18px;
+  padding: 20px;
+  border: 1px solid var(--decorative);
+  border-radius: 14px;
+  background: var(--paper);
+  scroll-margin-top: 96px;
+}
+.pu-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.pu-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ember);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.pu-panel-head h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.pu-panel-head h3 span {
+  color: var(--muted);
+  font-weight: 600;
+}
+.pu-compare {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--ember);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.pu-panel-meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px 28px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+.pu-features {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pu-feature {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--decorative);
+}
+.pu-feature:first-child {
+  border-top: 0;
+}
+.pu-feature-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--decorative);
+  color: var(--muted);
+}
+.pu-feature[data-status="included"] .pu-feature-icon {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--paper);
+}
+.pu-feature[data-status="limited"] .pu-feature-icon {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+.pu-feature-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.pu-feature-copy strong {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.pu-feature-copy span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+.pu-feature-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--decorative);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pu-feature[data-status="locked"] .pu-feature-tag,
+.pu-feature[data-status="limited"] .pu-feature-tag {
+  color: var(--ink);
+  border-color: var(--line);
+}
+@media (max-width: 560px) {
+  .pu-panel {
+    padding: 16px;
+  }
+  .pu-feature {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .pu-feature-tag {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

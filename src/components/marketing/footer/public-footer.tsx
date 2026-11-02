@@ -153,11 +153,11 @@ export function PublicFooter() {
           </div>
           <div className="mmf-payments">
             <div className="mmf-proof-label">
-              Payment options preview <span>Planned · not yet available</span>
+              Payment options <span>Secure checkout by Razorpay</span>
             </div>
             <Image
               src="/brand/footer/payment-options-preview.svg"
-              alt="Illustrative Visa, Mastercard and UPI payment options; planned, not currently accepted by Menu Minute."
+              alt="Illustrative payment marks. The payment methods available are shown at checkout when you subscribe."
               width={242}
               height={43}
               unoptimized

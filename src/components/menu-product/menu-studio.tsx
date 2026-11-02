@@ -1,4 +1,6 @@
 "use client";
+import { PlanMeterStrip } from "@/components/plans/plan-usage";
+import type { PlanUsageView } from "@/modules/plans/view";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
@@ -49,6 +51,7 @@ export function MenuStudio({
   outletChoices,
   brandChoices,
   imports = [],
+  planUsage = null,
 }: {
   outlet: {
     id: string;
@@ -66,6 +69,7 @@ export function MenuStudio({
   outletChoices: { id: string; name: string; currency: string }[];
   brandChoices: { id: string; name: string }[];
   imports?: { id: string; status: string; revision: number; updatedAt: Date | string }[];
+  planUsage?: PlanUsageView | null;
 }) {
   const router = useRouter();
   const [list, setList] = useState(initialList);
@@ -507,6 +511,7 @@ export function MenuStudio({
         />
       )}
       <div className="atelier-body">
+        <PlanMeterStrip view={planUsage} only={["dishes"]} />
         {doc && detail && (
           <StudioAddDish
             key={detail.id}

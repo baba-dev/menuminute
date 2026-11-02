@@ -21,6 +21,19 @@ NEXT_PUBLIC value or worker configuration.
 
 - In the Razorpay Dashboard create a real **monthly INR** ordering plan for ₹119
   (`11900` paise). Verify its plan ID, recurrence, pricing, GST policy and merchant account.
+- **Kitchen Pro is ₹499 a month (`49900` paise).** Create a new monthly INR plan at that amount and set
+  its ID as `RAZORPAY_PLAN_KITCHEN_ID` **before** deploying the release that changes the catalog price.
+  The webhook refuses a charge below the catalog amount for the plan it belongs to.
+- **Existing ₹299 subscribers.** Keep the original ₹299 plan ID in `RAZORPAY_PLAN_KITCHEN_LEGACY_ID`.
+  Subscriptions created on it keep renewing at ₹299 (`29900` paise) and are never accepted at a lower
+  amount; new checkouts use the current plan. Remove the setting only when no active subscription uses it.
+- **Kitchen Pro replaces Ordering.** When a Kitchen Pro payment is verified, the webhook cancels any
+  Ordering subscription of the same organization at the end of its paid cycle (paid days stay active).
+  A provider failure makes the webhook return 503 so the provider retries. Before this fix an owner could
+  be billed for both: run `scripts/billing-double-billing-audit.ts` once (read-only) and cancel any
+  Ordering subscription it lists in the Razorpay Dashboard.
+- **Extra outlets (₹149 each beyond the 3 included) are not billed automatically yet.** The outlet cap for
+  Kitchen Pro is 10 and is enforced, but there is no add-on charge; see plans-and-limits.md.
 - Create a webhook with a distinct high-entropy signing secret, subscribed to
   `subscription.charged`, `subscription.paused`, `subscription.halted`,
   `subscription.cancelled`, `subscription.completed`, `subscription.resumed`,

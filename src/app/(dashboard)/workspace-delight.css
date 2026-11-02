@@ -147,18 +147,22 @@
   }
 }
 
-/* Side by side, the tall dining floor spans two rows so the two widgets that follow it stack in
-   the right-hand column and stretch to meet its bottom edge instead of leaving a gap. */
+/* Side by side, the tall dining floor spans two rows beside the service requests, and the tall
+   pulse spans the lower two rows so the plan widget can sit under the floor at its left. Every
+   widget in the second column stretches to meet the bottom edge instead of leaving a gap. */
 @media (min-width: 1161px) {
-  .mm-widget[data-widget="floor"] {
+  .mm-widget[data-widget="floor"],
+  .mm-widget[data-widget="pulse"] {
     grid-row: span 2;
   }
   .mm-widget[data-widget="serviceRequests"],
-  .mm-widget[data-widget="pulse"] {
+  .mm-widget[data-widget="pulse"],
+  .mm-widget[data-widget="plan"] {
     align-self: stretch;
   }
   .mm-widget[data-widget="serviceRequests"] > section,
-  .mm-widget[data-widget="pulse"] > section {
+  .mm-widget[data-widget="pulse"] > section,
+  .mm-widget[data-widget="plan"] > section {
     height: 100%;
   }
 }

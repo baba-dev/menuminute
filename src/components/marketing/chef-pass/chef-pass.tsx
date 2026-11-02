@@ -38,7 +38,7 @@ const capabilities = [
   },
   {
     label: "Designed for busy service",
-    detail: "Planned connection awareness and recoverable kitchen workflows.",
+    detail: "Connection awareness and recoverable kitchen workflows.",
     Icon: Wifi,
   },
 ] as const;
@@ -201,21 +201,21 @@ export function ChefPass() {
           <span className="cp-eyebrow">
             <ChefHat size={17} aria-hidden="true" /> 05 / THE CHEF&apos;S PASS
           </span>
-          <span className="cp-roadmap">KITCHEN PRO · IN DEVELOPMENT</span>
+          <span className="cp-roadmap">KITCHEN PRO · AVAILABLE NOW</span>
           <h2 id="chef-pass-heading">
             One order. Every station. <em>In sync.</em>
           </h2>
           <p className="cp-lead">The kitchen is where everything comes together.</p>
           <p className="cp-description">
-            From Grill to Tandoor to Drinks, discover the multi-station Kitchen Display System
-            we&apos;re designing to keep preparation coordinated and the final handoff deliberate.
+            From Grill to Tandoor to Drinks, the multi-station Kitchen Display System keeps
+            preparation coordinated and the final handoff deliberate.
           </p>
         </header>
 
         <div
           className="cp-stage"
           role="img"
-          aria-label="Illustrative future Kitchen Pro: accepted order 1042 splits into distinct Grill, Tandoor and Drinks assignments. Drinks finishes before Grill and Tandoor. The order stays unreleased until all stations finish and an expeditor confirms the handoff."
+          aria-label="Illustrative Kitchen Pro: accepted order 1042 splits into distinct Grill, Tandoor and Drinks assignments. Drinks finishes before Grill and Tandoor. The order stays unreleased until all stations finish and an expeditor confirms the handoff."
         >
           <div
             className="cp-desktop-art cp-desktop-dark"
@@ -273,7 +273,7 @@ export function ChefPass() {
           )}
         </div>
 
-        <div className="cp-capabilities" aria-label="Planned Kitchen Pro capabilities">
+        <div className="cp-capabilities" aria-label="Kitchen Pro capabilities">
           {capabilities.map(({ label, detail, Icon }) => (
             <div className="cp-capability" key={label}>
               <span className="cp-capability-icon">
@@ -290,13 +290,14 @@ export function ChefPass() {
           <div>
             <h3>Less chasing tickets. More focus on the food.</h3>
             <p>
-              Full multi-station Kitchen Pro is in development and not yet available for purchase.
-              Begin with your free QR menu while we build the kitchen experience.
+              Kitchen Pro is ₹499 a month and includes three outlets, online ordering and the
+              kitchen display. Set up your stations and staff, and tickets start routing as soon as
+              your outlet is ready.
             </p>
           </div>
           <div className="cp-links">
             <Link className="cp-primary" href="/pricing">
-              Explore future plans <ArrowUpRight size={18} aria-hidden="true" />
+              See pricing <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
             <Link className="cp-secondary" href="/register">
               Create your free menu <ArrowRight size={18} aria-hidden="true" />
