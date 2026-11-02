@@ -39,11 +39,22 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: PAGE_URL,
     type: "website",
+    locale: "en_IN",
+    siteName: "MenuMinute",
+    images: [
+      {
+        url: "/brand/social/og-light.webp",
+        width: 1200,
+        height: 630,
+        alt: "MenuMinute by BabaBuilds",
+      },
+    ],
   },
   twitter: {
     title: "Delete Your MenuMinute Account & Data | MenuMinute",
     description: DESCRIPTION,
     card: "summary_large_image",
+    images: ["/brand/social/og-light.webp"],
   },
 };
 
