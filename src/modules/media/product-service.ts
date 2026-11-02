@@ -6,7 +6,6 @@ import { getPool } from "@/db";
 import { domainError } from "@/modules/organizations/service";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { putObject, getObject } from "./storage";
-import { env } from "@/lib/config/env";
 import { createHash } from "node:crypto";
 import { invalidateOutletMenuCache } from "@/modules/menu-product/cache";
 import { mediaEnv } from "@/lib/config/media-env";
