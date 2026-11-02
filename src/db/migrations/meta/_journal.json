@@ -540,6 +540,13 @@
       "when": 1795093200031,
       "tag": "0077_demo_reset_consumer_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1795093200032,
+      "tag": "0078_account_deletion_requests",
+      "breakpoints": true
     }
   ]
 }
