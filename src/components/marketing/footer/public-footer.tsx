@@ -50,7 +50,7 @@ const groups = [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Account deletion", href: "/delete-account" },
       { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies", soon: true },
+      { label: "Cookie Policy", href: "/cookies" },
       { label: "Refund Policy", href: "/refund-policy", soon: true },
       { label: "Accessibility", href: "/accessibility", soon: true },
       { label: "Security", href: "/security", soon: true },
