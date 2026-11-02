@@ -1,4 +1,11 @@
-import { DEDICATED_MONTHLY_PAISE, formatInr, inrMonthlyPrice } from "@/modules/billing/catalog";
+import {
+  DEDICATED_MONTHLY_PAISE,
+  DEDICATED_ON_PREMISE_USD_CENTS,
+  formatInr,
+  formatUsd,
+  formatSubscriptionMonthlyPrice,
+  type BillingCurrency,
+} from "@/modules/billing/catalog";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanKey } from "./catalog";
 import { fmt, NEXT_PLAN, type IntakeSnapshot } from "./view";
 
@@ -12,19 +19,31 @@ import { fmt, NEXT_PLAN, type IntakeSnapshot } from "./view";
 export type PricePoint = {
   /** "Free", "₹119", "Custom" */
   label: string;
-  /** "forever", "per month" */
+  /** "forever", "per month", "by contract" */
   note: string;
   paid: boolean;
   /** Extra pricing fact shown under the price, e.g. what is included. */
   detail?: string;
 };
 
-export function planPrice(plan: PlanKey): PricePoint {
-  if (plan === "free") return { label: "₹0", note: "forever", paid: false };
-  // Dedicated is sold by contract, so it is not purchasable in checkout, but its price is published.
+export function planPrice(plan: PlanKey, currency: BillingCurrency = "INR"): PricePoint {
+  if (plan === "free")
+    return { label: currency === "USD" ? "$0" : "₹0", note: "forever", paid: false };
+  // Dedicated is not self-serve: USD is a private on-premise contract quote, not a monthly plan.
   if (plan === "dedicated")
-    return { label: formatInr(DEDICATED_MONTHLY_PAISE), note: "per month", paid: false };
-  const price: PricePoint = { label: inrMonthlyPrice(plan), note: "per month", paid: true };
+    return currency === "USD"
+      ? {
+          label: formatUsd(DEDICATED_ON_PREMISE_USD_CENTS),
+          note: "by contract",
+          detail: "Private on-premise deployment",
+          paid: false,
+        }
+      : { label: formatInr(DEDICATED_MONTHLY_PAISE), note: "per month", paid: false };
+  const price: PricePoint = {
+    label: formatSubscriptionMonthlyPrice(plan, currency),
+    note: "per month",
+    paid: true,
+  };
   if (plan === "kitchen_pro") price.detail = "One flat price for up to 10 outlets";
   return price;
 }
@@ -36,7 +55,7 @@ export type BenefitRow = {
   to: string;
 };
 
-type Opts = { intake?: IntakeSnapshot | null };
+type Opts = { intake?: IntakeSnapshot | null; currency?: BillingCurrency };
 
 export const UNLIMITED = "Virtually unlimited";
 const capText = (n: number | null) => (n === null ? UNLIMITED : fmt(n));
@@ -125,7 +144,12 @@ export function planHighlights(plan: PlanKey, opts: Opts = {}): string[] {
     );
   } else list.push("Online ordering with no monthly cap");
   if (plan === "kitchen_pro" || plan === "dedicated") list.push("Kitchen display and stations");
-  if (plan === "dedicated") list.push("Your own domain and branding, set up with our team");
+  if (plan === "dedicated")
+    list.push(
+      opts.currency === "USD"
+        ? "Private on-premise deployment, scoped by contract"
+        : "Your own domain and branding, set up with our team"
+    );
   return list;
 }
 
@@ -133,8 +157,11 @@ export function planHighlights(plan: PlanKey, opts: Opts = {}): string[] {
 export function planLadder(opts: Opts = {}): PlanOffer[] {
   return (["free", "ordering", "kitchen_pro", "dedicated"] as const).map((key) => ({
     key,
-    label: PLAN_LABELS[key],
-    price: planPrice(key),
+    label:
+      key === "dedicated" && opts.currency === "USD"
+        ? "Dedicated · On-premise Private"
+        : PLAN_LABELS[key],
+    price: planPrice(key, opts.currency),
     tagline: TAGLINE[key],
     highlights: planHighlights(key, opts),
   }));
@@ -157,7 +184,7 @@ export function buildNextUp(plan: PlanKey, opts: Opts = {}): NextUp | null {
   return {
     plan: next,
     label: PLAN_LABELS[next],
-    price: planPrice(next),
+    price: planPrice(next, opts.currency),
     tagline: TAGLINE[next],
     benefits: benefitsBetween(plan, next, opts),
   };
