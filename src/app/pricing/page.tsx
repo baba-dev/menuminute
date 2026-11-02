@@ -4,6 +4,7 @@ import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
 import { CheckCircle, Sparkles, Terminal } from "lucide-react";
 import { planLadder, type PlanOffer } from "@/modules/plans/offer";
+import type { BillingCurrency } from "@/modules/billing/catalog";
 import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
 import { fmt } from "@/modules/plans/view";
 
@@ -86,8 +87,11 @@ const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
   },
 ];
 
-function PlanCard({ offer }: { offer: PlanOffer }) {
+function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurrency }) {
   const card = CARD[offer.key];
+  const usdInterest = currency === "USD" && (offer.key === "ordering" || offer.key === "kitchen_pro");
+  const actionHref = usdInterest ? "/contact" : card.href;
+  const actionText = usdInterest ? "Ask about USD billing" : card.cta;
   const primary = card.primary;
   return (
     <div
@@ -148,22 +152,28 @@ function PlanCard({ offer }: { offer: PlanOffer }) {
       </div>
       <div className="mt-8 pt-4">
         <Link
-          href={card.href}
+          href={actionHref}
           className={`block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md transition-colors ${
             primary
               ? "text-brand-700 bg-white hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
               : "bg-brand-600 hover:bg-brand-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
           }`}
         >
-          {card.cta}
+          {actionText}
         </Link>
       </div>
     </div>
   );
 }
 
-export default function PricingPage() {
-  const plans = planLadder();
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ currency?: string | string[] }>;
+}) {
+  const query = await searchParams;
+  const currency: BillingCurrency = query.currency === "USD" ? "USD" : "INR";
+  const plans = planLadder({ currency });
   return (
     <div className="bg-background text-foreground min-h-screen transition-colors">
       <MarketingSubpageNav />
@@ -179,14 +189,30 @@ export default function PricingPage() {
           </h1>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
             Your permanent QR menu is free. Add ordering when you want guests to order from the
-            table, and a full kitchen display when your service needs it. Prices are in INR, billed
-            monthly, and you can cancel any time.
+            table, and a full kitchen display when your service needs it. Compare fixed INR and USD
+            monthly prices below; restaurant menu prices remain independent of platform billing.
           </p>
+          <nav aria-label="Subscription pricing currency" className="mt-7 flex justify-center gap-2">
+            {(["INR", "USD"] as const).map((code) => (
+              <Link
+                key={code}
+                href={`/pricing?currency=${code}`}
+                aria-current={currency === code ? "page" : undefined}
+                className={`rounded-full border px-5 py-2 text-sm font-semibold transition-colors ${
+                  currency === code
+                    ? "border-orange-600 bg-orange-600 text-white"
+                    : "border-border bg-card text-foreground hover:border-orange-500"
+                }`}
+              >
+                {code === "INR" ? "₹ INR" : "$ USD"}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((offer) => (
-            <PlanCard key={offer.key} offer={offer} />
+            <PlanCard key={offer.key} offer={offer} currency={currency} />
           ))}
         </div>
 
@@ -195,7 +221,9 @@ export default function PricingPage() {
           <Link href="/billing" className="text-foreground font-semibold underline">
             Manage your plan in billing
           </Link>
-          . Billing is in INR; international pricing is coming later.
+          . {currency === "USD"
+            ? "USD plans are published for international enquiries. USD checkout is not yet active; no USD card charges can be initiated from this page."
+            : "Current self-service checkout charges in INR. USD plan requests are available in the USD tab."}
         </p>
 
         <section className="mx-auto mt-20 max-w-6xl" aria-labelledby="compare-heading">
