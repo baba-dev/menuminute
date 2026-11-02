@@ -1,3 +1,4 @@
+import { STICKER_DEMO_URL } from "../../src/components/marketing/storefront-studio/sticker-config";
 import { expect, test } from "@playwright/test";
 
 const studio = (page: import("@playwright/test").Page) => page.getByTestId("storefront-studio");
@@ -31,7 +32,7 @@ test("Section 7 replaces the generic CTA and shows six real-demo sticker formats
   );
   await expect(section.getByRole("link", { name: /Open the sample menu/i })).toHaveAttribute(
     "href",
-    "https://food.bababuilds.com/m/demo-spice-route-kitchen-v1"
+    STICKER_DEMO_URL
   );
   const qr = section.locator(".ss-real-qr-image img");
   await expect(qr).toHaveAttribute("src", /^data:image\/png;base64,/);

@@ -486,8 +486,9 @@ export function LiveOrdersBoard({
           <h1>The Service Counter.</h1>
           <p className="sc-hero-tagline">Every order, beautifully in motion.</p>
           <p className="sc-hero-intro">
-            Keep {outletName}&apos;s service moving from the first incoming ticket to the final
-            handoff. <span className="sc-currency">· {currency}</span>
+            Review and accept {outletName}&apos;s guest requests here. Point of Sale handles cashier
+            sales and payment records; Kitchen handles preparation.{" "}
+            <span className="sc-currency">· {currency}</span>
           </p>
           <div className="sc-hero-actions">
             <button type="button" className="sc-hero-primary" onClick={() => show("all")}>
@@ -1011,7 +1012,7 @@ export function LiveOrdersBoard({
                             href={`/dashboard/pos?attachOrder=${encodeURIComponent(currentSelected.id)}`}
                             className="sc-secondary"
                           >
-                            Open in The Till (draft attachment)
+                            Open in Point of Sale (draft attachment)
                           </Link>
                           <button
                             type="button"

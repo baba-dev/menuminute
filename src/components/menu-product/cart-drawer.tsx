@@ -163,7 +163,7 @@ export function CartDrawer({
       if (event.key !== "Tab" || !cartRef.current) return;
       const elements = Array.from(
         cartRef.current.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
         )
       );
       if (!elements.length) return;
@@ -356,7 +356,12 @@ export function CartDrawer({
                 className="icon-btn"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close cart"
-                style={{ borderRadius: "50%", padding: "0.4rem", minHeight: "36px", width: "36px" }}
+                style={{
+                  borderRadius: "50%",
+                  padding: "0.4rem",
+                  minHeight: "44px",
+                  minWidth: "44px",
+                }}
               >
                 <X size={18} />
               </button>
@@ -366,12 +371,19 @@ export function CartDrawer({
             <div className="cart-section stack" style={{ gap: "0.5rem" }}>
               <span className="section-title">Order Type</span>
               {fulfillmentModes.length > 1 ? (
-                <div className="row" style={{ gap: "0.5rem" }}>
+                <div
+                  className="row"
+                  role="group"
+                  aria-label="Choose order type"
+                  style={{ gap: "0.5rem", flexWrap: "wrap" }}
+                >
                   {fulfillmentModes.includes("dine_in") && (
                     <button
                       type="button"
                       className={`action ${fulfillmentMode === "dine_in" ? "ink-press" : ""}`}
-                      style={{ flex: 1 }}
+                      aria-pressed={fulfillmentMode === "dine_in"}
+                      aria-label={point ? `Dine in at ${point}` : "Dine in"}
+                      style={{ flex: "1 1 9rem", minHeight: "44px" }}
                       onClick={() => setFulfillmentMode("dine_in")}
                     >
                       <Utensils size={15} />
@@ -382,7 +394,8 @@ export function CartDrawer({
                     <button
                       type="button"
                       className={`action ${fulfillmentMode === "pickup" ? "ink-press" : ""}`}
-                      style={{ flex: 1 }}
+                      aria-pressed={fulfillmentMode === "pickup"}
+                      style={{ flex: "1 1 9rem", minHeight: "44px" }}
                       onClick={() => setFulfillmentMode("pickup")}
                     >
                       <Package size={15} />
@@ -490,7 +503,7 @@ export function CartDrawer({
                           <button
                             type="button"
                             className="action icon-btn"
-                            style={{ minHeight: "32px", width: "32px", padding: 0 }}
+                            style={{ minHeight: "44px", minWidth: "44px", padding: 0 }}
                             onClick={() => onUpdateQuantity(index, item.quantity - 1)}
                             aria-label="Decrease quantity"
                           >
@@ -504,7 +517,7 @@ export function CartDrawer({
                           <button
                             type="button"
                             className="action icon-btn"
-                            style={{ minHeight: "32px", width: "32px", padding: 0 }}
+                            style={{ minHeight: "44px", minWidth: "44px", padding: 0 }}
                             onClick={() => onUpdateQuantity(index, item.quantity + 1)}
                             aria-label="Increase quantity"
                           >
@@ -519,6 +532,8 @@ export function CartDrawer({
                             color: "var(--danger)",
                             border: "none",
                             background: "transparent",
+                            minHeight: "44px",
+                            minWidth: "44px",
                           }}
                           onClick={() => onRemoveItem(index)}
                           aria-label="Remove item"
@@ -566,34 +581,49 @@ export function CartDrawer({
               {/* Guest Details */}
               <div className="cart-section stack" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
                 <span className="section-title">Your Details (Optional)</span>
-                <div className="row" style={{ gap: "0.5rem" }}>
+                <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+                  <label
+                    className="stack"
+                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
+                  >
+                    <span>Guest name (optional)</span>
+                    <input
+                      type="text"
+                      placeholder="Your name"
+                      value={customerName}
+                      maxLength={80}
+                      autoComplete="name"
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="field-input"
+                    />
+                  </label>
+                  <label
+                    className="stack"
+                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
+                  >
+                    <span>Phone number (optional)</span>
+                    <input
+                      type="tel"
+                      placeholder="Phone number"
+                      value={customerPhone}
+                      maxLength={30}
+                      autoComplete="tel"
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="field-input"
+                    />
+                  </label>
+                </div>
+                <label className="stack" style={{ gap: "0.25rem" }}>
+                  <span>Order instructions (optional)</span>
                   <input
                     type="text"
-                    placeholder="Your Name"
-                    value={customerName}
-                    maxLength={80}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Allergies or special requests for the kitchen"
+                    value={orderNotes}
+                    maxLength={500}
+                    onChange={(e) => setOrderNotes(e.target.value)}
                     className="field-input"
-                    style={{ flex: 1 }}
                   />
-                  <input
-                    type="tel"
-                    placeholder="Phone (Optional)"
-                    value={customerPhone}
-                    maxLength={30}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="field-input"
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Order instructions or table notes..."
-                  value={orderNotes}
-                  maxLength={500}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  className="field-input"
-                />
+                </label>
               </div>
 
               {/* Price Breakdown */}

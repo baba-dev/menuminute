@@ -9,7 +9,12 @@ import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { ThemedArtwork } from "@/components/onboarding/themed-artwork";
 import "@/components/onboarding/onboarding-wizard.css";
 export const metadata = { title: "Set up your outlet — MenuMinute" };
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ quick?: string }>;
+}) {
+  const { quick } = await searchParams;
   const session = await auth();
   if (!session?.user.id) redirect("/login?next=%2Fonboarding");
   const memberships = await listOrganizations({ userId: session.user.id });
@@ -44,7 +49,7 @@ export default async function OnboardingPage() {
           className="wizard-welcome-mobile"
         />
       </div>
-      <OnboardingForm />
+      <OnboardingForm initialQuick={quick === "1"} />
     </AuthShell>
   );
 }

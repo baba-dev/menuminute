@@ -24,6 +24,14 @@ const find = (id: string) => navItems.find((item) => item.id === id)!;
 const ids = (items: { id: string }[]) => items.map((item) => item.id);
 
 describe("navigation availability keeps the original gating rules", () => {
+  it("uses consistent mobile labels and explains operational workspaces", () => {
+    expect(find("pos").shortLabel).toBe("POS");
+    expect(find("pos").description).toMatch(/cashier/i);
+    expect(find("orders").description).toMatch(/incoming guest orders/i);
+    expect(find("kitchen").description).toMatch(/kitchen stations/i);
+    expect(find("floor").description).toMatch(/guest service requests/i);
+  });
+
   it("ungated destinations are always available, even when capabilities are unknown", () => {
     for (const id of ["overview", "pos", "menu", "qr", "organization", "settings"])
       expect(navState(find(id), undefined).state).toBe("available");
@@ -107,7 +115,7 @@ describe("grouped sidebar", () => {
 });
 
 describe("mobile bottom bar", () => {
-  it("shows Orders, Till, Kitchen and Floor when all are usable", () => {
+  it("shows Orders, POS, Kitchen and Floor when all are usable", () => {
     expect(ids(bottomBarItems(caps()))).toEqual(["orders", "pos", "kitchen", "floor"]);
   });
 

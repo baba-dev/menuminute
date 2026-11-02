@@ -29,6 +29,8 @@ function NavLink({ item }: { item: ResolvedNavItem }) {
   return (
     <Link
       href={item.href}
+      title={item.description}
+      aria-description={item.description}
       className={"mm-workspace-nav-link" + (selected ? " is-active" : "")}
       aria-current={selected ? "page" : undefined}
     >

@@ -11,6 +11,14 @@ import { StepLocation } from "./wizard-steps/step-location";
 import { StepOperations } from "./wizard-steps/step-operations";
 import { StepContactTables } from "./wizard-steps/step-contact-tables";
 import { StepLaunch } from "./wizard-steps/step-launch";
+import { QuickMenuIdentity } from "./quick-menu-identity";
+import { QuickMenuRegion } from "./quick-menu-region";
+import {
+  quickStartDraft,
+  nextOnboardingStep,
+  previousOnboardingStep,
+  visibleOnboardingSteps,
+} from "./quick-menu-flow";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
 import { regions } from "@/modules/onboarding/locales";
@@ -123,11 +131,14 @@ function validateStep(step: number, draft: WizardDraft): string | null {
 
 interface OnboardingWizardProps {
   onSuccess?: (outletId: string) => void;
+  initialQuick?: boolean;
 }
 
-export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
+export function OnboardingWizard({ onSuccess, initialQuick = false }: OnboardingWizardProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [quickStart, setQuickStart] = useState(initialQuick);
+  const quickLinkRequested = useRef(initialQuick);
   const [draft, setDraft] = useState<WizardDraft>(initialWizardDraft);
   const [ready, setReady] = useState(false);
   const [restoreFailed, setRestoreFailed] = useState(false);
@@ -182,6 +193,18 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       setRestoreFailed(false);
       setProvisioning(data.status === "provisioning");
       if (data.status === "provisioning") setCurrentStep(STEPS.length - 1);
+      let savedQuick: string | null = null;
+      try {
+        savedQuick = window.sessionStorage.getItem(progressStorageKey.current + ".quick");
+      } catch {
+        // Session storage is optional; server-owned form data remains authoritative.
+      }
+      const goal = data.draft?.onboardingGoal ?? "qr_menu";
+      // An explicit Quick Start link takes precedence over an earlier full-wizard
+      // preference from this browser session.
+      const shouldQuick =
+        goal === "qr_menu" && (quickLinkRequested.current || savedQuick === "true");
+      setQuickStart(shouldQuick);
       if (data.draft && Object.keys(data.draft).length > 0) {
         // Restored drafts must not be overwritten by a country suggestion.
         if (typeof data.draft.timezone === "string") timezoneTouched.current = true;
@@ -191,6 +214,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           // Ensure arrays are preserved
           fulfillmentModes: data.draft.fulfillmentModes || prev.fulfillmentModes,
         }));
+      } else if (shouldQuick) {
+        // New QR-only outlets do not need ten speculative table records.
+        setDraft(quickStartDraft(initialWizardDraft));
         setPersisted(true);
         setStatusMessage("Restored your saved progress.");
       }
@@ -207,7 +233,9 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         storedStep >= 0 &&
         storedStep < STEPS.length
       )
-        setCurrentStep(storedStep);
+        setCurrentStep(
+          shouldQuick && !visibleOnboardingSteps(true).includes(storedStep) ? 0 : storedStep
+        );
       setReady(true);
     } catch {
       // Do not enable autosave with unverified defaults: a failed GET must
@@ -230,11 +258,12 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
     if (ready) {
       try {
         window.sessionStorage.setItem(progressStorageKey.current, String(currentStep));
+        window.sessionStorage.setItem(progressStorageKey.current + ".quick", String(quickStart));
       } catch {
         /* Storage disabled; server draft remains authoritative. */
       }
     }
-  }, [ready, currentStep]);
+  }, [ready, currentStep, quickStart]);
   // Debounced auto-save function
   const save = useCallback((data: WizardDraft, revision = draftRevision.current) => {
     const operation = queue.current
@@ -301,16 +330,37 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       setErrorMessage(problem);
       return;
     }
+    // Quick Start displays currency and timezone on its second screen. The
+    // full operations validator still owns these constraints.
+    if (quickStart && currentStep === 1) {
+      const operationsError = validateStep(2, draft);
+      if (operationsError) {
+        setQuickStart(false);
+        setCurrentStep(2);
+        setErrorMessage(operationsError);
+        return;
+      }
+    }
 
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+      setBusy(true);
+      try {
+        // A fast tap followed by a reload must not lose the prior screen's edits.
+        // Preserve the same ordered, server-owned draft write path used by autosave.
+        await save(draft);
+        setCurrentStep(nextOnboardingStep(currentStep, quickStart));
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to save your progress.");
+      } finally {
+        setBusy(false);
+      }
     }
   };
 
   const handleBack = () => {
     setErrorMessage("");
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep(previousOnboardingStep(currentStep, quickStart));
     }
   };
 
@@ -323,6 +373,10 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
       for (let step = 0; step < STEPS.length - 1; step++) {
         const problem = validateStep(step, draft);
         if (problem) {
+          if (quickStart && !visibleOnboardingSteps(true).includes(step)) {
+            // The invalid value lives on a full-setup screen, not Quick Start.
+            setQuickStart(false);
+          }
           setCurrentStep(step);
           throw new Error(problem);
         }
@@ -365,6 +419,8 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
   };
 
   const activeStepMeta = STEPS[currentStep]!;
+  const shownSteps = visibleOnboardingSteps(quickStart);
+  const stepPosition = shownSteps.indexOf(currentStep);
 
   return (
     <div className="wizard-container" aria-busy={busy || !ready}>
@@ -387,34 +443,77 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           A previous creation request is being reconciled. The existing request will be reused.
         </p>
       )}
+      {currentStep === 0 && !provisioning && (
+        <div className="wizard-quick-choice" aria-label="Setup journey">
+          <div>
+            <strong>
+              {quickStart ? "Free QR menu quick start" : "Want to publish a QR menu sooner?"}
+            </strong>
+            <p className="wizard-desc">
+              {quickStart
+                ? "Three short steps, then straight to Menu Studio. You can configure tables, address and opening hours later."
+                : "Skip optional tables, GPS, hours and branding for now. The full setup remains available."}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="wizard-back-btn"
+            disabled={!ready || busy}
+            onClick={() => {
+              if (quickStart) {
+                quickLinkRequested.current = false;
+                setQuickStart(false);
+                try {
+                  window.sessionStorage.setItem(progressStorageKey.current + ".quick", "false");
+                } catch {
+                  // State still works without session storage.
+                }
+                // Switching back to the full wizard must stay full on reload.
+                if (window.location.search.includes("quick=1")) {
+                  window.history.replaceState(window.history.state, "", "/onboarding");
+                }
+              } else {
+                setDraft((previous) => quickStartDraft(previous));
+                draftRevision.current += 1;
+                setPersisted(false);
+                setQuickStart(true);
+              }
+              setErrorMessage("");
+            }}
+          >
+            {quickStart ? "Use full restaurant setup" : "Start with a free QR menu"}
+          </button>
+        </div>
+      )}
       {/* Stepper Progress Bar */}
       <nav className="wizard-stepper" aria-label="Onboarding Progress">
-        {STEPS.map((step, idx) => {
-          const isActive = idx === currentStep;
-          const isCompleted = idx < currentStep;
+        {shownSteps.map((stepIndex, idx) => {
+          const step = STEPS[stepIndex]!;
+          const isActive = stepIndex === currentStep;
+          const isCompleted = idx < stepPosition;
           return (
             <div
               key={step.id}
               style={{
                 display: "flex",
                 alignItems: "center",
-                flex: idx === STEPS.length - 1 ? "none" : 1,
+                flex: idx === shownSteps.length - 1 ? "none" : 1,
               }}
             >
               <button
                 type="button"
                 className={`wizard-step-node ${isActive ? "wizard-step-node--active" : ""} ${isCompleted ? "wizard-step-node--completed" : ""}`}
-                disabled={!ready || busy || provisioning || idx > currentStep}
-                onClick={() => setCurrentStep(idx)}
+                disabled={!ready || busy || provisioning || idx > stepPosition}
+                onClick={() => setCurrentStep(stepIndex)}
               >
                 <span className="wizard-step-badge">
                   {isCompleted ? <Check size={14} /> : step.number}
                 </span>
                 <span className="wizard-step-label">{step.label}</span>
               </button>
-              {idx < STEPS.length - 1 && (
+              {idx < shownSteps.length - 1 && (
                 <div
-                  className={`wizard-step-divider ${idx < currentStep ? "wizard-step-divider--filled" : ""}`}
+                  className={`wizard-step-divider ${idx < stepPosition ? "wizard-step-divider--filled" : ""}`}
                 />
               )}
             </div>
@@ -433,7 +532,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         <div className="wizard-content" style={{ paddingTop: "0.5rem", paddingBottom: "0.25rem" }}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="wizard-mobile-step-pill">
-              Step {currentStep + 1} of {STEPS.length}
+              Step {stepPosition + 1} of {shownSteps.length}
             </span>
             <p
               className="font-display text-sm font-semibold text-amber-900 dark:text-amber-200"
@@ -460,8 +559,25 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
           aria-busy={!ready}
         >
           <legend className="sr-only">{activeStepMeta.label}</legend>
-          {currentStep === 0 && <StepIdentity draft={draft} onChange={updateDraft} />}
-          {currentStep === 1 && (
+          {currentStep === 0 &&
+            (quickStart ? (
+              <QuickMenuIdentity draft={draft} onChange={updateDraft} />
+            ) : (
+              <StepIdentity draft={draft} onChange={updateDraft} />
+            ))}
+          {currentStep === 1 && quickStart && (
+            <QuickMenuRegion
+              draft={draft}
+              onChange={updateDraft}
+              onTimezoneSuggestion={(timezone) => {
+                if (!timezoneTouched.current) {
+                  draftRevision.current += 1;
+                  setDraft((prev) => ({ ...prev, timezone }));
+                }
+              }}
+            />
+          )}
+          {currentStep === 1 && !quickStart && (
             <StepLocation
               draft={draft}
               onChange={updateDraft}
@@ -481,6 +597,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
               draft={draft}
               busy={busy || !ready}
               onLaunch={handleLaunch}
+              quick={quickStart}
             />
           )}
         </fieldset>
@@ -501,7 +618,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
         >
           <div className="wizard-footer">
             <div>
-              {currentStep > 0 ? (
+              {stepPosition > 0 ? (
                 <button
                   type="button"
                   className="wizard-back-btn"
@@ -532,7 +649,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              {currentStep > 0 && currentStep < STEPS.length - 1 && (
+              {stepPosition > 0 && stepPosition < shownSteps.length - 1 && (
                 <span className="wizard-status-pill">
                   {persisted && (
                     <span
@@ -545,7 +662,7 @@ export function OnboardingWizard({ onSuccess }: OnboardingWizardProps) {
                 </span>
               )}
 
-              {currentStep < STEPS.length - 1 ? (
+              {stepPosition < shownSteps.length - 1 ? (
                 <button
                   type="button"
                   className="wizard-primary-btn"

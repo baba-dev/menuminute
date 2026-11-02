@@ -42,7 +42,7 @@ export default async function PosPage() {
     return (
       <main className="till-page">
         <h1>POS access required</h1>
-        <p>Your current outlet assignment does not permit the Till.</p>
+        <p>Your current outlet assignment does not permit Point of Sale access.</p>
         <Link href="/dashboard">Return to dashboard</Link>
       </main>
     );

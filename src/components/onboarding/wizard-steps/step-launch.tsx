@@ -10,9 +10,10 @@ interface StepLaunchProps {
   draft: WizardDraft;
   busy: boolean;
   onLaunch: () => Promise<void>;
+  quick?: boolean;
 }
 
-export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
+export function StepLaunch({ draft, busy, onLaunch, quick = false }: StepLaunchProps) {
   const [celebrating, setCelebrating] = useState(false);
   const [confirmedTimezone, setConfirmedTimezone] = useState(false);
   const [confirmedCurrency, setConfirmedCurrency] = useState(false);
@@ -37,7 +38,9 @@ export function StepLaunch({ draft, busy, onLaunch }: StepLaunchProps) {
   return (
     <div className="wizard-content">
       <div className="wizard-header">
-        <span className="wizard-eyebrow">Step 05 / Review & Create</span>
+        <span className="wizard-eyebrow">
+          {quick ? "Step 03" : "Step 05"} / Review &amp; Create
+        </span>
         <h2 className="wizard-title">Review your outlet details.</h2>
         <p className="wizard-desc">
           Creating the outlet prepares a private draft menu and any selected tables. Publish a menu

@@ -38,6 +38,8 @@ export type NavItem = {
   label: string;
   /** Short label for the cramped mobile bar. The accessible name stays the full label. */
   shortLabel: string;
+  /** Contextual explanation; no effect on permission gates or labels. */
+  description?: string;
   group: NavGroupId | null;
   icon: NavIcon;
   gate: Gate;
@@ -67,6 +69,7 @@ export const navItems: readonly NavItem[] = [
     href: "/dashboard/orders",
     label: "Orders",
     shortLabel: "Orders",
+    description: "Receive, accept and track incoming guest orders.",
     group: "run",
     icon: "orders",
     gate: "ordering",
@@ -76,7 +79,8 @@ export const navItems: readonly NavItem[] = [
     id: "pos",
     href: "/dashboard/pos",
     label: "Point of Sale",
-    shortLabel: "Till",
+    shortLabel: "POS",
+    description: "Record counter sales, bills and cashier payments.",
     group: "run",
     icon: "pos",
     gate: null,
@@ -87,6 +91,7 @@ export const navItems: readonly NavItem[] = [
     href: "/kitchen",
     label: "Kitchen",
     shortLabel: "Kitchen",
+    description: "Prepare dishes and move tickets through kitchen stations.",
     group: "run",
     icon: "kitchen",
     gate: "kitchen",
@@ -97,6 +102,7 @@ export const navItems: readonly NavItem[] = [
     href: "/dashboard/floor",
     label: "Dining floor",
     shortLabel: "Floor",
+    description: "Monitor dining tables and guest service requests.",
     group: "run",
     icon: "floor",
     gate: "ordering",
@@ -233,7 +239,7 @@ export function isNavSelected(item: Pick<NavItem, "href">, pathname: string): bo
 }
 
 /**
- * Mobile bottom bar: Orders, Till, Kitchen and Floor when the user can use them, then More.
+ * Mobile bottom bar: Orders, POS, Kitchen and Floor when the user can use them, then More.
  * An outlet without ordering would otherwise get a nearly empty bar, so it is back-filled with
  * Overview, Menu and QR codes until there are at least three destinations.
  */

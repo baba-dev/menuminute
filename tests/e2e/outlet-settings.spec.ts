@@ -60,7 +60,7 @@ test("Outlet Atelier saves scoped profile and remains responsive in both themes"
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/settings");
-  await expect(page.getByTestId("outlet-atelier")).toBeVisible();
+  await expect(page.locator("#workspace-main").getByTestId("outlet-atelier")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Atelier Kitchen", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Restaurant profile." })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Settings areas" })).toBeVisible();
@@ -100,7 +100,7 @@ test("Outlet Atelier rejects a stale profile after another authorized update", a
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/settings");
-  await expect(page.getByTestId("outlet-atelier")).toBeVisible();
+  await expect(page.locator("#workspace-main").getByTestId("outlet-atelier")).toBeVisible();
 
   // A separate authorized request commits a newer profile version while this editor
   // deliberately holds its earlier version. The real database must reject its stale save.
