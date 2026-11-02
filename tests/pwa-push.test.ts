@@ -12,9 +12,13 @@ import {
 function keys() {
   const ecdh = createECDH("prime256v1");
   ecdh.generateKeys();
+  // OpenSSL may return a 31-byte private scalar when its most significant byte is
+  // zero. VAPID private keys must be encoded as fixed-width 32-byte P-256 values.
+  const scalar = ecdh.getPrivateKey();
+  const privateKey = Buffer.concat([Buffer.alloc(32 - scalar.length), scalar]);
   return {
     publicKey: ecdh.getPublicKey().toString("base64url"),
-    privateKey: ecdh.getPrivateKey().toString("base64url"),
+    privateKey: privateKey.toString("base64url"),
   };
 }
 
@@ -89,6 +93,21 @@ describe("PWA H: push service safety and signing", () => {
     expect(() =>
       createVapidHeaders(endpoint, pair.publicKey, keys().privateKey, "mailto:admin@bababuilds.com")
     ).toThrow("mismatch");
+  });
+
+  it("signs VAPID with a correctly padded P-256 scalar that begins with zero", () => {
+    const ecdh = createECDH("prime256v1");
+    const privateKey = Buffer.alloc(32);
+    privateKey[31] = 1;
+    ecdh.setPrivateKey(privateKey);
+    const result = createVapidHeaders(
+      "https://fcm.googleapis.com/fcm/send/abc",
+      ecdh.getPublicKey().toString("base64url"),
+      privateKey.toString("base64url"),
+      "mailto:admin@bababuilds.com",
+      Date.UTC(2026, 9, 31)
+    );
+    expect(result.Authorization).toMatch(/^vapid t=.+, k=.+$/);
   });
 
   it("sends no personal payload and classifies permanent vs retryable failures", async () => {
