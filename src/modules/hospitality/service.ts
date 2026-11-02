@@ -16,6 +16,8 @@ export type GuestServiceRequest = {
   id: string;
   /** Null for a water request made from the table QR before any order exists. */
   orderNumber: number | null;
+  /** The diner's own chosen name from the order, when given. */
+  customerName?: string | null;
   tableNumber: string;
   signal: "call_server" | "water_refill" | "bill_request";
   status: "requested" | "acknowledged" | "resolved";

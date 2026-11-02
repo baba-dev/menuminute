@@ -708,6 +708,13 @@
       "when": 1796734800037,
       "tag": "0101_guest_device_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1796734800038,
+      "tag": "0102_staff_requests_guest_name",
+      "breakpoints": true
     }
   ]
 }

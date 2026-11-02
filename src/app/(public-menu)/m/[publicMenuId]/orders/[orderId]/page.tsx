@@ -1,4 +1,5 @@
 import { OrderTracker } from "@/components/menu-product/order-tracker";
+import { env } from "@/lib/config/env";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,11 @@ export default async function OrderTrackingPage({ params, searchParams }: Props)
   const { trackingToken } = await searchParams;
 
   return (
-    <OrderTracker orderId={orderId} token={publicMenuId} trackingToken={trackingToken || ""} />
+    <OrderTracker
+      orderId={orderId}
+      token={publicMenuId}
+      trackingToken={trackingToken || ""}
+      live={env.PUBLIC_DINER_STREAM_ENABLED}
+    />
   );
 }
