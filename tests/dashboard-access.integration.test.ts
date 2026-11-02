@@ -74,6 +74,7 @@ describe("dashboard authorization and lightweight projections", () => {
     });
     expect(await dashboardNavigation(owner.actor, org, outletId)).toEqual({
       ordering: true,
+      crm: true,
       kitchen: true,
       ordersRead: true,
       kitchenRead: true,
@@ -83,6 +84,7 @@ describe("dashboard authorization and lightweight projections", () => {
     });
     expect(await dashboardNavigation(editor.actor, org, outletId)).toEqual({
       ordering: true,
+      crm: true,
       kitchen: true,
       ordersRead: false,
       kitchenRead: false,

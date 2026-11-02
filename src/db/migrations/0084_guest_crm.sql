@@ -39,8 +39,10 @@ REVOKE ALL ON crm_guests,crm_guest_orders,crm_erased_phones FROM PUBLIC,menuminu
 
 CREATE FUNCTION app_private.crm_entitled(p_org text) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
- SELECT app_private.entitlement_allowed(p_org,'ordering.new')
-     OR app_private.entitlement_allowed(p_org,'kitchen.new')
+ SELECT EXISTS (SELECT 1 FROM entitlement_grants g
+   WHERE g.organization_id=p_org AND g.capability IN ('ordering.new','kitchen.new')
+     AND g.revoked_at IS NULL AND g.starts_at<=statement_timestamp()
+     AND g.ends_at>statement_timestamp())
      OR app_private.is_community_edition()
 $$;
 CREATE FUNCTION app_private.crm_can(p_outlet text,p_mode text) RETURNS boolean
@@ -175,7 +177,7 @@ BEGIN
  LEFT JOIN LATERAL (
   SELECT count(*)::int n,max(o.created_at) last_at
   FROM crm_guest_orders link JOIN orders o ON o.id=link.order_id AND o.restaurant_id=link.outlet_id
-  WHERE link.guest_id=g.id AND link.outlet_id=p_outlet AND o.status NOT IN ('cancelled','rejected','expired')
+  WHERE link.guest_id=g.id AND link.outlet_id=p_outlet AND o.status IN ('accepted','preparing','ready','served','collected','confirmed','delivered')
  ) history ON true;
  RETURN result;
 END $$;
@@ -252,9 +254,7 @@ FROM (
   coalesce(left(o.customer_name,80),'') display_name,o.created_at
  FROM orders o JOIN restaurants r ON r.id=o.restaurant_id
  WHERE o.customer_phone IS NOT NULL AND NOT r.is_demo_data AND
-  (app_private.entitlement_allowed(r.organization_id,'ordering.new')
-    OR app_private.entitlement_allowed(r.organization_id,'kitchen.new')
-    OR app_private.is_community_edition())
+  app_private.crm_entitled(r.organization_id)
 ) src WHERE phone_e164 IS NOT NULL GROUP BY organization_id,phone_e164
 ON CONFLICT (organization_id,phone_e164) DO NOTHING;
 INSERT INTO crm_guest_orders(order_id,organization_id,outlet_id,guest_id)
