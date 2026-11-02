@@ -10,12 +10,12 @@ unchanged. The earlier 50%-premium / INR 95 reference calculation is superseded.
 Future repricing requires versioned provider plans and an explicit policy for
 notifying or grandfathering existing subscriptions.
 
-| Plan                            | INR monthly | USD quote          | USD minor units |
-| ------------------------------- | ----------: | ------------------: | --------------: |
-| Free                            |          ₹0 |                  $0 |               0 |
-| Ordering                        |        ₹119 |            $5/month |             500 |
-| Kitchen Pro                     |        ₹499 |           $20/month |            2000 |
-| Dedicated (private on-premise)  |     ₹30,000 | $3,000 by contract |          300000 |
+| Plan                           | INR monthly |          USD quote | USD minor units |
+| ------------------------------ | ----------: | -----------------: | --------------: |
+| Free                           |          ₹0 |                 $0 |               0 |
+| Ordering                       |        ₹119 |           $5/month |             500 |
+| Kitchen Pro                    |        ₹499 |          $20/month |            2000 |
+| Dedicated (private on-premise) |     ₹30,000 | $3,000 by contract |          300000 |
 
 USD amounts are **listed but not yet payable**. The current Razorpay
 implementation is INR-only at the checkout route, webhook verification and
