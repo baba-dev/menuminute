@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
   title: "Pricing",
   description:
-    "Free permanent QR menus. Ordering from ₹119 a month, Kitchen Pro at a flat ₹499 a month for up to ten outlets, and Dedicated at ₹30,000 a month.",
+    "Free QR menus. Ordering from ₹119/month or $5/month, Kitchen Pro at ₹499/month or $20/month, and private on-premise Dedicated deployment at $3,000 by contract.",
 };
 
 /** Everything below comes from the reviewed plan catalogs, the same ones checkout uses. */
