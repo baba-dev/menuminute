@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { hashPassword } from "better-auth/crypto";
 import { provisionDemo } from "../src/modules/demo/provision";
+import { clearDemoConsumerReceipts } from "./helpers/demo-receipts";
 import { demoPassword } from "../src/modules/demo/credential";
 import { buildDemoBaseline, DEMO_IDS } from "../src/modules/demo/baseline";
 import { buildDemoOrders } from "../src/modules/demo/history";
@@ -27,6 +28,7 @@ const count = async (sql: string, args: unknown[] = []) =>
 async function provision() {
   const c = await owner.connect();
   try {
+    await clearDemoConsumerReceipts(c);
     return await provisionDemo(c, await hashPassword(demoPassword(process.env["AUTH_SECRET"]!)));
   } finally {
     c.release();
