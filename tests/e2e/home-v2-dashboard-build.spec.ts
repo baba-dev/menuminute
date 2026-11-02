@@ -90,6 +90,7 @@ test.describe("home-v2 scroll-assembled dashboard", () => {
       "floor",
       "serviceRequests",
       "pulse",
+      "plan",
     ]);
     const floor = page.locator('[data-widget="floor"]');
     await expect(floor).toContainText("Your dining floor");
