@@ -114,6 +114,8 @@ export type FloorTableOverview = {
   qrCode: { id: string; destinationToken: string; label: string } | null;
   /** True when guests have been seated for a long time with no open order. */
   stale: boolean;
+  /** Live guest-journey indicators. Null when the outlet has not enabled live table signals. */
+  journey?: TableJourney | null;
 };
 
 export type FloorTotals = {
@@ -125,7 +127,48 @@ export type FloorTotals = {
   tablesOccupied: number;
 };
 
+export const signalSettingsInputSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    qrScanPings: z.boolean().optional(),
+    guestWaterButton: z.boolean().optional(),
+    showKitchen: z.boolean().optional(),
+    showPosBill: z.boolean().optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, "Nothing to change");
+export type SignalSettingsInput = z.infer<typeof signalSettingsInputSchema>;
+
+/** Optional live table signals. Everything defaults to off at the outlet level. */
+export type FloorSignalSettings = {
+  enabled: boolean;
+  qrScanPings: boolean;
+  guestWaterButton: boolean;
+  showKitchen: boolean;
+  showPosBill: boolean;
+};
+
+export type JourneyStepKey =
+  "qr" | "order" | "cooking" | "ready" | "delivered" | "bill" | "paid" | "water";
+/** idle: not happened; active: happening now or waiting on staff; done: completed. */
+export type JourneyStepState = "idle" | "active" | "done";
+export type JourneyStep = {
+  key: JourneyStepKey;
+  state: JourneyStepState;
+  /** ISO time of the event this step reflects, if any. */
+  at: string | null;
+  /** Short factual detail, e.g. "2 dishes". Never contains guest names or phone numbers. */
+  detail: string | null;
+};
+export type TableJourney = {
+  steps: JourneyStep[];
+  /** True while a guest request (water or bill) is waiting for staff. */
+  needsStaff: boolean;
+};
+
 export type FloorOverview = {
+  /** For the owner toggle; when `enabled` is false no indicators are computed. */
+  signalSettings?: FloorSignalSettings;
   sections: FloorSection[];
   tables: FloorTableOverview[];
   unassignedChairs: FloorChair[];

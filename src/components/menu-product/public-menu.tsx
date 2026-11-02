@@ -83,6 +83,24 @@ export function PublicMenu({
     cartRef.current = cartItems;
   }, [cartItems]);
   const [cartHydrated, setCartHydrated] = useState(false);
+  // Table QR scan ping: once per browser session per QR. The server records it only when the
+  // outlet opted in; a failure is silent and never affects the menu.
+  useEffect(() => {
+    if (!data.point) return;
+    try {
+      const key = `qr_scan_${token}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* Storage unavailable: still ping once for this page view. */
+    }
+    void fetch("/api/public-orders/scan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token }),
+      keepalive: true,
+    }).catch(() => undefined);
+  }, [data.point, token]);
   const [activeSection, setActiveSection] = useState("");
   const categoryNavRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);

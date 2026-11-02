@@ -624,6 +624,20 @@
       "when": 1796043600032,
       "tag": "0089_pos_bill_guest_and_table",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1796130000032,
+      "tag": "0090_table_signals",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1796216400032,
+      "tag": "0091_qr_scan_signal",
+      "breakpoints": true
     }
   ]
 }

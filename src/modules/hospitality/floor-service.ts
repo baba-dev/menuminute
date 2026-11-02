@@ -15,6 +15,7 @@ import {
   restaurantTables,
   type DiningReservation,
 } from "@/db/schema";
+import { buildJourney, DEFAULT_SIGNAL_SETTINGS, type SignalEventInput } from "./floor-signals";
 import {
   MAX_TABLES_PER_OUTLET,
   type AddChairsInput,
@@ -24,6 +25,8 @@ import {
   type FloorChair,
   type FloorOverview,
   type FloorSection,
+  type FloorSignalSettings,
+  type SignalSettingsInput,
   type FloorTableOverview,
   type ReservationItem,
   type UpdateChairInput,
@@ -155,6 +158,76 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
       where restaurant_id=${outletId} and table_id is not null and is_active
       order by table_id, created_at, id`);
 
+    const settingsRow = (
+      await tx.execute<{
+        enabled: boolean;
+        qr_scan_pings: boolean;
+        guest_water_button: boolean;
+        show_kitchen: boolean;
+        show_pos_bill: boolean;
+      }>(sql`select enabled, qr_scan_pings, guest_water_button, show_kitchen, show_pos_bill
+        from floor_signal_settings where outlet_id=${outletId}`)
+    ).rows[0];
+    const signalSettings: FloorSignalSettings = settingsRow
+      ? {
+          enabled: settingsRow.enabled,
+          qrScanPings: settingsRow.qr_scan_pings,
+          guestWaterButton: settingsRow.guest_water_button,
+          showKitchen: settingsRow.show_kitchen,
+          showPosBill: settingsRow.show_pos_bill,
+        }
+      : DEFAULT_SIGNAL_SETTINGS;
+    // Indicators are optional: with the switch off, no signal or journey query runs at all.
+    const eventsByTable = new Map<string, SignalEventInput[]>();
+    const journeyOrders = new Map<
+      string,
+      {
+        status: string;
+        paymentStatus: string;
+        createdAt: string;
+        updatedAt: string;
+        dishCount: number;
+      }
+    >();
+    if (signalSettings.enabled) {
+      const events = await tx.execute<{
+        table_id: string;
+        kind: string;
+        occurred_at: string | Date;
+      }>(
+        sql`select table_id, kind, occurred_at from table_signal_events
+          where outlet_id=${outletId} and occurred_at > now() - interval '6 hours'
+          order by occurred_at desc limit 2000`
+      );
+      for (const e of events.rows)
+        eventsByTable.set(e.table_id, [
+          ...(eventsByTable.get(e.table_id) ?? []),
+          { kind: e.kind, occurredAt: iso(e.occurred_at) },
+        ]);
+      const latestOrders = await tx.execute<{
+        table_id: string;
+        status: string;
+        payment_status: string;
+        created_at: string | Date;
+        updated_at: string | Date;
+        dishes: number;
+      }>(sql`select distinct on (o.table_id) o.table_id, o.status, o.payment_status,
+          o.created_at, o.updated_at,
+          (select coalesce(sum(i.quantity),0)::int from order_items i where i.order_id=o.id) as dishes
+        from orders o
+        where o.restaurant_id=${outletId} and o.table_id is not null
+          and o.created_at > now() - interval '6 hours'
+        order by o.table_id, o.created_at desc, o.id desc`);
+      for (const o of latestOrders.rows)
+        journeyOrders.set(o.table_id, {
+          status: o.status,
+          paymentStatus: o.payment_status,
+          createdAt: iso(o.created_at),
+          updatedAt: iso(o.updated_at),
+          dishCount: o.dishes,
+        });
+    }
+
     const orders = new Map(orderRows.rows.map((r) => [r.table_id, r]));
     const qrs = new Map(qrRows.rows.map((r) => [r.table_id, r]));
     const nextByTable = new Map<string, (typeof reservationRows.rows)[number]>();
@@ -204,6 +277,11 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
             }
           : null,
         qrCode: qr ? { id: qr.id, destinationToken: qr.destination_token, label: qr.label } : null,
+        journey: buildJourney({
+          settings: signalSettings,
+          events: eventsByTable.get(t.id) ?? [],
+          order: journeyOrders.get(t.id) ?? null,
+        }),
         stale:
           taken.length > 0 &&
           (o?.active ?? 0) === 0 &&
@@ -214,6 +292,7 @@ export async function getFloorOverview(actor: Actor, outletId: string): Promise<
 
     const first = reservationRows.rows[0];
     return {
+      signalSettings,
       sections: sectionRows.map<FloorSection>((s) => ({
         id: s.id,
         name: s.name,
@@ -719,4 +798,60 @@ export async function attachExistingTableQr(actor: Actor, outletId: string, tabl
       ${"Table " + existing[0].tableNumber}) as record`);
     return result.rows[0]!.record;
   });
+}
+
+/**
+ * Owner switch for live table signals. Defaults to off; changing it never touches orders, kitchen
+ * or POS state. Needs menu.write like the rest of the floor structure.
+ */
+export async function updateSignalSettings(
+  actor: Actor,
+  outletId: string,
+  input: SignalSettingsInput
+): Promise<FloorSignalSettings> {
+  return guard(() =>
+    withOutlet(actor, outletId, "menu.write", async (tx) => {
+      const next = {
+        enabled: input.enabled,
+        qrScanPings: input.qrScanPings,
+        guestWaterButton: input.guestWaterButton,
+        showKitchen: input.showKitchen,
+        showPosBill: input.showPosBill,
+      };
+      const row = (
+        await tx.execute<{
+          enabled: boolean;
+          qr_scan_pings: boolean;
+          guest_water_button: boolean;
+          show_kitchen: boolean;
+          show_pos_bill: boolean;
+        }>(sql`insert into floor_signal_settings
+          (outlet_id, enabled, qr_scan_pings, guest_water_button, show_kitchen, show_pos_bill, updated_by)
+          values (${outletId},
+            ${next.enabled ?? DEFAULT_SIGNAL_SETTINGS.enabled},
+            ${next.qrScanPings ?? DEFAULT_SIGNAL_SETTINGS.qrScanPings},
+            ${next.guestWaterButton ?? DEFAULT_SIGNAL_SETTINGS.guestWaterButton},
+            ${next.showKitchen ?? DEFAULT_SIGNAL_SETTINGS.showKitchen},
+            ${next.showPosBill ?? DEFAULT_SIGNAL_SETTINGS.showPosBill},
+            ${actor.userId})
+          on conflict (outlet_id) do update set
+            enabled = coalesce(${next.enabled ?? null}::boolean, floor_signal_settings.enabled),
+            qr_scan_pings = coalesce(${next.qrScanPings ?? null}::boolean, floor_signal_settings.qr_scan_pings),
+            guest_water_button = coalesce(${next.guestWaterButton ?? null}::boolean, floor_signal_settings.guest_water_button),
+            show_kitchen = coalesce(${next.showKitchen ?? null}::boolean, floor_signal_settings.show_kitchen),
+            show_pos_bill = coalesce(${next.showPosBill ?? null}::boolean, floor_signal_settings.show_pos_bill),
+            revision = floor_signal_settings.revision + 1,
+            updated_by = ${actor.userId},
+            updated_at = now()
+          returning enabled, qr_scan_pings, guest_water_button, show_kitchen, show_pos_bill`)
+      ).rows[0]!;
+      return {
+        enabled: row.enabled,
+        qrScanPings: row.qr_scan_pings,
+        guestWaterButton: row.guest_water_button,
+        showKitchen: row.show_kitchen,
+        showPosBill: row.show_pos_bill,
+      };
+    })
+  );
 }

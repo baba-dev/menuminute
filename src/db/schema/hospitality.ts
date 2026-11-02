@@ -104,3 +104,43 @@ export type DiningSectionRow = typeof diningSections.$inferSelect;
 export type RestaurantChair = typeof restaurantChairs.$inferSelect;
 export type DiningFloorPlan = typeof diningFloorPlans.$inferSelect;
 export type DiningReservation = typeof diningReservations.$inferSelect;
+
+/** Optional live table signals for an outlet. Default off; see migration 0090. */
+export const floorSignalSettings = pgTable("floor_signal_settings", {
+  outletId: text("outlet_id")
+    .primaryKey()
+    .references(() => restaurants.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull().default(false),
+  qrScanPings: boolean("qr_scan_pings").notNull().default(true),
+  guestWaterButton: boolean("guest_water_button").notNull().default(true),
+  showKitchen: boolean("show_kitchen").notNull().default(true),
+  showPosBill: boolean("show_pos_bill").notNull().default(true),
+  revision: integer("revision").notNull().default(1),
+  updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+});
+
+/** Append-only ledger of per-table guest-journey events. Producers land in later slices. */
+export const tableSignalEvents = pgTable(
+  "table_signal_events",
+  {
+    id: text("id").primaryKey(),
+    outletId: text("outlet_id")
+      .notNull()
+      .references(() => restaurants.id, { onDelete: "cascade" }),
+    tableId: text("table_id").notNull(),
+    kind: text("kind").notNull(),
+    source: text("source", { enum: ["guest", "orders", "kitchen", "pos", "staff"] }).notNull(),
+    refId: text("ref_id"),
+    dedupeKey: text("dedupe_key").notNull(),
+    meta: jsonb("meta")
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    occurredAt: timestamp("occurred_at", { withTimezone: true })
+      .notNull()
+      .default(sql`clock_timestamp()`),
+  },
+  (t) => [index("table_signal_events_recent").on(t.outletId, t.tableId, t.occurredAt)]
+);
