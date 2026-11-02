@@ -16,7 +16,7 @@ import { dashboardWidgetIds, defaultDashboardLayout } from "../src/modules/dashb
 
 const custom = {
   version: 1 as const,
-  order: ["health", "kpis", "priorities", "dispatch", "floor", "serviceRequests", "pulse"],
+  order: ["health", "kpis", "priorities", "dispatch", "floor", "serviceRequests", "pulse", "plan"],
   hidden: ["floor"],
   pinned: ["health"],
 };
@@ -32,6 +32,19 @@ describe("dashboard layout preference", () => {
     const next = await readDashboardLayout(actor.userId);
     expect(next.hidden).toEqual([]);
     expect(next.pinned).toEqual([]);
+  });
+
+  it("appends the plan widget to a layout saved before it existed", async () => {
+    const { actor } = await fixture();
+    // A layout saved by an older release lists only the original seven widgets.
+    await saveDashboardLayout(actor, {
+      ...custom,
+      order: ["health", "kpis", "priorities", "dispatch", "floor", "serviceRequests", "pulse"],
+    });
+    const read = await readDashboardLayout(actor.userId);
+    expect(read.order.at(-1)).toBe("plan");
+    expect(read.order).toHaveLength(8);
+    expect(read.hidden).toEqual(["floor"]);
   });
 
   it("is independent of the default-workspace preference in both directions", async () => {

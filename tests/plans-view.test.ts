@@ -36,12 +36,12 @@ describe("buildPlanUsageView", () => {
   const free = {
     plan: "free" as const,
     limits: PLAN_LIMITS.free,
-    counts: { dishes: 14, qrCodes: 2 },
+    counts: { dishes: 14, qrCodes: 2, tables: 0, chairs: 0 },
   };
 
   it("shows dish and QR meters for Free and only real, enforced limits", () => {
     const view = buildPlanUsageView({ ...free, intake: null })!;
-    expect(view.meters.map((m) => m.key)).toEqual(["dishes", "qrCodes"]);
+    expect(view.meters.map((m) => m.key)).toEqual(["dishes", "qrCodes", "tables", "chairs"]);
     expect(view.planLabel).toBe("Free");
     expect(view.nextPlanLabel).toBe("Ordering");
     expect(view.features.find((f) => f.key === "ordering")).toMatchObject({
@@ -69,10 +69,10 @@ describe("buildPlanUsageView", () => {
     const view = buildPlanUsageView({
       plan: "ordering",
       limits: PLAN_LIMITS.ordering,
-      counts: { dishes: 10, qrCodes: 3 },
+      counts: { dishes: 10, qrCodes: 3, tables: 0, chairs: 0 },
       intake: { enabled: true, used: 5, cap: 100 },
     })!;
-    expect(view.meters.map((m) => m.key)).toEqual(["dishes", "qrCodes"]);
+    expect(view.meters.map((m) => m.key)).toEqual(["dishes", "qrCodes", "tables", "chairs"]);
     expect(view.nextPlanLabel).toBe("Kitchen Pro");
     expect(view.features.find((f) => f.key === "ordering")?.status).toBe("included");
     expect(view.features.find((f) => f.key === "kitchen")).toMatchObject({
@@ -85,7 +85,7 @@ describe("buildPlanUsageView", () => {
     const pro = buildPlanUsageView({
       plan: "kitchen_pro",
       limits: PLAN_LIMITS.kitchen_pro,
-      counts: { dishes: 1, qrCodes: 1 },
+      counts: { dishes: 1, qrCodes: 1, tables: 0, chairs: 0 },
       intake: null,
     })!;
     expect(pro.features.every((f) => f.status === "included")).toBe(true);
@@ -94,7 +94,7 @@ describe("buildPlanUsageView", () => {
       buildPlanUsageView({
         plan: "dedicated",
         limits: PLAN_LIMITS.dedicated,
-        counts: { dishes: 9, qrCodes: 9 },
+        counts: { dishes: 9, qrCodes: 9, tables: 0, chairs: 0 },
         intake: null,
       })
     ).toBeNull();
@@ -106,19 +106,21 @@ describe("upgrade hints", () => {
     const calm = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 5, qrCodes: 0 },
+      counts: { dishes: 5, qrCodes: 0, tables: 0, chairs: 0 },
       intake: null,
     })!;
     expect(calm.meters.every((m) => m.upgradeHint === undefined)).toBe(true);
     const hot = buildPlanUsageView({
       plan: "free",
       limits: PLAN_LIMITS.free,
-      counts: { dishes: 18, qrCodes: 2 },
+      counts: { dishes: 18, qrCodes: 2, tables: 2, chairs: 6 },
       intake: { enabled: true, used: 100, cap: 100 },
     })!;
     expect(hot.meters.map((m) => m.upgradeHint)).toEqual([
       "Ordering allows 200",
       "Ordering allows 25",
+      "Ordering allows 10",
+      "Ordering allows 30",
       "Ordering has no monthly cap",
     ]);
     expect(JSON.stringify(hot)).not.toMatch(/₹|\$|price/i);

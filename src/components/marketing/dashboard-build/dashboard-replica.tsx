@@ -43,6 +43,10 @@ import { FloorGlanceView } from "@/components/dashboard/floor/floor-glance-view"
 import { TodayPulsePanel } from "@/components/dashboard/pulse/today-pulse";
 import { buildFloorGlance } from "@/modules/hospitality/floor-glance";
 import type { DashboardWidgetId } from "@/modules/dashboard/layout";
+import { PlanBento } from "@/components/plans/plan-bento";
+import { buildBentoView } from "@/modules/plans/bento";
+import { PLAN_LIMITS } from "@/modules/plans/catalog";
+import { buildPlanUsageView } from "@/modules/plans/view";
 import { countFormats, pieceById, pieceStyle, staggerStyle } from "./dashboard-build-timeline";
 
 /**
@@ -586,6 +590,20 @@ function ReplicaRequests() {
   );
 }
 
+/** Sample data for the plan widget: a Free outlet part-way through its allowances. */
+const REPLICA_PLAN_VIEW = buildBentoView({
+  plan: "free",
+  usage: buildPlanUsageView({
+    plan: "free",
+    limits: PLAN_LIMITS.free,
+    counts: { dishes: 17, qrCodes: 1, tables: 1, chairs: 4 },
+    intake: null,
+  }),
+  intake: null,
+  canManageBilling: true,
+  billingEnabled: true,
+})!;
+
 /**
  * The widgets the replica renders, in the product's order. A test compares this with
  * `dashboardWidgetIds`, so a widget added to (or reordered in) the product fails CI until the
@@ -599,6 +617,7 @@ export const REPLICA_WIDGETS: readonly DashboardWidgetId[] = [
   "floor",
   "serviceRequests",
   "pulse",
+  "plan",
 ];
 
 /** A product widget wrapper. Panels that fill their grid cell carry the scroll piece on the wrapper. */
@@ -654,6 +673,9 @@ export function ReplicaBody() {
         </Widget>
         <Widget id="pulse" piece="today">
           <ReplicaToday />
+        </Widget>
+        <Widget id="plan">
+          <PlanBento view={REPLICA_PLAN_VIEW} />
         </Widget>
       </div>
     </div>

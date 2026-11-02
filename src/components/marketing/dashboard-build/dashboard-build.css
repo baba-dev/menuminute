@@ -215,15 +215,18 @@
 @media (min-width: 681px) and (max-width: 1160px) {
   /* workspace-delight.css applies these at >= 1161px: the floor spans two rows beside the
      stacked service-requests and pulse widgets, which stretch to meet its bottom edge. */
-  .db .mm-widget[data-widget="floor"] {
+  .db .mm-widget[data-widget="floor"],
+  .db .mm-widget[data-widget="pulse"] {
     grid-row: span 2;
   }
   .db .mm-widget[data-widget="serviceRequests"],
-  .db .mm-widget[data-widget="pulse"] {
+  .db .mm-widget[data-widget="pulse"],
+  .db .mm-widget[data-widget="plan"] {
     align-self: stretch;
   }
   .db .mm-widget[data-widget="serviceRequests"] > section,
-  .db .mm-widget[data-widget="pulse"] > section {
+  .db .mm-widget[data-widget="pulse"] > section,
+  .db .mm-widget[data-widget="plan"] > section {
     height: 100%;
   }
   .db .mm-widget {

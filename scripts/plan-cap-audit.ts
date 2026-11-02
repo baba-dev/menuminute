@@ -27,16 +27,25 @@ with dish_counts as (
 ), qr_counts as (
   select restaurant_id as outlet_id, count(*)::int as qr_codes
   from qr_codes where is_active group by restaurant_id
+), table_counts as (
+  select restaurant_id as outlet_id, count(*)::int as tables
+  from restaurant_tables where is_active and display_number is not null group by restaurant_id
+), chair_counts as (
+  select outlet_id, count(*)::int as chairs
+  from restaurant_chairs where is_active group by outlet_id
 )
 select r.id as "outletId", r.organization_id as "organizationId", r.slug,
        r.is_demo_data as demo,
        app_private.entitlement_allowed(r.organization_id,'ordering.new') as ordering,
        app_private.entitlement_allowed(r.organization_id,'kitchen.new') as kitchen,
        app_private.is_community_edition() as community,
-       coalesce(d.dishes,0) as dishes, coalesce(q.qr_codes,0) as "qrCodes"
+       coalesce(d.dishes,0) as dishes, coalesce(q.qr_codes,0) as "qrCodes",
+       coalesce(t.tables,0) as tables, coalesce(c.chairs,0) as chairs
 from restaurants r
 left join dish_counts d on d.outlet_id = r.id
 left join qr_counts q on q.outlet_id = r.id
+left join table_counts t on t.outlet_id = r.id
+left join chair_counts c on c.outlet_id = r.id
 order by r.id`;
 
 async function main() {
@@ -66,6 +75,8 @@ async function main() {
           `plan=${e.plan}`,
           `dishes=${e.dishes}/${e.dishCap}`,
           `qr=${e.qrCodes}/${e.qrCap}`,
+          `tables=${e.tables}/${e.tablesCap}`,
+          `chairs=${e.chairs}/${e.chairsCap}`,
           e.demo ? "demo" : "",
         ]
           .filter(Boolean)

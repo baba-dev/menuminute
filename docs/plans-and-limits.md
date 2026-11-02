@@ -25,7 +25,9 @@ and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 | Price, INR / month (annual = 10 × monthly)          | 0               | 119             | 499 incl. 3 outlets, +149 each | Quote (see below) |
 | Outlets per organization                            | 1               | 1               | 10                             | By contract       |
 | Dishes                                              | 20              | 200             | 2,000                          | By contract       |
-| Permanent QR codes / tables                         | 2               | 25              | 200 (existing code cap)        | By contract       |
+| Permanent QR codes                                  | 2               | 25              | 200 (existing code cap)        | By contract       |
+| Dining-floor tables (numbered)                      | 2               | 10              | 20                             | Unlimited         |
+| Dining-floor chairs                                 | 6               | 30              | 60                             | Unlimited         |
 | Staff seats (org)                                   | 2               | 5               | 25                             | By contract       |
 | AI credits / month (pooled per org)                 | 10              | 150             | 1,000                          | Own key or pooled |
 | Media storage                                       | 100 MB          | 300 MB          | 500 MB                         | By contract       |
@@ -348,3 +350,59 @@ Known limits: the Menu Studio strip reflects the server count at load and refres
 (the studio already refreshes the page on save); dish counts use the acting user's visibility;
 the "Compare plans" link goes to the public pricing page, whose copy is not yet updated for the new
 plans.
+
+## Dining-floor quotas (added 2026-11-02)
+
+Owner-approved: **Free 2 tables / 6 chairs, Ordering 10 / 30, Kitchen Pro 20 / 60, Dedicated unlimited.**
+
+- **What counts:** active, numbered floor tables (legacy QR-only tables have no floor number and never
+  count) and active chairs, including chairs not yet assigned to a table.
+- **Enforcement:** the same transactional guard as dishes and QR codes, around the only two writers,
+  `createTable` (a table with its first chairs, all or nothing) and `addChairs`. A table whose chairs
+  would push the outlet over its chair cap is rejected as a whole. The older 200-table ceiling in the
+  floor service remains as a technical limit. Off until `PLAN_LIMITS_ENFORCED=true`.
+- **Grandfathering:** an outlet already over a cap can keep operating and shrink, but not grow.
+  Nothing is deleted or hidden (hiding extras after a downgrade is slice 3).
+- **Visibility:** meters on the Dining floor page, the Plan & usage panel, `/billing` and the
+  dashboard widget; the plan comparison shows tables and chairs as a single "Dining floor" row.
+- **Audit:** `scripts/plan-cap-audit.ts` now reports tables and chairs too. Run it before enabling.
+
+## Plan widget and /billing
+
+**Dashboard widget ("Plan & billing")** is a normal dashboard widget (the eighth), so owners can hide,
+pin and reorder it in "Customize layout". It sits under the dining floor beside Today's pulse: the
+pulse now spans two grid rows so the two stack evenly. The marketing homepage's dashboard replica
+shows it with sample data (a test keeps the replica in step with the real widget list). It is a
+bento of three tiles: your plan and price, your two most-used meters, and what the next plan
+unlocks with a single call to action. Owners get "Upgrade to Ordering"; Kitchen Pro leads to a
+conversation; non-owners are told to ask the owner; while payments are off it says "See plans".
+
+**`/billing`** is the main billing page, reachable from the widget, every usage strip and the
+Organization panel. It adds no new payment path: upgrades use the existing checkout API
+(`POST /api/organizations/{id}/billing/checkout`), the existing provider webhooks mint the paid
+entitlement, and cancellation uses the existing cancel API. After the payment is authorized the
+page refreshes every 4 seconds (up to 10 times) until the new plan appears.
+
+| Section             | Shows                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| Your plan           | Plan, catalog price, what it includes                                                            |
+| Billing cycle       | Renewal or end date from the subscription, or the granted access window; payment note            |
+| Usage & limits      | Every enforced meter with what the next plan allows                                              |
+| Unlock next         | Benefit-by-benefit before and after, plus the one action                                         |
+| Choose your plan    | Free, Ordering and Kitchen Pro, each with a truthful state (current, included, upgrade, why not) |
+| Subscriptions       | Provider subscriptions with owner-only "Cancel renewal" (confirm step)                           |
+| Payments & invoices | Plain statement that the provider handles payment; GST invoices marked "not available yet"       |
+| Access history      | Recent grant windows and their status                                                            |
+
+Honesty rules: prices are the reviewed catalog amounts only (`PAID_PLAN_CATALOG`; today Ordering
+INR 119, Kitchen Pro INR 299, which are the provider plan amounts, not the proposed Kitchen Pro
+price in the matrix above). Kitchen Pro checkout opens only when the platform release is approved
+(`kitchenCommerceEnabled`); until then its button is "Talk to us about Kitchen Pro". Payment
+methods and invoices are not shown because the application does not hold them. A billing load
+failure says so instead of guessing. Non-owners get a read-only overview with the reason on every
+locked action.
+
+Not done: a sidebar entry for Billing (the navigation model is tightly tested and the owner has not
+asked to change it), saved-payment-method management, GST invoices, annual billing, and live plan
+changes between paid plans (a Kitchen Pro purchase from Ordering uses the existing checkout and has
+not been exercised against the provider sandbox).

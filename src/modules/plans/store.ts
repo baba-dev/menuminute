@@ -38,6 +38,19 @@ export function dbPlanStore(tx: Transaction): PlanStore {
         );
         return rows.rows[0]?.n ?? 0;
       }
+      if (resource === "tables") {
+        // Numbered floor tables only; legacy QR-only tables have no display number and never count.
+        const rows = await tx.execute<{ n: number }>(sql`
+          select count(*)::int as n from restaurant_tables
+          where restaurant_id = ${outletId} and is_active and display_number is not null`);
+        return rows.rows[0]?.n ?? 0;
+      }
+      if (resource === "chairs") {
+        const rows = await tx.execute<{ n: number }>(
+          sql`select count(*)::int as n from restaurant_chairs where outlet_id = ${outletId} and is_active`
+        );
+        return rows.rows[0]?.n ?? 0;
+      }
       // Distinct dish ids across live (non-archived) menus the outlet owns or is assigned.
       const rows = await tx.execute<{ n: number }>(sql`
         select count(distinct item->>'id')::int as n

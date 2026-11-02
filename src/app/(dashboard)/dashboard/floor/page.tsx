@@ -7,6 +7,7 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { getFloorOverview } from "@/modules/hospitality/floor-service";
 import { withOutlet, type Actor } from "@/modules/tenancy/service";
 import { FloorBoard } from "@/components/dashboard/floor/floor-board";
+import { getPlanUsageView } from "@/modules/plans/usage";
 
 export const metadata: Metadata = {
   title: "Dining Floor — MenuMinute",
@@ -40,10 +41,11 @@ export default async function FloorPage() {
   }
 
   const actor = { userId: session.user.id };
-  const [overview, canManage, canSeat] = await Promise.all([
+  const [overview, canManage, canSeat, planUsage] = await Promise.all([
     getFloorOverview(actor, outlet.id),
     allowed(actor, outlet.id, "menu.write"),
     allowed(actor, outlet.id, "orders.accept"),
+    getPlanUsageView(actor, outlet.id),
   ]);
 
   return (
@@ -58,6 +60,7 @@ export default async function FloorPage() {
       initialOverview={overview}
       canManage={canManage}
       canSeat={canSeat}
+      planUsage={planUsage}
     />
   );
 }

@@ -11,6 +11,8 @@ const row = (over: Partial<AuditRow>): AuditRow => ({
   community: false,
   dishes: 0,
   qrCodes: 0,
+  tables: 0,
+  chairs: 0,
   ...over,
 });
 

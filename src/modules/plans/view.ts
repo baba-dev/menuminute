@@ -7,7 +7,7 @@ import { PLAN_LABELS, PLAN_LIMITS, type PlanKey, type PlanLimits } from "./catal
  * seats are deliberately absent until something enforces them, so the UI never advertises a
  * limit that does not exist.
  */
-export type MeterKey = "dishes" | "qrCodes" | "orders";
+export type MeterKey = "dishes" | "qrCodes" | "tables" | "chairs" | "orders";
 /** ok < 80% · near 80–99% · full = cap · over > cap (existing data above a newly applied cap). */
 export type MeterState = "ok" | "near" | "full" | "over";
 
@@ -47,7 +47,7 @@ export type PlanUsageView = {
   nextPlanLabel: string | null;
 };
 
-export type UsageCounts = { dishes: number; qrCodes: number };
+export type UsageCounts = { dishes: number; qrCodes: number; tables: number; chairs: number };
 export type IntakeSnapshot = { enabled: boolean; used: number; cap: number };
 
 export function meterState(used: number, cap: number): MeterState {
@@ -90,7 +90,8 @@ export function buildMeter(
   };
 }
 
-const NEXT_PLAN: Record<PlanKey, PlanKey | null> = {
+/** The self-serve upgrade path. Dedicated is by contract, so nothing sits above Kitchen Pro. */
+export const NEXT_PLAN: Record<PlanKey, PlanKey | null> = {
   free: "ordering",
   ordering: "kitchen_pro",
   kitchen_pro: null,
@@ -107,7 +108,9 @@ export function buildPlanUsageView(input: {
   const { plan, limits, counts, intake } = input;
   if (plan === "dedicated") return null;
   const nextPlan = NEXT_PLAN[plan];
-  const hint = (resource: "dishes" | "qrCodes" | "ordersPerMonth"): string | undefined => {
+  const hint = (
+    resource: "dishes" | "qrCodes" | "tables" | "chairs" | "ordersPerMonth"
+  ): string | undefined => {
     if (!nextPlan) return undefined;
     const cap = PLAN_LIMITS[nextPlan][resource];
     const label = PLAN_LABELS[nextPlan];
@@ -118,30 +121,27 @@ export function buildPlanUsageView(input: {
     return cap === null ? `${label} has no cap` : `${label} allows ${cap.toLocaleString("en-US")}`;
   };
   const meters: UsageMeterView[] = [];
-  if (limits.dishes !== null)
-    meters.push(
-      buildMeter(
-        "dishes",
-        "Dishes",
-        "dishes",
-        counts.dishes,
-        limits.dishes,
-        undefined,
-        hint("dishes")
-      )
-    );
-  if (limits.qrCodes !== null)
-    meters.push(
-      buildMeter(
-        "qrCodes",
-        "QR codes",
-        "QR codes",
-        counts.qrCodes,
-        limits.qrCodes,
-        undefined,
-        hint("qrCodes")
-      )
-    );
+  const specs = [
+    { key: "dishes", label: "Dishes", noun: "dishes" },
+    { key: "qrCodes", label: "QR codes", noun: "QR codes" },
+    { key: "tables", label: "Tables", noun: "tables" },
+    { key: "chairs", label: "Chairs", noun: "chairs" },
+  ] as const;
+  for (const spec of specs) {
+    const cap = limits[spec.key];
+    if (cap !== null)
+      meters.push(
+        buildMeter(
+          spec.key,
+          spec.label,
+          spec.noun,
+          counts[spec.key],
+          cap,
+          undefined,
+          hint(spec.key)
+        )
+      );
+  }
   if (plan === "free" && intake?.enabled && intake.cap > 0)
     meters.push(
       buildMeter(

@@ -13,6 +13,8 @@ export type LimitResource =
   | "outlets"
   | "dishes"
   | "qrCodes"
+  | "tables"
+  | "chairs"
   | "staffSeats"
   | "aiCreditsPerMonth"
   | "mediaBytes"
@@ -31,6 +33,9 @@ export const PLAN_LIMITS: Readonly<Record<PlanKey, PlanLimits>> = {
     outlets: 1,
     dishes: 20,
     qrCodes: 2,
+    // Dining floor (owner-approved 2026-11-02): active numbered floor tables and active chairs.
+    tables: 2,
+    chairs: 6,
     staffSeats: 2,
     aiCreditsPerMonth: 10,
     mediaBytes: 100 * MB,
@@ -43,6 +48,8 @@ export const PLAN_LIMITS: Readonly<Record<PlanKey, PlanLimits>> = {
     outlets: 1,
     dishes: 200,
     qrCodes: 25,
+    tables: 10,
+    chairs: 30,
     staffSeats: 5,
     aiCreditsPerMonth: 150,
     mediaBytes: 300 * MB,
@@ -54,6 +61,8 @@ export const PLAN_LIMITS: Readonly<Record<PlanKey, PlanLimits>> = {
     outlets: 10,
     dishes: 2000,
     qrCodes: 200,
+    tables: 20,
+    chairs: 60,
     staffSeats: 25,
     aiCreditsPerMonth: 1000,
     mediaBytes: 500 * MB,
@@ -66,6 +75,8 @@ export const PLAN_LIMITS: Readonly<Record<PlanKey, PlanLimits>> = {
     outlets: null,
     dishes: null,
     qrCodes: null,
+    tables: null,
+    chairs: null,
     staffSeats: null,
     aiCreditsPerMonth: null,
     mediaBytes: null,
@@ -86,6 +97,8 @@ export const RESOURCE_LABELS: Readonly<Record<LimitResource, string>> = {
   outlets: "outlets",
   dishes: "dishes",
   qrCodes: "QR codes",
+  tables: "tables",
+  chairs: "chairs",
   staffSeats: "staff seats",
   aiCreditsPerMonth: "AI credits per month",
   mediaBytes: "bytes of media",

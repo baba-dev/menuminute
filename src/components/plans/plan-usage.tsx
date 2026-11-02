@@ -7,7 +7,7 @@ import "./plan-usage.css";
  * Plan usage UI (slice 2c). Purely presentational: it renders a server-built `PlanUsageView` and
  * holds no limit logic. State is always spelled out in text and icon, never colour alone.
  */
-export const PLAN_USAGE_HREF = "/dashboard/organization#plan-usage";
+export const PLAN_USAGE_HREF = "/billing";
 
 function StateIcon({ state }: { state: UsageMeterView["state"] }) {
   if (state === "near" || state === "full") return <TriangleAlert size={14} aria-hidden="true" />;
@@ -105,7 +105,7 @@ export function PlanUsagePanel({ view, outletName }: { view: PlanUsageView; outl
           </h3>
         </div>
         {view.nextPlanLabel && (
-          <Link href="/pricing" className="pu-compare">
+          <Link href="/billing" className="pu-compare">
             Compare plans
             <ArrowUpRight size={15} aria-hidden="true" />
           </Link>

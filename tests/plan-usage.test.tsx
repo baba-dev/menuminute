@@ -11,7 +11,7 @@ const free = (dishes: number, qrCodes: number, orders?: { used: number; cap: num
   buildPlanUsageView({
     plan: "free",
     limits: PLAN_LIMITS.free,
-    counts: { dishes, qrCodes },
+    counts: { dishes, qrCodes, tables: 0, chairs: 0 },
     intake: orders ? { enabled: true, ...orders } : null,
   })!;
 
@@ -32,10 +32,7 @@ describe("PlanMeterStrip", () => {
     expect(screen.getByText("Limit reached")).toBeInTheDocument();
     expect(screen.getByText("Ordering allows 200")).toBeInTheDocument();
     // At the cap the link names the plan to look at.
-    expect(screen.getByRole("link", { name: /See Ordering/ })).toHaveAttribute(
-      "href",
-      "/dashboard/organization#plan-usage"
-    );
+    expect(screen.getByRole("link", { name: /See Ordering/ })).toHaveAttribute("href", "/billing");
   });
 
   it("stays quiet with a neutral link while usage is comfortable", () => {
@@ -57,7 +54,7 @@ describe("PlanUsagePanel", () => {
   it("lists every meter and what each feature needs, with text status for each row", () => {
     render(<PlanUsagePanel view={free(17, 2, { used: 8, cap: 100 })} outletName="Saffron" />);
     const panel = screen.getByRole("region", { name: /Free plan/ });
-    expect(within(panel).getAllByRole("meter")).toHaveLength(3);
+    expect(within(panel).getAllByRole("meter")).toHaveLength(5);
     const rows = within(panel).getAllByRole("listitem");
     expect(rows).toHaveLength(3);
     expect(within(rows[0]!).getByText("Included")).toBeInTheDocument();
@@ -65,7 +62,7 @@ describe("PlanUsagePanel", () => {
     expect(within(rows[2]!).getByText("Unlock with Kitchen Pro")).toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: /Compare plans/ })).toHaveAttribute(
       "href",
-      "/pricing"
+      "/billing"
     );
   });
 
@@ -73,7 +70,7 @@ describe("PlanUsagePanel", () => {
     const pro = buildPlanUsageView({
       plan: "kitchen_pro",
       limits: PLAN_LIMITS.kitchen_pro,
-      counts: { dishes: 5, qrCodes: 2 },
+      counts: { dishes: 5, qrCodes: 2, tables: 0, chairs: 0 },
       intake: null,
     })!;
     render(<PlanUsagePanel view={pro} />);

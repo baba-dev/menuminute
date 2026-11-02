@@ -70,6 +70,20 @@ describe("enforceCap", () => {
     ).rejects.toMatchObject({ resource: "QR codes", limit: 2 });
   });
 
+  it("caps dining-floor tables and chairs at 2 and 6 on Free", async () => {
+    const counts = { o1: 1 };
+    const { store } = fakeStore(counts);
+    await enforceCap(store, ["o1"], "tables", async () => void (counts.o1 = 2));
+    await expect(
+      enforceCap(store, ["o1"], "tables", async () => void (counts.o1 = 3))
+    ).rejects.toMatchObject({ resource: "tables", limit: 2, upgradeTo: "Ordering" });
+    const chairs = { o1: 4 };
+    const chairStore = fakeStore(chairs).store;
+    await expect(
+      enforceCap(chairStore, ["o1"], "chairs", async () => void (chairs.o1 = 7))
+    ).rejects.toMatchObject({ resource: "chairs", limit: 6 });
+  });
+
   it("uses the paid plan's cap and treats Kitchen Pro as implying Ordering", async () => {
     const counts = { o1: 150 };
     const ordering = fakeStore(counts, { ...FREE, ordering: true });

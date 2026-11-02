@@ -30,6 +30,11 @@ describe("approved caps", () => {
     expect(PLAN_LIMITS.ordering).toMatchObject({ dishes: 200, mediaBytes: 300 * 1024 * 1024 });
     expect(PLAN_LIMITS.kitchen_pro.mediaBytes).toBe(500 * 1024 * 1024);
     expect(PLAN_LIMITS.kitchen_pro.customDomains).toBe(10);
+    // Dining floor (owner-approved 2026-11-02): tables and chairs, Dedicated unlimited.
+    expect([PLAN_LIMITS.free.tables, PLAN_LIMITS.free.chairs]).toEqual([2, 6]);
+    expect([PLAN_LIMITS.ordering.tables, PLAN_LIMITS.ordering.chairs]).toEqual([10, 30]);
+    expect([PLAN_LIMITS.kitchen_pro.tables, PLAN_LIMITS.kitchen_pro.chairs]).toEqual([20, 60]);
+    expect([PLAN_LIMITS.dedicated.tables, PLAN_LIMITS.dedicated.chairs]).toEqual([null, null]);
     expect(PLAN_LIMITS.free.customDomains).toBe(0);
   });
   it("is non-decreasing across self-serve tiers for every resource", () => {
