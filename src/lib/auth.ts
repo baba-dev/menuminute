@@ -4,6 +4,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { headers, cookies } from "next/headers";
 import { getDb } from "@/db";
+import { googleMfaBlocked } from "@/lib/google-auth-guard";
 import { users, sessions, accounts, verificationTokens, rateLimits, twoFactors } from "@/db/schema";
 import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
@@ -18,12 +19,50 @@ export const authServer = betterAuth({
   baseURL: env.APP_URL,
   secret: env.AUTH_SECRET,
   user: {
+    // Better Auth's TOTP challenge is credential-only. Reject Google OAuth for a
+    // TOTP-protected account instead of creating an unchallenged authenticated session.
+    validateUserInfo: async ({ user, source }) => {
+      if (source.oauth?.providerId !== "google") return;
+      const profile = source.oauth.profile as Record<string, unknown> | undefined;
+      const externalId =
+        typeof profile?.sub === "string"
+          ? profile.sub
+          : typeof profile?.id === "string"
+            ? profile.id
+            : "";
+      if (await googleMfaBlocked(user.email ?? "", externalId))
+        return {
+          error: "mfa_requires_password",
+          errorDescription: "This account requires password and authenticator sign-in.",
+        };
+    },
     additionalFields: {
       termsVersion: { type: "string", required: true, input: true },
       termsAcceptedAt: { type: "date", required: true, input: true },
     },
   },
   trustedOrigins: [new URL(env.APP_URL).origin],
+  socialProviders:
+    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            disableSignUp: true,
+            disableIdTokenSignIn: true,
+            requireEmailVerification: true,
+          },
+        }
+      : {},
+  account: {
+    accountLinking: {
+      enabled: true,
+      disableImplicitLinking: true,
+      trustedProviders: [],
+      allowDifferentEmails: false,
+      allowUnlinkingAll: false,
+    },
+  },
   database: drizzleAdapter(getDb(), {
     provider: "pg",
     transaction: true,

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { env } from "@/lib/config/env";
 import { safeReturnPath } from "@/lib/auth-return";
 import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 import { LoginForm } from "./login-form";
@@ -26,7 +27,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
   return (
     <Suspense>
-      <LoginForm />
+      <LoginForm googleEnabled={Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)} />
     </Suspense>
   );
 }

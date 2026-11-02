@@ -120,3 +120,17 @@ export async function allowStepUpAttempt(userId: string, sessionId: string): Pro
   );
   return Number(count) <= 5;
 }
+
+/** Bound current-password verification on the signed-in user's active session. */
+export async function allowPasswordChangeAttempt(
+  userId: string,
+  sessionId: string
+): Promise<boolean> {
+  const subject = fingerprint(userId + ":" + sessionId);
+  const redis = await redisClient("cache");
+  const count = await redis.eval(
+    "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],600) end; return n",
+    { keys: ["auth:password:change:" + subject], arguments: [] }
+  );
+  return Number(count) <= 5;
+}

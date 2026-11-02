@@ -8,7 +8,8 @@ export type AuthEvent =
   | "mfa.enrolled"
   | "mfa.failed"
   | "sessions.revoked_all"
-  | "password.reset";
+  | "password.reset"
+  | "password.changed";
 export async function recordAuthEvent(userId: string, kind: AuthEvent, sessionId?: string) {
   await getPool().query(
     "insert into auth_security_events(id,user_id,kind,session_id) values($1,$2,$3,$4)",

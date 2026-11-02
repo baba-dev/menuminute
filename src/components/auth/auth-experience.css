@@ -492,3 +492,54 @@
     min-height: 44px;
   }
 }
+
+/* Optional linked Google sign-in, unobtrusive beside the original password flow. */
+.mm-auth-social {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  text-align: center;
+}
+.mm-auth-social p,
+.mm-auth-social small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mm-auth-google {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid var(--decorative);
+  border-radius: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.mm-auth-google:hover {
+  border-color: #d48b52;
+}
+.mm-auth-google:focus-visible {
+  outline: 3px solid #dc6a17;
+  outline-offset: 3px;
+}
+.mm-auth-google:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.mm-auth-google-g {
+  display: inline-grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  font-weight: 900;
+  color: #4285f4;
+  background: var(--paper);
+  border-radius: 50%;
+}
