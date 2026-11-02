@@ -1032,6 +1032,115 @@
   }
 }
 
+
+/* Personal-account deletion request: understated until deliberately confirmed. */
+.oh-account-deletion {
+  padding: clamp(16px, 2.4vw, 25px);
+  border: 1px solid var(--oh-line);
+  border-radius: 13px;
+  background: var(--oh-surface);
+  display: grid;
+  gap: 13px;
+}
+.oh-account-deletion-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.oh-account-deletion-heading > div {
+  max-width: 610px;
+}
+.oh-account-deletion-heading > svg {
+  color: var(--oh-subtle);
+  flex: none;
+}
+.oh-account-deletion-heading .oh-hint {
+  margin-top: 7px;
+}
+.oh-deletion-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  justify-self: start;
+  min-height: 39px;
+  padding: 9px 15px;
+  border-radius: 9px;
+  border: 1px solid #ac5b53;
+  background: transparent;
+  color: #aa3931;
+  font-size: 12px;
+  font-weight: 800;
+}
+:root[data-theme="dark"] .oh-deletion-danger {
+  color: #ffb8aa;
+  border-color: #bc7067;
+}
+.oh-deletion-danger:not(:disabled):hover {
+  background: #fbe8e5;
+}
+:root[data-theme="dark"] .oh-deletion-danger:not(:disabled):hover {
+  background: #4b302d;
+}
+.oh-deletion-confirm,
+.oh-deletion-request {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--oh-soft);
+  border: 1px solid var(--oh-line);
+  border-radius: 11px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.oh-deletion-confirm > strong,
+.oh-deletion-request > strong {
+  font-size: 14px;
+  color: var(--ink);
+}
+.oh-deletion-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+.oh-deletion-check input {
+  margin-top: 3px;
+  accent-color: var(--oh-accent);
+}
+.oh-deletion-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.oh-deletion-text {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  padding: 7px 2px;
+  color: var(--oh-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.oh-deletion-error {
+  color: #ab3027;
+  font-size: 12px;
+}
+:root[data-theme="dark"] .oh-deletion-error {
+  color: #ffb8aa;
+}
+.oh-deletion-feedback {
+  color: var(--oh-subtle);
+  font-size: 12px;
+}
+.oh-deletion-feedback:empty {
+  display: none;
+}
+
 @media (max-width: 1100px) {
   .oh-layout {
     grid-template-columns: 170px minmax(0, 1fr);
