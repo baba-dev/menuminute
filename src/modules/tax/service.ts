@@ -50,8 +50,7 @@ export async function saveOutletSalesTax(
     });
   } catch (error) {
     const inner = error instanceof Error && error.cause ? error.cause : error;
-    const code =
-      inner && typeof inner === "object" && "code" in inner ? String(inner.code) : null;
+    const code = inner && typeof inner === "object" && "code" in inner ? String(inner.code) : null;
     if (code === "40001")
       throw new ConflictError("Tax settings changed elsewhere. Reload and review before saving.");
     if (code === "22023") throw new ValidationError("Invalid merchant tax settings");
