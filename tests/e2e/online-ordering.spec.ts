@@ -353,7 +353,16 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute("aria-selected", "true");
 });
 
-test("checkout validates the phone inline and remembers details only when asked", async ({
+async function withDb<T>(work: (pool: Pool) => Promise<T>) {
+  const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+  try {
+    return await work(pool);
+  } finally {
+    await pool.end();
+  }
+}
+
+test("checkout validates the phone inline and remembers the device only when asked", async ({
   page,
 }) => {
   test.setTimeout(120000);
@@ -384,13 +393,60 @@ test("checkout validates the phone inline and remembers details only when asked"
   await cart.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
 
-  // A later visit on the same device is prefilled; instructions are never stored.
+  // A later visit on the same device is recognised by the server cookie. The full phone is never
+  // sent back to the browser: only a masked hint is shown, and instructions are never stored.
   cart = await openCart();
   await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("Asha");
-  await expect(cart.getByRole("textbox", { name: "Phone number" })).toHaveValue("+919876543210");
+  await expect(cart.getByText(/Saved •••• 3210/)).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Phone number" })).toHaveValue("");
   await expect(cart.getByRole("textbox", { name: "Order instructions" })).toHaveValue("");
   await cart.getByRole("button", { name: "Forget saved details" }).click();
   await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("");
   cart = await openCart();
   await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("");
+  await expect(cart.getByText(/Saved •••• 3210/)).toHaveCount(0);
+});
+
+test("live status reaches the tracker over the stream and a served order can be rated", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  const fixture = await seedOrdering(true);
+  await page.goto(`/m/${fixture.tableToken}`);
+  await page.getByRole("button", { name: "Add to order", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Paneer Curry" })
+    .getByRole("button", { name: /Add to Order/ })
+    .click();
+  await page.getByRole("button", { name: /^View Your Order/ }).click();
+  const streamRequest = page.waitForRequest((request) => request.url().includes("/stream"));
+  await page
+    .getByRole("dialog", { name: "Your order" })
+    .getByRole("button", { name: /Submit order/ })
+    .click();
+  await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
+  const orderId = /\/orders\/(ord-[^/?#]+)/.exec(page.url())![1]!;
+  await streamRequest;
+
+  await withDb((pool) =>
+    pool.query("update orders set status='accepted', updated_at=now() where id=$1", [orderId])
+  );
+  await expect(page.getByRole("status").filter({ hasText: "accepted your order" })).toBeVisible({
+    timeout: 20000,
+  });
+
+  await withDb((pool) =>
+    pool.query("update orders set status='served', updated_at=now() where id=$1", [orderId])
+  );
+  await expect(page.getByRole("heading", { name: "How was your meal?" })).toBeVisible({
+    timeout: 20000,
+  });
+  await page
+    .getByRole("radiogroup", { name: "Rate Paneer Curry" })
+    .getByRole("radio", { name: "5 stars" })
+    .click();
+  await page.getByLabel(/Comment \(optional/).fill("Rich and creamy");
+  await page.getByRole("button", { name: "Send rating" }).click();
+  await expect(page.getByText(/you rated this 5 out of 5/)).toBeVisible();
+  await expect(page.getByText(/awaiting the restaurant/)).toBeVisible();
 });

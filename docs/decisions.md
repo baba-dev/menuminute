@@ -80,3 +80,14 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 | 025 | Demo-only bypass of the Kitchen Pro pilot gate           | `provision_demo_ops()` enables the demo kitchen and grants Ordering/Kitchen for ten years; owner-only, hardcoded to the demo outlet. Real outlets keep the two-operator pilot or paid path. |
 | 026 | Drop the legacy `order_items.variant_id` foreign key     | Versioned-menu variant ids are not legacy rows; the FK rejected every guest order line with a variant. Order items are immutable snapshots. Migration 0061.                                 |
 | 027 | Higher Ember daily budget for the shared demo actor only | Per-user/org budgets and table checks widened for `demo-owner`/`org-demo-outlet` (migration 0062); application-level per-source and daily caps bound real cost.                             |
+
+## Public diner features (proposed 2 November 2026; all default off)
+
+| ADR | Decision                                           | Consequence                                                                                                                                                                                                                                        |
+| --- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 028 | Server-side, opt-in diner device profile           | httpOnly cookie `menuminute.guest`, only its SHA-256 stored (migration 0101). One organization per device, name and phone only, 180-day sliding expiry, scrubbed on forget, never created for the demo tenant. Flag `PUBLIC_DINER_DEVICE_ENABLED`. |
+| 029 | Signal-only live order updates with polling backup | SSE says "changed"; the client re-reads authoritative tracking state, so a missed or repeated signal cannot show a wrong status. Bounded per process and source. Flag `PUBLIC_DINER_STREAM_ENABLED`.                                               |
+| 030 | Verified ratings; comments only after approval     | One rating per ordered line via the order's tracking capability once served (migration 0103). Stars public from three ratings; comments appear only after manager approval. Flag `PUBLIC_DINER_REVIEWS_ENABLED`.                                   |
+
+Enabling any flag in production needs the owner's approval of the matching privacy and cookie notice;
+guest Web Push (empty-payload push bound to one order) is not implemented yet.

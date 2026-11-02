@@ -317,7 +317,31 @@ export function CartDrawer({
 
       clearPendingGuestOrder(token);
       setPendingRecovery(null);
-      if (rememberDetails) {
+      if (deviceMemory) {
+        // Best effort after the order is already placed; a failure never affects the order.
+        // keepalive lets the save finish while the page navigates to the tracker.
+        const typedPhone = cleanPhoneInput(customerPhone);
+        const call = rememberDetails
+          ? fetch("/api/public-orders/device", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              keepalive: true,
+              body: JSON.stringify({
+                token,
+                name: customerName.trim(),
+                phone: typedPhone,
+                keepPhone: !typedPhone && Boolean(savedPhoneMasked),
+              }),
+            })
+          : savedPhoneMasked || hasSavedProfile
+            ? fetch("/api/public-orders/device", { method: "DELETE", keepalive: true })
+            : null;
+        void call?.catch(() => undefined);
+        if (!rememberDetails) {
+          setHasSavedProfile(false);
+          setSavedPhoneMasked(null);
+        } else if (customerName.trim() || typedPhone) setHasSavedProfile(true);
+      } else if (rememberDetails) {
         writeGuestProfile(localStorage, {
           name: customerName,
           phone: cleanPhoneInput(customerPhone),
