@@ -64,6 +64,33 @@ export class LimitReachedError extends AppError {
   }
 }
 
+/**
+ * The organization has used its AI credits for the month. Manual editing keeps working; credits reset at
+ * the start of the next UTC month. Same HTTP shape as LIMIT_REACHED so clients can offer the upgrade.
+ */
+export class AiCreditsExhaustedError extends AppError {
+  public readonly limit: number;
+  public readonly resetsAt: string;
+  public readonly upgradeTo: string | null;
+
+  constructor(limit: number, resetsAt: string, upgradeTo: string | null) {
+    const day = new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    }).format(new Date(resetsAt));
+    super(
+      `You have used all ${limit.toLocaleString("en-US")} AI credits for this month. They reset on ${day}. Editing by hand still works.`,
+      "AI_CREDITS_EXHAUSTED",
+      402
+    );
+    this.name = "AiCreditsExhaustedError";
+    this.limit = limit;
+    this.resetsAt = resetsAt;
+    this.upgradeTo = upgradeTo;
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message: string) {
     super(message, "CONFLICT", 409);

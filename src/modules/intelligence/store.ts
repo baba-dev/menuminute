@@ -6,6 +6,7 @@ import { withActor, type Actor } from "@/modules/tenancy/service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { IntelligenceError, type InferenceResult, type ProviderId } from "./contracts";
 import type { SpendPolicy } from "./spend";
+import { AI_CREDIT_COSTS, refundAiCredits, spendAiCredits } from "@/modules/plans/credits";
 const uuid = z.string().uuid();
 const entity = z
   .string()
@@ -140,6 +141,9 @@ export async function beginTurn(s: Scope, id: string, raw: unknown) {
       sql`select app_private.ai_reserve_user_budget(${s.organizationId},${s.outletId},${s.actor.userId},'turn') as allowed`
     );
     if (!budget.rows[0]?.allowed) throw new ForbiddenError("Daily assistant request limit reached");
+    // The monthly AI-credit allowance (plan limit). In this transaction, so a refused or failed turn
+    // creation never keeps a credit.
+    await spendAiCredits(tx, s.outletId, AI_CREDIT_COSTS.assistantTurn);
     const active = await tx.execute(
       sql`select id from assistant_turns where conversation_id=${id} and status='processing' limit 1`
     );
@@ -236,8 +240,12 @@ export async function failTurn(s: Scope, id: string, code: string) {
     await tx.execute(
       sql`update assistant_attempts set status='uncertain',settled_at=now() where turn_id=${id} and status='started'`
     );
-    await tx.execute(sql`update assistant_turns set status='failed',answer=null,error_code=${code},completed_at=now()
+    const failed =
+      await tx.execute(sql`update assistant_turns set status='failed',answer=null,error_code=${code},completed_at=now()
   where id=${id} and status='processing' and organization_id=${s.organizationId}
-  and outlet_id=${s.outletId} and user_id=${s.actor.userId}`);
+  and outlet_id=${s.outletId} and user_id=${s.actor.userId} returning id`);
+    // A turn that failed produced no answer: give its credit back (once, because only a processing turn fails).
+    if (failed.rows.length === 1)
+      await refundAiCredits(tx, s.outletId, AI_CREDIT_COSTS.assistantTurn);
   });
 }

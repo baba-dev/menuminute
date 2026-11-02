@@ -5,6 +5,8 @@ import { boundedBytes } from "@/lib/bounded-input";
 import { errorResponse, requestContext } from "@/lib/request-context";
 import { ConflictError, ForbiddenError, RateLimitError, UnavailableError } from "@/lib/errors";
 import { redisClient } from "@/lib/redis";
+import { withOutlet } from "@/modules/tenancy/service";
+import { AI_CREDIT_COSTS, refundAiCredits, spendAiCredits } from "@/modules/plans/credits";
 import { menuDetail, listMenus } from "@/modules/menu-product/service";
 import { entityId } from "@/modules/menu-product/contracts";
 import {
@@ -165,6 +167,16 @@ export async function POST(req: Request) {
       .map((dish) => dish.name);
 
     await reserveAutofill(actor.userId, restaurant.id, input.key);
+    // One AI credit from the organization's monthly allowance (a plan limit); given back if nothing is produced.
+    let credited = false;
+    try {
+      credited = await withOutlet(actor, restaurant.id, "menu.read", (tx) =>
+        spendAiCredits(tx, restaurant.id, AI_CREDIT_COSTS.dishAutofill)
+      );
+    } catch (error) {
+      await settleAutofill(actor.userId, restaurant.id, input.key, false).catch(() => undefined);
+      throw error;
+    }
     let completed = false;
     try {
       let result;
@@ -253,6 +265,14 @@ export async function POST(req: Request) {
         } catch {
           console.error("[dish-ai] success slot release unavailable");
         }
+        if (credited)
+          try {
+            await withOutlet(actor, restaurant.id, "menu.read", (tx) =>
+              refundAiCredits(tx, restaurant.id, AI_CREDIT_COSTS.dishAutofill)
+            );
+          } catch {
+            console.error("[dish-ai] credit refund unavailable");
+          }
       }
     }
   } catch (error) {

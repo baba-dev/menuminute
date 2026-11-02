@@ -1,11 +1,10 @@
 import { observedRoute } from "@/lib/observed-route";
 import { NextResponse } from "next/server";
-import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { requestContext, errorResponse } from "@/lib/request-context";
 import { boundedJson } from "@/lib/bounded-input";
 import { AppError } from "@/lib/errors";
-import { withActor } from "@/modules/tenancy/service";
+import { submitImportForProcessing } from "@/modules/menu-import/service";
 import { domainError } from "@/modules/organizations/service";
 import { importId } from "@/modules/menu-import/contracts";
 import { importEngineEnabled } from "@/modules/menu-import/nvidia";
@@ -26,15 +25,7 @@ async function observed_POST(req: Request, c: C) {
       input = command.parse(await boundedJson(req));
     let result: { id: string; status: string; revision: number };
     try {
-      result = await withActor(
-        actor,
-        async (tx) =>
-          (
-            await tx.execute<{ result: typeof result }>(
-              sql`select app_private.import_enqueue(${restaurant.id},${id},${input.expectedRevision}) as result`
-            )
-          ).rows[0]!.result
-      );
+      result = await submitImportForProcessing(actor, restaurant.id, id, input.expectedRevision);
     } catch (err) {
       domainError(err);
     }

@@ -167,3 +167,62 @@ describe("overflow notice", () => {
     expect(view.meters.filter((m) => m.notice).map((m) => m.key)).toEqual(["dishes"]);
   });
 });
+
+describe("AI credit and photo storage meters", () => {
+  const counts = { outlets: 1, dishes: 0, qrCodes: 0, tables: 0, chairs: 0 };
+  const MB = 1024 * 1024;
+  const view = (plan: "free" | "ordering" | "kitchen_pro", ai: number, usedBytes: number) =>
+    buildPlanUsageView({
+      plan,
+      limits: PLAN_LIMITS[plan],
+      counts,
+      intake: null,
+      ai: { used: ai, resetsAt: "2026-12-01T00:00:00Z" },
+      storage: { usedBytes },
+    })!;
+  const find = (v: ReturnType<typeof view>, key: string) => v.meters.find((m) => m.key === key);
+
+  it("shows both with the catalog caps: 10/150/1,000 credits and 100/300/500 MB", () => {
+    expect(find(view("free", 3, 20 * MB), "aiCredits")).toMatchObject({ used: 3, cap: 10 });
+    expect(find(view("ordering", 3, 20 * MB), "aiCredits")).toMatchObject({ cap: 150 });
+    expect(find(view("kitchen_pro", 3, 20 * MB), "aiCredits")).toMatchObject({ cap: 1000 });
+    expect(find(view("free", 0, 20 * MB), "storage")).toMatchObject({ used: 20, cap: 100 });
+    expect(find(view("ordering", 0, 0), "storage")).toMatchObject({ cap: 300 });
+    expect(find(view("kitchen_pro", 0, 0), "storage")).toMatchObject({ cap: 500 });
+  });
+
+  it("states the monthly reset and rounds partial megabytes up, never down", () => {
+    expect(find(view("free", 1, 1), "aiCredits")?.period).toBe("Resets 1 Dec 2026");
+    expect(find(view("free", 0, 1), "storage")?.used).toBe(1);
+    expect(find(view("free", 0, 1.5 * MB), "storage")?.used).toBe(2);
+  });
+
+  it("turns amber near the limit and points at what the next plan allows", () => {
+    const near = find(view("free", 9, 0), "aiCredits")!;
+    expect(near.state).toBe("near");
+    expect(near.upgradeHint).toBe("Ordering allows 150 a month");
+    const full = find(view("free", 0, 100 * MB), "storage")!;
+    expect(full.state).toBe("full");
+    expect(full.upgradeHint).toBe("Ordering allows 300 MB");
+  });
+
+  it("is absent when no snapshot is given (limits off) and for contract plans", () => {
+    const none = buildPlanUsageView({
+      plan: "free",
+      limits: PLAN_LIMITS.free,
+      counts,
+      intake: null,
+    })!;
+    expect(none.meters.map((m) => m.key)).not.toContain("aiCredits");
+    expect(none.meters.map((m) => m.key)).not.toContain("storage");
+    expect(
+      buildPlanUsageView({
+        plan: "dedicated",
+        limits: PLAN_LIMITS.dedicated,
+        counts,
+        intake: null,
+        ai: { used: 5, resetsAt: "2026-12-01T00:00:00Z" },
+      })
+    ).toBeNull();
+  });
+});

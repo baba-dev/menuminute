@@ -204,7 +204,7 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 | 2b  | Free order intake, 100 guest orders a month; done in migration 0079 behind an owner-only database switch (default OFF)                                      | 2                         |
 | 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                                                            | 2                         |
 | 3   | Downgrade grace and hiding of extra dishes (hide, not delete), instant restore on upgrade; done in migration 0081 behind an owner-only switch (default OFF) | 2                         |
-| 4   | AI credit accounting per org per month                                                                                                                      | 1, AI spend accounting    |
+| 4   | AI credit accounting per org per month; done in migration 0086 (see "AI credits and photo storage")                                                         | 1, AI spend accounting    |
 | 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                     | Billing gates             |
 | 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                              | Kitchen Pro release gates |
 | 7   | Custom domain verification, routing, TLS                                                                                                                    | Edge decision             |
@@ -323,9 +323,9 @@ dashboard can see the Free order count without reading the owner-only settings t
 
 Design and accessibility decisions:
 
-- **Honest by construction.** Only limits that are really enforced get a meter: dishes, QR codes
-  and, while Free intake is on, orders this month. AI credits, storage, seats and custom domains
-  have no meter until something enforces them. Features show as locked only when they truly are
+- **Honest by construction.** Only limits that are really enforced get a meter: dishes, QR codes,
+  tables, chairs, outlets, AI credits, photo storage and, while Free intake is on, orders this month.
+  Seats and custom domains have no meter until something enforces them. Features show as locked only when they truly are
   (online ordering without intake, and the Kitchen display). POS, reports and similar are not
   gated today, so they are not shown as locked.
 - **State is never colour alone.** Each meter has an accessible `role="meter"` with spoken text
@@ -562,3 +562,40 @@ retries a failed send up to 5 times. A reminder is dropped if the customer has p
 now uses one shared template (`src/lib/email/template.ts`: HTML with a plain-text twin, dark mode, escaped
 text, same-origin links only). The worker needs the mail settings in `docs/environment.md`; without a real
 provider the reminders simply stay off.
+
+## AI credits and photo storage (migration 0086)
+
+**AI credits.** Each organization has a monthly allowance pooled across its outlets: Free 10, Ordering 150,
+Kitchen Pro 1,000, Dedicated by contract (never refused, still recorded). It resets at the start of each UTC
+month with no rollover, and only counts while plan limits are enforced.
+
+| Action                       | Cost                                  | Where it is charged                                                  |
+| ---------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| One assistant message        | 1 credit                              | In the transaction that creates the turn (`beginTurn`)               |
+| One dish autofill suggestion | 1 credit                              | Before the provider call; refunded if nothing is produced            |
+| AI menu import               | 1 credit per ready page or photo      | In the same transaction as the enqueue (`submitImportForProcessing`) |
+| Menu concierge for guests    | Not charged (its own separate budget) | n/a                                                                  |
+
+- The ledger (`app_private.ai_credit_usage`) is private. `ai_credit_spend` takes an advisory lock per
+  organization, so concurrent requests can never overspend; a refusal changes nothing. The cap is passed from
+  the reviewed catalog, the same way as the media budget.
+- When the allowance is used up the API answers `AI_CREDITS_EXHAUSTED` (HTTP 402) with the limit, the reset
+  date and the next plan. Manual editing keeps working; no overage is billed.
+- A failed assistant message and a failed dish autofill give their credit back. Import credits are **not**
+  refunded if the provider later fails a page, because the requests were made.
+- The existing safeguards (daily per-user and per-organization limits, the model spend cap in USD) are
+  unchanged and still apply on top.
+
+**Photo storage.** The existing per-outlet upload budget is now the plan's cap while limits are enforced:
+Free 100 MB, Ordering 300 MB, Kitchen Pro 500 MB **per outlet** (Kitchen Pro's 10 outlets can therefore hold up
+to 5 GB in total). Dedicated and any deployment with limits off keep the operational default
+(`MEDIA_OUTLET_BUDGET_BYTES`). An upload that does not fit is refused with `LIMIT_REACHED` ("Your plan allows
+100 MB of photo storage") and the upgrade pointer; the generic hourly upload limit keeps its own message.
+Nothing already stored is ever removed. Only dish photos count, exactly as the upload budget counts them.
+
+**Meters.** "AI credits" (with the reset date) and "Photo storage" appear on the billing page, the plan panel
+and, when close to the limit, the dashboard widget. They are not added to the Menu Studio strip.
+
+**Decisions to confirm.** (1) Storage is per outlet, not per organization. (2) The credit costs above; the
+table is the place to change them (`AI_CREDIT_COSTS`). (3) Import credits are charged at submission and not
+refunded on a later provider failure.
