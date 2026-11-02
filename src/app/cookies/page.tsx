@@ -119,7 +119,8 @@ const storageInventory = [
     purpose: "Installed-app prompt preference",
     example: "menuminute:pwa-install-dismissed-at",
     category: "Local storage",
-    duration: "Used to suppress another prompt for approximately 30 days; the entry can remain until cleared.",
+    duration:
+      "Used to suppress another prompt for approximately 30 days; the entry can remain until cleared.",
   },
   {
     purpose: "Guest menu cart and installed web-app experience",
@@ -170,7 +171,16 @@ function CookieArtwork() {
         <circle cx="240" cy="383" r="5" />
         <circle cx="71" cy="214" r="5" />
       </g>
-      <rect x="107" y="105" width="267" height="225" rx="28" fill="#110c09" stroke="#cc945e" strokeWidth="2.5" />
+      <rect
+        x="107"
+        y="105"
+        width="267"
+        height="225"
+        rx="28"
+        fill="#110c09"
+        stroke="#cc945e"
+        strokeWidth="2.5"
+      />
       <rect x="121" y="119" width="239" height="198" rx="19" fill="#2a1c15" />
       <path d="M121 153h239" stroke="#a87044" strokeWidth="2" strokeOpacity=".65" />
       <circle cx="144" cy="137" r="4" fill="#ffc989" />
@@ -178,7 +188,15 @@ function CookieArtwork() {
       <circle cx="174" cy="137" r="4" fill="#976041" />
       <path d="M276 137h57" stroke="#b98966" strokeWidth="4" strokeLinecap="round" />
       <circle cx="235" cy="231" r="72" fill="url(#cookie-gold)" />
-      <circle cx="235" cy="231" r="62" fill="none" stroke="#fff0cc" strokeOpacity=".42" strokeWidth="2" />
+      <circle
+        cx="235"
+        cy="231"
+        r="62"
+        fill="none"
+        stroke="#fff0cc"
+        strokeOpacity=".42"
+        strokeWidth="2"
+      />
       <g fill="#854820">
         <circle cx="209" cy="202" r="8" />
         <circle cx="258" cy="210" r="7" />
@@ -196,8 +214,20 @@ function CookieArtwork() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M85 223h-20m10-9-10 9 10 9" fill="none" stroke="#eeb17a" strokeWidth="3" strokeLinecap="round" />
-      <path d="M396 223h20m-10-9 10 9-10 9" fill="none" stroke="#eeb17a" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M85 223h-20m10-9-10 9 10 9"
+        fill="none"
+        stroke="#eeb17a"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M396 223h20m-10-9 10 9-10 9"
+        fill="none"
+        stroke="#eeb17a"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -296,8 +326,8 @@ export default function CookiesPage() {
                 <p>
                   MenuMinute uses browser storage for sign-in, safety and useful features. This
                   policy also explains optional technologies that would need additional controls
-                  before activation. It does not claim that every third-party cookie is set on
-                  every visit.
+                  before activation. It does not claim that every third-party cookie is set on every
+                  visit.
                 </p>
               </div>
             </div>
@@ -323,7 +353,8 @@ export default function CookiesPage() {
               <p>
                 It should be read with our <Link href="/privacy">Privacy Policy</Link>, which
                 describes personal data, rights, purposes, retention and contact details. A
-                restaurant may separately control information you submit when ordering from its menu.
+                restaurant may separately control information you submit when ordering from its
+                menu.
               </p>
             </section>
 
@@ -333,27 +364,32 @@ export default function CookiesPage() {
                 A <strong>cookie</strong> is a small value stored by your browser and usually sent
                 back with requests to the site that set it. A first-party cookie comes from our
                 website. A third-party service may use its own cookies when its feature is loaded.
-                Session cookies generally expire when a browser session ends; persistent cookies
-                may remain longer.
+                Session cookies generally expire when a browser session ends; persistent cookies may
+                remain longer.
               </p>
               <p>
                 <strong>Local storage</strong> remembers choices in a particular browser until
                 changed or cleared. <strong>Session storage</strong> usually lasts for the current
                 tab session. <strong>Service workers and cache storage</strong> can help an
-                installed PWA load its interface. These are related browser technologies, but
-                they are not all cookies and are not all sent to our servers.
+                installed PWA load its interface. These are related browser technologies, but they
+                are not all cookies and are not all sent to our servers.
               </p>
             </section>
 
             <section className="privacy-section" id="inventory" aria-labelledby="inventory-heading">
               <h2 id="inventory-heading">3. What we use today</h2>
               <p>
-                The following examples are drawn from the current MenuMinute application code.
-                Some apply only if you sign in, select a restaurant, use a guest menu, or install
-                the PWA. A technical cookie name can vary by environment and authentication
+                The following examples are drawn from the current MenuMinute application code. Some
+                apply only if you sign in, select a restaurant, use a guest menu, or install the
+                PWA. A technical cookie name can vary by environment and authentication
                 implementation.
               </p>
-              <div className="cookies-inventory-scroll" role="region" aria-label="Cookies and browser storage inventory" tabIndex={0}>
+              <div
+                className="cookies-inventory-scroll"
+                role="region"
+                aria-label="Cookies and browser storage inventory"
+                tabIndex={0}
+              >
                 <table className="cookies-inventory">
                   <thead>
                     <tr>
@@ -376,10 +412,10 @@ export default function CookiesPage() {
                 </table>
               </div>
               <p>
-                Essential sign-in cookies protect authenticated sessions; disabling them may
-                prevent account access. Appearance and other preference storage improve
-                convenience. Guest cart state and PWA cache are browser-based functionality,
-                not permission to skip server-side menu or price validation.
+                Essential sign-in cookies protect authenticated sessions; disabling them may prevent
+                account access. Appearance and other preference storage improve convenience. Guest
+                cart state and PWA cache are browser-based functionality, not permission to skip
+                server-side menu or price validation.
               </p>
             </section>
 
@@ -408,15 +444,15 @@ export default function CookiesPage() {
               <h2 id="optional-heading">5. Analytics, advertising and consent</h2>
               <p>
                 Our reviewed application code does not activate Google Analytics or advertising
-                tracking cookies. We may introduce optional measurement tools in the future,
-                but describing a possible integration does not mean it is currently running.
+                tracking cookies. We may introduce optional measurement tools in the future, but
+                describing a possible integration does not mean it is currently running.
               </p>
               <p>
-                Where applicable law requires permission for non-essential analytics,
-                advertising, or similar tracking, we must provide an appropriate choice before
-                activating those technologies. Essential authentication and security mechanisms
-                are treated differently. We do not currently offer a site-wide optional-cookie
-                preference switch, and this policy page does not record consent.
+                Where applicable law requires permission for non-essential analytics, advertising,
+                or similar tracking, we must provide an appropriate choice before activating those
+                technologies. Essential authentication and security mechanisms are treated
+                differently. We do not currently offer a site-wide optional-cookie preference
+                switch, and this policy page does not record consent.
               </p>
               <p>
                 This review does not replace checking the live Cloudflare configuration, connected
@@ -429,17 +465,25 @@ export default function CookiesPage() {
               <h2 id="controls-heading">6. How to manage your browser storage</h2>
               <p>
                 You can use your browser&apos;s privacy or site-settings menu to view and delete
-                cookies and site data for <strong>food.bababuilds.com</strong>. You can also
-                block third-party cookies, subject to what your browser supports. Clearing
-                essential cookies can sign you out; clearing local storage may reset your theme,
-                remembered email, guest cart or installed-app preferences.
+                cookies and site data for <strong>food.bababuilds.com</strong>. You can also block
+                third-party cookies, subject to what your browser supports. Clearing essential
+                cookies can sign you out; clearing local storage may reset your theme, remembered
+                email, guest cart or installed-app preferences.
               </p>
               <ul>
-                <li>Use your browser&apos;s site data or privacy settings to clear cookies and storage.</li>
+                <li>
+                  Use your browser&apos;s site data or privacy settings to clear cookies and
+                  storage.
+                </li>
                 <li>Change the light or dark appearance using the MenuMinute theme switch.</li>
                 <li>Use the sign-in screen to choose whether your email is remembered.</li>
-                <li>For an installed PWA, the browser or device&apos;s application/site-data controls can remove cached information.</li>
-                <li>Contact us if you need assistance with a specific storage or privacy question.</li>
+                <li>
+                  For an installed PWA, the browser or device&apos;s application/site-data controls
+                  can remove cached information.
+                </li>
+                <li>
+                  Contact us if you need assistance with a specific storage or privacy question.
+                </li>
               </ul>
               <p>
                 Browser controls cannot necessarily erase information already recorded by a
@@ -451,9 +495,8 @@ export default function CookiesPage() {
                 <div>
                   <strong>Using a public restaurant QR menu?</strong>
                   <p>
-                    You do not need a MenuMinute account simply to view a published menu.
-                    Your browser may still keep temporary menu, cart or offline data for
-                    that experience.
+                    You do not need a MenuMinute account simply to view a published menu. Your
+                    browser may still keep temporary menu, cart or offline data for that experience.
                   </p>
                 </div>
               </div>
@@ -463,16 +506,16 @@ export default function CookiesPage() {
               <h2 id="updates-heading">7. Changes and contact</h2>
               <p>
                 We review this notice when relevant cookies, storage, vendors or applicable
-                requirements change. The date at the top identifies the application review
-                reflected here; it is not a claim that every browser or CDN configuration was
-                independently certified on that date.
+                requirements change. The date at the top identifies the application review reflected
+                here; it is not a claim that every browser or CDN configuration was independently
+                certified on that date.
               </p>
               <p>
                 For questions about cookies, site storage or your information, contact{" "}
                 <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Cookie%20Policy">
                   admin@bababuilds.com
-                </a>.
-                You can also read the <Link href="/privacy">Privacy Policy</Link> and{" "}
+                </a>
+                . You can also read the <Link href="/privacy">Privacy Policy</Link> and{" "}
                 <Link href="/terms">Terms of Service</Link>.
               </p>
             </section>
@@ -481,8 +524,7 @@ export default function CookiesPage() {
                 <span>STILL HAVE QUESTIONS?</span>
                 <h2>Clear answers start here.</h2>
                 <p>
-                  Ask BabaBuilds about cookies, browser storage and privacy choices
-                  for MenuMinute.
+                  Ask BabaBuilds about cookies, browser storage and privacy choices for MenuMinute.
                 </p>
               </div>
               <a href="mailto:admin@bababuilds.com?subject=MenuMinute%20Cookie%20Policy">
@@ -493,8 +535,8 @@ export default function CookiesPage() {
               <Download size={14} aria-hidden="true" /> Print or save this policy for your records.
             </p>
             <p className="cookies-quiet-footnote">
-              <Cookie size={16} aria-hidden="true" /> Last reviewed {REVIEWED_DATE}.
-              This notice covers the current web/PWA application, not unshipped native apps.
+              <Cookie size={16} aria-hidden="true" /> Last reviewed {REVIEWED_DATE}. This notice
+              covers the current web/PWA application, not unshipped native apps.
             </p>
           </main>
         </div>
