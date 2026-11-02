@@ -72,7 +72,6 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
     return res.json() as Promise<GuestList>;
   }
   useEffect(() => {
-    if (!query && page === 0) return;
     const abort = new AbortController();
     const timer = window.setTimeout(() => {
       void refresh(page, query, abort.signal)
