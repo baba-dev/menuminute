@@ -7,6 +7,14 @@ import type { CartItem, CustomizerDish } from "./item-customizer";
 import { playTicketTear } from "@/lib/sound-effects";
 import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
 import { DiningImage } from "./dining-image";
+import { GuestDetails } from "./guest-details";
+import {
+  cleanPhoneInput,
+  clearGuestProfile,
+  phoneProblem,
+  readGuestProfile,
+  writeGuestProfile,
+} from "@/modules/orders/guest-profile";
 import {
   clearPendingGuestOrder,
   pendingOrderStorageKey,
@@ -141,6 +149,9 @@ export function CartDrawer({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [rememberDetails, setRememberDetails] = useState(false);
+  const [hasSavedProfile, setHasSavedProfile] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [pickupTime, setPickupTime] = useState("");
   const [pendingRecovery, setPendingRecovery] = useState<PendingGuestOrder | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -191,7 +202,16 @@ export function CartDrawer({
         sessionStorage.getItem(pendingOrderStorageKey(token)),
         token
       );
-      if (!recovered) return;
+      if (!recovered) {
+        const saved = readGuestProfile(localStorage);
+        if (saved) {
+          setCustomerName((current) => current || saved.name);
+          setCustomerPhone((current) => current || saved.phone);
+          setRememberDetails(true);
+          setHasSavedProfile(true);
+        }
+        return;
+      }
       setPendingRecovery(recovered);
       setFulfillmentMode(recovered.fulfillmentMode);
       setCustomerName(recovered.customerName);
@@ -223,6 +243,12 @@ export function CartDrawer({
       setIsOpen(true);
       return;
     }
+    if (!pendingRecovery && phoneProblem(customerPhone)) {
+      setPhoneTouched(true);
+      setErrorMessage("Check your phone number, or clear it to continue without one.");
+      setIsOpen(true);
+      return;
+    }
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -237,7 +263,7 @@ export function CartDrawer({
             ? outletInputToIso(pickupTime, timezone)
             : null,
         customerName: customerName.trim(),
-        customerPhone: customerPhone.trim(),
+        customerPhone: cleanPhoneInput(customerPhone),
         notes: orderNotes.trim(),
         items: items.map((i) => ({
           dishId: i.dishId,
@@ -271,6 +297,16 @@ export function CartDrawer({
 
       clearPendingGuestOrder(token);
       setPendingRecovery(null);
+      if (rememberDetails) {
+        writeGuestProfile(localStorage, {
+          name: customerName,
+          phone: cleanPhoneInput(customerPhone),
+        });
+        setHasSavedProfile(true);
+      } else {
+        clearGuestProfile(localStorage);
+        setHasSavedProfile(false);
+      }
       playTicketTear();
       onClearCart();
       setIsOpen(false);
@@ -579,52 +615,28 @@ export function CartDrawer({
                 </section>
               )}
               {/* Guest Details */}
-              <div className="cart-section stack" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
-                <span className="section-title">Your Details (Optional)</span>
-                <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
-                  <label
-                    className="stack"
-                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
-                  >
-                    <span>Guest name (optional)</span>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={customerName}
-                      maxLength={80}
-                      autoComplete="name"
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="field-input"
-                    />
-                  </label>
-                  <label
-                    className="stack"
-                    style={{ flex: "1 1 12rem", minWidth: 0, gap: "0.25rem" }}
-                  >
-                    <span>Phone number (optional)</span>
-                    <input
-                      type="tel"
-                      placeholder="Phone number"
-                      value={customerPhone}
-                      maxLength={30}
-                      autoComplete="tel"
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="field-input"
-                    />
-                  </label>
-                </div>
-                <label className="stack" style={{ gap: "0.25rem" }}>
-                  <span>Order instructions (optional)</span>
-                  <input
-                    type="text"
-                    placeholder="Allergies or special requests for the kitchen"
-                    value={orderNotes}
-                    maxLength={500}
-                    onChange={(e) => setOrderNotes(e.target.value)}
-                    className="field-input"
-                  />
-                </label>
-              </div>
+              <GuestDetails
+                name={customerName}
+                phone={customerPhone}
+                notes={orderNotes}
+                remember={rememberDetails}
+                hasSavedProfile={hasSavedProfile}
+                phoneTouched={phoneTouched}
+                disabled={Boolean(pendingRecovery)}
+                onName={setCustomerName}
+                onPhone={setCustomerPhone}
+                onPhoneBlur={() => setPhoneTouched(true)}
+                onNotes={setOrderNotes}
+                onRemember={setRememberDetails}
+                onForget={() => {
+                  clearGuestProfile(localStorage);
+                  setHasSavedProfile(false);
+                  setRememberDetails(false);
+                  setCustomerName("");
+                  setCustomerPhone("");
+                  setPhoneTouched(false);
+                }}
+              />
 
               {/* Price Breakdown */}
               <div

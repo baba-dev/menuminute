@@ -123,6 +123,13 @@ const storageInventory = [
       "Used to suppress another prompt for approximately 30 days; the entry can remain until cleared.",
   },
   {
+    purpose: "Optional remembered guest checkout details",
+    example: "menuminute.guest-profile.v1",
+    category: "Local storage",
+    duration:
+      "Written only if the diner ticks “Remember my name and phone on this device”; stores name and phone, never order instructions, and is ignored after 90 days. “Forget saved details” removes it.",
+  },
+  {
     purpose: "Guest menu cart and installed web-app experience",
     example: "Restaurant-scoped browser state, service worker and offline caches where used",
     category: "Browser storage / cache",

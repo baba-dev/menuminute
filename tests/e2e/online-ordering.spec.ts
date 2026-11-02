@@ -145,9 +145,9 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     .click();
   await page.getByRole("button", { name: /^View Your Order/ }).click();
   const cart = page.getByRole("dialog", { name: "Your order" });
-  await expect(cart.getByRole("textbox", { name: "Guest name (optional)" })).toBeVisible();
-  await expect(cart.getByRole("textbox", { name: "Phone number (optional)" })).toBeVisible();
-  await expect(cart.getByRole("textbox", { name: "Order instructions (optional)" })).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Name" })).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Phone number" })).toBeVisible();
+  await expect(cart.getByRole("textbox", { name: "Order instructions" })).toBeVisible();
   const orderType = cart.getByRole("group", { name: "Choose order type" });
   await expect(orderType.getByRole("button", { name: /Dine In/i })).toHaveAttribute(
     "aria-pressed",
@@ -351,4 +351,46 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await page.getByRole("tab", { name: "Live orders" }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("checkout validates the phone inline and remembers details only when asked", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  const fixture = await seedOrdering(true);
+  const openCart = async () => {
+    await page.goto(`/m/${fixture.tableToken}`);
+    await page.getByRole("button", { name: "Add to order", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "Paneer Curry" })
+      .getByRole("button", { name: /Add to Order/ })
+      .click();
+    await page.getByRole("button", { name: /^View Your Order/ }).click();
+    return page.getByRole("dialog", { name: "Your order" });
+  };
+
+  let cart = await openCart();
+  const phone = cart.getByRole("textbox", { name: "Phone number" });
+  await cart.getByRole("textbox", { name: "Name" }).fill("Asha");
+  await phone.fill("12ab");
+  await phone.blur();
+  await expect(cart.getByRole("alert").filter({ hasText: "digits only" })).toBeVisible();
+  await cart.getByRole("button", { name: /Submit order/ }).click();
+  await expect(cart.getByText("Check your phone number")).toBeVisible();
+  await expect(page).not.toHaveURL(/\/orders\//);
+
+  await phone.fill("+91 98765 43210");
+  await cart.getByRole("checkbox", { name: /Remember my name and phone/ }).check();
+  await cart.getByRole("button", { name: /Submit order/ }).click();
+  await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
+
+  // A later visit on the same device is prefilled; instructions are never stored.
+  cart = await openCart();
+  await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("Asha");
+  await expect(cart.getByRole("textbox", { name: "Phone number" })).toHaveValue("+919876543210");
+  await expect(cart.getByRole("textbox", { name: "Order instructions" })).toHaveValue("");
+  await cart.getByRole("button", { name: "Forget saved details" }).click();
+  await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("");
+  cart = await openCart();
+  await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("");
 });
