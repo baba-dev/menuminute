@@ -26,6 +26,7 @@ import type {
 import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { PosNavigation } from "./pos-navigation";
+import { PosGuestLookup } from "./pos-guest-lookup";
 import { PosIncomingOrders } from "./pos-incoming-orders";
 import { PosOrderRegister } from "./pos-order-register";
 import {
@@ -100,7 +101,7 @@ export function TheTill({
   const inlineConfigRef = useRef<HTMLDivElement>(null);
   const [variant, setVariant] = useState("");
   const [groups, setGroups] = useState<Record<string, string[]>>({});
-  const [customer, setCustomer] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [note, setNote] = useState("");
   const [mode, setMode] = useState<"dine_in" | "pickup">(
     initial.context.fulfillmentModes.includes("pickup") ? "pickup" : "dine_in"
@@ -231,7 +232,7 @@ export function TheTill({
       setSearch("");
       setDish(null);
       setEditingLineId(null);
-      setCustomer("");
+      setCustomerPhone("");
       setNote("");
       setTableId("");
       setMarkAsPaid(false);
@@ -463,7 +464,8 @@ export function TheTill({
       },
       fulfillmentMode: mode,
       tableId: mode === "dine_in" ? tableId || null : null,
-      customerName: customer,
+      customerName: "",
+      customerPhone,
       notes: note,
       expectedSubtotalMinor: subtotal.toString(),
       markAsPaid,
@@ -488,7 +490,7 @@ export function TheTill({
       setMobileTicketOpen(false);
       setMarkAsPaid(false);
       setPaymentMethod("cash");
-      setCustomer("");
+      setCustomerPhone("");
       setNote("");
       setTableId("");
       commandRef.current = null;
@@ -962,15 +964,13 @@ export function TheTill({
                     </select>
                   </label>
                 )}
-                <label>
-                  Guest name (optional)
-                  <input
-                    maxLength={80}
-                    value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
-                    placeholder="Walk-in customer"
-                  />
-                </label>
+                <PosGuestLookup
+                  organizationId={organizationId}
+                  outletId={outletId}
+                  country={workspace.context.country}
+                  phone={customerPhone}
+                  onPhoneChange={setCustomerPhone}
+                />
               </div>
               {cart.length ? (
                 cart.map((entry) => (

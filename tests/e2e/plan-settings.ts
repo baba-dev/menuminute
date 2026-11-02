@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 
 /**
- * Plan switches ship ON (migration 0084). Specs that assert the QR-only presentation of a Free outlet
+ * Plan switches ship ON (migration 0086). Specs that assert the QR-only presentation of a Free outlet
  * turn free order intake off for their own run and put it back afterwards. Browser CI runs one worker
  * per shard database, so these toggles cannot overlap.
  */

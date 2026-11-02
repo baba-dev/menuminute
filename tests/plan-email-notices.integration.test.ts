@@ -229,7 +229,7 @@ describe("delivery safety", () => {
 });
 
 describe("shipped defaults", () => {
-  it("every plan switch is on by default in a fresh database (migration 0084)", async () => {
+  it("every plan switch is on by default in a fresh database (migration 0086)", async () => {
     const rows = await owner<{ column_name: string; column_default: string }>(
       `select column_name,column_default from information_schema.columns
         where table_schema='app_private' and table_name='plan_settings' and column_name like '%\\_enabled'

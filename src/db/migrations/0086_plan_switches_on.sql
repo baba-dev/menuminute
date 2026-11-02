@@ -1,4 +1,4 @@
--- 0084: Turn the plan features on. The owner decided (pre-launch) that every plan switch ships enabled:
+-- 0086: Turn the plan features on. The owner decided (pre-launch) that every plan switch ships enabled:
 -- free order intake, hiding of dishes beyond the plan cap after the grace period, the automatic Ordering
 -- trial, and the payment-retry grace. They stay owner-only settings, so any of them can still be switched
 -- off with a single UPDATE (see docs/plans-and-limits.md). Caps and day counts keep their reviewed values.

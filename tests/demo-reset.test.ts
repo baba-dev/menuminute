@@ -19,6 +19,10 @@ const app = asRole("menuminute_app", "isolated-ci-app-password");
 
 // Tables carrying outlet/org scope that the reset intentionally leaves alone, with the reason.
 const PRESERVED: Record<string, string> = {
+  crm_guests:
+    "public demo does not store guest mobile identities; production records are tenant-scoped",
+  crm_erased_phones: "public demo does not store guest profiles or retention suppression",
+  crm_guest_orders: "automatically deleted with demo orders through ON DELETE CASCADE",
   account_workspace_preferences: "user preference",
   account_deletion_requests:
     "personal privacy requests are blocked for demo outlets and not an outlet reset concern",

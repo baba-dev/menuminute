@@ -587,21 +587,35 @@
       "idx": 83,
       "version": "7",
       "when": 1795611600032,
-      "tag": "0084_plan_switches_on",
+      "tag": "0084_public_outlet_profile",
       "breakpoints": true
     },
     {
       "idx": 84,
       "version": "7",
       "when": 1795698000032,
-      "tag": "0085_plan_email_notices",
+      "tag": "0085_guest_crm",
       "breakpoints": true
     },
     {
       "idx": 85,
       "version": "7",
       "when": 1795784400032,
-      "tag": "0086_ai_credits",
+      "tag": "0086_plan_switches_on",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1795870800032,
+      "tag": "0087_plan_email_notices",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795957200032,
+      "tag": "0088_ai_credits",
       "breakpoints": true
     }
   ]

@@ -105,9 +105,16 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     const initial = await posWorkspace(f.actor, f.outlet.organizationId, f.outlet.id);
     expect(initial.context.enabled).toBe(true);
     expect(initial.menus.some((m) => m.id === f.menuId)).toBe(true);
-    const result = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, input(f.menuId));
+    const result = await posSubmit(f.actor, f.outlet.organizationId, f.outlet.id, {
+      ...input(f.menuId),
+      customerPhone: "9876543210",
+    });
     expect(result.subtotalMinor).toBe("28000");
     expect(result.status).toBe("accepted");
+    const mobile = await admin(async (_db, pool) =>
+      pool.query("select customer_phone from orders where id=$1", [result.orderId])
+    );
+    expect(mobile.rows[0]?.customer_phone).toBe("+919876543210");
     expect(result.taxAndFeesCalculated).toBe(false);
     const rows = await admin(async (_db, pool) =>
       pool.query(

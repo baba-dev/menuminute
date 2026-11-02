@@ -8,7 +8,7 @@ import { dbPlanStore } from "./store";
 import { upgradeTargetFor } from "./limits";
 
 /**
- * AI credits: a monthly allowance pooled across an organization's outlets (migration 0086).
+ * AI credits: a monthly allowance pooled across an organization's outlets (migration 0088).
  * One credit is one merchant-initiated AI request. Guest-facing AI (the menu concierge) has its own
  * budget and never spends the merchant's credits.
  */

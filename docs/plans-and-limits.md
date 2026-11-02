@@ -200,11 +200,11 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 | #   | Slice                                                                                                                                                       | Depends on                |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
 | 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                                                                   | This sign-off             |
-| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default on since 0084), no UI                                     | 1                         |
+| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default on since 0086), no UI                                     | 1                         |
 | 2b  | Free order intake, 100 guest orders a month; done in migration 0079 behind an owner-only database switch (default OFF)                                      | 2                         |
 | 2c  | Usage meters and plan panel (UI); done, hidden until `PLAN_LIMITS_ENFORCED=true`                                                                            | 2                         |
 | 3   | Downgrade grace and hiding of extra dishes (hide, not delete), instant restore on upgrade; done in migration 0081 behind an owner-only switch (default OFF) | 2                         |
-| 4   | AI credit accounting per org per month; done in migration 0086 (see "AI credits and photo storage")                                                         | 1, AI spend accounting    |
+| 4   | AI credit accounting per org per month; done in migration 0088 (see "AI credits and photo storage")                                                         | 1, AI spend accounting    |
 | 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                     | Billing gates             |
 | 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                              | Kitchen Pro release gates |
 | 7   | Custom domain verification, routing, TLS                                                                                                                    | Edge decision             |
@@ -226,7 +226,7 @@ Each slice is one PR with an explicit migration and rollback note, tested agains
   **QR count:** active QR codes. Both are counted with the acting user's database visibility.
 - **Plan source:** `ordering.new` and `kitchen.new` entitlements, as before. Community Edition is
   never capped.
-- **On by default (since migration 0084):** `PLAN_LIMITS_ENFORCED` is true unless set to `false`. The
+- **On by default (since migration 0086):** `PLAN_LIMITS_ENFORCED` is true unless set to `false`. The
   product has not launched, so there is no existing data to review; the cap audit below remains for any
   later change to the limits.
 - Not in this slice: the Free order cap, usage meters or any UI, AI credits, media bytes, seats,
@@ -470,7 +470,7 @@ the same catalog.
 
 ## Auto-trial and payment-failure grace (migration 0082)
 
-Two owner-controlled features, both **on by default since migration 0084**, built on ordinary time-boxed entitlement
+Two owner-controlled features, both **on by default since migration 0086**, built on ordinary time-boxed entitlement
 grants so every existing gate (ordering, plan caps, overflow) keeps working unchanged.
 
 **Automatic trial.** The first time an organization **owner** publishes a menu, the organization gets a
@@ -550,11 +550,11 @@ limit keep working and cannot add more; the cap audit now reports outlets too.
 **Kitchen Pro is one flat price.** The owner decided (2026-11-02) to sell Kitchen Pro at a flat INR 499 for up
 to 10 outlets, so there is no per-outlet add-on and nothing to build for it.
 
-**Switches ship on.** From migration 0084 all four owner switches (free order intake, overflow hiding,
+**Switches ship on.** From migration 0086 all four owner switches (free order intake, overflow hiding,
 automatic trial, payment-retry grace) are on, and `PLAN_LIMITS_ENFORCED` defaults to true. Each can still be
 switched off with a single `UPDATE app_private.plan_settings` (or `PLAN_LIMITS_ENFORCED=false`).
 
-**Reminder emails (migration 0085).** Three reminders go to organization members with a verified email, once
+**Reminder emails (migration 0087).** Three reminders go to organization members with a verified email, once
 per recipient and event: _trial ending_ (3 days or less left, to the owner), _payment failed_ (when the
 retry-grace window opens, to owners and admins) and _grace ending_ (a day before, to owners and admins). The
 database decides what is due and records each reminder once; the worker sends it every 15 minutes and
@@ -563,7 +563,7 @@ now uses one shared template (`src/lib/email/template.ts`: HTML with a plain-tex
 text, same-origin links only). The worker needs the mail settings in `docs/environment.md`; without a real
 provider the reminders simply stay off.
 
-## AI credits and photo storage (migration 0086)
+## AI credits and photo storage (migration 0088)
 
 **AI credits.** Each organization has a monthly allowance pooled across its outlets: Free 10, Ordering 150,
 Kitchen Pro 1,000, Dedicated by contract (never refused, still recorded). It resets at the start of each UTC

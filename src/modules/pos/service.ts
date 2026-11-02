@@ -29,6 +29,7 @@ export const posSubmissionSchema = z
     fulfillmentMode: z.enum(["dine_in", "pickup"]),
     tableId: identity.nullable(),
     customerName: z.string().trim().max(80).default(""),
+    customerPhone: z.string().trim().max(32).default(""),
     notes: z.string().trim().max(500).default(""),
     expectedSubtotalMinor: minorText,
     markAsPaid: z.boolean().default(false),
@@ -615,6 +616,7 @@ export async function posSubmit(
     fulfillmentMode: input.fulfillmentMode,
     tableId: input.tableId,
     customerName: input.customerName,
+    customerPhone: input.customerPhone,
     notes: input.notes,
     expectedSubtotalMinor: quote.subtotalMinor,
     lines: input.selection.lines,
@@ -622,8 +624,7 @@ export async function posSubmit(
     paymentMethod: input.markAsPaid ? input.paymentMethod : null,
   };
   return posCall(actor, outletId, async (run) => {
-    const r =
-      (await run(sql`select app_private.pos_submit_and_dispatch(${outletId},${input.key},${hash},
+    const r = (await run(sql`select app_private.crm_pos_submit(${outletId},${input.key},${hash},
       ${JSON.stringify(payload)}::jsonb) as data`)) as { rows: { data: PosSaleResult }[] };
     return r.rows[0]!.data;
   });

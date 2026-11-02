@@ -1,4 +1,4 @@
--- 0086: Monthly AI credits per organization (docs/plans-and-limits.md).
+-- 0088: Monthly AI credits per organization (docs/plans-and-limits.md).
 -- A credit is one merchant-initiated AI request (an assistant message, a dish autofill, or one page of an
 -- AI menu import). The allowance is pooled across the organization's outlets and resets at the start of each
 -- UTC month with no rollover. The cap is passed in by the application from the reviewed plan catalog (the

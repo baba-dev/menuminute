@@ -1,4 +1,4 @@
--- 0085: Reminder emails for the plan lifecycle (trial ending, payment failing, grace period ending).
+-- 0087: Reminder emails for the plan lifecycle (trial ending, payment failing, grace period ending).
 -- A durable, idempotent queue: the worker asks the database which reminders are due, the database records
 -- each one exactly once per recipient and event (unique kind + event + recipient), and the worker sends
 -- them. Delivery is at-least-once with a bounded retry; a failed send never blocks billing or ordering.

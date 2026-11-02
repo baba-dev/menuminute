@@ -5,7 +5,7 @@ import { planPrice } from "./offer";
 import { fmt, fmtDate } from "./view";
 
 /**
- * Plan reminder emails: trial ending, payment failing, grace period ending (migration 0085).
+ * Plan reminder emails: trial ending, payment failing, grace period ending (migration 0087).
  * Env-free and worker-safe: the worker has no web environment, so the app origin is passed in.
  * The database decides what is due and records each reminder once per recipient (see
  * `enqueue_plan_email_notices`); this module only words and sends them.
