@@ -1,0 +1,139 @@
+-- Public demo reset (owner review required; see AGENTS.md "Public demo exception").
+-- reset_demo_outlet deleted the demo outlet's outbox events, but the worker records a
+-- consumer_receipts row for every event it consumes (consumer_receipts_event_id_outbox_events_id_fk,
+-- no cascade), so any reset after the worker had processed a seeded demo event failed with 23503.
+-- Fix: remove only the receipts that reference the very demo events about to be deleted, in the same
+-- transaction. The events are row-locked first so an in-flight consumer commit cannot slip a new
+-- receipt in between the two deletes. Everything else is unchanged from migration 0068: the function
+-- stays hardcoded to the demo ids, the immutable POS ledger, audit trail, AI spend, identity and
+-- billing tables remain untouched, and other tenants' receipts are never selected.
+CREATE OR REPLACE FUNCTION app_private.reset_demo_outlet(p_baseline jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE
+  o CONSTANT text := 'demo-outlet';
+  org CONSTANT text := 'org-demo-outlet';
+  mid CONSTANT text := 'menu-demo-outlet';
+  rev integer;
+  cur record;
+  locale_row record;
+  tbl jsonb;
+  res jsonb;
+  counts jsonb := '{}'::jsonb;
+  n bigint;
+BEGIN
+  IF p_baseline IS NULL OR jsonb_typeof(p_baseline->'menu') IS DISTINCT FROM 'object'
+     OR jsonb_typeof(p_baseline->'tables') IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'Invalid demo baseline' USING ERRCODE='22023';
+  END IF;
+  IF octet_length(p_baseline->>'menu') > 500000 THEN
+    RAISE EXCEPTION 'Demo baseline menu too large' USING ERRCODE='22023';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM restaurants WHERE id=o AND organization_id=org AND is_demo_data) THEN
+    RAISE EXCEPTION 'Demo outlet is not provisioned' USING ERRCODE='42501';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtextextended('demo-outlet-reset',0));
+
+  -- Runtime state, children before parents.
+  DELETE FROM kitchen_work_history WHERE outlet_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('kitchen_work_history',n);
+  DELETE FROM kitchen_work WHERE outlet_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('kitchen_work',n);
+  DELETE FROM kitchen_command_receipts WHERE outlet_id=o;
+  DELETE FROM kitchen_events WHERE outlet_id=o;
+  DELETE FROM guest_service_requests WHERE outlet_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('guest_service_requests',n);
+  DELETE FROM order_status_events WHERE restaurant_id=o;
+  DELETE FROM order_items WHERE restaurant_id=o;
+  DELETE FROM orders WHERE restaurant_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('orders',n);
+  DELETE FROM assistant_attempts WHERE outlet_id=o;
+  DELETE FROM assistant_action_proposals WHERE outlet_id=o;
+  DELETE FROM assistant_turns WHERE outlet_id=o;
+  DELETE FROM assistant_conversations WHERE outlet_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('assistant_conversations',n);
+  DELETE FROM menu_import_ai_usage WHERE outlet_id=o;
+  DELETE FROM menu_import_candidates WHERE outlet_id=o;
+  DELETE FROM menu_import_reviews WHERE outlet_id=o;
+  DELETE FROM menu_import_sources WHERE outlet_id=o;
+  DELETE FROM menu_imports WHERE outlet_id=o; GET DIAGNOSTICS n=ROW_COUNT; counts:=counts||jsonb_build_object('menu_imports',n);
+  DELETE FROM dish_media WHERE outlet_id=o;
+  -- Lock the demo events (waits for any in-flight consumer commit), drop the worker idempotency
+  -- receipts that reference them, then the events. A receipt only dedupes delivery of its event, so
+  -- it has no meaning once that event is gone.
+  PERFORM 1 FROM outbox_events WHERE outlet_id=o OR organization_id=org ORDER BY id FOR UPDATE;
+  DELETE FROM consumer_receipts WHERE event_id IN (SELECT id FROM outbox_events WHERE outlet_id=o OR organization_id=org);
+  DELETE FROM outbox_events WHERE outlet_id=o OR organization_id=org;
+  DELETE FROM domain_commands WHERE organization_id=org;
+  DELETE FROM organization_invitations WHERE organization_id=org;
+
+  -- Versioned menu. The revision is monotonic so a public-menu cache generation never goes backwards,
+  -- but it is NOT bumped when the visitor left the published menu untouched: the guest order path
+  -- compares a fingerprint that includes the revision, and the worker cannot invalidate the web cache,
+  -- so a needless bump would make guests' orders conflict for up to the cache TTL after every reset.
+  DELETE FROM menu_overrides WHERE outlet_id=o;
+  DELETE FROM menu_translation_revisions WHERE menu_id=mid;
+  DELETE FROM menu_translations WHERE menu_id=mid;
+  SELECT revision, published_revision, document INTO cur FROM menus WHERE id=mid AND organization_id=org AND outlet_id=o FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Demo menu is not provisioned' USING ERRCODE='42501'; END IF;
+  IF cur.published_revision IS NOT DISTINCT FROM cur.revision AND cur.document=p_baseline->'menu'
+     AND EXISTS(SELECT 1 FROM menu_releases WHERE menu_id=mid AND revision=cur.revision AND document=p_baseline->'menu') THEN
+    rev:=cur.revision;
+    DELETE FROM menu_releases WHERE menu_id=mid AND revision<>rev;
+  ELSE
+    rev:=cur.revision+1;
+    DELETE FROM menu_releases WHERE menu_id=mid;
+    UPDATE menus SET document=p_baseline->'menu', revision=rev, published_revision=rev, archived=false, updated_at=now() WHERE id=mid;
+    INSERT INTO menu_releases(menu_id,revision,organization_id,document,published_by) VALUES(mid,rev,org,p_baseline->'menu','demo-owner');
+  END IF;
+  IF jsonb_typeof(p_baseline->'translations')='object' THEN
+    FOR locale_row IN SELECT key AS locale, value AS doc FROM jsonb_each(p_baseline->'translations') LOOP
+      INSERT INTO menu_translations(organization_id,menu_id,locale,revision,source_revision,document,reviewed_by)
+      VALUES(org,mid,locale_row.locale,1,rev,locale_row.doc,'demo-owner');
+    END LOOP;
+  END IF;
+
+  -- Release dependent table associations before restoring the physical table catalog.
+  DELETE FROM dining_reservations WHERE outlet_id=o;
+  DELETE FROM dining_floor_plans WHERE outlet_id=o;
+  -- Floor plan.
+  DELETE FROM restaurant_tables WHERE restaurant_id=o;
+  FOR tbl IN SELECT * FROM jsonb_array_elements(p_baseline->'tables') LOOP
+    INSERT INTO restaurant_tables(id,restaurant_id,table_number,label,capacity)
+    VALUES(tbl->>'id',o,tbl->>'number',tbl->>'label',(tbl->>'capacity')::integer);
+  END LOOP;
+
+  -- Restore the visual floor and demo reservations. The established order-history
+  -- seeding and stable publication revision logic below must remain unchanged.
+  IF jsonb_typeof(p_baseline->'floorPlan')='object' THEN
+    INSERT INTO dining_floor_plans(outlet_id,layout) VALUES(o,p_baseline->'floorPlan');
+  END IF;
+  IF jsonb_typeof(p_baseline->'reservations')='array' THEN
+    FOR res IN SELECT * FROM jsonb_array_elements(p_baseline->'reservations') LOOP
+      INSERT INTO dining_reservations(id,outlet_id,table_id,guest_name,guest_phone,party_size,
+        reservation_time,duration_minutes,status,notes)
+      VALUES(res->>'id',o,res->>'tableId',res->>'guestName',res->>'guestPhone',
+        (res->>'partySize')::integer,(res->>'reservationTime')::timestamptz,
+        COALESCE((res->>'durationMinutes')::integer,90),
+        COALESCE(res->>'status','confirmed'),res->>'notes');
+    END LOOP;
+  END IF;
+
+  -- Public identity of the outlet.
+  IF jsonb_typeof(p_baseline->'outlet')='object' THEN
+    UPDATE restaurants SET
+      name=COALESCE(p_baseline->'outlet'->>'name',name),
+      description=COALESCE(p_baseline->'outlet'->>'description',description),
+      city=COALESCE(p_baseline->'outlet'->>'city',city),
+      is_published=true,
+      free_menu_enabled=true
+    WHERE id=o;
+  END IF;
+
+  -- Seeded order history and live orders (final statuses inserted directly; live ones progress by
+  -- UPDATE so the normal kitchen fan-out triggers create station work when the kitchen is enabled).
+  IF jsonb_typeof(p_baseline->'orders')='array' THEN
+    counts:=counts||jsonb_build_object('seededOrders',app_private.seed_demo_orders(p_baseline->'orders'));
+  END IF;
+
+  counts:=counts||jsonb_build_object('menuRevision',rev);
+  INSERT INTO app_private.demo_reset_runs(summary) VALUES(counts);
+  DELETE FROM app_private.demo_reset_runs WHERE id < (SELECT max(id)-199 FROM app_private.demo_reset_runs);
+  RETURN counts;
+END $$;
+REVOKE ALL ON FUNCTION app_private.reset_demo_outlet(jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.reset_demo_outlet(jsonb) TO menuminute_worker;

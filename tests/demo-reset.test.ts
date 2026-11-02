@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import { provisionDemo } from "../src/modules/demo/provision";
 import { buildDemoBaseline, DEMO_IDS } from "../src/modules/demo/baseline";
 import { resetDemoOutlet } from "../src/modules/demo/reset";
+import { claimEvents, consumeEvent } from "../src/modules/jobs/worker";
 
 const ownerUrl = process.env["MIGRATION_DATABASE_URL"]!;
 const owner = new Pool({ connectionString: ownerUrl, max: 2 });
@@ -26,7 +27,6 @@ const PRESERVED: Record<string, string> = {
   audit_logs: "audit trail",
   brand_outlets: "tenant structure",
   brands: "tenant structure",
-  consumer_receipts: "worker idempotency",
   dining_floor_plans: "legacy floor layout configuration (no longer read)",
   dining_sections: "floor configuration; the demo section is re-asserted when tables are restored",
   restaurant_chairs:
@@ -221,6 +221,51 @@ describe("demo outlet reset", () => {
     ).toBe(1);
   });
 
+  it("resets after the worker consumed demo events and keeps other tenants' receipts", async () => {
+    // Seeded live orders fan out kitchen events; the production worker consumes them like any other.
+    await resetDemoOutlet(worker);
+    const real = await owner.query<{ id: string; organization_id: string }>(
+      "select id, organization_id from outbox_events where organization_id='org-real-outlet' limit 1"
+    );
+    expect(real.rowCount).toBe(1);
+    await owner.query(
+      "insert into consumer_receipts(event_id,consumer,organization_id) values($1,'sentinel-v1',$2) on conflict do nothing",
+      [real.rows[0]!.id, real.rows[0]!.organization_id]
+    );
+    // Drain every claimable event (other test files may share this database) through the real consumer.
+    for (let i = 0; i < 20; i++) {
+      const batch = await claimEvents(worker, 50);
+      if (batch.length === 0) break;
+      for (const e of batch)
+        await consumeEvent(
+          worker,
+          {
+            eventId: e.id,
+            organizationId: e.organization_id,
+            attempt: e.attempts,
+            deliverySequence: e.delivery_sequence,
+            schemaVersion: 1,
+          },
+          `${e.id}-${e.delivery_sequence}`
+        ).catch(() => undefined);
+    }
+    const receipts = () =>
+      owner.query<{ n: number }>(
+        "select count(*)::int n from consumer_receipts where organization_id=$1",
+        [DEMO_IDS.organizationId]
+      );
+    expect((await receipts()).rows[0]!.n).toBeGreaterThan(0); // precondition: receipts reference demo events
+    await expect(resetDemoOutlet(worker)).resolves.toBeDefined(); // used to fail with FK 23503
+    expect((await receipts()).rows[0]!.n).toBe(0);
+    expect(
+      (
+        await owner.query(
+          "select count(*)::int n from consumer_receipts where consumer='sentinel-v1'"
+        )
+      ).rows[0].n
+    ).toBe(1);
+  });
+
   it("is executable only by the worker role and refuses non-demo or malformed input", async () => {
     await expect(
       app.query("select app_private.reset_demo_outlet($1::jsonb)", ["{}"])
@@ -267,11 +312,15 @@ describe("demo outlet reset", () => {
       "menu_releases",
       "restaurant_tables",
     ]);
+    // Added after 0059: the receipts of the deleted demo events (FK to outbox_events), migration 0077.
+    const resetSince0077 = ["consumer_receipts"];
     const { rows } = await owner.query<{ t: string }>(
       `select distinct table_name t from information_schema.columns
        where table_schema='public' and column_name in ('restaurant_id','outlet_id','organization_id')`
     );
-    const unaccounted = rows.map((r) => r.t).filter((t) => !reset.has(t) && !(t in PRESERVED));
+    const unaccounted = rows
+      .map((r) => r.t)
+      .filter((t) => !reset.has(t) && !resetSince0077.includes(t) && !(t in PRESERVED));
     expect(unaccounted, "new scoped table: add it to the reset function or PRESERVED").toEqual([]);
     const migration = (await import("node:fs")).readFileSync(
       "src/db/migrations/0059_demo_outlet_reset.sql",
@@ -279,5 +328,10 @@ describe("demo outlet reset", () => {
     );
     for (const t of reset)
       expect(migration, t).toMatch(new RegExp(`(DELETE FROM|INSERT INTO) ${t}\\b`));
+    const latest = (await import("node:fs")).readFileSync(
+      "src/db/migrations/0077_demo_reset_consumer_receipts.sql",
+      "utf8"
+    );
+    for (const t of resetSince0077) expect(latest, t).toMatch(new RegExp(`DELETE FROM ${t}\\b`));
   });
 });

@@ -533,6 +533,13 @@
       "when": 1795006800030,
       "tag": "0076_legal_policy_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1795093200031,
+      "tag": "0077_demo_reset_consumer_receipts",
+      "breakpoints": true
     }
   ]
 }

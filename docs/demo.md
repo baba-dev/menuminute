@@ -17,6 +17,11 @@ entitlements, Ember limits, documentation site and the visual polish pass implem
   It deletes visitor runtime state (orders, kitchen work, service calls, Ember conversations, menu
   imports, overrides, outbox, invitations), republishes the baseline menu at a **monotonic** revision
   and restores the floor plan. Reset takes about 150 ms.
+  Migration `0077_demo_reset_consumer_receipts.sql` (latest definition) also deletes the worker's
+  `consumer_receipts` rows for the demo events it removes, inside the same transaction after row-locking
+  those events. Without it, any reset after the worker had consumed a seeded demo event failed with FK
+  violation 23503 (`consumer_receipts_event_id_outbox_events_id_fk`). Only receipts of deleted demo
+  events are removed; other tenants' receipts, the POS ledger and the audit trail are untouched.
 - **Worker job:** runs the reset every 30 minutes when `DEMO_MODE_ENABLED=true`, and
   relies on the 180 s public-menu cache TTL to converge (the worker has no cache credentials). Off by default.
 
