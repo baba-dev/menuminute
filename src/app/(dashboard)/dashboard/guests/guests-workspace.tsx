@@ -191,8 +191,8 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
           <span className="guests-eyebrow">GUEST RELATIONSHIPS / 01</span>
           <h1>Know your guests.</h1>
           <p>
-            Recognize returning customers, remember their preferences and see their order history
-            — all in one place.
+            Recognize returning customers, remember their preferences and see their order history —
+            all in one place.
           </p>
           <div className="guests-hero-actions">
             <button type="button" className="guests-add" onClick={openNewGuest}>
