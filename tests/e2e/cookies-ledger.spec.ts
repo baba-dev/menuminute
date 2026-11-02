@@ -19,7 +19,9 @@ test.describe("public Cookie Policy", () => {
     );
     await expect(page.getByTestId("public-footer")).toHaveCount(1);
     await expect(page.locator("main.privacy-copy section.privacy-section")).toHaveCount(7);
-    await expect(page.getByRole("heading", { name: "5. Analytics, advertising and consent" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "5. Analytics, advertising and consent" })
+    ).toBeVisible();
   });
 
   test("discloses verified browser storage without fake preference switches", async ({ page }) => {
@@ -30,10 +32,9 @@ test.describe("public Cookie Policy", () => {
     await expect(inventory).toContainText("menuminute.pending-login.v1");
     await expect(inventory).toContainText("Better Auth");
     await expect(page.getByText(/does not record consent/)).toBeVisible();
-    await expect(page.getByRole("link", { name: "account and data deletion page" })).toHaveAttribute(
-      "href",
-      "/delete-account"
-    );
+    await expect(
+      page.getByRole("link", { name: "account and data deletion page" })
+    ).toHaveAttribute("href", "/delete-account");
     await expect(page.getByRole("switch")).toHaveCount(0);
   });
 
@@ -47,6 +48,8 @@ test.describe("public Cookie Policy", () => {
     await page.getByRole("link", { name: "3. What we use today" }).last().click();
     await expect(page).toHaveURL(/#inventory$/);
     await expect(page.locator(".privacy-art-orbit")).toHaveCSS("animation-name", "none");
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+      false
+    );
   });
 });
