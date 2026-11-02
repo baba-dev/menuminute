@@ -26,7 +26,7 @@ export const authServer = betterAuth({
       const profile = source.oauth.profile as Record<string, unknown> | undefined;
       const externalId = typeof profile?.sub === "string" ? profile.sub :
         typeof profile?.id === "string" ? profile.id : "";
-      if (await googleMfaBlocked(user.email, externalId)) return {
+      if (await googleMfaBlocked(user.email ?? "", externalId)) return {
         error: "mfa_requires_password",
         errorDescription: "This account requires password and authenticator sign-in.",
       };

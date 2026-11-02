@@ -18,6 +18,7 @@ type Props = {
   hasPassword: boolean;
   googleEnabled: boolean;
   googleLinked: boolean;
+  googleAccountId: string | null;
   emailVerified: boolean;
   isDemo: boolean;
 };
@@ -155,7 +156,7 @@ function SecurityActivity() {
 }
 
 export function SecurityConsole({
-  initialMfa, hasPassword, googleEnabled, googleLinked, emailVerified, isDemo,
+  initialMfa, hasPassword, googleEnabled, googleLinked, googleAccountId, emailVerified, isDemo,
 }: Props) {
   const [mfa, setMfa] = useState(initialMfa);
   const [linked, setLinked] = useState(googleLinked);
@@ -288,7 +289,7 @@ export function SecurityConsole({
                   <span className="mm-sec-provider-icon"><Link2 size={20} aria-hidden="true"/></span>
                   <div><strong>Google</strong><small>{linked ? "Connected to your account" :
                     googleEnabled ? "Link Google to sign in on this account" : "Not configured by this deployment"}</small></div>
-                  {linked ? (hasPassword && !mfa ? <button type="button" className="oh-secondary" disabled={busy || isDemo}
+                  {linked ? (hasPassword && !mfa && googleAccountId ? <button type="button" className="oh-secondary" disabled={busy || isDemo}
                     onClick={() => setConfirmUnlink(true)}>Disconnect</button> :
                     <span className="mm-sec-provider-state">Connected</span>) :
                     <button type="button" className="oh-secondary" disabled={busy || isDemo || !emailVerified || !googleEnabled || mfa || !hasPassword}
@@ -302,7 +303,7 @@ export function SecurityConsole({
                   <div className="mm-sec-actions">
                     <button type="button" className="oh-secondary" onClick={() => setConfirmUnlink(false)}>Cancel</button>
                     <button type="button" className="oh-primary" disabled={busy || isDemo} onClick={() => void perform(async () => {
-                      const result = await authClient.unlinkAccount({ providerId: "google" });
+                      const result = await authClient.unlinkAccount({ accountId: googleAccountId! });
                       if (result.error) { setError("Google could not be disconnected."); return; }
                       setLinked(false); setConfirmUnlink(false); setMessage("Google sign-in disconnected.");
                     })}>Confirm disconnect</button>
