@@ -1,4 +1,11 @@
-import { DEDICATED_MONTHLY_PAISE, formatInr, inrMonthlyPrice } from "@/modules/billing/catalog";
+import {
+  DEDICATED_MONTHLY_PAISE,
+  DEDICATED_MONTHLY_USD_CENTS,
+  formatInr,
+  formatUsd,
+  formatSubscriptionMonthlyPrice,
+  type BillingCurrency,
+} from "@/modules/billing/catalog";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanKey } from "./catalog";
 import { fmt, NEXT_PLAN, type IntakeSnapshot } from "./view";
 
@@ -19,12 +26,24 @@ export type PricePoint = {
   detail?: string;
 };
 
-export function planPrice(plan: PlanKey): PricePoint {
-  if (plan === "free") return { label: "₹0", note: "forever", paid: false };
-  // Dedicated is sold by contract, so it is not purchasable in checkout, but its price is published.
+export function planPrice(plan: PlanKey, currency: BillingCurrency = "INR"): PricePoint {
+  if (plan === "free")
+    return { label: currency === "USD" ? "$0" : "₹0", note: "forever", paid: false };
+  // Dedicated is sold by contract. USD is an indicative contract catalog rate, not self-serve checkout.
   if (plan === "dedicated")
-    return { label: formatInr(DEDICATED_MONTHLY_PAISE), note: "per month", paid: false };
-  const price: PricePoint = { label: inrMonthlyPrice(plan), note: "per month", paid: true };
+    return {
+      label:
+        currency === "USD"
+          ? formatUsd(DEDICATED_MONTHLY_USD_CENTS)
+          : formatInr(DEDICATED_MONTHLY_PAISE),
+      note: "per month",
+      paid: false,
+    };
+  const price: PricePoint = {
+    label: formatSubscriptionMonthlyPrice(plan, currency),
+    note: "per month",
+    paid: true,
+  };
   if (plan === "kitchen_pro") price.detail = "One flat price for up to 10 outlets";
   return price;
 }
@@ -36,7 +55,7 @@ export type BenefitRow = {
   to: string;
 };
 
-type Opts = { intake?: IntakeSnapshot | null };
+type Opts = { intake?: IntakeSnapshot | null; currency?: BillingCurrency };
 
 export const UNLIMITED = "Virtually unlimited";
 const capText = (n: number | null) => (n === null ? UNLIMITED : fmt(n));
@@ -134,7 +153,7 @@ export function planLadder(opts: Opts = {}): PlanOffer[] {
   return (["free", "ordering", "kitchen_pro", "dedicated"] as const).map((key) => ({
     key,
     label: PLAN_LABELS[key],
-    price: planPrice(key),
+    price: planPrice(key, opts.currency),
     tagline: TAGLINE[key],
     highlights: planHighlights(key, opts),
   }));
@@ -157,7 +176,7 @@ export function buildNextUp(plan: PlanKey, opts: Opts = {}): NextUp | null {
   return {
     plan: next,
     label: PLAN_LABELS[next],
-    price: planPrice(next),
+    price: planPrice(next, opts.currency),
     tagline: TAGLINE[next],
     benefits: benefitsBetween(plan, next, opts),
   };
