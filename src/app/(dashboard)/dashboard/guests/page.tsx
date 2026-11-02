@@ -21,8 +21,15 @@ export default async function GuestsPage() {
   const actor = { userId: session.user.id, sessionId: session.session.id };
   try {
     const initial = await listGuests(actor, outlet.organizationId, outlet.id, "", 0);
-    return <GuestsWorkspace key={outlet.id} organizationId={outlet.organizationId}
-      outletId={outlet.id} outletName={outlet.name} initial={initial} />;
+    return (
+      <GuestsWorkspace
+        key={outlet.id}
+        organizationId={outlet.organizationId}
+        outletId={outlet.id}
+        outletName={outlet.name}
+        initial={initial}
+      />
+    );
   } catch (error) {
     if (!(error instanceof ForbiddenError)) throw error;
     return (
@@ -31,7 +38,11 @@ export default async function GuestsPage() {
         <h1>Guests</h1>
         <div className="guests-empty">
           <h2>Guest CRM is included with paid plans</h2>
-          <p>Ordering, Kitchen Pro and Dedicated subscribers can recognize returning guests and review their visit history. Your current account or outlet role cannot open this workspace.</p>
+          <p>
+            Ordering, Kitchen Pro and Dedicated subscribers can recognize returning guests and
+            review their visit history. Your current account or outlet role cannot open this
+            workspace.
+          </p>
           <Link href="/pricing">View plans</Link>
         </div>
       </main>
