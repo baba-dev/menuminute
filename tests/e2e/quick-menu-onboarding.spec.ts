@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { mockTurnstileForBrowserTests } from "./turnstile-mock";
 
+// A deterministic non-Indian browser locale verifies worldwide first-outlet defaults.
+test.use({ locale: "en-US", timezoneId: "America/New_York" });
+
 test("QR-only Quick Start resumes its compact flow and reaches the first menu milestone", async ({
   page,
 }) => {
@@ -28,12 +31,20 @@ test("QR-only Quick Start resumes its compact flow and reaches the first menu mi
   await expect(page.getByRole("heading", { name: "Choose your restaurant region." })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Choose your restaurant region." })).toBeVisible();
-  await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("INR");
+  await expect(page.getByLabel("Restaurant country *")).toHaveValue("US");
+  await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("USD");
+  // Unmapped countries must not inherit the currency of a previous country.
+  await page.getByLabel("Restaurant country *").selectOption("BW");
+  await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("");
+  await page.getByLabel("Menu pricing currency *").selectOption("BWP");
+  await page.reload();
+  await expect(page.getByLabel("Restaurant country *")).toHaveValue("BW");
+  await expect(page.getByLabel("Menu pricing currency *")).toHaveValue("BWP");
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Review your outlet details." })).toBeVisible();
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
-  await page.getByRole("checkbox", { name: /I confirm INR is the currency/ }).check();
+  await page.getByRole("checkbox", { name: /I confirm BWP is the currency/ }).check();
   await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
   await expect(page).toHaveURL(/\/dashboard\/get-started/);
   await expect(page.getByRole("link", { name: "Add your first dish" })).toBeVisible();
