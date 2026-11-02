@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -125,6 +123,15 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
       return () => window.clearTimeout(timer);
     }
   }, []);
+  function openNewGuest() {
+    setSelected("new");
+    setLoading(false);
+    setDetail(null);
+    setName("");
+    setNotes("");
+    setPhone("");
+    setError("");
+  }
   async function save() {
     setSaving(true);
     setError("");
@@ -180,20 +187,22 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
   return (
     <main className="guests-shell">
       <header className="guests-hero">
-        <div>
-          <Link href="/dashboard" className="guests-back">
-            <ArrowLeft size={15} /> Dashboard
-          </Link>
-          <span className="guests-eyebrow">RELATIONSHIPS / 01</span>
-          <h1>Every guest has a story.</h1>
+        <div className="guests-hero-copy">
+          <span className="guests-eyebrow">GUEST RELATIONSHIPS / 01</span>
+          <h1>Know your guests.</h1>
           <p>
-            Recognize familiar faces, see what they have ordered, and serve them thoughtfully. No
-            extra work at the counter.
+            Recognize returning customers, remember their preferences and see their order history
+            — all in one place.
           </p>
-          <span className="guests-outlet">{outletName} · Private guest directory</span>
+          <div className="guests-hero-actions">
+            <button type="button" className="guests-add" onClick={openNewGuest}>
+              <UserPlus size={17} aria-hidden="true" /> Add guest
+            </button>
+            <span className="guests-outlet">{outletName} · Private guest directory</span>
+          </div>
         </div>
         <div className="guests-hero-art" aria-hidden="true">
-          <UsersRound size={74} strokeWidth={1.1} />
+          <UsersRound size={65} strokeWidth={1.15} />
         </div>
       </header>
       <div className="guests-content">
@@ -204,9 +213,9 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
             <span>Customers recorded for this organization</span>
           </div>
           <div>
-            <small>RETURNING ON THIS PAGE</small>
+            <small>RETURNING GUESTS SHOWN</small>
             <strong>{data.items.filter((g) => g.visits > 1).length}</strong>
-            <span>With more than one completed visit at this outlet</span>
+            <span>More than one visit · among {data.items.length} listed guests</span>
           </div>
         </section>
         <section className="guests-directory">
@@ -215,33 +224,20 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
               <span className="guests-eyebrow">02 / THE GUEST BOOK</span>
               <h2>Your guests</h2>
             </div>
-            <button
-              type="button"
-              className="guests-add"
-              onClick={() => {
-                setSelected("new");
-                setLoading(false);
-                setDetail(null);
-                setName("");
-                setNotes("");
-                setPhone("");
-              }}
-            >
-              <UserPlus size={17} /> Add guest
-            </button>
+            <label className="guests-search">
+              <Search size={17} aria-hidden="true" />
+              <span className="sr-only">Search guests by name or phone</span>
+              <input
+                type="search"
+                value={query}
+                placeholder="Search by name or phone…"
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(0);
+                }}
+              />
+            </label>
           </div>
-          <label className="guests-search">
-            <Search size={17} />
-            <span className="sr-only">Search guests</span>
-            <input
-              value={query}
-              placeholder="Search by name or phone…"
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(0);
-              }}
-            />
-          </label>
           {error && (
             <div className="guests-error" role="alert">
               {error}
@@ -273,13 +269,15 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
                 {data.items.map((guest) => (
                   <tr key={guest.id}>
                     <td data-label="Guest">
-                      <span className="guests-avatar">
-                        <UsersRound size={17} />
+                      <span className="guests-person">
+                        <span className="guests-avatar" aria-hidden="true">
+                          <UsersRound size={17} />
+                        </span>
+                        <strong>{guest.name || "Unnamed guest"}</strong>
                       </span>
-                      <strong>{guest.name || "Unnamed guest"}</strong>
                     </td>
                     <td data-label="Mobile">{masked(guest.phone)}</td>
-                    <td data-label="Visits">{guest.visits}</td>
+                    <td data-label="Visits here">{guest.visits}</td>
                     <td data-label="Last visit">
                       {guest.lastVisit ? new Date(guest.lastVisit).toLocaleDateString() : "—"}
                     </td>
@@ -287,6 +285,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
                       <button
                         className="guests-view"
                         type="button"
+                        aria-label={"View profile for " + (guest.name || masked(guest.phone))}
                         onClick={() => {
                           setError("");
                           setDetail(null);
@@ -294,7 +293,7 @@ export function GuestsWorkspace({ organizationId, outletId, outletName, initial 
                           setSelected(guest.id);
                         }}
                       >
-                        View
+                        View <ChevronRight size={15} aria-hidden="true" />
                       </button>
                     </td>
                   </tr>
