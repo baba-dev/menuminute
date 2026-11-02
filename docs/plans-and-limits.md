@@ -28,28 +28,47 @@ and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 | Permanent QR codes / tables                          | 2                | 25              | 200 (existing code cap)        | By contract        |
 | Staff seats (org)                                    | 2                | 5               | 25                             | By contract        |
 | AI credits / month (pooled per org)                  | 10               | 150             | 1,000                          | Own key or pooled  |
-| Media storage                                        | 100 MB           | 2 GB            | 20 GB                          | By contract        |
-| Live table ordering, counter board, order tracking   | Preview only     | Yes             | Yes                            | Yes                |
+| Media storage                                        | 100 MB           | 300 MB          | 500 MB                         | By contract        |
+| Accepting guest orders (QR → merchant inbox)         | Yes              | Yes             | Yes                            | Yes                |
+| Table-based ordering, counter board, order tracking  | Locked, visible  | Yes             | Yes                            | Yes                |
 | POS bill printing / receipts                         | Locked, visible  | Yes             | Yes                            | Yes                |
 | Reports history                                      | Locked, visible  | 90 days         | 24 months + export             | By contract        |
 | Kitchen Display System, stations, devices            | Locked, visible  | Locked, visible | Yes (10 devices)               | Yes                |
-| POS till / cash drawer shifts                        | Locked           | Locked          | Yes                            | Yes                |
+| POS till / cash drawer shifts                        | Locked, visible  | Locked, visible | Yes                            | Yes                |
 | Multi-outlet reporting and shared menus              | n/a              | n/a             | Yes                            | Yes                |
 | Intelligence / AI concierge suite                    | Locked, visible  | Limited         | Full                           | Full               |
 | Custom domain → public menu (redirect)               | Locked, visible  | Locked, visible | 1 per outlet, max 10           | Own domain, full   |
-| "Powered by MenuMinute" badge                        | Shown            | Removable       | Removable                      | Removable          |
+| "Powered by MenuMinute" badge                        | Shown            | Shown           | Removable                      | Removable          |
 | Support                                              | Docs             | Email           | Priority                       | Named contact      |
 
 Notes:
 
-- Free "store core ops" is interpreted as menu, sold-out controls, hours/profile and QR. Accepting
-  orders stays paid. Confirm this reading.
-- "Preview only" means the guest-facing flow is demonstrable without creating real orders.
+- Free includes menu, sold-out controls, hours/profile, QR codes **and accepting guest orders**
+  (owner decision, 2026-11-02). Free outlets receive orders in a basic merchant inbox; table
+  ordering, the counter board, POS bill printing and reports are the Ordering upgrade. Because this
+  moves the paywall, see [Free order intake](#free-order-intake) below.
+- The badge is non-removable on Free and Ordering; only Kitchen Pro and Dedicated may remove it.
 - Kitchen Pro as "A–Z" depends on the Kitchen Pro release gates. Until they pass, sell it as early
   access; do not advertise it as generally available.
 - Ordering includes POS bill printing, but POS and the till are today tied to the Kitchen Pro
   capability and its own safeguards. Decoupling receipts from `kitchen.new` needs a reviewed
   migration and tests. The till/cash-drawer shift stays in Kitchen Pro until that is verified.
+
+## Free order intake
+
+Accepting orders on Free changes what `ordering.new` means today: it is currently the paid
+capability that gates new accepted orders (see [admin-feature-access.md](admin-feature-access.md)).
+Required consequences, to confirm before building:
+
+- Introduce a distinct free intake allowance rather than granting `ordering.new` to everyone, so
+  the paid grant still unlocks tables, the counter board, bill printing and reports.
+- Cap Free intake to protect cost and support load. Proposed: 100 accepted orders per month, shown
+  as a meter, with accepted tickets always completable and a clear message when the cap is reached.
+  The number is a hypothesis; the cap mechanism matters more than the value.
+- Free outlets need a minimal merchant inbox (accept, reject, mark ready), since the counter board
+  is paid. Ordering launch safeguards (expiry, acceptance races, tenant scope) apply unchanged.
+- Revenue impact: the ₹119 plan now sells operations tooling, not order intake. Expect a lower
+  free-to-paid conversion unless the order cap and the paid tooling are compelling.
 
 ## Cap behavior
 
@@ -61,7 +80,7 @@ Notes:
 | Downgrade or expiry with data above cap  | 14-day grace, unchanged. After grace the owner's chosen N dishes stay published (default: oldest-created N); the rest are hidden, not deleted, and return on upgrade. Printed QR links keep working. |
 | QR codes above the cap                   | The first N by creation stay active; the rest show a "not available" page, not an error, and reactivate on upgrade.                                                                |
 | AI credits exhausted                     | Manual path only, no overage billing in v1. Credits reset monthly; no rollover.                                                                                                    |
-| Accepted orders after plan loss          | Unchanged rule: accepted tickets finish; new orders stop.                                                                                                                          |
+| Accepted orders after plan loss          | Unchanged rule: accepted tickets finish. New orders continue only within the Free intake allowance.                                                                                                                          |
 | Abuse (pay, bulk-add, downgrade)         | The grace window and hide-not-delete rule leave nothing extra live on Free.                                                                                                        |
 
 ## Implementation shape
@@ -80,6 +99,33 @@ Notes:
   reconciliation) remain launch gates.
 - **UI:** one shared `<UsageMeter>` and `<LockedFeature>` component driven by a server-provided
   plan snapshot; no client-side limit logic.
+
+## Kitchen Pro: what remains before it can be the maximum paid tier
+
+Source: [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md) and
+[kitchen-pro-activation-a-h.md](kitchen-pro-activation-a-h.md). Those documents describe the
+state of the work when they were written; re-check the linked issues #76 and #77 for anything
+closed since. Per them, the remaining items are **evidence, review, operations and commercial
+gates**, not missing code for phases A–H:
+
+| Remaining item                                                                                          | Type                     |
+| ------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Independent review (security, correctness, operations, UX/accessibility) by a reviewer other than the code owner | Review                   |
+| Final-SHA native ARM64 CI (four lanes plus quality gate) and migration compatibility on that SHA        | CI evidence              |
+| Load run (`infra/load/kitchen.js`) on a disposable dataset, with owner-approved resource and SLO limits | Capacity evidence        |
+| Failure injection: Redis cache and queue loss, web/worker restart, revoked sessions, duplicate commands | Reliability evidence     |
+| Shared-ERP coexistence measurements before, during and after load                                       | Operator evidence        |
+| Fresh off-host backup and an isolated SQL plus private-media restore                                    | Operator evidence        |
+| Off-host backup timer and non-destructive alert test                                                    | Operator evidence        |
+| Exact release identity (web and worker symlinks, source CI, public SHA agree)                           | Operator evidence        |
+| Controlled live pilot on an approved disposable outlet (two-operator approval, seven-day grant)         | Owner approval           |
+| Commercial activation: owner-approved pricing, supported jurisdictions and tax, SLO, incident owner     | Product and commercial   |
+| Billing path: a Kitchen Pro plan is not published, there is no checkout or self-enablement today        | Engineering              |
+
+Engineering work this plan adds on top: decouple receipt printing from the Kitchen Pro capability,
+fold multi-outlet and custom domains into the Pro plan, and add the plan/limit layer. Until the
+gates above are signed, Kitchen Pro is sold only through the existing seven-day pilot and operator
+grants, and the pricing page must not describe it as generally available.
 
 ## Custom domain → public menu (Kitchen Pro)
 
@@ -133,12 +179,13 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Open decisions
 
-1. Final prices and caps (this doc is a starting point; pick numbers you can afford to honor).
-2. Is receipt printing separable from the Kitchen Pro POS till (engineering check)?
-3. Dedicated: A only, or A plus B-by-contract?
-4. Custom-domain edge: shared Nginx or a separate edge?
-5. International billing (USD): Razorpay is INR-only here; choose a provider or merchant of record.
-6. Whether Ordering gets limited intelligence features or none.
+1. Free monthly order cap (proposed 100) and whether Free gets a basic merchant inbox.
+2. Final prices and caps (this doc is a starting point; pick numbers you can afford to honor).
+3. Is receipt printing separable from the Kitchen Pro POS till (engineering check)?
+4. Dedicated: A only, or A plus B-by-contract?
+5. Custom-domain edge: shared Nginx or a separate edge?
+6. International billing (USD): Razorpay is INR-only here; choose a provider or merchant of record.
+7. Whether Ordering gets limited intelligence features or none.
 
 ## Delivery slices
 
