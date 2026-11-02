@@ -12,6 +12,7 @@ import {
   type TargetSearchResult,
 } from "./grant-studio";
 import type { GrantActionResult } from "@/modules/admin/grant-feedback";
+import type { PlanActionResult } from "@/modules/admin/plan-feedback";
 
 interface Plan {
   id: string;
@@ -45,7 +46,10 @@ interface PaymentsConsoleProps {
     byCurrency: Array<{ currency: string; orderCount: number; totalMinor: number }>;
     planSubscriptions: Array<{ planName: string; count: number }>;
   };
-  onUpdatePlan: (planId: string, data: any) => Promise<any>;
+  onUpdatePlan: (
+    planId: string,
+    data: { displayName: string; isActive: boolean; sortOrder: number }
+  ) => Promise<PlanActionResult>;
   onIssueGrant: (data: {
     organizationId: string;
     capability: "ordering.new" | "kitchen.new";
@@ -95,19 +99,26 @@ export function PaymentsConsole({
     if (!editingPlan || savingPlan) return;
     setSavingPlan(true);
     try {
-      await onUpdatePlan(editingPlan.id, {
+      const result = await onUpdatePlan(editingPlan.id, {
         displayName: editingPlan.displayName,
         isActive: editingPlan.isActive,
         sortOrder: Number(editingPlan.sortOrder),
       });
+      if (!result.ok) {
+        setMessage({ text: result.message, type: "error" });
+        return;
+      }
       setMessage({
         text: `Plan ${editingPlan.displayName} updated successfully.`,
         type: "success",
       });
       setEditingPlan(null);
       router.refresh();
-    } catch (err: any) {
-      setMessage({ text: err.message || "Failed to update plan", type: "error" });
+    } catch {
+      setMessage({
+        text: "The update could not be confirmed. Refresh the plan status before retrying.",
+        type: "error",
+      });
     } finally {
       setSavingPlan(false);
     }
@@ -400,6 +411,12 @@ export function PaymentsConsole({
             <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
               Plan prices are read-only here. Price changes require a reviewed provider plan
               release.
+              {editingPlan.name === "kitchen_pro" && (
+                <>
+                  {" "}Kitchen Pro can be reactivated only after the one-time global commercial
+                  approval. Confirm a privileged action before saving.
+                </>
+              )}
             </p>
 
             <div className="flex items-center gap-2">
