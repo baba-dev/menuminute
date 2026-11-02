@@ -26,6 +26,7 @@ test("shared public footer keeps its primary links without the removed entries",
     await expect(footer.locator(`a[href="${href}"]`)).toHaveCount(0);
   }
 
+  const navigation = footer.getByRole("navigation", { name: "Footer navigation" });
   for (const href of [
     "/features",
     "/solutions",
@@ -36,7 +37,7 @@ test("shared public footer keeps its primary links without the removed entries",
     "/cookies",
     "/refund-policy",
   ]) {
-    await expect(footer.locator(`a[href="${href}"]`)).toHaveCount(1);
+    await expect(navigation.locator(`a[href="${href}"]`)).toHaveCount(1);
   }
 });
 
