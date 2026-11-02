@@ -21,7 +21,7 @@ import {
 } from "./quick-menu-flow";
 import { initialWizardDraft, type WizardDraft } from "./wizard-types";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
-import { regions } from "@/modules/onboarding/locales";
+import { browserOutletRegion, regions } from "@/modules/onboarding/locales";
 import { scheduleSchema } from "@/modules/menu-product/contracts";
 import "./onboarding-wizard.css";
 
@@ -214,11 +214,15 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
           // Ensure arrays are preserved
           fulfillmentModes: data.draft.fulfillmentModes || prev.fulfillmentModes,
         }));
-      } else if (shouldQuick) {
-        // New QR-only outlets do not need ten speculative table records.
-        setDraft(quickStartDraft(initialWizardDraft));
-        setPersisted(true);
-        setStatusMessage("Restored your saved progress.");
+      } else {
+        // Brand-new outlets may use browser locale/timezone as *suggestions* only.
+        // Saved drafts and restored merchant choices are never rewritten by this hint.
+        const browser = browserOutletRegion(
+          window.navigator.language,
+          Intl.DateTimeFormat().resolvedOptions().timeZone
+        );
+        const fresh = { ...initialWizardDraft, ...(browser ?? {}) };
+        setDraft(shouldQuick ? quickStartDraft(fresh) : fresh);
       }
       let storedStep = Number.NaN;
       try {
