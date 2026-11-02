@@ -7,6 +7,7 @@ import { PublicMenu } from "@/components/menu-product/public-menu";
 import { GuestOfflineCoordinator } from "@/components/pwa/guest-offline-coordinator";
 import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
 import { env } from "@/lib/config/env";
+import { publicDishRatings, type DishRatings } from "@/modules/reviews/service";
 
 // Must stay dynamic: the page depends on ?lang=, embeds the request time for opening
 // hours, and publicProduct re-checks QR revocation in PostgreSQL on every request.
@@ -50,6 +51,15 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await searchParams;
   const data = await publicProduct(publicMenuId, lang);
   if (!data) notFound();
+  // Ratings are decoration: a failure must never take the menu down.
+  let ratings: DishRatings = {};
+  if (env.PUBLIC_DINER_REVIEWS_ENABLED && !data.outlet.isDemoData) {
+    try {
+      ratings = await publicDishRatings(publicMenuId);
+    } catch {
+      ratings = {};
+    }
+  }
   return (
     <>
       <GuestOfflineCoordinator
@@ -62,6 +72,8 @@ export default async function Page({ params, searchParams }: Props) {
         initial={data}
         token={publicMenuId}
         deviceMemory={env.PUBLIC_DINER_DEVICE_ENABLED}
+        ratings={ratings}
+        reviewsEnabled={env.PUBLIC_DINER_REVIEWS_ENABLED && !data.outlet.isDemoData}
       />
     </>
   );

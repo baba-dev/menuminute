@@ -60,11 +60,16 @@ export function PublicMenu({
   token,
   preview = false,
   deviceMemory = false,
+  ratings = {},
+  reviewsEnabled = false,
 }: {
   initial: PublicProduct;
   token?: string;
   preview?: boolean;
   deviceMemory?: boolean;
+  /** Verified dish ratings keyed by dish id; only dishes above the public threshold appear. */
+  ratings?: Record<string, { count: number; average: number }>;
+  reviewsEnabled?: boolean;
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -841,6 +846,7 @@ export function PublicMenu({
                             priceMinor={startingPriceMinor(dish)}
                             currency={menu.view.currency}
                             browseOnly={browseOnly}
+                            rating={ratings[dish.id] ?? null}
                             onOpen={() => openDish(dish, category.name)}
                           />
                         );
@@ -912,6 +918,7 @@ export function PublicMenu({
             <ItemCustomizer
               key={(customizingDish?.id ?? "empty") + ":" + customizerSequence}
               dish={customizingDish}
+              reviewsToken={reviewsEnabled && token ? token : undefined}
               visual={
                 customizingDish ? dishVisual(customizingDish, customizingCategory, preview) : null
               }

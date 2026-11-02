@@ -1,5 +1,6 @@
 "use client";
 
+import { DishReviewsList } from "./dish-reviews-list";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
@@ -109,6 +110,7 @@ export function ItemCustomizer({
   currency,
   visual,
   readOnly = false,
+  reviewsToken,
   isOpen,
   companionDishes = [],
   onSelectCompanion,
@@ -119,6 +121,8 @@ export function ItemCustomizer({
   currency: string;
   visual?: DiningVisual | null;
   readOnly?: boolean;
+  /** Menu token when approved diner comments should be listed for this dish. */
+  reviewsToken?: string;
   isOpen: boolean;
   companionDishes?: CustomizerDish[];
   onSelectCompanion?: (companion: CustomizerDish) => void;
@@ -339,6 +343,7 @@ export function ItemCustomizer({
               {activeDish.description}
             </p>
           )}
+          {reviewsToken && <DishReviewsList token={reviewsToken} dishId={activeDish.id} />}
 
           <div className="row wrap" style={{ gap: "0.4rem" }}>
             {activeDish.dietary.map((d) => (

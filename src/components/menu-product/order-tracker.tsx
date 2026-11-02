@@ -20,6 +20,7 @@ import { RubberStamp, ChefStickyNote } from "@/components/ui/tactile-elements";
 import { getGuestOrderNote, getOrderStampVariant } from "@/lib/hospitality-order-status";
 import { createSseParser } from "@/modules/orders/guest-stream";
 import { playWoodenTap } from "@/lib/sound-effects";
+import { OrderReviews } from "./order-reviews";
 
 const STATUS_ANNOUNCEMENT: Record<string, string> = {
   accepted: "The restaurant accepted your order.",
@@ -87,12 +88,15 @@ export function OrderTracker({
   trackingToken,
   token,
   live = false,
+  reviews = false,
 }: {
   orderId: string;
   trackingToken: string;
   token: string;
   /** Live updates are approved and enabled; polling always remains the fallback. */
   live?: boolean;
+  /** Verified dish ratings are approved and enabled. */
+  reviews?: boolean;
 }) {
   const snapshot = useCallback(() => {
     try {
@@ -728,6 +732,10 @@ export function OrderTracker({
               </div>
             ))}
           </div>
+
+          {reviews && (order.status === "served" || order.status === "collected") && (
+            <OrderReviews token={token} orderId={orderId} capability={capability} />
+          )}
 
           {/* Pricing Totals */}
           <div
