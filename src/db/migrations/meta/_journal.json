@@ -589,6 +589,13 @@
       "when": 1795611600032,
       "tag": "0084_public_outlet_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1795698000032,
+      "tag": "0085_guest_crm",
+      "breakpoints": true
     }
   ]
 }

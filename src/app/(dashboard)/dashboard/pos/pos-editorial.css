@@ -1412,3 +1412,99 @@
   font-size: 11px;
   font-weight: 800;
 }
+
+/* Guest CRM: one compact checkout field, no extra persistent POS panel. */
+.pos-guest-lookup {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.pos-guest-lookup > label {
+  font-size: 12px;
+  font-weight: 650;
+}
+.pos-guest-mobile-field {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  border: 1px solid var(--pos-line, #ddd);
+  border-radius: 11px;
+  background: var(--pos-surface, #fff);
+}
+.pos-guest-mobile-field input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  color: inherit;
+  background: transparent;
+  border: 0 !important;
+  padding: 10px 0 !important;
+  outline: 0;
+  font-size: 14px;
+}
+.pos-guest-mobile-field:focus-within {
+  outline: 2px solid var(--till-ember);
+  outline-offset: 2px;
+}
+.pos-guest-mobile-field button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+.pos-guest-match {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #3a9972 35%, transparent);
+  background: color-mix(in srgb, #3a9972 7%, var(--pos-surface, white));
+  animation: pos-guest-arrive 0.18s ease-out both;
+}
+.pos-guest-match > svg {
+  color: #3a9972;
+  flex-shrink: 0;
+}
+.pos-guest-match > div {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.pos-guest-match strong {
+  font-size: 12px;
+}
+.pos-guest-match small,
+.pos-guest-new {
+  color: var(--ink-muted, #777);
+  font-size: 11px;
+}
+.pos-guest-match a {
+  padding: 7px;
+  border-radius: 9px;
+  color: var(--till-ember);
+}
+.pos-guest-match a:hover {
+  background: color-mix(in srgb, var(--till-ember) 12%, transparent);
+}
+@keyframes pos-guest-arrive {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pos-guest-match {
+    animation: none;
+  }
+}

@@ -12,6 +12,7 @@ import type { DashboardNavigation } from "../src/modules/menu-product/dashboard-
 
 const caps = (over: Partial<DashboardNavigation> = {}): DashboardNavigation => ({
   ordering: true,
+  crm: true,
   kitchen: true,
   ordersRead: true,
   kitchenRead: true,
@@ -71,15 +72,17 @@ describe("grouped sidebar", () => {
     expect(grouped.groups.map((g) => [g.label, ids(g.items)])).toEqual([
       ["Run service", ["orders", "pos", "kitchen", "floor"]],
       ["Menu", ["menu", "qr"]],
-      ["Insights", ["reports"]],
+      ["Insights", ["guests", "reports"]],
       ["Admin", ["organization", "settings"]],
     ]);
     expect(grouped.addOns).toEqual([]);
   });
 
   it("collapses known-unavailable items into Add-ons and drops empty groups", () => {
-    const grouped = groupNavigation(caps({ ordering: false, kitchenOperational: false }));
-    expect(ids(grouped.addOns)).toEqual(["orders", "kitchen", "floor", "reports"]);
+    const grouped = groupNavigation(
+      caps({ ordering: false, crm: false, kitchenOperational: false })
+    );
+    expect(ids(grouped.addOns)).toEqual(["orders", "kitchen", "floor", "guests", "reports"]);
     expect(grouped.groups.map((g) => [g.id, ids(g.items)])).toEqual([
       ["run", ["pos"]],
       ["menu", ["menu", "qr"]],
@@ -138,7 +141,15 @@ describe("mobile bottom bar", () => {
 
   it("lists everything else that is available in More, with no duplicates of the bar", () => {
     const more = ids(moreItems(caps()));
-    expect(more).toEqual(["overview", "menu", "qr", "reports", "organization", "settings"]);
+    expect(more).toEqual([
+      "overview",
+      "menu",
+      "qr",
+      "guests",
+      "reports",
+      "organization",
+      "settings",
+    ]);
     const bar = ids(bottomBarItems(caps()));
     expect(more.filter((id) => bar.includes(id))).toEqual([]);
   });

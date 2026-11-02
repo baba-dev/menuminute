@@ -32,6 +32,7 @@ vi.mock("sonner", () => ({ toast: { error: (...args: unknown[]) => toastError(..
 
 const caps = (over: Partial<DashboardNavigation> = {}): DashboardNavigation => ({
   ordering: true,
+  crm: true,
   kitchen: true,
   ordersRead: true,
   kitchenRead: true,
