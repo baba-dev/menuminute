@@ -2,6 +2,12 @@ import { expect, test } from "@playwright/test";
 import { hashPassword } from "better-auth/crypto";
 import { Pool } from "pg";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
+import { setFreeIntake } from "./plan-settings";
+
+// Free order intake ships on, which gives a Free outlet an Orders slot on the phone bar and moves Overview
+// into "More". This file asserts the menu-only dashboard, so switch intake off for it and restore it after.
+test.beforeAll(() => setFreeIntake(false));
+test.afterAll(() => setFreeIntake(true));
 
 async function seedPublishedOutlet(publish = true) {
   const url = process.env["MIGRATION_DATABASE_URL"];
