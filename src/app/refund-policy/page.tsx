@@ -130,24 +130,57 @@ function RefundArtwork() {
         <circle cx="69" cy="214" r="5" />
       </g>
       <ellipse cx="240" cy="348" rx="129" ry="17" fill="#090504" opacity=".27" />
-      <rect x="140" y="82" width="202" height="273" rx="22" fill="#110c09" stroke="#d49a5c" strokeWidth="2.5" />
+      <rect
+        x="140"
+        y="82"
+        width="202"
+        height="273"
+        rx="22"
+        fill="#110c09"
+        stroke="#d49a5c"
+        strokeWidth="2.5"
+      />
       <path
         d="M154 99h174v235l-13-8-13 8-13-8-13 8-13-8-13 8-13-8-13 8-13-8-13 8-13-8-13 8-13-8V99z"
         fill="url(#refund-sheet)"
       />
       <path d="M181 130h77" stroke="#764522" strokeWidth="6" strokeLinecap="round" />
       <path d="M181 151h120" stroke="#9c683c" strokeWidth="3" strokeLinecap="round" opacity=".7" />
-      <path d="M181 185h108M181 201h94M181 217h111" stroke="#a87345" strokeWidth="4" strokeLinecap="round" opacity=".7" />
+      <path
+        d="M181 185h108M181 201h94M181 217h111"
+        stroke="#a87345"
+        strokeWidth="4"
+        strokeLinecap="round"
+        opacity=".7"
+      />
       <path d="M181 256h118" stroke="#c58b55" strokeWidth="2" strokeDasharray="5 6" />
       <path d="M181 275h53" stroke="#804a29" strokeWidth="6" strokeLinecap="round" />
       <path d="M281 275h21" stroke="#804a29" strokeWidth="6" strokeLinecap="round" />
       <g className="privacy-art-nodes">
         <circle cx="332" cy="271" r="52" fill="#211711" stroke="#f2bb7d" strokeWidth="3" />
-        <path d="m332 237 29 13v22c0 23-13 39-29 47-16-8-29-24-29-47v-22z" fill="#ca7836" stroke="#ffe0aa" strokeWidth="2" />
-        <path d="m319 271 10 10 19-22" fill="none" stroke="#fff2db" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="m332 237 29 13v22c0 23-13 39-29 47-16-8-29-24-29-47v-22z"
+          fill="#ca7836"
+          stroke="#ffe0aa"
+          strokeWidth="2"
+        />
+        <path
+          d="m319 271 10 10 19-22"
+          fill="none"
+          stroke="#fff2db"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </g>
       <circle cx="124" cy="206" r="23" fill="#281b13" stroke="#e6a967" strokeWidth="2" />
-      <path d="M114 207h20m-7-7 7 7-7 7" stroke="#f3bf85" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M114 207h20m-7-7 7 7-7 7"
+        stroke="#f3bf85"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -195,12 +228,12 @@ export default function RefundPolicyPage() {
               Clear prices. <em>Clear policies.</em>
             </h1>
             <p>
-              Our straightforward approach to subscription refunds and cancellations—designed
-              for affordable restaurant software, with your legal rights preserved.
+              Our straightforward approach to subscription refunds and cancellations—designed for
+              affordable restaurant software, with your legal rights preserved.
             </p>
             <p className="privacy-review-status">
-              No voluntary refunds for change of mind or unused time. Statutory rights and
-              genuine billing errors are not excluded.
+              No voluntary refunds for change of mind or unused time. Statutory rights and genuine
+              billing errors are not excluded.
             </p>
             <div className="privacy-hero-meta">
               <span>Effective: {EFFECTIVE_DATE}</span>
@@ -245,9 +278,9 @@ export default function RefundPolicyPage() {
                 <strong>The short version</strong>
                 <p>
                   MenuMinute does not offer discretionary refunds on paid software subscriptions.
-                  You can cancel an eligible recurring plan to prevent future renewals. If
-                  a charge is incorrect or the promised service is materially deficient,
-                  your rights under applicable law remain unaffected.
+                  You can cancel an eligible recurring plan to prevent future renewals. If a charge
+                  is incorrect or the promised service is materially deficient, your rights under
+                  applicable law remain unaffected.
                 </p>
               </div>
             </div>
@@ -266,115 +299,142 @@ export default function RefundPolicyPage() {
             <section className="privacy-section" id="scope" aria-labelledby="scope-heading">
               <h2 id="scope-heading">1. Who and what this policy covers</h2>
               <p>
-                MenuMinute is software operated by <strong>BabaBuilds</strong>, a sole proprietorship
-                based in Pilani, Rajasthan, India. This policy applies to fees that BabaBuilds
-                itself charges a restaurant or authorized account owner for a MenuMinute
+                MenuMinute is software operated by <strong>BabaBuilds</strong>, a sole
+                proprietorship based in Pilani, Rajasthan, India. This policy applies to fees that
+                BabaBuilds itself charges a restaurant or authorized account owner for a MenuMinute
                 platform subscription or separately purchased software service.
               </p>
               <p>
-                Our permanent digital QR menu offering is free, so no refund arises merely
-                from using it. Optional paid plans such as Live Table Ordering and Kitchen Pro
-                are subject to the actual availability, eligibility, pricing and activation
-                disclosed at <Link href="/pricing">pricing</Link> and checkout. Listing a plan,
-                signing up or viewing a demonstration does not itself create a charge or
-                guarantee that a restricted feature can be purchased immediately.
+                Our permanent digital QR menu offering is free, so no refund arises merely from
+                using it. Optional paid plans such as Live Table Ordering and Kitchen Pro are
+                subject to the actual availability, eligibility, pricing and activation disclosed at{" "}
+                <Link href="/pricing">pricing</Link> and checkout. Listing a plan, signing up or
+                viewing a demonstration does not itself create a charge or guarantee that a
+                restricted feature can be purchased immediately.
               </p>
               <p>
-                This policy supplements our <Link href="/terms">Terms of Service</Link> and
-                the terms shown before a payment is authorized. If a separately agreed written
-                contract or applicable platform-store rules govern a particular purchase, they
-                apply to their relevant scope, without taking away non-waivable legal rights.
+                This policy supplements our <Link href="/terms">Terms of Service</Link> and the
+                terms shown before a payment is authorized. If a separately agreed written contract
+                or applicable platform-store rules govern a particular purchase, they apply to their
+                relevant scope, without taking away non-waivable legal rights.
               </p>
             </section>
 
             <section className="privacy-section" id="standard" aria-labelledby="standard-heading">
               <h2 id="standard-heading">2. Our no-voluntary-refund policy</h2>
               <p>
-                <strong>Except where required by applicable law or expressly agreed in writing,
-                completed charges for an activated paid subscription are non-refundable.</strong>
+                <strong>
+                  Except where required by applicable law or expressly agreed in writing, completed
+                  charges for an activated paid subscription are non-refundable.
+                </strong>
                 This helps us keep the standard software plans affordable.
               </p>
               <p>In particular, we do not ordinarily refund an already-paid period because:</p>
               <ul>
-                <li>You change your mind after purchase or decide the software is no longer needed.</li>
-                <li>You do not use some or all of the subscription period or available features.</li>
-                <li>You voluntarily cancel, close an account, or switch to the free plan before the paid period ends.</li>
-                <li>You expected a benefit, feature or business outcome that was not included in the agreed plan description.</li>
+                <li>
+                  You change your mind after purchase or decide the software is no longer needed.
+                </li>
+                <li>
+                  You do not use some or all of the subscription period or available features.
+                </li>
+                <li>
+                  You voluntarily cancel, close an account, or switch to the free plan before the
+                  paid period ends.
+                </li>
+                <li>
+                  You expected a benefit, feature or business outcome that was not included in the
+                  agreed plan description.
+                </li>
               </ul>
               <p>
-                We do not promise an automatic trial, cooling-off period, credit balance,
-                pro-rata refund or transferable subscription value. Any promotion or
-                exceptional commercial goodwill remedy must be expressly confirmed by
-                BabaBuilds; it does not create a standing refund entitlement.
+                We do not promise an automatic trial, cooling-off period, credit balance, pro-rata
+                refund or transferable subscription value. Any promotion or exceptional commercial
+                goodwill remedy must be expressly confirmed by BabaBuilds; it does not create a
+                standing refund entitlement.
               </p>
             </section>
 
-            <section className="privacy-section" id="exceptions" aria-labelledby="exceptions-heading">
+            <section
+              className="privacy-section"
+              id="exceptions"
+              aria-labelledby="exceptions-heading"
+            >
               <h2 id="exceptions-heading">3. When a refund or remedy may be due</h2>
               <p>
-                The no-voluntary-refund rule <strong>does not override applicable consumer
-                protection law, payment rules or other mandatory rights</strong>. We review
-                issues including:
+                The no-voluntary-refund rule{" "}
+                <strong>
+                  does not override applicable consumer protection law, payment rules or other
+                  mandatory rights
+                </strong>
+                . We review issues including:
               </p>
               <ul>
-                <li>A charge taken for a subscription we did not provide or could not activate as agreed.</li>
-                <li>A material deficiency or misrepresentation of the purchased service that we cannot appropriately remedy.</li>
+                <li>
+                  A charge taken for a subscription we did not provide or could not activate as
+                  agreed.
+                </li>
+                <li>
+                  A material deficiency or misrepresentation of the purchased service that we cannot
+                  appropriately remedy.
+                </li>
                 <li>Duplicate, incorrect, excessive or otherwise unauthorized billing.</li>
-                <li>A transaction failure requiring a reversal, or another refund or remedy required by law, contract or a binding authority.</li>
+                <li>
+                  A transaction failure requiring a reversal, or another refund or remedy required
+                  by law, contract or a binding authority.
+                </li>
               </ul>
               <p>
-                Depending on the facts and your applicable legal rights, the resolution
-                may include fixing the service, providing it as agreed, correcting a charge,
-                extending access where appropriate, or a full or proportionate refund.
-                We will not insist on store credit in place of a monetary refund when
-                the law requires repayment. We assess each report fairly, not solely
-                by whether a plan is inexpensive.
+                Depending on the facts and your applicable legal rights, the resolution may include
+                fixing the service, providing it as agreed, correcting a charge, extending access
+                where appropriate, or a full or proportionate refund. We will not insist on store
+                credit in place of a monetary refund when the law requires repayment. We assess each
+                report fairly, not solely by whether a plan is inexpensive.
               </p>
             </section>
 
-            <section className="privacy-section" id="cancellation" aria-labelledby="cancellation-heading">
+            <section
+              className="privacy-section"
+              id="cancellation"
+              aria-labelledby="cancellation-heading"
+            >
               <h2 id="cancellation-heading">4. Cancellation and renewals</h2>
               <p>
-                When recurring billing is enabled for your plan, the authorized organization
-                owner can request cancellation through the available billing controls or
-                by contacting us at <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a>.
-                Subject to any legally required exception or different term disclosed at
-                purchase, cancellation takes effect at the <strong>end of the
-                already-paid billing period</strong>. It stops future renewals and
-                ordinarily preserves eligible paid access until that period ends.
+                When recurring billing is enabled for your plan, the authorized organization owner
+                can request cancellation through the available billing controls or by contacting us
+                at <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a>. Subject to any legally required
+                exception or different term disclosed at purchase, cancellation takes effect at the{" "}
+                <strong>end of the already-paid billing period</strong>. It stops future renewals
+                and ordinarily preserves eligible paid access until that period ends.
               </p>
               <p>
-                A cancellation is not the same as a refund of past charges. Removing an
-                installed web app or discontinuing use does not by itself cancel a
-                recurring subscription. Please check that the cancellation was
-                acknowledged and contact us promptly if a renewal appears after an
-                effective cancellation.
+                A cancellation is not the same as a refund of past charges. Removing an installed
+                web app or discontinuing use does not by itself cancel a recurring subscription.
+                Please check that the cancellation was acknowledged and contact us promptly if a
+                renewal appears after an effective cancellation.
               </p>
               <p>
-                Any automatic renewal, price, frequency, taxes and cancellation terms
-                must be disclosed before payment authorization; renewal payments are
-                subject to applicable payment-network and RBI requirements where relevant.
-                If a paid plan is not currently enabled for your account, no new
-                subscription charge is authorized merely by reading this policy.
+                Any automatic renewal, price, frequency, taxes and cancellation terms must be
+                disclosed before payment authorization; renewal payments are subject to applicable
+                payment-network and RBI requirements where relevant. If a paid plan is not currently
+                enabled for your account, no new subscription charge is authorized merely by reading
+                this policy.
               </p>
             </section>
 
             <section className="privacy-section" id="payments" aria-labelledby="payments-heading">
               <h2 id="payments-heading">5. Failed, duplicate and disputed payments</h2>
               <p>
-                If your bank or payment app shows a debit but your MenuMinute subscription
-                was not activated, do not pay repeatedly without checking the first
-                transaction. Send us the transaction reference so we can review our
-                records and coordinate with the payment provider as appropriate.
+                If your bank or payment app shows a debit but your MenuMinute subscription was not
+                activated, do not pay repeatedly without checking the first transaction. Send us the
+                transaction reference so we can review our records and coordinate with the payment
+                provider as appropriate.
               </p>
               <p>
-                Failed-payment reversals, chargebacks and other payment-network
-                remedies follow applicable banking, card, UPI or payment-service
-                rules, including RBI requirements where applicable. We will not
-                use this no-voluntary-refund policy to deny a reversal or correction
-                legally required after an unsuccessful or duplicate payment.
-                For an unrecognized charge, you may also contact your bank or
-                payment provider promptly.
+                Failed-payment reversals, chargebacks and other payment-network remedies follow
+                applicable banking, card, UPI or payment-service rules, including RBI requirements
+                where applicable. We will not use this no-voluntary-refund policy to deny a reversal
+                or correction legally required after an unsuccessful or duplicate payment. For an
+                unrecognized charge, you may also contact your bank or payment provider promptly.
               </p>
             </section>
 
@@ -386,8 +446,8 @@ export default function RefundPolicyPage() {
                   <div>
                     <strong>Send an email</strong>
                     <p>
-                      Write to <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a> with
-                      the subject &ldquo;MenuMinute Billing or Refund Request&rdquo;.
+                      Write to <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a> with the subject
+                      &ldquo;MenuMinute Billing or Refund Request&rdquo;.
                     </p>
                   </div>
                 </div>
@@ -396,10 +456,10 @@ export default function RefundPolicyPage() {
                   <div>
                     <strong>Include the essentials</strong>
                     <p>
-                      Share your account email, organization or outlet name,
-                      approximate date, amount, invoice or provider transaction reference,
-                      and a short description of the problem. Do not send a full card
-                      number, password, one-time password or sensitive banking credentials.
+                      Share your account email, organization or outlet name, approximate date,
+                      amount, invoice or provider transaction reference, and a short description of
+                      the problem. Do not send a full card number, password, one-time password or
+                      sensitive banking credentials.
                     </p>
                   </div>
                 </div>
@@ -408,72 +468,71 @@ export default function RefundPolicyPage() {
                   <div>
                     <strong>We investigate and respond</strong>
                     <p>
-                      We may verify your authority to act for the business, review payment
-                      and service records, ask for relevant evidence, and explain the
-                      proposed remedy or reason for our decision.
+                      We may verify your authority to act for the business, review payment and
+                      service records, ask for relevant evidence, and explain the proposed remedy or
+                      reason for our decision.
                     </p>
                   </div>
                 </div>
               </div>
               <p>
-                Contact us as soon as you notice an issue. No informal support
-                deadline on this page shortens a claim period or remedy that
-                applicable law gives you.
+                Contact us as soon as you notice an issue. No informal support deadline on this page
+                shortens a claim period or remedy that applicable law gives you.
               </p>
             </section>
 
-            <section className="privacy-section" id="resolution" aria-labelledby="resolution-heading">
+            <section
+              className="privacy-section"
+              id="resolution"
+              aria-labelledby="resolution-heading"
+            >
               <h2 id="resolution-heading">7. Resolution and payment timing</h2>
               <p>
-                Where a monetary refund is due, we will process it through an appropriate
-                original payment method or another lawful and verified method, subject
-                to payment-provider capabilities and applicable rules. Bank or
-                provider settlement time may vary. We will communicate the relevant
-                status or next steps rather than promise an unverified universal
-                &ldquo;instant refund&rdquo; period.
+                Where a monetary refund is due, we will process it through an appropriate original
+                payment method or another lawful and verified method, subject to payment-provider
+                capabilities and applicable rules. Bank or provider settlement time may vary. We
+                will communicate the relevant status or next steps rather than promise an unverified
+                universal &ldquo;instant refund&rdquo; period.
               </p>
               <p>
-                Legally prescribed reversal, refund, grievance and compensation
-                deadlines take precedence over any operational estimate. Applicable
-                invoice, GST or credit-note adjustments will be handled as required
-                for the particular transaction.
+                Legally prescribed reversal, refund, grievance and compensation deadlines take
+                precedence over any operational estimate. Applicable invoice, GST or credit-note
+                adjustments will be handled as required for the particular transaction.
               </p>
             </section>
 
             <section className="privacy-section" id="diners" aria-labelledby="diners-heading">
               <h2 id="diners-heading">8. Restaurant orders are separate</h2>
               <p>
-                This is a policy for <strong>MenuMinute platform software fees</strong>,
-                not for food or restaurant-service purchases made by diners. A restaurant
-                sets its menu prices, fulfils diner orders and is ordinarily responsible
-                for the associated food-order cancellations, refunds and disputes.
-                Guests should contact the restaurant that sold the order.
+                This is a policy for <strong>MenuMinute platform software fees</strong>, not for
+                food or restaurant-service purchases made by diners. A restaurant sets its menu
+                prices, fulfils diner orders and is ordinarily responsible for the associated
+                food-order cancellations, refunds and disputes. Guests should contact the restaurant
+                that sold the order.
               </p>
               <p>
-                A restaurant cannot use this software-subscription policy to deny
-                diners rights they may have against it. Nothing here removes a
-                responsibility that applicable law separately places on BabaBuilds.
+                A restaurant cannot use this software-subscription policy to deny diners rights they
+                may have against it. Nothing here removes a responsibility that applicable law
+                separately places on BabaBuilds.
               </p>
             </section>
 
             <section className="privacy-section" id="rights" aria-labelledby="rights-heading">
               <h2 id="rights-heading">9. Indian law, other rights and contact</h2>
               <p>
-                This policy is designed to operate subject to Indian law, including
-                the <strong>Consumer Protection Act, 2019</strong> and applicable
-                <strong> Consumer Protection (E-Commerce) Rules</strong>, as well as
-                relevant payment-system requirements. Those laws can protect
-                eligible customers against unfair terms, deficient services and
-                unlawful refusal of required remedies. The precise rights depend on
-                the transaction and whether the purchaser qualifies for a particular
-                legal protection.
+                This policy is designed to operate subject to Indian law, including the{" "}
+                <strong>Consumer Protection Act, 2019</strong> and applicable
+                <strong> Consumer Protection (E-Commerce) Rules</strong>, as well as relevant
+                payment-system requirements. Those laws can protect eligible customers against
+                unfair terms, deficient services and unlawful refusal of required remedies. The
+                precise rights depend on the transaction and whether the purchaser qualifies for a
+                particular legal protection.
               </p>
               <p>
-                A limitation here applies only to the extent allowed by applicable
-                law. No clause prevents an eligible person from contacting a
-                regulator, payment provider, consumer commission or other competent
-                authority or from exercising non-excludable rights. You can find
-                Indian consumer-protection information at the{" "}
+                A limitation here applies only to the extent allowed by applicable law. No clause
+                prevents an eligible person from contacting a regulator, payment provider, consumer
+                commission or other competent authority or from exercising non-excludable rights.
+                You can find Indian consumer-protection information at the{" "}
                 <a
                   href="https://consumerhelpline.gov.in/"
                   target="_blank"
@@ -481,17 +540,16 @@ export default function RefundPolicyPage() {
                 >
                   National Consumer Helpline
                   <ArrowUpRight size={14} aria-hidden="true" className="inline" />
-                </a>.
+                </a>
+                .
               </p>
               <p>
-                Operator: BabaBuilds (sole proprietorship), Pilani, Rajasthan,
-                India. Billing and policy contact:{" "}
-                <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a>. Our{" "}
+                Operator: BabaBuilds (sole proprietorship), Pilani, Rajasthan, India. Billing and
+                policy contact: <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a>. Our{" "}
                 <Link href="/terms">Terms of Service</Link> and{" "}
-                <Link href="/privacy">Privacy Policy</Link> explain related
-                contractual and data-handling matters. We may update this
-                policy prospectively with appropriate notice; a later update
-                does not remove rights or alter already-agreed charges
+                <Link href="/privacy">Privacy Policy</Link> explain related contractual and
+                data-handling matters. We may update this policy prospectively with appropriate
+                notice; a later update does not remove rights or alter already-agreed charges
                 contrary to applicable law.
               </p>
             </section>
@@ -501,8 +559,8 @@ export default function RefundPolicyPage() {
                 <span>QUESTIONS ABOUT A CHARGE?</span>
                 <h2>Talk to a real person.</h2>
                 <p>
-                  Share your billing reference and we will review the matter
-                  against your plan, payment details and applicable rights.
+                  Share your billing reference and we will review the matter against your plan,
+                  payment details and applicable rights.
                 </p>
               </div>
               <a href={SUPPORT_EMAIL}>
@@ -524,8 +582,8 @@ export default function RefundPolicyPage() {
             </p>
             <p className="refund-version">
               <FileCheck2 size={14} aria-hidden="true" /> Effective {EFFECTIVE_DATE}.
-              <RefreshCcw size={14} aria-hidden="true" /> Cancellation concerns
-              future renewals; it is not a retroactive refund.
+              <RefreshCcw size={14} aria-hidden="true" /> Cancellation concerns future renewals; it
+              is not a retroactive refund.
             </p>
           </main>
         </div>
