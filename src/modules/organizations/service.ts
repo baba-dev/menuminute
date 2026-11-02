@@ -262,7 +262,11 @@ export async function organizationDetail(actor: Actor, organizationId: string) {
   });
 }
 /** A bounded, organization-scoped history of completed domain operations. */
-export async function organizationActivity(actor: Actor, organizationId: string, requestedPage = 1) {
+export async function organizationActivity(
+  actor: Actor,
+  organizationId: string,
+  requestedPage = 1
+) {
   id.parse(organizationId);
   const pageInput = z.number().int().min(1).max(10000).parse(requestedPage);
   const pageSize = 5;
