@@ -23,12 +23,13 @@ const schema = z.object({
   password: z.string().min(1, "Password is required."),
 });
 type Values = z.infer<typeof schema>;
-export function LoginForm() {
+export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter(),
     params = useSearchParams();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const rememberedEmail = useSyncExternalStore(
     subscribeRememberedAccount,
     readRememberedAccount,
@@ -131,6 +132,13 @@ export function LoginForm() {
             Password updated. Sign in with your new password.
           </p>
         )}
+        {params.has("error") && (
+          <p className="mm-auth-message mm-auth-message--error" role="alert">
+            {params.get("error") === "mfa_requires_password"
+              ? "This account is protected by an authenticator. Sign in with your email, password and verification code."
+              : "Google sign-in could not be completed. Sign in with your password first, then connect Google in Account Security."}
+          </p>
+        )}
         {error && (
           <p role="alert" className="mm-auth-message mm-auth-message--error" tabIndex={-1}>
             {error}
@@ -222,6 +230,33 @@ export function LoginForm() {
           {!busy && <ArrowRight size={18} aria-hidden="true" />}
         </button>
       </form>
+      {googleEnabled && (
+        <div className="mm-auth-social">
+          <p>Or sign in with a connected account</p>
+          <button type="button" className="mm-auth-google" disabled={busy || googleBusy}
+            onClick={async () => {
+              if (googleBusy) return;
+              setGoogleBusy(true);
+              setError("");
+              try {
+                const result = await authClient.signIn.social({
+                  provider: "google",
+                  callbackURL: next || "/dashboard",
+                  errorCallbackURL: "/login",
+                });
+                if (result.error) setError("Google sign-in failed. Sign in with your password to manage connected accounts.");
+              } catch {
+                setError("Unable to start Google sign-in. Please use your password.");
+              } finally {
+                setGoogleBusy(false);
+              }
+            }}>
+            <span aria-hidden="true" className="mm-auth-google-g">G</span>
+            {googleBusy ? "Connecting to Google…" : "Continue with Google"}
+          </button>
+          <small>New here? Create your account with email first, then connect Google in Account Security.</small>
+        </div>
+      )}
     </AuthShell>
   );
 }

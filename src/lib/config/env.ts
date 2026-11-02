@@ -52,6 +52,15 @@ const envSchema = z
     DATABASE_URL: pgUrl,
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
     AUTH_SECRET: z.string().min(32),
+    // Both keys are optional; Google is disabled unless both are present.
+    GOOGLE_CLIENT_ID: z.preprocess(
+      (value) => value === "" ? undefined : value,
+      z.string().trim().min(8).optional()
+    ),
+    GOOGLE_CLIENT_SECRET: z.preprocess(
+      (value) => value === "" ? undefined : value,
+      z.string().trim().min(8).optional()
+    ),
     EMAIL_PROVIDER: z.enum(["smtp", "resend", "test"]).default("test"),
     EMAIL_FROM: z.string().trim().email().optional(),
     RESEND_API_KEY: z.string().trim().min(1).optional(),
