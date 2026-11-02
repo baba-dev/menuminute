@@ -144,7 +144,10 @@ describe("POS A/B/C restricted PostgreSQL end-to-end integration", () => {
     // The shared POS fixture enables dine-in only. This test also exercises
     // pickup receipts, so explicitly enable that mode for this outlet.
     await admin(async (_db, pool) =>
-      pool.query("update restaurants set fulfillment_modes=ARRAY['dine_in','pickup']::text[] where id=$1", [f.outlet.id])
+      pool.query(
+        "update restaurants set fulfillment_modes=ARRAY['dine_in','pickup']::text[] where id=$1",
+        [f.outlet.id]
+      )
     );
     await admin(async (_db, pool) =>
       applyEntitlement(pool, {
