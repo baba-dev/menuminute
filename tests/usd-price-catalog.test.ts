@@ -42,12 +42,7 @@ describe("fixed USD subscription price book", () => {
       "$7.88",
       "$473.68",
     ]);
-    expect(planLadder().map((p) => p.price.label)).toEqual([
-      "₹0",
-      "₹119",
-      "₹499",
-      "₹30,000",
-    ]);
+    expect(planLadder().map((p) => p.price.label)).toEqual(["₹0", "₹119", "₹499", "₹30,000"]);
   });
 
   it("does not conflate published USD prices with existing INR provider payment contracts", () => {
