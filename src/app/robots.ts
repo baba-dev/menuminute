@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/delete-account",
           "/cookies",
+          "/refund-policy",
           "/m/",
         ],
         disallow: [
