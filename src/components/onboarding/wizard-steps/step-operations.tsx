@@ -85,6 +85,9 @@ export function StepOperations({
             value={draft.currency}
             onChange={(e) => onChange("currency", e.target.value)}
           >
+            <option value="" disabled>
+              Select a pricing currency
+            </option>
             {currencies.map((c) => (
               <option key={c} value={c}>
                 {c}
