@@ -89,7 +89,8 @@ const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
 
 function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurrency }) {
   const card = CARD[offer.key];
-  const usdInterest = currency === "USD" && (offer.key === "ordering" || offer.key === "kitchen_pro");
+  const usdInterest =
+    currency === "USD" && (offer.key === "ordering" || offer.key === "kitchen_pro");
   const actionHref = usdInterest ? "/contact" : card.href;
   const actionText = usdInterest ? "Ask about USD billing" : card.cta;
   const primary = card.primary;
@@ -192,7 +193,10 @@ export default async function PricingPage({
             table, and a full kitchen display when your service needs it. Compare fixed INR and USD
             monthly prices below; restaurant menu prices remain independent of platform billing.
           </p>
-          <nav aria-label="Subscription pricing currency" className="mt-7 flex justify-center gap-2">
+          <nav
+            aria-label="Subscription pricing currency"
+            className="mt-7 flex justify-center gap-2"
+          >
             {(["INR", "USD"] as const).map((code) => (
               <Link
                 key={code}
@@ -221,7 +225,8 @@ export default async function PricingPage({
           <Link href="/billing" className="text-foreground font-semibold underline">
             Manage your plan in billing
           </Link>
-          . {currency === "USD"
+          .{" "}
+          {currency === "USD"
             ? "USD plans are published for international enquiries. USD checkout is not yet active; no USD card charges can be initiated from this page."
             : "Current self-service checkout charges in INR. USD plan requests are available in the USD tab."}
         </p>
