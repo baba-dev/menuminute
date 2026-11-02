@@ -117,7 +117,9 @@
   border-radius: 50%;
   background: rgb(255 255 255 / 5%);
   color: #ffe6c9;
-  box-shadow: 0 0 0 19px rgb(255 255 255 / 3%), 0 0 0 40px rgb(255 255 255 / 2%);
+  box-shadow:
+    0 0 0 19px rgb(255 255 255 / 3%),
+    0 0 0 40px rgb(255 255 255 / 2%);
 }
 
 .guests-content {
@@ -197,7 +199,9 @@
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-  transition: filter 0.16s ease, transform 0.16s ease;
+  transition:
+    filter 0.16s ease,
+    transform 0.16s ease;
 }
 .guests-add:hover,
 .guests-save:not(:disabled):hover {
@@ -660,7 +664,7 @@
   .guests-person strong {
     font-size: 14px;
   }
-  .guests-table td:nth-child(n+2):not(:last-child)::before {
+  .guests-table td:nth-child(n + 2):not(:last-child)::before {
     content: attr(data-label);
     display: block;
     color: var(--guest-muted);
