@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowRight,
   Check,
@@ -15,6 +16,7 @@ import {
   Mail,
   Clock3,
   Navigation,
+  ReceiptText,
 } from "lucide-react";
 import type { OutletProfileFields } from "@/modules/restaurants/profile";
 import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
@@ -423,6 +425,9 @@ export function OutletAtelier({
             <a className="os-action os-action-primary" href="#profile">
               Edit public profile <ArrowRight size={17} aria-hidden="true" />
             </a>
+            <Link className="os-action" href="/dashboard/settings/tax">
+              Sales tax preferences <ReceiptText size={17} aria-hidden="true" />
+            </Link>
           </div>
         </div>
         <div className="os-hero-art" aria-hidden="true">

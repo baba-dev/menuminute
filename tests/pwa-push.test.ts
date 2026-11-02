@@ -12,9 +12,13 @@ import {
 function keys() {
   const ecdh = createECDH("prime256v1");
   ecdh.generateKeys();
+  // OpenSSL may return a 31-byte private scalar when its most significant byte is
+  // zero. VAPID private keys must be encoded as fixed-width 32-byte P-256 values.
+  const scalar = ecdh.getPrivateKey();
+  const privateKey = Buffer.concat([Buffer.alloc(32 - scalar.length), scalar]);
   return {
     publicKey: ecdh.getPublicKey().toString("base64url"),
-    privateKey: ecdh.getPrivateKey().toString("base64url"),
+    privateKey: privateKey.toString("base64url"),
   };
 }
 
