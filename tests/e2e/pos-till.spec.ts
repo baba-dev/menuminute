@@ -138,6 +138,7 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
     await expect(mobileTicket).toBeVisible();
     await mobileTicket.click();
   }
+  await page.getByLabel("Mobile number (optional)").fill("9876543210");
   await expect(page.getByText("Pre-tax subtotal")).toBeVisible();
   await page.getByRole("button", { name: /Place Order & Send/ }).click();
   await expect(page.locator(".till-success")).toContainText("Dispatched");
@@ -220,6 +221,8 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   const receiptPath = reprintHref!.split("?")[0];
   await page.goto(receiptPath + "?paper=80");
   await expect(page.locator(".receipt-paper")).toContainText("Paneer Lunch");
+  await expect(page.locator(".receipt-details")).toContainText("+919876543210");
+  await expect(page.locator(".receipt-details dt").filter({ hasText: "Table" })).toHaveCount(0);
   await expect(page.locator(".mm-workspace-sidebar")).toBeVisible();
   await page.emulateMedia({ media: "print" });
   await expect(page.locator(".mm-workspace-sidebar")).toBeHidden();
