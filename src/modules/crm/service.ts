@@ -54,10 +54,16 @@ async function scoped<T>(
   ident.parse(outletId);
   const fn = permission === "orders.read" ? withOutletRead : withOutlet;
   return fn(actor, outletId, permission, async (tx) => {
-    const check = await tx.execute<{ organizationId: string }>(
-      sql`select organization_id as "organizationId" from restaurants where id=${outletId}`
-    );
+    const check = await tx.execute<{ organizationId: string; crmAllowed: boolean }>(sql`
+      select r.organization_id as "organizationId",
+        (app_private.entitlement_allowed(r.organization_id, 'ordering.new')
+          OR app_private.entitlement_allowed(r.organization_id, 'kitchen.new')
+          OR app_private.is_community_edition()) as "crmAllowed"
+      from restaurants r where r.id=${outletId}
+    `);
     if (check.rows[0]?.organizationId !== organizationId) throw new ForbiddenError();
+    if (check.rows[0]?.crmAllowed !== true)
+      throw new ForbiddenError("Guest CRM is included with paid plans.");
     return work((query) => tx.execute(query) as Promise<{ rows: unknown[] }>);
   });
 }
