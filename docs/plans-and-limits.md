@@ -67,7 +67,7 @@ Required consequences, to confirm before building:
   the paid grant still unlocks tables, the counter board, bill printing and reports.
 - Cap Free intake to protect cost and support load. Owner-approved (2026-11-02): 100 accepted orders per month, shown
   as a meter, with accepted tickets always completable and a clear message when the cap is reached.
-  The monthly window and reset rule are defined in slice 2.
+  The monthly window and reset rule are defined in slice 2b (see below).
 - Free outlets need a minimal merchant inbox (accept, reject, mark ready), since the counter board
   is paid. Ordering launch safeguards (expiry, acceptance races, tenant scope) apply unchanged.
 - Revenue impact: the ₹119 plan now sells operations tooling, not order intake. Expect a lower
@@ -192,15 +192,36 @@ Recommendation: ship **A first as the Dedicated entry level**, and offer **B onl
 
 ## Delivery slices
 
-| #   | Slice                                                                                     | Depends on                |
-| --- | ----------------------------------------------------------------------------------------- | ------------------------- |
-| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement) | This sign-off             |
-| 2   | Enforce dish and QR caps in services (transactional) + meters                             | 1                         |
-| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                           | 2                         |
-| 4   | AI credit accounting per org per month                                                    | 1, AI spend accounting    |
-| 5   | Self-serve billing, proration, GST invoices, auto-trial                                   | Billing gates             |
-| 6   | Kitchen Pro as the max plan; multi-outlet caps                                            | Kitchen Pro release gates |
-| 7   | Custom domain verification, routing, TLS                                                  | Edge decision             |
-| 8   | Dedicated A (brand), then B by contract                                                   | 7, pricing                |
+| #   | Slice                                                                                                                                                                                                                                | Depends on                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| 1   | Plan catalog, `resolveLimits`, `LIMIT_REACHED` error, tests (done; no UI, no enforcement)                                                                                                                                            | This sign-off             |
+| 2   | Enforce dish and QR caps in services (transactional); done behind `PLAN_LIMITS_ENFORCED` (default off), no UI                                                                                                                        | 1                         |
+| 2b  | Free order intake: 100 accepted orders per month. Needs a reviewed SQL migration to the guest-order functions, a monthly counter and a basic merchant inbox; changes what the public menu offers, so it needs its own release review | 2                         |
+| 2c  | Usage meters and locked-feature UI (the only UI work; requires explicit sign-off)                                                                                                                                                    | 2                         |
+| 3   | Downgrade/grace behavior (hide, not delete), restore on upgrade                                                                                                                                                                      | 2                         |
+| 4   | AI credit accounting per org per month                                                                                                                                                                                               | 1, AI spend accounting    |
+| 5   | Self-serve billing, proration, GST invoices, auto-trial                                                                                                                                                                              | Billing gates             |
+| 6   | Kitchen Pro as the max plan; multi-outlet caps                                                                                                                                                                                       | Kitchen Pro release gates |
+| 7   | Custom domain verification, routing, TLS                                                                                                                                                                                             | Edge decision             |
+| 8   | Dedicated A (brand), then B by contract                                                                                                                                                                                              | 7, pricing                |
 
 Each slice is one PR with an explicit migration and rollback note, tested against real PostgreSQL.
+
+## Slice 2 as built
+
+- Enforcement lives in `src/modules/plans/{guard,store}.ts` and wraps the three writers that can
+  add dishes or QR codes: `commandMenu` (create, save, assign, restore), `applyReview` (menu
+  import) and `qrCommand` (create, regenerate). The SQL commands are unchanged.
+- **Transactional:** an outlet-scoped advisory lock is taken, the count is read, the command runs,
+  the count is read again, and growth beyond the cap throws `LIMIT_REACHED`, rolling the whole
+  transaction back. Concurrent writers for one outlet are serialized.
+- **Grandfathering:** only growth past the cap is rejected. An outlet already over its cap can edit,
+  shrink and reorder; nothing is deleted. Hiding extra dishes after a downgrade is slice 3.
+- **Dish count:** distinct dish ids across non-archived menus an outlet owns or is assigned.
+  **QR count:** active QR codes. Both are counted with the acting user's database visibility.
+- **Plan source:** `ordering.new` and `kitchen.new` entitlements, as before. Community Edition is
+  never capped.
+- **Off by default:** `PLAN_LIMITS_ENFORCED=false`. Enabling it is an operator step after the
+  existing-data review: list outlets over their cap first, because they will be unable to add more.
+- Not in this slice: the Free order cap, usage meters or any UI, AI credits, media bytes, seats,
+  outlets and custom domains.

@@ -4,6 +4,7 @@ import { sql, eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { menus, menuAssignments, menuOverrides, dishMedia, menuReleases } from "@/db/schema";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
+import { withPlanCap } from "@/modules/plans/store";
 import { getPool, type Transaction } from "@/db";
 import { getPublicMenu, getRestaurantById } from "@/modules/restaurants/service";
 import { getFullMenu } from "@/modules/menus/service";
@@ -192,9 +193,16 @@ export async function commandMenu(actor: Actor, outletId: string, id: string, ra
       const before = await tx.execute<{ outlet_id: string }>(
         sql`select outlet_id from menu_assignments where menu_id=${id}`
       );
-      const rows = await tx.execute<{ result: { menuId: string; revision: number } }>(
-        sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
-      );
+      // Only actions that can add dishes to an outlet are plan-guarded; assignment also
+      // grows the target outlet. Edits that shrink or keep the count are never blocked.
+      const growsDishes = ["create", "save", "assign", "restore"].includes(input.action);
+      const guarded = [outletId];
+      if (input.action === "assign") guarded.push((input.data as { outletId: string }).outletId);
+      const run = async () =>
+        tx.execute<{ result: { menuId: string; revision: number } }>(
+          sql`select app_private.menu_command(${outletId},${id},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key},${input.expectedRevision}) as result`
+        );
+      const rows = growsDishes ? await withPlanCap(tx, guarded, "dishes", run) : await run();
       const after = await tx.execute<{ outlet_id: string }>(
         sql`select outlet_id from menu_assignments where menu_id=${id}`
       );
@@ -271,9 +279,14 @@ export async function qrCommand(actor: Actor, outletId: string, raw: unknown) {
                 sql`select destination_token from qr_codes where id=${input.data.qrId} and restaurant_id=${outletId}`
               )
             ).rows[0]?.destination_token;
-      const rows = await tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
-        sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
-      );
+      const runQr = async () =>
+        tx.execute<{ result: { id: string; token?: string; revoked?: boolean } }>(
+          sql`select app_private.qr_command(${outletId},${input.action},${JSON.stringify(input.data)}::jsonb,${input.key}) as result`
+        );
+      const rows =
+        input.action === "revoke"
+          ? await runQr()
+          : await withPlanCap(tx, [outletId], "qrCodes", runQr);
       return { value: rows.rows[0]!.result, oldToken };
     });
     if (mutation.oldToken) await revokeCachedQrToken(outletId, mutation.oldToken);
