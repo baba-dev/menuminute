@@ -1,17 +1,21 @@
 # USD subscription price book and activation path
 
-**Price book approved for planning by the owner on 2026-11-03.**
-USD subscription prices are **50% higher** than the INR prices after converting
-at the frozen reference of **INR 95 = USD 1**. They are rounded once to a
-cent and **do not automatically float with FX changes**. Any future repricing
-requires versioned plan IDs, notice and renewal/grandfathering decisions.
+**Owner-revised USD price book, 2026-11-03.**
+The USD catalog is independently priced: Ordering **USD 5/month**, Kitchen Pro
+**USD 20/month**, and Dedicated **USD 3,000** for a privately deployed,
+on-premise instance **by contract**. USD Dedicated's payment schedule (including
+whether this is one-time or recurring) is not specified by the price book;
+it must be agreed in the individual contract. All existing INR prices remain
+unchanged. The earlier 50%-premium / INR 95 reference calculation is superseded.
+Future repricing requires versioned provider plans and an explicit policy for
+notifying or grandfathering existing subscriptions.
 
-| Plan                    | INR monthly | USD monthly | USD minor units |
-| ----------------------- | ----------: | ----------: | --------------: |
-| Free                    |          ₹0 |          $0 |               0 |
-| Ordering                |        ₹119 |       $1.88 |             188 |
-| Kitchen Pro             |        ₹499 |       $7.88 |             788 |
-| Dedicated (by contract) |     ₹30,000 |     $473.68 |           47368 |
+| Plan                            | INR monthly | USD quote          | USD minor units |
+| ------------------------------- | ----------: | ------------------: | --------------: |
+| Free                            |          ₹0 |                  $0 |               0 |
+| Ordering                        |        ₹119 |            $5/month |             500 |
+| Kitchen Pro                     |        ₹499 |           $20/month |            2000 |
+| Dedicated (private on-premise)  |     ₹30,000 | $3,000 by contract |          300000 |
 
 USD amounts are **listed but not yet payable**. The current Razorpay
 implementation is INR-only at the checkout route, webhook verification and
@@ -28,9 +32,10 @@ its account supports this specific flow. Subscriptions cannot be assumed
 active solely because plans exist in the provider dashboard.
 
 1. Create **two distinct, immutable USD monthly provider plans**, for
-   USD 1.88 and USD 7.88, and configure their USD plan IDs separately from
-   the existing INR plan IDs. Dedicated stays contract-only, not a self-serve
-   plan. Verify card-method eligibility, permitted payment countries, account
+   USD 5 and USD 20, and configure their USD plan IDs separately from
+   the existing INR plan IDs. The USD 3,000 Dedicated private on-premise offer
+   stays contract-only, not a recurring provider plan unless its contract
+   explicitly specifies recurrence. Verify card-method eligibility, permitted payment countries, account
    KYC, taxes, fees and settlement rules.
 2. Add an explicit `billingCurrency: "INR" | "USD"` choice to the
    authenticated billing page. Keep outlet menu currency completely separate.
