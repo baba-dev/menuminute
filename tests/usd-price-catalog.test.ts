@@ -38,9 +38,7 @@ describe("independently priced INR and USD plan books", () => {
       label: "₹30,000",
       note: "per month",
     });
-    expect(planLadder({ currency: "USD" })[3]?.label).toBe(
-      "Dedicated · On-premise Private"
-    );
+    expect(planLadder({ currency: "USD" })[3]?.label).toBe("Dedicated · On-premise Private");
   });
 
   it("uses the same price book throughout the four-card plan ladder", () => {
