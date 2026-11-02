@@ -4,7 +4,7 @@ import { ConflictError, ValidationError } from "@/lib/errors";
 import { withOutlet, withOutletRead, type Actor } from "@/modules/tenancy/service";
 import { salesTaxPolicySchema } from "./sales-tax";
 
-const snapshotSchema = salesTaxPolicySchema.extend({
+const snapshotSchema = salesTaxPolicySchema.safeExtend({
   revision: z.number().int().nonnegative(),
   updatedAt: z.string().nullable(),
   canChangeOrders: z.literal(false),
