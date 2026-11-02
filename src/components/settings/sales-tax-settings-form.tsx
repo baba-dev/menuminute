@@ -43,7 +43,7 @@ export function SalesTaxSettingsForm({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const rateBps = percentToBasisPoints(percent);
+  const rateBps = status === "configured" ? percentToBasisPoints(percent) : 0;
   const policy: SalesTaxPolicy = {
     status,
     label: label.trim(),
