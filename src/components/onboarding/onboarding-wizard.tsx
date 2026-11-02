@@ -644,9 +644,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
                     >
                       <CheckCircle2 size={12} /> Saved to account
                     </span>
-                  ) : (
-                    statusMessage
-                  )}
+                  ) : null}
                 </span>
               )}
             </div>
