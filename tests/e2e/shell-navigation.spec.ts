@@ -410,12 +410,18 @@ test.describe("phone shell", () => {
   });
 
   test("a menu-only outlet still gets a useful bar", async ({ page }) => {
-    await signIn(page, await seed({ ordering: false }));
-    const bar = page.getByRole("navigation", { name: "Primary" });
-    // The owner can set up the kitchen, which takes a slot; Overview and Menu fill the rest.
-    for (const name of ["Overview", "Point of Sale", "Kitchen Setup", "Menu Studio"])
-      await expect(bar.getByRole("link", { name })).toBeVisible();
-    await expect(bar.getByRole("link", { name: "Orders" })).toHaveCount(0);
+    // Free order intake ships on, which gives a Free outlet an Orders slot; this is the QR-menu-only bar.
+    await setFreeIntake(false);
+    try {
+      await signIn(page, await seed({ ordering: false }));
+      const bar = page.getByRole("navigation", { name: "Primary" });
+      // The owner can set up the kitchen, which takes a slot; Overview and Menu fill the rest.
+      for (const name of ["Overview", "Point of Sale", "Kitchen Setup", "Menu Studio"])
+        await expect(bar.getByRole("link", { name })).toBeVisible();
+      await expect(bar.getByRole("link", { name: "Orders" })).toHaveCount(0);
+    } finally {
+      await setFreeIntake(true);
+    }
   });
 
   test("search and notifications are reachable from More", async ({ page }) => {
