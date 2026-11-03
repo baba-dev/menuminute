@@ -357,6 +357,29 @@ BEGIN
    OR NEW.total_minor IS DISTINCT FROM s.total_minor)
  THEN RAISE EXCEPTION 'POS financial snapshot differs from committed merchant tax'
   USING ERRCODE='40001'; END IF;
+ IF FOUND AND s.applied THEN
+   -- Even equal header totals must not conceal a changed per-dish rate or
+   -- reallocated tax. Existing paid orders retain their original tax basis.
+   IF jsonb_array_length(NEW.line_snapshot)<>jsonb_array_length(s.line_snapshot)
+     OR EXISTS (
+       SELECT 1 FROM jsonb_array_elements(NEW.line_snapshot) billed(value)
+       LEFT JOIN pos_sale_lines pl ON pl.id=billed.value->>'id'
+         AND pl.outlet_id=NEW.outlet_id AND pl.sale_id=NEW.sale_id
+       LEFT JOIN LATERAL (
+         SELECT original.value AS amount
+         FROM jsonb_array_elements(s.line_snapshot) original(value)
+         WHERE original.value->>'orderItemId'=pl.order_item_id
+         LIMIT 1
+       ) frozen ON true
+       WHERE frozen.amount IS NULL
+         OR billed.value->>'baseMinor' IS DISTINCT FROM frozen.amount->>'baseMinor'
+         OR billed.value->>'taxMinor' IS DISTINCT FROM frozen.amount->>'taxMinor'
+         OR billed.value->>'totalMinor' IS DISTINCT FROM frozen.amount->>'totalMinor'
+         OR billed.value->>'rateBps' IS DISTINCT FROM frozen.amount->>'rateBps'
+     )
+   THEN RAISE EXCEPTION 'POS line tax differs from original order'
+     USING ERRCODE='40001'; END IF;
+ END IF;
  RETURN NEW;
 END $$;
 CREATE TRIGGER pos_bill_live_tax_guard BEFORE INSERT ON pos_bills
