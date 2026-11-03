@@ -185,6 +185,17 @@ describe("Live merchant checkout tax — real PostgreSQL/Redis", () => {
     await expect(submitGuestOrder(f.outlet.publicId, order(10500, 1))).rejects.toMatchObject({
       statusCode: 409,
     });
+    // The statutory classification must independently match the merchant's new
+    // rate; a preference edit cannot silently override dish-level tax authority.
+    await expect(submitGuestOrder(f.outlet.publicId, order(10600, 2))).rejects.toMatchObject({
+      statusCode: 409,
+    });
+    await admin(async (_db, pool) => {
+      await pool.query(
+        "update pos_tax_classes set rate_bps=600 where outlet_id=$1 and dish_id='plate'",
+        [f.outlet.id]
+      );
+    });
     const newer = await submitGuestOrder(f.outlet.publicId, order(10600, 2));
     expect(newer.totalMinor).toBe(10600);
     const old = await admin(async (_db, pool) =>
