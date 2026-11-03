@@ -89,7 +89,12 @@ CREATE TABLE app_private.india_gst_statutory_records (
   CONSTRAINT india_gst_balance CHECK (taxable_minor+tax_minor=total_minor),
   CONSTRAINT india_gst_bill_of_supply_no_gst CHECK(kind<>'bill_of_supply' OR tax_minor=0),
   CONSTRAINT india_gst_irp_fields CHECK(
-    (irp_required AND irn IS NOT NULL AND irn ~ '^[a-fA-F0-9]{64}
+    (irp_required AND irn IS NOT NULL AND length(irn)=64
+       AND irn !~ '[^0-9a-fA-F]'
+       AND irp_acknowledged_at IS NOT NULL
+       AND irp_signed_evidence_hash IS NOT NULL
+       AND length(irp_signed_evidence_hash)=64
+       AND irp_signed_evidence_hash !~ '[^0-9a-f]')
     OR (NOT irp_required AND irn IS NULL AND irp_acknowledged_at IS NULL
        AND irp_signed_evidence_hash IS NULL)
   )
