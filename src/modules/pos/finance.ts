@@ -15,6 +15,7 @@ import { getPool } from "@/db";
 import { sendTransactionalEmail } from "@/lib/email";
 import { validateTender } from "@/lib/pos/finance-math";
 import { assessFiscalReadiness } from "./fiscal-readiness";
+import { indiaGstDraftInputSchema, reviewIndiaGstDraft } from "./india-gst";
 import { formatFinancialDocumentEmail } from "./document-email";
 
 const key = z.string().uuid();
@@ -399,6 +400,28 @@ async function run<T>(
     dbError(error);
   }
 }
+/**
+ * Authorized, side-effect-free GST draft review. Only declarations come from the
+ * client. The seller, bill lines, currency and tax amounts are fetched afresh from
+ * the scoped frozen POS record; no client-provided financial totals are trusted.
+ * No statutory issuance, serial allocation, IRP call or persistence occurs.
+ */
+export async function financeReviewIndiaGst(
+  actor: Actor,
+  organizationId: string,
+  outletId: string,
+  raw: unknown
+) {
+  const declaration = indiaGstDraftInputSchema.parse(raw);
+  await posContext(actor, organizationId, outletId);
+  const trusted = await run<unknown>(
+    actor,
+    outletId,
+    sql`select app_private.pos_fiscal_readiness(${outletId},${declaration.saleId}) as result`
+  );
+  return reviewIndiaGstDraft(trusted, declaration);
+}
+
 export async function financeRead(
   actor: Actor,
   organizationId: string,

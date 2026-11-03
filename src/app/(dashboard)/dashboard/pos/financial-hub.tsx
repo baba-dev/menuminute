@@ -793,6 +793,14 @@ export function FinancialHub({
                     <small>
                       No IRP registration, statutory serial, or tax credit document is created.
                     </small>
+                    {fiscalReadiness.supportedDiagnosticCountry === "IN" && selected.bill && (
+                      <Link
+                        className="os-action"
+                        href={"/dashboard/pos/fiscal?sale=" + encodeURIComponent(selected.saleId)}
+                      >
+                        Prepare India GST draft review — not an invoice
+                      </Link>
+                    )}
                   </section>
                 )}
                 {selected.bill ? (
