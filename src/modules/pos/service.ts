@@ -5,7 +5,7 @@ import { withActor, type Actor } from "@/modules/tenancy/service";
 import { publicProduct, type PublicProduct } from "@/modules/menu-product/service";
 import { quoteInputSchema, quotePublishedSelection } from "@/modules/orders/quote";
 import { calculateCheckoutTax, requireCheckoutRevision } from "@/modules/tax/checkout";
-import { getOutletSalesTax } from "@/modules/tax/service";
+import { checkoutTaxPolicySchema, type CheckoutTaxPolicy } from "@/modules/tax/checkout";
 import { projectMenu } from "@/modules/menu-product/projector";
 import { availableNow } from "@/modules/menu-product/contracts";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
@@ -558,6 +558,19 @@ async function replay(actor: Actor, outletId: string, k: string, hash: string, a
     return r.rows[0]?.data ?? null;
   });
 }
+/** Authorized cashier quote: a staff POS role need not have tax-settings write rights. */
+export async function posTaxPolicy(
+  actor: Actor,
+  organizationId: string,
+  outletId: string
+): Promise<CheckoutTaxPolicy> {
+  await posContext(actor, organizationId, outletId);
+  const result = (await posCall(actor, outletId, (run) =>
+    run(sql`select app_private.pos_order_tax_policy(${outletId}) as data`)
+  )) as { rows: { data: unknown }[] };
+  return checkoutTaxPolicySchema.parse(result.rows[0]?.data);
+}
+
 export async function posSubmit(
   actor: Actor,
   organizationId: string,
@@ -597,21 +610,12 @@ export async function posSubmit(
     throw new ConflictError("The published price changed. Review the revised cart.");
   // Revalidate the merchant's revision and final payable amount on the server.
   // The trusted SQL producer repeats these checks under the policy transaction lock.
-  const settings = await getOutletSalesTax(actor, organizationId, outletId);
-  const policy = {
-    currency: context.currency,
-    revision: settings.revision,
-    status: settings.status,
-    label: settings.label,
-    rateBps: settings.canChangeOrders ? settings.rateBps : 0,
-    inclusive: settings.inclusive,
-    applied: settings.canChangeOrders,
-  };
+  const policy = await posTaxPolicy(actor, organizationId, outletId);
   requireCheckoutRevision(input.expectedTaxRevision, policy);
   const merchantTax = calculateCheckoutTax(
     context.currency, quote.lines.map((line) => line.lineSubtotalMinor), policy
   );
-  if (settings.canChangeOrders &&
+  if (policy.applied &&
       (input.expectedTotalMinor === undefined || input.expectedTaxMinor === undefined))
     throw new ConflictError("Confirm the final merchant tax total before placing the POS order.");
   if ((input.expectedTotalMinor !== undefined &&
