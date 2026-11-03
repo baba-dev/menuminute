@@ -10,7 +10,11 @@ import {
 } from "@/modules/orders/rate-limit";
 import { publicCheckoutTaxPolicy } from "@/modules/tax/checkout";
 
-const tokenSchema = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const tokenSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/);
 
 /**
  * Publish only the non-sensitive merchant tax policy for the authenticated QR
@@ -20,12 +24,12 @@ const tokenSchema = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
 async function observed_GET(request: Request) {
   try {
     const source = verifiedOrderSource(request);
-    if (!await reserveOrderSource("tracking", source))
+    if (!(await reserveOrderSource("tracking", source)))
       return NextResponse.json({ message: "Please retry shortly" }, { status: 429 });
     const token = tokenSchema.parse(new URL(request.url).searchParams.get("token"));
     const outletId = await publicOrderOutlet(token);
     if (!outletId) return NextResponse.json({ message: "Menu unavailable" }, { status: 404 });
-    if (!await reserveOrderCapability("tracking", source, token))
+    if (!(await reserveOrderCapability("tracking", source, token)))
       return NextResponse.json({ message: "Please retry shortly" }, { status: 429 });
     const policy = await publicCheckoutTaxPolicy(token);
     return NextResponse.json(policy, {

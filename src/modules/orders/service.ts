@@ -296,7 +296,9 @@ export async function submitGuestOrder(
     throw new ValidationError("Order total exceeds supported amount.");
   }
   if (input.quotedTotalMinor !== totalMinor) {
-    throw new ConflictError("Your cart or tax total has changed. Review the latest amount before submitting.");
+    throw new ConflictError(
+      "Your cart or tax total has changed. Review the latest amount before submitting."
+    );
   }
   if (!outlet.versioned) {
     throw new ForbiddenError("Online ordering requires a published versioned menu.");

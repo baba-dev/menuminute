@@ -255,20 +255,35 @@ export function CartDrawer({
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotalMinor = items.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
-  const cartFingerprint = items.map((item) => [item.dishId,item.variantId,item.quantity,
-    item.unitPriceMinor,item.selectedAddOns.map((option) => option.groupId+":"+option.optionId).join(",")].join("|")).join("~");
-  const checkoutPolicy = taxPolicyState?.fingerprint === cartFingerprint ? taxPolicyState.policy : null;
+  const cartFingerprint = items
+    .map((item) =>
+      [
+        item.dishId,
+        item.variantId,
+        item.quantity,
+        item.unitPriceMinor,
+        item.selectedAddOns.map((option) => option.groupId + ":" + option.optionId).join(","),
+      ].join("|")
+    )
+    .join("~");
+  const checkoutPolicy =
+    taxPolicyState?.fingerprint === cartFingerprint ? taxPolicyState.policy : null;
   let merchantTaxQuote: ReturnType<typeof previewMerchantSalesTax> | null = null;
   if (checkoutPolicy?.currency === currency) {
     try {
-      merchantTaxQuote = previewMerchantSalesTax(currency,
-        items.map((item) => String(item.unitPriceMinor * item.quantity)), {
+      merchantTaxQuote = previewMerchantSalesTax(
+        currency,
+        items.map((item) => String(item.unitPriceMinor * item.quantity)),
+        {
           status: checkoutPolicy.applied ? "configured" : "no_tax",
           rateBps: checkoutPolicy.applied ? checkoutPolicy.rateBps : 0,
           label: checkoutPolicy.label,
           inclusive: checkoutPolicy.inclusive,
-        });
-    } catch { merchantTaxQuote = null; }
+        }
+      );
+    } catch {
+      merchantTaxQuote = null;
+    }
   }
   const payableMinor = merchantTaxQuote ? Number(merchantTaxQuote.totalMinor) : subtotalMinor;
   const displayedTaxMinor = merchantTaxQuote ? Number(merchantTaxQuote.taxMinor) : 0;
@@ -277,20 +292,24 @@ export function CartDrawer({
     if (!isOpen || items.length === 0) return;
     const controller = new AbortController();
     void fetch("/api/public-orders/tax-quote?token=" + encodeURIComponent(token), {
-      cache: "no-store", signal: controller.signal,
+      cache: "no-store",
+      signal: controller.signal,
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("The restaurant tax quote is temporarily unavailable.");
         return response.json() as Promise<CheckoutTaxPolicy>;
       })
       .then((policy) => {
-        if (policy.currency !== currency) throw new Error("The menu currency changed. Refresh to continue.");
+        if (policy.currency !== currency)
+          throw new Error("The menu currency changed. Refresh to continue.");
         setTaxPolicyState({ fingerprint: cartFingerprint, policy });
         setTaxQuoteError("");
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        setTaxQuoteError(error instanceof Error ? error.message : "Could not verify the checkout total.");
+        setTaxQuoteError(
+          error instanceof Error ? error.message : "Could not verify the checkout total."
+        );
       });
     return () => controller.abort();
   }, [isOpen, token, currency, cartFingerprint]);
@@ -309,7 +328,9 @@ export function CartDrawer({
       return;
     }
     if (!pendingRecovery && !merchantTaxQuote) {
-      setErrorMessage("Unable to verify the restaurant's current tax quote. Reopen the cart to retry.");
+      setErrorMessage(
+        "Unable to verify the restaurant's current tax quote. Reopen the cart to retry."
+      );
       return;
     }
     if (!pendingRecovery && phoneProblem(customerPhone)) {
@@ -758,23 +779,46 @@ export function CartDrawer({
                 {merchantTaxQuote && checkoutPolicy && (
                   <div className="stack" style={{ gap: "0.3rem" }} role="status">
                     <div className="row between" style={{ gap: "0.5rem" }}>
-                      <span>{checkoutPolicy.applied ? checkoutPolicy.label : "Merchant tax"}
-                        {checkoutPolicy.applied ? checkoutPolicy.inclusive ? " (included)" : " (added)" : " (not applied)"}</span>
+                      <span>
+                        {checkoutPolicy.applied ? checkoutPolicy.label : "Merchant tax"}
+                        {checkoutPolicy.applied
+                          ? checkoutPolicy.inclusive
+                            ? " (included)"
+                            : " (added)"
+                          : " (not applied)"}
+                      </span>
                       <strong>{formatPrice(displayedTaxMinor, currency)}</strong>
                     </div>
-                    <div className="row between" style={{ borderTop: "1px solid var(--border)", paddingTop: "0.5rem", gap: "0.5rem" }}>
+                    <div
+                      className="row between"
+                      style={{
+                        borderTop: "1px solid var(--border)",
+                        paddingTop: "0.5rem",
+                        gap: "0.5rem",
+                      }}
+                    >
                       <strong>Total to pay</strong>
                       <strong>{formatPrice(payableMinor, currency)}</strong>
                     </div>
-                    <small className="quiet">Tax policy revision {checkoutPolicy.revision} · Rechecked when you submit. This is not a statutory tax invoice.</small>
+                    <small className="quiet">
+                      Tax policy revision {checkoutPolicy.revision} · Rechecked when you submit.
+                      This is not a statutory tax invoice.
+                    </small>
                   </div>
                 )}
                 {!merchantTaxQuote && (
-                  <small className="quiet" role="status">Checking the restaurant’s current tax policy…</small>
+                  <small className="quiet" role="status">
+                    Checking the restaurant’s current tax policy…
+                  </small>
                 )}
-                {taxQuoteError && <small role="alert" className="error">{taxQuoteError}</small>}
+                {taxQuoteError && (
+                  <small role="alert" className="error">
+                    {taxQuoteError}
+                  </small>
+                )}
                 <small className="quiet">
-                  The restaurant validates published prices and tax at submission. Any change requires your confirmation.
+                  The restaurant validates published prices and tax at submission. Any change
+                  requires your confirmation.
                 </small>
               </div>
               <div
@@ -838,7 +882,12 @@ export function CartDrawer({
                 type="button"
                 className="action ember"
                 style={{ width: "100%", minHeight: "50px", fontSize: "1.05rem" }}
-                disabled={isSubmitting || items.length === 0 || !online || (!pendingRecovery && !merchantTaxQuote)}
+                disabled={
+                  isSubmitting ||
+                  items.length === 0 ||
+                  !online ||
+                  (!pendingRecovery && !merchantTaxQuote)
+                }
                 onClick={handleSubmitOrder}
               >
                 {!online

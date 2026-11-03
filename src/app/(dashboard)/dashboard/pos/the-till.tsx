@@ -96,7 +96,10 @@ export function TheTill({
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [taxPolicyState, setTaxPolicyState] = useState<{ fingerprint: string; policy: CheckoutTaxPolicy } | null>(null);
+  const [taxPolicyState, setTaxPolicyState] = useState<{
+    fingerprint: string;
+    policy: CheckoutTaxPolicy;
+  } | null>(null);
   const [taxQuoteError, setTaxQuoteError] = useState("");
   const [dish, setDish] = useState<Dish | null>(null);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
@@ -205,22 +208,38 @@ export function TheTill({
     [menu, category, search]
   );
   const subtotal = cart.reduce((sum, c) => sum + BigInt(c.unitMinor) * BigInt(c.line.quantity), 0n);
-  const taxFingerprint = cart.map((item) => [item.line.dishId,item.line.variantId,
-    item.line.quantity,item.unitMinor,item.line.groups.map((g) => g.groupId+":"+g.optionIds.join(",")).join("|")].join(":")).join(";");
+  const taxFingerprint = cart
+    .map((item) =>
+      [
+        item.line.dishId,
+        item.line.variantId,
+        item.line.quantity,
+        item.unitMinor,
+        item.line.groups.map((g) => g.groupId + ":" + g.optionIds.join(",")).join("|"),
+      ].join(":")
+    )
+    .join(";");
   const taxPolicy = taxPolicyState?.fingerprint === taxFingerprint ? taxPolicyState.policy : null;
   let taxQuote: ReturnType<typeof previewMerchantSalesTax> | null = null;
   if (taxPolicy?.currency === currency && cart.length) {
     try {
-      taxQuote = previewMerchantSalesTax(currency,
-        cart.map((item) => String(BigInt(item.unitMinor) * BigInt(item.line.quantity))), {
+      taxQuote = previewMerchantSalesTax(
+        currency,
+        cart.map((item) => String(BigInt(item.unitMinor) * BigInt(item.line.quantity))),
+        {
           status: taxPolicy.applied ? "configured" : "no_tax",
           label: taxPolicy.label,
           rateBps: taxPolicy.applied ? taxPolicy.rateBps : 0,
           inclusive: taxPolicy.inclusive,
-        });
-    } catch { taxQuote = null; }
+        }
+      );
+    } catch {
+      taxQuote = null;
+    }
   }
-  const canCheckout = Boolean(workspace.context.enabled && menu?.open && cart.length > 0 && !busy && taxQuote);
+  const canCheckout = Boolean(
+    workspace.context.enabled && menu?.open && cart.length > 0 && !busy && taxQuote
+  );
 
   useEffect(() => {
     if (!workspace.context.enabled) return;
@@ -711,7 +730,8 @@ export function TheTill({
             <div>
               <strong>Dispatched · Order #{success.orderNumber}</strong>
               <p>
-                Sale {success.saleId} · {money(success.totalMinor ?? success.subtotalMinor, success.currency)} total due ·
+                Sale {success.saleId} ·{" "}
+                {money(success.totalMinor ?? success.subtotalMinor, success.currency)} total due ·
                 Payment{" "}
                 {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
                 The order was accepted and sent to service. This confirmation is not a receipt or
@@ -1087,19 +1107,35 @@ export function TheTill({
                 />
               </label>
               <div className="till-total">
-                <span>{taxPolicy?.applied && taxPolicy.inclusive ? "Tax-inclusive item subtotal" : "Pre-tax subtotal"}</span>
+                <span>
+                  {taxPolicy?.applied && taxPolicy.inclusive
+                    ? "Tax-inclusive item subtotal"
+                    : "Pre-tax subtotal"}
+                </span>
                 <strong>{money(subtotal.toString(), currency)}</strong>
               </div>
               {taxQuote && taxPolicy && (
                 <div className="till-total" role="status">
-                  <span>{taxPolicy.applied ? taxPolicy.label + (taxPolicy.inclusive ? " (included)" : " (added)") : "Merchant tax (not applied)"}</span>
+                  <span>
+                    {taxPolicy.applied
+                      ? taxPolicy.label + (taxPolicy.inclusive ? " (included)" : " (added)")
+                      : "Merchant tax (not applied)"}
+                  </span>
                   <strong>{money(taxQuote.taxMinor, currency)}</strong>
                   <span>Total payable · policy rev {taxPolicy.revision}</span>
                   <strong>{money(taxQuote.totalMinor, currency)}</strong>
                 </div>
               )}
-              {!taxQuote && <p className="till-disclaimer" role="status">Checking the merchant tax policy…</p>}
-              {taxQuoteError && <p className="till-disclaimer" role="alert">{taxQuoteError}</p>}
+              {!taxQuote && (
+                <p className="till-disclaimer" role="status">
+                  Checking the merchant tax policy…
+                </p>
+              )}
+              {taxQuoteError && (
+                <p className="till-disclaimer" role="alert">
+                  {taxQuoteError}
+                </p>
+              )}
               <p className="till-disclaimer">
                 Amounts are rechecked against the current published menu and locked tax policy
                 before staff payment is recorded. This is a non-fiscal bill, not a tax invoice.

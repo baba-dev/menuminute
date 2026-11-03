@@ -196,8 +196,14 @@ export type PosReceipt = {
   taxLabel?: string;
   taxInclusive?: boolean;
   taxApplied?: boolean;
-  taxLines?: { orderItemId: string; dishId: string; originalMinor: string;
-    baseMinor: string; taxMinor: string; totalMinor: string }[];
+  taxLines?: {
+    orderItemId: string;
+    dishId: string;
+    originalMinor: string;
+    baseMinor: string;
+    taxMinor: string;
+    totalMinor: string;
+  }[];
   paymentStatus: "pending" | "complete" | "refunded";
   refundRecorded: boolean;
   paymentEvidence: "staff_recorded" | "none";
@@ -623,15 +629,20 @@ export async function posSubmit(
   const policy = await posTaxPolicy(actor, organizationId, outletId);
   requireCheckoutRevision(input.expectedTaxRevision, policy);
   const merchantTax = calculateCheckoutTax(
-    context.currency, quote.lines.map((line) => line.lineSubtotalMinor), policy
+    context.currency,
+    quote.lines.map((line) => line.lineSubtotalMinor),
+    policy
   );
-  if (policy.applied &&
-      (input.expectedTotalMinor === undefined || input.expectedTaxMinor === undefined))
+  if (
+    policy.applied &&
+    (input.expectedTotalMinor === undefined || input.expectedTaxMinor === undefined)
+  )
     throw new ConflictError("Confirm the final merchant tax total before placing the POS order.");
-  if ((input.expectedTotalMinor !== undefined &&
+  if (
+    (input.expectedTotalMinor !== undefined &&
       input.expectedTotalMinor !== merchantTax.totalMinor) ||
-      (input.expectedTaxMinor !== undefined &&
-      input.expectedTaxMinor !== merchantTax.taxMinor))
+    (input.expectedTaxMinor !== undefined && input.expectedTaxMinor !== merchantTax.taxMinor)
+  )
     throw new ConflictError("The merchant tax quote changed. Review the revised POS total.");
   if (input.tableId && input.fulfillmentMode !== "dine_in")
     throw new ValidationError("A table can only be selected for dine-in service");

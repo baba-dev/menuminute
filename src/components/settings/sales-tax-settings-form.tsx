@@ -92,12 +92,12 @@ export function SalesTaxSettingsForm({
           method: "PATCH",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-              expectedRevision: saved.revision,
-              confirmed: true,
-              policy,
-              applyToOrders: status === "configured" && collectLive,
-              ...(status === "configured" && collectLive ? { confirmedLiveTax: true } : {}),
-            }),
+            expectedRevision: saved.revision,
+            confirmed: true,
+            policy,
+            applyToOrders: status === "configured" && collectLive,
+            ...(status === "configured" && collectLive ? { confirmedLiveTax: true } : {}),
+          }),
         }
       );
       const data = await response.json().catch(() => null);
@@ -150,9 +150,10 @@ export function SalesTaxSettingsForm({
           role="status"
         >
           <strong>Merchant-controlled collection:</strong> Existing tax preferences remain
-          preview-only until you explicitly activate live tax. New guest orders and POS sales
-          can use a saved merchant rate after confirmation and required seller/classification checks.
-          Historical amounts do not change. This is <strong>not certified GST/VAT invoicing</strong>.
+          preview-only until you explicitly activate live tax. New guest orders and POS sales can
+          use a saved merchant rate after confirmation and required seller/classification checks.
+          Historical amounts do not change. This is <strong>not certified GST/VAT invoicing</strong>
+          .
         </div>
         <form
           onSubmit={save}
@@ -255,27 +256,43 @@ export function SalesTaxSettingsForm({
                 Inclusive — tax is already included in the menu price
               </label>
             </fieldset>
-            <fieldset disabled={!canManage || busy || status !== "configured"} className="border-border space-y-3 border-t pt-4">
+            <fieldset
+              disabled={!canManage || busy || status !== "configured"}
+              className="border-border space-y-3 border-t pt-4"
+            >
               <legend className="text-sm font-semibold">Apply to real orders</legend>
               <label className="flex items-start gap-3 text-sm">
-                <input type="checkbox" checked={collectLive}
+                <input
+                  type="checkbox"
+                  checked={collectLive}
                   onChange={(event) => setCollectLive(event.target.checked)}
-                  className="mt-1 accent-orange-600" />
-                <span>Collect the declared tax on <strong>new</strong> public checkout and POS orders.
-                This changes customers’ payable totals; it cannot change existing orders.</span>
+                  className="mt-1 accent-orange-600"
+                />
+                <span>
+                  Collect the declared tax on <strong>new</strong> public checkout and POS orders.
+                  This changes customers’ payable totals; it cannot change existing orders.
+                </span>
               </label>
               {collectLive && (
                 <label className="flex items-start gap-3 text-sm">
-                  <input type="checkbox" checked={confirmedLiveTax}
+                  <input
+                    type="checkbox"
+                    checked={confirmedLiveTax}
                     onChange={(event) => setConfirmedLiveTax(event.target.checked)}
-                    className="mt-1 accent-orange-600" />
-                  <span>I confirm the applicable merchant registration and dish classifications,
-                    and authorize collection of this rate on live orders. India GST rates require
+                    className="mt-1 accent-orange-600"
+                  />
+                  <span>
+                    I confirm the applicable merchant registration and dish classifications, and
+                    authorize collection of this rate on live orders. India GST rates require
                     matching classified dishes and registered-seller details; otherwise checkout
-                    will refuse tax collection until those settings are complete.</span>
+                    will refuse tax collection until those settings are complete.
+                  </span>
                 </label>
               )}
-              <p className="text-muted-foreground text-xs">This merchant calculation is not a tax invoice, fiscal registration or a government-validated rate.</p>
+              <p className="text-muted-foreground text-xs">
+                This merchant calculation is not a tax invoice, fiscal registration or a
+                government-validated rate.
+              </p>
             </fieldset>
             <label className="border-border flex items-start gap-3 border-t pt-4 text-sm">
               <input
@@ -292,7 +309,14 @@ export function SalesTaxSettingsForm({
             </label>
             <button
               type="submit"
-              disabled={!canManage || busy || !confirmed || !dirty || !sample || (status === "configured" && collectLive && !confirmedLiveTax)}
+              disabled={
+                !canManage ||
+                busy ||
+                !confirmed ||
+                !dirty ||
+                !sample ||
+                (status === "configured" && collectLive && !confirmedLiveTax)
+              }
               className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={17} aria-hidden="true" /> {busy ? "Saving…" : "Save tax preference"}
@@ -348,8 +372,9 @@ export function SalesTaxSettingsForm({
               </p>
             )}
             <p className="text-muted-foreground text-xs">
-              This sample is only a preview; a real order uses server-verified published prices
-              and the exact saved policy revision. Live tax is currently {saved.canChangeOrders ? "ON" : "OFF"}.
+              This sample is only a preview; a real order uses server-verified published prices and
+              the exact saved policy revision. Live tax is currently{" "}
+              {saved.canChangeOrders ? "ON" : "OFF"}.
             </p>
             <div className="border-border text-muted-foreground border-t pt-4 text-xs">
               <p>Saved revision: {saved.revision}</p>

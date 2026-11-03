@@ -147,17 +147,26 @@ export default async function ReceiptPage({
         </div>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-total">
-          <span>{receipt.taxApplied && receipt.taxInclusive ? "Tax-inclusive menu prices" : "Item subtotal"}</span>
+          <span>
+            {receipt.taxApplied && receipt.taxInclusive
+              ? "Tax-inclusive menu prices"
+              : "Item subtotal"}
+          </span>
           <strong>{money(receipt.subtotalMinor, receipt.currency)}</strong>
         </div>
         {receipt.taxApplied && (
           <>
             <div className="receipt-total">
               <span>Taxable base</span>
-              <strong>{money(receipt.taxableBaseMinor ?? receipt.subtotalMinor, receipt.currency)}</strong>
+              <strong>
+                {money(receipt.taxableBaseMinor ?? receipt.subtotalMinor, receipt.currency)}
+              </strong>
             </div>
             <div className="receipt-total">
-              <span>{receipt.taxLabel ?? "Merchant tax"} {receipt.taxInclusive ? "(included)" : "(added)"}</span>
+              <span>
+                {receipt.taxLabel ?? "Merchant tax"}{" "}
+                {receipt.taxInclusive ? "(included)" : "(added)"}
+              </span>
               <strong>{money(receipt.taxMinor ?? "0", receipt.currency)}</strong>
             </div>
           </>

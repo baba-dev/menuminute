@@ -4,15 +4,17 @@ import { ConflictError } from "@/lib/errors";
 import { previewMerchantSalesTax, type SalesTaxPolicy, type TaxQuote } from "./sales-tax";
 
 /** Publicly safe, QR-token-scoped fields only; never reveal supplier registration. */
-export const checkoutTaxPolicySchema = z.object({
-  revision: z.number().int().nonnegative(),
-  status: z.enum(["unconfigured", "no_tax", "configured"]),
-  label: z.string().min(2).max(40),
-  rateBps: z.number().int().min(0).max(10_000),
-  inclusive: z.boolean(),
-  applied: z.boolean(),
-  currency: z.string().length(3),
-}).strict();
+export const checkoutTaxPolicySchema = z
+  .object({
+    revision: z.number().int().nonnegative(),
+    status: z.enum(["unconfigured", "no_tax", "configured"]),
+    label: z.string().min(2).max(40),
+    rateBps: z.number().int().min(0).max(10_000),
+    inclusive: z.boolean(),
+    applied: z.boolean(),
+    currency: z.string().length(3),
+  })
+  .strict();
 export type CheckoutTaxPolicy = z.infer<typeof checkoutTaxPolicySchema>;
 
 export async function publicCheckoutTaxPolicy(token: string): Promise<CheckoutTaxPolicy> {
@@ -39,11 +41,10 @@ export function calculateCheckoutTax(
   return previewMerchantSalesTax(currency, lineAmountsMinor, effective);
 }
 
-export function requireCheckoutRevision(
-  requested: number | undefined,
-  current: CheckoutTaxPolicy
-) {
-  if ((current.applied && requested === undefined) ||
-    (requested !== undefined && requested !== current.revision))
+export function requireCheckoutRevision(requested: number | undefined, current: CheckoutTaxPolicy) {
+  if (
+    (current.applied && requested === undefined) ||
+    (requested !== undefined && requested !== current.revision)
+  )
     throw new ConflictError("The restaurant's tax configuration changed. Review your new total.");
 }
