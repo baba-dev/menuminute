@@ -28,14 +28,21 @@ export default async function IndiaGstPage({
     return (
       <main className="mx-auto max-w-4xl space-y-4 p-8">
         <h1 className="text-3xl font-semibold">India GST draft review</h1>
-        <p>Choose a frozen POS sale from The Ledger to review its statutory invoice requirements.</p>
-        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">Open The Ledger</Link>
+        <p>
+          Choose a frozen POS sale from The Ledger to review its statutory invoice requirements.
+        </p>
+        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">
+          Open The Ledger
+        </Link>
       </main>
     );
 
   const actor = { userId: session.user.id, sessionId: session.session.id };
   const [sale, readiness] = await Promise.all([
-    financeRead(actor, outlet.organizationId, outlet.id, { view: "sale", id: saleId }) as Promise<Detail>,
+    financeRead(actor, outlet.organizationId, outlet.id, {
+      view: "sale",
+      id: saleId,
+    }) as Promise<Detail>,
     financeRead(actor, outlet.organizationId, outlet.id, { view: "fiscal_readiness", id: saleId }),
   ]);
   if (!sale || !sale.bill)
@@ -43,7 +50,9 @@ export default async function IndiaGstPage({
       <main className="mx-auto max-w-4xl space-y-4 p-8">
         <h1 className="text-3xl font-semibold">A frozen bill is required</h1>
         <p>Unfrozen sale amounts cannot be used to prepare a statutory invoice draft.</p>
-        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">Back to The Ledger</Link>
+        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">
+          Back to The Ledger
+        </Link>
       </main>
     );
   return (
