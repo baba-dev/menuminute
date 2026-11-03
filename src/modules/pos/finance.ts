@@ -324,6 +324,7 @@ const queryTypes = z.discriminatedUnion("view", [
   z.object({ view: z.literal("sale"), id }).strict(),
   z.object({ view: z.literal("settlement"), id }).strict(),
   z.object({ view: z.literal("fiscal_readiness"), id }).strict(),
+  z.object({ view: z.literal("india_gst_ledger_readiness") }).strict(),
   z.object({ view: z.literal("document"), id }).strict(),
   z.object({ view: z.literal("preview"), id }).strict(),
 ]);
@@ -477,6 +478,25 @@ export async function financeRead(
         partial: boolean;
         anomalies: { saleId: string; reason: string }[];
       }>(actor, outletId, sql`select app_private.pos_reconciliation(${outletId}) as result`);
+    case "india_gst_ledger_readiness":
+      return run<{
+        jurisdiction: "IN";
+        registeredOperatorRelease: boolean;
+        legalSignoff: boolean;
+        financeSignoff: boolean;
+        jurisdictionVerified: boolean;
+        irpApplicabilityVerified: boolean;
+        adapterVerified: boolean;
+        signatureVerified: boolean;
+        printerAccepted: boolean;
+        statutoryIssuanceAvailable: false;
+        invoiceCount: number;
+        reviewOnly: true;
+      }>(
+        actor,
+        outletId,
+        sql`select app_private.india_gst_ledger_readiness(${outletId}) as result`
+      );
     case "fiscal_readiness": {
       const rawPacket = await run<unknown>(
         actor,
