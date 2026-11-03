@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { financeRead, type Detail } from "@/modules/pos/finance";
+import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
 import { IndiaGstDraftWorkspace } from "./india-gst-draft-workspace";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export default async function IndiaGstPage({
       outletId={outlet.id}
       outletName={outlet.name}
       sale={sale}
-      readiness={readiness as Awaited<ReturnType<typeof import("@/modules/pos/fiscal-readiness").assessFiscalReadiness>>}
+      readiness={readiness as FiscalReadiness}
     />
   );
 }
