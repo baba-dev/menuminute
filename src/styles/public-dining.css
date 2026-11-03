@@ -67,6 +67,73 @@
   );
   pointer-events: none;
 }
+/* Keep the guest appearance switch visible over every restaurant cover. */
+.dining-theme-control {
+  position: absolute;
+  z-index: 2;
+  top: clamp(1rem, 3vw, 2rem);
+  right: max(
+    var(--dining-gutter),
+    calc((100vw - var(--dining-content-width)) / 2 + var(--dining-gutter))
+  );
+}
+.dining-cover .dining-theme-control .mm-theme-toggle {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid #e2ccb6;
+  border-radius: 999px;
+  background: rgb(255 250 243 / 94%);
+  color: #302017;
+  box-shadow: 0 4px 16px rgb(43 28 18 / 12%);
+  backdrop-filter: blur(10px);
+}
+.dining-cover .dining-theme-control .mm-theme-toggle:hover {
+  background: #fff;
+  border-color: #a93608;
+}
+:root[data-theme="dark"] .dining-cover {
+  background: #201914;
+  color: #fff2df;
+}
+:root[data-theme="dark"] .dining-cover::after {
+  background: linear-gradient(
+    90deg,
+    rgb(22 17 15 / 95%),
+    rgb(22 17 15 / 78%) 43%,
+    rgb(22 17 15 / 24%) 80%
+  );
+}
+:root[data-theme="dark"] .dining-cover-content h1 {
+  color: #fff2df;
+}
+:root[data-theme="dark"] .dining-cover-content p {
+  color: #e2cdb8;
+}
+:root[data-theme="dark"] .dining-cover .dining-kicker {
+  color: #ffc268;
+}
+:root[data-theme="dark"] .dining-hero-category,
+:root[data-theme="dark"] .dining-cover-details span,
+:root[data-theme="dark"] .dining-cover-details strong {
+  background: rgb(42 31 26 / 91%);
+  color: #fff2df;
+  border-color: #715443;
+}
+:root[data-theme="dark"] .dining-hero-category:hover {
+  background: #352820;
+  border-color: #ffc268;
+}
+:root[data-theme="dark"] .dining-cover .dining-theme-control .mm-theme-toggle {
+  background: rgb(42 31 26 / 94%);
+  color: #fff2df;
+  border-color: #715443;
+}
+:root[data-theme="dark"] .dining-cover .dining-theme-control .mm-theme-toggle:hover {
+  background: #453127;
+  border-color: #ffc268;
+}
 .dining-cover-content {
   width: min(var(--dining-content-width), 100%);
   padding: clamp(1.5rem, 5vw, 5rem) var(--dining-gutter);
