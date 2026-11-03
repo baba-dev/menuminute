@@ -358,3 +358,87 @@ CREATE TRIGGER pos_bill_live_tax_guard BEFORE INSERT ON pos_bills
  FOR EACH ROW EXECUTE FUNCTION app_private.pos_bill_live_tax_guard();
 REVOKE ALL ON FUNCTION app_private.pos_bill_live_tax_guard()
  FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
+-- Backwards-compatible merchant API: a separately acknowledged choice activates
+-- LIVE collection. Existing configured preview-only profiles remain off.
+CREATE OR REPLACE FUNCTION app_private.read_outlet_sales_tax(p_org text,p_outlet text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE p app_private.outlet_sales_tax_policies%ROWTYPE;
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+   OR NOT app_private.can_outlet(p_outlet,'menu.read')
+   OR NOT EXISTS(SELECT 1 FROM restaurants WHERE organization_id=p_org AND id=p_outlet AND is_active)
+ THEN RAISE EXCEPTION 'Outlet access denied' USING ERRCODE='42501'; END IF;
+ SELECT * INTO p FROM app_private.outlet_sales_tax_policies WHERE outlet_id=p_outlet AND organization_id=p_org;
+ IF NOT FOUND THEN
+  RETURN jsonb_build_object('status','unconfigured','label','Sales tax','rateBps',0,
+    'inclusive',false,'revision',0,'updatedAt',NULL,'canChangeOrders',false);
+ END IF;
+ RETURN jsonb_build_object('status',p.status,'label',p.label,'rateBps',p.rate_bps,
+   'inclusive',p.inclusive,'revision',p.revision,'updatedAt',p.updated_at,
+   'canChangeOrders',p.apply_to_orders);
+END $$;
+
+CREATE OR REPLACE FUNCTION app_private.save_outlet_sales_tax(
+ p_org text,p_outlet text,p_expected integer,p_data jsonb
+) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE p app_private.outlet_sales_tax_policies%ROWTYPE; r restaurants%ROWTYPE;
+ v_status text; v_label text;v_rate integer;v_inclusive boolean;
+ v_revision integer;v_live boolean;v_actor text:=NULLIF(current_setting('app.actor_id',true),'');
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+   OR NOT app_private.can_outlet(p_outlet,'outlet.manage')
+   OR p_expected IS NULL OR p_expected<0 OR p_data IS NULL
+   OR jsonb_typeof(p_data)<>'object'
+   OR EXISTS (SELECT 1 FROM jsonb_object_keys(p_data) k(key)
+      WHERE k.key NOT IN ('status','label','rateBps','inclusive','confirmed','applyToOrders','confirmedLiveTax'))
+   OR p_data->>'status' NOT IN ('unconfigured','no_tax','configured')
+   OR (p_data ? 'applyToOrders' AND jsonb_typeof(p_data->'applyToOrders') IS DISTINCT FROM 'boolean')
+   OR (p_data ? 'confirmedLiveTax' AND jsonb_typeof(p_data->'confirmedLiveTax') IS DISTINCT FROM 'boolean')
+   OR jsonb_typeof(p_data->'label') IS DISTINCT FROM 'string'
+   OR jsonb_typeof(p_data->'rateBps') IS DISTINCT FROM 'number'
+   OR COALESCE(p_data->>'rateBps','') !~ '^[0-9]{1,5}$'
+   OR jsonb_typeof(p_data->'inclusive') IS DISTINCT FROM 'boolean'
+   OR jsonb_typeof(p_data->'confirmed') IS DISTINCT FROM 'boolean'
+   OR (p_data->>'confirmed')::boolean IS DISTINCT FROM true
+ THEN RAISE EXCEPTION 'Invalid sales tax settings or outlet access' USING ERRCODE='42501'; END IF;
+ v_status:=p_data->>'status';v_label:=btrim(p_data->>'label');
+ v_rate:=(p_data->>'rateBps')::integer;v_inclusive:=(p_data->>'inclusive')::boolean;
+ IF length(v_label) NOT BETWEEN 2 AND 40 OR v_rate NOT BETWEEN 0 AND 10000
+   OR (v_status='configured' AND v_rate=0)
+   OR (v_status<>'configured' AND v_rate<>0)
+ THEN RAISE EXCEPTION 'Invalid tax label, status or rate' USING ERRCODE='22023'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended('outlet-sales-tax:'||p_outlet,0));
+ SELECT * INTO r FROM restaurants WHERE id=p_outlet AND organization_id=p_org
+   AND is_active AND NOT is_demo_data FOR SHARE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Outlet unavailable' USING ERRCODE='42501'; END IF;
+ SELECT * INTO p FROM app_private.outlet_sales_tax_policies
+   WHERE outlet_id=p_outlet AND organization_id=p_org FOR UPDATE;
+ IF COALESCE(p.revision,0)<>p_expected THEN
+  RAISE EXCEPTION 'Sales tax settings changed; reload and review' USING ERRCODE='40001'; END IF;
+ v_live:=CASE WHEN p_data ? 'applyToOrders' THEN (p_data->>'applyToOrders')::boolean ELSE COALESCE(p.apply_to_orders,false) END;
+ IF v_live AND (v_status<>'configured' OR (NOT COALESCE(p.apply_to_orders,false)
+   AND (p_data->>'confirmedLiveTax') IS DISTINCT FROM 'true')) THEN
+  RAISE EXCEPTION 'Explicit live tax collection consent required' USING ERRCODE='42501'; END IF;
+ v_revision:=p_expected+1;
+ INSERT INTO app_private.outlet_sales_tax_policies(
+   outlet_id,organization_id,status,label,rate_bps,inclusive,apply_to_orders,revision,updated_by)
+ VALUES(p_outlet,p_org,v_status,v_label,v_rate,v_inclusive,v_live,v_revision,v_actor)
+ ON CONFLICT(outlet_id) DO UPDATE SET
+   status=excluded.status,label=excluded.label,rate_bps=excluded.rate_bps,
+   inclusive=excluded.inclusive,apply_to_orders=excluded.apply_to_orders,revision=excluded.revision,
+   updated_by=excluded.updated_by,updated_at=clock_timestamp();
+ INSERT INTO app_private.outlet_sales_tax_policy_history(
+   outlet_id,revision,organization_id,status,label,rate_bps,inclusive,changed_by)
+ VALUES(p_outlet,v_revision,p_org,v_status,v_label,v_rate,v_inclusive,v_actor);
+ INSERT INTO domain_audit(id,organization_id,actor_id,action,details)
+ VALUES(gen_random_uuid()::text,p_org,v_actor,'outlet.sales_tax.settings',
+  jsonb_build_object('outletId',p_outlet,'revision',v_revision,'status',v_status,
+    'rateBps',v_rate,'inclusive',v_inclusive,'appliedToOrders',v_live));
+ RETURN jsonb_build_object('status',v_status,'label',v_label,'rateBps',v_rate,
+   'inclusive',v_inclusive,'revision',v_revision,'updatedAt',clock_timestamp(),
+   'canChangeOrders',v_live);
+END $$;
+
