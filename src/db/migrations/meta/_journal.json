@@ -743,6 +743,13 @@
       "when": 1796734800042,
       "tag": "0106_india_gst_statutory_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1796734800043,
+      "tag": "0107_live_sales_tax",
+      "breakpoints": true
     }
   ]
 }

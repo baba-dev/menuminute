@@ -44,6 +44,8 @@ export function SalesTaxSettingsForm({
   const [percent, setPercent] = useState((initial.rateBps / 100).toFixed(2));
   const [inclusive, setInclusive] = useState(initial.inclusive);
   const [confirmed, setConfirmed] = useState(false);
+  const [collectLive, setCollectLive] = useState(initial.canChangeOrders);
+  const [confirmedLiveTax, setConfirmedLiveTax] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -66,11 +68,16 @@ export function SalesTaxSettingsForm({
     status !== saved.status ||
     label.trim() !== saved.label ||
     (status === "configured" ? rateBps : 0) !== saved.rateBps ||
-    inclusive !== saved.inclusive;
+    inclusive !== saved.inclusive ||
+    (status === "configured" && collectLive) !== saved.canChangeOrders;
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canManage || busy || !confirmed || !dirty) return;
+    if (status === "configured" && collectLive && !confirmedLiveTax) {
+      setError("Confirm responsibility for enabling live tax collection before saving.");
+      return;
+    }
     if (rateBps === null || (status === "configured" && rateBps === 0) || !sample) {
       setError("Enter a valid percentage between 0.01% and 100.00%.");
       return;
@@ -84,7 +91,13 @@ export function SalesTaxSettingsForm({
         {
           method: "PATCH",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ expectedRevision: saved.revision, confirmed: true, policy }),
+          body: JSON.stringify({
+            expectedRevision: saved.revision,
+            confirmed: true,
+            policy,
+            applyToOrders: status === "configured" && collectLive,
+            ...(status === "configured" && collectLive ? { confirmedLiveTax: true } : {}),
+          }),
         }
       );
       const data = await response.json().catch(() => null);
@@ -95,8 +108,13 @@ export function SalesTaxSettingsForm({
             : data?.message || "Unable to save tax settings."
         );
       setSaved(data as Settings);
-      setNotice("Sales tax preference saved with a new audit revision.");
+      setNotice(
+        data.canChangeOrders
+          ? "Sales tax enabled for new orders. Existing orders and receipts remain unchanged."
+          : "Tax preference saved. Live order collection remains disabled."
+      );
       setConfirmed(false);
+      setConfirmedLiveTax(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save sales tax settings.");
     } finally {
@@ -131,10 +149,11 @@ export function SalesTaxSettingsForm({
           className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
           role="status"
         >
-          <strong>Configuration phase:</strong> Saved rates are audited, but are{" "}
-          <strong>not yet applied to live guest orders, POS charges or receipts</strong>. Checkout
-          and fiscal invoice issuance remain unchanged until the shared financial integration is
-          tested and approved.
+          <strong>Merchant-controlled collection:</strong> Existing tax preferences remain
+          preview-only until you explicitly activate live tax. New guest orders and POS sales can
+          use a saved merchant rate after confirmation and required seller/classification checks.
+          Historical amounts do not change. This is <strong>not certified GST/VAT invoicing</strong>
+          .
         </div>
         <form
           onSubmit={save}
@@ -173,7 +192,10 @@ export function SalesTaxSettingsForm({
                     name="taxStatus"
                     value={value}
                     checked={status === value}
-                    onChange={() => setStatus(value)}
+                    onChange={() => {
+                      setStatus(value);
+                      if (value !== "configured") setCollectLive(false);
+                    }}
                     className="mt-1 accent-orange-600"
                   />
                   <span>
@@ -234,6 +256,44 @@ export function SalesTaxSettingsForm({
                 Inclusive — tax is already included in the menu price
               </label>
             </fieldset>
+            <fieldset
+              disabled={!canManage || busy || status !== "configured"}
+              className="border-border space-y-3 border-t pt-4"
+            >
+              <legend className="text-sm font-semibold">Apply to real orders</legend>
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={collectLive}
+                  onChange={(event) => setCollectLive(event.target.checked)}
+                  className="mt-1 accent-orange-600"
+                />
+                <span>
+                  Collect the declared tax on <strong>new</strong> public checkout and POS orders.
+                  This changes customers’ payable totals; it cannot change existing orders.
+                </span>
+              </label>
+              {collectLive && (
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={confirmedLiveTax}
+                    onChange={(event) => setConfirmedLiveTax(event.target.checked)}
+                    className="mt-1 accent-orange-600"
+                  />
+                  <span>
+                    I confirm the applicable merchant registration and dish classifications, and
+                    authorize collection of this rate on live orders. India GST rates require
+                    matching classified dishes and registered-seller details; otherwise checkout
+                    will refuse tax collection until those settings are complete.
+                  </span>
+                </label>
+              )}
+              <p className="text-muted-foreground text-xs">
+                This merchant calculation is not a tax invoice, fiscal registration or a
+                government-validated rate.
+              </p>
+            </fieldset>
             <label className="border-border flex items-start gap-3 border-t pt-4 text-sm">
               <input
                 type="checkbox"
@@ -249,7 +309,14 @@ export function SalesTaxSettingsForm({
             </label>
             <button
               type="submit"
-              disabled={!canManage || busy || !confirmed || !dirty || !sample}
+              disabled={
+                !canManage ||
+                busy ||
+                !confirmed ||
+                !dirty ||
+                !sample ||
+                (status === "configured" && collectLive && !confirmedLiveTax)
+              }
               className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={17} aria-hidden="true" /> {busy ? "Saving…" : "Save tax preference"}
@@ -305,7 +372,9 @@ export function SalesTaxSettingsForm({
               </p>
             )}
             <p className="text-muted-foreground text-xs">
-              Preview only. No customer order, invoice or tax payment is created.
+              This sample is only a preview; a real order uses server-verified published prices and
+              the exact saved policy revision. Live tax is currently{" "}
+              {saved.canChangeOrders ? "ON" : "OFF"}.
             </p>
             <div className="border-border text-muted-foreground border-t pt-4 text-xs">
               <p>Saved revision: {saved.revision}</p>

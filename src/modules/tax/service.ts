@@ -7,7 +7,7 @@ import { salesTaxPolicySchema } from "./sales-tax";
 const snapshotSchema = salesTaxPolicySchema.safeExtend({
   revision: z.number().int().nonnegative(),
   updatedAt: z.string().nullable(),
-  canChangeOrders: z.literal(false),
+  canChangeOrders: z.boolean(),
 });
 export type SalesTaxSettings = z.infer<typeof snapshotSchema>;
 
@@ -16,6 +16,8 @@ export const taxSettingsCommandSchema = z
     expectedRevision: z.number().int().nonnegative(),
     confirmed: z.literal(true),
     policy: salesTaxPolicySchema,
+    applyToOrders: z.boolean().optional(),
+    confirmedLiveTax: z.literal(true).optional(),
   })
   .strict();
 
@@ -43,7 +45,7 @@ export async function saveOutletSalesTax(
       const result = await tx.execute<{ profile: unknown }>(
         sql`select app_private.save_outlet_sales_tax(
           ${organizationId},${outletId},${input.expectedRevision},
-          ${JSON.stringify({ ...input.policy, confirmed: true })}::jsonb
+          ${JSON.stringify({ ...input.policy, confirmed: true, ...(input.applyToOrders !== undefined ? { applyToOrders: input.applyToOrders } : {}), ...(input.confirmedLiveTax ? { confirmedLiveTax: true } : {}) })}::jsonb
         ) as profile`
       );
       return snapshotSchema.parse(result.rows[0]?.profile);

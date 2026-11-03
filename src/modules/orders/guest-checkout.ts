@@ -8,6 +8,7 @@ const pendingBody = z
     token: z.string().min(1).max(128),
     clientSubmissionKey: z.uuid(),
     quotedTotalMinor: z.number().int().min(0).max(2147483647),
+    quotedTaxRevision: z.number().int().nonnegative().optional(),
     fulfillmentMode: z.enum(["dine_in", "pickup"]),
     requestedFulfillmentAt: z.iso.datetime().nullable(),
     customerName: z.string().max(80),

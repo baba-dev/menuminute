@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Utensils, Package } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { previewMerchantSalesTax } from "@/modules/tax/sales-tax";
+import type { CheckoutTaxPolicy } from "@/modules/tax/checkout";
 import type { CartItem, CustomizerDish } from "./item-customizer";
 import { playTicketTear } from "@/lib/sound-effects";
 import { startingPriceMinor, type DiningVisual } from "@/modules/menu-product/public-presentation";
@@ -159,6 +161,12 @@ export function CartDrawer({
   const [pickupTime, setPickupTime] = useState("");
   const [pendingRecovery, setPendingRecovery] = useState<PendingGuestOrder | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taxPolicyState, setTaxPolicyState] = useState<{
+    fingerprint: string;
+    policy: CheckoutTaxPolicy;
+  } | null>(null);
+  const [taxQuoteError, setTaxQuoteError] = useState("");
+  const [taxQuoteRefresh, setTaxQuoteRefresh] = useState(0);
   const [checkoutOpenedAt] = useState(() => Date.now());
   const cartRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -248,6 +256,64 @@ export function CartDrawer({
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotalMinor = items.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
+  const cartFingerprint = items
+    .map((item) =>
+      [
+        item.dishId,
+        item.variantId,
+        item.quantity,
+        item.unitPriceMinor,
+        item.selectedAddOns.map((option) => option.groupId + ":" + option.optionId).join(","),
+      ].join("|")
+    )
+    .join("~");
+  const checkoutPolicy =
+    taxPolicyState?.fingerprint === cartFingerprint ? taxPolicyState.policy : null;
+  let merchantTaxQuote: ReturnType<typeof previewMerchantSalesTax> | null = null;
+  if (checkoutPolicy?.currency === currency) {
+    try {
+      merchantTaxQuote = previewMerchantSalesTax(
+        currency,
+        items.map((item) => String(item.unitPriceMinor * item.quantity)),
+        {
+          status: checkoutPolicy.applied ? "configured" : "no_tax",
+          rateBps: checkoutPolicy.applied ? checkoutPolicy.rateBps : 0,
+          label: checkoutPolicy.label,
+          inclusive: checkoutPolicy.inclusive,
+        }
+      );
+    } catch {
+      merchantTaxQuote = null;
+    }
+  }
+  const payableMinor = merchantTaxQuote ? Number(merchantTaxQuote.totalMinor) : subtotalMinor;
+  const displayedTaxMinor = merchantTaxQuote ? Number(merchantTaxQuote.taxMinor) : 0;
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return;
+    const controller = new AbortController();
+    void fetch("/api/public-orders/tax-quote?token=" + encodeURIComponent(token), {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("The restaurant tax quote is temporarily unavailable.");
+        return response.json() as Promise<CheckoutTaxPolicy>;
+      })
+      .then((policy) => {
+        if (policy.currency !== currency)
+          throw new Error("The menu currency changed. Refresh to continue.");
+        setTaxPolicyState({ fingerprint: cartFingerprint, policy });
+        setTaxQuoteError("");
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setTaxQuoteError(
+          error instanceof Error ? error.message : "Could not verify the checkout total."
+        );
+      });
+    return () => controller.abort();
+  }, [isOpen, token, currency, cartFingerprint, items.length, taxQuoteRefresh]);
 
   if (items.length === 0) return null;
 
@@ -260,6 +326,12 @@ export function CartDrawer({
     if (fulfillmentMode === "pickup" && !pickupTime && !pendingRecovery) {
       setErrorMessage("Choose a pickup time before submitting your order.");
       setIsOpen(true);
+      return;
+    }
+    if (!pendingRecovery && !merchantTaxQuote) {
+      setErrorMessage(
+        "Unable to verify the restaurant's current tax quote. Reopen the cart to retry."
+      );
       return;
     }
     if (!pendingRecovery && phoneProblem(customerPhone)) {
@@ -275,7 +347,8 @@ export function CartDrawer({
       const freshBody: PendingGuestOrder = {
         token,
         clientSubmissionKey: crypto.randomUUID(),
-        quotedTotalMinor: subtotalMinor,
+        quotedTotalMinor: payableMinor,
+        quotedTaxRevision: checkoutPolicy?.revision,
         fulfillmentMode,
         requestedFulfillmentAt:
           fulfillmentMode === "pickup" && pickupTime
@@ -308,6 +381,12 @@ export function CartDrawer({
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 409) {
+          // The server already rejected the proposed amount without creating a new order.
+          // Re-quote the original cart but never retry a changed amount automatically.
+          setTaxPolicyState(null);
+          setTaxQuoteRefresh((revision) => revision + 1);
+        }
         if (response.status < 500 && response.status !== 429) {
           clearPendingGuestOrder(token);
           setPendingRecovery(null);
@@ -699,14 +778,54 @@ export function CartDrawer({
                 }}
               >
                 <div className="row between" style={{ alignItems: "baseline", gap: "0.75rem" }}>
-                  <span style={{ fontWeight: 800 }}>Estimated item subtotal</span>
+                  <span style={{ fontWeight: 800 }}>Menu item subtotal</span>
                   <span className="money" style={{ fontSize: "1.2rem", fontWeight: 800 }}>
                     {formatPrice(subtotalMinor, currency)}
                   </span>
                 </div>
+                {merchantTaxQuote && checkoutPolicy && (
+                  <div className="stack" style={{ gap: "0.3rem" }} role="status">
+                    <div className="row between" style={{ gap: "0.5rem" }}>
+                      <span>
+                        {checkoutPolicy.applied ? checkoutPolicy.label : "Merchant tax"}
+                        {checkoutPolicy.applied
+                          ? checkoutPolicy.inclusive
+                            ? " (included)"
+                            : " (added)"
+                          : " (not applied)"}
+                      </span>
+                      <strong>{formatPrice(displayedTaxMinor, currency)}</strong>
+                    </div>
+                    <div
+                      className="row between"
+                      style={{
+                        borderTop: "1px solid var(--border)",
+                        paddingTop: "0.5rem",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <strong>Total to pay</strong>
+                      <strong>{formatPrice(payableMinor, currency)}</strong>
+                    </div>
+                    <small className="quiet">
+                      Tax policy revision {checkoutPolicy.revision} · Rechecked when you submit.
+                      This is not a statutory tax invoice.
+                    </small>
+                  </div>
+                )}
+                {!merchantTaxQuote && (
+                  <small className="quiet" role="status">
+                    Checking the restaurant’s current tax policy…
+                  </small>
+                )}
+                {taxQuoteError && (
+                  <small role="alert" className="error">
+                    {taxQuoteError}
+                  </small>
+                )}
                 <small className="quiet">
-                  Item subtotal is estimated. The restaurant validates prices and any applicable
-                  charges before accepting your order.
+                  The restaurant validates published prices and tax at submission. Any change
+                  requires your confirmation.
                 </small>
               </div>
               <div
@@ -770,7 +889,12 @@ export function CartDrawer({
                 type="button"
                 className="action ember"
                 style={{ width: "100%", minHeight: "50px", fontSize: "1.05rem" }}
-                disabled={isSubmitting || items.length === 0 || !online}
+                disabled={
+                  isSubmitting ||
+                  items.length === 0 ||
+                  !online ||
+                  (!pendingRecovery && !merchantTaxQuote)
+                }
                 onClick={handleSubmitOrder}
               >
                 {!online
@@ -779,7 +903,7 @@ export function CartDrawer({
                     ? "Submitting your order request..."
                     : pendingRecovery
                       ? "Check previous submission"
-                      : `Submit order request · ${formatPrice(subtotalMinor, currency)}`}
+                      : `Submit order request · ${formatPrice(payableMinor, currency)}`}
               </button>
             </div>
           </div>

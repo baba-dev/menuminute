@@ -25,6 +25,8 @@ import type {
 } from "@/modules/pos/service";
 import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
+import { previewMerchantSalesTax } from "@/modules/tax/sales-tax";
+import type { CheckoutTaxPolicy } from "@/modules/tax/checkout";
 import { PosNavigation } from "./pos-navigation";
 import { PosGuestLookup } from "./pos-guest-lookup";
 import { PosIncomingOrders } from "./pos-incoming-orders";
@@ -60,13 +62,16 @@ function money(minor: number | string, currency: string) {
 }
 async function json<T>(response: Response): Promise<T> {
   const result = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
+  if (!response.ok) {
+    const error = new Error(
       result?.message ??
         (response.status === 409
           ? "Another operator changed this order. Refresh and retry."
           : "The request failed.")
     );
+    Object.assign(error, { statusCode: response.status });
+    throw error;
+  }
   return result as T;
 }
 
@@ -94,6 +99,12 @@ export function TheTill({
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [taxPolicyState, setTaxPolicyState] = useState<{
+    fingerprint: string;
+    policy: CheckoutTaxPolicy;
+  } | null>(null);
+  const [taxQuoteError, setTaxQuoteError] = useState("");
+  const [taxQuoteRefresh, setTaxQuoteRefresh] = useState(0);
   const [dish, setDish] = useState<Dish | null>(null);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [mobileTicketOpen, setMobileTicketOpen] = useState(false);
@@ -201,7 +212,58 @@ export function TheTill({
     [menu, category, search]
   );
   const subtotal = cart.reduce((sum, c) => sum + BigInt(c.unitMinor) * BigInt(c.line.quantity), 0n);
-  const canCheckout = workspace.context.enabled && menu?.open && cart.length > 0 && !busy;
+  const taxFingerprint = cart
+    .map((item) =>
+      [
+        item.line.dishId,
+        item.line.variantId,
+        item.line.quantity,
+        item.unitMinor,
+        item.line.groups.map((g) => g.groupId + ":" + g.optionIds.join(",")).join("|"),
+      ].join(":")
+    )
+    .join(";");
+  const taxPolicy = taxPolicyState?.fingerprint === taxFingerprint ? taxPolicyState.policy : null;
+  let taxQuote: ReturnType<typeof previewMerchantSalesTax> | null = null;
+  if (taxPolicy?.currency === currency && cart.length) {
+    try {
+      taxQuote = previewMerchantSalesTax(
+        currency,
+        cart.map((item) => String(BigInt(item.unitMinor) * BigInt(item.line.quantity))),
+        {
+          status: taxPolicy.applied ? "configured" : "no_tax",
+          label: taxPolicy.label,
+          rateBps: taxPolicy.applied ? taxPolicy.rateBps : 0,
+          inclusive: taxPolicy.inclusive,
+        }
+      );
+    } catch {
+      taxQuote = null;
+    }
+  }
+  const canCheckout = Boolean(
+    workspace.context.enabled && menu?.open && cart.length > 0 && !busy && taxQuote
+  );
+
+  useEffect(() => {
+    if (!workspace.context.enabled) return;
+    const controller = new AbortController();
+    void fetch(endpoint + "/tax-quote", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to retrieve the current POS tax settings.");
+        return response.json() as Promise<CheckoutTaxPolicy>;
+      })
+      .then((policy) => {
+        if (policy.currency !== currency) throw new Error("Outlet currency changed. Refresh POS.");
+        setTaxPolicyState({ fingerprint: taxFingerprint, policy });
+        setTaxQuoteError("");
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setTaxQuoteError(error instanceof Error ? error.message : "Tax quote unavailable.");
+      });
+    return () => controller.abort();
+  }, [endpoint, workspace.context.enabled, currency, taxFingerprint, taxQuoteRefresh]);
 
   async function refresh() {
     const fresh = await json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" }));
@@ -445,7 +507,7 @@ export function TheTill({
     commandRef.current = null;
   }
   async function submit() {
-    if (!menu || !canCheckout) return;
+    if (!menu || !canCheckout || !taxQuote || !taxPolicy) return;
     const reservedWindow = printInvoice ? reserveReceiptWindow() : null;
     setBusy(true);
     setSubmitFeedback("idle");
@@ -468,6 +530,9 @@ export function TheTill({
       customerPhone,
       notes: note,
       expectedSubtotalMinor: subtotal.toString(),
+      expectedTaxRevision: taxPolicy.revision,
+      expectedTotalMinor: taxQuote.totalMinor,
+      expectedTaxMinor: taxQuote.taxMinor,
       markAsPaid,
       paymentMethod: markAsPaid ? paymentMethod : null,
     };
@@ -526,6 +591,13 @@ export function TheTill({
         );
       } else {
         feedback("error");
+        if (e instanceof Error && "statusCode" in e && e.statusCode === 409) {
+          // A stale quote is rejected transactionally. Keep the ticket for review,
+          // refresh the tax policy, and force a new command key on confirmation.
+          setTaxPolicyState(null);
+          setTaxQuoteRefresh((revision) => revision + 1);
+          commandRef.current = null;
+        }
         setMessage(
           e instanceof Error
             ? e.message
@@ -669,7 +741,8 @@ export function TheTill({
             <div>
               <strong>Dispatched · Order #{success.orderNumber}</strong>
               <p>
-                Sale {success.saleId} · {money(success.subtotalMinor, success.currency)} pre-tax ·
+                Sale {success.saleId} ·{" "}
+                {money(success.totalMinor ?? success.subtotalMinor, success.currency)} total due ·
                 Payment{" "}
                 {success.paymentStatus === "complete" ? "Complete (staff recorded)" : "Pending"}.
                 The order was accepted and sent to service. This confirmation is not a receipt or
@@ -1045,12 +1118,38 @@ export function TheTill({
                 />
               </label>
               <div className="till-total">
-                <span>Pre-tax subtotal</span>
+                <span>
+                  {taxPolicy?.applied && taxPolicy.inclusive
+                    ? "Tax-inclusive item subtotal"
+                    : "Pre-tax subtotal"}
+                </span>
                 <strong>{money(subtotal.toString(), currency)}</strong>
               </div>
+              {taxQuote && taxPolicy && (
+                <div className="till-total" role="status">
+                  <span>
+                    {taxPolicy.applied
+                      ? taxPolicy.label + (taxPolicy.inclusive ? " (included)" : " (added)")
+                      : "Merchant tax (not applied)"}
+                  </span>
+                  <strong>{money(taxQuote.taxMinor, currency)}</strong>
+                  <span>Total payable · policy rev {taxPolicy.revision}</span>
+                  <strong>{money(taxQuote.totalMinor, currency)}</strong>
+                </div>
+              )}
+              {!taxQuote && (
+                <p className="till-disclaimer" role="status">
+                  Checking the merchant tax policy…
+                </p>
+              )}
+              {taxQuoteError && (
+                <p className="till-disclaimer" role="alert">
+                  {taxQuoteError}
+                </p>
+              )}
               <p className="till-disclaimer">
-                Pre-tax operational subtotal. Staff-marked payments need no gateway. Printing does
-                not issue a tax invoice.
+                Amounts are rechecked against the current published menu and locked tax policy
+                before staff payment is recorded. This is a non-fiscal bill, not a tax invoice.
               </p>
               <div className="till-receipt-options" aria-label="Payment and invoice options">
                 <label className="till-receipt-option">

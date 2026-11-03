@@ -174,8 +174,9 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   }
   const receipt = page.locator(".ticket-receipt-card");
   await expect(receipt).toBeVisible();
-  await expect(receipt).toContainText("Estimated item subtotal");
-  await expect(receipt).toContainText("The restaurant validates prices");
+  await expect(receipt).toContainText("Menu item subtotal");
+  await expect(receipt).toContainText("Total to pay");
+  await expect(receipt).toContainText("The restaurant validates published prices and tax");
   await expect(receipt.getByText("Subtotal", { exact: true })).toHaveCount(0);
   await expect(page.locator(".ticket-receipt-tear")).toHaveAttribute("aria-hidden", "true");
   const [receiptPaper, drawerPaper] = await Promise.all([

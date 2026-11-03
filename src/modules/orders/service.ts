@@ -7,6 +7,11 @@ import { orders, orderItems, restaurants, type SelectedOptionSnapshot } from "@/
 import { publicProduct } from "@/modules/menu-product/service";
 import { projectMenu } from "@/modules/menu-product/projector";
 import { availableNow } from "@/modules/menu-product/contracts";
+import {
+  calculateCheckoutTax,
+  publicCheckoutTaxPolicy,
+  requireCheckoutRevision,
+} from "@/modules/tax/checkout";
 import { withOutlet, type Actor, type Permission } from "@/modules/tenancy/service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import {
@@ -274,15 +279,26 @@ export async function submitGuestOrder(
     });
   }
 
-  // Tax inclusive by default
-  const taxMinor = 0;
-  const totalMinor = subtotalMinor + taxMinor;
+  // The released menu determines item prices. Merchant policy is a separate
+  // versioned server quote and is re-locked by PostgreSQL at the commit boundary.
+  // Existing unconfigured/preview-only profiles continue to produce zero tax.
+  const merchantPolicy = await publicCheckoutTaxPolicy(token);
+  requireCheckoutRevision(input.quotedTaxRevision, merchantPolicy);
+  const taxQuote = calculateCheckoutTax(
+    outlet.currency,
+    preparedItems.map((item) => String(item.totalMinor)),
+    merchantPolicy
+  );
+  const taxMinor = Number(taxQuote.taxMinor);
+  const totalMinor = Number(taxQuote.totalMinor);
 
   if (!Number.isSafeInteger(totalMinor) || totalMinor > 2147483647) {
     throw new ValidationError("Order total exceeds supported amount.");
   }
   if (input.quotedTotalMinor !== totalMinor) {
-    throw new ConflictError("Your cart price has changed. Please review the updated menu.");
+    throw new ConflictError(
+      "Your cart or tax total has changed. Review the latest amount before submitting."
+    );
   }
   if (!outlet.versioned) {
     throw new ForbiddenError("Online ordering requires a published versioned menu.");
@@ -326,6 +342,7 @@ export async function submitGuestOrder(
     subtotalMinor,
     taxMinor,
     totalMinor,
+    expectedTaxRevision: merchantPolicy.revision,
     items: preparedItems.map((item) => ({
       dishId: item.dishId,
       dishName: item.dishName,
