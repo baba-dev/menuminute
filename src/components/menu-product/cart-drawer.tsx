@@ -312,7 +312,7 @@ export function CartDrawer({
         );
       });
     return () => controller.abort();
-  }, [isOpen, token, currency, cartFingerprint]);
+  }, [isOpen, token, currency, cartFingerprint, items.length]);
 
   if (items.length === 0) return null;
 
