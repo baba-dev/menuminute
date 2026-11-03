@@ -66,7 +66,7 @@ describe("India GST pre-issuance adapter: never legal issuance", () => {
       reconciled: true,
     });
     expect(draft.totalMinor).toBe(frozen.totalMinor);
-    expect(draft.issuanceAllowed).toBeUndefined();
+    expect("issuanceAllowed" in draft).toBe(false);
     expect(draft.statutoryIssuanceAllowed).toBe(false);
     expect(draft.serialAllocated).toBe(false);
     expect(draft.irpVerified).toBe(false);
