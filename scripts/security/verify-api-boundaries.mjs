@@ -25,7 +25,8 @@ for (const p of await walk("src/app/api")) {
 }
 const nginx = await readFile("infra/nginx/menuminute.conf.example", "utf8");
 if (
-  !nginx.includes("location ^~ /api/public-orders {") ||
+  !nginx.includes("location /api/public-orders {") ||
+  nginx.includes("location ^~ /api/public-orders") ||
   !nginx.includes("X-MenuMinute-Edge-Key $menuminute_edge_secret;")
 ) {
   violations.push("nginx: guest-order edge attestation");

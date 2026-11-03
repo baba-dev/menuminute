@@ -1,5 +1,18 @@
 # HTTPS food.bababuilds.com server location sample. NEVER replace the entire vhost.
 # Preserve ERP coexistence, trusted Cloudflare real_ip and existing order attestation.
+#
+# Reference only. The live vhost is /etc/nginx/conf.d/food.bababuilds.com.conf; see
+# docs/deployment-actions.md for the dated operator-attested 2026-11-03 revision.
+# Cloudflare real_ip (set_real_ip_from + real_ip_header CF-Connecting-IP) belongs in the
+# http{} context and must exist exactly once; never add a second real_ip_header.
+#
+# Optional http{} context used by the live host (not part of this vhost):
+#   upstream menuminute_app { server 127.0.0.1:3100; keepalive 32; }
+#   limit_req_zone  $binary_remote_addr zone=mm_auth:10m   rate=30r/m;
+#   limit_req_zone  $binary_remote_addr zone=mm_orders:10m rate=60r/m;
+#   limit_conn_zone $binary_remote_addr zone=mm_conn:10m;
+#   limit_req_status 429; limit_conn_status 429;
+# Edge limits are an additional layer; the application's Redis limits remain authoritative.
 location / {
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
@@ -8,6 +21,9 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Real-IP $remote_addr;
+    # Never forward client-supplied attestation headers on unattested routes.
+    proxy_set_header X-MenuMinute-Client-IP "";
+    proxy_set_header X-MenuMinute-Edge-Key "";
     proxy_read_timeout 60s;
     client_max_body_size 1m;
 }
@@ -20,15 +36,20 @@ location ^~ /api/auth/ {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Client-IP "";
+    proxy_set_header X-MenuMinute-Edge-Key "";
     proxy_no_cache 1;
     proxy_cache_bypass 1;
+    proxy_hide_header Cache-Control;
     add_header Cache-Control "private, no-store" always;
     proxy_read_timeout 60s;
     client_max_body_size 16k;
 }
 
 # Public guest-order submission and tracking require signed proxy identity.
-location ^~ /api/public-orders {
+# Deliberately a plain prefix, NOT ^~: a ^~ prefix match suppresses regex locations, which
+# would make the /api/public-orders/<id>/stream location below unreachable (buffered SSE).
+location /api/public-orders {
     include /etc/menuminute/nginx-order-edge-secret.conf;
     proxy_pass http://127.0.0.1:3100;
     proxy_http_version 1.1;
@@ -38,9 +59,54 @@ location ^~ /api/public-orders {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-MenuMinute-Client-IP $remote_addr;
     proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
-    proxy_read_timeout 60s;
-    client_max_body_size 128k;
+    proxy_read_timeout 30s;
+    client_max_body_size 64k;
+    proxy_hide_header Cache-Control;
     add_header Cache-Control "private, no-store" always;
+}
+
+# Diner order-status SSE (PUBLIC_DINER_STREAM_ENABLED). Must be a regex location that wins over
+# the plain /api/public-orders prefix above. Unbuffered, uncompressed, uncached; the application
+# closes the stream before the 75s read timeout and sends heartbeats.
+location ~ ^/api/public-orders/[^/]+/stream$ {
+    include /etc/menuminute/nginx-order-edge-secret.conf;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Client-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Edge-Key $menuminute_edge_secret;
+    proxy_buffering off;
+    proxy_cache off;
+    gzip off;
+    proxy_read_timeout 75s;
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "no-cache, no-transform" always;
+}
+
+# Authenticated kitchen SSE: same streaming requirements, no edge attestation. The private
+# identity headers are cleared so clients cannot supply them.
+location ~ ^/api/organizations/[^/]+/outlets/[^/]+/kitchen/stream$ {
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-MenuMinute-Client-IP "";
+    proxy_set_header X-MenuMinute-Edge-Key "";
+    proxy_buffering off;
+    proxy_cache off;
+    gzip off;
+    proxy_read_timeout 75s;
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "no-cache, no-transform" always;
 }
 
 # 5 MiB image uploads + transfer overhead; other paths retain the 1 MiB default.

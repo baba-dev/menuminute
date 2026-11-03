@@ -429,3 +429,44 @@ For an unhealthy-current-service incident only, create a root-owned mode-0600 au
 then manually dispatch that SHA with `forward_recovery=true` within one hour. The helper verifies
 the candidate against the production migration checksum ledger in read-only mode; it neither
 applies nor reverses SQL. Remove the authorization afterward. Never use this path for normal releases.
+
+## Operator record: Food Nginx edge revision (2026-11-03)
+
+Operator-attested host change, not CI evidence. The operator reported installing a revised
+`/etc/nginx/conf.d/food.bababuilds.com.conf` plus a companion `/etc/nginx/conf.d/menuminute-http.conf`
+(upstream `menuminute_app` with keepalive and the `mm_auth`, `mm_orders`, `mm_conn` limit zones).
+No ERP vhost, certificate or `nginx.conf` real_ip block was modified. A duplicate generated
+`real_ip_header` file was removed; the pre-existing `http{}` Cloudflare real_ip block in
+`/etc/nginx/nginx.conf` (current IPv4/IPv6 ranges, `CF-Connecting-IP`) is the single source.
+
+Operator-reported evidence:
+
+- `nginx -t` succeeded and a graceful `systemctl reload nginx` completed.
+- ERP returned HTTP 200 before and after the reload.
+- Access log attributed a request through Cloudflare to the real client IP.
+- Configuration content reviewed by the operator (`cat` of the live vhost).
+
+Changes versus the previous live vhost and `infra/nginx/menuminute.conf.example`:
+
+- `/api/public-orders` is a plain prefix (no `^~`) so the diner stream regex location is reachable.
+  A `^~` prefix suppresses regex matching and had silently routed streams through the buffered block.
+- New unbuffered, uncompressed, uncached SSE locations: diner `/api/public-orders/<id>/stream` and
+  authenticated `/api/organizations/<org>/outlets/<outlet>/kitchen/stream` (75s read timeout).
+- Private `X-MenuMinute-Client-IP` / `X-MenuMinute-Edge-Key` are cleared on unattested routes;
+  `X-Real-IP` is overwritten on every proxied location.
+- `proxy_hide_header Cache-Control` before the Nginx `Cache-Control` to avoid duplicates.
+- TLS hardening (TLS 1.2/1.3, session cache, no tickets) and HSTS (one year, no subdomains).
+- Edge `limit_req`/`limit_conn` on auth, orders and the diner stream as an extra layer; the
+  application's Redis limits remain authoritative.
+- Live deviation from the example: `client_max_body_size 6m` is server-wide instead of dedicated
+  6 MiB upload locations with a 1 MiB default.
+
+Operator-reported Cloudflare settings (not independently verified): Full (strict), Cache Rules
+scoped to `food.bababuilds.com` (`/api/` bypass, `/_next/static/` cache) and the related speed/
+security settings. Cloudflare dashboard state is not captured in this repository.
+
+**Still unconfirmed; do not treat as passed:** diner and kitchen SSE through Cloudflare staying open
+to ~55s with live events; published QR image 200 -> 304 -> 404 after unapproval; forged/missing edge
+key returning 503; a 5 MiB media upload and 413 on oversized bodies; a forged `CF-Connecting-IP`
+direct-origin request logged as the real socket IP; Cloudflare cache HIT/BYPASS headers; off-host
+alerting. Authenticated Origin Pulls and origin firewall restriction were not applied.
