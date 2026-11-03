@@ -188,6 +188,16 @@ export type PosReceipt = {
   createdAt: string;
   currency: string;
   subtotalMinor: string;
+  totalMinor?: string;
+  taxMinor?: string;
+  taxableBaseMinor?: string;
+  originalSubtotalMinor?: string;
+  taxPolicyRevision?: number;
+  taxLabel?: string;
+  taxInclusive?: boolean;
+  taxApplied?: boolean;
+  taxLines?: { orderItemId: string; dishId: string; originalMinor: string;
+    baseMinor: string; taxMinor: string; totalMinor: string }[];
   paymentStatus: "pending" | "complete" | "refunded";
   refundRecorded: boolean;
   paymentEvidence: "staff_recorded" | "none";
