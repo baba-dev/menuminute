@@ -12,12 +12,12 @@ describe("India GST statutory ledger permissions and concurrency", () => {
   it("defaults closed and refuses app-role fiscal table reads and serial allocation", async () => {
     const f = await fixture();
     const result = await withActor(f.actor, async (tx) => {
-      await tx.execute(sql\`select set_config('app.outlet_id',\${f.outlet.id},true)\`);
+      await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
       const x = await tx.execute<{ result: {
         statutoryIssuanceAvailable: boolean;
         registeredOperatorRelease: boolean;
         invoiceCount: number;
-      } }>(sql\`select app_private.india_gst_ledger_readiness(\${f.outlet.id}) as result\`);
+      } }>(sql`select app_private.india_gst_ledger_readiness(${f.outlet.id}) as result`);
       return x.rows[0]?.result;
     });
     expect(result).toMatchObject({
@@ -26,15 +26,15 @@ describe("India GST statutory ledger permissions and concurrency", () => {
       invoiceCount: 0,
     });
     await expect(withActor(f.actor, async (tx) => {
-      await tx.execute(sql\`select set_config('app.outlet_id',\${f.outlet.id},true)\`);
-      await tx.execute(sql\`select * from app_private.india_gst_statutory_records\`);
+      await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
+      await tx.execute(sql`select * from app_private.india_gst_statutory_records`);
     })).rejects.toThrow();
     await expect(withActor(f.actor, async (tx) => {
-      await tx.execute(sql\`select set_config('app.outlet_id',\${f.outlet.id},true)\`);
-      await tx.execute(sql\`select app_private.india_gst_allocate_serial(
-        \${f.outlet.id},'08ABCDE1234F1Z5','INV',
+      await tx.execute(sql`select set_config('app.outlet_id',${f.outlet.id},true)`);
+      await tx.execute(sql`select app_private.india_gst_allocate_serial(
+        ${f.outlet.id},'08ABCDE1234F1Z5','INV',
         (clock_timestamp() AT TIME ZONE 'Asia/Kolkata')::date
-      )\`);
+      )`);
     })).rejects.toThrow();
   });
 
@@ -42,8 +42,8 @@ describe("India GST statutory ledger permissions and concurrency", () => {
     const owner = await fixture();
     const other = await fixture();
     await expect(withActor(owner.actor, async (tx) => {
-      await tx.execute(sql\`select set_config('app.outlet_id',\${other.outlet.id},true)\`);
-      await tx.execute(sql\`select app_private.india_gst_ledger_readiness(\${other.outlet.id})\`);
+      await tx.execute(sql`select set_config('app.outlet_id',${other.outlet.id},true)`);
+      await tx.execute(sql`select app_private.india_gst_ledger_readiness(${other.outlet.id})`);
     })).rejects.toThrow();
   });
 
