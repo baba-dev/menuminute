@@ -10,14 +10,16 @@ import { z } from "zod";
  */
 const gstin = z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/);
 const reference = z.string().regex(/^[A-Z0-9/-]{7,16}$/);
-const signedClaims = z.object({
-  sellerGstin: gstin,
-  documentNumber: reference,
-  fiscalYearStart: z.number().int().min(2017).max(2100),
-  documentTotalMinor: z.string().regex(/^(0|[1-9][0-9]{0,9})$/),
-  irn: z.string().regex(/^[a-fA-F0-9]{64}$/),
-  acknowledgementIso: z.iso.datetime({ offset: true }),
-}).strict();
+const signedClaims = z
+  .object({
+    sellerGstin: gstin,
+    documentNumber: reference,
+    fiscalYearStart: z.number().int().min(2017).max(2100),
+    documentTotalMinor: z.string().regex(/^(0|[1-9][0-9]{0,9})$/),
+    irn: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    acknowledgementIso: z.iso.datetime({ offset: true }),
+  })
+  .strict();
 const header = z.object({ alg: z.literal("RS256"), kid: z.string().min(1).max(128) }).passthrough();
 export type VerifiedIrpEvidence = {
   sellerGstin: string;
@@ -75,19 +77,29 @@ export function verifyIrpPartnerJws(
   if (compactJws.length > 64_000) throw new Error("IRP response exceeds bound");
   const parts = compactJws.split(".");
   if (parts.length !== 3) throw new Error("IRP signature must have exactly three segments");
-  const [encodedHeader, encodedClaims, encodedSignature] = parts as [string,string,string];
+  const [encodedHeader, encodedClaims, encodedSignature] = parts as [string, string, string];
   const metadata = header.parse(JSON.parse(segment(encodedHeader).toString("utf8")));
   const pem = Object.hasOwn(trustedPublicKeysPem, metadata.kid)
-    ? trustedPublicKeysPem[metadata.kid] : null;
+    ? trustedPublicKeysPem[metadata.kid]
+    : null;
   if (!pem) throw new Error("IRP signer key is not trusted");
-  if (!verify("RSA-SHA256", Buffer.from(encodedHeader+"."+encodedClaims,"ascii"), pem,
-    segment(encodedSignature))) throw new Error("IRP signature was not verified");
+  if (
+    !verify(
+      "RSA-SHA256",
+      Buffer.from(encodedHeader + "." + encodedClaims, "ascii"),
+      pem,
+      segment(encodedSignature)
+    )
+  )
+    throw new Error("IRP signature was not verified");
   const claims = signedClaims.parse(JSON.parse(segment(encodedClaims).toString("utf8")));
-  if (claims.sellerGstin !== expected.sellerGstin
-    || claims.documentNumber !== expected.documentNumber
-    || claims.fiscalYearStart !== expected.fiscalYearStart
-    || claims.documentTotalMinor !== expected.documentTotalMinor
-  ) throw new Error("IRP signed invoice does not match the frozen document");
+  if (
+    claims.sellerGstin !== expected.sellerGstin ||
+    claims.documentNumber !== expected.documentNumber ||
+    claims.fiscalYearStart !== expected.fiscalYearStart ||
+    claims.documentTotalMinor !== expected.documentTotalMinor
+  )
+    throw new Error("IRP signed invoice does not match the frozen document");
   const ack = new Date(claims.acknowledgementIso);
   if (!Number.isFinite(ack.getTime())) throw new Error("Invalid IRP acknowledgement time");
   return {
@@ -95,7 +107,7 @@ export function verifyIrpPartnerJws(
     documentNumber: claims.documentNumber,
     irn: claims.irn.toLowerCase(),
     acknowledgementIso: ack.toISOString(),
-    responseSha256: createHash("sha256").update(compactJws,"utf8").digest("hex"),
+    responseSha256: createHash("sha256").update(compactJws, "utf8").digest("hex"),
     verifiedKeyId: metadata.kid,
     verifiedSignature: true,
     irpReconciliationOnly: true,
@@ -128,19 +140,26 @@ export const indiaIrpGateway = {
  */
 export function indianFiscalYear(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("Invalid Indian date");
-  const [year, month, day] = date.split("-").map(Number) as [number,number,number];
-  const d = new Date(Date.UTC(year,month-1,day));
-  if (d.toISOString().slice(0,10)!==date || year<2017 || year>2100)
+  const [year, month, day] = date.split("-").map(Number) as [number, number, number];
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.toISOString().slice(0, 10) !== date || year < 2017 || year > 2100)
     throw new Error("Invalid Indian date");
-  return month>=4 ? year : year-1;
+  return month >= 4 ? year : year - 1;
 }
 
 export function formatIndianGstSerial(prefix: string, fiscalYearStart: number, sequence: number) {
-  if (!/^[A-Z0-9]{1,6}$/.test(prefix)
-    || !Number.isInteger(fiscalYearStart) || fiscalYearStart<2017 || fiscalYearStart>2100
-    || !Number.isInteger(sequence) || sequence<1 || sequence>999999)
+  if (
+    !/^[A-Z0-9]{1,6}$/.test(prefix) ||
+    !Number.isInteger(fiscalYearStart) ||
+    fiscalYearStart < 2017 ||
+    fiscalYearStart > 2100 ||
+    !Number.isInteger(sequence) ||
+    sequence < 1 ||
+    sequence > 999999
+  )
     throw new Error("Invalid Indian GST series values");
-  const result = prefix+"/"+String(fiscalYearStart).slice(-2)+"/"+String(sequence).padStart(6,"0");
-  if (result.length>16) throw new Error("GST statutory serial exceeds Rule 46 bound");
+  const result =
+    prefix + "/" + String(fiscalYearStart).slice(-2) + "/" + String(sequence).padStart(6, "0");
+  if (result.length > 16) throw new Error("GST statutory serial exceeds Rule 46 bound");
   return result;
 }
