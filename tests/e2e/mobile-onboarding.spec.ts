@@ -119,6 +119,16 @@ for (const size of SIZES) {
         await expectTouchTarget(page, next, "Continue");
         await expectTouchTarget(page, page.locator(".wizard-step-node").first(), "stepper node");
       }
+      // The worldwide wizard may suggest USD or another local currency from
+      // the browser's region. This particular mobile journey deliberately
+      // provisions an Indian outlet; make the choice through the UI rather
+      // than assuming the runner's locale is en-IN.
+      if (step === 2) {
+        await page.locator("#wz-country").selectOption("IN");
+      }
+      if (step === 3) {
+        await page.locator("#wz-currency").selectOption("INR");
+      }
       expect(await overflowOffenders(page), `wizard step ${step} overflow`).toEqual([]);
       expect(await zoomTriggers(page), `wizard step ${step} zoom triggers`).toEqual([]);
       await snap(`03-wizard-step-${step}`);
