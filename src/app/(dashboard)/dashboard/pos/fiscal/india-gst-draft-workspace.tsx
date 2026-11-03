@@ -405,9 +405,17 @@ export function IndiaGstDraftWorkspace({
           </form>
           <aside className="border-border bg-card space-y-5 self-start rounded-2xl border p-5 sm:p-7">
             <h2 className="text-lg font-semibold">Pre-issuance checks</h2>
-            <div className="border-border space-y-2 rounded-xl border p-3 text-xs" aria-label="Operator-only statutory activation gates">
+            <div
+              className="border-border space-y-2 rounded-xl border p-3 text-xs"
+              aria-label="Operator-only statutory activation gates"
+            >
               <p className="font-semibold">Statutory issuer is disabled</p>
-              <p>Operator release: {release.registeredOperatorRelease ? "record exists, not enough for issuance" : "not configured"}</p>
+              <p>
+                Operator release:{" "}
+                {release.registeredOperatorRelease
+                  ? "record exists, not enough for issuance"
+                  : "not configured"}
+              </p>
               <p>Legal sign-off: {release.legalSignoff ? "recorded" : "required"}</p>
               <p>Finance sign-off: {release.financeSignoff ? "recorded" : "required"}</p>
               <p>IRP adapter: {release.adapterVerified ? "operator recorded" : "unverified"}</p>
@@ -446,18 +454,27 @@ export function IndiaGstDraftWorkspace({
                   <strong>Printable review worksheet (not an invoice)</strong>
                   <label className="flex items-center justify-between gap-2">
                     Paper width
-                    <select value={paper} onChange={(event) => setPaper(event.target.value as DraftPaper)}
-                      className="border-border bg-background rounded-lg border p-2">
+                    <select
+                      value={paper}
+                      onChange={(event) => setPaper(event.target.value as DraftPaper)}
+                      className="border-border bg-background rounded-lg border p-2"
+                    >
                       <option value="a4">A4</option>
                       <option value="80">80 mm thermal</option>
                       <option value="58">58 mm thermal</option>
                     </select>
                   </label>
-                  <button type="button" onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 rounded-lg border border-border p-2 font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="border-border inline-flex items-center gap-2 rounded-lg border p-2 font-semibold"
+                  >
                     <Printer size={15} aria-hidden="true" /> Print draft-only worksheet
                   </button>
-                  <p>Select matching media in the browser print dialog; printed text always states NOT A TAX INVOICE.</p>
+                  <p>
+                    Select matching media in the browser print dialog; printed text always states
+                    NOT A TAX INVOICE.
+                  </p>
                 </div>
                 <strong className="text-sm">{review.issues} unresolved checks</strong>
                 <ul className="space-y-3">
