@@ -60,7 +60,7 @@ export type GstDraftLine = {
 };
 export type IndiaGstDraftReview = {
   mode: "india_gst_preissue_review";
-  currency: "INR";
+  currency: string;
   saleId: string;
   documentType: "tax_invoice_draft" | "bill_of_supply_draft";
   issuingAuthorityVerified: false;
@@ -177,7 +177,7 @@ export function reviewIndiaGstDraft(source: unknown, raw: unknown): IndiaGstDraf
     totalDue += due;
     rows.push({
       description: textValue(frozen["name"]),
-      quantity,
+      quantity: Number(quantity),
       hsnSac: declared.hsnSac,
       classification: declared.classification,
       unitCode: declared.unitCode,
@@ -206,7 +206,7 @@ export function reviewIndiaGstDraft(source: unknown, raw: unknown): IndiaGstDraf
     "Bill of supply cannot claim positive GST collection; mixed/exempt cases require separate jurisdiction review.");
   return {
     mode: "india_gst_preissue_review",
-    currency: "INR",
+    currency: packet.currency,
     saleId: input.saleId,
     documentType: input.kind,
     issuingAuthorityVerified: false,
