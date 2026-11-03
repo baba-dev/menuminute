@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileCheck2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, FileCheck2, ShieldAlert, Printer } from "lucide-react";
 import type { Detail } from "@/modules/pos/finance";
 import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
 import type { IndiaGstDraftReview } from "@/modules/pos/india-gst";
+import type { IndiaGstLedgerReadiness } from "@/modules/pos/india-gst-issuer";
+import { IndiaGstDraftPrintSheet, type DraftPaper } from "./india-gst-draft-print";
 import { percentToBasisPoints } from "@/modules/tax/sales-tax";
 
 type DraftLine = {
@@ -22,6 +24,7 @@ type Props = {
   outletName: string;
   sale: Detail;
   readiness: FiscalReadiness;
+  release: IndiaGstLedgerReadiness;
 };
 const money = (raw: string | number | null | undefined) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
@@ -34,6 +37,7 @@ export function IndiaGstDraftWorkspace({
   outletName,
   sale,
   readiness,
+  release,
 }: Props) {
   const bill = sale.bill!;
   const sellerGstin = bill.seller.taxRegistration ?? "";
@@ -66,6 +70,7 @@ export function IndiaGstDraftWorkspace({
   const [review, setReview] = useState<IndiaGstDraftReview | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [paper, setPaper] = useState<DraftPaper>("a4");
   const edit = (fn: () => void) => {
     fn();
     setReview(null);
@@ -400,6 +405,25 @@ export function IndiaGstDraftWorkspace({
           </form>
           <aside className="border-border bg-card space-y-5 self-start rounded-2xl border p-5 sm:p-7">
             <h2 className="text-lg font-semibold">Pre-issuance checks</h2>
+            <div
+              className="border-border space-y-2 rounded-xl border p-3 text-xs"
+              aria-label="Operator-only statutory activation gates"
+            >
+              <p className="font-semibold">Statutory issuer is disabled</p>
+              <p>
+                Operator release:{" "}
+                {release.registeredOperatorRelease
+                  ? "record exists, not enough for issuance"
+                  : "not configured"}
+              </p>
+              <p>Legal sign-off: {release.legalSignoff ? "recorded" : "required"}</p>
+              <p>Finance sign-off: {release.financeSignoff ? "recorded" : "required"}</p>
+              <p>IRP adapter: {release.adapterVerified ? "operator recorded" : "unverified"}</p>
+              <p>Signing: {release.signatureVerified ? "operator recorded" : "unverified"}</p>
+              <p>Printer acceptance: {release.printerAccepted ? "recorded" : "pending"}</p>
+              <p>Current issued GST records: {release.invoiceCount}</p>
+              <p className="font-semibold">Available for statutory issuance: No</p>
+            </div>
             <p className="text-muted-foreground text-sm">
               {readiness.failedCount} existing fiscal-readiness checks outstanding.
             </p>
@@ -426,6 +450,32 @@ export function IndiaGstDraftWorkspace({
                     <dd>{money(review.frozenBillTotalMinor)}</dd>
                   </div>
                 </dl>
+                <div className="border-border space-y-2 rounded-lg border p-3 text-xs">
+                  <strong>Printable review worksheet (not an invoice)</strong>
+                  <label className="flex items-center justify-between gap-2">
+                    Paper width
+                    <select
+                      value={paper}
+                      onChange={(event) => setPaper(event.target.value as DraftPaper)}
+                      className="border-border bg-background rounded-lg border p-2"
+                    >
+                      <option value="a4">A4</option>
+                      <option value="80">80 mm thermal</option>
+                      <option value="58">58 mm thermal</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="border-border inline-flex items-center gap-2 rounded-lg border p-2 font-semibold"
+                  >
+                    <Printer size={15} aria-hidden="true" /> Print draft-only worksheet
+                  </button>
+                  <p>
+                    Select matching media in the browser print dialog; printed text always states
+                    NOT A TAX INVOICE.
+                  </p>
+                </div>
                 <strong className="text-sm">{review.issues} unresolved checks</strong>
                 <ul className="space-y-3">
                   {review.checks.map((check) => (
@@ -450,6 +500,17 @@ export function IndiaGstDraftWorkspace({
             )}
           </aside>
         </div>
+        {review && (
+          <IndiaGstDraftPrintSheet
+            review={review}
+            supplierName={String(bill.seller.legalName ?? outletName)}
+            supplierGstin={sellerGstin}
+            buyerName={buyerName}
+            buyerGstin={supplyType === "b2b" ? buyerGstin.trim().toUpperCase() : ""}
+            placeOfSupply={placeOfSupply}
+            paper={paper}
+          />
+        )}
       </div>
     </main>
   );
