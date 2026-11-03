@@ -33,6 +33,7 @@ import {
 import { DiningImage } from "./dining-image";
 import { DishCard } from "./dish-card";
 import { DiningBrandMark } from "./dining-brand-mark";
+import { ThemeControl } from "./theme-control";
 import { reconcileGuestCart } from "@/modules/menu-product/cart-storage";
 import { isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
 import type { PublicProduct } from "@/modules/menu-product/service";
@@ -541,6 +542,9 @@ export function PublicMenu({
         Skip to dishes
       </a>
       <header className="dining-cover" ref={coverRef}>
+        <div className="dining-theme-control no-print">
+          <ThemeControl />
+        </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="dining-cover-image"
