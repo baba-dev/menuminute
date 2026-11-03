@@ -39,20 +39,42 @@ test("filtered public menu does not expose dead category links", async ({ page }
   await expect(links.first()).toBeVisible();
 });
 
-test("public cover shows the MenuMinute brand mark without CSP violations", async ({ page }) => {
+test("public cover switches its brand mark with the guest appearance preference", async ({
+  page,
+}) => {
   const violations: string[] = [];
   page.on("console", (message) => {
     if (/Content Security Policy/i.test(message.text())) violations.push(message.text());
   });
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/m/demo-spice-route-kitchen-v1");
   const mark = page.getByTestId("dining-brand-mark");
   await expect(mark).toHaveAccessibleName("Powered by MenuMinute");
-  const logo = mark.locator("img");
-  await expect(logo).toHaveAttribute("src", /logo-reveal-light-nav\.svg/);
+  const lightLogo = mark.locator("img.mm-brand-nav-logo__light");
+  const darkLogo = mark.locator("img.mm-brand-nav-logo__dark");
+  await expect(lightLogo).toHaveAttribute("src", /logo-reveal-light-nav\.svg/);
+  await expect(darkLogo).toHaveAttribute("src", /logo-reveal-dark-nav\.svg/);
+  await expect(lightLogo).toBeVisible();
+  await expect(darkLogo).toBeHidden();
   await expect
     .poll(() =>
-      logo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)
+      lightLogo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)
     )
     .toBe(true);
+
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(darkLogo).toBeVisible();
+  await expect(lightLogo).toBeHidden();
+  await expect
+    .poll(() =>
+      darkLogo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)
+    )
+    .toBe(true);
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Switch to light mode" })).toBeVisible();
+  await expect(darkLogo).toBeVisible();
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await expect(lightLogo).toBeVisible();
   expect(violations).toEqual([]);
 });
