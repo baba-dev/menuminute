@@ -166,10 +166,19 @@ BEGIN
  IF NEW.kind IN ('credit_note','debit_note') THEN
    SELECT * INTO orig FROM app_private.india_gst_statutory_records
     WHERE id=NEW.source_document_id AND outlet_id=NEW.outlet_id
-      AND supplier_gstin=NEW.supplier_gstin FOR SHARE;
+      AND supplier_gstin=NEW.supplier_gstin FOR UPDATE;
+   -- Serialize every credit linked to the original document, so concurrent
+   -- cashiers cannot collectively credit more than the original liability.
    IF NOT FOUND OR orig.kind NOT IN ('tax_invoice','bill_of_supply') OR
-     orig.sale_id<>NEW.sale_id OR NEW.total_minor>orig.total_minor
-   THEN RAISE EXCEPTION 'Invalid original document or credit/debit amount'
+     orig.sale_id<>NEW.sale_id
+   THEN RAISE EXCEPTION 'Invalid original statutory document'
+      USING ERRCODE='22023'; END IF;
+   IF NEW.kind='credit_note' AND
+      COALESCE((SELECT sum(total_minor)
+        FROM app_private.india_gst_statutory_records
+        WHERE source_document_id=orig.id AND kind='credit_note'),0)
+      + NEW.total_minor > orig.total_minor
+   THEN RAISE EXCEPTION 'Cumulative credit exceeds original statutory value'
       USING ERRCODE='22023'; END IF;
  END IF;
  -- Issuer must explicitly reconcile the fiscal source, not infer legitimacy
