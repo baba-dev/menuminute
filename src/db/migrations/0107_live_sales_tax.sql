@@ -303,3 +303,58 @@ BEGIN
   'paymentMethod',v_method,'paymentEvidence','staff_recorded');
 END $$;
 
+
+-- Private non-fiscal receipt view uses frozen tax values, not today's policy.
+-- Legacy/issued historical documents continue through their existing snapshots.
+ALTER FUNCTION app_private.pos_receipt_data_v2(text,text)
+ RENAME TO pos_receipt_data_v2_before_live_tax_0107;
+REVOKE ALL ON FUNCTION app_private.pos_receipt_data_v2_before_live_tax_0107(text,text)
+ FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+CREATE FUNCTION app_private.pos_receipt_data_v2(p_outlet text,p_sale text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE result jsonb; snap app_private.order_sales_tax_snapshots%ROWTYPE;
+BEGIN
+ result:=app_private.pos_receipt_data_v2_before_live_tax_0107(p_outlet,p_sale);
+ SELECT t.* INTO snap FROM pos_sales s
+ JOIN app_private.order_sales_tax_snapshots t ON t.order_id=s.order_id AND t.outlet_id=s.outlet_id
+ WHERE s.outlet_id=p_outlet AND s.id=p_sale;
+ IF NOT FOUND THEN RETURN result||jsonb_build_object('taxApplied',false,
+   'totalMinor',result->>'subtotalMinor','taxMinor','0'); END IF;
+ RETURN result||jsonb_build_object(
+  'taxApplied',snap.applied,'taxPolicyRevision',snap.policy_revision,
+  'taxLabel',snap.label,'taxInclusive',snap.inclusive,
+  'originalSubtotalMinor',snap.original_subtotal_minor::text,
+  'taxableBaseMinor',snap.taxable_base_minor::text,
+  'taxMinor',snap.tax_minor::text,'totalMinor',snap.total_minor::text,
+  'taxLines',snap.line_snapshot
+ );
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_receipt_data_v2(text,text)
+ FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.pos_receipt_data_v2(text,text) TO menuminute_app;
+
+-- Finance bill-freezing cannot silently recalculate a different tax amount
+-- against an already-accepted guest/POS tax snapshot.
+CREATE FUNCTION app_private.pos_bill_live_tax_guard()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE s app_private.order_sales_tax_snapshots%ROWTYPE;
+BEGIN
+ SELECT snap.* INTO s FROM pos_sales sale
+ JOIN app_private.order_sales_tax_snapshots snap
+   ON snap.outlet_id=sale.outlet_id AND snap.order_id=sale.order_id
+ WHERE sale.outlet_id=NEW.outlet_id AND sale.id=NEW.sale_id;
+ IF FOUND AND s.applied AND (NEW.currency IS DISTINCT FROM s.currency
+   OR NEW.subtotal_minor IS DISTINCT FROM s.original_subtotal_minor
+   OR NEW.taxable_base_minor IS DISTINCT FROM s.taxable_base_minor
+   OR NEW.tax_minor IS DISTINCT FROM s.tax_minor
+   OR NEW.total_minor IS DISTINCT FROM s.total_minor)
+ THEN RAISE EXCEPTION 'POS financial snapshot differs from committed merchant tax'
+  USING ERRCODE='40001'; END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER pos_bill_live_tax_guard BEFORE INSERT ON pos_bills
+ FOR EACH ROW EXECUTE FUNCTION app_private.pos_bill_live_tax_guard();
+REVOKE ALL ON FUNCTION app_private.pos_bill_live_tax_guard()
+ FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
