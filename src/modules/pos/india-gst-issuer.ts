@@ -9,7 +9,6 @@ import { z } from "zod";
  * The caller must pin the IRP's genuine public key, NEVER an invoice-supplied key.
  */
 const gstin = z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/);
-const hash = z.string().regex(/^[0-9a-f]{64}$/);
 const reference = z.string().regex(/^[A-Z0-9/-]{7,16}$/);
 const signedClaims = z.object({
   sellerGstin: gstin,
@@ -31,6 +30,22 @@ export type VerifiedIrpEvidence = {
   /** Private verification result, never an issue authorization or GST registration proof. */
   irpReconciliationOnly: true;
 };
+export type IndiaGstLedgerReadiness = {
+  jurisdiction: "IN";
+  policyRevision: number;
+  registeredOperatorRelease: boolean;
+  legalSignoff: boolean;
+  financeSignoff: boolean;
+  jurisdictionVerified: boolean;
+  irpApplicabilityVerified: boolean;
+  adapterVerified: boolean;
+  signatureVerified: boolean;
+  printerAccepted: boolean;
+  statutoryIssuanceAvailable: false;
+  invoiceCount: number;
+  reviewOnly: true;
+};
+
 export type IrpExpectedInvoice = {
   sellerGstin: string;
   documentNumber: string;
