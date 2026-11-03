@@ -254,6 +254,7 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
 
 test("Service Counter keeps verified queue and counters isolated under partial outages", async ({
   page,
+  isMobile,
 }, info) => {
   test.setTimeout(120000);
   const fixture = await seedOrdering(true);
@@ -263,11 +264,18 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   await page.getByLabel("Password", { exact: true }).fill(fixture.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
-  // The fixture switches guest reviews on; an ordering outlet's manager gets the moderation destination.
+  // The fixture switches reviews on. The mobile workspace puts secondary
+  // routes in the More sheet, whereas desktop renders the sidebar.
+  if (isMobile) {
+    await page.getByRole("button", { name: "More" }).click();
+  }
   await expect(page.getByRole("link", { name: "Guest reviews" }).first()).toHaveAttribute(
     "href",
     "/dashboard/reviews"
   );
+  if (isMobile) {
+    await page.getByRole("button", { name: "Close More" }).click();
+  }
 
   const pulsePath = "**/orders/workspace?view=pulse";
   const railPath = "**/orders/workspace?view=rail";
