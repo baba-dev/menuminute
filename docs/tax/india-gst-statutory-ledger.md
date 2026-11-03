@@ -1,17 +1,17 @@
 # India GST statutory ledger 3.2 — implementation and release protocol
 
-**Source status:** statutory *data model and verification seams only*. PR #320 does not issue a tax invoice. Existing fiscal issuance is not activated. Issue #226 remains open; issue #315 (actual tax application to guest/POS payments) is a dependency.
+**Source status:** statutory _data model and verification seams only_. PR #320 does not issue a tax invoice. Existing fiscal issuance is not activated. Issue #226 remains open; issue #315 (actual tax application to guest/POS payments) is a dependency.
 
 ## What the release adds
 
 The additive migration `0106_india_gst_statutory_ledger.sql` introduces protected tables under `app_private`, not the app's public tables:
 
-| Object | Purpose | Initial state |
-| --- | --- | --- |
-| `india_gst_operator_releases` | Per-outlet, GSTIN-specific legal/finance/IRP/signing/printer acceptance record | No rows / all flags false |
-| `india_gst_serial_counters` | GSTIN-wide, India financial-year serials with a six-character series and six-digit sequence | No rows |
-| `india_gst_statutory_records` | Immutable final statutory document metadata, original and credit/debit references and reconciliation | Empty; app cannot insert |
-| `india_gst_irp_audit` | Append-only provider attempt/uncertainty/verified-ack evidence digest | Empty |
+| Object                        | Purpose                                                                                              | Initial state             |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------- |
+| `india_gst_operator_releases` | Per-outlet, GSTIN-specific legal/finance/IRP/signing/printer acceptance record                       | No rows / all flags false |
+| `india_gst_serial_counters`   | GSTIN-wide, India financial-year serials with a six-character series and six-digit sequence          | No rows                   |
+| `india_gst_statutory_records` | Immutable final statutory document metadata, original and credit/debit references and reconciliation | Empty; app cannot insert  |
+| `india_gst_irp_audit`         | Append-only provider attempt/uncertainty/verified-ack evidence digest                                | Empty                     |
 
 No ordinary web/worker/billing role has direct SELECT, INSERT, UPDATE or DELETE to these tables. The serial allocator itself has **no application EXECUTE grant**. The only exposed function, `india_gst_ledger_readiness`, validates the actor's current outlet and document permission and returns a **read-only** checklist with `statutoryIssuanceAvailable: false`.
 
@@ -23,11 +23,11 @@ The immutable record schema requires the correct source document for a credit/de
 
 `src/modules/pos/india-gst-issuer.ts` contains:
 
-- Offline-only `submit`, `reconcile` and `cancel` operations that throw an explicit *not configured* error without network calls.
+- Offline-only `submit`, `reconcile` and `cancel` operations that throw an explicit _not configured_ error without network calls.
 - A pinned-public-key RS256 JWS verification primitive for a **future approved IRP partner adapter**, matching GSTIN, financial year, document number and exact minor-unit total. The signer key must be supplied by a trusted operator keyring; never from an invoice field or remote response. All ambiguous/unknown-key/bad-signature/changed-amount cases fail.
 - Fiscal-year and series-format functions with regression tests.
 
-This cryptographic primitive is *not* a working NIC/IRIS IRP adapter. Actual provider payloads require verified normalization, tenant authorization, credentials, endpoint pinning and sandbox acceptance. **Do not construct or invent an IRN or a signed QR.** An uncertain provider response requires a read-only partner lookup and reconciliation; it must not trigger duplicate registration.
+This cryptographic primitive is _not_ a working NIC/IRIS IRP adapter. Actual provider payloads require verified normalization, tenant authorization, credentials, endpoint pinning and sandbox acceptance. **Do not construct or invent an IRN or a signed QR.** An uncertain provider response requires a read-only partner lookup and reconciliation; it must not trigger duplicate registration.
 
 ## Print and review
 
