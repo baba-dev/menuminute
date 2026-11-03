@@ -147,8 +147,24 @@ export default async function ReceiptPage({
         </div>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-total">
-          <span>Pre-tax subtotal</span>
+          <span>{receipt.taxApplied && receipt.taxInclusive ? "Tax-inclusive menu prices" : "Item subtotal"}</span>
           <strong>{money(receipt.subtotalMinor, receipt.currency)}</strong>
+        </div>
+        {receipt.taxApplied && (
+          <>
+            <div className="receipt-total">
+              <span>Taxable base</span>
+              <strong>{money(receipt.taxableBaseMinor ?? receipt.subtotalMinor, receipt.currency)}</strong>
+            </div>
+            <div className="receipt-total">
+              <span>{receipt.taxLabel ?? "Merchant tax"} {receipt.taxInclusive ? "(included)" : "(added)"}</span>
+              <strong>{money(receipt.taxMinor ?? "0", receipt.currency)}</strong>
+            </div>
+          </>
+        )}
+        <div className="receipt-total">
+          <span>{refunded ? "Original paid amount (refunded)" : "Total payable"}</span>
+          <strong>{money(receipt.totalMinor ?? receipt.subtotalMinor, receipt.currency)}</strong>
         </div>
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center receipt-footer">
@@ -162,8 +178,9 @@ export default async function ReceiptPage({
                   : "PAYMENT PENDING"}
           </strong>
           <p>
-            Prices are pre-tax; taxes and fees have not been calculated. This operational bill is
-            not a tax invoice, fiscal receipt or provider-verified payment confirmation.
+            {receipt.taxApplied
+              ? "Merchant-declared tax is frozen at the order's original policy revision. This operational receipt is not a statutory tax invoice, fiscal receipt or provider-verified payment confirmation."
+              : "No merchant tax was applied at order creation. This operational bill is not a tax invoice, fiscal receipt or provider-verified payment confirmation."}
           </p>
           <p>Thank you for visiting!</p>
           <p className="receipt-signature">Powered by MenuMinute</p>
