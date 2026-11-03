@@ -16,7 +16,10 @@ async function observed_POST(req: Request, { params }: Context) {
     const actor = await requestActor(req, true);
     const { organizationId, outletId } = await params;
     const review = await financeReviewIndiaGst(
-      actor, organizationId, outletId, await boundedJson(req)
+      actor,
+      organizationId,
+      outletId,
+      await boundedJson(req)
     );
     return NextResponse.json(review, {
       headers: { "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" },
