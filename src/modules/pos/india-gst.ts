@@ -221,6 +221,11 @@ export function reviewIndiaGstDraft(source: unknown, raw: unknown): IndiaGstDraf
       "Inter-state supplies require IGST; intra-state supplies require a reviewed CGST/SGST or CGST/UTGST treatment."
     );
     check(
+      "line_" + i + "_utgst_jurisdiction",
+      declared.componentMode !== "cgst_utgst",
+      "CGST/UTGST applicability must be separately verified for the relevant Union Territory before issuance."
+    );
+    check(
       "line_" + i + "_frozen",
       base !== null &&
         frozenTax !== null &&
