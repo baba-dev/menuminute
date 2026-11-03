@@ -145,12 +145,17 @@ BEGIN
    OR (p_expected_tax IS NOT NULL AND p_expected_tax<>v_tax)
  THEN RAISE EXCEPTION 'Sales tax quote changed; confirm updated total'
    USING ERRCODE='40001'; END IF;
- INSERT INTO app_private.order_sales_tax_snapshots(
-  order_id,outlet_id,organization_id,policy_revision,policy_status,applied,
-  label,rate_bps,inclusive,currency,original_subtotal_minor,
-  taxable_base_minor,tax_minor,total_minor,line_snapshot)
- VALUES(p_order,p_outlet,r.organization_id,v_rev,v_status,v_applied,
-  v_label,v_rate,v_inclusive,r.currency,v_sub,v_base,v_tax,v_total,lines);
+ -- Demo orders are intentionally disposable: the authorized demo reset must
+ -- delete its operational orders without persisting financial tax evidence.
+ -- Real merchants always receive a protected immutable snapshot.
+ IF NOT r.is_demo_data THEN
+  INSERT INTO app_private.order_sales_tax_snapshots(
+   order_id,outlet_id,organization_id,policy_revision,policy_status,applied,
+   label,rate_bps,inclusive,currency,original_subtotal_minor,
+   taxable_base_minor,tax_minor,total_minor,line_snapshot)
+  VALUES(p_order,p_outlet,r.organization_id,v_rev,v_status,v_applied,
+   v_label,v_rate,v_inclusive,r.currency,v_sub,v_base,v_tax,v_total,lines);
+ END IF;
  UPDATE orders SET subtotal_minor=v_base::integer,subtotal_paise=v_base::integer,
   tax_minor=v_tax::integer,tax_paise=v_tax::integer,
   total_minor=v_total::integer,total_paise=v_total::integer
