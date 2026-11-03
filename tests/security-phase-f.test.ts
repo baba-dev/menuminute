@@ -9,7 +9,11 @@ describe("A–F security regression contracts", () => {
   });
   it("preserves signed edge guest orders and 5 MiB media upload support", () => {
     const nginx = readFileSync("infra/nginx/menuminute.conf.example", "utf8");
-    expect(nginx).toContain("location ^~ /api/public-orders {");
+    expect(nginx).toContain("location /api/public-orders {");
+    expect(nginx).not.toContain("location ^~ /api/public-orders");
+    expect(nginx).toContain("location ~ ^/api/public-orders/[^/]+/stream$ {");
+    expect(nginx).toContain("location ~ ^/api/organizations/[^/]+/outlets/[^/]+/kitchen/stream$ {");
+    expect(nginx.match(/proxy_buffering off;/g)?.length).toBe(2);
     expect(nginx).toContain("X-MenuMinute-Edge-Key $menuminute_edge_secret;");
     expect(nginx).toContain("location = /api/media {");
     expect(nginx).toContain("location ^~ /api/media/ {");
