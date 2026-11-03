@@ -4,7 +4,7 @@ import { commandMenu } from "../src/modules/menu-product/service";
 import { applyEntitlement } from "../src/modules/billing/operator";
 import { submitGuestOrder } from "../src/modules/orders/service";
 import { posConfigure, posContext, posSubmit, posReceipt } from "../src/modules/pos/service";
-import { financeCommand } from "../src/modules/pos/finance";
+import { financeCommand, financeRead } from "../src/modules/pos/finance";
 import { getOutletSalesTax, saveOutletSalesTax } from "../src/modules/tax/service";
 import { publicCheckoutTaxPolicy } from "../src/modules/tax/checkout";
 import { getPool } from "../src/db";
@@ -256,6 +256,23 @@ describe("Live merchant checkout tax — real PostgreSQL/Redis", () => {
       taxApplied: true,
       paymentStatus: "complete",
     });
+    const settlement = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
+      view: "settlement", id: created.saleId,
+    });
+    expect(settlement).toMatchObject({
+      expectedMinor: "10500", staffAttestedMinor: "10500",
+      unallocatedOriginalMinor: "0", state: "paid",
+    });
+    const ledger = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
+      view: "ledger_page",
+    });
+    expect(ledger.items.find((item) => item.saleId === created.saleId)).toMatchObject({
+      totalMinor: "10500", taxMinor: "500", paidMinor: "10500",
+    });
+    const reconciliation = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
+      view: "reconcile_page",
+    });
+    expect(reconciliation.anomalies.filter((a) => a.saleId === created.saleId)).toEqual([]);
     const refunded = await financeCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
       action: "staff_refund",
       key: crypto.randomUUID(),
