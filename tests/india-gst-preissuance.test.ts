@@ -95,6 +95,17 @@ describe("India GST pre-issuance adapter: never legal issuance", () => {
     expect(bad.checks.find((c) => c.id === "line_0_place_of_supply")?.satisfied).toBe(false);
   });
 
+  it("does not approve UTGST or reverse-charge from an unchecked merchant declaration", () => {
+    const utgst = reviewIndiaGstDraft(frozen, {
+      ...input,
+      lines: [{ ...input.lines[0], componentMode: "cgst_utgst" }],
+    });
+    expect(utgst.checks.find((item) => item.id === "line_0_utgst_jurisdiction")?.satisfied).toBe(false);
+    const reverse = reviewIndiaGstDraft(frozen, { ...input, reverseCharge: true });
+    expect(reverse.checks.find((item) => item.id === "reverse_charge")?.satisfied).toBe(false);
+    expect(reverse.statutoryIssuanceAllowed).toBe(false);
+  });
+
   it("reconciles bill-of-supply zero GST without producing an official bill of supply", () => {
     const taxFree = {
       ...frozen,
