@@ -4,7 +4,7 @@
 
 ## Rollout and merchant consent
 
-Migration `0107_live_sales_tax` adds `apply_to_orders BOOLEAN NOT NULL DEFAULT FALSE` to pre-existing outlet tax policies. **All previously configured tax rates remain preview-only** until an authorized merchant explicitly checks *Collect on new orders*, accepts legal responsibility and saves a new policy revision. Saving and opt-in are independently audit-logged. An authorized owner/manager may turn collection off by saving the policy with `applyToOrders:false`.
+Migration `0107_live_sales_tax` adds `apply_to_orders BOOLEAN NOT NULL DEFAULT FALSE` to pre-existing outlet tax policies. **All previously configured tax rates remain preview-only** until an authorized merchant explicitly checks _Collect on new orders_, accepts legal responsibility and saves a new policy revision. Saving and opt-in are independently audit-logged. An authorized owner/manager may turn collection off by saving the policy with `applyToOrders:false`.
 
 The merchant's declaration is **not** proof of tax registration or authority to collect. For India the order-commit guard requires a registered POS seller with matching country and per-dish POS tax classifications matching the declared rate and inclusive flag. A configured generic rate is never a substitute for India GST statutory classification; ineligible or inconsistent configuration refuses checkout. Additional country jurisdictions require qualified tax review before activating local collection.
 
