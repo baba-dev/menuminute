@@ -166,6 +166,7 @@ export function CartDrawer({
     policy: CheckoutTaxPolicy;
   } | null>(null);
   const [taxQuoteError, setTaxQuoteError] = useState("");
+  const [taxQuoteRefresh, setTaxQuoteRefresh] = useState(0);
   const [checkoutOpenedAt] = useState(() => Date.now());
   const cartRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -312,7 +313,7 @@ export function CartDrawer({
         );
       });
     return () => controller.abort();
-  }, [isOpen, token, currency, cartFingerprint, items.length]);
+  }, [isOpen, token, currency, cartFingerprint, items.length, taxQuoteRefresh]);
 
   if (items.length === 0) return null;
 
@@ -380,6 +381,12 @@ export function CartDrawer({
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 409) {
+          // The server already rejected the proposed amount without creating a new order.
+          // Re-quote the original cart but never retry a changed amount automatically.
+          setTaxPolicyState(null);
+          setTaxQuoteRefresh((revision) => revision + 1);
+        }
         if (response.status < 500 && response.status !== 429) {
           clearPendingGuestOrder(token);
           setPendingRecovery(null);
