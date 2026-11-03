@@ -26,6 +26,7 @@ export const orderSubmissionSchema = z
   .object({
     clientSubmissionKey: z.string().uuid(),
     quotedTotalMinor: z.number().int().min(0).max(2147483647),
+    quotedTaxRevision: z.number().int().nonnegative().optional(),
     fulfillmentMode: z.enum(["dine_in", "pickup"]).default("dine_in"),
     requestedFulfillmentAt: z.iso.datetime().nullable().optional().default(null),
     customerName: z.string().trim().max(80).optional().default(""),
