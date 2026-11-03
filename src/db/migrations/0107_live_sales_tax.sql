@@ -606,6 +606,8 @@ BEGIN
     FROM (SELECT * FROM pos_sales WHERE outlet_id=p_outlet
        ORDER BY created_at DESC,id DESC LIMIT 60) s
     LEFT JOIN pos_bills b ON b.outlet_id=p_outlet AND b.sale_id=s.id
+    LEFT JOIN app_private.order_sales_tax_snapshots tax
+      ON tax.outlet_id=s.outlet_id AND tax.order_id=s.order_id
     LEFT JOIN pos_staff_payment_attestations a ON a.outlet_id=p_outlet AND a.sale_id=s.id
     LEFT JOIN pos_staff_refunds sf ON sf.outlet_id=p_outlet AND sf.sale_id=s.id
   ),'[]'::jsonb);
@@ -654,6 +656,8 @@ BEGIN
     FROM scanned c JOIN pos_sales s ON s.id=c.id AND s.outlet_id=p_outlet
     JOIN orders o ON o.id=s.order_id AND o.restaurant_id=p_outlet
     LEFT JOIN pos_bills b ON b.sale_id=s.id AND b.outlet_id=p_outlet
+    LEFT JOIN app_private.order_sales_tax_snapshots tax
+      ON tax.outlet_id=s.outlet_id AND tax.order_id=s.order_id
     LEFT JOIN pos_staff_payment_attestations a ON a.sale_id=s.id AND a.outlet_id=p_outlet
     LEFT JOIN pos_staff_refunds sf ON sf.sale_id=s.id AND sf.outlet_id=p_outlet
   ), anomalies AS (
