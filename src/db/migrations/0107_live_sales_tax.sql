@@ -49,21 +49,21 @@ CREATE TRIGGER order_sales_tax_immutable BEFORE UPDATE OR DELETE
 CREATE FUNCTION app_private.public_order_tax_policy(p_token text)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path=pg_catalog,public,pg_temp AS $$
-DECLARE r restaurants%ROWTYPE; p app_private.outlet_sales_tax_policies%ROWTYPE;
+DECLARE v_rest restaurants%ROWTYPE; p app_private.outlet_sales_tax_policies%ROWTYPE;
 BEGIN
- SELECT r.* INTO r FROM restaurants r JOIN qr_codes q ON q.restaurant_id=r.id
- JOIN organizations o ON o.id=r.organization_id
- WHERE q.destination_token=p_token AND q.is_active AND r.is_active
- AND r.is_published AND o.is_active LIMIT 1;
+ SELECT rr.* INTO v_rest FROM restaurants rr JOIN qr_codes q ON q.restaurant_id=rr.id
+ JOIN organizations o ON o.id=rr.organization_id
+ WHERE q.destination_token=p_token AND q.is_active AND rr.is_active
+ AND rr.is_published AND o.is_active LIMIT 1;
  IF NOT FOUND THEN RAISE EXCEPTION 'Published menu unavailable' USING ERRCODE='42501'; END IF;
- SELECT * INTO p FROM app_private.outlet_sales_tax_policies WHERE outlet_id=r.id;
+ SELECT * INTO p FROM app_private.outlet_sales_tax_policies WHERE outlet_id=v_rest.id;
  IF NOT FOUND THEN
    RETURN jsonb_build_object('revision',0,'status','unconfigured','label','Sales tax',
-     'rateBps',0,'inclusive',false,'applied',false,'currency',r.currency);
+     'rateBps',0,'inclusive',false,'applied',false,'currency',v_rest.currency);
  END IF;
  RETURN jsonb_build_object('revision',p.revision,'status',p.status,'label',p.label,
    'rateBps',CASE WHEN p.apply_to_orders THEN p.rate_bps ELSE 0 END,
-   'inclusive',p.inclusive,'applied',p.apply_to_orders,'currency',r.currency);
+   'inclusive',p.inclusive,'applied',p.apply_to_orders,'currency',v_rest.currency);
 END $$;
 REVOKE ALL ON FUNCTION app_private.public_order_tax_policy(text)
  FROM PUBLIC,menuminute_worker,menuminute_billing;
