@@ -4,6 +4,8 @@ import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import { publicProduct, type PublicProduct } from "@/modules/menu-product/service";
 import { quoteInputSchema, quotePublishedSelection } from "@/modules/orders/quote";
+import { calculateCheckoutTax, requireCheckoutRevision } from "@/modules/tax/checkout";
+import { getOutletSalesTax } from "@/modules/tax/service";
 import { projectMenu } from "@/modules/menu-product/projector";
 import { availableNow } from "@/modules/menu-product/contracts";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
@@ -32,6 +34,9 @@ export const posSubmissionSchema = z
     customerPhone: z.string().trim().max(32).default(""),
     notes: z.string().trim().max(500).default(""),
     expectedSubtotalMinor: minorText,
+    expectedTaxRevision: z.number().int().nonnegative().optional(),
+    expectedTotalMinor: minorText.optional(),
+    expectedTaxMinor: minorText.optional(),
     markAsPaid: z.boolean().default(false),
     paymentMethod: z
       .enum(["cash", "upi_external", "card_external", "bank_external", "other"])
@@ -78,7 +83,12 @@ export type PosSaleResult = {
   currency: string;
   subtotalMinor: string;
   status: string;
-  taxAndFeesCalculated: false;
+  taxAndFeesCalculated: boolean;
+  totalMinor?: string;
+  taxMinor?: string;
+  taxRevision?: number;
+  taxLabel?: string;
+  taxApplied?: boolean;
   duplicate: boolean;
   paymentStatus?: "pending" | "complete" | "refunded";
   paymentEvidence?: "none" | "staff_recorded";
@@ -585,6 +595,30 @@ export async function posSubmit(
   const quote = quotePublishedSelection(product, input.selection, instant);
   if (quote.subtotalMinor !== input.expectedSubtotalMinor)
     throw new ConflictError("The published price changed. Review the revised cart.");
+  // Revalidate the merchant's revision and final payable amount on the server.
+  // The trusted SQL producer repeats these checks under the policy transaction lock.
+  const settings = await getOutletSalesTax(actor, organizationId, outletId);
+  const policy = {
+    currency: context.currency,
+    revision: settings.revision,
+    status: settings.status,
+    label: settings.label,
+    rateBps: settings.canChangeOrders ? settings.rateBps : 0,
+    inclusive: settings.inclusive,
+    applied: settings.canChangeOrders,
+  };
+  requireCheckoutRevision(input.expectedTaxRevision, policy);
+  const merchantTax = calculateCheckoutTax(
+    context.currency, quote.lines.map((line) => line.lineSubtotalMinor), policy
+  );
+  if (settings.canChangeOrders &&
+      (input.expectedTotalMinor === undefined || input.expectedTaxMinor === undefined))
+    throw new ConflictError("Confirm the final merchant tax total before placing the POS order.");
+  if ((input.expectedTotalMinor !== undefined &&
+      input.expectedTotalMinor !== merchantTax.totalMinor) ||
+      (input.expectedTaxMinor !== undefined &&
+      input.expectedTaxMinor !== merchantTax.taxMinor))
+    throw new ConflictError("The merchant tax quote changed. Review the revised POS total.");
   if (input.tableId && input.fulfillmentMode !== "dine_in")
     throw new ValidationError("A table can only be selected for dine-in service");
   const menuRelease = product.menus.find((m) => m.id === quote.menuId)!;
@@ -626,6 +660,9 @@ export async function posSubmit(
     customerPhone: input.customerPhone,
     notes: input.notes,
     expectedSubtotalMinor: quote.subtotalMinor,
+    expectedTaxRevision: policy.revision,
+    expectedTotalMinor: merchantTax.totalMinor,
+    expectedTaxMinor: merchantTax.taxMinor,
     lines: input.selection.lines,
     markAsPaid: input.markAsPaid,
     paymentMethod: input.markAsPaid ? input.paymentMethod : null,
