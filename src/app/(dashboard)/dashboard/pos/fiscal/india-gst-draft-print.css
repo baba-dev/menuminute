@@ -12,28 +12,75 @@
   padding: 7px;
   text-align: center;
   font-weight: 900;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.gst-draft-print header { margin: 12px 0; }
-.gst-draft-print h2 { font-size: 1.2em; font-weight: 800; margin: 0 0 8px; }
-.gst-draft-print p { margin: 8px 0; font-size: .84em; }
-.gst-draft-print dl { margin: 10px 0; }
-.gst-draft-print dl div { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
-.gst-draft-print dt { font-weight: 600; }
-.gst-draft-print dd { text-align: right; margin: 0; }
-.gst-draft-print table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 12px 0; }
-.gst-draft-print td, .gst-draft-print th {
-  text-align: left; padding: 6px 3px; vertical-align: top;
-  border-bottom: 1px solid #999; font-size: .83em;
+.gst-draft-print header {
+  margin: 12px 0;
 }
-.gst-draft-print th:nth-child(n+2), .gst-draft-print td:nth-child(n+2) { text-align: right; }
-.gst-draft-print td small { display: block; font-size: .82em; margin-top: 3px; }
-.gst-draft-print td:first-child { width: 45%; }
+.gst-draft-print h2 {
+  font-size: 1.2em;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+.gst-draft-print p {
+  margin: 8px 0;
+  font-size: 0.84em;
+}
+.gst-draft-print dl {
+  margin: 10px 0;
+}
+.gst-draft-print dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.gst-draft-print dt {
+  font-weight: 600;
+}
+.gst-draft-print dd {
+  text-align: right;
+  margin: 0;
+}
+.gst-draft-print table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.gst-draft-print td,
+.gst-draft-print th {
+  text-align: left;
+  padding: 6px 3px;
+  vertical-align: top;
+  border-bottom: 1px solid #999;
+  font-size: 0.83em;
+}
+.gst-draft-print th:nth-child(n + 2),
+.gst-draft-print td:nth-child(n + 2) {
+  text-align: right;
+}
+.gst-draft-print td small {
+  display: block;
+  font-size: 0.82em;
+  margin-top: 3px;
+}
+.gst-draft-print td:first-child {
+  width: 45%;
+}
 @media print {
-  @page { margin: 4mm; size: auto; }
-  body * { visibility: hidden !important; }
-  .gst-draft-print, .gst-draft-print * { visibility: visible !important; }
+  @page {
+    margin: 4mm;
+    size: auto;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .gst-draft-print,
+  .gst-draft-print * {
+    visibility: visible !important;
+  }
   .gst-draft-print {
     display: block !important;
     position: absolute !important;
@@ -46,14 +93,31 @@
     font-size: 10pt;
     print-color-adjust: exact;
   }
-  .gst-draft-print[data-paper="a4"] { width: 180mm; }
-  .gst-draft-print[data-paper="80"] { width: 70mm; font-size: 8pt; }
-  .gst-draft-print[data-paper="58"] { width: 48mm; font-size: 7pt; }
+  .gst-draft-print[data-paper="a4"] {
+    width: 180mm;
+  }
+  .gst-draft-print[data-paper="80"] {
+    width: 70mm;
+    font-size: 8pt;
+  }
+  .gst-draft-print[data-paper="58"] {
+    width: 48mm;
+    font-size: 7pt;
+  }
   .gst-draft-print[data-paper="58"] dl div,
-  .gst-draft-print[data-paper="80"] dl div { display: block; }
+  .gst-draft-print[data-paper="80"] dl div {
+    display: block;
+  }
   .gst-draft-print[data-paper="58"] dd,
-  .gst-draft-print[data-paper="80"] dd { text-align: left; }
+  .gst-draft-print[data-paper="80"] dd {
+    text-align: left;
+  }
   .gst-draft-print[data-paper="58"] td,
-  .gst-draft-print[data-paper="58"] th { font-size: .72em; padding: 2px 1px; }
-  .gst-draft-print tr { break-inside: avoid; }
+  .gst-draft-print[data-paper="58"] th {
+    font-size: 0.72em;
+    padding: 2px 1px;
+  }
+  .gst-draft-print tr {
+    break-inside: avoid;
+  }
 }
