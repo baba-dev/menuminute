@@ -4,7 +4,7 @@ import { z } from "zod";
  * Diagnostic-only jurisdiction contract: it does not allocate a fiscal serial,
  * submit to IRP, sign, deliver, or issue a statutory invoice.
  */
-const sourceSchema = z
+export const fiscalSourceSchema = z
   .object({
     saleId: z.string(),
     outletId: z.string(),
@@ -55,7 +55,7 @@ const HSN_SAC = /^\d{4,8}$/;
 const asText = (x: unknown) => (typeof x === "string" ? x.trim() : "");
 
 export function assessFiscalReadiness(raw: unknown): FiscalReadiness {
-  const data = sourceSchema.parse(raw);
+  const data = fiscalSourceSchema.parse(raw);
   const checks: FiscalCheck[] = [];
   const check = (id: string, label: string, satisfied: boolean, explanation: string) => {
     checks.push({ id, label, satisfied, explanation });
