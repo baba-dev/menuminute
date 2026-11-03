@@ -72,7 +72,10 @@
   position: absolute;
   z-index: 2;
   top: clamp(1rem, 3vw, 2rem);
-  right: max(var(--dining-gutter), calc((100vw - var(--dining-content-width)) / 2 + var(--dining-gutter)));
+  right: max(
+    var(--dining-gutter),
+    calc((100vw - var(--dining-content-width)) / 2 + var(--dining-gutter))
+  );
 }
 .dining-cover .dining-theme-control .mm-theme-toggle {
   width: 44px;
