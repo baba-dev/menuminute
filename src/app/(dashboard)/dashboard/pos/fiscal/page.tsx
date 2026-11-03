@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { financeRead, type Detail } from "@/modules/pos/finance";
 import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
+import type { IndiaGstLedgerReadiness } from "@/modules/pos/india-gst-issuer";
+import "./india-gst-draft-print.css";
 import { IndiaGstDraftWorkspace } from "./india-gst-draft-workspace";
 
 export const dynamic = "force-dynamic";
@@ -38,12 +40,13 @@ export default async function IndiaGstPage({
     );
 
   const actor = { userId: session.user.id, sessionId: session.session.id };
-  const [sale, readiness] = await Promise.all([
+  const [sale, readiness, release] = await Promise.all([
     financeRead(actor, outlet.organizationId, outlet.id, {
       view: "sale",
       id: saleId,
     }) as Promise<Detail>,
     financeRead(actor, outlet.organizationId, outlet.id, { view: "fiscal_readiness", id: saleId }),
+    financeRead(actor, outlet.organizationId, outlet.id, { view: "india_gst_ledger_readiness" }),
   ]);
   if (!sale || !sale.bill)
     return (
@@ -62,6 +65,7 @@ export default async function IndiaGstPage({
       outletName={outlet.name}
       sale={sale}
       readiness={readiness as FiscalReadiness}
+      release={release as IndiaGstLedgerReadiness}
     />
   );
 }
