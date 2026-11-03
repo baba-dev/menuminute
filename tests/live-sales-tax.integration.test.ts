@@ -257,18 +257,25 @@ describe("Live merchant checkout tax — real PostgreSQL/Redis", () => {
       paymentStatus: "complete",
     });
     const settlement = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
-      view: "settlement", id: created.saleId,
+      view: "settlement",
+      id: created.saleId,
     });
     expect(settlement).toMatchObject({
-      expectedMinor: "10500", staffAttestedMinor: "10500",
-      unallocatedOriginalMinor: "0", state: "paid",
+      expectedMinor: "10500",
+      staffAttestedMinor: "10500",
+      unallocatedOriginalMinor: "0",
+      state: "paid",
     });
     const ledger = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
       view: "ledger_page",
     });
-    const ledgerRows = ledger as { items: Array<{ saleId: string; totalMinor: string; taxMinor: string; paidMinor: string }> };
+    const ledgerRows = ledger as {
+      items: Array<{ saleId: string; totalMinor: string; taxMinor: string; paidMinor: string }>;
+    };
     expect(ledgerRows.items.find((item) => item.saleId === created.saleId)).toMatchObject({
-      totalMinor: "10500", taxMinor: "500", paidMinor: "10500",
+      totalMinor: "10500",
+      taxMinor: "500",
+      paidMinor: "10500",
     });
     const reconciliation = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
       view: "reconcile_page",
