@@ -62,13 +62,16 @@ function money(minor: number | string, currency: string) {
 }
 async function json<T>(response: Response): Promise<T> {
   const result = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
+  if (!response.ok) {
+    const error = new Error(
       result?.message ??
         (response.status === 409
           ? "Another operator changed this order. Refresh and retry."
           : "The request failed.")
     );
+    Object.assign(error, { statusCode: response.status });
+    throw error;
+  }
   return result as T;
 }
 
@@ -101,6 +104,7 @@ export function TheTill({
     policy: CheckoutTaxPolicy;
   } | null>(null);
   const [taxQuoteError, setTaxQuoteError] = useState("");
+  const [taxQuoteRefresh, setTaxQuoteRefresh] = useState(0);
   const [dish, setDish] = useState<Dish | null>(null);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [mobileTicketOpen, setMobileTicketOpen] = useState(false);
@@ -259,7 +263,7 @@ export function TheTill({
         setTaxQuoteError(error instanceof Error ? error.message : "Tax quote unavailable.");
       });
     return () => controller.abort();
-  }, [endpoint, workspace.context.enabled, currency, taxFingerprint]);
+  }, [endpoint, workspace.context.enabled, currency, taxFingerprint, taxQuoteRefresh]);
 
   async function refresh() {
     const fresh = await json<PosWorkspace>(await fetch(endpoint, { cache: "no-store" }));
@@ -587,6 +591,13 @@ export function TheTill({
         );
       } else {
         feedback("error");
+        if (e instanceof Error && "statusCode" in e && e.statusCode === 409) {
+          // A stale quote is rejected transactionally. Keep the ticket for review,
+          // refresh the tax policy, and force a new command key on confirmation.
+          setTaxPolicyState(null);
+          setTaxQuoteRefresh((revision) => revision + 1);
+          commandRef.current = null;
+        }
         setMessage(
           e instanceof Error
             ? e.message
