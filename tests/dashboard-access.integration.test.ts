@@ -75,6 +75,8 @@ describe("dashboard authorization and lightweight projections", () => {
     expect(await dashboardNavigation(owner.actor, org, outletId)).toEqual({
       ordering: true,
       crm: true,
+      // Reviews default off (PUBLIC_DINER_REVIEWS_ENABLED), so no one sees the destination.
+      reviews: false,
       kitchen: true,
       ordersRead: true,
       kitchenRead: true,
@@ -85,6 +87,8 @@ describe("dashboard authorization and lightweight projections", () => {
     expect(await dashboardNavigation(editor.actor, org, outletId)).toEqual({
       ordering: true,
       crm: true,
+      // Reviews default off (PUBLIC_DINER_REVIEWS_ENABLED), so no one sees the destination.
+      reviews: false,
       kitchen: true,
       ordersRead: false,
       kitchenRead: false,

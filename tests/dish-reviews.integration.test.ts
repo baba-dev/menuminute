@@ -12,6 +12,8 @@ import {
   submitGuestReview,
 } from "../src/modules/reviews/service";
 import { getPool } from "../src/db";
+import { env } from "../src/lib/config/env";
+import { dashboardNavigation } from "../src/modules/menu-product/dashboard-data";
 
 async function outlet() {
   const f = await fixture();
@@ -193,5 +195,23 @@ describe("verified dish reviews (migration 0103)", () => {
     expect((await guestReviewState(order.token, order.orderId, order.trackingToken)).eligible).toBe(
       false
     );
+  });
+
+  it("offers the moderation destination to an outlet manager only while the flag is on", async () => {
+    const f = await outlet();
+    const flag = env as { PUBLIC_DINER_REVIEWS_ENABLED: boolean };
+    const before = flag.PUBLIC_DINER_REVIEWS_ENABLED;
+    try {
+      flag.PUBLIC_DINER_REVIEWS_ENABLED = false;
+      expect(
+        (await dashboardNavigation(f.actor, f.outlet.organizationId, f.outlet.id)).reviews
+      ).toBe(false);
+      flag.PUBLIC_DINER_REVIEWS_ENABLED = true;
+      expect(
+        (await dashboardNavigation(f.actor, f.outlet.organizationId, f.outlet.id)).reviews
+      ).toBe(true);
+    } finally {
+      flag.PUBLIC_DINER_REVIEWS_ENABLED = before;
+    }
   });
 });

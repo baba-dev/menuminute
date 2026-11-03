@@ -87,10 +87,11 @@ dish calculation examples, jurisdiction rules and complete UX remain explicit im
 | --- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 028 | Server-side, opt-in diner device profile           | httpOnly cookie `menuminute.guest`, only its SHA-256 stored (migration 0101). One organization per device, name and phone only, 180-day sliding expiry, scrubbed on forget, never created for the demo tenant. Flag `PUBLIC_DINER_DEVICE_ENABLED`. |
 | 029 | Signal-only live order updates with polling backup | SSE says "changed"; the client re-reads authoritative tracking state, so a missed or repeated signal cannot show a wrong status. Bounded per process and source. Flag `PUBLIC_DINER_STREAM_ENABLED`.                                               |
+| 031 | Per-order guest Web Push, empty payload            | Migration 0105. Opt-in per order via its tracking capability; 24-hour expiry; no personal data or order content stored or sent; shares `PWA_PUSH_*` gate, VAPID keys and outlet allowlist with staff push; never for the demo tenant.              |
 | 030 | Verified ratings; comments only after approval     | One rating per ordered line via the order's tracking capability once served (migration 0103). Stars public from three ratings; comments appear only after manager approval. Flag `PUBLIC_DINER_REVIEWS_ENABLED`.                                   |
 
 Enabling any flag in production needs the owner's approval of the matching privacy and cookie notice;
-guest Web Push (empty-payload push bound to one order) is not implemented yet.
+guest Web Push is implemented (ADR 031) and uses the existing staff push rollout gate.
 
 ## Worldwide geographic scope clarified 2026-11-03
 

@@ -45,9 +45,10 @@ tenant profile table or separate public contact endpoint is required.
 | `PUBLIC_DINER_STREAM_ENABLED`  | `GET /api/public-orders/{id}/stream` (header `x-tracking-token`) emits `hello`/`changed`/`done` signals. The tracker re-reads state on each signal and slows polling to 30 s while connected.        |
 | `PUBLIC_DINER_REVIEWS_ENABLED` | Tracker offers ratings once served or collected; cards show stars from three ratings; approved comments appear in the dish detail; managers moderate at `/dashboard/reviews`.                        |
 
+Guest order push is not behind a `PUBLIC_DINER_*` flag: it shares the staff `PWA_PUSH_*` gate (see docs/pwa.md). The reviews destination appears in the sidebar and command palette only where `PUBLIC_DINER_REVIEWS_ENABLED=true`, ordering is enabled and the viewer can manage the outlet.
+
 Operational notes: Nginx must not buffer `/api/public-orders/*/stream` (`X-Accel-Buffering: no` is set).
-The reviews page has no sidebar entry yet; adding one is an information-architecture change to
-`src/modules/dashboard/nav-model.ts` and its tests. The staff service-request queue now shows the diner's
+The staff service-request queue now shows the diner's
 chosen name beside the table (migration 0102).
 
 ## Release verification

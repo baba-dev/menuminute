@@ -21,6 +21,7 @@ import { getGuestOrderNote, getOrderStampVariant } from "@/lib/hospitality-order
 import { createSseParser } from "@/modules/orders/guest-stream";
 import { playWoodenTap } from "@/lib/sound-effects";
 import { OrderReviews } from "./order-reviews";
+import { OrderPushToggle } from "./order-push-toggle";
 
 const STATUS_ANNOUNCEMENT: Record<string, string> = {
   accepted: "The restaurant accepted your order.",
@@ -89,6 +90,7 @@ export function OrderTracker({
   token,
   live = false,
   reviews = false,
+  push = false,
 }: {
   orderId: string;
   trackingToken: string;
@@ -97,6 +99,8 @@ export function OrderTracker({
   live?: boolean;
   /** Verified dish ratings are approved and enabled. */
   reviews?: boolean;
+  /** Order-update push may be offered (the server still checks the outlet rollout). */
+  push?: boolean;
 }) {
   const snapshot = useCallback(() => {
     try {
@@ -441,6 +445,14 @@ export function OrderTracker({
         className="public-shell stack"
         style={{ maxWidth: "600px", margin: "0 auto", paddingBottom: "3rem" }}
       >
+        {push && (
+          <OrderPushToggle
+            token={token}
+            orderId={orderId}
+            capability={capability}
+            finished={TERMINAL_STATUSES.includes(order.status)}
+          />
+        )}
         <p
           role="status"
           aria-live="polite"

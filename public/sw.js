@@ -410,15 +410,59 @@ self.__MENUMINUTE_PWA_TEST__ = Object.freeze({
   isPublicMenuApi,
   parseGuestEnrollment,
   responseCanBeCached,
+  isGuestOrderLink,
+  readGuestPushLink,
 });
 
 // H: Empty-payload push only. Never trust notification text, URL or tenant identity
 // from a server payload; opening Orders always reauthenticates on the network.
+//
+// Diner order pushes use the same empty payload. The page that subscribed stores a same-origin
+// order link locally (origin-private Cache Storage, never sent anywhere) when the diner opts in; it
+// is the only thing that makes a push a diner push. The link is validated against a strict pattern
+// both when read and again on click, and expires after 12 hours.
+const GUEST_PUSH_CACHE = "menuminute-guest-push";
+const GUEST_PUSH_KEY = "/__guest-push-link";
+const GUEST_PUSH_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+const GUEST_ORDER_LINK =
+  /^\/m\/[A-Za-z0-9_-]{1,128}\/orders\/[A-Za-z0-9_-]{1,128}\?trackingToken=[A-Za-z0-9_-]{12,128}$/;
+
+function isGuestOrderLink(value) {
+  return typeof value === "string" && value.length <= 512 && GUEST_ORDER_LINK.test(value);
+}
+
+async function readGuestPushLink(now = Date.now()) {
+  try {
+    const cache = await caches.open(GUEST_PUSH_CACHE);
+    const stored = await cache.match(GUEST_PUSH_KEY);
+    if (!stored) return null;
+    const data = await stored.json();
+    const age = now - Number(data && data.savedAt);
+    if (!isGuestOrderLink(data && data.url) || !(age >= 0 && age <= GUEST_PUSH_MAX_AGE_MS))
+      return null;
+    return data.url;
+  } catch {
+    return null;
+  }
+}
+
 self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       if (windows.some((client) => client.visibilityState === "visible")) return;
+      const guestUrl = await readGuestPushLink();
+      if (guestUrl) {
+        await self.registration.showNotification("Update on your order", {
+          body: "Open to see your order's latest status.",
+          icon: "/brand/icons/pwa/icon-192.png",
+          badge: "/brand/icons/pwa/icon-192.png",
+          tag: "menuminute-order",
+          renotify: true,
+          data: { url: guestUrl },
+        });
+        return;
+      }
       await self.registration.showNotification("MenuMinute • new activity", {
         body: "Open your restaurant workspace to check the latest activity.",
         icon: "/brand/icons/pwa/icon-192.png",
@@ -433,7 +477,9 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
     (async () => {
-      const target = new URL("/dashboard/orders", self.location.origin).href;
+      const requested = event.notification.data && event.notification.data.url;
+      const path = isGuestOrderLink(requested) ? requested : "/dashboard/orders";
+      const target = new URL(path, self.location.origin).href;
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       const existing = windows.find(
         (client) => new URL(client.url).origin === self.location.origin

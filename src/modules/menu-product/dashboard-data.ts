@@ -1,3 +1,4 @@
+import { env } from "@/lib/config/env";
 import { cache } from "react";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { menuAssignments, menus, qrCodes, restaurants } from "@/db/schema";
@@ -67,6 +68,8 @@ export type DashboardNavigation = {
   ordering: boolean;
   /** CRM is paid-only, independently of whether free guest order intake is enabled. */
   crm?: boolean;
+  /** Guest reviews are switched on and this viewer may moderate them (outlet.manage). */
+  reviews?: boolean;
   kitchen: boolean;
   ordersRead: boolean;
   kitchenRead: boolean;
@@ -93,6 +96,7 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
     const result = await tx.execute<{
       ordering: boolean;
       crm: boolean;
+      reviewsManage: boolean;
       kitchen: boolean;
       ordersRead: boolean;
       kitchenRead: boolean;
@@ -107,6 +111,7 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
       (app_private.entitlement_allowed(${organizationId}, 'ordering.new')
         OR app_private.entitlement_allowed(${organizationId}, 'kitchen.new')
         OR app_private.is_community_edition()) as crm,
+      app_private.can_outlet(${outletId}, 'outlet.manage') as "reviewsManage",
       app_private.entitlement_allowed(${organizationId}, 'kitchen.new') as kitchen,
       app_private.can_outlet(${outletId}, 'orders.read') as "ordersRead",
       app_private.can_outlet(${outletId}, 'orders.prepare') as "kitchenRead",
@@ -116,6 +121,10 @@ export async function dashboardNavigation(actor: Actor, organizationId: string, 
     return {
       ordering: status?.ordering === true,
       crm: status?.crm === true,
+      reviews:
+        env.PUBLIC_DINER_REVIEWS_ENABLED &&
+        status?.ordering === true &&
+        status?.reviewsManage === true,
       kitchen: status?.kitchen === true,
       ordersRead: status?.ordersRead === true,
       kitchenRead: status?.kitchenRead === true,

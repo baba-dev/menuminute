@@ -100,6 +100,27 @@ silently resume: the operator must choose **Reload and sync** so the server reva
 outlet state. In an installed standalone display, an operator may explicitly request a Screen Wake
 Lock; it is released when the page hides, goes offline, or unmounts, and denial is non-fatal.
 
+## Guest order notifications (migration 0105)
+
+A diner can opt in, per order, to an empty-payload push when that order's status becomes accepted,
+preparing, ready, rejected or cancelled. It reuses the staff push gate (`PWA_PUSH_ENABLED`, the exact
+`PWA_PUSH_OUTLET_IDS` allowlist and the VAPID keys) and the same worker lane.
+
+- **Subscribe:** `POST /api/public-orders/{id}/push` with the order's tracking token; endpoints must be a
+  known push service. One subscription row per order and device (at most three devices), expiring after
+  24 hours and cascading away with the order. Never created for the demo tenant or a finished order.
+- **Capture and delivery:** a trigger on `order_status_events` queues a delivery per subscribed device
+  and swallows its own errors so it can never abort an order transaction. The worker leases one endpoint at
+  a time through `guest_push_claim` / `guest_push_finish` and has no table privileges.
+- **Service worker:** the message is empty. A same-origin order link is stored in origin-private Cache
+  Storage (`menuminute-guest-push`, 12-hour validity) when the diner opts in; a push becomes a diner
+  notification only while that link is present and valid, and a click opens only a link that matches the
+  strict `/m/<token>/orders/<id>?trackingToken=<token>` pattern, otherwise the staff destination.
+- **Limits:** iPhone needs the site added to the Home Screen; a device that is both a staff and a diner
+  device shows the diner notification while its link is fresh (it is cleared when the order finishes).
+- **Rollback:** turn `PWA_PUSH_ENABLED` off or remove the outlet from the allowlist; nothing is sent and
+  unsubscribe keeps working.
+
 ## Activation and rollback
 
 1. Deploy with `PWA_OPERATIONAL_ENABLED=false`; this also replaces v1 caches with the safer v2
