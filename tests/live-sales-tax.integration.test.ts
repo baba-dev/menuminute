@@ -266,13 +266,15 @@ describe("Live merchant checkout tax — real PostgreSQL/Redis", () => {
     const ledger = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
       view: "ledger_page",
     });
-    expect(ledger.items.find((item) => item.saleId === created.saleId)).toMatchObject({
+    const ledgerRows = ledger as { items: Array<{ saleId: string; totalMinor: string; taxMinor: string; paidMinor: string }> };
+    expect(ledgerRows.items.find((item) => item.saleId === created.saleId)).toMatchObject({
       totalMinor: "10500", taxMinor: "500", paidMinor: "10500",
     });
     const reconciliation = await financeRead(f.actor, f.outlet.organizationId, f.outlet.id, {
       view: "reconcile_page",
     });
-    expect(reconciliation.anomalies.filter((a) => a.saleId === created.saleId)).toEqual([]);
+    const reconPage = reconciliation as { anomalies: Array<{ saleId: string; reason: string }> };
+    expect(reconPage.anomalies.filter((a) => a.saleId === created.saleId)).toEqual([]);
     const refunded = await financeCommand(f.actor, f.outlet.organizationId, f.outlet.id, {
       action: "staff_refund",
       key: crypto.randomUUID(),
