@@ -356,7 +356,7 @@ export type SettlementDetail = {
   saleId: string;
   orderId: string;
   currency: string;
-  basis: "pre_tax_draft" | "frozen_bill";
+  basis: "pre_tax_draft" | "merchant_tax_order" | "frozen_bill";
   expectedMinor: string;
   staffAttestedMinor: string;
   staffMethod: string | null;
