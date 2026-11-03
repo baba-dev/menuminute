@@ -20,11 +20,7 @@ const claims = {
   acknowledgementIso: "2026-11-03T09:10:11+05:30",
 };
 
-function signedToken(
-  payload: object = claims,
-  keyId = "trusted-1",
-  privateKey?: string
-) {
+function signedToken(payload: object = claims, keyId = "trusted-1", privateKey?: string) {
   const keys = privateKey
     ? { privateKey }
     : generateKeyPairSync("rsa", {
@@ -34,9 +30,13 @@ function signedToken(
       });
   const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: keyId })).toString("base64url");
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = sign("RSA-SHA256", Buffer.from(header + "." + body), keys.privateKey)
-    .toString("base64url");
-  return { token: header + "." + body + "." + signature, publicKey: "publicKey" in keys ? keys.publicKey : "" };
+  const signature = sign("RSA-SHA256", Buffer.from(header + "." + body), keys.privateKey).toString(
+    "base64url"
+  );
+  return {
+    token: header + "." + body + "." + signature,
+    publicKey: "publicKey" in keys ? keys.publicKey : "",
+  };
 }
 
 describe("India GST statutory series and IRP boundary", () => {
@@ -88,13 +88,25 @@ describe("India GST statutory series and IRP boundary", () => {
     const real = signedToken();
     const attacker = signedToken();
     expect(() => verifyIrpPartnerJws(real.token, expected, { another: real.publicKey })).toThrow();
-    expect(() => verifyIrpPartnerJws(attacker.token, expected, { "trusted-1": real.publicKey })).toThrow();
-    expect(() => verifyIrpPartnerJws(real.token, { ...expected, documentTotalMinor: "999" },
-      { "trusted-1": real.publicKey })).toThrow();
+    expect(() =>
+      verifyIrpPartnerJws(attacker.token, expected, { "trusted-1": real.publicKey })
+    ).toThrow();
+    expect(() =>
+      verifyIrpPartnerJws(
+        real.token,
+        { ...expected, documentTotalMinor: "999" },
+        { "trusted-1": real.publicKey }
+      )
+    ).toThrow();
     const parts = real.token.split(".");
-    const altered = Buffer.from(JSON.stringify({ ...claims, documentTotalMinor: "1" })).toString("base64url");
-    expect(() => verifyIrpPartnerJws(parts[0] + "." + altered + "." + parts[2],
-      expected, { "trusted-1": real.publicKey })).toThrow();
+    const altered = Buffer.from(JSON.stringify({ ...claims, documentTotalMinor: "1" })).toString(
+      "base64url"
+    );
+    expect(() =>
+      verifyIrpPartnerJws(parts[0] + "." + altered + "." + parts[2], expected, {
+        "trusted-1": real.publicKey,
+      })
+    ).toThrow();
   });
 
   it("rejects non-RS256, malformed/oversize JWS and false IRNs", () => {
@@ -105,12 +117,19 @@ describe("India GST statutory series and IRP boundary", () => {
     });
     const unsupported = signedToken(claims, "trusted-1", keys.privateKey);
     const decoded = unsupported.token.split(".");
-    const wrongAlg = Buffer.from(JSON.stringify({ kid: "trusted-1", alg: "none" })).toString("base64url");
-    expect(() => verifyIrpPartnerJws(wrongAlg+"."+decoded[1]+"."+decoded[2],
-      expected, { "trusted-1": keys.publicKey })).toThrow();
+    const wrongAlg = Buffer.from(JSON.stringify({ kid: "trusted-1", alg: "none" })).toString(
+      "base64url"
+    );
+    expect(() =>
+      verifyIrpPartnerJws(wrongAlg + "." + decoded[1] + "." + decoded[2], expected, {
+        "trusted-1": keys.publicKey,
+      })
+    ).toThrow();
     expect(() => verifyIrpPartnerJws("not-a-jws", expected, {})).toThrow();
     expect(() => verifyIrpPartnerJws("a".repeat(64001), expected, {})).toThrow();
     const fake = signedToken({ ...claims, irn: "NOT-AN-IRN" });
-    expect(() => verifyIrpPartnerJws(fake.token, expected, { "trusted-1": fake.publicKey })).toThrow();
+    expect(() =>
+      verifyIrpPartnerJws(fake.token, expected, { "trusted-1": fake.publicKey })
+    ).toThrow();
   });
 });
