@@ -168,3 +168,138 @@ END $$;
 REVOKE ALL ON FUNCTION
  app_private.commit_order_sales_tax(text,text,integer,bigint,bigint)
  FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
+-- Preserve old production guest/POS validation, menu release checks,
+-- idempotency, free-plan cap and kitchen dispatch, then finalize TAX in the
+-- SAME transaction. Old functions are no longer callable by the app role.
+ALTER FUNCTION app_private.submit_guest_order(text,jsonb)
+ RENAME TO submit_guest_order_before_live_tax_0107;
+REVOKE ALL ON FUNCTION app_private.submit_guest_order_before_live_tax_0107(text,jsonb)
+ FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
+CREATE FUNCTION app_private.submit_guest_order(p_token text,p_payload jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE q qr_codes%ROWTYPE;v_result jsonb;v_tax jsonb;
+BEGIN
+ IF jsonb_typeof(p_payload) IS DISTINCT FROM 'object' THEN
+   RAISE EXCEPTION 'Invalid guest order' USING ERRCODE='22023'; END IF;
+ SELECT * INTO q FROM qr_codes WHERE destination_token=p_token AND is_active;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Menu unavailable' USING ERRCODE='22023'; END IF;
+ -- The legacy order producer is the authority for item prices, menu
+ -- fingerprint, idempotency key, fulfillment, free cap and order ID.
+ v_result:=app_private.submit_guest_order_before_live_tax_0107(
+  p_token,jsonb_set(jsonb_set(p_payload,'{taxMinor}','0'::jsonb,true),
+    '{totalMinor}',p_payload->'subtotalMinor',true)
+ );
+ IF COALESCE((v_result->>'isDuplicate')::boolean,false) THEN RETURN v_result; END IF;
+ v_tax:=app_private.commit_order_sales_tax(
+    q.restaurant_id,v_result->>'orderId',
+    CASE WHEN p_payload ? 'expectedTaxRevision'
+      THEN (p_payload->>'expectedTaxRevision')::integer ELSE NULL END,
+    CASE WHEN p_payload ? 'totalMinor'
+      THEN (p_payload->>'totalMinor')::bigint ELSE NULL END,
+    CASE WHEN p_payload ? 'taxMinor'
+      THEN (p_payload->>'taxMinor')::bigint ELSE NULL END
+ );
+ RETURN v_result||jsonb_build_object('totalMinor',(v_tax->>'totalMinor')::integer,
+   'taxMinor',(v_tax->>'taxMinor')::integer,'taxRevision',v_tax->'policyRevision',
+   'taxLabel',v_tax->'label','taxApplied',v_tax->'applied');
+END $$;
+REVOKE ALL ON FUNCTION app_private.submit_guest_order(text,jsonb)
+ FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.submit_guest_order(text,jsonb) TO menuminute_app;
+
+ALTER FUNCTION app_private.pos_submit_order(text,text,text,jsonb)
+ RENAME TO pos_submit_order_before_live_tax_0107;
+REVOKE ALL ON FUNCTION app_private.pos_submit_order_before_live_tax_0107(text,text,text,jsonb)
+ FROM PUBLIC,menuminute_app,menuminute_worker,menuminute_billing;
+
+CREATE FUNCTION app_private.pos_submit_order(
+  p_outlet text,p_key text,p_hash text,p_data jsonb
+) RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE v_result jsonb;v_tax jsonb;v_actor text:=NULLIF(current_setting('app.actor_id',true),'');
+BEGIN
+ IF jsonb_typeof(p_data) IS DISTINCT FROM 'object' THEN
+   RAISE EXCEPTION 'Invalid staff order' USING ERRCODE='22023'; END IF;
+ v_result:=app_private.pos_submit_order_before_live_tax_0107(p_outlet,p_key,p_hash,p_data);
+ IF COALESCE((v_result->>'duplicate')::boolean,false) THEN RETURN v_result; END IF;
+ v_tax:=app_private.commit_order_sales_tax(
+  p_outlet,v_result->>'orderId',
+  CASE WHEN p_data ? 'expectedTaxRevision' THEN (p_data->>'expectedTaxRevision')::integer ELSE NULL END,
+  CASE WHEN p_data ? 'expectedTotalMinor' THEN (p_data->>'expectedTotalMinor')::bigint ELSE NULL END,
+  CASE WHEN p_data ? 'expectedTaxMinor' THEN (p_data->>'expectedTaxMinor')::bigint ELSE NULL END
+ );
+ v_result:=v_result||jsonb_build_object(
+    'totalMinor',v_tax->'totalMinor','taxMinor',v_tax->'taxMinor',
+    'subtotalMinor',v_tax->'originalSubtotalMinor',
+    'taxRevision',v_tax->'policyRevision',
+    'taxAndFeesCalculated',v_tax->'taxAndFeesCalculated',
+    'taxApplied',v_tax->'applied','taxLabel',v_tax->'label');
+ UPDATE pos_commands SET result=v_result
+ WHERE outlet_id=p_outlet AND actor_id=v_actor AND request_key=p_key
+    AND action='submit_order' AND request_hash=p_hash;
+ IF NOT FOUND THEN RAISE EXCEPTION 'POS command evidence missing' USING ERRCODE='40001'; END IF;
+ RETURN v_result;
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_submit_order(text,text,text,jsonb)
+ FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.pos_submit_order(text,text,text,jsonb) TO menuminute_app;
+
+-- Refund and payment records refer to the original full payable, not
+-- pre-tax pos_sales.subtotal_minor; this is essential for 0/2/3 ISO decimals
+-- and inclusive/exclusive merchant tax. Preserve all existing attestation gates.
+CREATE OR REPLACE FUNCTION app_private.pos_submit_order_with_attestation(
+ p_outlet text,p_key text,p_hash text,p_data jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE v_result jsonb; v_sale pos_sales%ROWTYPE; v_order orders%ROWTYPE;
+ v_org text; v_method text; v_paid boolean; v_prior pos_staff_payment_attestations%ROWTYPE;
+ v_actor text:=NULLIF(current_setting('app.actor_id',true),'');
+BEGIN
+ IF jsonb_typeof(p_data->'markAsPaid') IS DISTINCT FROM 'boolean'
+ THEN RAISE EXCEPTION 'Invalid payment choice' USING ERRCODE='22023'; END IF;
+ v_paid := (p_data->>'markAsPaid')::boolean;
+ v_method := NULLIF(p_data->>'paymentMethod','');
+ IF (v_paid AND v_method NOT IN ('cash','upi_external','card_external','bank_external','other'))
+ OR (v_paid AND v_method IS NULL) OR (NOT v_paid AND v_method IS NOT NULL)
+ THEN RAISE EXCEPTION 'Invalid staff payment method' USING ERRCODE='22023'; END IF;
+ v_result:=app_private.pos_submit_order(p_outlet,p_key,p_hash,p_data);
+ IF NOT v_paid THEN
+  RETURN v_result || jsonb_build_object('paymentStatus','pending','paymentEvidence','none');
+ END IF;
+ SELECT * INTO v_sale FROM pos_sales WHERE id=v_result->>'saleId' AND outlet_id=p_outlet FOR UPDATE;
+ IF NOT FOUND OR v_sale.origin<>'staff' THEN RAISE EXCEPTION 'Staff sale unavailable' USING ERRCODE='22023'; END IF;
+ SELECT * INTO v_order FROM orders WHERE id=v_sale.order_id AND restaurant_id=p_outlet FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Order unavailable' USING ERRCODE='22023'; END IF;
+ SELECT * INTO v_prior FROM pos_staff_payment_attestations
+ WHERE sale_id=v_sale.id AND outlet_id=p_outlet;
+ IF FOUND THEN
+  IF v_prior.method IS DISTINCT FROM v_method OR v_prior.amount_minor<>v_order.total_minor
+  OR v_prior.actor_id IS DISTINCT FROM v_actor OR v_order.payment_status<>'paid'
+  THEN RAISE EXCEPTION 'Payment attestation conflict' USING ERRCODE='40001'; END IF;
+ ELSE
+  IF v_order.payment_status<>'unpaid' OR EXISTS(
+   SELECT 1 FROM pos_bills WHERE sale_id=v_sale.id AND outlet_id=p_outlet)
+   OR EXISTS(SELECT 1 FROM pos_tenders WHERE sale_id=v_sale.id AND outlet_id=p_outlet)
+  THEN RAISE EXCEPTION 'Sale already settled or changed' USING ERRCODE='40001'; END IF;
+  INSERT INTO pos_staff_payment_attestations(
+   sale_id,organization_id,outlet_id,order_id,actor_id,method,amount_minor,currency)
+  VALUES(v_sale.id,v_sale.organization_id,p_outlet,v_order.id,v_actor,v_method,v_order.total_minor,v_sale.currency);
+  UPDATE orders SET payment_status='paid',version=version+1,updated_at=clock_timestamp()
+  WHERE id=v_order.id AND restaurant_id=p_outlet AND payment_status='unpaid';
+  IF NOT FOUND THEN RAISE EXCEPTION 'Stale order payment' USING ERRCODE='40001'; END IF;
+  INSERT INTO domain_audit(id,organization_id,actor_id,action,details)
+  VALUES(gen_random_uuid()::text,v_sale.organization_id,v_actor,'pos.staff_payment.attested',
+   jsonb_build_object('saleId',v_sale.id,'orderId',v_order.id,'outletId',p_outlet,
+   'method',v_method,'amountMinor',v_order.total_minor::text,'currency',v_sale.currency,
+   'evidence','staff_recorded','taxCalculated',v_order.tax_minor>0));
+  INSERT INTO outbox_events(id,organization_id,outlet_id,type,schema_version,aggregate_version,payload)
+  SELECT gen_random_uuid()::text,v_sale.organization_id,p_outlet,'order.payment_changed',1,version,
+   jsonb_build_object('orderId',id,'paymentStatus','paid','evidence','staff_recorded')
+  FROM orders WHERE id=v_order.id AND restaurant_id=p_outlet;
+ END IF;
+ RETURN v_result || jsonb_build_object('paymentStatus','complete',
+  'paymentMethod',v_method,'paymentEvidence','staff_recorded');
+END $$;
+
