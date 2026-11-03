@@ -100,7 +100,9 @@ describe("India GST pre-issuance adapter: never legal issuance", () => {
       ...input,
       lines: [{ ...input.lines[0], componentMode: "cgst_utgst" }],
     });
-    expect(utgst.checks.find((item) => item.id === "line_0_utgst_jurisdiction")?.satisfied).toBe(false);
+    expect(utgst.checks.find((item) => item.id === "line_0_utgst_jurisdiction")?.satisfied).toBe(
+      false
+    );
     const reverse = reviewIndiaGstDraft(frozen, { ...input, reverseCharge: true });
     expect(reverse.checks.find((item) => item.id === "reverse_charge")?.satisfied).toBe(false);
     expect(reverse.statutoryIssuanceAllowed).toBe(false);
