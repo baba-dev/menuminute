@@ -13,6 +13,7 @@ This module is an additive, country-specific foundation. It is **not** approval 
 - IRP advisory effective April 1, 2025 imposes a 30-day e-invoice reporting restriction for certain taxpayers with AATO ₹10 crore or more. This is not a universal timestamp rule.
 
 Authority references:
+
 - https://taxinformation.cbic.gov.in/content-page/explore-rules/1000136/1000001
 - https://taxinformation.cbic.gov.in/content-page/explore-act/1000300/1000001/invoice/ACTS
 - https://taxinformation.cbic.gov.in/content-page/explore-act/1000304/1000001
