@@ -116,6 +116,8 @@ export function reviewIndiaGstDraft(source: unknown, raw: unknown): IndiaGstDraf
     "B2B requires buyer GSTIN; B2C must not be misrepresented as registered supply.");
   check("buyer_state", input.supplyType === "b2c" || input.buyer.gstin.slice(0, 2) === input.buyer.stateCode,
     "Buyer GSTIN prefix must match the buyer's declared state; syntax is not authority validation.");
+  check("reverse_charge", !input.reverseCharge,
+    "Reverse charge must be reviewed with a qualified tax adviser; no automatic self-assessed treatment is supported.");
   check("no_exports", input.supplyType === "b2b" || input.supplyType === "b2c",
     "Exports and SEZ treatment require their own approved adapter.");
   check("number_of_lines", packet.lines.length === input.lines.length,
