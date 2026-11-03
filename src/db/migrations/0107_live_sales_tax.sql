@@ -442,3 +442,29 @@ BEGIN
    'canChangeOrders',v_live);
 END $$;
 
+
+-- A cashier/service staff member may quote tax without permission to edit it.
+-- This mirrors POS sale authorization rather than the merchant settings role.
+CREATE FUNCTION app_private.pos_order_tax_policy(p_outlet text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $$
+DECLARE r restaurants%ROWTYPE; p app_private.outlet_sales_tax_policies%ROWTYPE;
+BEGIN
+ IF current_setting('app.outlet_id',true) IS DISTINCT FROM p_outlet
+   OR NOT app_private.pos_access(p_outlet,'sale')
+ THEN RAISE EXCEPTION 'POS tax quote access denied' USING ERRCODE='42501'; END IF;
+ SELECT * INTO r FROM restaurants WHERE id=p_outlet AND is_active;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Outlet unavailable' USING ERRCODE='42501'; END IF;
+ SELECT * INTO p FROM app_private.outlet_sales_tax_policies
+ WHERE outlet_id=p_outlet AND organization_id=r.organization_id;
+ IF NOT FOUND THEN RETURN jsonb_build_object(
+   'revision',0,'status','unconfigured','label','Sales tax',
+   'rateBps',0,'inclusive',false,'applied',false,'currency',r.currency);
+ END IF;
+ RETURN jsonb_build_object('revision',p.revision,'status',p.status,
+   'label',p.label,'rateBps',CASE WHEN p.apply_to_orders THEN p.rate_bps ELSE 0 END,
+   'inclusive',p.inclusive,'applied',p.apply_to_orders,'currency',r.currency);
+END $$;
+REVOKE ALL ON FUNCTION app_private.pos_order_tax_policy(text)
+ FROM PUBLIC,menuminute_worker,menuminute_billing;
+GRANT EXECUTE ON FUNCTION app_private.pos_order_tax_policy(text) TO menuminute_app;
