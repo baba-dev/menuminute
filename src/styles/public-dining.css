@@ -975,7 +975,19 @@
   color: var(--dc-ink);
 }
 .dining-modal .customizer-body {
+  min-height: 0;
   overscroll-behavior: contain;
+}
+.dining-modal .customizer-header,
+.dining-modal .customizer-footer,
+.dining-cart .cart-header,
+.dining-cart .cart-footer {
+  flex-shrink: 0;
+}
+.dining-customizer-submit {
+  flex: 1;
+  min-height: 48px;
+  margin-left: 1rem;
 }
 .dining-modal .dining-detail-hint {
   font-size: 0.85rem;
@@ -1201,6 +1213,7 @@
   background: var(--dc-surface);
   color: var(--dc-ink);
   max-width: 710px;
+  max-height: 92dvh;
   overscroll-behavior: contain;
 }
 .dining-cart .cart-header,
@@ -1209,6 +1222,7 @@
   border-color: var(--dc-line);
 }
 .dining-cart .cart-body {
+  min-height: 0;
   padding: 1.1rem 1.4rem;
   overscroll-behavior: contain;
 }
@@ -1222,6 +1236,14 @@
   background: var(--dc-paper);
   border-color: var(--dc-line);
   align-items: start;
+}
+.dining-cart-item-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dining-cart-item-title {
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
 }
 .dining-cart-thumb {
   width: 82px;
@@ -1277,8 +1299,9 @@
   gap: 0.15rem;
 }
 .dining-cart-suggestion button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   border-radius: 10px;
   border: 0;
   background: var(--dc-ember);
@@ -1292,6 +1315,45 @@
 }
 .dining-cart .cart-footer button {
   min-height: 54px;
+}
+@media (max-width: 450px) {
+  .dining-modal .customizer-header,
+  .dining-modal .customizer-body,
+  .dining-cart .cart-header,
+  .dining-cart .cart-body {
+    padding: 1rem;
+  }
+  .dining-cart > .cart-section {
+    padding-inline: 1rem;
+  }
+  .dining-modal .customizer-footer,
+  .dining-cart .cart-footer {
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  .dining-modal .customizer-footer {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .dining-customizer-submit {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .dining-modal .dining-customizer-photo {
+    min-height: 0;
+    flex-shrink: 0;
+  }
+  .dining-modal .dining-customizer-photo img {
+    height: 140px;
+  }
+  .dining-cart-thumb {
+    width: 52px;
+    height: 52px;
+  }
+  .dining-modal .field-input,
+  .dining-cart .field-input {
+    /* Keep focused fields readable without automatic zoom on iOS. */
+    font-size: 1rem;
+  }
 }
 @media (min-width: 850px) {
   .dining-cart {

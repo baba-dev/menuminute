@@ -4,18 +4,7 @@ import { DishReviewsList } from "./dish-reviews-list";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
-import {
-  X,
-  Plus,
-  Minus,
-  Leaf,
-  Check,
-  Clock3,
-  Flame,
-  ShieldAlert,
-  Sparkles,
-  ChefHat,
-} from "lucide-react";
+import { X, Plus, Minus, Leaf, Check, Clock3, Flame, ShieldAlert, Sparkles } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
 import { canQuickAddCompanion, hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
@@ -297,11 +286,6 @@ export function ItemCustomizer({
       aria-labelledby="customizer-title"
     >
       <div className="customizer-sheet stack" ref={sheetRef}>
-        {visual && (
-          <div className="dining-customizer-photo">
-            <DiningImage visual={visual} eager />
-          </div>
-        )}
         <div className="customizer-header row between">
           <div className="stack" style={{ gap: "0.2rem" }}>
             <span className="eyebrow">{readOnly ? "From our kitchen" : "Make it yours"}</span>
@@ -315,13 +299,24 @@ export function ItemCustomizer({
             className="icon-btn"
             onClick={onClose}
             aria-label="Close customizer"
-            style={{ borderRadius: "50%", padding: "0.4rem", minHeight: "36px", width: "36px" }}
+            style={{
+              borderRadius: "50%",
+              padding: "0.4rem",
+              minHeight: "44px",
+              width: "44px",
+              flexShrink: 0,
+            }}
           >
             <X size={18} />
           </button>
         </div>
 
         <div className="customizer-body stack">
+          {visual && (
+            <div className="dining-customizer-photo">
+              <DiningImage visual={visual} eager />
+            </div>
+          )}
           {activeDish.culinary?.chefNote && (
             <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3.5 dark:border-amber-900/50 dark:bg-amber-950/20">
               <div className="flex items-center gap-2">
@@ -365,23 +360,6 @@ export function ItemCustomizer({
               </span>
             )}
           </div>
-
-          {/* Chef Tasting Note / Heritage Story */}
-          {activeDish.culinary?.chefNote && (
-            <div className="dining-chef-note stack">
-              <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
-                <ChefHat size={16} className="ember-text" />
-                <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>
-                  Chef&apos;s Tasting Note
-                </span>
-              </div>
-              <p
-                style={{ margin: 0, fontStyle: "italic", fontSize: "0.92rem", lineHeight: "1.45" }}
-              >
-                &ldquo;{activeDish.culinary.chefNote}&rdquo;
-              </p>
-            </div>
-          )}
 
           {/* Flavor Profile Tags */}
           {activeDish.culinary?.flavorNotes && activeDish.culinary.flavorNotes.length > 0 && (
@@ -675,9 +653,12 @@ export function ItemCustomizer({
           {/* Cooking notes input */}
           {!readOnly && (
             <div className="customizer-section stack">
-              <span className="section-title">Special Instructions</span>
+              <label className="section-title" htmlFor="dish-special-instructions">
+                Special Instructions
+              </label>
               <input
                 type="text"
+                id="dish-special-instructions"
                 placeholder="e.g. Less spicy, dressing on side, allergies"
                 value={itemNotes}
                 maxLength={200}
@@ -737,8 +718,7 @@ export function ItemCustomizer({
 
               <button
                 type="button"
-                className="action ember"
-                style={{ flex: 1, minHeight: "48px", marginLeft: "1rem" }}
+                className="action ember dining-customizer-submit"
                 onClick={handleSubmit}
               >
                 Add to Order · {formatPrice(grandTotal, currency)}

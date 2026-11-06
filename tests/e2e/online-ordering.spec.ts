@@ -5,6 +5,57 @@ import { hashPassword } from "better-auth/crypto";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 import { setFreeIntake } from "./plan-settings";
 
+for (const width of [360, 390]) {
+  test(`diner sheets stay usable at ${width}px and removing the last item restores scrolling`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 740 });
+    const fixture = await seedOrdering(true);
+    await page.goto(`/m/${fixture.tableToken}`);
+    await page
+      .getByRole("button", { name: "Add to order", exact: true })
+      .click();
+    const detail = page.getByRole("dialog", { name: "Paneer Curry" });
+    const close = detail.getByRole("button", { name: "Close customizer" });
+    const closeBox = await close.boundingBox();
+    expect(closeBox?.width).toBeGreaterThanOrEqual(44);
+    expect(closeBox?.height).toBeGreaterThanOrEqual(44);
+    await detail.getByLabel("Special Instructions").fill("Sauce on the side");
+    await expect(detail.locator(".customizer-footer")).toBeInViewport();
+    await page.screenshot({
+      path: testInfo.outputPath("mobile-customizer.png"),
+    });
+    await detail.getByRole("button", { name: /Add to Order/ }).click();
+    await page.getByRole("button", { name: /^View Your Order/ }).click();
+    const cart = page.getByRole("dialog", { name: "Your order" });
+    await expect(cart).toBeVisible();
+    expect(
+      await cart.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    await expect(
+      cart.getByRole("button", { name: /Submit order/ }),
+    ).toBeInViewport();
+    await page.screenshot({ path: testInfo.outputPath("mobile-cart.png") });
+    await cart
+      .getByRole("button", { name: "Remove item", exact: true })
+      .click();
+    await expect(cart).toHaveCount(0);
+    await expect
+      .poll(() => page.evaluate(() => document.body.style.overflow))
+      .not.toBe("hidden");
+    await page
+      .getByRole("button", { name: "Add to order", exact: true })
+      .click();
+    await detail.getByRole("button", { name: /Add to Order/ }).click();
+    await expect(cart).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /^View Your Order/ }),
+    ).toBeVisible();
+  });
+}
+
 async function seedOrdering(enabled: boolean) {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test") {
@@ -23,25 +74,30 @@ async function seedOrdering(enabled: boolean) {
       await client.query("BEGIN");
       await client.query(
         "insert into users(id,name,email,email_verified) values($1,'Ordering owner',$2,true)",
-        [ownerId, email]
+        [ownerId, email],
       );
       await client.query(
         "insert into accounts(id,user_id,provider_id,account_id,password) values($1,$2,'credential',$2,$3)",
-        [crypto.randomUUID(), ownerId, await hashPassword(password)]
+        [crypto.randomUUID(), ownerId, await hashPassword(password)],
       );
-      await client.query("select set_config('app.actor_id',$1,true)", [ownerId]);
-      await client.query("select app_private.provision_organization($1,$2,$3::jsonb)", [
-        outletId,
-        publicId,
-        JSON.stringify({
-          name: "Order Browser Kitchen",
-          country: "IN",
-          currency: "INR",
-          timezone: "Asia/Kolkata",
-          outletType: "restaurant",
-          fulfillmentModes: ["dine_in", "pickup"],
-        }),
+      await client.query("select set_config('app.actor_id',$1,true)", [
+        ownerId,
       ]);
+      await client.query(
+        "select app_private.provision_organization($1,$2,$3::jsonb)",
+        [
+          outletId,
+          publicId,
+          JSON.stringify({
+            name: "Order Browser Kitchen",
+            country: "IN",
+            currency: "INR",
+            timezone: "Asia/Kolkata",
+            outletType: "restaurant",
+            fulfillmentModes: ["dine_in", "pickup"],
+          }),
+        ],
+      );
       const document = menuDocumentSchema.parse({
         name: "Online menu",
         currency: "INR",
@@ -53,24 +109,26 @@ async function seedOrdering(enabled: boolean) {
           },
         ],
       });
-      await client.query("select app_private.menu_command($1,$2,'save',$3::jsonb,$4,1)", [
-        outletId,
-        `menu-${outletId}`,
-        JSON.stringify({ document }),
-        crypto.randomUUID(),
-      ]);
-      await client.query("select app_private.menu_command($1,$2,'publish','{}'::jsonb,$3,2)", [
-        outletId,
-        `menu-${outletId}`,
-        crypto.randomUUID(),
-      ]);
+      await client.query(
+        "select app_private.menu_command($1,$2,'save',$3::jsonb,$4,1)",
+        [
+          outletId,
+          `menu-${outletId}`,
+          JSON.stringify({ document }),
+          crypto.randomUUID(),
+        ],
+      );
+      await client.query(
+        "select app_private.menu_command($1,$2,'publish','{}'::jsonb,$3,2)",
+        [outletId, `menu-${outletId}`, crypto.randomUUID()],
+      );
       const result = await client.query<{ data: { token: string } }>(
         "select app_private.qr_command($1,'create',$2::jsonb,$3) as data",
         [
           outletId,
           JSON.stringify({ label: "Dining room", pointLabel: "Table 4" }),
           crypto.randomUUID(),
-        ]
+        ],
       );
       tableToken = result.rows[0]!.data.token;
       if (enabled) {
@@ -79,7 +137,7 @@ async function seedOrdering(enabled: boolean) {
           (id,organization_id,capability,billing_currency,starts_at,ends_at,operator,reason,request_key)
           values($1,$2,'ordering.new','USD',now()-interval '1 minute',
           now()+interval '1 hour','browser-test','Ordering UI acceptance',$3)`,
-          [crypto.randomUUID(), `org-${outletId}`, crypto.randomUUID()]
+          [crypto.randomUUID(), `org-${outletId}`, crypto.randomUUID()],
         );
       }
       await client.query("COMMIT");
@@ -102,11 +160,20 @@ test("a free outlet takes orders under its monthly allowance (free intake ships 
   try {
     const fixture = await seedOrdering(false);
     await page.goto(`/m/${fixture.tableToken}`);
-    await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
-    await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
+    await expect(
+      page.getByRole("heading", { name: "Paneer Curry" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "View Paneer Curry details" })
+      .first()
+      .click();
     const detail = page.getByRole("dialog", { name: "Paneer Curry" });
-    await expect(detail.getByRole("button", { name: /Add to Order/ })).toBeVisible();
-    await expect(detail.getByText(/Browse the available options and pricing/)).toHaveCount(0);
+    await expect(
+      detail.getByRole("button", { name: /Add to Order/ }),
+    ).toBeVisible();
+    await expect(
+      detail.getByText(/Browse the available options and pricing/),
+    ).toHaveCount(0);
   } finally {
     await setFreeIntake(false);
   }
@@ -119,13 +186,24 @@ test("with free intake off, the free QR-only outlet retains its public menu but 
   try {
     const fixture = await seedOrdering(false);
     await page.goto(`/m/${fixture.tableToken}`);
-    await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
-    await page.getByRole("button", { name: "View Paneer Curry details" }).first().click();
+    await expect(
+      page.getByRole("heading", { name: "Paneer Curry" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "View Paneer Curry details" })
+      .first()
+      .click();
     const detail = page.getByRole("dialog", { name: "Paneer Curry" });
-    await expect(detail.getByText(/Browse the available options and pricing/)).toBeVisible();
-    await expect(detail.getByRole("button", { name: /Add to Order/ })).toHaveCount(0);
+    await expect(
+      detail.getByText(/Browse the available options and pricing/),
+    ).toBeVisible();
+    await expect(
+      detail.getByRole("button", { name: /Add to Order/ }),
+    ).toHaveCount(0);
     await detail.getByRole("button", { name: "Back to menu" }).click();
-    await expect(page.getByRole("button", { name: /^View Your Order/ })).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /^View Your Order/ }),
+    ).toHaveCount(0);
   } finally {
     await setFreeIntake(true);
   }
@@ -137,7 +215,9 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   test.setTimeout(120000);
   const fixture = await seedOrdering(true);
   await page.goto(`/m/${fixture.tableToken}`);
-  await expect(page.getByRole("heading", { name: "Paneer Curry" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Paneer Curry" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Add to order", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Paneer Curry" })
@@ -146,29 +226,35 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   await page.getByRole("button", { name: /^View Your Order/ }).click();
   const cart = page.getByRole("dialog", { name: "Your order" });
   await expect(cart.getByRole("textbox", { name: "Name" })).toBeVisible();
-  await expect(cart.getByRole("textbox", { name: "Phone number" })).toBeVisible();
-  await expect(cart.getByRole("textbox", { name: "Order instructions" })).toBeVisible();
+  await expect(
+    cart.getByRole("textbox", { name: "Phone number" }),
+  ).toBeVisible();
+  await expect(
+    cart.getByRole("textbox", { name: "Order instructions" }),
+  ).toBeVisible();
   const orderType = cart.getByRole("group", { name: "Choose order type" });
-  await expect(orderType.getByRole("button", { name: /Dine In/i })).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
+  await expect(
+    orderType.getByRole("button", { name: /Dine In/i }),
+  ).toHaveAttribute("aria-pressed", "true");
   await orderType.getByRole("button", { name: /Takeaway \/ Pickup/i }).click();
-  await expect(orderType.getByRole("button", { name: /Takeaway \/ Pickup/i })).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
+  await expect(
+    orderType.getByRole("button", { name: /Takeaway \/ Pickup/i }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(cart.getByLabel("Pickup time")).toBeVisible();
   await orderType.getByRole("button", { name: /Dine In/i }).click();
   for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
       await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
       ),
-      `cart overflow at ${width}px`
+      `cart overflow at ${width}px`,
     ).toBeLessThanOrEqual(1);
-    const close = await cart.getByRole("button", { name: "Close cart" }).boundingBox();
+    const close = await cart
+      .getByRole("button", { name: "Close cart" })
+      .boundingBox();
     expect(close?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect(close?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
@@ -176,37 +262,50 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
   await expect(receipt).toBeVisible();
   await expect(receipt).toContainText("Menu item subtotal");
   await expect(receipt).toContainText("Total to pay");
-  await expect(receipt).toContainText("The restaurant validates published prices and tax");
+  await expect(receipt).toContainText(
+    "The restaurant validates published prices and tax",
+  );
   await expect(receipt.getByText("Subtotal", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".ticket-receipt-tear")).toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator(".ticket-receipt-tear")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
   const [receiptPaper, drawerPaper] = await Promise.all([
     receipt.evaluate((node) => getComputedStyle(node).backgroundColor),
-    page.locator(".dining-cart").evaluate((node) => getComputedStyle(node).backgroundColor),
+    page
+      .locator(".dining-cart")
+      .evaluate((node) => getComputedStyle(node).backgroundColor),
   ]);
   expect(receiptPaper).toBe(drawerPaper);
-  await expect(page.getByText("Table 4", { exact: false }).first()).toBeVisible();
+  await expect(
+    page.getByText("Table 4", { exact: false }).first(),
+  ).toBeVisible();
   await page.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
   await expect(page.getByText("Order Sent to Restaurant")).toBeVisible();
-  await expect(page.getByRole("list", { name: "Order progress" })).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Order progress" }),
+  ).toBeVisible();
   const trackerAxe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(
     trackerAxe.violations
       .filter((v) => v.impact === "serious" || v.impact === "critical")
-      .map((v) => `${v.id}: ${v.nodes.length} node(s)`)
+      .map((v) => `${v.id}: ${v.nodes.length} node(s)`),
   ).toEqual([]);
 
   const orderId = new URL(page.url()).pathname.split("/").at(-1)!;
   const unauthorized = await page.request.get(
     `/api/public-orders/${orderId}?token=${encodeURIComponent(fixture.tableToken)}`,
-    { headers: { "x-tracking-token": "incorrect-token" } }
+    { headers: { "x-tracking-token": "incorrect-token" } },
   );
   expect(unauthorized.status()).toBe(404);
 
   // Keep each synthetic browser login on an independent proxy-supplied client IP.
-  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page
+    .context()
+    .setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   const owner = await page.context().newPage();
   try {
     await owner.goto("/login");
@@ -215,41 +314,61 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await owner.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(owner).toHaveURL(/dashboard/);
     await owner.goto("/dashboard/orders");
-    await expect(owner.getByRole("heading", { name: "The Service Counter." })).toBeVisible();
+    await expect(
+      owner.getByRole("heading", { name: "The Service Counter." }),
+    ).toBeVisible();
     await expect(owner.getByTestId("service-counter")).toBeVisible();
     await expect(owner.getByText("Today's service pulse")).toBeVisible();
-    await expect(owner.getByRole("tab", { name: /Live orders/ })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    await owner.getByRole("button", { name: "Details", exact: false }).first().click();
+    await expect(
+      owner.getByRole("tab", { name: /Live orders/ }),
+    ).toHaveAttribute("aria-selected", "true");
+    await owner
+      .getByRole("button", { name: "Details", exact: false })
+      .first()
+      .click();
     await expect(owner.getByRole("dialog", { name: /Order #/ })).toBeVisible();
     await owner.getByRole("button", { name: "Close order details" }).click();
     await owner.getByRole("button", { name: "Accept", exact: true }).click();
-    await expect(page.getByText("Order Accepted!")).toBeVisible({ timeout: 15000 });
-    await owner.getByRole("button", { name: "Start Preparing" }).click();
-    await expect(page.getByText("Food Being Prepared")).toBeVisible({ timeout: 15000 });
-    await owner.getByRole("button", { name: "Mark Ready" }).click();
-    await expect(page.getByText("Order Ready!")).toBeVisible({ timeout: 15000 });
-    await owner.getByRole("button", { name: "Record Paid" }).click();
-    await owner.getByRole("button", { name: "Confirm cash received" }).click();
-    await expect(page.getByText("Your payment has been received.")).toBeVisible({
+    await expect(page.getByText("Order Accepted!")).toBeVisible({
       timeout: 15000,
     });
+    await owner.getByRole("button", { name: "Start Preparing" }).click();
+    await expect(page.getByText("Food Being Prepared")).toBeVisible({
+      timeout: 15000,
+    });
+    await owner.getByRole("button", { name: "Mark Ready" }).click();
+    await expect(page.getByText("Order Ready!")).toBeVisible({
+      timeout: 15000,
+    });
+    await owner.getByRole("button", { name: "Record Paid" }).click();
+    await owner.getByRole("button", { name: "Confirm cash received" }).click();
+    await expect(page.getByText("Your payment has been received.")).toBeVisible(
+      {
+        timeout: 15000,
+      },
+    );
     await owner.getByRole("button", { name: "Mark Served" }).click();
-    await expect(page.getByText("Order Complete")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Order Complete")).toBeVisible({
+      timeout: 15000,
+    });
     await owner.getByRole("tab", { name: "History" }).click();
     await expect(owner.getByText("matching concluded orders")).toBeVisible();
     for (const width of [360, 390, 768, 1024, 1440]) {
       await owner.setViewportSize({ width, height: 900 });
-      expect(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true
-      );
+      expect(
+        await owner.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
     }
   } finally {
     await owner.close();
   }
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });
 
 test("Service Counter keeps verified queue and counters isolated under partial outages", async ({
@@ -258,7 +377,9 @@ test("Service Counter keeps verified queue and counters isolated under partial o
 }, info) => {
   test.setTimeout(120000);
   const fixture = await seedOrdering(true);
-  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page
+    .context()
+    .setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   await page.goto("/login");
   await page.getByLabel("Email address").fill(fixture.email);
   await page.getByLabel("Password", { exact: true }).fill(fixture.password);
@@ -269,10 +390,9 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   if (isMobile) {
     await page.getByRole("button", { name: "More" }).click();
   }
-  await expect(page.getByRole("link", { name: "Guest reviews" }).first()).toHaveAttribute(
-    "href",
-    "/dashboard/reviews"
-  );
+  await expect(
+    page.getByRole("link", { name: "Guest reviews" }).first(),
+  ).toHaveAttribute("href", "/dashboard/reviews");
   if (isMobile) {
     await page.getByRole("button", { name: "Close More" }).click();
   }
@@ -285,13 +405,19 @@ test("Service Counter keeps verified queue and counters isolated under partial o
       headers: { "x-request-id": "test-ref-001" },
       contentType: "application/json",
       body: JSON.stringify({ message: "An unexpected error occurred" }),
-    })
+    }),
   );
   await page.goto("/dashboard/orders");
-  await expect(page.getByTestId("service-rail-status")).toContainText("Live queue synced");
+  await expect(page.getByTestId("service-rail-status")).toContainText(
+    "Live queue synced",
+  );
   await expect(page.getByTestId("service-pulse-error")).toBeVisible();
-  await expect(page.getByTestId("service-pulse-error")).toContainText("Reference: test-ref");
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
+  await expect(page.getByTestId("service-pulse-error")).toContainText(
+    "Reference: test-ref",
+  );
+  await expect(
+    page.getByRole("navigation", { name: "Breadcrumb" }),
+  ).toHaveCount(1);
   await expect(page.getByText("No tickets awaiting acceptance.")).toBeVisible();
   const cells = page.getByTestId("service-pulse-grid").locator("button");
   await expect(cells).toHaveCount(4);
@@ -309,14 +435,16 @@ test("Service Counter keeps verified queue and counters isolated under partial o
         bottom: box.bottom,
         border: parseFloat(style.borderLeftWidth),
       };
-    })
+    }),
   );
   expect(geometry.every((box) => box.border >= 1)).toBe(true);
   for (let i = 0; i < geometry.length; i += 1) {
     for (let j = i + 1; j < geometry.length; j += 1) {
       const a = geometry[i]!;
       const b = geometry[j]!;
-      expect(a.right <= b.x || b.right <= a.x || a.bottom <= b.y || b.bottom <= a.y).toBe(true);
+      expect(
+        a.right <= b.x || b.right <= a.x || a.bottom <= b.y || b.bottom <= a.y,
+      ).toBe(true);
     }
   }
 
@@ -326,12 +454,14 @@ test("Service Counter keeps verified queue and counters isolated under partial o
       status: 503,
       contentType: "application/json",
       body: JSON.stringify({ message: "An unexpected error occurred" }),
-    })
+    }),
   );
   await page.getByRole("button", { name: "Sync", exact: true }).click();
   await expect(page.getByTestId("service-rail-error")).toBeVisible();
   await expect(page.getByTestId("service-pulse-error")).toHaveCount(0);
-  await expect(page.getByTestId("service-rail-status")).toContainText("read-only");
+  await expect(page.getByTestId("service-rail-status")).toContainText(
+    "read-only",
+  );
   await expect(page.getByText("Queue unavailable").first()).toBeVisible();
   await expect(cells.first()).toContainText("0");
 
@@ -342,9 +472,11 @@ test("Service Counter keeps verified queue and counters isolated under partial o
 
   for (const width of [360, 390, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true
-    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
@@ -364,11 +496,17 @@ test("Service Counter keeps verified queue and counters isolated under partial o
   });
   await page.getByRole("tab", { name: "Live orders" }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "History" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 });
 
 async function withDb<T>(work: (pool: Pool) => Promise<T>) {
-  const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+  const pool = new Pool({
+    connectionString: process.env["MIGRATION_DATABASE_URL"],
+    max: 1,
+  });
   try {
     return await work(pool);
   } finally {
@@ -383,7 +521,9 @@ test("checkout validates the phone inline and remembers the device only when ask
   const fixture = await seedOrdering(true);
   const openCart = async () => {
     await page.goto(`/m/${fixture.tableToken}`);
-    await page.getByRole("button", { name: "Add to order", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Add to order", exact: true })
+      .click();
     await page
       .getByRole("dialog", { name: "Paneer Curry" })
       .getByRole("button", { name: /Add to Order/ })
@@ -395,23 +535,31 @@ test("checkout validates the phone inline and remembers the device only when ask
   let cart = await openCart();
   // Regression: the order-type block once sat flush against the sheet edge while the rest was padded.
   const left = (locator: import("@playwright/test").Locator) =>
-    locator.evaluate((element) => Math.round(element.getBoundingClientRect().left));
+    locator.evaluate((element) =>
+      Math.round(element.getBoundingClientRect().left),
+    );
   const sectionLeft = await left(cart.getByText("Order Type", { exact: true }));
   expect(sectionLeft).toBeGreaterThanOrEqual(16);
   expect(
-    Math.abs(sectionLeft - (await left(cart.getByText("Your details (optional)"))))
+    Math.abs(
+      sectionLeft - (await left(cart.getByText("Your details (optional)"))),
+    ),
   ).toBeLessThanOrEqual(2);
   const phone = cart.getByRole("textbox", { name: "Phone number" });
   await cart.getByRole("textbox", { name: "Name" }).fill("Asha");
   await phone.fill("12ab");
   await phone.blur();
-  await expect(cart.getByRole("alert").filter({ hasText: "digits only" })).toBeVisible();
+  await expect(
+    cart.getByRole("alert").filter({ hasText: "digits only" }),
+  ).toBeVisible();
   await cart.getByRole("button", { name: /Submit order/ }).click();
   await expect(cart.getByText("Check your phone number")).toBeVisible();
   await expect(page).not.toHaveURL(/\/orders\//);
 
   await phone.fill("+91 98765 43210");
-  await cart.getByRole("checkbox", { name: /Remember my name and phone/ }).check();
+  await cart
+    .getByRole("checkbox", { name: /Remember my name and phone/ })
+    .check();
   await cart.getByRole("button", { name: /Submit order/ }).click();
   await expect(page).toHaveURL(/\/m\/[^/]+\/orders\/ord-/);
 
@@ -420,8 +568,12 @@ test("checkout validates the phone inline and remembers the device only when ask
   cart = await openCart();
   await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("Asha");
   await expect(cart.getByText(/Saved •••• 3210/)).toBeVisible();
-  await expect(cart.getByRole("textbox", { name: "Phone number" })).toHaveValue("");
-  await expect(cart.getByRole("textbox", { name: "Order instructions" })).toHaveValue("");
+  await expect(cart.getByRole("textbox", { name: "Phone number" })).toHaveValue(
+    "",
+  );
+  await expect(
+    cart.getByRole("textbox", { name: "Order instructions" }),
+  ).toHaveValue("");
   await cart.getByRole("button", { name: "Forget saved details" }).click();
   await expect(cart.getByRole("textbox", { name: "Name" })).toHaveValue("");
   cart = await openCart();
@@ -441,7 +593,9 @@ test("live status reaches the tracker over the stream and a served order can be 
     .getByRole("button", { name: /Add to Order/ })
     .click();
   await page.getByRole("button", { name: /^View Your Order/ }).click();
-  const streamRequest = page.waitForRequest((request) => request.url().includes("/stream"));
+  const streamRequest = page.waitForRequest((request) =>
+    request.url().includes("/stream"),
+  );
   await page
     .getByRole("dialog", { name: "Your order" })
     .getByRole("button", { name: /Submit order/ })
@@ -451,16 +605,26 @@ test("live status reaches the tracker over the stream and a served order can be 
   await streamRequest;
 
   await withDb((pool) =>
-    pool.query("update orders set status='accepted', updated_at=now() where id=$1", [orderId])
+    pool.query(
+      "update orders set status='accepted', updated_at=now() where id=$1",
+      [orderId],
+    ),
   );
-  await expect(page.getByRole("status").filter({ hasText: "accepted your order" })).toBeVisible({
+  await expect(
+    page.getByRole("status").filter({ hasText: "accepted your order" }),
+  ).toBeVisible({
     timeout: 20000,
   });
 
   await withDb((pool) =>
-    pool.query("update orders set status='served', updated_at=now() where id=$1", [orderId])
+    pool.query(
+      "update orders set status='served', updated_at=now() where id=$1",
+      [orderId],
+    ),
   );
-  await expect(page.getByRole("heading", { name: "How was your meal?" })).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: "How was your meal?" }),
+  ).toBeVisible({
     timeout: 20000,
   });
   await page
