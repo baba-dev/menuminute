@@ -116,7 +116,7 @@ it("rejects untrusted provider output, never fabricating a recognized candidate"
     )
   ).rejects.toBeInstanceOf(NvidiaExtractionError);
 });
-it("accepts fenced JSON while leaving uncertain prices null", async () => {
+it("accepts fenced JSON and reads a plainly printed price when the model omits the flag", async () => {
   const sourceId = crypto.randomUUID();
   const out = await extractNvidiaCandidate(
     {
@@ -145,8 +145,8 @@ it("accepts fenced JSON while leaving uncertain prices null", async () => {
       )
   );
   expect(out.candidate.categories[0]?.items[0]?.priceMinor).toMatchObject({
-    value: null,
-    review: "needs_attention",
+    value: 7500,
+    review: "unreviewed",
   });
   expect(out.usage.requests).toBe(1);
 });

@@ -242,14 +242,13 @@ export const ownerArticles: HelpArticle[] = [
     audience: "owner",
     category: "Menu Creation",
     title: "AI Menu Import: Turn Paper Menus into Digital Catalogs",
-    subtitle:
-      "Snap a photo of your existing paper menu or upload a PDF to create your digital menu automatically.",
+    subtitle: "Photograph your existing paper menu to create a private draft of your digital menu.",
     summary:
-      "Save hours of typing! Upload clear pictures of your existing printed menu or a PDF design file. MenuMinute's intelligent scanner reads your categories, dishes, descriptions, and prices into a draft for you to review and approve.",
+      "Save hours of typing! Upload clear pictures (up to 12 per import) of your existing printed menu. MenuMinute's scanner reads your categories, dishes, descriptions, and prices into a draft for you to review and approve.",
     readTimeMinutes: 5,
     difficulty: "Beginner Friendly",
     lastUpdated: "2026-10-31",
-    keywords: ["ai import", "ocr", "scan menu", "pdf import", "photo upload", "menu digitizer"],
+    keywords: ["ai import", "ocr", "scan menu", "photo upload", "menu digitizer"],
     heroImage: {
       src: "/brand/menu-studio/recipe-atelier/dish-workspace-illustration.webp",
       alt: "AI Menu Import scanning workflow",
@@ -257,7 +256,7 @@ export const ownerArticles: HelpArticle[] = [
     },
     quickSteps: [
       "Navigate to Menu Studio and click 'Import Menu'.",
-      "Upload high-quality photos or a PDF of your existing paper menu.",
+      "Upload high-quality JPEG, PNG or WebP photos of your existing paper menu (PDF files are not supported yet).",
       "Wait for the import to finish. Larger or harder-to-read menus may take longer.",
       "Review the parsed items in the visual side-by-side editor.",
       "Accept and merge the items into your draft menu with one click.",
@@ -279,8 +278,8 @@ export const ownerArticles: HelpArticle[] = [
         ],
         callout: {
           type: "hospitality",
-          title: "Have the Designer PDF?",
-          text: "If your menu was created by a graphic designer, uploading their original PDF file yields the cleanest, fastest import results!",
+          title: "Have a designer PDF?",
+          text: "PDF upload is not available yet. Export each page as a high-resolution image (JPEG, PNG or WebP) or screenshot it, then upload the images.",
         },
       },
       {
@@ -288,7 +287,7 @@ export const ownerArticles: HelpArticle[] = [
         title: "2. Reviewing the Parsed Candidate Draft",
         content: [
           "MenuMinute never publishes imported items automatically. Your restaurant reputation is paramount, so the scanner always prepares a private Candidate Draft for your review.",
-          "In the review screen, you can verify dish names, adjust any prices, reassign categories, and confirm dietary tags.",
+          "In the review screen, you can verify dish names, adjust descriptions and prices, and confirm every entry against your photo. Dietary and allergen details are never read from a photo, so add them yourself in Menu Studio.",
           "Once you are satisfied, click 'Accept Items' to import them directly into your Menu Studio draft.",
         ],
       },

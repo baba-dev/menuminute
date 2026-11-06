@@ -3,6 +3,14 @@ import { z } from "zod";
 /** Candidate v1 is untrusted recognition data; it is never a publishable MenuDocument. */
 export const importId = z.uuid();
 export const sourceLimit = 12;
+/** Why a photograph contributed nothing or only part of its menu. */
+export const sourceWarningReasons = [
+  "invalid_provider_response",
+  "provider_unavailable",
+  "not_processed",
+  "truncated_output",
+] as const;
+export type SourceWarningReason = (typeof sourceWarningReasons)[number];
 export const sourceByteLimit = 5 * 1024 * 1024;
 export const sessionByteLimit = 30 * 1024 * 1024;
 const boundedText = (max: number) => z.string().trim().max(max);
@@ -72,7 +80,7 @@ export const importCandidateSchema = z
         z
           .object({
             sourceId: importId,
-            reason: z.literal("invalid_provider_response"),
+            reason: z.enum(sourceWarningReasons),
           })
           .strict()
       )

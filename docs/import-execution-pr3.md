@@ -28,3 +28,7 @@ Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, PostgreSQL+Redis integra
 **PR 3 does not solve stale import-source file cleanup or the permanent 30-source outlet storage cap (I-2), menu draft merge (I-5), or public cache/media optimizations (I-8); these require their separate remediation slices.**
 
 Source PRs do not prove server activation or live NVIDIA billing behavior. No production NVIDIA calls should be made from CI or the PR.
+
+## Addendum — cancel and credits (migration 0108)
+
+`import_engine_heartbeat` now returns false once the import is no longer `processing`, so a cancelled import is not renewable and the worker's per-page lease check stops it. `import_engine_begin` (cancel before start) and `import_engine_finish` call the internal `import_release_credits`, which returns credits for pages never sent. See [menu-import-engine.md](menu-import-engine.md).
