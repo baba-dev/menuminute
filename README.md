@@ -1,252 +1,433 @@
-# MenuMinute
+<div align="center">
 
-> **Affordable, mobile-first restaurant SaaS.**  
-> Create digital menus, generate permanent QR codes for free forever, and scale into online ordering and kitchen display systems.
+<a href="https://food.bababuilds.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/logos/logo-horizontal-dark.svg">
+    <img alt="MenuMinute" src="public/brand/logos/logo-horizontal-light.svg" height="72">
+  </picture>
+</a>
+
+### The restaurant platform that starts free and grows with you.
+
+Digital menus and **permanent QR codes, free forever** — then live table ordering, a kitchen display and a native POS when you're ready.
+
+<br>
+
+[![Live site](https://img.shields.io/badge/%E2%96%B6%20Live-food.bababuilds.com-F97316?style=for-the-badge)](https://food.bababuilds.com)
+[![Try the demo](https://img.shields.io/badge/%F0%9F%8D%BD%EF%B8%8F%20Try-the%20demo-1F2937?style=for-the-badge)](docs/demo.md)
+[![Docs](https://img.shields.io/badge/%F0%9F%93%9A%20Read-the%20docs-2563EB?style=for-the-badge)](#-documentation)
 
 [![CI](https://github.com/baba-dev/menuminute/actions/workflows/ci.yml/badge.svg)](https://github.com/baba-dev/menuminute/actions/workflows/ci.yml)
-[![Node.js](https://img.shields.io/badge/Node.js-LTS_v24-green.svg)](https://nodejs.org/)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
-[![ORM](https://img.shields.io/badge/ORM-Drizzle-orange.svg)](https://orm.drizzle.team/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Drizzle-4169E1?logo=postgresql&logoColor=white)
+![Node](https://img.shields.io/badge/Node-%E2%89%A522-339933?logo=nodedotjs&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**[Why MenuMinute](#-why-menuminute) · [Features](#-features) · [Screenshots](#-take-a-look) · [Plans](#-plans) · [Quick start](#-quick-start) · [Architecture](#-architecture) · [Docs](#-documentation) · [Contributing](#-contributing)**
+
+<br>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/docs-media/dashboard-desktop-dark.webp">
+  <img alt="MenuMinute owner dashboard" src="public/docs-media/dashboard-desktop-light.webp" width="880">
+</picture>
+
+</div>
 
 ---
 
-## Approved architecture and implementation status
+## ✨ Why MenuMinute
 
-Production targets **Linux ARM64/aarch64**, PostgreSQL + Drizzle/pg, separate Redis queue/cache
-instances, BullMQ and Better Auth database sessions. Launch supports dine-in and pickup for restaurants, takeout and cloud kitchens, with staff
-acceptance and payment at the restaurant/counter. Phase 1 converts foundation/menu services to PostgreSQL, Better Auth and scoped tenancy;
-Phase 2 adds organization/outlet management, scoped roles, durable projection jobs and explicit billing
-entitlements. Phase 3 adds versioned Menu Studio, reviewed media, permanent service-point QR codes
-and the public menu product. Ordering/KDS remain subsequent slices. The initial Free QR Menu web/worker release was activated on the shared Oracle ARM64 host on
-2026-10-16. Public HTTPS readiness and signup were verified; the full production media/QR flow,
-nightly backup operation, external alerting and capacity sign-off remain open. The audited host
-has 4 visible ARM cores and 23 GiB RAM. See the [production runbook](docs/production-runbook.md)
-for actual paths, deployed SHA, live status and shared-ERP protections.
+Most restaurant software makes you pay before you see any value. MenuMinute flips that.
 
-Phase 4 merchant-readiness work is tracked by [execution epic #37](https://github.com/baba-dev/menuminute/issues/37) and [the scoped plan](docs/orchestration/phase-4.md). Its [acceptance matrix](docs/orchestration/phase-4-acceptance.md) separates integrated CI from the [operator-backed production checks](docs/orchestration/phase-4-ops-evidence.md); do not label Phase 4 complete solely on merged PRs or a deployment badge.
-
-Start with [architecture](docs/architecture.md), [decisions](docs/decisions.md),
-[dependency plan](docs/dependency-plan.md), [implementation gates](docs/implementation-plan.md),
-and [AI development primers](docs/ai-development-primers.md). Contributors must read [AGENTS.md](AGENTS.md).
-
-See [approved product requirements](docs/product-requirements.md) for worldwide multi-outlet scope,
-outlet-type onboarding, role permissions, variants/add-ons, closing-time expiry and the initial
-25-owner / 50-restaurant / 1,000-orders-per-hour planning envelope. Platform subscriptions use
-USD/INR; outlets select supported local transaction currencies independently.
-
-## Brand identity assets (approved)
-
-| Asset                         | Canonical location                                 | Usage                                                 |
-| ----------------------------- | -------------------------------------------------- | ----------------------------------------------------- |
-| Static logo / emblem          | `public/brand/logos/`, `public/brand/icons/`       | Theme-aware vector identity, favicon                  |
-| Animated SVG logo             | `public/brand/motion/`                             | One-shot homepage header and larger reveal            |
-| Motion integration            | `src/components/marketing/brand/`                  | Replay only after effective color mode changes        |
-| WebP references / sharing     | `public/brand/reference/`, `public/brand/social/`  | Individually exported concept boards / OG and avatars |
-| QR centre marks / loader SVGs | `public/brand/qr/`, `public/brand/motion/loaders/` | Vector masters; only tested live QR is scannable      |
-| Asset rules / future work     | [Brand asset index](docs/brand-assets.md)          | Source of truth; PWA assets explicitly deferred       |
-
-## Approved design direction
-
-Ink & Ember remains approved: vivid color on white, gold/orange on charcoal, expressive restaurant
-typography and selective chef's-note details. Use Ember Flow for everyday actions and Ink Press
-for selected tactile emphasis; both use gradients and intent-driven motion. Service Card is for
-routine dialogs, Ink Ticket for milestones and Chef's Note for optional guidance.
-
-Light / Dark / System is required app-wide, including marketing, authentication, guests, owner tools
-and future kitchen surfaces. Phase 4 adds shared Ink & Ember primitives and improves current free-menu
-surfaces; older scaffold layouts need explicit visual acceptance. Orders/Kitchen remain previews and AI
-is stubbed.
-See [design system](docs/design-system.md), [buttons](docs/button-options.md) and
-[feedback/motion](docs/feedback-and-motion.md) for preserved implementation contracts.
-
-## 🍽️ Product Overview & Tiers
-
-- **Free Forever (Primary Customer Acquisition Channel)**:
-  - Create full digital menus with categories, dishes, descriptions, and dietary indicators.
-  - Generate permanent QR codes that diners scan with zero registration required.
-  - Unlimited menu items with real-time updates.
-- **Live Table Ordering — ₹119/month (INR, provider-gated)**:
-  - Dine-in/table and pickup ordering with mobile cart and staff acceptance.
-  - Live order management for front-of-house staff.
-- **Kitchen Pro — ₹299/month (commercial activation gated)**:
-  - Dedicated Kitchen Display System (KDS) tablet interface.
-  - Order acceptance and preparation stages with audible notifications.
+| 🆓 **Free forever**                                                                                                                   | 📱 **Mobile-first**                                                                                                  | 🧱 **One platform**                                                                                 |
+| :------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| Build a full menu and print a permanent QR code. Diners scan with **zero sign-up**. Free menus stay live even after paid access ends. | Designed around the phone in a diner's hand and the tablet in the kitchen. Light, dark and system themes everywhere. | Menu, QR, orders, kitchen and billing share one tenant-scoped domain — no stitching tools together. |
 
 ---
 
-Published India pricing is ₹119/month for Live Table Ordering and ₹299/month for Kitchen Pro.
-Checkout is disabled by default pending verified Razorpay provider configuration, and Kitchen Pro remains
-behind its independent commercial release gate. Free menus remain accessible after paid access ends.
-USD billing and multi-outlet subscription units are not yet supported; do not advertise them as available.
+## 🍴 Features
 
-## 🛠️ Technical Stack
+<table>
+<tr>
+<td width="33%" valign="top">
 
-| Layer                | Technology                                            |
-| -------------------- | ----------------------------------------------------- |
-| **Framework**        | Next.js App Router (React 19)                         |
-| **Language**         | TypeScript (Strict mode enabled)                      |
-| **Styling**          | Tailwind CSS v4 with custom design tokens             |
-| **Icons**            | Lucide React + custom vector SVGs                     |
-| **Database**         | PostgreSQL via `pg` (SQLite import tool only)         |
-| **ORM**              | Drizzle ORM with versioned SQL migrations             |
-| **Validation**       | Zod v4                                                |
-| **Authentication**   | Better Auth database sessions; scrypt + legacy bcrypt |
-| **QR Generation**    | `qrcode` with high-density SVG & PNG output           |
-| **Image Processing** | Sharp with automatic dimension resizing               |
-| **Testing**          | Vitest + React Testing Library + Playwright           |
-| **Target Host**      | Ubuntu 24.04 ARM64; shared ERP host; Nginx + systemd  |
+### 📋 Menu Studio
+
+Categories, dishes, variants, add-ons, dietary indicators and reviewed media. Unlimited items with real-time updates.
+
+[Contracts →](docs/menu-product/contracts.md) · [Studio 2 →](docs/menu-studio-2.md)
+
+</td>
+<td width="33%" valign="top">
+
+### 🔳 QR Studio
+
+Permanent service-point QR codes with print-ready tabletop layouts and high-density SVG / PNG output.
+
+[QR Studio 3 →](docs/qr-studio-3-print-atelier.md) · [Connections →](docs/qr-studio-4-connection-atelier.md)
+
+</td>
+<td width="33%" valign="top">
+
+### 📄 Menu import
+
+Turn an existing PDF or photo of a menu into a reviewed, editable digital one.
+
+[Import engine →](docs/menu-import-engine.md) · [Review →](docs/menu-import-review.md)
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🛎️ Live ordering
+
+Dine-in, table and pickup orders with a mobile cart and staff acceptance. Immutable order snapshots.
+
+[Order reliability →](docs/order-reliability.md) · [Counter service →](docs/orders-service-counter-release.md)
+
+</td>
+<td valign="top">
+
+### 👨‍🍳 Kitchen Pro
+
+A tablet-first Kitchen Display System with preparation stages and audible alerts.
+
+[Kitchen Pro →](docs/kitchen-pro-a-d.md) · [Live service →](docs/kitchen-live-service-2.md)
+
+</td>
+<td valign="top">
+
+### 🪑 Dining floor
+
+Table and floor view with live service signals so the front of house sees what needs attention.
+
+[Dining floor →](docs/dining-floor.md) · [Scan table →](docs/scan-table-2.md)
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🔥 Ember assistant
+
+An in-product AI helper for menus and operations with grounded answers and budgeted usage.
+
+[AI & media policy →](docs/ai-and-media.md) · [Dish intelligence →](docs/dish-intelligence.md)
+
+</td>
+<td valign="top">
+
+### 🧾 POS & ledger
+
+A native Till, invoice history and register closing desk. _In design and phased delivery._
+
+[POS overview →](docs/pos/README.md) · [Contracts →](docs/pos/contracts.md)
+
+</td>
+<td valign="top">
+
+### 🌍 Worldwide by design
+
+Multi-outlet scope, independent country, currency, locale and timezone. Platform billing in INR / USD.
+
+[Requirements →](docs/product-requirements.md) · [Launch →](docs/worldwide-commercial-launch.md)
+
+</td>
+</tr>
+</table>
+
+> [!NOTE]
+> Features are released in phases. Orders, Kitchen and POS ship behind explicit activation gates, and AI is budgeted and optional. See the [roadmap](docs/product-roadmap.md) and the [feature activation guide](docs/feature-activation.md) for what is live today.
 
 ---
 
-## Production deployment and release safety
+## 🖼️ Take a look
 
-The live origin is [food.bababuilds.com](https://food.bababuilds.com), with a separate
-ERP-preserving Nginx virtual host. Runtime media is **local private shared-group storage**;
-Cloudflare R2 is used for **encrypted off-host backups**, not live media. After a successful merge,
-native ARM64 CI publishes an immutable release and the deploy workflow automatically stages and
-activates the latest verified `main` build, including append-only migrations, once the reviewed
-root-owned **helper v4** and the root-only migration-owner/off-host restic prerequisites are installed.
-A migration-changing release first creates and verifies a new encrypted remote backup, then applies
-the exact staged checksummed SQL before switching both services. No per-SHA operator marker is needed.
-Failed prerequisites or migrations fail the deployment rather than silently claiming it is live.
-The GitHub `production` environment, ERP/readiness checks and exact-SHA verification still apply.
-See [unattended migration deployment](docs/automatic-migration-deployment.md) for the one-time
-bootstrap and forward-only recovery contract.
+<div align="center">
 
-Start with the [production source-of-truth runbook](docs/production-runbook.md), then consult the
-[ARM64 deployment contract](docs/deployment.md) and [CI/CD 2.0: automatic safe releases and manual migration path](docs/deployment-actions.md).
-Do not follow first-install examples on an already-live host or change `/usr/bin/node` used by ERP.
+|                                                                                               Menu Studio                                                                                               |                                                                                             QR Studio                                                                                             |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/menu-studio-desktop-dark.webp"><img alt="Menu Studio" src="public/docs-media/menu-studio-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/qr-studio-desktop-dark.webp"><img alt="QR Studio" src="public/docs-media/qr-studio-desktop-light.webp"></picture> |
 
-## 🚀 Quick Start Guide
+|                                                                                          Orders                                                                                          |                                                                                           Kitchen display                                                                                           |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/orders-desktop-dark.webp"><img alt="Orders" src="public/docs-media/orders-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/kitchen-desktop-dark.webp"><img alt="Kitchen display" src="public/docs-media/kitchen-desktop-light.webp"></picture> |
 
-### 1. Clone & Install Dependencies
+|                                                                                         Dining floor                                                                                         |                                                                                           Reports                                                                                           |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/floor-desktop-dark.webp"><img alt="Dining floor" src="public/docs-media/floor-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/reports-desktop-dark.webp"><img alt="Reports" src="public/docs-media/reports-desktop-light.webp"></picture> |
+
+**What diners see**
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/public-menu-desktop-dark.webp"><img alt="Public menu" src="public/docs-media/public-menu-desktop-light.webp" width="640"></picture>
+
+<img alt="Public menu on mobile" src="public/docs-media/public-menu-mobile-light.webp" height="420"> <img alt="Dish detail on mobile" src="public/docs-media/public-menu-dish-mobile-light.webp" height="420"> <img alt="Orders on mobile" src="public/docs-media/orders-mobile-light.webp" height="420">
+
+</div>
+
+> Want to click around? The [public demo](docs/demo.md) is a 236-dish sample restaurant with one-click entry that resets every 30 minutes.
+
+---
+
+## 💳 Plans
+
+|                                      | **Free QR Menu** | **Live Table Ordering** | **Kitchen Pro** |
+| :----------------------------------- | :--------------: | :---------------------: | :-------------: |
+| **Price (India)**                    | **Free forever** |      ₹119 / month       |  ₹299 / month   |
+| Digital menu, unlimited items        |        ✅        |           ✅            |       ✅        |
+| Permanent QR codes, no diner sign-up |        ✅        |           ✅            |       ✅        |
+| Dine-in / table / pickup ordering    |        —         |           ✅            |       ✅        |
+| Live order management                |        —         |           ✅            |       ✅        |
+| Kitchen Display System               |        —         |            —            |       ✅        |
+
+Checkout is disabled by default until the payment provider (Razorpay) is configured, and Kitchen Pro sits behind its own commercial release gate. USD billing and multi-outlet subscription units are not available yet. Details: [plans and limits](docs/plans-and-limits.md).
+
+---
+
+## 🚀 Quick start
+
+**You'll need:** Node.js ≥ 22, pnpm ≥ 11, and Docker (for the isolated PostgreSQL + Redis test stack).
 
 ```bash
 git clone https://github.com/baba-dev/menuminute.git
 cd menuminute
 pnpm install --frozen-lockfile
-```
-
-### 2. Environment Configuration
-
-```bash
 cp .env.example .env.local
 ```
 
-### 3. Start isolated dependencies and apply reviewed migrations
+Start the dependencies, load your environment and apply the reviewed migrations:
 
 ```bash
 pnpm infra:test:up
-set -a
-source .env.local
-set +a
+set -a && source .env.local && set +a
 NODE_ENV=test pnpm exec tsx scripts/test-bootstrap.ts
 pnpm db:migrate
-# Optional explicit non-production demo:
-ALLOW_DEMO_SEED=true DEMO_PASSWORD="set-a-unique-local-password" pnpm db:seed
 ```
 
-### 4. Start Local Development Server
+Optionally seed a **non-production** sample restaurant, then run the app:
 
 ```bash
+ALLOW_DEMO_SEED=true DEMO_PASSWORD="choose-a-unique-12+-char-password" pnpm db:seed
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open <http://localhost:3000>.
+
+<details>
+<summary><b>🔑 Local demo access</b></summary>
+
+<br>
+
+The seed creates one sample restaurant for local use only. Never run it against production.
+
+|                   |                                                       |
+| :---------------- | :---------------------------------------------------- |
+| Login             | <http://localhost:3000/login>                         |
+| Email             | `demo@menuminute.com`                                 |
+| Password          | the `DEMO_PASSWORD` you passed to the seed            |
+| Sample restaurant | _Spice Route Kitchen_ (one dish)                      |
+| Public menu       | <http://localhost:3000/m/demo-spice-route-kitchen-v1> |
+
+</details>
+
+<details>
+<summary><b>🧪 Testing and quality checks</b></summary>
+
+<br>
+
+```bash
+pnpm test         # unit + integration (Vitest)
+pnpm typecheck    # strict TypeScript
+pnpm lint         # ESLint, zero warnings
+pnpm test:e2e     # Playwright browser tests
+```
+
+Strategy and conventions: [testing strategy](docs/testing-strategy.md) · [development workflow](docs/development.md) · [environment variables](docs/environment.md).
+
+</details>
 
 ---
 
-## 🔑 Local test/demo access only
+## 🏗️ Architecture
 
-The explicit **non-production** CI seed (`pnpm db:seed`) creates a one-dish sample restaurant. Never run it
-against production or interpret it as an actual merchant:
-
-- **Login URL**: [http://localhost:3000/login](http://localhost:3000/login)
-- **Email**: `demo@menuminute.com`
-- **Password**: the unique `DEMO_PASSWORD` (12+ characters) you passed to the seed command
-- **Sample Restaurant**: _Spice Route Kitchen_ (one sample dish)
-- **Public Menu URL**: [http://localhost:3000/m/demo-spice-route-kitchen-v1](http://localhost:3000/m/demo-spice-route-kitchen-v1)
-
-The full public demo (236 dishes, one-click entry, 30-minute reset) is a separate, owner-approved
-tenant described in [docs/demo.md](docs/demo.md).
-
----
-
-## 📂 Project Architecture
-
-See [docs/architecture.md](docs/architecture.md) for architectural details.
+| Layer                | Technology                                           |
+| :------------------- | :--------------------------------------------------- |
+| **Framework**        | Next.js App Router, React 19                         |
+| **Language**         | TypeScript (strict)                                  |
+| **Styling**          | Tailwind CSS v4 with custom design tokens            |
+| **Database**         | PostgreSQL via `pg`, tenant-scoped transactions      |
+| **ORM / migrations** | Drizzle ORM, versioned append-only SQL               |
+| **Queues / cache**   | Redis + BullMQ durable jobs                          |
+| **Auth**             | Better Auth database sessions                        |
+| **Validation**       | Zod v4                                               |
+| **QR**               | `qrcode` — SVG and PNG output                        |
+| **Images**           | Sharp                                                |
+| **Testing**          | Vitest, React Testing Library, Playwright            |
+| **Delivery**         | Native ARM64 CI, immutable releases, Nginx + systemd |
 
 ```text
 src/
-├── app/                  # Next.js App Router route handlers & pages
-│   ├── page.tsx, pricing/ # Landing page & pricing
-│   ├── login/, register/ # Login and user registration
-│   ├── (dashboard)/      # Restaurant management portal
-│   ├── (public-menu)/    # Mobile-first customer menu view
-│   └── api/              # RESTful endpoints for menu and auth
-├── db/                   # PostgreSQL schema, migrations, and scoped transactions
-├── lib/                  # Validated config, errors, utility helpers
-├── modules/              # Core business services (menus, restaurants, qr, ai, media)
-└── styles/               # Design tokens and Tailwind CSS theme definitions
+├── app/            # App Router pages and route handlers
+│   ├── (dashboard)/    # Restaurant management portal
+│   ├── (public-menu)/  # Mobile-first diner menu
+│   └── api/            # Menu, auth and ordering endpoints
+├── components/     # UI and marketing components
+├── db/             # Schema, migrations, scoped transactions
+├── lib/            # Config, errors, utilities
+└── modules/        # Business services: menus, orders, qr, media, billing, ai …
 ```
+
+Go deeper: [architecture guide](docs/architecture.md) · [database](docs/database.md) · [decisions (ADRs)](docs/decisions.md) · [security](docs/security.md).
+
+<details>
+<summary><b>🎨 Design language: Ink &amp; Ember</b></summary>
+
+<br>
+
+Vivid colour on white, gold and orange on charcoal, expressive restaurant typography and selective chef's-note details. Light, dark and system modes apply across marketing, auth, guest, owner and kitchen surfaces.
+
+[Design system](docs/design-system.md) · [Buttons](docs/button-options.md) · [Feedback and motion](docs/feedback-and-motion.md) · [Brand assets](docs/brand-assets.md)
+
+</details>
+
+<details>
+<summary><b>🚢 Deployment and release safety</b></summary>
+
+<br>
+
+Merges to `main` flow through native ARM64 CI (quality, TypeScript, isolated PostgreSQL/Redis integration, production build and browser checks), a single aggregate gate on the same SHA, an immutable published release and a gated `production` activation that verifies the public SHA. Releases that change the schema first create and verify an encrypted off-host backup. Runtime media is private local storage; backups go to object storage.
+
+Start with the [production runbook](docs/production-runbook.md), then [deployment](docs/deployment.md), [CI/CD 2.0](docs/deployment-actions.md) and [automatic migrations](docs/automatic-migration-deployment.md). Don't follow first-install examples on an already-live host.
+
+</details>
 
 ---
 
-## 🧪 Testing & Verification
+## 📚 Documentation
 
-```bash
-# Unit & integration tests
-pnpm test
+<table>
+<tr>
+<td valign="top" width="33%">
 
-# Type checking
-pnpm typecheck
+**🧭 Start here**
 
-# Code quality & linting
-pnpm lint
+- [Product requirements](docs/product-requirements.md)
+- [Product direction](docs/product-direction.md)
+- [Roadmap](docs/product-roadmap.md)
+- [Architecture](docs/architecture.md)
+- [Decisions (ADRs)](docs/decisions.md)
+- [Implementation plan](docs/implementation-plan.md)
 
-# E2E browser smoke tests
-pnpm test:e2e
-```
+</td>
+<td valign="top" width="33%">
+
+**🛠️ Build**
+
+- [Development workflow](docs/development.md)
+- [Environment variables](docs/environment.md)
+- [Database and schema](docs/database.md)
+- [Dependency plan](docs/dependency-plan.md)
+- [Testing strategy](docs/testing-strategy.md)
+- [AI development primers](docs/ai-development-primers.md)
+
+</td>
+<td valign="top" width="33%">
+
+**🎨 Design**
+
+- [Design system](docs/design-system.md)
+- [Design options](docs/design-options.md)
+- [Buttons](docs/button-options.md)
+- [Feedback and motion](docs/feedback-and-motion.md)
+- [Brand assets](docs/brand-assets.md)
+- [AI and media policy](docs/ai-and-media.md)
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🍽️ Product**
+
+- [Menu product contracts](docs/menu-product/contracts.md)
+- [Core domain contracts](docs/core-domains/contracts.md)
+- [POS](docs/pos/README.md)
+- [Kitchen Pro](docs/kitchen-pro-a-d.md)
+- [PWA](docs/pwa.md)
+- [Public demo](docs/demo.md)
+
+</td>
+<td valign="top">
+
+**🔐 Security and trust**
+
+- [Security architecture](docs/security.md)
+- [Hardening A–F](docs/security-hardening-a-f.md)
+- [Auth 2 security](docs/auth-2-security.md)
+- [Privacy](docs/privacy)
+- [Legal](docs/legal/README.md)
+
+</td>
+<td valign="top">
+
+**🚢 Operations**
+
+- [Production runbook](docs/production-runbook.md)
+- [Deployment](docs/deployment.md)
+- [CI/CD 2.0](docs/deployment-actions.md)
+- [Observability](docs/observability-operations.md)
+- [Server inventory](docs/server-inventory.md)
+- [Delivery orchestration](docs/orchestration/README.md)
+
+</td>
+</tr>
+</table>
+
+<details>
+<summary><b>🗂️ Delivery phases</b></summary>
+
+<br>
+
+| Phase | Focus                                                             | Reference                                                                                                                                                   |
+| :---- | :---------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | PostgreSQL, Better Auth, scoped tenancy                           | [Foundation](docs/foundation/phase-1.md)                                                                                                                    |
+| 2     | Organizations, outlets, roles, durable jobs, billing entitlements | [Core domains](docs/core-domains/contracts.md) · [Operations](docs/core-domains/operations.md)                                                              |
+| 3     | Menu Studio, reviewed media, permanent QR, public menu            | [Contracts](docs/menu-product/contracts.md) · [Operations](docs/menu-product/operations.md)                                                                 |
+| 4     | Merchant readiness                                                | [Plan](docs/orchestration/phase-4.md) · [Acceptance](docs/orchestration/phase-4-acceptance.md) · [Ops evidence](docs/orchestration/phase-4-ops-evidence.md) |
+| 5     | Kitchen and ordering                                              | [Plan](docs/orchestration/phase-5.md) · [Acceptance](docs/orchestration/phase-5-acceptance.md)                                                              |
+
+</details>
 
 ---
 
-## 📚 Documentation Index
+## 🤝 Contributing
 
-- [Phase 1 foundation status, cutover and infrastructure](docs/foundation/phase-1.md)
-- [Phase 3 free QR menu contracts](docs/menu-product/contracts.md) and [operations](docs/menu-product/operations.md)
-- [Phase 2 core domain contracts](docs/core-domains/contracts.md) and [worker/billing operations](docs/core-domains/operations.md)
+Contributions are welcome.
 
-- [Phase 0 Development Orchestration](docs/orchestration/README.md)
-- [Approved Product Requirements](docs/product-requirements.md)
-- [Product Direction](docs/product-direction.md)
-- [Design Exploration and Recorded Decision](docs/design-options.md)
-- [Design and Theme Contract](docs/design-system.md)
-- [Approved Buttons](docs/button-options.md)
-- [AI and Media Policy](docs/ai-and-media.md)
-- [Feedback and Motion](docs/feedback-and-motion.md)
-- [Architecture Guide](docs/architecture.md)
-- [Database & Schema](docs/database.md)
-- [Development Workflow](docs/development.md)
-- [Environment Variables](docs/environment.md)
-- [Production operations source of truth: paths, release, checks and rollback](docs/production-runbook.md)
-- [Production Deployment (Linux ARM64 target)](docs/deployment.md)
-- [GitHub Actions CI/CD 2.0: automated safe deployment](docs/deployment-actions.md)
-- [Audited ARM server and coexistence requirements](docs/server-inventory.md)
-- [Security Architecture](docs/security.md)
-- [Product Roadmap](docs/product-roadmap.md)
-- [Architecture Decision Records (ADRs)](docs/decisions.md)
+1. Read [`AGENTS.md`](AGENTS.md) and the [development workflow](docs/development.md).
+2. Open or pick up an [issue](https://github.com/baba-dev/menuminute/issues).
+3. Branch from `main`, keep changes focused, and run `pnpm lint`, `pnpm typecheck` and `pnpm test` before opening a PR.
+4. Fill in the [pull request template](.github/pull_request_template.md).
 
-### CI/CD 2.0 release status
+Found a security issue? Please report it privately rather than in a public issue — see [security](docs/security.md).
 
-The native ARM64 CI runs quality, TypeScript, isolated PostgreSQL/Redis integration
-and production build/browser checks in parallel. A final aggregate gate requires
-all four to pass on the same SHA. The CI-tested production archive is the sole
-input to immutable publication (no publisher rebuild). Its authenticated
-publication handoff drives staging; the separate GitHub `production` activation
-job exposes [the live application](https://food.bababuilds.com) and verifies
-the public SHA. Stage-only results never count as verified deployment.
-Migration-changing releases use the versioned automatic migration path with a fresh verified
-off-host snapshot; helper v4, migration-owner env and restic provisioning are one-time root tasks. See [deployment actions](docs/deployment-actions.md)
-and the [measured pre-change baseline](docs/ci-cd-baseline.md). Repository code
-alone does not update the installed VPS helper or establish live deployment.
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE).
+
+<div align="center">
+
+<br>
+
+**Built for restaurants that want to start small and grow without replatforming.**
+
+[🌐 food.bababuilds.com](https://food.bababuilds.com) · [⭐ Star this repo](https://github.com/baba-dev/menuminute) · [🐛 Report a bug](https://github.com/baba-dev/menuminute/issues)
+
+</div>
