@@ -56,6 +56,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verify API abuse boundaries
         run: node scripts/security/verify-api-boundaries.mjs
+      - name: Enforce patched Next.js dependency floor
+        run: node scripts/security/verify-framework-version.mjs
 
       - name: Check code formatting (Prettier)
         run: |
