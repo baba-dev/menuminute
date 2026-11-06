@@ -102,7 +102,10 @@ test("organization and outlet management, scoped roles, billing and suspension r
     await page.getByRole("button", { name: "More" }).click();
   await organizationLink.click();
   await expect(page.getByRole("heading", { name: "Organization management" })).toBeVisible();
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.org);
   const rename = page
     .getByRole("button", { name: "Save organization name" })
     .locator("xpath=ancestor::form");
@@ -145,7 +148,10 @@ test("organization and outlet management, scoped roles, billing and suspension r
   expect((await activeContext.json()).selectedOutletId).toBe(pickup.id);
   await expect(page.getByRole("heading", { name: "Scoped Pickup", exact: true })).toHaveCount(0);
   await page.goto("/dashboard/organization");
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.org);
   await expect(page.getByRole("heading", { name: "Billing entitlements" })).toBeVisible();
   await expect(page.getByText(/Public QR menus: free/)).toBeVisible();
   const status = page
@@ -157,7 +163,10 @@ test("organization and outlet management, scoped roles, billing and suspension r
   await page.reload();
   // Suspension falls back to an active workspace. Re-select the suspended
   // organization explicitly before exercising recovery after a reload.
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.org);
   await expect(page.getByRole("button", { name: "Reactivate organization" })).toBeVisible();
   const reactivate = page
     .getByRole("button", { name: "Reactivate organization" })
@@ -206,7 +215,10 @@ test("organization switching ignores a late response from the previous organizat
     waitUntil: "domcontentloaded",
   });
   await started;
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.otherOrg);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.otherOrg);
   await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Beta Domain");
   resolve();
   await page.unrouteAll({ behavior: "wait" });
@@ -234,7 +246,10 @@ test("organization switching ignores a late response from the previous organizat
   await form.getByLabel("Organization name", { exact: true }).fill("Beta Background Save");
   await form.getByRole("button", { name: "Save organization name" }).click();
   await saving;
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.org);
   releaseSave();
   await page.unrouteAll({ behavior: "wait" });
   await expect(page.getByLabel("Organization name", { exact: true })).toHaveValue("Alpha Domain");
@@ -300,7 +315,10 @@ test("outlet role grants reflect saved permissions after refresh and switching m
   const f = await seed();
   await login(page, f.email, f.password);
   await page.goto("/dashboard/organization");
-  await page.locator("#workspace-main").getByLabel("Organization", { exact: true }).selectOption(f.org);
+  await page
+    .locator("#workspace-main")
+    .getByLabel("Organization", { exact: true })
+    .selectOption(f.org);
   const form = page
     .getByRole("button", { name: "Save outlet roles" })
     .locator("xpath=ancestor::form");
