@@ -71,7 +71,9 @@ if (process.argv[1]?.endsWith("/verify-live-edge.mjs")) {
   try {
     if (verifyNginxPublicEdge(readFileSync(0, "utf8"))) {
       console.log("PASS: Food proxy attestation and internal-media configuration present.");
-      console.log("Validate official Cloudflare CIDRs, host firewall and live requests separately.");
+      console.log(
+        "Validate official Cloudflare CIDRs, host firewall and live requests separately."
+      );
     } else {
       console.error("FAIL: Food proxy configuration needs operator review. No changes made.");
       process.exitCode = 1;

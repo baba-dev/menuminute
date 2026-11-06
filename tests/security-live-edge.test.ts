@@ -22,20 +22,24 @@ describe("read-only installed-edge audit", () => {
     expect(result.stdout).not.toContain("menuminute_edge_secret");
   });
   it("rejects spoofed client identity and missing header clearing", () => {
-    expect(audit(config.replace(
-      "X-MenuMinute-Client-IP $remote_addr;",
-      "X-MenuMinute-Client-IP $http_x_forwarded_for;"
-    )).status).toBe(1);
-    expect(audit(config.replace(
-      'X-MenuMinute-Edge-Key "";',
-      "X-MenuMinute-Edge-Key $http_edge_secret;"
-    )).status).toBe(1);
+    expect(
+      audit(
+        config.replace(
+          "X-MenuMinute-Client-IP $remote_addr;",
+          "X-MenuMinute-Client-IP $http_x_forwarded_for;"
+        )
+      ).status
+    ).toBe(1);
+    expect(
+      audit(config.replace('X-MenuMinute-Edge-Key "";', "X-MenuMinute-Edge-Key $http_edge_secret;"))
+        .status
+    ).toBe(1);
   });
   it("rejects global real-IP trust and SSE regex precedence regressions", () => {
     expect(audit(config.replace("173.245.48.0/20", "0.0.0.0/0")).status).toBe(1);
-    expect(audit(config.replace(
-      "location /api/public-orders {",
-      "location ^~ /api/public-orders {"
-    )).status).toBe(1);
+    expect(
+      audit(config.replace("location /api/public-orders {", "location ^~ /api/public-orders {"))
+        .status
+    ).toBe(1);
   });
 });

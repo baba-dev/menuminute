@@ -6,8 +6,8 @@ For owner-operated MenuMinute hosts only. This check requires no service restart
 - Installed Nginx syntax: run sudo nginx -t. Never replace the whole live vhost with a repository example.
 - Installed Nginx trust: in Bash, run the following pipeline. It reads the **full live Nginx configuration** privately in memory and emits only PASS/FAIL. Never paste nginx -T output, save it to a log, or enable shell tracing; a private include may contain the edge key.
 
-    set -o pipefail
-    sudo nginx -T 2>/dev/null | node scripts/security/verify-live-edge.mjs
+  set -o pipefail
+  sudo nginx -T 2>/dev/null | node scripts/security/verify-live-edge.mjs
 
 - Independently verify Cloudflare Full (strict), the complete current official Cloudflare source CIDRs, and port 3100 being bound only to loopback. The script checks several dangerous proxy patterns but cannot prove firewall enforcement or the correctness of every CIDR.
 - Verify that both web and worker active symlinks point to one reviewed SHA, existing ERP HTTP 200 remains, and a fresh off-host backup plus isolated restore have been verified before migrations.
