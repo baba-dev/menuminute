@@ -4,9 +4,7 @@ import { verifyAudit } from "./verify-advisory-exceptions.mjs";
 
 function report(advisories = []) {
   return {
-    advisories: Object.fromEntries(
-      advisories.map((a, index) => [String(index + 1), a])
-    ),
+    advisories: Object.fromEntries(advisories.map((a, index) => [String(index + 1), a])),
     metadata: {
       vulnerabilities: {
         low: 0,
@@ -46,13 +44,18 @@ describe("dependency advisory review gate", () => {
     assert.throws(
       () =>
         verifyAudit(
-          report([{ ...esbuild, findings: [{ version: "0.18.20", paths: [".>public-runtime>esbuild"] }] }])
+          report([
+            { ...esbuild, findings: [{ version: "0.18.20", paths: [".>public-runtime>esbuild"] }] },
+          ])
         ),
       /unreviewed version or dependency path/
     );
   });
   it("fails on high severity and malformed/incomplete audit output", () => {
-    assert.throws(() => verifyAudit(report([{ ...esbuild, severity: "high" }])), /requires remediation/);
+    assert.throws(
+      () => verifyAudit(report([{ ...esbuild, severity: "high" }])),
+      /requires remediation/
+    );
     assert.throws(() => verifyAudit({}), /missing or invalid/);
   });
 });

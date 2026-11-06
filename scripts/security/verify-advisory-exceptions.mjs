@@ -5,10 +5,7 @@
 import { readFileSync } from "node:fs";
 
 const exceptions = new Map([
-  [
-    "GHSA-67mh-4wv8-2f99",
-    { name: "esbuild", version: "0.18.20", ancestor: ">drizzle-kit>" },
-  ],
+  ["GHSA-67mh-4wv8-2f99", { name: "esbuild", version: "0.18.20", ancestor: ">drizzle-kit>" }],
   [
     "GHSA-g3hv-75wg-m249",
     { name: "minimatch", version: "10.2.6", ancestor: ">eslint-config-next>" },
@@ -17,7 +14,9 @@ const exceptions = new Map([
 
 export function verifyAudit(data) {
   if (!data || typeof data !== "object" || !data.advisories || !data.metadata?.vulnerabilities) {
-    throw new Error("Dependency audit output is missing or invalid; refusing to skip security review");
+    throw new Error(
+      "Dependency audit output is missing or invalid; refusing to skip security review"
+    );
   }
   const accepted = [];
   for (const record of Object.values(data.advisories)) {
@@ -27,11 +26,15 @@ export function verifyAudit(data) {
     const severity = record.severity;
     if (severity === "low" || severity === "info") continue;
     if (severity !== "moderate") {
-      throw new Error(`Dependency security finding requires remediation: ${record.github_advisory_id ?? record.id ?? "unknown"} (${severity})`);
+      throw new Error(
+        `Dependency security finding requires remediation: ${record.github_advisory_id ?? record.id ?? "unknown"} (${severity})`
+      );
     }
     const allowed = exceptions.get(record.github_advisory_id);
     if (!allowed || record.module_name !== allowed.name) {
-      throw new Error(`Unreviewed moderate security advisory: ${record.github_advisory_id ?? record.id ?? "unknown"} (${record.module_name ?? "unknown"})`);
+      throw new Error(
+        `Unreviewed moderate security advisory: ${record.github_advisory_id ?? record.id ?? "unknown"} (${record.module_name ?? "unknown"})`
+      );
     }
     if (!Array.isArray(record.findings) || record.findings.length === 0) {
       throw new Error(`Advisory ${record.github_advisory_id} lacks package findings`);
@@ -43,7 +46,9 @@ export function verifyAudit(data) {
         finding.paths.length === 0 ||
         !finding.paths.every((path) => typeof path === "string" && path.includes(allowed.ancestor))
       ) {
-        throw new Error(`Reviewed advisory ${record.github_advisory_id} now affects an unreviewed version or dependency path`);
+        throw new Error(
+          `Reviewed advisory ${record.github_advisory_id} now affects an unreviewed version or dependency path`
+        );
       }
     }
     accepted.push(`${record.github_advisory_id}: ${allowed.name}@${allowed.version}`);
@@ -65,5 +70,7 @@ if (process.argv[1]?.endsWith("/verify-advisory-exceptions.mjs")) {
   for (const advisory of accepted) {
     console.warn(`Reviewed moderate dependency risk — NOT patched: ${advisory}`);
   }
-  console.log(`Dependency advisory review complete; ${accepted.length} known moderate exception(s), no unreviewed moderate or high findings.`);
+  console.log(
+    `Dependency advisory review complete; ${accepted.length} known moderate exception(s), no unreviewed moderate or high findings.`
+  );
 }
