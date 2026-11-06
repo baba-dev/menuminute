@@ -9,7 +9,7 @@ export const dishAutofillSuggestionSchema = z
     dietary: z.array(z.enum(["vegetarian", "vegan"])).max(2),
     culinary: z
       .object({
-        spiceLevel: z.number().int().min(0).max(4),
+        spiceLevel: z.number().int().min(0).max(5),
         flavorNotes: z.array(z.string().trim().min(1).max(30)).max(6),
         chefNote: z.string().trim().max(300),
         servingTemp: z.enum(["hot", "chilled", "ambient"]),
@@ -137,7 +137,7 @@ export const dishAutofillJsonSchema = objectSchema({
   description: stringProperty(1000),
   dietary: { type: "array", items: { type: "string", enum: ["vegetarian", "vegan"] }, maxItems: 2 },
   culinary: objectSchema({
-    spiceLevel: { type: "integer", minimum: 0, maximum: 4 },
+    spiceLevel: { type: "integer", minimum: 0, maximum: 5 },
     flavorNotes: { type: "array", items: stringProperty(30), maxItems: 6 },
     chefNote: stringProperty(300),
     servingTemp: { type: "string", enum: ["hot", "chilled", "ambient"] },
