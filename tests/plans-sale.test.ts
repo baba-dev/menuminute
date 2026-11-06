@@ -42,19 +42,36 @@ describe("public plan calls to action never promise an unavailable purchase", ()
     expect(planSale("ordering", "INR", orderingOnly)).toMatchObject({
       state: "checkout",
       label: "Get Ordering",
-      href: "/billing?plan=ordering",
+      href: "/login?next=%2Fbilling%3Fplan%3Dordering",
       note: null,
     });
     expect(planSale("kitchen_pro", "INR", orderingOnly).state).toBe("early_access");
   });
 
   it("both open: both paid plans go to their Billing card", () => {
-    expect(planSale("ordering", "INR", everything).href).toBe("/billing?plan=ordering");
-    expect(planSale("kitchen_pro", "INR", everything)).toMatchObject({
+    const owner = { signedIn: true };
+    expect(planSale("ordering", "INR", everything, owner).href).toBe("/billing?plan=ordering");
+    expect(planSale("kitchen_pro", "INR", everything, owner)).toMatchObject({
       state: "checkout",
       label: "Get Kitchen Pro",
       href: "/billing?plan=kitchen_pro",
     });
+  });
+
+  it("an anonymous visitor goes through sign-in and returns to the same Billing card", () => {
+    // The dashboard layout sends anonymous visitors to a bare /login, so the return path is explicit.
+    const anon = planSale("kitchen_pro", "INR", everything);
+    expect(anon.href).toBe("/login?next=%2Fbilling%3Fplan%3Dkitchen_pro");
+    const next = new URL(anon.href, "https://x.test").searchParams.get("next");
+    expect(next).toBe("/billing?plan=kitchen_pro");
+    // Signed-in and anonymous differ only for purchasable plans.
+    for (const plan of ["free", "dedicated"] as const)
+      expect(planSale(plan, "INR", everything, { signedIn: true })).toEqual(
+        planSale(plan, "INR", everything)
+      );
+    expect(planSale("ordering", "INR", off, { signedIn: true })).toEqual(
+      planSale("ordering", "INR", off)
+    );
   });
 
   it("USD is always an enquiry, whatever INR checkout does", () => {
@@ -78,12 +95,13 @@ describe("public plan calls to action never promise an unavailable purchase", ()
   it("every plan, currency and state yields a real destination", () => {
     for (const facts of [off, orderingOnly, everything, community])
       for (const currency of ["INR", "USD"] as const)
-        for (const plan of PLAN_ORDER) {
-          const sale = planSale(plan, currency, facts);
-          expect(sale.href).toMatch(/^\/[a-z]/);
-          expect(sale.href).not.toBe("#");
-          expect(sale.label.length).toBeGreaterThan(0);
-        }
+        for (const plan of PLAN_ORDER)
+          for (const signedIn of [false, true]) {
+            const sale = planSale(plan, currency, facts, { signedIn });
+            expect(sale.href).toMatch(/^\/[a-z]/);
+            expect(sale.href).not.toBe("#");
+            expect(sale.label.length).toBeGreaterThan(0);
+          }
   });
 
   it("an unknown or failed lookup is treated as nothing for sale", () => {

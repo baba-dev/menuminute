@@ -51,15 +51,21 @@ If the switches cannot be read at all, the page falls back to "nothing for sale"
 
 ## What each visitor experiences
 
-| Situation                      | Journey                                                                                                                                                         |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New visitor, any plan          | Pricing → `/register` (Free, or Ordering while checkout is closed) → verify email → onboarding → publish menu                                                   |
-| Anonymous, checkout open       | Pricing → `/billing?plan=…` → redirected to `/login?next=/billing?plan=…` → sign in, or **Create an account** (keeps `next`) → back to that plan's Billing card |
-| Signed-in owner, checkout open | Pricing → Billing, plan highlighted → Upgrade → Razorpay checkout                                                                                               |
-| Kitchen Pro, checkout closed   | Pricing → `/contact?topic=kitchen-pro` → pre-filled email. The team enables it with an operator grant (Admin → Payments → Grant studio)                         |
-| USD / Dedicated                | Pricing → `/contact`                                                                                                                                            |
+| Situation                      | Journey                                                                                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| New visitor, any plan          | Pricing → `/register` (Free, or Ordering while checkout is closed) → verify email → onboarding → publish menu                           |
+| Anonymous, checkout open       | Pricing → `/login?next=/billing?plan=…` → sign in, or **Create an account** (keeps `next`) → back to that plan's Billing card           |
+| Signed-in owner, checkout open | Pricing → Billing, plan highlighted → Upgrade → Razorpay checkout                                                                       |
+| Kitchen Pro, checkout closed   | Pricing → `/contact?topic=kitchen-pro` → pre-filled email. The team enables it with an operator grant (Admin → Payments → Grant studio) |
+| USD / Dedicated                | Pricing → `/contact`                                                                                                                    |
 
-An unknown `plan` or `topic` query value is ignored, never echoed into a link, page or mail subject.
+The pricing page checks whether the visitor is signed in, because `/billing` sits behind the dashboard layout,
+which redirects anonymous visitors to a bare `/login` and forgets the destination. Anonymous visitors are
+therefore sent to sign-in with the Billing card as an explicit `next` path; signed-in owners go straight to
+Billing. If the session lookup fails, the anonymous link is used, which also works for a signed-in visitor.
+An unknown `plan` or `topic` query value is ignored, never echoed into a link, page or mail subject. Other
+dashboard deep links (for example from an email) still lose their destination on sign-in; that is existing
+behavior outside this change.
 
 ## Evidence and what is not verified
 

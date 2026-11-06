@@ -7,7 +7,8 @@ import { planLadder, type PlanOffer } from "@/modules/plans/offer";
 import type { BillingCurrency } from "@/modules/billing/catalog";
 import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
 import { fmt } from "@/modules/plans/view";
-import { planSale, saleFootnote, type SaleFacts } from "@/modules/plans/sale";
+import { planSale, saleFootnote, type SaleFacts, type SaleViewer } from "@/modules/plans/sale";
+import { auth } from "@/lib/auth";
 import { publicSaleFacts } from "@/modules/plans/sale-facts";
 
 export const metadata: Metadata = {
@@ -86,14 +87,16 @@ function PlanCard({
   offer,
   currency,
   facts,
+  viewer,
 }: {
   offer: PlanOffer;
   currency: BillingCurrency;
   facts: SaleFacts;
+  viewer: SaleViewer;
 }) {
   const card = CARD[offer.key];
   const isPrivateDeployment = currency === "USD" && offer.key === "dedicated";
-  const sale = planSale(offer.key, currency, facts);
+  const sale = planSale(offer.key, currency, facts, viewer);
   const primary = card.primary;
   return (
     <div
@@ -189,6 +192,12 @@ export default async function PricingPage({
   const currency: BillingCurrency = query.currency === "USD" ? "USD" : "INR";
   const plans = planLadder({ currency });
   const facts = publicSaleFacts();
+  // A lookup failure must never break a public page; anonymous links also work for signed-in visitors.
+  const viewer: SaleViewer = {
+    signedIn: await auth()
+      .then((session) => Boolean(session?.user.id))
+      .catch(() => false),
+  };
   return (
     <div className="bg-background text-foreground min-h-screen transition-colors">
       <MarketingSubpageNav />
@@ -231,7 +240,13 @@ export default async function PricingPage({
 
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((offer) => (
-            <PlanCard key={offer.key} offer={offer} currency={currency} facts={facts} />
+            <PlanCard
+              key={offer.key}
+              offer={offer}
+              currency={currency}
+              facts={facts}
+              viewer={viewer}
+            />
           ))}
         </div>
 

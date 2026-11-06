@@ -47,7 +47,25 @@ export type PlanSale = {
   note: string | null;
 };
 
-export function planSale(plan: PlanKey, currency: BillingCurrency, facts: SaleFacts): PlanSale {
+/** Who is looking. Anonymous is the safe default: its links work for a signed-in visitor too. */
+export type SaleViewer = { signedIn: boolean };
+
+/**
+ * Billing sits behind the dashboard layout, which sends an anonymous visitor to a bare `/login` and
+ * forgets where they were going. So an anonymous visitor is sent to sign-in with the Billing card as
+ * the explicit return path; the login and register pages carry it through to the same plan.
+ */
+function billingHref(plan: "ordering" | "kitchen_pro", viewer: SaleViewer): string {
+  const billing = `/billing?plan=${plan}`;
+  return viewer.signedIn ? billing : `/login?next=${encodeURIComponent(billing)}`;
+}
+
+export function planSale(
+  plan: PlanKey,
+  currency: BillingCurrency,
+  facts: SaleFacts,
+  viewer: SaleViewer = { signedIn: false }
+): PlanSale {
   if (plan === "free")
     return { state: "free", label: "Get started free", href: "/register", note: null };
 
@@ -76,7 +94,7 @@ export function planSale(plan: PlanKey, currency: BillingCurrency, facts: SaleFa
       return {
         state: "checkout",
         label: "Get Ordering",
-        href: "/billing?plan=ordering",
+        href: billingHref("ordering", viewer),
         note: null,
       };
     return {
@@ -91,7 +109,7 @@ export function planSale(plan: PlanKey, currency: BillingCurrency, facts: SaleFa
     return {
       state: "checkout",
       label: "Get Kitchen Pro",
-      href: "/billing?plan=kitchen_pro",
+      href: billingHref("kitchen_pro", viewer),
       note: null,
     };
   return {

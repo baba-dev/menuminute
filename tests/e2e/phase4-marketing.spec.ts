@@ -43,13 +43,15 @@ test("public pricing advertises the four INR tiers without unsupported internati
   expect(["checkout", "opening_soon"]).toContain(ordering.state);
   await expect(ordering.cta).toHaveAttribute(
     "href",
-    ordering.state === "checkout" ? "/billing?plan=ordering" : "/register"
+    ordering.state === "checkout" ? "/login?next=%2Fbilling%3Fplan%3Dordering" : "/register"
   );
   const kitchen = await saleHref("kitchen_pro");
   expect(["checkout", "early_access"]).toContain(kitchen.state);
   await expect(kitchen.cta).toHaveAttribute(
     "href",
-    kitchen.state === "checkout" ? "/billing?plan=kitchen_pro" : "/contact?topic=kitchen-pro"
+    kitchen.state === "checkout"
+      ? "/login?next=%2Fbilling%3Fplan%3Dkitchen_pro"
+      : "/contact?topic=kitchen-pro"
   );
   await expect(page.getByRole("link", { name: /Talk to us about Dedicated/ })).toHaveAttribute(
     "href",
@@ -111,18 +113,21 @@ test("every pricing button leads to a working page in both currencies", async ({
   }
 });
 
-test("a Billing deep link signs the visitor in first and returns to the same plan", async ({
+test("sign-in and sign-up carry a Billing return path, which is how pricing buttons reach a plan", async ({
   page,
 }) => {
-  await page.goto("/billing?plan=kitchen_pro");
-  await expect(page).toHaveURL(/\/login\?next=%2Fbilling%3Fplan%3Dkitchen_pro$/);
-  // Account creation from the sign-in page keeps the destination.
-  await expect(
-    page.getByRole("link", { name: /Create|Sign up|Register/i }).first()
-  ).toHaveAttribute("href", "/register?next=%2Fbilling%3Fplan%3Dkitchen_pro");
-  // Unknown plans are not echoed back into the return path.
-  await page.goto("/billing?plan=%3Cscript%3E");
-  await expect(page).toHaveURL(/\/login\?next=%2Fbilling$/);
+  // Anonymous visitors are sent to sign-in with the Billing card as the return path (see planSale).
+  await page.goto("/login?next=%2Fbilling%3Fplan%3Dkitchen_pro");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+    "href",
+    "/register?next=%2Fbilling%3Fplan%3Dkitchen_pro"
+  );
+  // The return path must stay on this site's own pages.
+  await page.goto("/login?next=https%3A%2F%2Fevil.example%2Fbilling");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+    "href",
+    "/register"
+  );
 });
 
 test("Kitchen Pro early access opens a pre-filled enquiry, and unknown topics are ignored", async ({
