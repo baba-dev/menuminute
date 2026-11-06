@@ -26,19 +26,16 @@ Require exact deployed web + worker SHA, isolated PostgreSQL/dual-Redis tests, o
 
 Never log or publish production credentials, customer notes, token values or unredacted private media. Never run destructive tests or representative load against the live VPS.
 
-
 ## Security review: 7 November 2026 (source-only, not a full penetration test)
 
 Baseline: `main` at `435b3af047a7f5416f06c8ea82c8dbfed20d9bd6`. Tracking issue: [#326](https://github.com/baba-dev/menuminute/issues/326).
 
-| Priority | Verified source observation | Proposed or implemented action |
-| --- | --- | --- |
-| High | `next` and `eslint-config-next` were pinned to 16.4.3, before Next.js 16.4.5 (3 November 2026), which fixes seven moderate-severity issues including cross-user cache disclosure, response injection and HttpOnly cookie exposure. Not all are necessarily reachable in MenuMinute. | Update to exact 16.4.5 with matching pinned ARM64 SWC, package integrity hashes and a CI regression guard. |
-| High, host status unknown | The dated runbook lists isolated Node.js 24.22.0, predating the 21 October 2026 Node.js 24.22.1 security release; 24.22.2 also exists. | Verify `/opt/menuminute/node24/bin/node -v` on the live host and update only the isolated runtime to the current vetted 24.x maintenance release if needed. Never modify system Node or the ERP. |
-| High, Community Edition only | `src/lib/auth.ts` has a read-before-create single-user guard without database atomicity; concurrent registrations can race. | A separate transactional/database-invariant remediation and simultaneous first-signup test are required. Do not make changes to SaaS signup behavior as a side effect. |
-| Medium | `next.config.ts` permits `script-src 'unsafe-inline'`. | Stage a framework-compatible nonce/hash CSP, with checkout, Turnstile, PWA and scripts tested before rollout. |
-| Operational | `verifiedOrderSource` relies on the deployed Nginx overwriting two private headers; the checked-in example does so. | Confirm **installed** proxy config, trusted Cloudflare source IPs, origin-only 3100, and Redis outage behavior. Source code alone cannot prove edge safety. |
-| Operational | Multi-tenant RLS and stream access checks exist, but production role grants, existing stream revocation and restored data permissions require separate testing. | Run authenticated cross-tenant negative tests with isolated fixtures and review SQL roles. |
+- **High — framework dependency:** `next` and `eslint-config-next` were pinned to 16.4.3, preceding Next.js 16.4.5 (3 November 2026). The upstream patch addresses seven moderate-severity issues including cross-user cache disclosure, response injection and HttpOnly cookie exposure. Not all are necessarily reachable in MenuMinute. Upgrade to exact 16.4.5 with matching pinned ARM64 SWC, published package integrity hashes and a CI regression guard.
+- **High — live Node status unverified:** The dated runbook lists isolated Node.js 24.22.0, preceding the 21 October 2026 Node.js 24.22.1 security release. Verify `/opt/menuminute/node24/bin/node -v` on the live host and update only the isolated runtime to a vetted 24.x maintenance release if needed. Do not modify the system Node or the ERP.
+- **High — Community Edition only:** `src/lib/auth.ts` has a read-before-create single-user guard without database atomicity, so concurrent registrations can race. A separate transactional/database-invariant remediation and simultaneous first-signup test are required. Do not change SaaS signup as a side effect.
+- **Medium — CSP:** `next.config.ts` permits `script-src 'unsafe-inline'`. Stage a framework-compatible nonce/hash policy, with checkout, Turnstile, PWA and scripts tested before rollout.
+- **Operational — signed edge trust:** `verifiedOrderSource` relies on installed Nginx overwriting two private headers; the checked-in example does so. Confirm the actual installed proxy config, trusted Cloudflare source IPs, origin-only port 3100 and Redis outage behavior. Source code alone cannot prove edge safety.
+- **Operational — tenant isolation:** Multi-tenant RLS and stream access checks exist, but production role grants, existing stream revocation and restored data permissions require separate testing. Exercise authenticated cross-tenant negative fixtures in isolated PostgreSQL/Redis.
 
 The dependency-only patch adds **no migrations**, changes no feature flags and does not alter orders, money, POS, kitchen or ERP behavior by intent. It is **not deployed by creating a PR**. Require all four CI categories, native ARM64 compile and browser checks on the exact final SHA. Verify owner-visible flows in staging and preserve the existing backup/rollback process before deploying.
 
