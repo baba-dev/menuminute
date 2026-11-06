@@ -11,7 +11,12 @@ test("public pricing advertises the four INR tiers without unsupported internati
   for (const price of ["₹0", "₹119", "₹499", "₹30,000"])
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
   await expect(page.getByText("One flat price for up to 10 outlets")).toBeVisible();
-  await expect(page.getByText(/Current self-service checkout charges in INR/)).toBeVisible();
+  // The footnote must agree with the buttons: it only mentions live checkout when checkout is open.
+  await expect(
+    page.getByText(
+      /Current self-service checkout charges in INR|Self-service paid checkout is not open yet/
+    )
+  ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Subscription pricing currency" })
   ).toBeVisible();
@@ -27,9 +32,24 @@ test("public pricing advertises the four INR tiers without unsupported internati
     "href",
     "/register"
   );
-  await expect(page.getByRole("link", { name: "Get Kitchen Pro" })).toHaveAttribute(
+  // Paid-plan buttons follow the deployment's real payment switches (data-sale-state), never a
+  // blanket "/register": a purchasable plan opens its Billing card, anything else is honest about it.
+  const saleHref = async (plan: "ordering" | "kitchen_pro") => {
+    const card = page.locator(`[data-plan="${plan}"]`);
+    const state = await card.getAttribute("data-sale-state");
+    return { state, cta: card.locator("a[data-sale-cta]") };
+  };
+  const ordering = await saleHref("ordering");
+  expect(["checkout", "opening_soon"]).toContain(ordering.state);
+  await expect(ordering.cta).toHaveAttribute(
     "href",
-    "/register"
+    ordering.state === "checkout" ? "/billing?plan=ordering" : "/register"
+  );
+  const kitchen = await saleHref("kitchen_pro");
+  expect(["checkout", "early_access"]).toContain(kitchen.state);
+  await expect(kitchen.cta).toHaveAttribute(
+    "href",
+    kitchen.state === "checkout" ? "/billing?plan=kitchen_pro" : "/contact?topic=kitchen-pro"
   );
   await expect(page.getByRole("link", { name: /Talk to us about Dedicated/ })).toHaveAttribute(
     "href",
@@ -71,4 +91,50 @@ test("international USD price book is published but cannot open INR checkout", a
     "href",
     "/contact"
   );
+});
+
+test("every pricing button leads to a working page in both currencies", async ({
+  page,
+  request,
+}) => {
+  for (const currency of ["INR", "USD"]) {
+    await page.goto(`/pricing?currency=${currency}`);
+    const hrefs = await page
+      .locator("a[data-sale-cta]")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(hrefs, currency).toHaveLength(4);
+    for (const href of hrefs) {
+      expect(href, currency).toMatch(/^\/[a-z]/);
+      const response = await request.get(href!);
+      expect(response.status(), `${currency} ${href}`).toBeLessThan(400);
+    }
+  }
+});
+
+test("a Billing deep link signs the visitor in first and returns to the same plan", async ({
+  page,
+}) => {
+  await page.goto("/billing?plan=kitchen_pro");
+  await expect(page).toHaveURL(/\/login\?next=%2Fbilling%3Fplan%3Dkitchen_pro$/);
+  // Account creation from the sign-in page keeps the destination.
+  await expect(
+    page.getByRole("link", { name: /Create|Sign up|Register/i }).first()
+  ).toHaveAttribute("href", "/register?next=%2Fbilling%3Fplan%3Dkitchen_pro");
+  // Unknown plans are not echoed back into the return path.
+  await page.goto("/billing?plan=%3Cscript%3E");
+  await expect(page).toHaveURL(/\/login\?next=%2Fbilling$/);
+});
+
+test("Kitchen Pro early access opens a pre-filled enquiry, and unknown topics are ignored", async ({
+  page,
+}) => {
+  await page.goto("/contact?topic=kitchen-pro");
+  const topic = page.getByTestId("contact-topic");
+  await expect(topic).toContainText("Request Kitchen Pro early access");
+  await expect(topic.getByRole("link")).toHaveAttribute(
+    "href",
+    "mailto:admin@bababuilds.com?subject=Kitchen%20Pro%20early%20access"
+  );
+  await page.goto("/contact?topic=%3Cscript%3E");
+  await expect(page.getByTestId("contact-topic")).toHaveCount(0);
 });

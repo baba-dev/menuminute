@@ -27,7 +27,11 @@ export default async function BillingPage({
 }) {
   const query = await searchParams;
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session) {
+    // Pricing buttons point here. Sign-in (or sign-up from the login page) returns to the same plan.
+    const wanted = query.plan === "ordering" || query.plan === "kitchen_pro" ? query.plan : null;
+    redirect(`/login?next=${encodeURIComponent(wanted ? `/billing?plan=${wanted}` : "/billing")}`);
+  }
   const actor = { userId: session.user.id };
   const outlet = await getDefaultOrActiveRestaurant(actor.userId, session.activeOutletId);
   if (!outlet)

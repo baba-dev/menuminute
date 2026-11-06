@@ -62,23 +62,26 @@ See [design system](docs/design-system.md), [buttons](docs/button-options.md) an
 
 ## 🍽️ Product Overview & Tiers
 
-- **Free Forever (Primary Customer Acquisition Channel)**:
-  - Create full digital menus with categories, dishes, descriptions, and dietary indicators.
-  - Generate permanent QR codes that diners scan with zero registration required.
-  - Unlimited menu items with real-time updates.
-- **Live Table Ordering — ₹119/month (INR, provider-gated)**:
-  - Dine-in/table and pickup ordering with mobile cart and staff acceptance.
-  - Live order management for front-of-house staff.
-- **Kitchen Pro — ₹299/month (commercial activation gated)**:
-  - Dedicated Kitchen Display System (KDS) tablet interface.
-  - Order acceptance and preparation stages with audible notifications.
+Prices and limits come from `src/modules/billing/catalog.ts` and `src/modules/plans/catalog.ts`; the
+pricing page, billing page and checkout all read them. Whether a plan can be **bought today** is decided
+at runtime, not in copy: see [commercial availability](docs/commercial-availability.md).
 
----
+| Plan            | Price                                 | Limits (per outlet unless noted)                                           | Available to buy                                                       |
+| --------------- | ------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Free**        | ₹0 forever                            | 1 outlet, 20 dishes, 2 QR codes, 2 tables, up to 100 orders/month          | **Yes.** Permanent QR menu, no guest sign-up                           |
+| **Ordering**    | ₹119 / month (also $5)                | 1 outlet, 200 dishes, 25 QR codes, 10 tables, no order cap                 | When Razorpay checkout is enabled; until then, start on Free           |
+| **Kitchen Pro** | ₹499 / month flat (also $20)          | Up to 10 outlets, 2,000 dishes, 200 QR codes, kitchen display and stations | By request until its independent release gate and checkout are enabled |
+| **Dedicated**   | ₹30,000 / month, or $3,000 on-premise | Virtually unlimited; own domain and branding set up with the team          | By contract (`/contact`)                                               |
 
-Published India pricing is ₹119/month for Live Table Ordering and ₹299/month for Kitchen Pro.
-Checkout is disabled by default pending verified Razorpay provider configuration, and Kitchen Pro remains
-behind its independent commercial release gate. Free menus remain accessible after paid access ends.
-USD billing and multi-outlet subscription units are not yet supported; do not advertise them as available.
+- Free permanent QR menus are the acquisition product and stay accessible after paid access ends; printed
+  QR links survive every downgrade.
+- Paid checkout is **off by default** (`RAZORPAY_ENABLED=false`) pending verified Razorpay configuration and
+  the launch gates in [Razorpay billing](docs/operations/razorpay-billing.md). Kitchen Pro additionally needs
+  `RAZORPAY_KITCHEN_ENABLED` and the database release approval. The public pricing page reads these switches,
+  so its buttons say "Get Ordering" / "Get Kitchen Pro" only when checkout can complete, and otherwise offer
+  "Start free for now" / "Request early access".
+- USD prices are published for enquiries only; there is no USD checkout. Do not advertise USD billing as
+  purchasable.
 
 ## 🛠️ Technical Stack
 
@@ -235,6 +238,7 @@ pnpm test:e2e
 - [Audited ARM server and coexistence requirements](docs/server-inventory.md)
 - [Security Architecture](docs/security.md)
 - [Product Roadmap](docs/product-roadmap.md)
+- [Commercial availability: what is sellable today and how the site decides](docs/commercial-availability.md)
 - [Architecture Decision Records (ADRs)](docs/decisions.md)
 
 ### CI/CD 2.0 release status
