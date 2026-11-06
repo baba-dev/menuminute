@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getSpicePresentation, MAX_SPICE_LEVEL } from "../src/modules/menu-product/spice-presentation";
+import {
+  getSpicePresentation,
+  MAX_SPICE_LEVEL,
+} from "../src/modules/menu-product/spice-presentation";
 
 describe("merchant-provided dish heat presentation", () => {
   it("keeps existing 1–4 meanings and exposes the new fifth chilli", () => {

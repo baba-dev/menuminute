@@ -8,11 +8,13 @@ afterEach(cleanup);
 describe("public dish taste card", () => {
   it("renders a genuine five-chilli heat meter and existing merchant flavor/serving data", () => {
     const { container, rerender } = render(
-      <DishTasteProfile culinary={{
-        spiceLevel: 4,
-        flavorNotes: ["Smoky", "Creamy"],
-        servingTemp: "hot",
-      }} />
+      <DishTasteProfile
+        culinary={{
+          spiceLevel: 4,
+          flavorNotes: ["Smoky", "Creamy"],
+          servingTemp: "hot",
+        }}
+      />
     );
     expect(screen.getByRole("img", { name: "Heat: 4 of 5 chillies (Extra fiery)" })).toBeTruthy();
     expect(container.querySelectorAll(".dining-chilli")).toHaveLength(5);

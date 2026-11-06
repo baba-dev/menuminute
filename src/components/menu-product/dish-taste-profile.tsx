@@ -19,7 +19,13 @@ function Chilli({ active }: { active: boolean }) {
         d="M12.1 8.9C7.6 7.6 4.3 11 5.5 15.8c1.7 6.7 9.1 11 21 9-7.5-1.9-10.2-6.2-10-10.9.1-2.8-1.8-4.4-4.4-5Z"
         fill="currentColor"
       />
-      <path d="M13.2 9.5c.2-4.1 2.7-6.1 6.5-5.7" stroke="#66883d" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      <path
+        d="M13.2 9.5c.2-4.1 2.7-6.1 6.5-5.7"
+        stroke="#66883d"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }
@@ -65,7 +71,9 @@ export function DishTasteProfile({ culinary }: { culinary?: CustomizerDish["culi
           )}
           {serving && ServingIcon && (
             <div className="dining-taste-fact dining-serving-fact">
-              <span className="dining-serving-icon"><ServingIcon size={19} aria-hidden="true" /></span>
+              <span className="dining-serving-icon">
+                <ServingIcon size={19} aria-hidden="true" />
+              </span>
               <div className="dining-serving-copy">
                 <span>Best served</span>
                 <strong>{serving.label}</strong>
@@ -76,9 +84,15 @@ export function DishTasteProfile({ culinary }: { culinary?: CustomizerDish["culi
       )}
       {flavors.length > 0 && (
         <div className="dining-taste-flavors">
-          <span><Sparkles size={14} aria-hidden="true" /> Flavor notes</span>
+          <span>
+            <Sparkles size={14} aria-hidden="true" /> Flavor notes
+          </span>
           <div className="dining-flavor-list">
-            {flavors.map((note) => <span className="dining-flavor-tag" key={note}>{note}</span>)}
+            {flavors.map((note) => (
+              <span className="dining-flavor-tag" key={note}>
+                {note}
+              </span>
+            ))}
           </div>
         </div>
       )}

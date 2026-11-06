@@ -5,13 +5,33 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
 import {
-  X, Plus, Minus, Leaf, Check, Flame, ShieldAlert, ShieldCheck, Sparkles,
-  ChefHat, HeartPulse, CookingPot, UtensilsCrossed, Wheat, WheatOff, Sprout,
-  Dumbbell, Droplets, MessageSquareText,
+  X,
+  Plus,
+  Minus,
+  Leaf,
+  Check,
+  Flame,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  ChefHat,
+  HeartPulse,
+  CookingPot,
+  UtensilsCrossed,
+  Wheat,
+  WheatOff,
+  Sprout,
+  Dumbbell,
+  Droplets,
+  MessageSquareText,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
-import { canQuickAddCompanion, hasVerifiedNutrition, isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
+import {
+  canQuickAddCompanion,
+  hasVerifiedNutrition,
+  isVerifiedFreeFrom,
+} from "@/modules/menu-product/culinary-safety";
 import { DishTasteProfile } from "./dish-taste-profile";
 import { playWoodenTap } from "@/lib/sound-effects";
 
@@ -313,14 +333,13 @@ export function ItemCustomizer({
               <DiningImage visual={visual} eager />
             </div>
           )}
-          {activeDish.description && (
-            <p className="dining-dish-desc">{activeDish.description}</p>
-          )}
+          {activeDish.description && <p className="dining-dish-desc">{activeDish.description}</p>}
 
           {activeDish.dietary.length > 0 && (
             <div className="dining-dietary-row" aria-label="Restaurant dietary labels">
               {activeDish.dietary.map((diet) => {
-                const DietIcon = diet === "gluten_free" ? WheatOff : diet === "vegan" ? Sprout : Leaf;
+                const DietIcon =
+                  diet === "gluten_free" ? WheatOff : diet === "vegan" ? Sprout : Leaf;
                 return (
                   <span key={diet} className="dining-dietary-badge">
                     <DietIcon size={15} aria-hidden="true" />
@@ -347,40 +366,55 @@ export function ItemCustomizer({
           {hasVerifiedNutrition(activeDish.nutrition) && (
             <div className="stack" style={{ gap: "0.5rem" }}>
               <div className="dining-section-heading">
-                <span><HeartPulse size={17} aria-hidden="true" /> Nutrition</span>
+                <span>
+                  <HeartPulse size={17} aria-hidden="true" /> Nutrition
+                </span>
                 {activeDish.nutrition?.servingSize && (
-                  <small><UtensilsCrossed size={14} aria-hidden="true" /> {activeDish.nutrition.servingSize}</small>
+                  <small>
+                    <UtensilsCrossed size={14} aria-hidden="true" />{" "}
+                    {activeDish.nutrition.servingSize}
+                  </small>
                 )}
               </div>
               <div className="dining-macro-grid">
                 {activeDish.nutrition?.calories !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.calories}</span>
-                    <span className="dining-macro-lbl"><Flame size={13} aria-hidden="true" /> kcal</span>
+                    <span className="dining-macro-lbl">
+                      <Flame size={13} aria-hidden="true" /> kcal
+                    </span>
                   </div>
                 )}
                 {activeDish.nutrition?.proteinGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.proteinGrams}g</span>
-                    <span className="dining-macro-lbl"><Dumbbell size={13} aria-hidden="true" /> Protein</span>
+                    <span className="dining-macro-lbl">
+                      <Dumbbell size={13} aria-hidden="true" /> Protein
+                    </span>
                   </div>
                 )}
                 {activeDish.nutrition?.carbsGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.carbsGrams}g</span>
-                    <span className="dining-macro-lbl"><Wheat size={13} aria-hidden="true" /> Carbs</span>
+                    <span className="dining-macro-lbl">
+                      <Wheat size={13} aria-hidden="true" /> Carbs
+                    </span>
                   </div>
                 )}
                 {activeDish.nutrition?.fatGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fatGrams}g</span>
-                    <span className="dining-macro-lbl"><Droplets size={13} aria-hidden="true" /> Fat</span>
+                    <span className="dining-macro-lbl">
+                      <Droplets size={13} aria-hidden="true" /> Fat
+                    </span>
                   </div>
                 )}
                 {activeDish.nutrition?.fiberGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fiberGrams}g</span>
-                    <span className="dining-macro-lbl"><Sprout size={13} aria-hidden="true" /> Fiber</span>
+                    <span className="dining-macro-lbl">
+                      <Sprout size={13} aria-hidden="true" /> Fiber
+                    </span>
                   </div>
                 )}
               </div>
@@ -394,14 +428,16 @@ export function ItemCustomizer({
               Boolean(activeDish.safety.crossContact)) && (
               <div className="stack" style={{ gap: "0.6rem" }}>
                 <div className="dining-section-heading">
-                  <span><CookingPot size={17} aria-hidden="true" /> Ingredients &amp; allergens</span>
-                  <small><ShieldCheck size={14} aria-hidden="true" /> Restaurant-verified</small>
+                  <span>
+                    <CookingPot size={17} aria-hidden="true" /> Ingredients &amp; allergens
+                  </span>
+                  <small>
+                    <ShieldCheck size={14} aria-hidden="true" /> Restaurant-verified
+                  </small>
                 </div>
 
                 {activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0 && (
-                  <p
-                    className="dining-ingredients-line"
-                  >
+                  <p className="dining-ingredients-line">
                     <strong style={{ color: "var(--dc-ink)" }}>Ingredients:</strong>{" "}
                     {activeDish.safety.ingredients.join(", ")}.
                   </p>
@@ -431,7 +467,10 @@ export function ItemCustomizer({
               </div>
             )}
           {(isVerifiedFreeFrom(activeDish, "nuts") || isVerifiedFreeFrom(activeDish, "dairy")) && (
-            <div className="dining-verified-freefrom" aria-label="Restaurant-verified free-from claims">
+            <div
+              className="dining-verified-freefrom"
+              aria-label="Restaurant-verified free-from claims"
+            >
               <ShieldCheck size={16} aria-hidden="true" />
               {isVerifiedFreeFrom(activeDish, "nuts") && <span>Verified nut-free</span>}
               {isVerifiedFreeFrom(activeDish, "dairy") && <span>Verified dairy-free</span>}
@@ -625,7 +664,9 @@ export function ItemCustomizer({
           {!readOnly && (
             <div className="customizer-section stack">
               <label className="dining-section-heading" htmlFor="dish-special-instructions">
-                <span><MessageSquareText size={17} aria-hidden="true" /> Special instructions</span>
+                <span>
+                  <MessageSquareText size={17} aria-hidden="true" /> Special instructions
+                </span>
               </label>
               <input
                 type="text"
@@ -636,7 +677,9 @@ export function ItemCustomizer({
                 onChange={(e) => setItemNotes(e.target.value)}
                 className="field-input"
               />
-              <small className="dining-instructions-hint">Kitchen requests are not guaranteed. Please confirm allergies with staff.</small>
+              <small className="dining-instructions-hint">
+                Kitchen requests are not guaranteed. Please confirm allergies with staff.
+              </small>
             </div>
           )}
           {validationError && (
