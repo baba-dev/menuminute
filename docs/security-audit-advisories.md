@@ -1,0 +1,10 @@
+# Reviewed dependency advisories — 7 November 2026
+
+The frozen dependency audit on PR #330 identified two **moderate** indirect dependencies. Both have upstream fixes but affect toolchain paths, not a demonstrated public MenuMinute endpoint. They remain **unpatched** and must not be described as resolved.
+
+- **esbuild 0.18.20** — [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). Included through `drizzle-kit → @esbuild-kit/esm-loader → @esbuild-kit/core-utils`. The issue exposes a locally running esbuild **development server** to cross-origin requests. Production MenuMinute uses the compiled Next.js standalone server, not esbuild's development server. This lowers observed public exposure but does not eliminate the vulnerable dependency. Patch is available at >=0.25.0, requiring review of toolchain compatibility.
+- **minimatch 10.2.6** — [GHSA-g3hv-75wg-m249 / CVE-2026-118764](https://github.com/advisories/GHSA-g3hv-75wg-m249). Included through ESLint/TypeScript tooling under `eslint-config-next`. Exploitation requires attacker-controlled glob patterns with vulnerable optimization settings. Current code does not use this package to process public diner patterns. Fixed in >=11.0.1, a major upgrade requiring validation of the linter's transitive compatibility.
+
+**Policy:** `pnpm audit --audit-level high` remains a blocking CI check. The JSON advisory verification permits *only* the two reviewed advisory IDs, versions and paths above. Any new moderate finding, different version/path, high finding, or invalid audit report fails CI.
+
+**Remediation:** Upgrade each transitive toolchain through compatible maintained parent releases, or use a thoroughly tested override with exact new lockfile integrity hashes. Do not force major transitive overrides blindly on the shared production build. Full ARM64 frozen installs, lint, migration checks and browser tests must pass after each proposed upgrade. Remove a CI exception as soon as its vulnerable copy is eliminated. This is recorded risk acceptance for the review interval, not a blanket exemption or proof of zero vulnerabilities.
