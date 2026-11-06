@@ -445,7 +445,7 @@ export const marketingFeatures: readonly MarketingFeature[] = [
       {
         question: "Can every account use Kitchen Pro?",
         answer:
-          "Yes. Subscribe from your billing page, then set up stations and assign staff. Tickets start routing once your outlet is ready.",
+          "Yes. Subscribe from your billing page once Kitchen Pro checkout is open, or request early access from the pricing page and we will enable it for your outlet. Then set up stations and assign staff; tickets start routing once your outlet is ready.",
       },
       {
         question: "Does it support multiple stations?",

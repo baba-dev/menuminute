@@ -751,9 +751,9 @@ export function KitchenBoard({
             role="note"
             className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
           >
-            <AlertTriangle size={20} className="shrink-0" /> Kitchen setup mode. New tickets remain
-            on the existing merchant order board until the integrated Kitchen Pro release and
-            entitlements are approved. You can configure stations without activating sales.
+            <AlertTriangle size={20} className="shrink-0" /> Kitchen setup mode. New tickets stay on
+            your Orders board until Kitchen Pro is active for this outlet. You can configure
+            stations now; setup does not switch anything on.
           </section>
         )}
         {soundBlocked && sound && (

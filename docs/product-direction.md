@@ -32,6 +32,11 @@ The differentiator is the complete small-restaurant journey: a useful free menu,
 
 ## 3. Commercial model
 
+> **Superseded for prices and availability (2 and 6 November 2026).** The ₹149 / ₹299 figures in this
+> section and in the table above were pilot hypotheses and are no longer published. Current prices are
+> ₹119 Ordering and ₹499 Kitchen Pro; see [plans and limits](plans-and-limits.md) and
+> [commercial availability](commercial-availability.md). The tier _outcomes_ below remain the intent.
+
 | Tier        | Pilot price / outlet / month       | Included outcome                                                                                                            |
 | ----------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Free Menu   | ₹0                                 | Published mobile menu, categories, item information, availability, restaurant branding, stable menu URL and downloadable QR |

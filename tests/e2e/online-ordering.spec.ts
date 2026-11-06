@@ -393,6 +393,14 @@ test("checkout validates the phone inline and remembers the device only when ask
   };
 
   let cart = await openCart();
+  // Regression: the order-type block once sat flush against the sheet edge while the rest was padded.
+  const left = (locator: import("@playwright/test").Locator) =>
+    locator.evaluate((element) => Math.round(element.getBoundingClientRect().left));
+  const sectionLeft = await left(cart.getByText("Order Type", { exact: true }));
+  expect(sectionLeft).toBeGreaterThanOrEqual(16);
+  expect(
+    Math.abs(sectionLeft - (await left(cart.getByText("Your details (optional)"))))
+  ).toBeLessThanOrEqual(2);
   const phone = cart.getByRole("textbox", { name: "Phone number" });
   await cart.getByRole("textbox", { name: "Name" }).fill("Asha");
   await phone.fill("12ab");
