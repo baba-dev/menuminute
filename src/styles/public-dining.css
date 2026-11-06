@@ -1212,6 +1212,10 @@
   padding: 1.1rem 1.4rem;
   overscroll-behavior: contain;
 }
+/* Order type and pickup time sit between the header and the body; match the body's side padding. */
+.dining-cart > .cart-section {
+  padding: 1rem 1.4rem 0;
+}
 .dining-cart .cart-item-card {
   display: flex;
   gap: 0.75rem;

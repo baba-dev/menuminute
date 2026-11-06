@@ -599,10 +599,10 @@ export function CartDrawer({
                     disabled={Boolean(pendingRecovery)}
                     onChange={(event) => setPickupTime(event.target.value)}
                   />
-                  <small>Times are shown in {timezone}.</small>
                   <small>
-                    Earliest pickup is {pickupLeadMinutes} minutes from now. The restaurant must
-                    still accept your order.
+                    Times are shown in {timezone}, in {pickupSlotMinutes}-minute steps. Earliest
+                    pickup is {pickupLeadMinutes} minutes from now. The restaurant must still accept
+                    your order.
                   </small>
                 </label>
               )}
