@@ -3,14 +3,13 @@ import { ArrowUpRight, Flame, Leaf, Plus, ShieldAlert, Star } from "lucide-react
 import { DiningImage } from "./dining-image";
 import { hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
 import { dishVisual } from "@/modules/menu-product/public-presentation";
+import { getSpicePresentation } from "@/modules/menu-product/spice-presentation";
 import { formatPrice } from "@/lib/utils";
 import { RubberStamp } from "@/components/ui/tactile-elements";
 import type { CustomizerDish } from "./item-customizer";
 
 /** Verified-order rating aggregate. Supplied by the reviews slice; absent until then. */
 export type DishRating = { average: number; count: number };
-
-const SPICE_LABEL = ["", "Mild", "Medium", "Hot", "Fiery"] as const;
 
 export function DishCard({
   dish,
@@ -31,7 +30,7 @@ export function DishCard({
 }) {
   const unavailable = dish.soldOut || !dish.open;
   const customizable = dish.variants.length + dish.addOnGroups.length > 0;
-  const spice = dish.culinary?.spiceLevel ?? 0;
+  const spice = getSpicePresentation(dish.culinary?.spiceLevel);
   const showRating = rating && rating.count > 0;
   const allergenCount = dish.safety?.verified ? (dish.safety.allergens?.length ?? 0) : 0;
   return (
@@ -80,10 +79,10 @@ export function DishCard({
               {value.replaceAll("_", " ")}
             </span>
           ))}
-          {spice > 0 && (
+          {spice && (
             <span className="dining-spice-pill">
               <Flame size={12} aria-hidden="true" className="ember-text" />
-              {SPICE_LABEL[Math.min(spice, 4)]}
+              {spice.label}
             </span>
           )}
           {hasVerifiedNutrition(dish.nutrition) && dish.nutrition?.calories !== undefined && (
