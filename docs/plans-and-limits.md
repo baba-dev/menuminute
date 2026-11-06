@@ -1,9 +1,9 @@
 # Plans, resource caps and Dedicated tier — proposal
 
-**Status: proposal.** Direction approved by the owner in conversation on 2026-11-02; prices, caps and
-the Dedicated design are hypotheses awaiting sign-off. Nothing here is implemented or deployed.
-Today only two capabilities are gated (`ordering.new` ₹119, `kitchen.new` ₹499); the only hard
-resource limit in code is `MAX_TABLES_PER_OUTLET = 200`. See
+**Status: partly built.** Direction approved by the owner on 2026-11-02. The caps and prices in
+`src/modules/plans/catalog.ts` and `src/modules/billing/catalog.ts` are the source of truth; where this
+document disagrees with them, the code wins. Sections titled "as built" record what shipped (Free order
+intake ships behind an operator switch that defaults to off); other sections remain design notes. See
 [razorpay-billing.md](operations/razorpay-billing.md), [admin-feature-access.md](admin-feature-access.md)
 and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 

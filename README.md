@@ -23,7 +23,7 @@ Digital menus and **permanent QR codes, free forever** — then live table order
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Drizzle-4169E1?logo=postgresql&logoColor=white)
-![Node](https://img.shields.io/badge/Node-%E2%89%A522-339933?logo=nodedotjs&logoColor=white)
+![Node](https://img.shields.io/badge/Node-24_LTS-339933?logo=nodedotjs&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **[Why MenuMinute](#-why-menuminute) · [Features](#-features) · [Screenshots](#-take-a-look) · [Plans](#-plans) · [Quick start](#-quick-start) · [Architecture](#-architecture) · [Docs](#-documentation) · [Contributing](#-contributing)**
@@ -184,6 +184,7 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 | **Dedicated**   | ₹30,000 / month, or $3,000 on-premise | Virtually unlimited; own domain and branding set up with the team          | By contract ([contact](https://food.bababuilds.com/contact))                |
 
 Free permanent QR menus stay live even after paid access ends, and printed QR links survive every downgrade.
+On Free, guest-order intake is disabled until an operator enables it; the 100-order monthly cap still applies.
 Prices and limits are read from `src/modules/billing/catalog.ts` and `src/modules/plans/catalog.ts` by the
 pricing page, billing page and checkout alike.
 
@@ -198,7 +199,7 @@ code (and for self-hosters), needs verified provider configuration, and Kitchen 
 
 ## 🚀 Quick start
 
-**You'll need:** Node.js ≥ 22, pnpm ≥ 11, and Docker (for the isolated PostgreSQL + Redis test stack).
+**You'll need:** Node.js 24 LTS (pinned in [`.nvmrc`](.nvmrc)), pnpm 11 (pinned via `packageManager`), and Docker (for the isolated PostgreSQL + Redis test stack).
 
 ```bash
 git clone https://github.com/baba-dev/menuminute.git

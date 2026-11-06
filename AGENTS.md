@@ -10,9 +10,9 @@ the product planning context is Food Minutes. Do not rename the product incident
 - Read `docs/architecture.md`, `docs/domain-invariants.md`, and the relevant domain guide.
 - For any production, release, monitoring or migration work, read `docs/production-runbook.md` first;
   `docs/deployment-actions.md` records previous deployments and `docs/automatic-migration-deployment.md`
-  defines the successor v4 unattended migration/backup contract.
+  defines the current (helper v7) unattended migration/backup contract.
   Recorded live host state takes precedence over older proposed layouts or local CI defaults.
-- `docs/decisions.md` records approved target decisions; code may still implement the old scaffold.
+- `docs/decisions.md` records approved decisions. Where code and a decision disagree, check the decision's status and `docs/product-roadmap.md` for what is actually built.
 - Read `docs/product-requirements.md` for approved hierarchy, roles, fulfillment, currencies and expiry.
   USD/INR restrict platform subscription billing only; outlet transactions use supported local currencies.
 - `docs/implementation-plan.md` separates existing behavior from future acceptance gates.
@@ -32,7 +32,7 @@ the product planning context is Food Minutes. Do not rename the product incident
 ## Required boundaries
 
 - Keep Next.js route handlers and Server Actions thin; enforce authorization in services.
-- Target PostgreSQL + Drizzle/pg, BullMQ and two Redis workloads from the starter.
+- Use PostgreSQL + Drizzle/pg, BullMQ and two Redis workloads (the stack already in place).
 - PostgreSQL owns durable business state. Redis is not an order ledger or authorization authority.
 - Check current membership and outlet scope; never infer a private tenant from a demo/default.
 - Database transactions must atomically persist business changes and outbox intent.
@@ -69,7 +69,7 @@ the product planning context is Food Minutes. Do not rename the product incident
 
 - A PR merge is **not by itself** a deployment. Final native ARM64 CI on the latest SHA (all four lanes and aggregate gate), artifact
   digest, the configured production environment gate, ERP/readiness checks and migration
-  compatibility are required. With the one-time root-installed helper v4, the approved continuous
+  compatibility are required. With the one-time root-installed helper (v7; the deploy workflow checks `--version`), the approved continuous
   path accepts append-only checksummed SQL migrations after a newly verified encrypted off-host
   backup, without per-SHA approval; missing prerequisites or failed SQL stop deployment.
 - Deploy **only** the reviewed full 40-character SHA, with consistent `current` and `worker-current`
@@ -104,7 +104,7 @@ CI run ID and full SHA in the handoff; never trust the downstream
 `workflow_run.head_sha` as the source identity. Staging uses the
 `production-staging` environment and is **not** a live deployment. Only an
 eligible activation job uses the `production` environment and advertises
-https://food.bababuilds.com. Unattended schema deployment requires reviewed helper v4 installed
+https://food.bababuilds.com. Unattended schema deployment requires reviewed helper v7 installed
 root-owned, append-only historical migration validation, a fresh verified off-host backup
 before new SQL, and the latest main SHA immediately before cutover. The helper must verify both service users, source archive and paired
 runtime identities. Public-readiness release identity must equal the candidate
