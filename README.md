@@ -43,8 +43,8 @@ Digital menus and **permanent QR codes, free forever** — then live table order
 
 Most restaurant software makes you pay before you see any value. MenuMinute flips that.
 
-| 🆓 **Free forever** | 📱 **Mobile-first** | 🧱 **One platform** |
-| :-- | :-- | :-- |
+| 🆓 **Free forever**                                                                                                                   | 📱 **Mobile-first**                                                                                                  | 🧱 **One platform**                                                                                 |
+| :------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
 | Build a full menu and print a permanent QR code. Diners scan with **zero sign-up**. Free menus stay live even after paid access ends. | Designed around the phone in a diner's hand and the tablet in the kitchen. Light, dark and system themes everywhere. | Menu, QR, orders, kitchen and billing share one tenant-scoped domain — no stitching tools together. |
 
 ---
@@ -56,6 +56,7 @@ Most restaurant software makes you pay before you see any value. MenuMinute flip
 <td width="33%" valign="top">
 
 ### 📋 Menu Studio
+
 Categories, dishes, variants, add-ons, dietary indicators and reviewed media. Unlimited items with real-time updates.
 
 [Contracts →](docs/menu-product/contracts.md) · [Studio 2 →](docs/menu-studio-2.md)
@@ -64,6 +65,7 @@ Categories, dishes, variants, add-ons, dietary indicators and reviewed media. Un
 <td width="33%" valign="top">
 
 ### 🔳 QR Studio
+
 Permanent service-point QR codes with print-ready tabletop layouts and high-density SVG / PNG output.
 
 [QR Studio 3 →](docs/qr-studio-3-print-atelier.md) · [Connections →](docs/qr-studio-4-connection-atelier.md)
@@ -72,6 +74,7 @@ Permanent service-point QR codes with print-ready tabletop layouts and high-dens
 <td width="33%" valign="top">
 
 ### 📄 Menu import
+
 Turn an existing PDF or photo of a menu into a reviewed, editable digital one.
 
 [Import engine →](docs/menu-import-engine.md) · [Review →](docs/menu-import-review.md)
@@ -82,6 +85,7 @@ Turn an existing PDF or photo of a menu into a reviewed, editable digital one.
 <td valign="top">
 
 ### 🛎️ Live ordering
+
 Dine-in, table and pickup orders with a mobile cart and staff acceptance. Immutable order snapshots.
 
 [Order reliability →](docs/order-reliability.md) · [Counter service →](docs/orders-service-counter-release.md)
@@ -90,6 +94,7 @@ Dine-in, table and pickup orders with a mobile cart and staff acceptance. Immuta
 <td valign="top">
 
 ### 👨‍🍳 Kitchen Pro
+
 A tablet-first Kitchen Display System with preparation stages and audible alerts.
 
 [Kitchen Pro →](docs/kitchen-pro-a-d.md) · [Live service →](docs/kitchen-live-service-2.md)
@@ -98,6 +103,7 @@ A tablet-first Kitchen Display System with preparation stages and audible alerts
 <td valign="top">
 
 ### 🪑 Dining floor
+
 Table and floor view with live service signals so the front of house sees what needs attention.
 
 [Dining floor →](docs/dining-floor.md) · [Scan table →](docs/scan-table-2.md)
@@ -108,6 +114,7 @@ Table and floor view with live service signals so the front of house sees what n
 <td valign="top">
 
 ### 🔥 Ember assistant
+
 An in-product AI helper for menus and operations with grounded answers and budgeted usage.
 
 [AI & media policy →](docs/ai-and-media.md) · [Dish intelligence →](docs/dish-intelligence.md)
@@ -116,7 +123,8 @@ An in-product AI helper for menus and operations with grounded answers and budge
 <td valign="top">
 
 ### 🧾 POS & ledger
-A native Till, invoice history and register closing desk. *In design and phased delivery.*
+
+A native Till, invoice history and register closing desk. _In design and phased delivery._
 
 [POS overview →](docs/pos/README.md) · [Contracts →](docs/pos/contracts.md)
 
@@ -124,6 +132,7 @@ A native Till, invoice history and register closing desk. *In design and phased 
 <td valign="top">
 
 ### 🌍 Worldwide by design
+
 Multi-outlet scope, independent country, currency, locale and timezone. Platform billing in INR / USD.
 
 [Requirements →](docs/product-requirements.md) · [Launch →](docs/worldwide-commercial-launch.md)
@@ -141,16 +150,16 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 
 <div align="center">
 
-| Menu Studio | QR Studio |
-| :-: | :-: |
+|                                                                                               Menu Studio                                                                                               |                                                                                             QR Studio                                                                                             |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/menu-studio-desktop-dark.webp"><img alt="Menu Studio" src="public/docs-media/menu-studio-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/qr-studio-desktop-dark.webp"><img alt="QR Studio" src="public/docs-media/qr-studio-desktop-light.webp"></picture> |
 
-| Orders | Kitchen display |
-| :-: | :-: |
+|                                                                                          Orders                                                                                          |                                                                                           Kitchen display                                                                                           |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/orders-desktop-dark.webp"><img alt="Orders" src="public/docs-media/orders-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/kitchen-desktop-dark.webp"><img alt="Kitchen display" src="public/docs-media/kitchen-desktop-light.webp"></picture> |
 
-| Dining floor | Reports |
-| :-: | :-: |
+|                                                                                         Dining floor                                                                                         |                                                                                           Reports                                                                                           |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/floor-desktop-dark.webp"><img alt="Dining floor" src="public/docs-media/floor-desktop-light.webp"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="public/docs-media/reports-desktop-dark.webp"><img alt="Reports" src="public/docs-media/reports-desktop-light.webp"></picture> |
 
 **What diners see**
@@ -167,14 +176,14 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 
 ## 💳 Plans
 
-| | **Free QR Menu** | **Live Table Ordering** | **Kitchen Pro** |
-| :-- | :-: | :-: | :-: |
-| **Price (India)** | **Free forever** | ₹119 / month | ₹299 / month |
-| Digital menu, unlimited items | ✅ | ✅ | ✅ |
-| Permanent QR codes, no diner sign-up | ✅ | ✅ | ✅ |
-| Dine-in / table / pickup ordering | — | ✅ | ✅ |
-| Live order management | — | ✅ | ✅ |
-| Kitchen Display System | — | — | ✅ |
+|                                      | **Free QR Menu** | **Live Table Ordering** | **Kitchen Pro** |
+| :----------------------------------- | :--------------: | :---------------------: | :-------------: |
+| **Price (India)**                    | **Free forever** |      ₹119 / month       |  ₹299 / month   |
+| Digital menu, unlimited items        |        ✅        |           ✅            |       ✅        |
+| Permanent QR codes, no diner sign-up |        ✅        |           ✅            |       ✅        |
+| Dine-in / table / pickup ordering    |        —         |           ✅            |       ✅        |
+| Live order management                |        —         |           ✅            |       ✅        |
+| Kitchen Display System               |        —         |            —            |       ✅        |
 
 Checkout is disabled by default until the payment provider (Razorpay) is configured, and Kitchen Pro sits behind its own commercial release gate. USD billing and multi-outlet subscription units are not available yet. Details: [plans and limits](docs/plans-and-limits.md).
 
@@ -216,13 +225,13 @@ Open <http://localhost:3000>.
 
 The seed creates one sample restaurant for local use only. Never run it against production.
 
-| | |
-| :-- | :-- |
-| Login | <http://localhost:3000/login> |
-| Email | `demo@menuminute.com` |
-| Password | the `DEMO_PASSWORD` you passed to the seed |
-| Sample restaurant | *Spice Route Kitchen* (one dish) |
-| Public menu | <http://localhost:3000/m/demo-spice-route-kitchen-v1> |
+|                   |                                                       |
+| :---------------- | :---------------------------------------------------- |
+| Login             | <http://localhost:3000/login>                         |
+| Email             | `demo@menuminute.com`                                 |
+| Password          | the `DEMO_PASSWORD` you passed to the seed            |
+| Sample restaurant | _Spice Route Kitchen_ (one dish)                      |
+| Public menu       | <http://localhost:3000/m/demo-spice-route-kitchen-v1> |
 
 </details>
 
@@ -246,20 +255,20 @@ Strategy and conventions: [testing strategy](docs/testing-strategy.md) · [devel
 
 ## 🏗️ Architecture
 
-| Layer | Technology |
-| :-- | :-- |
-| **Framework** | Next.js App Router, React 19 |
-| **Language** | TypeScript (strict) |
-| **Styling** | Tailwind CSS v4 with custom design tokens |
-| **Database** | PostgreSQL via `pg`, tenant-scoped transactions |
-| **ORM / migrations** | Drizzle ORM, versioned append-only SQL |
-| **Queues / cache** | Redis + BullMQ durable jobs |
-| **Auth** | Better Auth database sessions |
-| **Validation** | Zod v4 |
-| **QR** | `qrcode` — SVG and PNG output |
-| **Images** | Sharp |
-| **Testing** | Vitest, React Testing Library, Playwright |
-| **Delivery** | Native ARM64 CI, immutable releases, Nginx + systemd |
+| Layer                | Technology                                           |
+| :------------------- | :--------------------------------------------------- |
+| **Framework**        | Next.js App Router, React 19                         |
+| **Language**         | TypeScript (strict)                                  |
+| **Styling**          | Tailwind CSS v4 with custom design tokens            |
+| **Database**         | PostgreSQL via `pg`, tenant-scoped transactions      |
+| **ORM / migrations** | Drizzle ORM, versioned append-only SQL               |
+| **Queues / cache**   | Redis + BullMQ durable jobs                          |
+| **Auth**             | Better Auth database sessions                        |
+| **Validation**       | Zod v4                                               |
+| **QR**               | `qrcode` — SVG and PNG output                        |
+| **Images**           | Sharp                                                |
+| **Testing**          | Vitest, React Testing Library, Playwright            |
+| **Delivery**         | Native ARM64 CI, immutable releases, Nginx + systemd |
 
 ```text
 src/
@@ -306,6 +315,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top" width="33%">
 
 **🧭 Start here**
+
 - [Product requirements](docs/product-requirements.md)
 - [Product direction](docs/product-direction.md)
 - [Roadmap](docs/product-roadmap.md)
@@ -317,6 +327,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top" width="33%">
 
 **🛠️ Build**
+
 - [Development workflow](docs/development.md)
 - [Environment variables](docs/environment.md)
 - [Database and schema](docs/database.md)
@@ -328,6 +339,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top" width="33%">
 
 **🎨 Design**
+
 - [Design system](docs/design-system.md)
 - [Design options](docs/design-options.md)
 - [Buttons](docs/button-options.md)
@@ -341,6 +353,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top">
 
 **🍽️ Product**
+
 - [Menu product contracts](docs/menu-product/contracts.md)
 - [Core domain contracts](docs/core-domains/contracts.md)
 - [POS](docs/pos/README.md)
@@ -352,6 +365,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top">
 
 **🔐 Security and trust**
+
 - [Security architecture](docs/security.md)
 - [Hardening A–F](docs/security-hardening-a-f.md)
 - [Auth 2 security](docs/auth-2-security.md)
@@ -362,6 +376,7 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 <td valign="top">
 
 **🚢 Operations**
+
 - [Production runbook](docs/production-runbook.md)
 - [Deployment](docs/deployment.md)
 - [CI/CD 2.0](docs/deployment-actions.md)
@@ -378,13 +393,13 @@ Start with the [production runbook](docs/production-runbook.md), then [deploymen
 
 <br>
 
-| Phase | Focus | Reference |
-| :-- | :-- | :-- |
-| 1 | PostgreSQL, Better Auth, scoped tenancy | [Foundation](docs/foundation/phase-1.md) |
-| 2 | Organizations, outlets, roles, durable jobs, billing entitlements | [Core domains](docs/core-domains/contracts.md) · [Operations](docs/core-domains/operations.md) |
-| 3 | Menu Studio, reviewed media, permanent QR, public menu | [Contracts](docs/menu-product/contracts.md) · [Operations](docs/menu-product/operations.md) |
-| 4 | Merchant readiness | [Plan](docs/orchestration/phase-4.md) · [Acceptance](docs/orchestration/phase-4-acceptance.md) · [Ops evidence](docs/orchestration/phase-4-ops-evidence.md) |
-| 5 | Kitchen and ordering | [Plan](docs/orchestration/phase-5.md) · [Acceptance](docs/orchestration/phase-5-acceptance.md) |
+| Phase | Focus                                                             | Reference                                                                                                                                                   |
+| :---- | :---------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | PostgreSQL, Better Auth, scoped tenancy                           | [Foundation](docs/foundation/phase-1.md)                                                                                                                    |
+| 2     | Organizations, outlets, roles, durable jobs, billing entitlements | [Core domains](docs/core-domains/contracts.md) · [Operations](docs/core-domains/operations.md)                                                              |
+| 3     | Menu Studio, reviewed media, permanent QR, public menu            | [Contracts](docs/menu-product/contracts.md) · [Operations](docs/menu-product/operations.md)                                                                 |
+| 4     | Merchant readiness                                                | [Plan](docs/orchestration/phase-4.md) · [Acceptance](docs/orchestration/phase-4-acceptance.md) · [Ops evidence](docs/orchestration/phase-4-ops-evidence.md) |
+| 5     | Kitchen and ordering                                              | [Plan](docs/orchestration/phase-5.md) · [Acceptance](docs/orchestration/phase-5-acceptance.md)                                                              |
 
 </details>
 
