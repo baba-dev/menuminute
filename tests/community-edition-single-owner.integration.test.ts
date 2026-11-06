@@ -52,7 +52,7 @@ describe("Community Edition atomic single-owner invariant", () => {
   });
 
   it("does not accept a community singleton claim from a hosted signup", async () => {
-    const email = `${nanoid()}@signup.invalid`;
+    const email = `${nanoid()}@signup.invalid`.toLowerCase();
     const response = await authServer.handler(
       new Request("http://localhost:3000/api/auth/sign-up/email", {
         method: "POST",
