@@ -6,15 +6,15 @@ The stock/AI integrations below remain target behavior; no inference or stock se
 
 ## Owner assistance
 
-| Capability                      | Proposed provider path                                                          | Publication rule                                      |
-| ------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Photo/PDF menu import           | Gemini vision-capable model, selected at integration time                       | Editable draft; highlight uncertain dish names/prices |
-| Description assistance          | Gemini; optional appropriately licensed text provider                           | Preserve factual ingredients; owner approves          |
-| Menu translation                | Gemini, configured language catalog                                             | Review per-language draft and retain source           |
-| Stock image suggestions         | Pexels search after owner action or bounded import job                          | Owner approves matching cuisine/dish                  |
-| Optional generated illustration | Eligible Cloudflare Workers AI model; other licensed provider only after review | Explicit opt-in, illustrative label, owner approves   |
+| Capability                      | Proposed provider path                                                                           | Publication rule                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Photo menu import               | **Implemented:** NVIDIA NIM vision model (`NVIDIA_IMPORT_MODEL`), photos only; PDF not supported | Private draft; every entry human-confirmed; see [engine](menu-import-engine.md) |
+| Description assistance          | Gemini; optional appropriately licensed text provider                                            | Preserve factual ingredients; owner approves                                    |
+| Menu translation                | Gemini, configured language catalog                                                              | Review per-language draft and retain source                                     |
+| Stock image suggestions         | Pexels search after owner action or bounded import job                                           | Owner approves matching cuisine/dish                                            |
+| Optional generated illustration | Eligible Cloudflare Workers AI model; other licensed provider only after review                  | Explicit opt-in, illustrative label, owner approves                             |
 
-Do not hard-code an outdated model name into the product contract. Track provider/model used and job state. Failures preserve manual editing; no AI, stock search or image generation runs on menu page requests or order submission.
+Menu import is the only implemented row in this table. Do not hard-code an outdated model name into the product contract. Track provider/model used and job state. Failures preserve manual editing; no AI, stock search or image generation runs on menu page requests or order submission.
 
 NVIDIA API trial access is excluded from production by default. Enable only an integration whose production rights and account entitlement have been verified. R2 is object storage, not inference. Free allowances are quotas, not unlimited infrastructure or an obligation to spend.
 

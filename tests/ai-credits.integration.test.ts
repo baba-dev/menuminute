@@ -14,7 +14,9 @@ import { withOutlet } from "../src/modules/tenancy/service";
 import { refundAiCredits, spendAiCredits } from "../src/modules/plans/credits";
 import { getPlanUsageView } from "../src/modules/plans/usage";
 import { beginTurn, createConversation, failTurn } from "../src/modules/intelligence/store";
+import { Pool } from "pg";
 import {
+  cancelImport,
   createImport,
   importDetail,
   submitImportForProcessing,
@@ -259,6 +261,46 @@ describe("AI menu import costs one credit per page", () => {
       imp.id,
     ]);
     expect(status[0]!.status).toBe("collecting");
+  });
+
+  it("records the charge, and a queued import cancelled before it starts gets every credit back once", async () => {
+    const f = await fixture();
+    const imp = await importWithPages(f, 3);
+    const queued = await submit(f, imp);
+    expect(await used(f)).toBe(3);
+    const recorded = await owner<{ credits_charged: number }>(
+      "select credits_charged from menu_imports where id=$1",
+      [imp.id]
+    );
+    expect(recorded[0]!.credits_charged).toBe(3);
+
+    await cancelImport(f.actor, f.outlet.id, imp.id, { expectedRevision: queued.revision });
+    const [event] = await owner<{ id: string }>(
+      "select id from outbox_events where type='menu_import.process' and payload->>'importId'=$1",
+      [imp.id]
+    );
+    const pool = new Pool({ connectionString: process.env["WORKER_DATABASE_URL"], max: 1 });
+    try {
+      const begin = () =>
+        pool.query("select app_private.import_engine_begin($1,$2,$3) as r", [
+          event!.id,
+          f.outlet.organizationId,
+          "test/vision",
+        ]);
+      expect((await begin()).rows[0].r).toMatchObject({ done: true });
+      expect(await used(f)).toBe(0);
+      // A redelivery must not return the credits a second time.
+      await spend(f, 2);
+      await begin();
+      expect(await used(f)).toBe(2);
+    } finally {
+      await pool.end();
+    }
+    const after = await owner<{ credits_charged: number }>(
+      "select credits_charged from menu_imports where id=$1",
+      [imp.id]
+    );
+    expect(after[0]!.credits_charged).toBe(0);
   });
 
   it("does not charge when the submission itself fails (stale revision)", async () => {

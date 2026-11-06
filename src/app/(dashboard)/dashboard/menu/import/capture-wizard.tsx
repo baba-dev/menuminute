@@ -29,7 +29,11 @@ type Source = {
 };
 type Candidate = {
   document: {
-    sourceWarnings?: Array<{ sourceId: string; reason: "invalid_provider_response" }>;
+    sourceWarnings?: Array<{
+      sourceId: string;
+      reason:
+        "invalid_provider_response" | "provider_unavailable" | "not_processed" | "truncated_output";
+    }>;
     categories: Array<{
       id: string;
       name: { value: string | null };
@@ -1101,9 +1105,8 @@ export function CaptureWizard({
                   className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
                 >
                   Partial extraction: {session.candidate.document.sourceWarnings.length}{" "}
-                  photographed page(s) did not return trustworthy data. Review the successful pages
-                  carefully; missing entries must be added manually or reimported from a clearer
-                  photograph.
+                  photographed page(s) were missing or incomplete. Review the other pages carefully;
+                  missing entries must be added manually or reimported from a clearer photograph.
                 </div>
               )}
               <Link

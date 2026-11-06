@@ -190,7 +190,7 @@ it("saves partial corrections, rejects stale revisions, confirms every ID, and a
   }));
   expect(counts).toEqual({ release: 0, audit: 1 });
 });
-it("target application respects exact menu revision and never modifies a published release", async () => {
+it("target application appends to the draft at the exact menu revision and never modifies a published release", async () => {
   const f = await fixture(),
     menuId = crypto.randomUUID();
   const old = menuDocumentSchema.parse({
@@ -246,7 +246,8 @@ it("target application respects exact menu revision and never modifies a publish
   expect(applied).toMatchObject({ status: "applied", menuId, menuRevision: 3 });
   const snapshot = await menuDetail(f2.actor, menuId);
   expect(snapshot.publishedRevision).toBe(2);
-  expect(snapshot.document.categories[0]?.items[0]?.name).toBe("Curry");
+  // Applying to an existing menu APPENDS: the live draft's own dish is untouched, import follows it.
+  expect(snapshot.document.categories.map((c) => c.items[0]?.name)).toEqual(["Live dish", "Curry"]);
   const live = await admin(
     async (_db, pool) =>
       (

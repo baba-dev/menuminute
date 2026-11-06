@@ -27,7 +27,7 @@ finalising). They are a marketing mirror, not an import of product code.
 
 ## Copy and honesty
 
-- Source claims: the owner help article (`/help/owner/ai-menu-import`) says photos or a PDF, a private
+- Source claims: the owner help article (`/help/owner/ai-menu-import`) says photos (JPEG, PNG or WebP; PDF is not supported by the real importer, only this scripted demo uses a sample PDF), a private
   candidate draft, never published automatically, reviewed and accepted by the owner.
 - Availability: the owner confirmed AI import is open to every outlet, so the third card says so and links
   to sign-up. Note that `/pricing` still says "AI photo import where separately enabled and approved";

@@ -35,6 +35,18 @@ type Session = {
   candidate: { revision: number; document: ImportCandidate };
   review: Review | null;
 };
+function warningSummary(warnings: Array<{ reason: string }>) {
+  const reasons = new Set(warnings.map((w) => w.reason));
+  const parts: string[] = [];
+  if (reasons.has("truncated_output"))
+    parts.push("Dishes at the end of a cut-off page were not imported.");
+  if (reasons.has("not_processed"))
+    parts.push("Pages not yet read because extraction stopped early were not imported.");
+  if (reasons.has("provider_unavailable") || reasons.has("invalid_provider_response"))
+    parts.push("Pages that could not be read were not imported.");
+  return parts.join(" ");
+}
+
 export function ReviewWorkspace({
   outletId,
   importId,
@@ -351,17 +363,19 @@ export function ReviewWorkspace({
           role="alert"
           className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
         >
-          <p className="font-bold">Partial transcription — some photographs were not recognized.</p>
+          <p className="font-bold">
+            Partial transcription — some photographs were missing or incomplete.
+          </p>
           <p className="mt-2">
-            Missing page(s):{" "}
+            Affected page(s):{" "}
             {candidate.sourceWarnings
               .map((warning) => {
                 const source = initial.sources.find((s) => s.id === warning.sourceId);
                 return source ? source.pageIndex + 1 : "unknown";
               })
               .join(", ")}
-            . The items on these pages have NOT been imported. Check the original photos and add
-            missing dishes manually in Menu Studio, or create another import with clearer captures.
+            . {warningSummary(candidate.sourceWarnings)} Check the original photos and add missing
+            dishes manually in Menu Studio, or create another import with clearer captures.
           </p>
           <label className="mt-3 flex items-start gap-2 font-medium">
             <input
@@ -370,7 +384,7 @@ export function ReviewWorkspace({
               checked={acknowledgedMissingPages}
               onChange={(event) => setAcknowledgedMissingPages(event.target.checked)}
             />
-            I understand this private draft may omit dishes from the missing pages.
+            I understand this private draft may omit dishes from the affected pages.
           </label>
         </section>
       )}

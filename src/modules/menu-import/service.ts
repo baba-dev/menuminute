@@ -230,8 +230,9 @@ export async function cancelImport(
 /**
  * Queues an import for the AI engine. One AI credit per ready page or photo is spent from the organization's
  * monthly allowance (a plan limit) in the same transaction as the enqueue, so a refused or failed submission
- * keeps no credit and an import is never started once the allowance is used up. Credits are not refunded if
- * the provider later fails a page: the request was made.
+ * keeps no credit and an import is never started once the allowance is used up. A page the provider was
+ * asked to read keeps its credit even if the answer was unusable (the request was made). Credits for pages
+ * never sent (cancelled, or stopped early by a provider failure) are returned when the import finishes.
  */
 export async function submitImportForProcessing(
   actor: Actor,
@@ -244,11 +245,18 @@ export async function submitImportForProcessing(
       sql`select count(*)::int as n from menu_import_sources where import_id=${importId} and outlet_id=${outletId} and status='ready'`
     );
     const n = pages.rows[0]?.n ?? 0;
-    if (n > 0) await spendAiCredits(tx, outletId, n * AI_CREDIT_COSTS.importSource);
-    return (
+    const charged =
+      n > 0 ? await spendAiCredits(tx, outletId, n * AI_CREDIT_COSTS.importSource) : false;
+    const queued = (
       await tx.execute<{ result: { id: string; status: string; revision: number } }>(
         sql`select app_private.import_enqueue(${outletId},${importId},${expectedRevision}) as result`
       )
     ).rows[0]!.result;
+    // Remember what was charged so credits for pages never sent can be returned (cancel, early failure).
+    if (charged)
+      await tx.execute(
+        sql`select app_private.import_record_credits(${outletId},${importId},${n * AI_CREDIT_COSTS.importSource})`
+      );
+    return queued;
   });
 }
