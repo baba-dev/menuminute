@@ -47,3 +47,22 @@ baseline evidence, not mobile screenshots or proof of the patched rendering.
 
 No migration or server contract change. Prices, tax quoting, idempotency, contact consent and
 order acceptance are unchanged. Roll back by reverting the UI commit; no data rollback is needed.
+
+## Dish popup — culinary detail extension (2026-11-07)
+
+The guest item customizer now displays a read-only five-chilli indicator (1–5,
+with 0/default not advertised), merchant-set serving temperature and flavor tags,
+food-themed dietary and nutrition icons, and the chef note exactly once. Diner
+reviews follow culinary/safety details; the existing variant, add-on, quantity,
+price and checkout code paths are unchanged. Nutrition and ingredient/allergen
+facts retain the established merchant-verification gates; verified-free-from
+claims retain the option/cross-contact safety guard.
+
+The JSON culinary contract now accepts level 5, preserving the meaning of
+existing 1–4 ratings. Menu Studio and AI suggestion validation support the
+same range. No SQL migration is required. To roll back, revert these
+feature commits; previously saved level-5 dishes should be edited to 0–4
+before rolling back the parser.
+
+This is a source-code change, not a verified production release. Mobile
+visual QA, final-SHA CI, and independent review remain required.
