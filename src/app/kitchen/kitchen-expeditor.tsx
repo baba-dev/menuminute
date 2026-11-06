@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { CheckCheck, RefreshCw, ChefHat, AlertTriangle, ClipboardCheck, Check } from "lucide-react";
 import type {
   KitchenExpoSnapshot,
@@ -186,8 +187,12 @@ export function KitchenExpeditor({ base, enabled, cursor, timezone }: Props) {
           role="note"
           className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
         >
-          Kitchen Pro remains commercially disabled. No new orders are routed to these stations;
-          this is a setup/review view.
+          Kitchen Pro is not switched on for this outlet yet, so this is a setup and review view.
+          New orders keep arriving on your Orders board and are not routed to these stations until
+          Kitchen Pro is active.{" "}
+          <Link href="/billing?plan=kitchen_pro" className="font-semibold underline">
+            See Kitchen Pro on Billing
+          </Link>
         </p>
       )}
       {data.overflow && (

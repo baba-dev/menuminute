@@ -2,11 +2,19 @@ import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import { z } from "zod";
 import { displayToMinor } from "@/lib/money";
-import { parseImportCandidate, type ImportCandidate } from "./contracts";
+import { parseImportCandidate, type ImportCandidate, type SourceWarningReason } from "./contracts";
+import { mergeCandidateCategories } from "./merge";
 
 /** Fixed provider endpoint; no caller-supplied URL or public source links. */
 export const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const name = z.string().trim().min(1).max(1000);
+const variantSchema = z
+  .object({
+    name,
+    price: z.string().trim().max(32).nullable().optional(),
+    uncertain: z.boolean().optional(),
+  })
+  .strict();
 const pageSchema = z
   .object({
     categories: z
@@ -22,6 +30,7 @@ const pageSchema = z
                     description: z.string().trim().max(1000).nullable().optional(),
                     price: z.string().trim().max(32).nullable().optional(),
                     uncertain: z.boolean().optional(),
+                    variants: z.array(variantSchema).max(20).optional(),
                   })
                   .strict()
               )
@@ -39,6 +48,7 @@ const completionSchema = z
         z
           .object({
             message: z.object({ content: z.string().max(130000) }).passthrough(),
+            finish_reason: z.string().nullable().optional(),
           })
           .passthrough()
       )
@@ -97,9 +107,52 @@ function decodePageJson(content: string): unknown {
   const fenced = /^\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n\x60\x60\x60$/i.exec(clean);
   return JSON.parse(fenced ? fenced[1]! : clean) as unknown;
 }
+/**
+ * A response cut off by the output-token limit is usually valid up to its last complete dish. Keep every
+ * complete category and dish (never a half-printed dish or variant list) and close the rest.
+ */
+export function salvageTruncatedJson(content: string): unknown {
+  const text = content.trim().replace(/^\x60\x60\x60(?:json)?\s*\n?/i, "");
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+  let safe: { end: number; closers: string } | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}" || ch === "]") {
+      stack.pop();
+      // Depth 2 = a category just closed, depth 4 = a dish just closed.
+      if (ch === "}" && (stack.length === 2 || stack.length === 4))
+        safe = {
+          end: i + 1,
+          closers: stack
+            .slice()
+            .reverse()
+            .map((open) => (open === "{" ? "}" : "]"))
+            .join(""),
+        };
+    }
+  }
+  if (!safe) return null;
+  try {
+    return JSON.parse(text.slice(0, safe.end) + safe.closers) as unknown;
+  } catch {
+    return null;
+  }
+}
 const prompt = (currency: string) =>
   "Transcribe only the menu text visibly printed in this photograph. Return ONLY a JSON object with the exact shape " +
   '{"categories":[{"name":"printed heading","items":[{"name":"printed dish","description":null,"price":"12.50","uncertain":false}]}]}. ' +
+  "When one dish prints several sizes or options with separate prices (for example Small 5.00 / Large 8.00), " +
+  'set its "price" to null and list them as "variants":[{"name":"Small","price":"5.00","uncertain":false}]; otherwise omit "variants". ' +
   "Use decimal numeric price strings with a period, no currency sign or thousands separator. Prices are in " +
   currency +
   ". If the price is missing, faint, ambiguous, crossed out, multi-valued, or unreadable, use null and uncertain true. " +
@@ -116,6 +169,7 @@ const recognition = (value: string | null, sourceId: string, attention = false) 
         : ("unreviewed" as const),
   evidence: [{ sourceId, ...(value ? { excerpt: value.slice(0, 500) } : {}) }],
 });
+type WarningList = Array<{ sourceId: string; reason: SourceWarningReason }>;
 function parsedPrice(value: string | null, uncertain: boolean, currency: string, sourceId: string) {
   let amount: number | null = null;
   if (!uncertain && value !== null && /^\d+(?:\.\d+)?$/.test(value)) {
@@ -153,8 +207,9 @@ export async function extractNvidiaCandidate(
   )
     throw new NvidiaExtractionError("source_unavailable", usage);
   const categories: ImportCandidate["categories"] = [];
-  const sourceWarnings: Array<{ sourceId: string; reason: "invalid_provider_response" }> = [];
-  for (const source of [...input.sources].sort((a, b) => a.pageIndex - b.pageIndex)) {
+  const sourceWarnings: WarningList = [];
+  const ordered = [...input.sources].sort((a, b) => a.pageIndex - b.pageIndex);
+  for (const [position, source] of ordered.entries()) {
     await input.guard?.(usage);
     if (!source.bytes.length || source.bytes.length > 5242880)
       throw new NvidiaExtractionError("source_unavailable", usage);
@@ -170,8 +225,9 @@ export async function extractNvidiaCandidate(
     }
     let accepted = false;
     let metered = false;
+    // A lost lease or a cancelled import is terminal: never degrade it into a partial result.
+    await input.guard?.(usage);
     try {
-      await input.guard?.(usage);
       usage.requests++;
       const response = await request(NVIDIA_CHAT_URL, {
         method: "POST",
@@ -227,26 +283,52 @@ export async function extractNvidiaCandidate(
       else if (usage.outputTokens !== null)
         usage.outputTokens += completion.usage.completion_tokens;
       metered = true;
-      const page = pageSchema.parse(decodePageJson(completion.choices[0]!.message.content));
+      const choice = completion.choices[0]!;
+      const truncated = choice.finish_reason === "length";
+      let page: z.infer<typeof pageSchema>;
+      try {
+        page = pageSchema.parse(decodePageJson(choice.message.content));
+      } catch (error) {
+        if (!truncated) throw error;
+        page = pageSchema.parse(salvageTruncatedJson(choice.message.content));
+      }
       if (!page.categories.some((category) => category.items.length))
         throw new Error("No legible menu entries");
       for (const category of page.categories)
         categories.push({
           id: randomUUID(),
           name: recognition(category.name, source.id),
-          items: category.items.map((item) => ({
-            id: randomUUID(),
-            name: recognition(item.name, source.id),
-            ...(item.description ? { description: recognition(item.description, source.id) } : {}),
-            priceMinor: parsedPrice(
-              item.price ?? null,
-              item.uncertain ?? true,
-              input.currency,
-              source.id
-            ),
-            variants: [],
-          })),
+          items: category.items.map((item) => {
+            const variants = item.variants ?? [];
+            return {
+              id: randomUUID(),
+              name: recognition(item.name, source.id),
+              ...(item.description
+                ? { description: recognition(item.description, source.id) }
+                : {}),
+              // Sized dishes have no single printed price; the reviewer chooses the base price.
+              priceMinor: variants.length
+                ? parsedPrice(null, true, input.currency, source.id)
+                : parsedPrice(
+                    item.price ?? null,
+                    item.uncertain === true,
+                    input.currency,
+                    source.id
+                  ),
+              variants: variants.map((variant) => ({
+                id: randomUUID(),
+                name: recognition(variant.name, source.id),
+                priceMinor: parsedPrice(
+                  variant.price ?? null,
+                  variant.uncertain === true,
+                  input.currency,
+                  source.id
+                ),
+              })),
+            };
+          }),
         });
+      if (truncated) sourceWarnings.push({ sourceId: source.id, reason: "truncated_output" });
     } catch {
       if (!metered) {
         usage.inputTokens = null;
@@ -259,6 +341,14 @@ export async function extractNvidiaCandidate(
         sourceWarnings.push({ sourceId: source.id, reason: "invalid_provider_response" });
         continue;
       }
+      // Pages already transcribed were paid for: keep them as a partial draft, flag this page and every
+      // page not yet sent, and stop. Nothing is retried automatically. With no usable page, fail.
+      if (categories.some((c) => c.items.length)) {
+        sourceWarnings.push({ sourceId: source.id, reason: "provider_unavailable" });
+        for (const rest of ordered.slice(position + 1))
+          sourceWarnings.push({ sourceId: rest.id, reason: "not_processed" });
+        break;
+      }
       throw new NvidiaExtractionError("provider_unavailable", usage);
     }
   }
@@ -270,7 +360,7 @@ export async function extractNvidiaCandidate(
         schemaVersion: 1,
         importId: input.importId,
         currency: input.currency,
-        categories,
+        categories: mergeCandidateCategories(categories),
         ...(sourceWarnings.length ? { sourceWarnings } : {}),
       }),
       usage,

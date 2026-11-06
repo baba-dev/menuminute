@@ -85,6 +85,8 @@ export default async function InformationPage({ params }: { params: Promise<{ sl
   const { slug } = await params;
   // Guides and the help centre now live in the documentation section.
   if (slug === "guides" || slug === "help") redirect("/docs");
+  // "Support" is the conventional URL for app-store listings and email footers; help is the support centre.
+  if (slug === "support") redirect("/help");
   const page = getPage(slug);
   if (!page) notFound();
   return (

@@ -39,6 +39,9 @@ export const authServer = betterAuth({
     additionalFields: {
       termsVersion: { type: "string", required: true, input: true },
       termsAcceptedAt: { type: "date", required: true, input: true },
+      // Never accept this slot from browsers or OAuth profile data. Only the server
+      // stamps it during Community Edition user creation (unique in PostgreSQL).
+      communityEditionSlot: { type: "number", required: false, input: false, returned: false },
     },
   },
   trustedOrigins: [new URL(env.APP_URL).origin],
@@ -120,6 +123,9 @@ export const authServer = betterAuth({
       create: {
         before: async (user) => {
           if (env.COMMUNITY_EDITION) {
+            // This read only provides a friendly rejection for ordinary attempts.
+            // Concurrent first signups are serialized by the database UNIQUE slot
+            // in migration 0109, not by this non-atomic read-before-insert.
             const existing = await getDb().select({ id: users.id }).from(users).limit(1);
             if (existing.length > 0) {
               throw new APIError("FORBIDDEN", {
@@ -127,6 +133,7 @@ export const authServer = betterAuth({
                   "Self-hosted Community Edition is restricted to a single administrator. Multi-user accounts are available on food.bababuilds.com.",
               });
             }
+            return { data: { ...user, communityEditionSlot: 1 } };
           }
           return { data: user };
         },

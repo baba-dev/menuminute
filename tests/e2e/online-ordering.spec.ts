@@ -5,6 +5,41 @@ import { hashPassword } from "better-auth/crypto";
 import { menuDocumentSchema } from "../../src/modules/menu-product/contracts";
 import { setFreeIntake } from "./plan-settings";
 
+for (const width of [360, 390]) {
+  test(`diner sheets stay usable at ${width}px and removing the last item restores scrolling`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 740 });
+    const fixture = await seedOrdering(true);
+    await page.goto(`/m/${fixture.tableToken}`);
+    await page.getByRole("button", { name: "Add to order", exact: true }).click();
+    const detail = page.getByRole("dialog", { name: "Paneer Curry" });
+    const close = detail.getByRole("button", { name: "Close customizer" });
+    const closeBox = await close.boundingBox();
+    expect(closeBox?.width).toBeGreaterThanOrEqual(44);
+    expect(closeBox?.height).toBeGreaterThanOrEqual(44);
+    await detail.getByLabel("Special Instructions").fill("Sauce on the side");
+    await expect(detail.locator(".customizer-footer")).toBeInViewport();
+    await page.screenshot({
+      path: testInfo.outputPath("mobile-customizer.png"),
+    });
+    await detail.getByRole("button", { name: /Add to Order/ }).click();
+    await page.getByRole("button", { name: /^View Your Order/ }).click();
+    const cart = page.getByRole("dialog", { name: "Your order" });
+    await expect(cart).toBeVisible();
+    expect(await cart.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await expect(cart.getByRole("button", { name: /Submit order/ })).toBeInViewport();
+    await page.screenshot({ path: testInfo.outputPath("mobile-cart.png") });
+    await cart.getByRole("button", { name: "Remove item", exact: true }).click();
+    await expect(cart).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
+    await page.getByRole("button", { name: "Add to order", exact: true }).click();
+    await detail.getByRole("button", { name: /Add to Order/ }).click();
+    await expect(cart).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^View Your Order/ })).toBeVisible();
+  });
+}
+
 async function seedOrdering(enabled: boolean) {
   const url = process.env["MIGRATION_DATABASE_URL"];
   if (!url || new URL(url).pathname !== "/menuminute_test") {
@@ -226,18 +261,26 @@ test("guest QR-to-kitchen lifecycle, independent finance settlement and tracking
     await expect(owner.getByRole("dialog", { name: /Order #/ })).toBeVisible();
     await owner.getByRole("button", { name: "Close order details" }).click();
     await owner.getByRole("button", { name: "Accept", exact: true }).click();
-    await expect(page.getByText("Order Accepted!")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Order Accepted!")).toBeVisible({
+      timeout: 15000,
+    });
     await owner.getByRole("button", { name: "Start Preparing" }).click();
-    await expect(page.getByText("Food Being Prepared")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Food Being Prepared")).toBeVisible({
+      timeout: 15000,
+    });
     await owner.getByRole("button", { name: "Mark Ready" }).click();
-    await expect(page.getByText("Order Ready!")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Order Ready!")).toBeVisible({
+      timeout: 15000,
+    });
     await owner.getByRole("button", { name: "Record Paid" }).click();
     await owner.getByRole("button", { name: "Confirm cash received" }).click();
     await expect(page.getByText("Your payment has been received.")).toBeVisible({
       timeout: 15000,
     });
     await owner.getByRole("button", { name: "Mark Served" }).click();
-    await expect(page.getByText("Order Complete")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Order Complete")).toBeVisible({
+      timeout: 15000,
+    });
     await owner.getByRole("tab", { name: "History" }).click();
     await expect(owner.getByText("matching concluded orders")).toBeVisible();
     for (const width of [360, 390, 768, 1024, 1440]) {
@@ -368,7 +411,10 @@ test("Service Counter keeps verified queue and counters isolated under partial o
 });
 
 async function withDb<T>(work: (pool: Pool) => Promise<T>) {
-  const pool = new Pool({ connectionString: process.env["MIGRATION_DATABASE_URL"], max: 1 });
+  const pool = new Pool({
+    connectionString: process.env["MIGRATION_DATABASE_URL"],
+    max: 1,
+  });
   try {
     return await work(pool);
   } finally {
@@ -393,6 +439,14 @@ test("checkout validates the phone inline and remembers the device only when ask
   };
 
   let cart = await openCart();
+  // Regression: the order-type block once sat flush against the sheet edge while the rest was padded.
+  const left = (locator: import("@playwright/test").Locator) =>
+    locator.evaluate((element) => Math.round(element.getBoundingClientRect().left));
+  const sectionLeft = await left(cart.getByText("Order Type", { exact: true }));
+  expect(sectionLeft).toBeGreaterThanOrEqual(16);
+  expect(
+    Math.abs(sectionLeft - (await left(cart.getByText("Your details (optional)"))))
+  ).toBeLessThanOrEqual(2);
   const phone = cart.getByRole("textbox", { name: "Phone number" });
   await cart.getByRole("textbox", { name: "Name" }).fill("Asha");
   await phone.fill("12ab");

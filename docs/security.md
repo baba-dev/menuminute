@@ -25,3 +25,18 @@ Status: **implemented controls plus remaining verification requirements**. This 
 Require exact deployed web + worker SHA, isolated PostgreSQL/dual-Redis tests, operator-backed merchant/guest/expeditor canary, real mobile/tablet/accessibility review, agreed capacity thresholds, independent security assessment and named release reviewer. A green CI lane, closed risk-accepted ticket or successful deployment health probe does not establish those absent checks.
 
 Never log or publish production credentials, customer notes, token values or unredacted private media. Never run destructive tests or representative load against the live VPS.
+
+## Security review: 7 November 2026 (source-only, not a full penetration test)
+
+Baseline: `main` at `435b3af047a7f5416f06c8ea82c8dbfed20d9bd6`. Tracking issue: [#326](https://github.com/baba-dev/menuminute/issues/326).
+
+- **High — framework dependency:** `next` and `eslint-config-next` were pinned to 16.4.3, preceding Next.js 16.4.5 (3 November 2026). The upstream patch addresses seven moderate-severity issues including cross-user cache disclosure, response injection and HttpOnly cookie exposure. Not all are necessarily reachable in MenuMinute. Upgrade to exact 16.4.5 with matching pinned ARM64 SWC, published package integrity hashes and a CI regression guard.
+- **High — live Node status unverified:** The dated runbook lists isolated Node.js 24.22.0, preceding the 21 October 2026 Node.js 24.22.1 security release. Verify `/opt/menuminute/node24/bin/node -v` on the live host and update only the isolated runtime to a vetted 24.x maintenance release if needed. Do not modify the system Node or the ERP.
+- **High — Community Edition only:** `src/lib/auth.ts` has a read-before-create single-user guard without database atomicity, so concurrent registrations can race. A separate transactional/database-invariant remediation and simultaneous first-signup test are required. Do not change SaaS signup as a side effect.
+- **Medium — CSP:** `next.config.ts` permits `script-src 'unsafe-inline'`. Stage a framework-compatible nonce/hash policy, with checkout, Turnstile, PWA and scripts tested before rollout.
+- **Operational — signed edge trust:** `verifiedOrderSource` relies on installed Nginx overwriting two private headers; the checked-in example does so. Confirm the actual installed proxy config, trusted Cloudflare source IPs, origin-only port 3100 and Redis outage behavior. Source code alone cannot prove edge safety.
+- **Operational — tenant isolation:** Multi-tenant RLS and stream access checks exist, but production role grants, existing stream revocation and restored data permissions require separate testing. Exercise authenticated cross-tenant negative fixtures in isolated PostgreSQL/Redis.
+
+The dependency-only patch adds **no migrations**, changes no feature flags and does not alter orders, money, POS, kitchen or ERP behavior by intent. It is **not deployed by creating a PR**. Require all four CI categories, native ARM64 compile and browser checks on the exact final SHA. Verify owner-visible flows in staging and preserve the existing backup/rollback process before deploying.
+
+References: [Next.js v16.4.5 release](https://github.com/vercel/next.js/releases/tag/v16.4.5), [Node.js October 2026 security releases](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases). No assessment can guarantee the absence of undisclosed zero-day vulnerabilities.

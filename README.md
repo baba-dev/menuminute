@@ -57,7 +57,7 @@ Most restaurant software makes you pay before you see any value. MenuMinute flip
 
 ### 📋 Menu Studio
 
-Categories, dishes, variants, add-ons, dietary indicators and reviewed media, with real-time updates to the live menu.
+Categories, dishes, variants, add-ons, dietary indicators and reviewed media, with real-time updates. Dish limits depend on the plan: 20 on Free, 200 on Ordering, 2,000 on Kitchen Pro.
 
 [Contracts →](docs/menu-product/contracts.md) · [Studio 2 →](docs/menu-studio-2.md)
 
@@ -176,20 +176,24 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 
 ## 💳 Plans
 
-|                                               |           **Free**           | **Ordering** | **Kitchen Pro** |    **Dedicated**    |
-| :-------------------------------------------- | :--------------------------: | :----------: | :-------------: | :-----------------: |
-| **Price (India)**                             |        **₹0 forever**        | ₹119 / month |  ₹499 / month   |   ₹30,000 / month   |
-| **Price (USD, listed)**                       |              $0              |  $5 / month  |   $20 / month   | $3,000, by contract |
-| Outlets                                       |              1               |      1       |    up to 10     |     by contract     |
-| Dishes per outlet                             |              20              |     200      |      2,000      |   no platform cap   |
-| Permanent QR codes                            |              2               |      25      |       200       |   no platform cap   |
-| Guest QR ordering                             | capped intake (100 / month)¹ |      ✅      |       ✅        |         ✅          |
-| Table ordering, counter board, order tracking |              —               |      ✅      |       ✅        |         ✅          |
-| Kitchen Display System                        |              —               |      —       |       ✅        |         ✅          |
+| Plan            | Price                                 | Limits (per outlet unless noted)                                           | Available to buy                                                            |
+| --------------- | ------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Free**        | ₹0 forever                            | 1 outlet, 20 dishes, 2 QR codes, 2 tables, up to 100 guest orders a month  | **Yes.** Permanent QR menu, no diner sign-up                                |
+| **Ordering**    | ₹119 / month (also $5)                | 1 outlet, 200 dishes, 25 QR codes, 10 tables, no order cap                 | Self-service checkout, when the payment switches are on                     |
+| **Kitchen Pro** | ₹499 / month flat (also $20)          | Up to 10 outlets, 2,000 dishes, 200 QR codes, kitchen display and stations | Self-service checkout once its own release gate is on; otherwise by request |
+| **Dedicated**   | ₹30,000 / month, or $3,000 on-premise | Virtually unlimited; own domain and branding set up with the team          | By contract ([contact](https://food.bababuilds.com/contact))                |
 
-¹ Free-plan order intake is off until an operator enables it. Free menus and QR codes keep working even after paid access ends.
+Free permanent QR menus stay live even after paid access ends, and printed QR links survive every downgrade.
+On Free, guest-order intake is disabled until an operator enables it; the 100-order monthly cap still applies.
+Prices and limits are read from `src/modules/billing/catalog.ts` and `src/modules/plans/catalog.ts` by the
+pricing page, billing page and checkout alike.
 
-Checkout is disabled by default until the payment provider (Razorpay) is configured. Prices are listed in INR and USD, but only INR is payable today. The numbers above mirror the in-code catalog ([`src/modules/billing/catalog.ts`](src/modules/billing/catalog.ts), [`src/modules/plans/catalog.ts`](src/modules/plans/catalog.ts)); details in [plans and limits](docs/plans-and-limits.md).
+Whether a plan can be **bought** is decided at runtime, not in copy. Razorpay checkout is off by default in the
+code (and for self-hosters), needs verified provider configuration, and Kitchen Pro also needs
+`RAZORPAY_KITCHEN_ENABLED` plus the database release approval. The pricing page reads those switches, so it shows
+"Get Ordering" / "Get Kitchen Pro" only when checkout can complete and otherwise offers "Start free for now" /
+"Request early access". USD prices are for enquiries only; there is no USD checkout. See
+[commercial availability](docs/commercial-availability.md) and [plans and limits](docs/plans-and-limits.md).
 
 ---
 

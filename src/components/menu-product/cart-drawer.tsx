@@ -171,8 +171,9 @@ export function CartDrawer({
   const cartRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
+  const dialogOpen = isOpen && items.length > 0;
   useEffect(() => {
-    if (!isOpen) return;
+    if (!dialogOpen) return;
     restoreRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const oldOverflow = document.body.style.overflow;
@@ -206,7 +207,7 @@ export function CartDrawer({
       document.body.style.overflow = oldOverflow;
       restoreRef.current?.focus();
     };
-  }, [isOpen, isSubmitting]);
+  }, [dialogOpen, isSubmitting]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -599,10 +600,10 @@ export function CartDrawer({
                     disabled={Boolean(pendingRecovery)}
                     onChange={(event) => setPickupTime(event.target.value)}
                   />
-                  <small>Times are shown in {timezone}.</small>
                   <small>
-                    Earliest pickup is {pickupLeadMinutes} minutes from now. The restaurant must
-                    still accept your order.
+                    Times are shown in {timezone}, in {pickupSlotMinutes}-minute steps. Earliest
+                    pickup is {pickupLeadMinutes} minutes from now. The restaurant must still accept
+                    your order.
                   </small>
                 </label>
               )}
@@ -622,8 +623,11 @@ export function CartDrawer({
                         <DiningImage visual={images[item.dishId]!} />
                       </div>
                     )}
-                    <div className="stack" style={{ gap: "0.25rem", flex: 1 }}>
-                      <div className="row between">
+                    <div
+                      className="stack dining-cart-item-content"
+                      style={{ gap: "0.25rem", flex: 1 }}
+                    >
+                      <div className="row between dining-cart-item-title">
                         <strong style={{ fontSize: "1rem" }}>{item.dishName}</strong>
                         <span className="money">
                           {formatPrice(item.unitPriceMinor * item.quantity, currency)}
@@ -663,7 +667,10 @@ export function CartDrawer({
                             type="button"
                             className="action icon-btn"
                             style={{ minHeight: "44px", minWidth: "44px", padding: 0 }}
-                            onClick={() => onUpdateQuantity(index, item.quantity - 1)}
+                            onClick={() => {
+                              if (items.length === 1 && item.quantity === 1) setIsOpen(false);
+                              onUpdateQuantity(index, item.quantity - 1);
+                            }}
                             aria-label="Decrease quantity"
                           >
                             <Minus size={14} />
@@ -694,7 +701,10 @@ export function CartDrawer({
                             minHeight: "44px",
                             minWidth: "44px",
                           }}
-                          onClick={() => onRemoveItem(index)}
+                          onClick={() => {
+                            if (items.length === 1) setIsOpen(false);
+                            onRemoveItem(index);
+                          }}
                           aria-label="Remove item"
                         >
                           <Trash2 size={16} />

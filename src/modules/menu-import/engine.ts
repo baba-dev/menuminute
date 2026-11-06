@@ -59,8 +59,14 @@ export async function processImport(
       });
   };
   const timer = setInterval(heartbeat, HEARTBEAT_MS);
+  // Before every page: renew the lease now (not only on the 15s timer). The database refuses the
+  // renewal once the import is no longer `processing`, so a cancel stops further billable pages.
   const assertLease = async (meter: Meter) => {
     if (pending) await pending;
+    if (!lost) {
+      heartbeat();
+      await pending;
+    }
     if (lost) throw new NvidiaExtractionError("provider_unavailable", meter);
   };
   const usage: Meter = { requests: 0, inputTokens: 0, outputTokens: 0 };

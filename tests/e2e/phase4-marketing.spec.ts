@@ -11,7 +11,12 @@ test("public pricing advertises the four INR tiers without unsupported internati
   for (const price of ["₹0", "₹119", "₹499", "₹30,000"])
     await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
   await expect(page.getByText("One flat price for up to 10 outlets")).toBeVisible();
-  await expect(page.getByText(/Current self-service checkout charges in INR/)).toBeVisible();
+  // The footnote must agree with the buttons: it only mentions live checkout when checkout is open.
+  await expect(
+    page.getByText(
+      /Current self-service checkout charges in INR|Self-service paid checkout is not open yet/
+    )
+  ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Subscription pricing currency" })
   ).toBeVisible();
@@ -27,9 +32,26 @@ test("public pricing advertises the four INR tiers without unsupported internati
     "href",
     "/register"
   );
-  await expect(page.getByRole("link", { name: "Get Kitchen Pro" })).toHaveAttribute(
+  // Paid-plan buttons follow the deployment's real payment switches (data-sale-state), never a
+  // blanket "/register": a purchasable plan opens its Billing card, anything else is honest about it.
+  const saleHref = async (plan: "ordering" | "kitchen_pro") => {
+    const card = page.locator(`[data-plan="${plan}"]`);
+    const state = await card.getAttribute("data-sale-state");
+    return { state, cta: card.locator("a[data-sale-cta]") };
+  };
+  const ordering = await saleHref("ordering");
+  expect(["checkout", "opening_soon"]).toContain(ordering.state);
+  await expect(ordering.cta).toHaveAttribute(
     "href",
-    "/register"
+    ordering.state === "checkout" ? "/login?next=%2Fbilling%3Fplan%3Dordering" : "/register"
+  );
+  const kitchen = await saleHref("kitchen_pro");
+  expect(["checkout", "early_access"]).toContain(kitchen.state);
+  await expect(kitchen.cta).toHaveAttribute(
+    "href",
+    kitchen.state === "checkout"
+      ? "/login?next=%2Fbilling%3Fplan%3Dkitchen_pro"
+      : "/contact?topic=kitchen-pro"
   );
   await expect(page.getByRole("link", { name: /Talk to us about Dedicated/ })).toHaveAttribute(
     "href",
@@ -71,4 +93,59 @@ test("international USD price book is published but cannot open INR checkout", a
     "href",
     "/contact"
   );
+});
+
+test("every pricing button leads to a working page in both currencies", async ({
+  page,
+  request,
+}) => {
+  for (const currency of ["INR", "USD"]) {
+    await page.goto(`/pricing?currency=${currency}`);
+    const hrefs = await page
+      .locator("a[data-sale-cta]")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(hrefs, currency).toHaveLength(4);
+    for (const href of hrefs) {
+      expect(href, currency).toMatch(/^\/[a-z]/);
+      const response = await request.get(href!);
+      expect(response.status(), `${currency} ${href}`).toBeLessThan(400);
+    }
+  }
+});
+
+test("sign-in and sign-up carry a Billing return path, which is how pricing buttons reach a plan", async ({
+  page,
+}) => {
+  // Anonymous visitors are sent to sign-in with the Billing card as the return path (see planSale).
+  await page.goto("/login?next=%2Fbilling%3Fplan%3Dkitchen_pro");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+    "href",
+    "/register?next=%2Fbilling%3Fplan%3Dkitchen_pro"
+  );
+  // The return path must stay on this site's own pages.
+  await page.goto("/login?next=https%3A%2F%2Fevil.example%2Fbilling");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+    "href",
+    "/register"
+  );
+});
+
+test("Kitchen Pro early access opens a pre-filled enquiry, and unknown topics are ignored", async ({
+  page,
+}) => {
+  await page.goto("/contact?topic=kitchen-pro");
+  const topic = page.getByTestId("contact-topic");
+  await expect(topic).toContainText("Request Kitchen Pro early access");
+  await expect(topic.getByRole("link")).toHaveAttribute(
+    "href",
+    "mailto:admin@bababuilds.com?subject=Kitchen%20Pro%20early%20access"
+  );
+  await page.goto("/contact?topic=%3Cscript%3E");
+  await expect(page.getByTestId("contact-topic")).toHaveCount(0);
+});
+
+test("the conventional /support URL leads to the help centre", async ({ page }) => {
+  await page.goto("/support");
+  await expect(page).toHaveURL(/\/help$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("How can we help");
 });
