@@ -67,7 +67,29 @@ describe("Community Edition atomic single-owner invariant", () => {
         }),
       })
     );
-    expect(response.status).toBe(200);
+    // Better Auth rejects the unauthorized server-only field (400); it does
+    // not persist it or let the caller choose the singleton slot.
+    expect(response.status).toBe(400);
+    const missing = await admin(async (_, pool) =>
+      pool.query("SELECT id FROM users WHERE email=$1", [email])
+    );
+    expect(missing.rows).toHaveLength(0);
+
+    // Ordinary hosted signup remains fully functional and leaves the slot NULL.
+    const valid = await authServer.handler(
+      new Request("http://localhost:3000/api/auth/sign-up/email", {
+        method: "POST",
+        headers: { origin: "http://localhost:3000", "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "Hosted Signup",
+          email,
+          password: "test-password-123",
+          termsVersion: TERMS_VERSION,
+          termsAcceptedAt: new Date().toISOString(),
+        }),
+      })
+    );
+    expect(valid.status).toBe(200);
     await admin(async (_, pool) => {
       const result = await pool.query<{ community_edition_slot: number | null }>(
         "SELECT community_edition_slot FROM users WHERE email=$1",
