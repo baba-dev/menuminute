@@ -86,12 +86,14 @@ Do these in order; the pricing page changes by itself at the end.
    `RAZORPAY_KITCHEN_ENABLED=true` and `RAZORPAY_PLAN_KITCHEN_ID`. `kitchen_pro` becomes `checkout`.
 6. To pause sales during an incident, set `RAZORPAY_ENABLED=false`; both buttons revert at once.
 
-## Known remaining gap (owner decision needed)
+## Homepage "AVAILABLE NOW" badges (decided: keep)
 
-The homepage sections for ordering, the Kitchen Pass, service worlds and the journey link still say
-**"AVAILABLE NOW"** with prices. That wording is pinned by `tests/e2e/phase4-marketing.spec.ts` and the
-section specs as an earlier owner decision, and those pages are static, so they cannot follow the switches.
-It is accurate for the _features_ (guests can order today on Free; the kitchen display works) but not for
-_buying_ Ordering or Kitchen Pro while checkout is closed. Options: keep it; reword to "Try free" /
-"By request" (and update the specs); or make those sections read `publicSaleFacts()`. This change deliberately
-does not decide that for the owner.
+The homepage sections for ordering, the Kitchen Pass, service worlds and the journey link say **"AVAILABLE NOW"**
+with prices. They are static and pinned by `tests/e2e/phase4-marketing.spec.ts` and the section specs. They are
+only accurate for _buying_ while checkout is open.
+
+**Decision, 6 November 2026 (owner):** production has both Ordering and Kitchen Pro checkout enabled, so the
+badges are accurate and stay unchanged. Revisit this if either switch is turned off (for example
+`RAZORPAY_ENABLED=false` during a provider incident): the pricing page reverts by itself, but these static
+badges will not. Options at that point are to reword them (for example "TRY FREE" or "BY REQUEST", updating the
+specs) or make the sections read `publicSaleFacts()`.
