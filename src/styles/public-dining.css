@@ -1014,6 +1014,195 @@
 }
 
 /* Top-Tier Culinary Detail Presentation */
+
+/* Dish detail: restaurant-provided culinary facts, mobile-first. */
+.dining-modal .dining-dish-desc {
+  margin: 0;
+  color: var(--dc-ink);
+  font-size: 0.98rem;
+  line-height: 1.62;
+}
+.dining-modal .dining-dietary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.dining-modal .dining-dietary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: capitalize;
+}
+.dining-modal .dining-taste-panel {
+  padding: clamp(0.85rem, 3vw, 1.2rem);
+  background: var(--dc-soft);
+  border: 1px solid var(--dc-line);
+  border-radius: 18px;
+  display: grid;
+  gap: 0.85rem;
+}
+.dining-modal .dining-taste-heading,
+.dining-modal .dining-section-heading,
+.dining-modal .dining-kitchen-note-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--dc-ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.dining-modal .dining-taste-heading svg,
+.dining-modal .dining-section-heading svg,
+.dining-modal .dining-kitchen-note-heading svg {
+  color: var(--dc-ember);
+  flex-shrink: 0;
+}
+.dining-modal .dining-taste-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0.6rem;
+}
+.dining-modal .dining-taste-fact {
+  background: var(--dc-surface);
+  border: 1px solid var(--dc-line);
+  border-radius: 13px;
+  padding: 0.8rem 0.9rem;
+  min-width: 0;
+}
+.dining-modal .dining-taste-fact-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.dining-modal .dining-taste-fact-title span,
+.dining-modal .dining-serving-copy span,
+.dining-modal .dining-taste-flavors > span {
+  font-size: 0.76rem;
+  color: var(--dc-muted);
+  font-weight: 650;
+}
+.dining-modal .dining-taste-fact-title strong,
+.dining-modal .dining-serving-copy strong {
+  font-size: 0.96rem;
+  color: var(--dc-ink);
+  font-weight: 800;
+}
+.dining-modal .dining-chilli-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.27rem;
+  margin-top: 0.6rem;
+}
+.dining-modal .dining-chilli {
+  width: clamp(21px, 5.5vw, 26px);
+  height: clamp(21px, 5.5vw, 26px);
+  color: var(--dc-line);
+  transform: rotate(-13deg);
+}
+.dining-modal .dining-chilli.is-active { color: #d83b2c; }
+:root[data-theme="dark"] .dining-modal .dining-chilli.is-active { color: #ff6b57; }
+.dining-modal .dining-serving-fact {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.dining-modal .dining-serving-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--dc-soft);
+  color: var(--dc-ember);
+  flex-shrink: 0;
+}
+.dining-modal .dining-serving-copy { display: grid; gap: 0.1rem; }
+.dining-modal .dining-taste-flavors { display: grid; gap: 0.5rem; }
+.dining-modal .dining-taste-flavors > span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.dining-modal .dining-flavor-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.dining-modal .dining-flavor-tag {
+  background: var(--dc-surface);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-weight: 650;
+}
+.dining-modal .dining-kitchen-note {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--dc-line);
+  border-left: 3px solid var(--dc-ember);
+  border-radius: 13px;
+  background: var(--dc-surface);
+}
+.dining-modal .dining-kitchen-note p {
+  margin: 0.4rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--dc-ink);
+}
+.dining-modal .dining-section-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 0.3rem;
+}
+.dining-modal .dining-section-heading > span,
+.dining-modal .dining-section-heading small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dining-modal .dining-section-heading small {
+  color: var(--dc-muted);
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.dining-modal .dining-macro-grid { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+.dining-modal .dining-macro-card {
+  min-height: 82px;
+  padding: 0.7rem 0.5rem;
+  background: var(--dc-surface);
+  border-radius: 13px;
+}
+.dining-modal .dining-macro-val { font-size: 1.12rem; font-variant-numeric: tabular-nums; }
+.dining-modal .dining-macro-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+.dining-modal .dining-macro-lbl svg { color: var(--dc-ember); }
+.dining-modal .dining-ingredients-line { margin: 0; color: var(--dc-ink); line-height: 1.55; font-size: 0.9rem; }
+.dining-modal .dining-verified-freefrom {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--dc-ink);
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--dc-line);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.dining-modal .dining-verified-freefrom svg { color: var(--success); }
+.dining-modal .dining-safety-reminder,
+.dining-modal .dining-instructions-hint {
+  color: var(--dc-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.dining-modal .dining-safety-reminder { margin: 0; }
+@media (max-width: 450px) {
+  .dining-modal .dining-taste-panel { border-radius: 14px; }
+  .dining-modal .dining-taste-facts { grid-template-columns: minmax(0, 1fr); }
+  .dining-modal .dining-macro-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .dining-dish-desc {
   font-size: 0.95rem;
   line-height: 1.5;

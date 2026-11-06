@@ -4,12 +4,16 @@ import { DishReviewsList } from "./dish-reviews-list";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DiningImage } from "./dining-image";
 import type { DiningVisual } from "@/modules/menu-product/public-presentation";
-import { X, Plus, Minus, Leaf, Check, Clock3, Flame, ShieldAlert, Sparkles } from "lucide-react";
+import {
+  X, Plus, Minus, Leaf, Check, Flame, ShieldAlert, ShieldCheck, Sparkles,
+  ChefHat, HeartPulse, CookingPot, UtensilsCrossed, Wheat, WheatOff, Sprout,
+  Dumbbell, Droplets, MessageSquareText,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY } from "@/modules/orders/guest-checkout";
-import { canQuickAddCompanion, hasVerifiedNutrition } from "@/modules/menu-product/culinary-safety";
+import { canQuickAddCompanion, hasVerifiedNutrition, isVerifiedFreeFrom } from "@/modules/menu-product/culinary-safety";
+import { DishTasteProfile } from "./dish-taste-profile";
 import { playWoodenTap } from "@/lib/sound-effects";
-import { RubberStamp } from "@/components/ui/tactile-elements";
 
 export type CustomizerDish = {
   id: string;
@@ -84,14 +88,6 @@ const ALLERGEN_LABELS: Record<string, string> = {
   sesame: "Sesame",
   mustard: "Mustard",
   sulfites: "Sulfites",
-};
-
-const SPICE_DESCRIPTIONS: Record<number, string> = {
-  0: "No Heat",
-  1: "Mild Heat 🔥",
-  2: "Medium Heat 🔥🔥",
-  3: "Hot 🔥🔥🔥",
-  4: "Extra Fiery 🔥🔥🔥🔥",
 };
 
 export function ItemCustomizer({
@@ -317,108 +313,74 @@ export function ItemCustomizer({
               <DiningImage visual={visual} eager />
             </div>
           )}
-          {activeDish.culinary?.chefNote && (
-            <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3.5 dark:border-amber-900/50 dark:bg-amber-950/20">
-              <div className="flex items-center gap-2">
-                <Clock3
-                  size={14}
-                  aria-hidden="true"
-                  className="text-amber-800 dark:text-amber-300"
-                />
-                <RubberStamp text="CHEF'S NOTE" variant="chef-pick" />
-              </div>
-              <p className="font-handwriting mt-2 text-base leading-relaxed text-amber-950 dark:text-amber-200">
-                {activeDish.culinary.chefNote}
-              </p>
-            </div>
-          )}
-
           {activeDish.description && (
-            <p className="quiet" style={{ fontSize: "0.95rem" }}>
-              {activeDish.description}
-            </p>
+            <p className="dining-dish-desc">{activeDish.description}</p>
           )}
-          {reviewsToken && <DishReviewsList token={reviewsToken} dishId={activeDish.id} />}
 
-          <div className="row wrap" style={{ gap: "0.4rem" }}>
-            {activeDish.dietary.map((d) => (
-              <span key={d} className="badge dining-dietary-badge">
-                <Leaf size={12} style={{ display: "inline" }} /> {d.replaceAll("_", " ")}
-              </span>
-            ))}
-            {activeDish.culinary?.spiceLevel !== undefined &&
-              activeDish.culinary.spiceLevel > 0 && (
-                <span className="badge dining-spice-badge">
-                  <Flame size={12} style={{ display: "inline" }} />{" "}
-                  {SPICE_DESCRIPTIONS[activeDish.culinary.spiceLevel] ??
-                    `${activeDish.culinary.spiceLevel} Heat`}
-                </span>
-              )}
-            {activeDish.culinary?.servingTemp && (
-              <span className="badge dining-temp-badge">
-                Served {activeDish.culinary.servingTemp}
-              </span>
-            )}
-          </div>
-
-          {/* Flavor Profile Tags */}
-          {activeDish.culinary?.flavorNotes && activeDish.culinary.flavorNotes.length > 0 && (
-            <div className="stack" style={{ gap: "0.4rem" }}>
-              <span className="section-title" style={{ fontSize: "0.85rem" }}>
-                Flavor & Sensation
-              </span>
-              <div className="row wrap" style={{ gap: "0.35rem" }}>
-                {activeDish.culinary.flavorNotes.map((note) => (
-                  <span key={note} className="dining-flavor-tag">
-                    {note}
+          {activeDish.dietary.length > 0 && (
+            <div className="dining-dietary-row" aria-label="Restaurant dietary labels">
+              {activeDish.dietary.map((diet) => {
+                const DietIcon = diet === "gluten_free" ? WheatOff : diet === "vegan" ? Sprout : Leaf;
+                return (
+                  <span key={diet} className="dining-dietary-badge">
+                    <DietIcon size={15} aria-hidden="true" />
+                    {diet.replaceAll("_", " ")}
                   </span>
-                ))}
-              </div>
+                );
+              })}
             </div>
+          )}
+
+          <DishTasteProfile culinary={activeDish.culinary} />
+
+          {activeDish.culinary?.chefNote && (
+            <aside className="dining-kitchen-note" aria-label="Chef's note">
+              <div className="dining-kitchen-note-heading">
+                <ChefHat size={17} aria-hidden="true" />
+                <span>From the kitchen</span>
+              </div>
+              <p>{activeDish.culinary.chefNote}</p>
+            </aside>
           )}
 
           {/* Nutritional Values & Macros */}
           {hasVerifiedNutrition(activeDish.nutrition) && (
             <div className="stack" style={{ gap: "0.5rem" }}>
-              <div className="row between">
-                <span className="section-title" style={{ fontSize: "0.85rem" }}>
-                  Nutritional Profile
-                </span>
+              <div className="dining-section-heading">
+                <span><HeartPulse size={17} aria-hidden="true" /> Nutrition</span>
                 {activeDish.nutrition?.servingSize && (
-                  <span className="quiet" style={{ fontSize: "0.8rem" }}>
-                    {activeDish.nutrition.servingSize}
-                  </span>
+                  <small><UtensilsCrossed size={14} aria-hidden="true" /> {activeDish.nutrition.servingSize}</small>
                 )}
               </div>
               <div className="dining-macro-grid">
                 {activeDish.nutrition?.calories !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.calories}</span>
-                    <span className="dining-macro-lbl">kcal</span>
+                    <span className="dining-macro-lbl"><Flame size={13} aria-hidden="true" /> kcal</span>
                   </div>
                 )}
                 {activeDish.nutrition?.proteinGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.proteinGrams}g</span>
-                    <span className="dining-macro-lbl">Protein</span>
+                    <span className="dining-macro-lbl"><Dumbbell size={13} aria-hidden="true" /> Protein</span>
                   </div>
                 )}
                 {activeDish.nutrition?.carbsGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.carbsGrams}g</span>
-                    <span className="dining-macro-lbl">Carbs</span>
+                    <span className="dining-macro-lbl"><Wheat size={13} aria-hidden="true" /> Carbs</span>
                   </div>
                 )}
                 {activeDish.nutrition?.fatGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fatGrams}g</span>
-                    <span className="dining-macro-lbl">Fat</span>
+                    <span className="dining-macro-lbl"><Droplets size={13} aria-hidden="true" /> Fat</span>
                   </div>
                 )}
                 {activeDish.nutrition?.fiberGrams !== undefined && (
                   <div className="dining-macro-card">
                     <span className="dining-macro-val">{activeDish.nutrition.fiberGrams}g</span>
-                    <span className="dining-macro-lbl">Fiber</span>
+                    <span className="dining-macro-lbl"><Sprout size={13} aria-hidden="true" /> Fiber</span>
                   </div>
                 )}
               </div>
@@ -431,14 +393,14 @@ export function ItemCustomizer({
               Boolean(activeDish.safety.allergens?.length) ||
               Boolean(activeDish.safety.crossContact)) && (
               <div className="stack" style={{ gap: "0.6rem" }}>
-                <span className="section-title" style={{ fontSize: "0.85rem" }}>
-                  Ingredients & Allergens
-                </span>
+                <div className="dining-section-heading">
+                  <span><CookingPot size={17} aria-hidden="true" /> Ingredients &amp; allergens</span>
+                  <small><ShieldCheck size={14} aria-hidden="true" /> Restaurant-verified</small>
+                </div>
 
                 {activeDish.safety?.ingredients && activeDish.safety.ingredients.length > 0 && (
                   <p
-                    className="quiet"
-                    style={{ fontSize: "0.88rem", margin: 0, lineHeight: "1.4" }}
+                    className="dining-ingredients-line"
                   >
                     <strong style={{ color: "var(--dc-ink)" }}>Ingredients:</strong>{" "}
                     {activeDish.safety.ingredients.join(", ")}.
@@ -468,12 +430,21 @@ export function ItemCustomizer({
                 )}
               </div>
             )}
+          {(isVerifiedFreeFrom(activeDish, "nuts") || isVerifiedFreeFrom(activeDish, "dairy")) && (
+            <div className="dining-verified-freefrom" aria-label="Restaurant-verified free-from claims">
+              <ShieldCheck size={16} aria-hidden="true" />
+              {isVerifiedFreeFrom(activeDish, "nuts") && <span>Verified nut-free</span>}
+              {isVerifiedFreeFrom(activeDish, "dairy") && <span>Verified dairy-free</span>}
+            </div>
+          )}
           {!activeDish.safety?.verified && (
-            <p className="quiet" role="note">
+            <p className="dining-safety-reminder" role="note">
               Ingredient and allergen details have not been verified by this restaurant. Ask staff
               before ordering if you have an allergy.
             </p>
           )}
+
+          {reviewsToken && <DishReviewsList token={reviewsToken} dishId={activeDish.id} />}
 
           {/* Chef Recommended Pairings */}
           {companionDishes && companionDishes.length > 0 && (
@@ -481,7 +452,7 @@ export function ItemCustomizer({
               <div className="row" style={{ gap: "0.4rem", alignItems: "center" }}>
                 <Sparkles size={15} className="ember-text" />
                 <span className="section-title" style={{ fontSize: "0.85rem" }}>
-                  Chef Recommended Pairings
+                  Pairs well with
                 </span>
               </div>
               <div className="dining-pairings-strip">
@@ -653,18 +624,19 @@ export function ItemCustomizer({
           {/* Cooking notes input */}
           {!readOnly && (
             <div className="customizer-section stack">
-              <label className="section-title" htmlFor="dish-special-instructions">
-                Special Instructions
+              <label className="dining-section-heading" htmlFor="dish-special-instructions">
+                <span><MessageSquareText size={17} aria-hidden="true" /> Special instructions</span>
               </label>
               <input
                 type="text"
                 id="dish-special-instructions"
-                placeholder="e.g. Less spicy, dressing on side, allergies"
+                placeholder="e.g., Less spicy or sauce on the side"
                 value={itemNotes}
                 maxLength={200}
                 onChange={(e) => setItemNotes(e.target.value)}
                 className="field-input"
               />
+              <small className="dining-instructions-hint">Kitchen requests are not guaranteed. Please confirm allergies with staff.</small>
             </div>
           )}
           {validationError && (
