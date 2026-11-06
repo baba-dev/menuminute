@@ -1,7 +1,9 @@
 # Dependency and external API plan
 
-Status: approved selections, pending compatibility/pinning implementation. Existing package.json
-and lockfile still describe the SQLite scaffold. No packages are installed by this document.
+Status: the PostgreSQL foundation selections (Drizzle + pg, BullMQ, Better Auth, Zod 4, Sharp, qrcode) are
+installed and pinned. The table below is the **original selection record**; the list under
+[Installed state](#installed-state-vs-original-selection) shows where the repository diverged. Treat `package.json`
+and the lockfile as the source of truth for what is installed.
 
 | Concern          | Selected                            | Alternative considered      | Reason / constraint                                                  |
 | ---------------- | ----------------------------------- | --------------------------- | -------------------------------------------------------------------- |
@@ -25,6 +27,19 @@ and lockfile still describe the SQLite scaffold. No packages are installed by th
 | Logging          | Pino                                | ad-hoc console logging      | Structured identifiers and redaction                                 |
 | Tests            | Vitest, Testing Library, Playwright | full mocks                  | Keep suite; real PostgreSQL/Redis via Testcontainers                 |
 | Load             | k6                                  | browser-only load           | Separate realistic API/SSE workload profiles                         |
+
+## Installed state vs original selection
+
+Verified against `package.json` and `src/`:
+
+- **Redis client:** `redis` (node-redis) with BullMQ, not ioredis.
+- **Email:** in-repo provider adapters in `src/lib/email/providers` (Resend over HTTP, SMTP via Nodemailer, and a test provider); no Resend SDK.
+- **Object storage:** R2 access is implemented in `src/modules/media/storage.ts` with `node:crypto` request signing, without an AWS SDK dependency. Live media is local; see [environment](environment.md).
+- **AI:** direct HTTP provider adapters (`src/modules/intelligence/providers/chat-http.ts`, `src/modules/menu-import/nvidia.ts`); the AI SDK was not adopted.
+- **Logging and rate limits:** in-repo `src/lib/logger.ts`, `src/lib/public-rate-limit.ts` and `src/lib/auth-abuse.ts`; Pino and rate-limiter-flexible were not adopted.
+- **Not adopted:** TanStack Query/Table, next-intl, a Motion library, OpenAPI tooling and Testcontainers. Integration tests use the disposable PostgreSQL/Redis in `infra/compose.test.yml`.
+- **Load testing:** k6 scripts live in `infra/load`; k6 itself is a separate binary, not a dependency.
+- **Legacy:** `better-sqlite3` remains a development-only dependency for `pnpm db:import:sqlite`; `bcryptjs` verifies imported legacy hashes.
 
 ## External API boundaries
 

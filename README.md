@@ -23,7 +23,7 @@ Digital menus and **permanent QR codes, free forever** — then live table order
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Drizzle-4169E1?logo=postgresql&logoColor=white)
-![Node](https://img.shields.io/badge/Node-%E2%89%A522-339933?logo=nodedotjs&logoColor=white)
+![Node](https://img.shields.io/badge/Node-24_LTS-339933?logo=nodedotjs&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **[Why MenuMinute](#-why-menuminute) · [Features](#-features) · [Screenshots](#-take-a-look) · [Plans](#-plans) · [Quick start](#-quick-start) · [Architecture](#-architecture) · [Docs](#-documentation) · [Contributing](#-contributing)**
@@ -57,7 +57,7 @@ Most restaurant software makes you pay before you see any value. MenuMinute flip
 
 ### 📋 Menu Studio
 
-Categories, dishes, variants, add-ons, dietary indicators and reviewed media. Unlimited items with real-time updates.
+Categories, dishes, variants, add-ons, dietary indicators and reviewed media, with real-time updates to the live menu.
 
 [Contracts →](docs/menu-product/contracts.md) · [Studio 2 →](docs/menu-studio-2.md)
 
@@ -176,22 +176,26 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 
 ## 💳 Plans
 
-|                                      | **Free QR Menu** | **Live Table Ordering** | **Kitchen Pro** |
-| :----------------------------------- | :--------------: | :---------------------: | :-------------: |
-| **Price (India)**                    | **Free forever** |      ₹119 / month       |  ₹299 / month   |
-| Digital menu, unlimited items        |        ✅        |           ✅            |       ✅        |
-| Permanent QR codes, no diner sign-up |        ✅        |           ✅            |       ✅        |
-| Dine-in / table / pickup ordering    |        —         |           ✅            |       ✅        |
-| Live order management                |        —         |           ✅            |       ✅        |
-| Kitchen Display System               |        —         |            —            |       ✅        |
+|                                               |           **Free**           | **Ordering** | **Kitchen Pro** |    **Dedicated**    |
+| :-------------------------------------------- | :--------------------------: | :----------: | :-------------: | :-----------------: |
+| **Price (India)**                             |        **₹0 forever**        | ₹119 / month |  ₹499 / month   |   ₹30,000 / month   |
+| **Price (USD, listed)**                       |              $0              |  $5 / month  |   $20 / month   | $3,000, by contract |
+| Outlets                                       |              1               |      1       |    up to 10     |     by contract     |
+| Dishes per outlet                             |              20              |     200      |      2,000      |   no platform cap   |
+| Permanent QR codes                            |              2               |      25      |       200       |   no platform cap   |
+| Guest QR ordering                             | capped intake (100 / month)¹ |      ✅      |       ✅        |         ✅          |
+| Table ordering, counter board, order tracking |              —               |      ✅      |       ✅        |         ✅          |
+| Kitchen Display System                        |              —               |      —       |       ✅        |         ✅          |
 
-Checkout is disabled by default until the payment provider (Razorpay) is configured, and Kitchen Pro sits behind its own commercial release gate. USD billing and multi-outlet subscription units are not available yet. Details: [plans and limits](docs/plans-and-limits.md).
+¹ Free-plan order intake is off until an operator enables it. Free menus and QR codes keep working even after paid access ends.
+
+Checkout is disabled by default until the payment provider (Razorpay) is configured. Prices are listed in INR and USD, but only INR is payable today. The numbers above mirror the in-code catalog ([`src/modules/billing/catalog.ts`](src/modules/billing/catalog.ts), [`src/modules/plans/catalog.ts`](src/modules/plans/catalog.ts)); details in [plans and limits](docs/plans-and-limits.md).
 
 ---
 
 ## 🚀 Quick start
 
-**You'll need:** Node.js ≥ 22, pnpm ≥ 11, and Docker (for the isolated PostgreSQL + Redis test stack).
+**You'll need:** Node.js 24 LTS (pinned in [`.nvmrc`](.nvmrc)), pnpm 11 (pinned via `packageManager`), and Docker (for the isolated PostgreSQL + Redis test stack).
 
 ```bash
 git clone https://github.com/baba-dev/menuminute.git

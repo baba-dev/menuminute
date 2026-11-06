@@ -1,7 +1,7 @@
 # Approved product requirements
 
 Approved by the product owner on 15 October 2026. This is the target contract, not a claim that
-the SQLite/NextAuth scaffold implements these features. Later decisions here supersede earlier
+the original SQLite/NextAuth scaffold implemented these features; the product has since moved to PostgreSQL and Better Auth, and delivery status is tracked in the [roadmap](product-roadmap.md). Later decisions here supersede earlier
 India-only, single-outlet, dine-in-only and USD/INR-only outlet assumptions.
 
 ## Market, ownership and hierarchy

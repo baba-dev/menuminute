@@ -4,9 +4,11 @@ This is the **subsequent-release** deployment path; the 2026-10-16 first install
 manually, with live deployment SHA and filesystem contract recorded in
 [production runbook](production-runbook.md). After successful `main` CI and publication of the
 immutable ARM64 release, the workflow verifies that the run is still the latest `main`, stages it,
-and automatically activates it only when the running and candidate migration trees are identical.
-It never builds on the ERP VPS. PRs cannot stage/deploy. It never runs SQL migrations; a
-migration-changing release remains staged for the manual, root-marker-gated activation path. Staging uses a dedicated `production-staging` environment. Only an eligible cutover runs in the GitHub `production` environment; its configured review gate, exact-SHA, ERP and MenuMinute readiness checks still apply.
+and automatically activates it. A release with a new append-only migration follows the unattended path in
+[automatic migration deployment](automatic-migration-deployment.md) (root-owned helper **v7**): a fresh verified
+off-host backup, checksummed SQL, then cutover, with no per-SHA operator marker. Sections below that name earlier
+helper versions (v2, v3, v4) are retained as historic operator evidence. It never builds on the ERP VPS. PRs cannot
+stage/deploy. Staging uses a dedicated `production-staging` environment. Only an eligible cutover runs in the GitHub `production` environment; its configured review gate, exact-SHA, ERP and MenuMinute readiness checks still apply.
 
 The deployment script and workflow live at
 `infra/deploy/menuminute-release` and `.github/workflows/deploy-vps.yml`.
@@ -299,6 +301,8 @@ failed activation blindly; establish old-release health first.
 
 ## 6. CI/CD 2.0 pipeline and rollout
 
+> **Historic detail:** helper versions named in this section (v2, v3) were current when written. The workflow now requires helper **v7**; see [Current successor](#current-successor-full-force-rls-backup-and-incident-recovery-helper-v7) and [automatic migration deployment](automatic-migration-deployment.md).
+
 ```mermaid
 flowchart LR
   A[Main push] --> B[Four parallel ARM64 CI lanes]
@@ -372,7 +376,7 @@ migrations, data, queues, media or customer writes.
 
 **Troubleshooting:** check the source CI ID and handoff if provenance fails;
 compare latest `main` before re-running a superseded deployment; install
-helper v2 if its version check fails; inspect changed migration trees before
+the current reviewed helper (v7) if its version check fails; inspect changed migration trees before
 an explicit manual migration; use `journalctl` for only the two MenuMinute
 units if readiness fails; treat public release-SHA mismatch as stale routing or
 cache, not success. Reconcile any failed automatic recovery manually while
@@ -403,7 +407,7 @@ on the VPS; verify the deploy account sees `--version` = `3`; only then
 merge/allow the next main publisher to stage. Never use `main` as an unpinned
 source URL while installing the helper. A normal PR CI never activates production.
 
-## Proposed successor: unattended migrations (helper v4; not proof of installation)
+## Successor: unattended migrations (introduced in helper v4; superseded by v7 below)
 
 [Automatic migration deployment contract](automatic-migration-deployment.md) replaces the
 per-SHA approval gate after the one-time reviewed helper v4 installation and provisioned

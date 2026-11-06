@@ -91,7 +91,7 @@ Status: **implemented in one PR; plan and as-built notes below.** Scope is the s
 | Layout module | new `src/modules/dashboard/layout-preference.ts` (schema, read, write), `src/app/api/account/dashboard-layout/route.ts`                                                               |
 | Data          | `src/db/schema/continuity.ts`, `src/db/migrations/0054_dashboard_layout_preference.sql`, `meta/_journal.json`                                                                         |
 | Loading       | `dashboard/{pos,reports,organization}/loading.tsx`                                                                                                                                    |
-| Tests         | `tests/dashboard-layout-preference.test.ts`, `tests/dashboard-milestones.test.ts`, `tests/dashboard-a11y.test.tsx`, `tests/e2e/dashboard-delight.spec.ts`                             |
+| Tests         | `tests/dashboard-layout-preference.test.ts`, `tests/dashboard-milestones.test.ts`, `tests/dashboard-delight.test.tsx`, `tests/e2e/dashboard-delight.spec.ts`                          |
 
 ## Test plan
 

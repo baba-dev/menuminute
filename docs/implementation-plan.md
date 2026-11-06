@@ -1,6 +1,6 @@
 # Implementation plan and acceptance gates
 
-Architecture approved 2026-10-15. The Phase 1 branch implements foundation/menu PostgreSQL services, Better Auth, scoped tenancy and real dependency CI; production cutover remains gated. See [Phase 1 status](foundation/phase-1.md).
+Architecture approved 2026-10-15. Phases 1–3 (PostgreSQL services, Better Auth, scoped tenancy, real dependency CI and the free QR menu) have merged and later slices are in progress; see the [roadmap](product-roadmap.md) for current status and [Phase 1 status](foundation/phase-1.md) for history. Production activation remains governed by the [production runbook](production-runbook.md).
 
 | Slice | Deliverable                                                              | Dependency                               | Exit gate                                                   |
 | ----- | ------------------------------------------------------------------------ | ---------------------------------------- | ----------------------------------------------------------- |

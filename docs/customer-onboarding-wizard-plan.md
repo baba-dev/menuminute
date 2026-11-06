@@ -1,5 +1,7 @@
 # Implementation Plan: Super Onboarding Wizard & Shop Geocoordinates
 
+> **Status: built.** The schema change shipped as migration `0029_outlet_geocoordinates_and_onboarding.sql` and the wizard lives in `src/components/onboarding/`. This page is kept as the design record; file names below match the repository.
+
 ## Goal Description
 
 Build an end-to-end **Super Onboarding Wizard** for MenuMinute that guides users through creating and personalizing their organization and shop/outlet. This includes:
@@ -74,7 +76,7 @@ An inspection of the schema (`src/db/schema/*`), migrations, and security proced
 > 1. `restaurants` must be altered to add `latitude numeric(10, 7)` and `longitude numeric(10, 7)`.
 > 2. `app_private.provision_organization` must be updated so that address, geocoordinates, contact, and branding fields are inserted atomically during outlet creation instead of leaving them empty.
 > 3. `app_private.update_outlet_profile` must accept and persist `latitude` and `longitude`.
-> 4. All migrations must be append-only (`0028_outlet_geocoordinates_and_onboarding.sql`) and registered in `meta/_journal.json`.
+> 4. All migrations must be append-only (`0029_outlet_geocoordinates_and_onboarding.sql`) and registered in `meta/_journal.json`.
 
 > [!NOTE]
 > **Onboarding Wizard Accessibility**:
@@ -193,7 +195,7 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 
 ### Database & Migration Layer
 
-#### [NEW] `src/db/migrations/0028_outlet_geocoordinates_and_onboarding.sql`
+#### [NEW] `src/db/migrations/0029_outlet_geocoordinates_and_onboarding.sql`
 
 - Add `latitude numeric(10, 7)` and `longitude numeric(10, 7)` columns to `restaurants`.
 - Update `app_private.provision_organization` to insert address fields (`address_line1`, `address_line2`, `state`, `postal_code`), geocoordinates (`latitude`, `longitude`), contact (`phone`, `email`, `website`), branding (`primary_color`, `secondary_color`), and table count into `restaurants` and `restaurant_tables`.
@@ -274,11 +276,11 @@ The user will generate the SVGs using ChatGPT. Below is the exact asset catalog 
 
 1. **Unit & Domain Tests**:
    - `tests/onboarding-lifecycle.test.ts`: Verify saving and provisioning with addresses, latitude, and longitude.
-   - `tests/outlet-profile.test.ts`: Verify updating geocoordinates via `update_outlet_profile`.
+   - `tests/outlet-settings.integration.test.ts`: Verify updating geocoordinates via `update_outlet_profile`.
    - `pnpm test tests/onboarding-lifecycle.test.ts`
    - `pnpm test tests/production-fh-contracts.test.ts`
 2. **Typecheck & Linting**:
-   - `pnpm check` or `pnpm tsc --noEmit`
+   - `pnpm typecheck`
    - `pnpm lint`
 
 ### Manual Verification

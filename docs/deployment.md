@@ -4,8 +4,7 @@ The shared Oracle ERP host is **Linux ARM64/aarch64, 4 visible ARM cores and 23 
 The earlier AMD64 host choice is superseded. **Initial production activation was verified on
 2026-10-16**, not performed by this documentation change. For current confirmed paths, the initial
 live artifact and outstanding production acceptance gates, read [the canonical production runbook](production-runbook.md)
-before these general deployment contracts. Phase 1 implements PostgreSQL/Redis foundation
-configuration; SQLite is read-only import input.
+before these general deployment contracts. The runtime uses PostgreSQL and Redis; SQLite is read-only import input.
 
 See [server inventory](server-inventory.md) for observations, confirmed cleanup and outstanding inputs.
 
@@ -89,9 +88,10 @@ it does not rebuild. Its authenticated handoff drives a separately reported
 staging environment. Only a healthy migration-compatible candidate reaches
 the `production` activation job with the native
 [application link](https://food.bababuilds.com). Public readiness includes the
-expected release identity. Migration-changing releases remain stage-only until
-root-approved manual SQL migration and activation. Never use production database
+expected release identity. Migration-changing releases use the unattended, append-only path in
+[automatic migration deployment](automatic-migration-deployment.md): a fresh verified
+off-host backup, checksummed SQL, then cutover. Missing prerequisites fail the deployment. Never use production database
 credentials from GitHub Actions, update shared ERP services, or build on VPS.
 See [Actions deployment](deployment-actions.md) and
 [production runbook](production-runbook.md). This source-level behavior requires
-a separately reviewed helper v2 installation and GitHub Environment configuration.
+a separately reviewed root-installed helper (v7) and GitHub Environment configuration.

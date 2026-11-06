@@ -1,6 +1,6 @@
 # Database migration and target schema
 
-Status: Phase 1 branch implements PostgreSQL for foundation and existing menu services. Orders/outbox remain later slices; see [implementation and cutover](foundation/phase-1.md).
+Status: PostgreSQL (Drizzle + pg) is the only runtime database, with append-only migrations under `src/db/migrations`. Orders, the outbox and later domains have shipped in subsequent slices; see the [roadmap](product-roadmap.md) and, for history, [Phase 1 implementation and cutover](foundation/phase-1.md).
 
 ## Preserved source baseline
 

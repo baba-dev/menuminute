@@ -23,7 +23,7 @@ and distinct from opaque order IDs. Business date uses outlet timezone, not the 
 Target fulfillment: pending -> accepted -> preparing -> ready -> served (dine-in) or collected (pickup).
 Pending -> rejected/cancelled/expired; accepted -> cancelled only under an explicit role/policy.
 Later cancellation requires a defined compensation and audit workflow; terminal states do not regress.
-The current scaffold uses confirmed/delivered: map these names explicitly during migration.
+The original scaffold used confirmed/delivered; migration `0006_online_ordering.sql` maps them to accepted/served.
 
 Use expected version and valid prior status in the update predicate. Append actor/reason/event and
 increment version atomically; stale callers receive conflict and refresh. Pay-at-restaurant records
