@@ -143,3 +143,9 @@ test("Kitchen Pro early access opens a pre-filled enquiry, and unknown topics ar
   await page.goto("/contact?topic=%3Cscript%3E");
   await expect(page.getByTestId("contact-topic")).toHaveCount(0);
 });
+
+test("the conventional /support URL leads to the help centre", async ({ page }) => {
+  await page.goto("/support");
+  await expect(page).toHaveURL(/\/help$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("How can we help");
+});
