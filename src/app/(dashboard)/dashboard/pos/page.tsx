@@ -4,6 +4,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { posWorkspace } from "@/modules/pos/service";
+import {
+  dashboardMenuRows,
+  dashboardPublicProjection,
+  dashboardQrRows,
+} from "@/modules/menu-product/dashboard-data";
+import { dashboardSummary, preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { ForbiddenError } from "@/lib/errors";
 import { OperationalPwa } from "@/components/pwa/operational-pwa";
 import { pwaOperationalEnabledForOutlet } from "@/lib/pwa/rollout";
@@ -46,6 +52,27 @@ export default async function PosPage() {
         <Link href="/dashboard">Return to dashboard</Link>
       </main>
     );
+  // POS may deliberately have no checkout catalogue while disabled or in the public demo.
+  // Read the same committed public projection as Overview rather than reporting false zeroes.
+  // This is display-only: no new POS permissions or checkout actions are granted.
+  const publishedSummary =
+    !workspace.context.enabled || workspace.menus.length === 0
+      ? await (async () => {
+          try {
+            const [rows, codes] = await Promise.all([
+              dashboardMenuRows(session.user.id, outlet.id),
+              dashboardQrRows(session.user.id, outlet.id),
+            ]);
+            const qr = preferredMenuQr(codes);
+            const projection = qr ? await dashboardPublicProjection(qr.destinationToken) : null;
+            const summary = dashboardSummary(rows, codes, projection);
+            return { menus: summary.publishedMenuCount, dishes: summary.publishedDishCount };
+          } catch {
+            // Staff with POS access may not have menu.read; never expose cross-role data.
+            return null;
+          }
+        })()
+      : null;
   return (
     <>
       {workspace.context.enabled && pwaOperationalEnabledForOutlet(outlet.id) ? (
@@ -56,6 +83,7 @@ export default async function PosPage() {
         organizationId={outlet.organizationId}
         outletId={outlet.id}
         initial={workspace}
+        publishedSummary={publishedSummary}
       />
     </>
   );

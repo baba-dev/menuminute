@@ -31,13 +31,15 @@ export default async function GuestsPage() {
         <span className="guests-eyebrow">GUEST RELATIONSHIPS</span>
         <h1>Guests</h1>
         <div className="guests-empty">
-          <h2>Guest CRM is included with paid plans</h2>
+          <h2>Guest directory unavailable</h2>
           <p>
-            Ordering, Kitchen Pro and Dedicated subscribers can recognize returning guests and
-            review their visit history. Your current account or outlet role cannot open this
-            workspace.
+            Guest CRM requires an eligible plan and permission to view orders for this outlet.
+            If your restaurant already has access, ask an owner to review your outlet role.
           </p>
-          <Link href="/pricing">View plans</Link>
+          <div className="guests-access-actions">
+            <Link href="/dashboard/organization">Review team access</Link>
+            <Link href="/billing">View plan &amp; benefits</Link>
+          </div>
         </div>
       </main>
     );

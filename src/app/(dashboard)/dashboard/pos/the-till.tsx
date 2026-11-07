@@ -83,10 +83,13 @@ export function TheTill({
   organizationId,
   outletId,
   initial,
+  publishedSummary = null,
 }: {
   organizationId: string;
   outletId: string;
   initial: PosWorkspace;
+  /** Committed public-menu totals, distinct from the POS-only checkout catalogue. */
+  publishedSummary?: { menus: number; dishes: number } | null;
 }) {
   const endpoint =
     "/api/organizations/" +
@@ -202,6 +205,10 @@ export function TheTill({
   const foodItemsOnMenu = new Set(
     workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items.map((i) => i.id)))
   ).size;
+  // An inactive POS and the read-only public demo can have no checkout catalogue
+  // while the public menu remains fully published. Never present that as zero dishes.
+  const publishedMenus = publishedSummary?.menus ?? (workspace.context.enabled ? workspace.menus.length : null);
+  const publishedDishes = publishedSummary?.dishes ?? (workspace.context.enabled ? foodItemsOnMenu : null);
   const dishes = useMemo(
     () =>
       menu?.categories
@@ -713,20 +720,20 @@ export function TheTill({
             <div className="pos-metric">
               <BookOpenText aria-hidden="true" />
               <span>Published menus</span>
-              <strong>{workspace.menus.length}</strong>
-              <small>Live menus in this outlet</small>
+              <strong>{publishedMenus ?? "—"}</strong>
+              <small>{publishedMenus === null ? "Menu totals unavailable for this role" : "Live menus in this outlet"}</small>
             </div>
             <div className="pos-metric">
               <Utensils aria-hidden="true" />
               <span>Food Items on Menu</span>
-              <strong>{foodItemsOnMenu}</strong>
-              <small>Unique published dishes</small>
+              <strong>{publishedDishes ?? "—"}</strong>
+              <small>{publishedDishes === null ? "Menu totals unavailable for this role" : "Unique published dishes"}</small>
             </div>
             <div className="pos-metric">
               <ClipboardList aria-hidden="true" />
               <span>Total Orders Today</span>
-              <strong>{workspace.kpis.totalOrders}</strong>
-              <small>All channels · Including pending and cancelled</small>
+              <strong>{workspace.context.enabled ? workspace.kpis.totalOrders : "—"}</strong>
+              <small>{workspace.context.enabled ? "All channels · Including pending and cancelled" : "Available after POS activation"}</small>
             </div>
           </div>
         </section>
