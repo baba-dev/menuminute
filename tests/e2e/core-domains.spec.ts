@@ -267,7 +267,9 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   await page.goto(`/dashboard/organization?organization=${encodeURIComponent(f.org)}`);
   const heading = page.getByRole("heading", { name: /All Under One Roof/i });
   await expect(heading).toBeVisible();
-  await expect(heading.locator("br")).toHaveCount(1);
+  // Desktop keeps the editorial two-line composition without forcing a break on phones.
+  await expect(heading.locator(".mm-hero-line")).toHaveCount(2);
+  await expect(heading.locator(".mm-hero-line").first()).toHaveCSS("display", "block");
   await expect(page.locator(".oh-hero")).toHaveCSS(
     "background-image",
     /Organization-Hero-Light\.png/
@@ -295,6 +297,7 @@ test("Hospitality House uses approved theme art, mobile composition and accessib
   await expect(page.getByText(/Clearing them revokes that outlet access/)).toBeHidden();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect(heading.locator(".mm-hero-line").first()).toHaveCSS("display", "inline");
   await expect(page.locator(".oh-hero")).toHaveCSS(
     "background-image",
     /Organization-Hero-Mobile-Dark\.png/

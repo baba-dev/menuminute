@@ -1186,7 +1186,7 @@
 }
 @media (max-width: 680px) {
   .oh-hero {
-    min-height: 560px;
+    min-height: clamp(365px, 101vw, 455px);
     align-items: flex-start;
     background-position: center center;
     background-size: cover;
@@ -1197,10 +1197,14 @@
   }
   .oh-hero-copy {
     width: 100%;
-    padding: 36px 22px;
+    padding: 28px 19px 32px;
   }
   .oh-hero h1 {
-    font-size: clamp(36px, 9vw, 51px);
+    max-width: 21ch;
+    font-size: clamp(31px, 8vw, 42px);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
   }
   .oh-hero-copy > p {
     max-width: 340px;

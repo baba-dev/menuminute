@@ -541,9 +541,8 @@ export default async function DashboardPage() {
           {firstRun ? (
             <>
               <h1>
-                Your restaurant is ready.
-                <br />
-                Let’s add your first dish.
+                <span className="mm-hero-line">Your restaurant is ready.</span>{" "}
+                <span className="mm-hero-line">Let’s add your first dish.</span>
               </h1>
               <p>
                 Welcome to <strong>{outlet.name}</strong>. A few dishes and one publish make your QR
@@ -555,9 +554,8 @@ export default async function DashboardPage() {
           ) : (
             <>
               <h1>
-                Make something
-                <br />
-                delicious today.
+                <span className="mm-hero-line">Make something</span>{" "}
+                <span className="mm-hero-line">delicious today.</span>
               </h1>
               <p>
                 Welcome back to <strong>{outlet.name}</strong>.<br />

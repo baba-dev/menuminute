@@ -703,7 +703,7 @@
 }
 @media (max-width: 720px) {
   .atelier-hero {
-    min-height: 520px;
+    min-height: clamp(370px, 103vw, 455px);
     align-items: start;
     padding: 30px 20px;
     background-image: url("/brand/menu-studio/recipe-atelier/hero-mobile-light.webp");
@@ -722,7 +722,10 @@
     max-width: 430px;
   }
   .product.studio-atelier .atelier-hero h1 {
-    font-size: clamp(33px, 8.5vw, 44px);
+    max-width: 22ch;
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.1;
+    text-wrap: balance;
   }
   .product.studio-atelier .atelier-hero-headline {
     font-size: 22px;
@@ -786,7 +789,7 @@
 }
 @media (max-width: 400px) {
   .atelier-hero {
-    min-height: 490px;
+    min-height: 380px;
   }
   .atelier-hero-links a {
     font-size: 11px;
@@ -2003,6 +2006,8 @@
   color: var(--ink);
 }
 .menu-board-filters {
+  scroll-padding-inline: 12px;
+  overscroll-behavior-x: contain;
   display: flex;
   flex: 2 1 270px;
   min-width: 0;
@@ -2022,6 +2027,27 @@
   background: var(--atelier-cream);
   border-color: var(--ember);
   color: var(--ember);
+}
+.product.studio-atelier .menu-board-collapse-all {
+  flex: none;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--atelier-line);
+  border-radius: 11px;
+  background: var(--atelier-soft);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.product.studio-atelier .menu-board-section-toggle {
+  border-radius: 10px;
+  padding: 0 10px;
+  gap: 5px;
+  color: var(--ink);
+}
+.menu-board-section-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
 }
 .menu-board-archived,
 .menu-board-free {
@@ -2130,8 +2156,8 @@
   margin-top: 8px;
 }
 .product.studio-atelier .menu-board-dish-actions button {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: grid;
   place-items: center;
   padding: 8px;
@@ -2334,7 +2360,9 @@
 }
 @media (max-width: 720px) {
   .product.studio-atelier .atelier-hero h1 {
-    font-size: clamp(36px, 8.5vw, 46px);
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.1;
+    text-wrap: balance;
   }
   .menu-board-heading {
     flex-direction: column;
@@ -2355,6 +2383,24 @@
   }
   .menu-board-filters {
     flex-basis: 100%;
+  }
+  .menu-board-section-heading {
+    flex-wrap: wrap;
+  }
+  .menu-board-section-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .menu-board-section-actions > span {
+    margin-right: auto;
+  }
+  .product.studio-atelier .menu-board-section-actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .menu-board-search input {
+    font-size: 16px;
   }
   .menu-board-archived {
     min-height: 38px;
@@ -2379,6 +2425,9 @@
   }
   .menu-board-section-actions {
     gap: 4px;
+  }
+  .menu-board-section-toggle span {
+    display: none;
   }
   .menu-board-grid {
     grid-template-columns: minmax(0, 1fr);

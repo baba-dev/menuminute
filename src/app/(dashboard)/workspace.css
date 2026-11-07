@@ -1563,6 +1563,122 @@
   }
 }
 
+/* Explicit desktop editorial lines become naturally balanced copy on narrow screens. */
+.mm-hero-line {
+  display: block;
+}
+@media (max-width: 680px) {
+  .mm-hero-line {
+    display: inline;
+  }
+  .mm-dashboard-hero {
+    min-height: clamp(420px, 110vw, 520px);
+  }
+  .mm-dashboard-hero-copy {
+    padding: 28px 20px 34px;
+  }
+  .mm-dashboard-hero-copy h1 {
+    max-width: 22ch;
+    font-size: clamp(30px, 8.1vw, 41px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    overflow-wrap: normal;
+  }
+  .mm-dashboard-hero-actions {
+    gap: 9px;
+  }
+}
+@media (max-width: 350px) {
+  .mm-dashboard-hero-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mm-dashboard .mm-dashboard-hero-actions > .mm-dashboard-button {
+    min-height: 44px;
+  }
+}
+
+/* Keep full page names on desktop; phone widths get intentional short labels
+   instead of truncating text such as "Restaurant overvi…". */
+.mm-dashboard-page-short {
+  display: none;
+}
+@media (max-width: 680px) {
+  .mm-dashboard-page-full {
+    display: none;
+  }
+  .mm-dashboard-page-short {
+    display: inline;
+  }
+}
+
+/* Mobile shell: navigation lives in the bottom bar and More sheet.
+   Keep the current page and essential actions on one line; never surface
+   the desktop Help footer as an extra row above the workspace. */
+@media (max-width: 900px) {
+  .mm-workspace-sidebar-footer {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .mm-shared-topbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 60px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .mm-shared-topbar .mm-dashboard-breadcrumb {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    letter-spacing: 0.015em;
+  }
+  .mm-shared-topbar .mm-dashboard-breadcrumb > span:not([aria-current]) {
+    display: none;
+  }
+  .mm-shared-topbar .mm-dashboard-breadcrumb [aria-current="page"] {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mm-shared-topbar .mm-dashboard-top-actions {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  /* Search, account, public menu and notifications are also in More.
+     Keep New, notifications and theme immediately accessible. */
+  .mm-shared-topbar
+    :is(
+      .mm-topbar-search,
+      .mm-topbar-chip,
+      .mm-topbar-connection,
+      .mm-dashboard-preview,
+      .mm-dashboard-user
+    ) {
+    display: none;
+  }
+  .mm-shared-topbar .mm-topbar-new,
+  .mm-shared-topbar .mm-topbar-bell,
+  .mm-shared-topbar .mm-theme-toggle {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
 /*
  * POS receipt and immutable-document routes live under the authenticated dashboard
  * layout. Keep its navigation interactive on screen, but never send that chrome

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Pencil, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Pencil, Plus, Search, X } from "lucide-react";
 import type { MenuDocument } from "@/modules/menu-product/contracts";
 import { formatPrice } from "@/lib/utils";
 import { startingPriceMinor } from "@/modules/menu-product/public-presentation";
@@ -56,6 +56,7 @@ export function StudioMenuBoard({
   onMoveSection: (categoryIndex: number, delta: number) => void;
 }) {
   const [filter, setFilter] = useState("all");
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => new Set());
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -73,6 +74,15 @@ export function StudioMenuBoard({
     .map((category, categoryIndex) => ({ category, categoryIndex }))
     .filter(({ category }) => showArchived || !category.archived);
   const editing = findEditingDish(doc, editingId);
+  const allCollapsed =
+    categories.length > 0 && categories.every(({ category }) => collapsedSections.has(category.id));
+  const toggleSection = (id: string) =>
+    setCollapsedSections((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   useEffect(() => {
     const dialog = editorDialog.current;
     if (editing && dialog && !dialog.open) dialog.showModal();
@@ -154,12 +164,33 @@ export function StudioMenuBoard({
               key={category.id}
               type="button"
               aria-pressed={filter === category.id}
-              onClick={() => setFilter(category.id)}
+              onClick={() => {
+                setFilter(category.id);
+                setCollapsedSections((previous) => {
+                  const next = new Set(previous);
+                  next.delete(category.id);
+                  return next;
+                });
+              }}
             >
               {category.name}
             </button>
           ))}
         </nav>
+        <button
+          type="button"
+          className="menu-board-collapse-all"
+          disabled={Boolean(query.trim())}
+          title={query.trim() ? "Clear search to collapse menu sections" : undefined}
+          aria-label={allCollapsed ? "Expand all menu sections" : "Collapse all menu sections"}
+          onClick={() =>
+            setCollapsedSections(
+              allCollapsed ? new Set() : new Set(categories.map(({ category }) => category.id))
+            )
+          }
+        >
+          {allCollapsed ? "Expand all" : "Collapse all"}
+        </button>
         <label className="menu-board-archived">
           <input
             type="checkbox"
@@ -192,6 +223,9 @@ export function StudioMenuBoard({
                       normalizeDishText(v).includes(normalizeDishText(query))
                     ))
               );
+            const expanded =
+              Boolean(query.trim()) || filter !== "all" || !collapsedSections.has(category.id);
+            const sectionId = "mm-menu-dishes-" + category.id;
             return (
               <section className="menu-board-section" key={category.id} aria-label={category.name}>
                 <div className="menu-board-section-heading">
@@ -205,6 +239,21 @@ export function StudioMenuBoard({
                   </div>
                   <div className="menu-board-section-actions">
                     <span>{visible.length} dishes</span>
+                    <button
+                      type="button"
+                      className="menu-board-section-toggle"
+                      aria-label={
+                        (expanded ? "Collapse section " : "Expand section ") + category.name
+                      }
+                      aria-controls={sectionId}
+                      aria-expanded={expanded}
+                      disabled={Boolean(query.trim())}
+                      title={query.trim() ? "Clear search to collapse this section" : undefined}
+                      onClick={() => toggleSection(category.id)}
+                    >
+                      <ChevronDown size={16} aria-hidden="true" />
+                      <span>{expanded ? "Hide" : "Show"}</span>
+                    </button>
                     <button
                       type="button"
                       aria-label={"Move section " + category.name + " up"}
@@ -309,66 +358,70 @@ export function StudioMenuBoard({
                     </button>
                   </div>
                 )}
-                {visible.length ? (
-                  <div className="menu-board-grid">
-                    {visible.map(({ dish, dishIndex }) => (
-                      <article className="menu-board-dish" key={dish.id}>
-                        {/* eslint-disable-next-line @next/next/no-img-element -- Private media is outlet-scoped. */}
-                        <img
-                          className="menu-board-dish-art"
-                          src={dishImageSrc(dish, "private")}
-                          alt=""
-                          width={108}
-                          height={108}
-                          loading="lazy"
-                        />
-                        <div className="menu-board-dish-copy">
-                          <strong>{dish.name}</strong>
-                          {dish.description && <p>{dish.description}</p>}
-                          <span className="menu-board-price">
-                            {dish.variants.length ? "From " : ""}
-                            {formatPrice(startingPriceMinor(dish), currency)}
-                          </span>
-                          {(dish.soldOut || dish.archived) && (
-                            <small className="menu-board-status">
-                              {dish.archived ? "Archived" : "Sold out"}
-                            </small>
-                          )}
-                        </div>
-                        <div className="menu-board-dish-actions">
-                          <button
-                            type="button"
-                            aria-label={"Edit " + dish.name}
-                            title={"Edit " + dish.name}
-                            onClick={() => setEditingId(dish.id)}
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={"Move " + dish.name + " up"}
-                            title="Move up"
-                            disabled={!canWrite || dishIndex === 0}
-                            onClick={() => onMoveDish(categoryIndex, dishIndex, -1)}
-                          >
-                            <ArrowUp size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={"Move " + dish.name + " down"}
-                            title="Move down"
-                            disabled={!canWrite || dishIndex === category.items.length - 1}
-                            onClick={() => onMoveDish(categoryIndex, dishIndex, 1)}
-                          >
-                            <ArrowDown size={15} />
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="menu-board-empty">No matching dishes in this section.</p>
-                )}
+                {!expanded && <div id={sectionId} hidden />}
+                {expanded &&
+                  (visible.length ? (
+                    <div id={sectionId} className="menu-board-grid">
+                      {visible.map(({ dish, dishIndex }) => (
+                        <article className="menu-board-dish" key={dish.id}>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- Private media is outlet-scoped. */}
+                          <img
+                            className="menu-board-dish-art"
+                            src={dishImageSrc(dish, "private")}
+                            alt=""
+                            width={108}
+                            height={108}
+                            loading="lazy"
+                          />
+                          <div className="menu-board-dish-copy">
+                            <strong>{dish.name}</strong>
+                            {dish.description && <p>{dish.description}</p>}
+                            <span className="menu-board-price">
+                              {dish.variants.length ? "From " : ""}
+                              {formatPrice(startingPriceMinor(dish), currency)}
+                            </span>
+                            {(dish.soldOut || dish.archived) && (
+                              <small className="menu-board-status">
+                                {dish.archived ? "Archived" : "Sold out"}
+                              </small>
+                            )}
+                          </div>
+                          <div className="menu-board-dish-actions">
+                            <button
+                              type="button"
+                              aria-label={"Edit " + dish.name}
+                              title={"Edit " + dish.name}
+                              onClick={() => setEditingId(dish.id)}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={"Move " + dish.name + " up"}
+                              title="Move up"
+                              disabled={!canWrite || dishIndex === 0}
+                              onClick={() => onMoveDish(categoryIndex, dishIndex, -1)}
+                            >
+                              <ArrowUp size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={"Move " + dish.name + " down"}
+                              title="Move down"
+                              disabled={!canWrite || dishIndex === category.items.length - 1}
+                              onClick={() => onMoveDish(categoryIndex, dishIndex, 1)}
+                            >
+                              <ArrowDown size={15} />
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p id={sectionId} className="menu-board-empty">
+                      No matching dishes in this section.
+                    </p>
+                  ))}
               </section>
             );
           })}

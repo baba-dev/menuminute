@@ -27,6 +27,17 @@ const labels: Record<string, string> = {
   "/billing": "Billing & plan",
   "/account": "My account",
 };
+const compactLabels: Record<string, string> = {
+  "Restaurant overview": "Overview",
+  "Service Counter": "Orders",
+  "Point of Sale": "POS",
+  "Reports & Insights": "Reports",
+  "Guest reviews": "Reviews",
+  "Billing & plan": "Billing",
+  "My account": "Account",
+  "Dining floor": "Floor",
+};
+
 export function WorkspaceTopbar({
   userName,
   publicHref,
@@ -45,6 +56,7 @@ export function WorkspaceTopbar({
       ([path]) => path !== "/dashboard" && pathname.startsWith(path + "/")
     )?.[1] ??
     "Workspace";
+  const compactLabel = compactLabels[label] ?? label;
   const initials = userName
     .trim()
     .split(/\s+/)
@@ -57,7 +69,10 @@ export function WorkspaceTopbar({
       <nav aria-label="Breadcrumb" className="mm-dashboard-breadcrumb">
         <span>Workspace</span>
         <span aria-hidden="true">/</span>
-        <span aria-current="page">{label}</span>
+        <span aria-current="page">
+          <span className="mm-dashboard-page-full">{label}</span>
+          <span className="mm-dashboard-page-short">{compactLabel}</span>
+        </span>
       </nav>
       <div className="mm-dashboard-top-actions">
         <PaletteTrigger />
