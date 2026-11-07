@@ -536,9 +536,8 @@ export function OrganizationManager({
           <span className="oh-kicker">THE HOSPITALITY HOUSE / ORGANIZATION</span>
           <h2 className="oh-hero-meta">Organization management</h2>
           <h1>
-            All Under
-            <br />
-            One Roof.
+            <span className="mm-hero-line">All Under</span>{" "}
+            <span className="mm-hero-line">One Roof.</span>
           </h1>
           <p>Business structure, team access, brands, billing and owner controls.</p>
           <div className="oh-hero-buttons">

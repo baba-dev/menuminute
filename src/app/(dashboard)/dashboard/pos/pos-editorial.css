@@ -1100,6 +1100,13 @@
   .till-page.pos-editorial .pos-hero {
     min-height: 300px;
   }
+  .till-page.pos-editorial .pos-hero h1 {
+    max-width: 21ch;
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
   .till-page.pos-editorial .pos-inbox-alert {
     top: 72px;
     right: 10px;

@@ -44,8 +44,8 @@ export default async function AccountPage() {
           <span className="oh-kicker">MY ACCOUNT / PERSONAL SETTINGS</span>
           <h2 className="oh-hero-meta">Identity and security</h2>
           <h1>
-            Everything personal,
-            <br /> in one place.
+            <span className="mm-hero-line">Everything personal,</span>{" "}
+            <span className="mm-hero-line">in one place.</span>
           </h1>
           <p>
             Your identity, sign-in protection and preferred workspace—kept separate from restaurant

@@ -1564,6 +1564,41 @@
 }
 
 
+/* Explicit desktop editorial lines become naturally balanced copy on narrow screens. */
+.mm-hero-line {
+  display: block;
+}
+@media (max-width: 680px) {
+  .mm-hero-line {
+    display: inline;
+  }
+  .mm-dashboard-hero {
+    min-height: clamp(420px, 110vw, 520px);
+  }
+  .mm-dashboard-hero-copy {
+    padding: 28px 20px 34px;
+  }
+  .mm-dashboard-hero-copy h1 {
+    max-width: 22ch;
+    font-size: clamp(30px, 8.1vw, 41px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    overflow-wrap: normal;
+  }
+  .mm-dashboard-hero-actions {
+    gap: 9px;
+  }
+}
+@media (max-width: 350px) {
+  .mm-dashboard-hero-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mm-dashboard .mm-dashboard-hero-actions > .mm-dashboard-button {
+    min-height: 44px;
+  }
+}
+
 /* Mobile shell: navigation lives in the bottom bar and More sheet.
    Keep the current page and essential actions on one line; never surface
    the desktop Help footer as an extra row above the workspace. */

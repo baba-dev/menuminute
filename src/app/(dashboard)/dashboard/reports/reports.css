@@ -937,7 +937,10 @@
     display: none;
   }
   .reports-hero h1 {
-    font-size: clamp(32px, 9vw, 43px);
+    max-width: 23ch;
+    font-size: clamp(30px, 8vw, 41px);
+    line-height: 1.12;
+    text-wrap: balance;
   }
   .reports-body {
     padding: 16px 14px 48px;
