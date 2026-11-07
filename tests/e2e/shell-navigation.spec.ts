@@ -447,6 +447,11 @@ test.describe("phone shell", () => {
     await expect(page.getByRole("dialog", { name: "Notifications" })).toBeVisible();
   });
 
+});
+
+// These tests explicitly set phone viewport widths and run in desktop Chromium too.
+// CI currently shards only the chromium project, not Mobile Chrome.
+test.describe("responsive workspace regression", () => {
   test("mobile header is one row and Help and public menu are in More", async ({
     page,
   }, testInfo) => {
