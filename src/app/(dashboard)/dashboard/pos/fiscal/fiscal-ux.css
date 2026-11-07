@@ -1,0 +1,45 @@
+.mm-fiscal-empty {
+  display: grid;
+  min-height: min(70dvh, 620px);
+  place-items: center;
+  padding: 28px 16px 90px;
+  background: var(--paper, #fffaf4);
+  color: var(--ink, #34251a);
+}
+.mm-fiscal-empty-card {
+  width: min(100%, 720px);
+  padding: clamp(24px, 5vw, 55px);
+  border: 1px solid var(--decorative, #e5d7c7);
+  border-radius: 22px;
+  background: var(--workspace-soft, #fffdfb);
+}
+.mm-fiscal-empty-card > svg {
+  color: #c06632;
+}
+.mm-fiscal-empty-card h1 {
+  margin: 24px 0 10px;
+  font-size: clamp(28px, 3.5vw, 43px);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.mm-fiscal-empty-card p {
+  margin: 0 0 26px;
+  max-width: 550px;
+  line-height: 1.6;
+}
+.mm-fiscal-back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: #a7481b;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.mm-fiscal-back:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}

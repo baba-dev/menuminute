@@ -1,0 +1,71 @@
+.mm-workspace-main:has(> .mm-shared-topbar + .mm-device-settings) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.mm-device-settings {
+  min-height: 100dvh;
+  background: var(--paper, #fffaf4);
+  color: var(--ink, #352519);
+}
+.mm-device-hero {
+  padding: clamp(25px, 4vw, 48px) var(--mm-content-gutter, 24px);
+  background: linear-gradient(120deg, #fff1df, #f4d9b9);
+}
+:root[data-theme="dark"] .mm-device-hero {
+  background: linear-gradient(120deg, #392b24, #5a3725);
+}
+.mm-device-back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.mm-device-headline {
+  display: flex;
+  max-width: 1180px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 15px auto 0;
+}
+.mm-device-headline > div {
+  max-width: 660px;
+}
+.mm-device-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.mm-device-headline h1 {
+  margin: 12px 0;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.mm-device-headline p {
+  margin: 0;
+  line-height: 1.6;
+}
+.mm-device-body {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: 28px var(--mm-content-gutter, 24px) 90px;
+}
+.mm-device-settings a:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .mm-device-headline > svg {
+    display: none;
+  }
+  .mm-device-body {
+    padding: 16px 14px 90px;
+  }
+}

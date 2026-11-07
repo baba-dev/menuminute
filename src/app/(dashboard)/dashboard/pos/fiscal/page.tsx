@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, FileWarning } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
@@ -7,6 +8,7 @@ import { financeRead, type Detail } from "@/modules/pos/finance";
 import type { FiscalReadiness } from "@/modules/pos/fiscal-readiness";
 import type { IndiaGstLedgerReadiness } from "@/modules/pos/india-gst-issuer";
 import "./india-gst-draft-print.css";
+import "./fiscal-ux.css";
 import { IndiaGstDraftWorkspace } from "./india-gst-draft-workspace";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +17,22 @@ export const metadata: Metadata = {
   description: "Merchant GST draft checks; no statutory invoice is issued.",
   robots: { index: false, follow: false },
 };
+
+function FiscalEmpty({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="mm-fiscal-empty">
+      <section className="mm-fiscal-empty-card">
+        <FileWarning size={38} strokeWidth={1.5} aria-hidden="true" />
+        <h1>{title}</h1>
+        <p>{detail}</p>
+        <Link className="mm-fiscal-back" href="/dashboard/pos/ledger">
+          Open The Ledger
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+      </section>
+    </div>
+  );
+}
 
 export default async function IndiaGstPage({
   searchParams,
@@ -28,15 +46,10 @@ export default async function IndiaGstPage({
   const saleId = (await searchParams).sale;
   if (!saleId || !/^[A-Za-z0-9_-]{1,128}$/.test(saleId))
     return (
-      <main className="mx-auto max-w-4xl space-y-4 p-8">
-        <h1 className="text-3xl font-semibold">India GST draft review</h1>
-        <p>
-          Choose a frozen POS sale from The Ledger to review its statutory invoice requirements.
-        </p>
-        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">
-          Open The Ledger
-        </Link>
-      </main>
+      <FiscalEmpty
+        title="India GST draft review"
+        detail="Choose a frozen POS sale from The Ledger to review its statutory invoice requirements."
+      />
     );
 
   const actor = { userId: session.user.id, sessionId: session.session.id };
@@ -50,13 +63,10 @@ export default async function IndiaGstPage({
   ]);
   if (!sale || !sale.bill)
     return (
-      <main className="mx-auto max-w-4xl space-y-4 p-8">
-        <h1 className="text-3xl font-semibold">A frozen bill is required</h1>
-        <p>Unfrozen sale amounts cannot be used to prepare a statutory invoice draft.</p>
-        <Link className="text-orange-600 underline" href="/dashboard/pos/ledger">
-          Back to The Ledger
-        </Link>
-      </main>
+      <FiscalEmpty
+        title="A frozen bill is required"
+        detail="Unfrozen sale amounts cannot be used to prepare a statutory invoice draft."
+      />
     );
   return (
     <IndiaGstDraftWorkspace
