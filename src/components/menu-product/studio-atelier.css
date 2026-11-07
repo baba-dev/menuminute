@@ -2360,7 +2360,9 @@
 }
 @media (max-width: 720px) {
   .product.studio-atelier .atelier-hero h1 {
-    font-size: clamp(36px, 8.5vw, 46px);
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.1;
+    text-wrap: balance;
   }
   .menu-board-heading {
     flex-direction: column;

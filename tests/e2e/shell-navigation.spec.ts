@@ -446,6 +446,159 @@ test.describe("phone shell", () => {
       .click();
     await expect(page.getByRole("dialog", { name: "Notifications" })).toBeVisible();
   });
+
+  test("mobile header is one row and Help and public menu are in More", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await signIn(page, await seed({ ordering: true }));
+    const topbar = page.locator(".mm-shared-topbar");
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    for (const size of [
+      { width: 320, height: 700 },
+      { width: 360, height: 800 },
+      { width: 390, height: 844 },
+      { width: 430, height: 932 },
+    ]) {
+      await page.setViewportSize(size);
+      await expect(topbar).toBeVisible();
+      await expect(nav).toBeVisible();
+      await expect(page.locator(".mm-workspace-sidebar-footer")).toBeHidden();
+      const bounds = await topbar.boundingBox();
+      expect(bounds, "topbar at " + size.width).not.toBeNull();
+      expect(bounds!.height, "one-row topbar at " + size.width).toBeLessThanOrEqual(72);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
+        ),
+        "no horizontal document scroll at " + size.width
+      ).toBe(true);
+      const more = nav.getByRole("button", { name: "More" });
+      const hitArea = await more.boundingBox();
+      expect(hitArea!.width).toBeGreaterThanOrEqual(44);
+      expect(hitArea!.height).toBeGreaterThanOrEqual(44);
+      if (size.width === 390) {
+        await testInfo.attach("workspace-shell-390-light", {
+          body: await page.screenshot({ animations: "disabled" }),
+          contentType: "image/png",
+        });
+      }
+    }
+    await nav.getByRole("button", { name: "More" }).click();
+    const sheet = page.getByRole("dialog", { name: "More" });
+    await expect(sheet.getByRole("link", { name: /Help & guides/ })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: /Public menu \(new tab\)/ })).toBeVisible();
+    await sheet.getByRole("button", { name: "Close More" }).click();
+    await expect(sheet).toHaveCount(0);
+  });
+
+  test("mobile merchant page matrix: contained headings, screenshots and theme", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(240_000);
+    await signIn(page, await seed({ ordering: true }));
+    const routes = [
+      "/dashboard",
+      "/dashboard/menu",
+      "/dashboard/orders",
+      "/dashboard/pos",
+      "/dashboard/qr-codes",
+      "/dashboard/guests",
+      "/dashboard/reviews",
+      "/dashboard/reports",
+      "/dashboard/organization",
+      "/dashboard/settings",
+      "/dashboard/floor",
+      "/account",
+      "/billing",
+    ] as const;
+    const captures = new Set([
+      "/dashboard",
+      "/dashboard/menu",
+      "/dashboard/pos",
+      "/dashboard/reports",
+      "/dashboard/organization",
+    ]);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const route of routes) {
+      await page.goto(route);
+      await expect(page.locator(".mm-shared-topbar")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      const heading = page.locator("#workspace-main h1").first();
+      await expect(heading, route + " heading").toBeVisible();
+      const rect = await heading.boundingBox();
+      expect(rect, route + " heading bounds").not.toBeNull();
+      expect(rect!.x, route + " left edge").toBeGreaterThanOrEqual(-1);
+      expect(rect!.x + rect!.width, route + " right edge").toBeLessThanOrEqual(392);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
+        ),
+        route + " has no document overflow"
+      ).toBe(true);
+      if (captures.has(route)) {
+        const name = route === "/dashboard" ? "dashboard" : route.replace(/^\//, "").replace(/\//g, "-");
+        await testInfo.attach(name + "-390-light", {
+          body: await page.screenshot({ animations: "disabled" }),
+          contentType: "image/png",
+        });
+        const switcher = page.locator(".mm-shared-topbar").getByRole("button", {
+          name: "Switch to dark mode",
+        });
+        await switcher.click();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+        await testInfo.attach(name + "-390-dark", {
+          body: await page.screenshot({ animations: "disabled" }),
+          contentType: "image/png",
+        });
+        await page
+          .locator(".mm-shared-topbar")
+          .getByRole("button", { name: "Switch to light mode" })
+          .click();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+      }
+    }
+    for (const width of [320, 360, 430]) {
+      await page.setViewportSize({ width, height: 800 });
+      for (const route of [
+        "/dashboard",
+        "/dashboard/menu",
+        "/dashboard/pos",
+        "/dashboard/organization",
+      ]) {
+        await page.goto(route);
+        await expect(page.locator(".mm-shared-topbar")).toBeVisible();
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
+          ),
+          route + " overflow at " + width
+        ).toBe(true);
+      }
+    }
+  });
+
+  test("mobile Menu Studio keeps filtered dishes reachable after collapsing sections", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await signIn(page, await seed({ ordering: true }));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/dashboard/menu");
+    const board = page.getByRole("region", { name: "Visual menu board" });
+    await expect(board.getByRole("button", { name: "Collapse all menu sections" })).toBeVisible();
+    await board.getByRole("button", { name: "Collapse all menu sections" }).click();
+    await expect(board.getByRole("button", { name: "Expand all menu sections" })).toBeVisible();
+    await expect(board.locator(".menu-board-dish")).toHaveCount(0);
+    await board.getByRole("button", { name: "Expand section Signature dishes" }).click();
+    await expect(board.getByRole("button", { name: "Edit Citrus salad" })).toBeVisible();
+    const editButton = await board.getByRole("button", { name: "Edit Citrus salad" }).boundingBox();
+    expect(editButton!.height).toBeGreaterThanOrEqual(44);
+    expect(editButton!.width).toBeGreaterThanOrEqual(44);
+    await board.getByRole("button", { name: "Collapse all menu sections" }).click();
+    await board.getByRole("searchbox", { name: "Find a dish" }).fill("Citrus salad");
+    await expect(board.getByRole("button", { name: "Edit Citrus salad" })).toBeVisible();
+  });
 });
 
 test("floor lifecycle keeps one physical table, QR association, and reservation conflict", async ({

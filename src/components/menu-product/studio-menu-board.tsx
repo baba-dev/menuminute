@@ -164,7 +164,14 @@ export function StudioMenuBoard({
               key={category.id}
               type="button"
               aria-pressed={filter === category.id}
-              onClick={() => setFilter(category.id)}
+              onClick={() => {
+                setFilter(category.id);
+                setCollapsedSections((previous) => {
+                  const next = new Set(previous);
+                  next.delete(category.id);
+                  return next;
+                });
+              }}
             >
               {category.name}
             </button>
@@ -173,6 +180,8 @@ export function StudioMenuBoard({
         <button
           type="button"
           className="menu-board-collapse-all"
+          disabled={Boolean(query.trim())}
+          title={query.trim() ? "Clear search to collapse menu sections" : undefined}
           aria-label={allCollapsed ? "Expand all menu sections" : "Collapse all menu sections"}
           onClick={() =>
             setCollapsedSections(
@@ -233,9 +242,11 @@ export function StudioMenuBoard({
                     <button
                       type="button"
                       className="menu-board-section-toggle"
-                      aria-label={(expanded ? "Collapse " : "Expand ") + category.name + " dishes"}
+                      aria-label={(expanded ? "Collapse section " : "Expand section ") + category.name}
                       aria-controls={sectionId}
                       aria-expanded={expanded}
+                      disabled={Boolean(query.trim())}
+                      title={query.trim() ? "Clear search to collapse this section" : undefined}
                       onClick={() => toggleSection(category.id)}
                     >
                       <ChevronDown size={16} aria-hidden="true" />
@@ -345,6 +356,7 @@ export function StudioMenuBoard({
                     </button>
                   </div>
                 )}
+                {!expanded && <div id={sectionId} hidden />}
                 {expanded && (visible.length ? (
                   <div id={sectionId} className="menu-board-grid">
                     {visible.map(({ dish, dishIndex }) => (

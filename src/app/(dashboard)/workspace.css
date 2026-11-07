@@ -1610,6 +1610,7 @@
 @media (max-width: 680px) {
   .mm-shared-topbar {
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     min-height: 60px;
     padding: 8px 14px;
