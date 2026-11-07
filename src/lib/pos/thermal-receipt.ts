@@ -110,7 +110,7 @@ export function encodeThermalReceipt(receipt: ThermalReceipt, paper: ThermalPape
   const data: number[] = [];
   // Preserve intentional spaces used to align numeric columns. All dynamic text
   // is sanitized before reaching this point; these bytes never include ESC.
-  const draw = (s: string) => line(data, s.replace(/[^\\x20-\\x7e]/g, "?").slice(0, width));
+  const draw = (s: string) => line(data, s.replace(/[^\x20-\x7e]/g, "?").slice(0, width));
   const separator = "-".repeat(width);
   esc(data, 0x1b, 0x40); // initialize
   esc(data, 0x1b, 0x61, 0x01); // center
