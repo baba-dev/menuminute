@@ -720,3 +720,22 @@
     animation: none;
   }
 }
+
+/* Access states identify the permission problem without assuming a plan upgrade. */
+.guests-access-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.guests-access-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 10px 15px;
+  border: 1px solid var(--guest-line);
+  border-radius: 10px;
+  color: var(--guest-ink);
+  font-weight: 700;
+}

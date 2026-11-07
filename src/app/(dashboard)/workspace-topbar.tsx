@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { Fragment } from "react";
+import { workspaceBreadcrumb } from "./workspace-breadcrumb";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { ThemeControl } from "@/components/menu-product/theme-control";
@@ -11,22 +13,6 @@ import {
   TillChip,
 } from "./workspace-controls";
 
-const labels: Record<string, string> = {
-  "/dashboard": "Restaurant overview",
-  "/dashboard/menu": "Menu Studio",
-  "/dashboard/orders": "Service Counter",
-  "/dashboard/kitchen": "Kitchen",
-  "/dashboard/floor": "Dining floor",
-  "/dashboard/qr-codes": "QR Studio",
-  "/dashboard/settings": "Settings",
-  "/dashboard/pos": "Point of Sale",
-  "/dashboard/organization": "Organization",
-  "/dashboard/reports": "Reports & Insights",
-  "/dashboard/guests": "Guests",
-  "/dashboard/reviews": "Guest reviews",
-  "/billing": "Billing & plan",
-  "/account": "My account",
-};
 const compactLabels: Record<string, string> = {
   "Restaurant overview": "Overview",
   "Service Counter": "Orders",
@@ -50,12 +36,8 @@ export function WorkspaceTopbar({
   assistantAction?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const label =
-    labels[pathname] ??
-    Object.entries(labels).find(
-      ([path]) => path !== "/dashboard" && pathname.startsWith(path + "/")
-    )?.[1] ??
-    "Workspace";
+  const crumbs = workspaceBreadcrumb(pathname);
+  const label = crumbs[crumbs.length - 1]?.label ?? "Workspace";
   const compactLabel = compactLabels[label] ?? label;
   const initials = userName
     .trim()
@@ -68,11 +50,26 @@ export function WorkspaceTopbar({
     <div className="mm-dashboard-topbar mm-shared-topbar">
       <nav aria-label="Breadcrumb" className="mm-dashboard-breadcrumb">
         <span>Workspace</span>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">
-          <span className="mm-dashboard-page-full">{label}</span>
-          <span className="mm-dashboard-page-short">{compactLabel}</span>
-        </span>
+        {crumbs.map((crumb, index) => (
+          <Fragment key={index}>
+            <span
+              aria-hidden="true"
+              className={crumb.href ? "mm-crumb-parent-separator" : undefined}
+            >
+              /
+            </span>
+            {crumb.href ? (
+              <Link href={crumb.href} className="mm-crumb-parent">
+                {crumb.label}
+              </Link>
+            ) : (
+              <span aria-current={index === crumbs.length - 1 ? "page" : undefined}>
+                <span className="mm-dashboard-page-full">{label}</span>
+                <span className="mm-dashboard-page-short">{compactLabel}</span>
+              </span>
+            )}
+          </Fragment>
+        ))}
       </nav>
       <div className="mm-dashboard-top-actions">
         <PaletteTrigger />

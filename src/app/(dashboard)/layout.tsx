@@ -34,6 +34,7 @@ import {
 } from "@/modules/restaurants/service";
 import "./workspace.css";
 import "./workspace-delight.css";
+import "./workspace-ux.css";
 import { env } from "@/lib/config/env";
 import { EmberPopups } from "@/components/intelligence/ember-popups";
 import { EmberLauncher } from "@/components/intelligence/ember-launcher";

@@ -46,3 +46,23 @@
   outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
 }
+
+/* Keep the reset notice readable above the compact logged-in header. */
+@media (max-width: 430px) {
+  .mm-demo-banner {
+    gap: 5px 8px;
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+  .mm-demo-banner-pill {
+    flex: 0 0 auto;
+    font-size: 10px;
+  }
+  .mm-demo-banner-text {
+    flex-basis: 185px;
+    overflow-wrap: anywhere;
+  }
+  .mm-demo-banner-button {
+    min-height: 44px;
+  }
+}

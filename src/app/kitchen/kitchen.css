@@ -2773,3 +2773,44 @@
     scroll-margin-top: 168px;
   }
 }
+
+/* Operational touch surfaces: do not let long station names or times push the phone canvas. */
+@media (max-width: 680px) {
+  .kk-stations,
+  .kk-mobile-lanes,
+  .kk-hero-stations-list {
+    min-width: 0;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .kk-station-tab,
+  .kk-mobile-lanes button,
+  .kk-hero-stations-list li {
+    scroll-snap-align: start;
+  }
+  .kk-stations {
+    scroll-snap-type: x proximity;
+  }
+  .kk-overview-card,
+  .kk-hero-station,
+  .kk-hero-stations-list li {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .kk-setup-dialog :is(input, select, textarea) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .kk-setup-dialog :is(button, select) {
+    touch-action: manipulation;
+  }
+}
+@media (max-width: 390px) {
+  .kk-station-tab {
+    padding-inline: 12px;
+  }
+  .kk-hero-stations-list li {
+    flex-basis: min(82%, 250px);
+  }
+}

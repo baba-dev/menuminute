@@ -27,6 +27,7 @@ import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { previewMerchantSalesTax } from "@/modules/tax/sales-tax";
 import type { CheckoutTaxPolicy } from "@/modules/tax/checkout";
+import { resolvePosDisplayTotals } from "@/modules/pos/display-totals";
 import { PosNavigation } from "./pos-navigation";
 import { PosGuestLookup } from "./pos-guest-lookup";
 import { PosIncomingOrders } from "./pos-incoming-orders";
@@ -83,10 +84,13 @@ export function TheTill({
   organizationId,
   outletId,
   initial,
+  publishedSummary = null,
 }: {
   organizationId: string;
   outletId: string;
   initial: PosWorkspace;
+  /** Committed public-menu totals, distinct from the POS-only checkout catalogue. */
+  publishedSummary?: { menus: number; dishes: number } | null;
 }) {
   const endpoint =
     "/api/organizations/" +
@@ -199,9 +203,11 @@ export function TheTill({
   const attachKeys = useRef<Record<string, string>>({});
   const menu = workspace.menus.find((m) => m.id === selectedMenu) ?? workspace.menus[0];
   const currency = workspace.context.currency;
-  const foodItemsOnMenu = new Set(
-    workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items.map((i) => i.id)))
-  ).size;
+  const { menus: publishedMenus, dishes: publishedDishes } = resolvePosDisplayTotals(
+    workspace.context.enabled,
+    workspace.menus,
+    publishedSummary
+  );
   const dishes = useMemo(
     () =>
       menu?.categories
@@ -713,20 +719,32 @@ export function TheTill({
             <div className="pos-metric">
               <BookOpenText aria-hidden="true" />
               <span>Published menus</span>
-              <strong>{workspace.menus.length}</strong>
-              <small>Live menus in this outlet</small>
+              <strong>{publishedMenus ?? "—"}</strong>
+              <small>
+                {publishedMenus === null
+                  ? "Menu totals unavailable for this role"
+                  : "Live menus in this outlet"}
+              </small>
             </div>
             <div className="pos-metric">
               <Utensils aria-hidden="true" />
               <span>Food Items on Menu</span>
-              <strong>{foodItemsOnMenu}</strong>
-              <small>Unique published dishes</small>
+              <strong>{publishedDishes ?? "—"}</strong>
+              <small>
+                {publishedDishes === null
+                  ? "Menu totals unavailable for this role"
+                  : "Unique published dishes"}
+              </small>
             </div>
             <div className="pos-metric">
               <ClipboardList aria-hidden="true" />
               <span>Total Orders Today</span>
-              <strong>{workspace.kpis.totalOrders}</strong>
-              <small>All channels · Including pending and cancelled</small>
+              <strong>{workspace.context.enabled ? workspace.kpis.totalOrders : "—"}</strong>
+              <small>
+                {workspace.context.enabled
+                  ? "All channels · Including pending and cancelled"
+                  : "Available after POS activation"}
+              </small>
             </div>
           </div>
         </section>
