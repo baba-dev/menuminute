@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "MenuMinute",
     description:
       "Create, publish and browse restaurant menus with permanent QR codes and live ordering.",
-    start_url: "/?source=pwa",
+    start_url: "/app",
     scope: "/",
     display: "standalone",
     background_color: "#fafaf9",
