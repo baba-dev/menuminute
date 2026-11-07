@@ -28,8 +28,7 @@ export function SettingsScopeNav({ className = "" }: { className?: string }) {
   return (
     <nav aria-label="Settings areas" className={`mm-scope-nav ${className}`}>
       {scopes.map(({ href, label, detail, Icon }) => {
-        const current =
-          pathname === href || (href === "/account" && pathname.startsWith("/account/"));
+        const current = pathname === href || pathname.startsWith(href + "/");
         return (
           <Link
             key={href}
