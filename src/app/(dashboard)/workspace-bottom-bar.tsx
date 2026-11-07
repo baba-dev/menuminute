@@ -20,10 +20,10 @@ import { useWorkspaceShell } from "./workspace-shell";
  */
 export function WorkspaceBottomBar({
   isSuperAdmin = false,
-  publicHref,
+  publicHref = null,
 }: {
   isSuperAdmin?: boolean;
-  publicHref: string | null;
+  publicHref?: string | null;
 }) {
   const pathname = usePathname();
   const returnFocus = useReturnFocus();
