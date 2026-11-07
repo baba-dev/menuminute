@@ -340,7 +340,7 @@ export default function FeaturesPage() {
             One connected journey
           </p>
           <h2 className="font-display mt-4 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-            From a guest discovering a dish to your next day's decisions.
+            From a guest discovering a dish to your next day&apos;s decisions.
           </h2>
           <p className="mt-5 max-w-3xl leading-8 text-stone-300">
             A restaurant runs on handoffs. MenuMinute gives each part of the experience its own
