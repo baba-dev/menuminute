@@ -4,7 +4,7 @@ This Android project packages the existing HTTPS merchant PWA as a **Trusted Web
 
 - Android application ID: `com.bababuilds.menuminute` (confirm before the first Play upload; the ID is permanent afterward).
 - Target/compile API 36, minimum API 26.
-- Trusted origin: `https://food.bababuilds.com`; launch URL: `/app?distribution=play`.
+- Trusted origin: `https://food.bababuilds.com`; launch URL: `/api/app/launch` (server redirects to `/app`).
 - The web app uses this specific launch marker to enter **consumption-only mode**: Razorpay digital subscription checkout is disabled within the Play client. Existing subscribers keep their entitlements.
 - The app does not claim native Bluetooth Classic printing. BLE GATT receipt printers can be accessed through Web Bluetooth in compatible Chrome/TWA installations after user permission.
 - `assetlinks.json` must contain the **Play App Signing** certificate's SHA-256 fingerprint, not only the local upload-key fingerprint.

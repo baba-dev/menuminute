@@ -12,6 +12,7 @@ import {
   type BillingStateInput,
 } from "@/modules/plans/billing-page";
 import { BillingConsole } from "./billing-console";
+import { isPlayClient } from "@/lib/app-distribution";
 import "./billing.css";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default async function BillingPage({
   searchParams: Promise<{ plan?: string | string[] }>;
 }) {
   const query = await searchParams;
+  const playClient = await isPlayClient();
   const session = await auth();
   if (!session) redirect("/login");
   const actor = { userId: session.user.id };
@@ -93,5 +95,5 @@ export default async function BillingPage({
     lifecycle: snapshot.lifecycle,
     focus: typeof query.plan === "string" ? query.plan : null,
   });
-  return <BillingConsole view={view} organizationId={snapshot.organizationId} />;
+  return <BillingConsole view={view} organizationId={snapshot.organizationId} playClient={playClient} />;
 }

@@ -8,6 +8,7 @@ import { env } from "@/lib/config/env";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import { createRazorpaySubscription, verifyBillingWriterReady } from "@/modules/billing/razorpay";
 import { PAID_PLAN_CATALOG } from "@/modules/billing/catalog";
+import { isPlayClient } from "@/lib/app-distribution";
 
 async function observed_POST(
   req: Request,
@@ -15,6 +16,11 @@ async function observed_POST(
 ) {
   try {
     const actor = await requestActor(req, true, { verified: true });
+    if (await isPlayClient())
+      return NextResponse.json(
+        { message: "Purchases are unavailable in the Play-distributed Android app." },
+        { status: 403, headers: { "cache-control": "private, no-store" } }
+      );
     const { organizationId } = await context.params;
 
     if (!env.RAZORPAY_ENABLED)

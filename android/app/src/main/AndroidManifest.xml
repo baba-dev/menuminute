@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="food.bababuilds.com" android:pathPrefix="/app" />
+                <data android:scheme="https" android:host="food.bababuilds.com" android:pathPrefix="/api/app/launch" />
             </intent-filter>
         </activity>
     </application>

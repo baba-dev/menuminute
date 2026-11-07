@@ -35,9 +35,11 @@ async function loadCheckoutScript(): Promise<void> {
 export function BillingConsole({
   view,
   organizationId,
+  playClient,
 }: {
   view: BillingPageView;
   organizationId: string;
+  playClient: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<Paid | null>(null);
@@ -169,6 +171,8 @@ export function BillingConsole({
         : "Active";
 
   const renderAction = (card: LadderCard, size: "lg" | "md" = "md") => {
+    // Google Play's consumption-only distribution must never surface a digital checkout.
+    if (playClient) return null;
     if (card.action?.kind === "checkout") {
       const plan = card.action.plan;
       const working = busy === plan;
@@ -211,8 +215,8 @@ export function BillingConsole({
           <span className="bp-eyebrow">BILLING &amp; PLAN</span>
           <h1>Your plan, in one place.</h1>
           <p>
-            {view.organizationName} · See your limits, your billing cycle and what the next plan
-            unlocks.
+            {view.organizationName} · See your current plan, usage and billing cycle.
+            {playClient ? " Purchases are not offered in the Android app." : " Explore available upgrades."}
           </p>
         </div>
         <div className="bp-hero-plan" aria-label="Current plan">
@@ -224,7 +228,7 @@ export function BillingConsole({
         </div>
       </header>
 
-      {view.notices.map((notice) => (
+      {view.notices.filter((entry) => !playClient || !entry.action).map((notice) => (
         <div
           key={notice.key}
           className="bp-banner"
@@ -322,7 +326,7 @@ export function BillingConsole({
           )}
         </article>
 
-        <article className="bp-tile bp-tile--accent bp-span-5" aria-labelledby="bp-next-title">
+        {!playClient && <article className="bp-tile bp-tile--accent bp-span-5" aria-labelledby="bp-next-title">
           {view.next ? (
             <>
               <span className="bp-label" id="bp-next-title">
@@ -362,10 +366,10 @@ export function BillingConsole({
               </p>
             </>
           )}
-        </article>
+        </article>}
       </div>
 
-      <section className="bp-section" aria-labelledby="bp-plans-title">
+      {!playClient && <section className="bp-section" aria-labelledby="bp-plans-title">
         <div className="bp-section-head">
           <h2 id="bp-plans-title">Choose your plan</h2>
           <p>Monthly, cancel any time. Your permanent QR menu is always free.</p>
@@ -411,7 +415,7 @@ export function BillingConsole({
             </article>
           ))}
         </div>
-      </section>
+      </section>}
 
       <div className="bp-grid">
         <article className="bp-tile bp-span-7" aria-labelledby="bp-subs-title">
@@ -480,8 +484,9 @@ export function BillingConsole({
             Payments &amp; invoices
           </span>
           <p className="bp-muted">
-            You pick how to pay inside the secure checkout. Card numbers go straight to our payment
-            provider and never touch MenuMinute.
+            {playClient
+              ? "Your existing subscription remains usable here. This Android app does not sell digital subscriptions."
+              : "You pick how to pay inside the secure checkout. Card numbers go straight to our payment provider and never touch MenuMinute."}
           </p>
           <p className="bp-muted">
             GST invoices are not available here yet. We will show them on this page as soon as

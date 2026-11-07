@@ -9,6 +9,8 @@ import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
 import { fmt } from "@/modules/plans/view";
 import { planSale, saleFootnote, type SaleFacts, type SaleViewer } from "@/modules/plans/sale";
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { isPlayClient } from "@/lib/app-distribution";
 import { publicSaleFacts } from "@/modules/plans/sale-facts";
 
 export const metadata: Metadata = {
@@ -189,6 +191,7 @@ export default async function PricingPage({
   searchParams: Promise<{ currency?: string | string[] }>;
 }) {
   const query = await searchParams;
+  if (await isPlayClient()) redirect("/billing");
   const currency: BillingCurrency = query.currency === "USD" ? "USD" : "INR";
   const plans = planLadder({ currency });
   const facts = publicSaleFacts();
