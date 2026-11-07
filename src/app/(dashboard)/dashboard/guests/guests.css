@@ -686,6 +686,15 @@
     gap: 8px;
     font-size: 11px;
   }
+  .guests-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-grid;
+    place-items: center;
+  }
+  .guests-profile-fields :is(input, textarea) {
+    font-size: 16px;
+  }
   .guests-drawer {
     top: auto;
     left: 0;

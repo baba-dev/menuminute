@@ -953,17 +953,31 @@
     gap: 4px;
   }
   .reports-preset-btn {
-    min-height: 38px;
+    min-height: 44px;
+  }
+  .reports-mode-select,
+  .reports-custom-range input {
+    min-height: 44px;
+    font-size: 16px;
   }
   .reports-tab-nav {
     flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
     scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 14px;
     overscroll-behavior-x: contain;
+  }
+  .reports-panel svg {
+    max-width: 100%;
+    height: auto;
   }
   .reports-tab-btn {
     flex-shrink: 0;
     min-height: 44px;
+    scroll-snap-align: start;
   }
   .reports-custom-range {
     width: 100%;

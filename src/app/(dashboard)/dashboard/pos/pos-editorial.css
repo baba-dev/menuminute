@@ -1108,9 +1108,12 @@
     text-wrap: balance;
   }
   .till-page.pos-editorial .pos-inbox-alert {
-    top: 72px;
+    top: calc(72px + env(safe-area-inset-top, 0px));
     right: 10px;
     width: calc(100vw - 20px);
+    max-height: min(55dvh, 520px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .till-page.pos-editorial .pos-mobile-ticket-toggle {
     display: flex;
@@ -1153,6 +1156,8 @@
     display: none;
   }
   .till-page.pos-editorial .pos-mobile-ticket-close {
+    min-width: 44px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

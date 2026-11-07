@@ -2752,6 +2752,18 @@
   }
 }
 
+/* Phone controls retain a 44px touch target while the Kitchen header wraps.
+   Do not change order states or the station board's own scrolling model. */
+@media (max-width: 680px) {
+  .mm-kitchen .kk-tools {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .mm-kitchen .kk-tools :is(button, a) {
+    min-height: 44px;
+  }
+}
+
 /* Sticky Kitchen Pro header: section anchors must clear its controls, including mobile wrap. */
 .mm-kitchen :is(#station-rail, .kk-station-heading, #expeditor, .kk-live-intake) {
   scroll-margin-top: 100px;
