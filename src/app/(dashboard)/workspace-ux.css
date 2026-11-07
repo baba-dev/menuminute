@@ -92,3 +92,38 @@
     transition: none;
   }
 }
+
+/* Deep paths collapse to the active screen on phones; full context stays on desktop. */
+@media (max-width: 680px) {
+  .mm-shared-topbar .mm-crumb-parent,
+  .mm-shared-topbar .mm-crumb-parent-separator {
+    display: none;
+  }
+  .mm-workspace-main {
+    min-width: 0;
+  }
+  .mm-workspace-main :is(.pos-body, .reports-body, .oh-body, .os-body, .guests-content) {
+    min-width: 0;
+  }
+  .mm-dashboard-breadcrumb [aria-current="page"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mm-scope-link {
+    overflow-wrap: anywhere;
+  }
+}
+@media (max-width: 360px) {
+  .mm-scope-link {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  .mm-shared-topbar {
+    gap: 5px;
+    padding-inline: 9px;
+  }
+  .mm-dashboard-breadcrumb {
+    max-width: 100%;
+  }
+}
