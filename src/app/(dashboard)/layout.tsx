@@ -184,7 +184,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           {children}
         </main>
-        <WorkspaceBottomBar isSuperAdmin={isSuperAdmin} />
+        <WorkspaceBottomBar isSuperAdmin={isSuperAdmin} publicHref={publicHref} />
         <CommandPalette />
         <NotificationDrawer />
         <EmberPopups />

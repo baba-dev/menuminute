@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Bell, CircleHelp, Ellipsis, Search, ShieldAlert, UserRound, X } from "lucide-react";
+import { Bell, CircleHelp, Ellipsis, ExternalLink, Search, ShieldAlert, UserRound, X } from "lucide-react";
 import {
   bottomBarItems,
   isNavSelected,
@@ -18,7 +18,13 @@ import { useWorkspaceShell } from "./workspace-shell";
  * Phone navigation: Orders, POS, Kitchen and Floor (whichever the user can use), then More.
  * Visible text is short; the accessible name stays the full label (for example "Kitchen Setup").
  */
-export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
+export function WorkspaceBottomBar({
+  isSuperAdmin = false,
+  publicHref,
+}: {
+  isSuperAdmin?: boolean;
+  publicHref: string | null;
+}) {
   const pathname = usePathname();
   const returnFocus = useReturnFocus();
   const {
@@ -158,6 +164,20 @@ export function WorkspaceBottomBar({ isSuperAdmin = false }: { isSuperAdmin?: bo
                   <span>Account &amp; security</span>
                 </Link>
               </li>
+              {publicHref && (
+                <li>
+                  <Link
+                    href={publicHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mm-sheet-link"
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    <ExternalLink size={19} strokeWidth={1.9} aria-hidden="true" />
+                    <span>Public menu (new tab)</span>
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/help/owner"
