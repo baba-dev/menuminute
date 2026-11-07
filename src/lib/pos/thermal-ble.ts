@@ -53,7 +53,8 @@ export function isAndroidInstalledClient(): boolean {
 }
 
 export async function printThermalBle(receipt: ThermalReceipt, paper: ThermalPaper): Promise<void> {
-  if (!isAndroidInstalledClient()) throw new Error("Bluetooth printing needs an installed Android PWA or app.");
+  if (!isAndroidInstalledClient())
+    throw new Error("Bluetooth printing needs an installed Android PWA or app.");
   const bluetooth = (navigator as Navigator & { bluetooth?: BluetoothPicker }).bluetooth;
   if (!bluetooth) throw new Error("This device does not expose Web Bluetooth.");
 

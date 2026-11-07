@@ -76,7 +76,8 @@ export default async function ReceiptPage({
       unitPrice: money(item.unitMinor, receipt.currency),
       lineTotal: money(item.lineMinor, receipt.currency),
     })),
-    subtotalLabel: receipt.taxApplied && receipt.taxInclusive ? "Tax-inclusive prices" : "Item subtotal",
+    subtotalLabel:
+      receipt.taxApplied && receipt.taxInclusive ? "Tax-inclusive prices" : "Item subtotal",
     subtotal: money(receipt.subtotalMinor, receipt.currency),
     taxableBase: receipt.taxApplied
       ? money(receipt.taxableBaseMinor ?? receipt.subtotalMinor, receipt.currency)
@@ -87,9 +88,15 @@ export default async function ReceiptPage({
     taxAmount: receipt.taxApplied ? money(receipt.taxMinor ?? "0", receipt.currency) : null,
     totalLabel: refunded ? "Original paid amount" : "Total payable",
     total: money(receipt.totalMinor ?? receipt.subtotalMinor, receipt.currency),
-    closingStatus: refunded ? "ORIGINAL STAFF PAYMENT REFUNDED" : staffPaid
-      ? "STAFF-RECORDED PAYMENT" : paid ? "PAYMENT COMPLETE" : "PAYMENT PENDING",
-    taxDisclaimer: "Operational receipt only. Not a statutory tax invoice or gateway-confirmed payment.",
+    closingStatus: refunded
+      ? "ORIGINAL STAFF PAYMENT REFUNDED"
+      : staffPaid
+        ? "STAFF-RECORDED PAYMENT"
+        : paid
+          ? "PAYMENT COMPLETE"
+          : "PAYMENT PENDING",
+    taxDisclaimer:
+      "Operational receipt only. Not a statutory tax invoice or gateway-confirmed payment.",
   };
   return (
     <main className={"receipt-shell receipt-width-" + paper}>

@@ -144,7 +144,8 @@ export function encodeThermalReceipt(receipt: ThermalReceipt, paper: ThermalPape
   }
   draw(separator);
   for (const s of pair(receipt.subtotalLabel, receipt.subtotal, width)) draw(s);
-  if (receipt.taxableBase) for (const s of pair("Taxable base", receipt.taxableBase, width)) draw(s);
+  if (receipt.taxableBase)
+    for (const s of pair("Taxable base", receipt.taxableBase, width)) draw(s);
   if (receipt.taxLabel && receipt.taxAmount)
     for (const s of pair(receipt.taxLabel, receipt.taxAmount, width)) draw(s);
   esc(data, 0x1b, 0x45, 0x01);

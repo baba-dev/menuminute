@@ -95,5 +95,7 @@ export default async function BillingPage({
     lifecycle: snapshot.lifecycle,
     focus: typeof query.plan === "string" ? query.plan : null,
   });
-  return <BillingConsole view={view} organizationId={snapshot.organizationId} playClient={playClient} />;
+  return (
+    <BillingConsole view={view} organizationId={snapshot.organizationId} playClient={playClient} />
+  );
 }

@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  isAndroidInstalledClient,
-  printThermalBle,
-} from "@/lib/pos/thermal-ble";
+import { isAndroidInstalledClient, printThermalBle } from "@/lib/pos/thermal-ble";
 import type { ThermalPaper, ThermalReceipt } from "@/lib/pos/thermal-receipt";
 
 export function ReceiptPrintActions({
@@ -45,7 +42,9 @@ export function ReceiptPrintActions({
       setMessage("Receipt data sent to the printer. Confirm it printed before closing.");
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Bluetooth receipt printing failed. Use system print."
+        error instanceof Error
+          ? error.message
+          : "Bluetooth receipt printing failed. Use system print."
       );
     } finally {
       setPrinting(false);

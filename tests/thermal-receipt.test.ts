@@ -38,11 +38,21 @@ describe("local Android BLE thermal receipt", () => {
   });
 
   it("sanitizes attacker-controlled ESC/POS bytes from customer and merchant names", () => {
-    expect(safePrinterText("Cafe" + String.fromCharCode(0x1b, 0x1d, 0x00) + " Evan")).not.toMatch(/[\\x00-\\x1f]/);
-    const bytes = encodeThermalReceipt({ ...receipt, merchantName: "EVIL" + String.fromCharCode(0x1d) + "V" + String.fromCharCode(0) }, "58");
+    expect(safePrinterText("Cafe" + String.fromCharCode(0x1b, 0x1d, 0x00) + " Evan")).not.toMatch(
+      /[\x00-\x1f]/
+    );
+    const bytes = encodeThermalReceipt(
+      {
+        ...receipt,
+        merchantName: "EVIL" + String.fromCharCode(0x1d) + "V" + String.fromCharCode(0),
+      },
+      "58"
+    );
     expect(bytes[0]).toBe(0x1b);
     expect(bytes[1]).toBe(0x40);
-    expect(Array.from(bytes).some((byte, i, list) => byte === 0x1d && list[i + 1] === 0x56)).toBe(false);
+    expect(Array.from(bytes).some((byte, i, list) => byte === 0x1d && list[i + 1] === 0x56)).toBe(
+      false
+    );
   });
 
   it.each(["58", "80"] as const)("keeps each receipt line inside %s mm width", (paper) => {
@@ -53,10 +63,12 @@ describe("local Android BLE thermal receipt", () => {
         i += bytes[i + 1] === 0x40 ? 1 : 2;
         continue;
       }
-      printable.push(bytes[i]);
+      printable.push(bytes[i]!);
     }
     const lines = new TextDecoder().decode(new Uint8Array(printable)).split("\n");
-    expect(Math.max(...lines.map((line) => line.length))).toBeLessThanOrEqual(thermalColumns(paper));
+    expect(Math.max(...lines.map((line) => line.length))).toBeLessThanOrEqual(
+      thermalColumns(paper)
+    );
     expect(lines.join("\n")).toContain("9876543210");
     expect(lines.join("\n")).toContain("Citrus Salad");
     expect(lines.join("\n")).toContain("NOT A TAX INVOICE");

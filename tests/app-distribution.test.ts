@@ -46,9 +46,7 @@ describe("Play consumption-only distribution", () => {
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data[0].target.package_name).toBe("com.bababuilds.menuminute");
-      expect(data[0].target.sha256_cert_fingerprints).toEqual([
-        Array(32).fill("AB").join(":"),
-      ]);
+      expect(data[0].target.sha256_cert_fingerprints).toEqual([Array(32).fill("AB").join(":")]);
     } finally {
       if (prior === undefined) delete process.env.ANDROID_PLAY_APP_SIGNING_SHA256;
       else process.env.ANDROID_PLAY_APP_SIGNING_SHA256 = prior;
