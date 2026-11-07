@@ -47,7 +47,10 @@ describe("features overview marketing content", () => {
   it("answers common questions without implying automatic payment capture or AI publishing", () => {
     expect(featureFaqs.length).toBeGreaterThanOrEqual(6);
     expect(new Set(featureFaqs.map((faq) => faq.question)).size).toBe(featureFaqs.length);
-    const combined = featureFaqs.map((faq) => faq.answer).join(" ").toLowerCase();
+    const combined = featureFaqs
+      .map((faq) => faq.answer)
+      .join(" ")
+      .toLowerCase();
     expect(combined).toContain("not by default");
     expect(combined).toContain("not acceptance");
     expect(combined).toContain("merchant");
