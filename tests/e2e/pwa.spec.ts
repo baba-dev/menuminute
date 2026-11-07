@@ -43,6 +43,12 @@ test.describe("Progressive Web App", () => {
     expect(new URL(scope).pathname).toBe("/");
   });
 
+  test("installed app entry directs signed-out merchants to login", async ({ page }) => {
+    await page.goto("/app");
+    await expect(page).toHaveURL(/\/login\?next=%2Fapp/);
+    await expect(page.getByLabel("Email address")).toBeVisible();
+  });
+
   test("push registration is private, no-store and cannot bypass a guest session", async ({
     request,
   }) => {
