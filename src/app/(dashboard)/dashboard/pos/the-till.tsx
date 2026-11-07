@@ -27,6 +27,7 @@ import { prepareRepeatCart } from "@/lib/pos/repeat-selection";
 import type { QuoteInput } from "@/modules/orders/quote";
 import { previewMerchantSalesTax } from "@/modules/tax/sales-tax";
 import type { CheckoutTaxPolicy } from "@/modules/tax/checkout";
+import { resolvePosDisplayTotals } from "@/modules/pos/display-totals";
 import { PosNavigation } from "./pos-navigation";
 import { PosGuestLookup } from "./pos-guest-lookup";
 import { PosIncomingOrders } from "./pos-incoming-orders";
@@ -202,13 +203,11 @@ export function TheTill({
   const attachKeys = useRef<Record<string, string>>({});
   const menu = workspace.menus.find((m) => m.id === selectedMenu) ?? workspace.menus[0];
   const currency = workspace.context.currency;
-  const foodItemsOnMenu = new Set(
-    workspace.menus.flatMap((m) => m.categories.flatMap((c) => c.items.map((i) => i.id)))
-  ).size;
-  // An inactive POS and the read-only public demo can have no checkout catalogue
-  // while the public menu remains fully published. Never present that as zero dishes.
-  const publishedMenus = publishedSummary?.menus ?? (workspace.context.enabled ? workspace.menus.length : null);
-  const publishedDishes = publishedSummary?.dishes ?? (workspace.context.enabled ? foodItemsOnMenu : null);
+  const { menus: publishedMenus, dishes: publishedDishes } = resolvePosDisplayTotals(
+    workspace.context.enabled,
+    workspace.menus,
+    publishedSummary
+  );
   const dishes = useMemo(
     () =>
       menu?.categories

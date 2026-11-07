@@ -126,6 +126,27 @@ const openPalette = async (page: Page) => {
 test.describe("desktop shell", () => {
   test.skip(({ isMobile }) => isMobile, "Desktop layout");
 
+  test("deep breadcrumbs link to parent workspaces and secondary screens have full headers", async ({
+    page,
+  }) => {
+    await signIn(page, await seed({ ordering: true }));
+    await page.goto("/dashboard/settings/device");
+    const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+    await expect(crumbs.getByRole("link", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/dashboard/settings"
+    );
+    await expect(crumbs.getByText("Device & app", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your app, your device." })).toBeVisible();
+
+    await page.goto("/dashboard/pos/fiscal");
+    await expect(crumbs.getByRole("link", { name: "Point of Sale" })).toHaveAttribute(
+      "href",
+      "/dashboard/pos"
+    );
+    await expect(page.getByRole("heading", { name: "India GST draft review" })).toBeVisible();
+  });
+
   test("the sidebar is grouped and unavailable items collapse into Add-ons", async ({ page }) => {
     await signIn(page, await seed({ ordering: true }));
     const nav = page.getByRole("navigation", { name: "Workspace" });
@@ -329,6 +350,29 @@ test.describe("desktop shell", () => {
 
 test.describe("phone shell", () => {
   test.skip(({ isMobile }) => !isMobile, "Phone layout");
+
+  test("secondary workspaces fit narrow screens without hiding their navigation", async ({
+    page,
+  }) => {
+    await signIn(page, await seed({ ordering: true }));
+    await page.setViewportSize({ width: 320, height: 650 });
+    await page.goto("/account");
+    const scopes = page.getByRole("navigation", { name: "Settings areas" });
+    await expect(scopes.getByRole("link")).toHaveCount(3);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+    await page.goto("/dashboard/settings/device");
+    await expect(page.getByRole("heading", { name: "Your app, your device." })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+    await page.goto("/dashboard/reviews");
+    await expect(page.getByRole("heading", { name: "Reviews, thoughtfully handled." })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+  });
 
   test("a bottom bar replaces the sidebar links, and More holds the rest", async ({ page }) => {
     test.setTimeout(90_000);
