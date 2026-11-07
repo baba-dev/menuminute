@@ -33,8 +33,8 @@ export default async function GuestsPage() {
         <div className="guests-empty">
           <h2>Guest directory unavailable</h2>
           <p>
-            Guest CRM requires an eligible plan and permission to view orders for this outlet.
-            If your restaurant already has access, ask an owner to review your outlet role.
+            Guest CRM requires an eligible plan and permission to view orders for this outlet. If
+            your restaurant already has access, ask an owner to review your outlet role.
           </p>
           <div className="guests-access-actions">
             <Link href="/dashboard/organization">Review team access</Link>

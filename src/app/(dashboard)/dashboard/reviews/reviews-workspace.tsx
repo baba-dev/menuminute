@@ -64,7 +64,8 @@ export function ReviewsWorkspace({
 
   const pending = items?.filter((review) => review.commentStatus === "pending") ?? [];
   const rest = items?.filter((review) => review.commentStatus !== "pending") ?? [];
-  const publishedCount = items?.filter((review) => review.commentStatus === "published").length ?? 0;
+  const publishedCount =
+    items?.filter((review) => review.commentStatus === "published").length ?? 0;
 
   function reviewRow(review: StaffReview) {
     return (
@@ -166,8 +167,8 @@ export function ReviewsWorkspace({
           <span className="rr-eyebrow">GUEST VOICES / {outletName}</span>
           <h1>Reviews, thoughtfully handled.</h1>
           <p>
-            Celebrate feedback, moderate written comments and keep ratings trustworthy.
-            Only guests who ordered can leave a rating.
+            Celebrate feedback, moderate written comments and keep ratings trustworthy. Only guests
+            who ordered can leave a rating.
           </p>
         </div>
         <div className="rr-hero-art" aria-hidden="true">
@@ -202,15 +203,23 @@ export function ReviewsWorkspace({
             </button>
           </div>
         )}
-        {notice && <p className="rr-notice" role="status">{notice}</p>}
-        {items === null && !error && <p className="rr-empty" role="status">Loading guest reviews…</p>}
+        {notice && (
+          <p className="rr-notice" role="status">
+            {notice}
+          </p>
+        )}
+        {items === null && !error && (
+          <p className="rr-empty" role="status">
+            Loading guest reviews…
+          </p>
+        )}
         {items && items.length === 0 && (
           <section className="rr-empty" aria-label="No reviews">
             <Star size={30} aria-hidden="true" />
             <h2>Your first review starts with a served order.</h2>
             <p>
-              Once a guest rates a dish, you can review comments here. Ratings appear publicly
-              after the minimum review threshold is reached.
+              Once a guest rates a dish, you can review comments here. Ratings appear publicly after
+              the minimum review threshold is reached.
             </p>
           </section>
         )}

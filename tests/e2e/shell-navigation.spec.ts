@@ -368,7 +368,9 @@ test.describe("phone shell", () => {
       true
     );
     await page.goto("/dashboard/reviews");
-    await expect(page.getByRole("heading", { name: "Reviews, thoughtfully handled." })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Reviews, thoughtfully handled." })
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true
     );

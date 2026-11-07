@@ -720,19 +720,31 @@ export function TheTill({
               <BookOpenText aria-hidden="true" />
               <span>Published menus</span>
               <strong>{publishedMenus ?? "—"}</strong>
-              <small>{publishedMenus === null ? "Menu totals unavailable for this role" : "Live menus in this outlet"}</small>
+              <small>
+                {publishedMenus === null
+                  ? "Menu totals unavailable for this role"
+                  : "Live menus in this outlet"}
+              </small>
             </div>
             <div className="pos-metric">
               <Utensils aria-hidden="true" />
               <span>Food Items on Menu</span>
               <strong>{publishedDishes ?? "—"}</strong>
-              <small>{publishedDishes === null ? "Menu totals unavailable for this role" : "Unique published dishes"}</small>
+              <small>
+                {publishedDishes === null
+                  ? "Menu totals unavailable for this role"
+                  : "Unique published dishes"}
+              </small>
             </div>
             <div className="pos-metric">
               <ClipboardList aria-hidden="true" />
               <span>Total Orders Today</span>
               <strong>{workspace.context.enabled ? workspace.kpis.totalOrders : "—"}</strong>
-              <small>{workspace.context.enabled ? "All channels · Including pending and cancelled" : "Available after POS activation"}</small>
+              <small>
+                {workspace.context.enabled
+                  ? "All channels · Including pending and cancelled"
+                  : "Available after POS activation"}
+              </small>
             </div>
           </div>
         </section>

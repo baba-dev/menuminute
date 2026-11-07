@@ -19,9 +19,19 @@ const pages: Record<string, string> = {
 };
 
 const nested: readonly { path: string; parent: string; label: string; prefix?: boolean }[] = [
-  { path: "/dashboard/pos/ledger/documents/", parent: "/dashboard/pos/ledger", label: "Document", prefix: true },
+  {
+    path: "/dashboard/pos/ledger/documents/",
+    parent: "/dashboard/pos/ledger",
+    label: "Document",
+    prefix: true,
+  },
   { path: "/dashboard/pos/receipts/", parent: "/dashboard/pos", label: "Receipt", prefix: true },
-  { path: "/dashboard/menu/import/", parent: "/dashboard/menu/import", label: "Review import", prefix: true },
+  {
+    path: "/dashboard/menu/import/",
+    parent: "/dashboard/menu/import",
+    label: "Review import",
+    prefix: true,
+  },
   { path: "/dashboard/pos/ledger", parent: "/dashboard/pos", label: "The Ledger" },
   { path: "/dashboard/pos/closing", parent: "/dashboard/pos", label: "Closing Desk" },
   { path: "/dashboard/pos/fiscal", parent: "/dashboard/pos", label: "GST draft review" },
