@@ -1598,6 +1598,20 @@
   }
 }
 
+/* Keep full page names on desktop; phone widths get intentional short labels
+   instead of truncating text such as "Restaurant overvi…". */
+.mm-dashboard-page-short {
+  display: none;
+}
+@media (max-width: 680px) {
+  .mm-dashboard-page-full {
+    display: none;
+  }
+  .mm-dashboard-page-short {
+    display: inline;
+  }
+}
+
 /* Mobile shell: navigation lives in the bottom bar and More sheet.
    Keep the current page and essential actions on one line; never surface
    the desktop Help footer as an extra row above the workspace. */
