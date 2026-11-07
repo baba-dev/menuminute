@@ -1,8 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isAndroidInstalledClient, printThermalBle } from "@/lib/pos/thermal-ble";
 import type { ThermalPaper, ThermalReceipt } from "@/lib/pos/thermal-receipt";
+
+function subscribeInstalledApp(onChange: () => void) {
+  const standalone = window.matchMedia("(display-mode: standalone)");
+  const fullscreen = window.matchMedia("(display-mode: fullscreen)");
+  standalone.addEventListener?.("change", onChange);
+  fullscreen.addEventListener?.("change", onChange);
+  window.addEventListener("appinstalled", onChange);
+  return () => {
+    standalone.removeEventListener?.("change", onChange);
+    fullscreen.removeEventListener?.("change", onChange);
+    window.removeEventListener("appinstalled", onChange);
+  };
+}
+
+function getInstalledEnvironment(): "ble" | "browser" {
+  return isAndroidInstalledClient() ? "ble" : "browser";
+}
+
+function getServerEnvironment(): "checking" {
+  return "checking";
+}
 
 export function ReceiptPrintActions({
   auto,
@@ -14,21 +35,17 @@ export function ReceiptPrintActions({
   receipt: ThermalReceipt;
 }) {
   const triggered = useRef(false);
-  const [environment, setEnvironment] = useState<"checking" | "ble" | "browser">("checking");
+  const environment = useSyncExternalStore(
+    subscribeInstalledApp,
+    getInstalledEnvironment,
+    getServerEnvironment
+  );
   const [printing, setPrinting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setEnvironment(isAndroidInstalledClient() ? "ble" : "browser");
-  }, []);
-
-  useEffect(() => {
-    if (!auto || triggered.current || environment === "checking") return;
+    if (!auto || triggered.current || environment !== "browser") return;
     triggered.current = true;
-    if (environment === "ble") {
-      setMessage("Tap Print thermal receipt to choose a Bluetooth LE printer.");
-      return;
-    }
     const id = window.setTimeout(() => window.print(), 300);
     return () => window.clearTimeout(id);
   }, [auto, environment]);
@@ -51,6 +68,12 @@ export function ReceiptPrintActions({
     }
   }
 
+  const status =
+    message ??
+    (auto && environment === "ble"
+      ? "Tap Print thermal receipt to choose a Bluetooth LE printer."
+      : null);
+
   return (
     <div className="receipt-print-actions">
       {environment === "ble" && (
@@ -66,7 +89,7 @@ export function ReceiptPrintActions({
       <button type="button" onClick={() => window.print()} className="receipt-print-button">
         Print / save PDF
       </button>
-      {message && <p role="status">{message}</p>}
+      {status && <p role="status">{status}</p>}
     </div>
   );
 }
