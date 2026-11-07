@@ -5,9 +5,7 @@ export function matchesInstalledAppContext(input: {
   referrer: string;
 }): boolean {
   const twaOrigin = "android-app://com.bababuilds.menuminute";
-  const twa =
-    input.referrer === twaOrigin ||
-    input.referrer.startsWith(twaOrigin + "/");
+  const twa = input.referrer === twaOrigin || input.referrer.startsWith(twaOrigin + "/");
   return input.standalone || input.fullscreen || input.iosStandalone || twa;
 }
 
