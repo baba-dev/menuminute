@@ -446,8 +446,38 @@ test.describe("phone shell", () => {
       .click();
     await expect(page.getByRole("dialog", { name: "Notifications" })).toBeVisible();
   });
-
 });
+
+// Identify the actual offender rather than hiding layout defects via overflow-x: hidden.
+async function inspectHorizontalOverflow(page: Page) {
+  return page.evaluate(() => {
+    const viewport = document.documentElement.clientWidth;
+    const offenders = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .map((node) => {
+        const bounds = node.getBoundingClientRect();
+        const style = getComputedStyle(node);
+        return {
+          tag: node.tagName.toLowerCase(),
+          className: typeof node.className === "string" ? node.className.slice(0, 90) : "",
+          right: Math.round(bounds.right),
+          left: Math.round(bounds.left),
+          width: Math.round(bounds.width),
+          position: style.position,
+          overflowX: style.overflowX,
+        };
+      })
+      .filter((item) => item.width > 0 && item.right > viewport + 1)
+      .sort((a, b) => b.right - a.right)
+      .slice(0, 18);
+    return {
+      viewport,
+      scrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      mainScrollWidth: document.querySelector("#workspace-main")?.scrollWidth ?? 0,
+      offenders,
+    };
+  });
+}
 
 // These tests explicitly set phone viewport widths and run in desktop Chromium too.
 // CI currently shards only the chromium project, not Mobile Chrome.
@@ -472,12 +502,11 @@ test.describe("responsive workspace regression", () => {
       const bounds = await topbar.boundingBox();
       expect(bounds, "topbar at " + size.width).not.toBeNull();
       expect(bounds!.height, "one-row topbar at " + size.width).toBeLessThanOrEqual(72);
+      const overflow = await inspectHorizontalOverflow(page);
       expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
-        ),
-        "no horizontal document scroll at " + size.width
-      ).toBe(true);
+        overflow.scrollWidth,
+        "no horizontal document scroll at " + size.width + ": " + JSON.stringify(overflow)
+      ).toBeLessThanOrEqual(overflow.viewport + 1);
       const more = nav.getByRole("button", { name: "More" });
       const hitArea = await more.boundingBox();
       expect(hitArea!.width).toBeGreaterThanOrEqual(44);
@@ -535,12 +564,11 @@ test.describe("responsive workspace regression", () => {
       expect(rect, route + " heading bounds").not.toBeNull();
       expect(rect!.x, route + " left edge").toBeGreaterThanOrEqual(-1);
       expect(rect!.x + rect!.width, route + " right edge").toBeLessThanOrEqual(392);
+      const overflow = await inspectHorizontalOverflow(page);
       expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
-        ),
-        route + " has no document overflow"
-      ).toBe(true);
+        overflow.scrollWidth,
+        route + " has no document overflow: " + JSON.stringify(overflow)
+      ).toBeLessThanOrEqual(overflow.viewport + 1);
       if (captures.has(route)) {
         const name =
           route === "/dashboard" ? "dashboard" : route.replace(/^\//, "").replace(/\//g, "-");
@@ -574,12 +602,11 @@ test.describe("responsive workspace regression", () => {
       ]) {
         await page.goto(route);
         await expect(page.locator(".mm-shared-topbar")).toBeVisible();
+        const overflow = await inspectHorizontalOverflow(page);
         expect(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
-          ),
-          route + " overflow at " + width
-        ).toBe(true);
+          overflow.scrollWidth,
+          route + " overflow at " + width + ": " + JSON.stringify(overflow)
+        ).toBeLessThanOrEqual(overflow.viewport + 1);
       }
     }
   });
