@@ -132,7 +132,7 @@ export function encodeThermalReceipt(receipt: ThermalReceipt, paper: ThermalPape
     ["Table", receipt.table],
     ["Payment", receipt.paymentStatus],
     ["Method", receipt.paymentMethod],
-  ]) {
+  ] as const) {
     if (value) for (const s of pair(label, value, width)) draw(s);
   }
   draw(separator);
