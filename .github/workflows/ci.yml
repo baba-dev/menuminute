@@ -576,11 +576,37 @@ jobs:
       - name: Analyze repository
         uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
 
+  android_twa:
+    name: Android API 36 TWA build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - name: Install Android 16 platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - name: Build debug APK and unsigned release bundle
+        working-directory: android
+        run: gradle --no-daemon --stacktrace :app:assembleDebug :app:bundleRelease
+      - name: Verify packages exist without declaring store readiness
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          test -s android/app/build/outputs/bundle/release/app-release.aab
+
   gate:
     name: Required CI quality gate
     if: always()
     # Packaging, every browser shard and the evidence/promotion job are all mandatory lanes here.
-    needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security]
+    needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security, android_twa]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -594,9 +620,10 @@ jobs:
           EVIDENCE: ${{ needs.evidence.result }}
           EMBER_BROWSER: ${{ needs.ember_browser.result }}
           SECURITY: ${{ needs.security.result }}
+          ANDROID_TWA: ${{ needs.android_twa.result }}
         run: |
           set -euo pipefail
-          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$E2E" "$EVIDENCE" "$EMBER_BROWSER" "$SECURITY"; do
+          for result in "$QUALITY" "$TYPECHECK" "$TEST" "$BUILD" "$E2E" "$EVIDENCE" "$EMBER_BROWSER" "$SECURITY" "$ANDROID_TWA"; do
             test "$result" = success || { echo "::error::Mandatory lane did not pass: $result"; exit 1; }
           done
           echo "All six lanes (including isolated Ember browser and security) passed on $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

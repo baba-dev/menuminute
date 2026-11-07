@@ -35,9 +35,11 @@ async function loadCheckoutScript(): Promise<void> {
 export function BillingConsole({
   view,
   organizationId,
+  playClient,
 }: {
   view: BillingPageView;
   organizationId: string;
+  playClient: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<Paid | null>(null);
@@ -169,6 +171,8 @@ export function BillingConsole({
         : "Active";
 
   const renderAction = (card: LadderCard, size: "lg" | "md" = "md") => {
+    // Google Play's consumption-only distribution must never surface a digital checkout.
+    if (playClient) return null;
     if (card.action?.kind === "checkout") {
       const plan = card.action.plan;
       const working = busy === plan;
@@ -211,8 +215,10 @@ export function BillingConsole({
           <span className="bp-eyebrow">BILLING &amp; PLAN</span>
           <h1>Your plan, in one place.</h1>
           <p>
-            {view.organizationName} · See your limits, your billing cycle and what the next plan
-            unlocks.
+            {view.organizationName} · See your current plan, usage and billing cycle.
+            {playClient
+              ? " Purchases are not offered in the Android app."
+              : " Explore available upgrades."}
           </p>
         </div>
         <div className="bp-hero-plan" aria-label="Current plan">
@@ -224,25 +230,27 @@ export function BillingConsole({
         </div>
       </header>
 
-      {view.notices.map((notice) => (
-        <div
-          key={notice.key}
-          className="bp-banner"
-          data-tone={notice.tone}
-          role={notice.tone === "alert" ? "alert" : "status"}
-        >
-          <div>
-            <strong>{notice.title}</strong>
-            <span>{notice.body}</span>
+      {view.notices
+        .filter((entry) => !playClient || !entry.action)
+        .map((notice) => (
+          <div
+            key={notice.key}
+            className="bp-banner"
+            data-tone={notice.tone}
+            role={notice.tone === "alert" ? "alert" : "status"}
+          >
+            <div>
+              <strong>{notice.title}</strong>
+              <span>{notice.body}</span>
+            </div>
+            {notice.action && (
+              <Link href={notice.action.href} className="bp-btn bp-btn--quiet">
+                {notice.action.label}
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            )}
           </div>
-          {notice.action && (
-            <Link href={notice.action.href} className="bp-btn bp-btn--quiet">
-              {notice.action.label}
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          )}
-        </div>
-      ))}
+        ))}
 
       <div className="bp-messages" aria-live="polite">
         {notice && (
@@ -322,96 +330,100 @@ export function BillingConsole({
           )}
         </article>
 
-        <article className="bp-tile bp-tile--accent bp-span-5" aria-labelledby="bp-next-title">
-          {view.next ? (
-            <>
-              <span className="bp-label" id="bp-next-title">
-                {view.next.mode === "keep" ? "Keep after your trial" : "Unlock next"}
-              </span>
-              <div className="bp-next-head">
-                <p className="bp-name">{view.next.label}</p>
-                <p className="bp-price">
-                  <strong>{view.next.price.label}</strong>
-                  <span>{view.next.price.note}</span>
+        {!playClient && (
+          <article className="bp-tile bp-tile--accent bp-span-5" aria-labelledby="bp-next-title">
+            {view.next ? (
+              <>
+                <span className="bp-label" id="bp-next-title">
+                  {view.next.mode === "keep" ? "Keep after your trial" : "Unlock next"}
+                </span>
+                <div className="bp-next-head">
+                  <p className="bp-name">{view.next.label}</p>
+                  <p className="bp-price">
+                    <strong>{view.next.price.label}</strong>
+                    <span>{view.next.price.note}</span>
+                  </p>
+                </div>
+                <p className="bp-muted">{view.next.tagline}</p>
+                <ul className="bp-benefits">
+                  {view.next.benefits.map((b) => (
+                    <li key={b.key}>
+                      <span>{b.label}</span>
+                      <span className="bp-benefit-values">
+                        <span className="bp-from">{b.from}</span>
+                        <ArrowRight size={13} aria-hidden="true" />
+                        <span className="bp-sr">to </span>
+                        <strong>{b.to}</strong>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {nextCard && <div className="bp-action">{renderAction(nextCard, "lg")}</div>}
+              </>
+            ) : (
+              <>
+                <span className="bp-label" id="bp-next-title">
+                  Top plan
+                </span>
+                <p className="bp-name">Everything is unlocked</p>
+                <p className="bp-muted">
+                  You are on our most complete plan. Thank you for building with MenuMinute.
                 </p>
-              </div>
-              <p className="bp-muted">{view.next.tagline}</p>
-              <ul className="bp-benefits">
-                {view.next.benefits.map((b) => (
-                  <li key={b.key}>
-                    <span>{b.label}</span>
-                    <span className="bp-benefit-values">
-                      <span className="bp-from">{b.from}</span>
-                      <ArrowRight size={13} aria-hidden="true" />
-                      <span className="bp-sr">to </span>
-                      <strong>{b.to}</strong>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {nextCard && <div className="bp-action">{renderAction(nextCard, "lg")}</div>}
-            </>
-          ) : (
-            <>
-              <span className="bp-label" id="bp-next-title">
-                Top plan
-              </span>
-              <p className="bp-name">Everything is unlocked</p>
-              <p className="bp-muted">
-                You are on our most complete plan. Thank you for building with MenuMinute.
-              </p>
-            </>
-          )}
-        </article>
+              </>
+            )}
+          </article>
+        )}
       </div>
 
-      <section className="bp-section" aria-labelledby="bp-plans-title">
-        <div className="bp-section-head">
-          <h2 id="bp-plans-title">Choose your plan</h2>
-          <p>Monthly, cancel any time. Your permanent QR menu is always free.</p>
-        </div>
-        <div className="bp-ladder">
-          {view.ladder.map((card) => (
-            <article
-              key={card.key}
-              id={`bp-plan-${card.key}`}
-              className="bp-plan-card"
-              data-state={card.state}
-              data-focus={view.focus === card.key ? "true" : undefined}
-              aria-label={`${card.label} plan`}
-            >
-              <header>
-                <h3>{card.label}</h3>
-                {card.state === "current" && (
-                  <span className="bp-chip bp-chip--ink">Current plan</span>
-                )}
-              </header>
-              <p className="bp-price">
-                <strong>{card.price.label}</strong>
-                <span>{card.price.note}</span>
-              </p>
-              {card.price.detail && <p className="bp-price-detail">{card.price.detail}</p>}
-              <p className="bp-muted">{card.tagline}</p>
-              <ul className="bp-checks">
-                {card.highlights.map((h) => (
-                  <li key={h}>
-                    <Check size={15} aria-hidden="true" />
-                    {h}
-                  </li>
-                ))}
-              </ul>
-              <div className="bp-action">
-                {card.state === "lower" ? (
-                  <p className="bp-note">Included in your plan</p>
-                ) : (
-                  renderAction(card)
-                )}
-                {card.switchNote && <p className="bp-note bp-note--switch">{card.switchNote}</p>}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      {!playClient && (
+        <section className="bp-section" aria-labelledby="bp-plans-title">
+          <div className="bp-section-head">
+            <h2 id="bp-plans-title">Choose your plan</h2>
+            <p>Monthly, cancel any time. Your permanent QR menu is always free.</p>
+          </div>
+          <div className="bp-ladder">
+            {view.ladder.map((card) => (
+              <article
+                key={card.key}
+                id={`bp-plan-${card.key}`}
+                className="bp-plan-card"
+                data-state={card.state}
+                data-focus={view.focus === card.key ? "true" : undefined}
+                aria-label={`${card.label} plan`}
+              >
+                <header>
+                  <h3>{card.label}</h3>
+                  {card.state === "current" && (
+                    <span className="bp-chip bp-chip--ink">Current plan</span>
+                  )}
+                </header>
+                <p className="bp-price">
+                  <strong>{card.price.label}</strong>
+                  <span>{card.price.note}</span>
+                </p>
+                {card.price.detail && <p className="bp-price-detail">{card.price.detail}</p>}
+                <p className="bp-muted">{card.tagline}</p>
+                <ul className="bp-checks">
+                  {card.highlights.map((h) => (
+                    <li key={h}>
+                      <Check size={15} aria-hidden="true" />
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+                <div className="bp-action">
+                  {card.state === "lower" ? (
+                    <p className="bp-note">Included in your plan</p>
+                  ) : (
+                    renderAction(card)
+                  )}
+                  {card.switchNote && <p className="bp-note bp-note--switch">{card.switchNote}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="bp-grid">
         <article className="bp-tile bp-span-7" aria-labelledby="bp-subs-title">
@@ -480,8 +492,9 @@ export function BillingConsole({
             Payments &amp; invoices
           </span>
           <p className="bp-muted">
-            You pick how to pay inside the secure checkout. Card numbers go straight to our payment
-            provider and never touch MenuMinute.
+            {playClient
+              ? "Your existing subscription remains usable here. This Android app does not sell digital subscriptions."
+              : "You pick how to pay inside the secure checkout. Card numbers go straight to our payment provider and never touch MenuMinute."}
           </p>
           <p className="bp-muted">
             GST invoices are not available here yet. We will show them on this page as soon as

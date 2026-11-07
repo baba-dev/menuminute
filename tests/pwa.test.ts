@@ -69,7 +69,7 @@ describe("PWA install metadata", () => {
     expect(value).toMatchObject({
       id: "/",
       short_name: "MenuMinute",
-      start_url: "/?source=pwa",
+      start_url: "/app",
       scope: "/",
       display: "standalone",
       theme_color: "#f97316",

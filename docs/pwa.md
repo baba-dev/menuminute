@@ -27,7 +27,7 @@ return a previous enrolled response, which the guest notice labels as potentiall
 
 ## Phase B — install assets
 
-`src/app/manifest.ts` owns the standalone manifest. Install PNGs are deterministic exports of the
+`src/app/manifest.ts` owns the standalone manifest. Its start URL is `/app`, a server-only, network-only merchant entry that redirects a signed-out user to `/login?next=%2Fapp`, an existing merchant to `/dashboard`, and a signed-in user without an outlet to `/start`. This does not alter public menu/QR entry points or offline cache policy. Install PNGs are deterministic exports of the
 approved `public/brand/icons/icon-master.svg`. The maskable and Apple icons use an opaque brand-orange
 background; the maskable mark is inset inside the safe zone. The SVG favicon remains the browser-tab
 asset and is not advertised as the install icon.

@@ -21,7 +21,7 @@ test.describe("Progressive Web App", () => {
       short_name: "MenuMinute",
       display: "standalone",
       scope: "/",
-      start_url: "/?source=pwa",
+      start_url: "/app",
     });
 
     for (const icon of manifest.icons as Array<{ src: string }>) {
@@ -41,6 +41,12 @@ test.describe("Progressive Web App", () => {
       return registration.scope;
     });
     expect(new URL(scope).pathname).toBe("/");
+  });
+
+  test("installed app entry directs signed-out merchants to login", async ({ page }) => {
+    await page.goto("/app");
+    await expect(page).toHaveURL(/\/login\?next=%2Fapp/);
+    await expect(page.getByLabel("Email address")).toBeVisible();
   });
 
   test("push registration is private, no-store and cannot bypass a guest session", async ({

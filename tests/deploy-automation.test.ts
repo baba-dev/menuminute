@@ -11,10 +11,12 @@ describe("provenance-bound main-only production delivery", () => {
   it("parallelizes six mandatory CI lanes and fails closed at the final gate", () => {
     expect(ci).toContain("Required CI quality gate");
     expect(ci).toContain(
-      "needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security]"
+      "needs: [quality, typecheck, test, build, e2e, evidence, ember_browser, security, android_twa]"
     );
     expect(ci).toContain('test "$result" = success');
     expect(ci).toContain("Ember Enabled Browser (ARM64)");
+    expect(ci).toContain("Android API 36 TWA build");
+    expect(ci).toContain("ANDROID_TWA: ${{ needs.android_twa.result }}");
     expect(ci).toContain("Dependency, Secret & Code Scanning");
     expect(ci).toContain("pnpm audit --audit-level high");
     expect(ci).toContain("github/codeql-action/analyze@");

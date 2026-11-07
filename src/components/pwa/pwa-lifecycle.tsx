@@ -7,6 +7,7 @@ import {
   subscribeOnlineStatus,
 } from "@/lib/pwa/connectivity";
 import styles from "./pwa-lifecycle.module.css";
+import { isInstalledAppClient } from "@/lib/pwa/installed";
 
 const INSTALL_DISMISSED_AT = "menuminute:pwa-install-dismissed-at";
 const INSTALL_DISMISS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -17,10 +18,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
-  );
+  return isInstalledAppClient();
 }
 
 function isIos() {

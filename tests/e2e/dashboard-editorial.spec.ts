@@ -84,6 +84,7 @@ async function seedPublishedOutlet(publish = true) {
 
 test("private editorial dashboard renders real KPIs, tooltips and responsive artwork", async ({
   page,
+  isMobile,
 }, info) => {
   test.setTimeout(90000);
   const owner = await seedPublishedOutlet();
@@ -102,8 +103,21 @@ test("private editorial dashboard renders real KPIs, tooltips and responsive art
   );
   await expect(page.getByText("Guest-visible releases")).toBeVisible();
   await expect(page.getByText("Published and visible")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Public menu" })).toBeVisible();
-  const publicHref = await page.getByRole("link", { name: "Public menu" }).getAttribute("href");
+  // #335 intentionally moves the public link into the mobile More sheet. Assert the
+  // visible control on the active viewport instead of a hidden desktop-only link.
+  let publicHref: string | null;
+  if (isMobile) {
+    await page.getByRole("button", { name: "More", exact: true }).click();
+    const more = page.getByRole("dialog", { name: "More" });
+    const link = more.getByRole("link", { name: "Public menu (new tab)" });
+    await expect(link).toBeVisible();
+    publicHref = await link.getAttribute("href");
+    await more.getByRole("button", { name: "Close More" }).click();
+  } else {
+    const link = page.getByRole("link", { name: "Public menu" });
+    await expect(link).toBeVisible();
+    publicHref = await link.getAttribute("href");
+  }
   expect(publicHref).toBeTruthy();
   await page.getByRole("button", { name: "Dish Availability" }).click();
   const dialog = page.getByRole("dialog", { name: "Dish Availability" });
@@ -189,7 +203,10 @@ test("editorial assets resolve with correct media types", async ({ request }) =>
   }
 });
 
-test("an outlet with an unpublished draft receives honest next-step guidance", async ({ page }) => {
+test("an outlet with an unpublished draft receives honest next-step guidance", async ({
+  page,
+  isMobile,
+}) => {
   const owner = await seedPublishedOutlet(false);
   await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
   await page.goto("/login");
@@ -197,7 +214,16 @@ test("an outlet with an unpublished draft receives honest next-step guidance", a
   await page.getByLabel("Password", { exact: true }).fill(owner.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByTestId("editorial-dashboard")).toBeVisible();
-  await expect(page.getByText("Public menu unavailable")).toBeVisible();
+  // Mobile hides the desktop topbar preview by design; its state must still be correct.
+  await expect(page.locator(".mm-dashboard-preview--unavailable")).toHaveText(
+    "Public menu unavailable"
+  );
+  if (isMobile) {
+    await page.getByRole("button", { name: "More", exact: true }).click();
+    const more = page.getByRole("dialog", { name: "More" });
+    await expect(more.getByRole("link", { name: "Public menu (new tab)" })).toHaveCount(0);
+    await more.getByRole("button", { name: "Close More" }).click();
+  }
   await expect(page.getByText("Continue your saved menu")).toBeVisible();
   await expect(page.getByText("Not live", { exact: true })).toBeVisible();
   await expect(page.getByText("1 menu has unpublished changes.")).toBeVisible();
