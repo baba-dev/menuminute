@@ -27,6 +27,17 @@ const labels: Record<string, string> = {
   "/billing": "Billing & plan",
   "/account": "My account",
 };
+const compactLabels: Record<string, string> = {
+  "Restaurant overview": "Overview",
+  "Service Counter": "Orders",
+  "Point of Sale": "POS",
+  "Reports & Insights": "Reports",
+  "Guest reviews": "Reviews",
+  "Billing & plan": "Billing",
+  "My account": "Account",
+  "Dining floor": "Floor",
+};
+
 export function WorkspaceTopbar({
   userName,
   publicHref,
@@ -45,17 +56,7 @@ export function WorkspaceTopbar({
       ([path]) => path !== "/dashboard" && pathname.startsWith(path + "/")
     )?.[1] ??
     "Workspace";
-  const compactLabel =
-    {
-      "Restaurant overview": "Overview",
-      "Service Counter": "Orders",
-      "Point of Sale": "POS",
-      "Reports & Insights": "Reports",
-      "Guest reviews": "Reviews",
-      "Billing & plan": "Billing",
-      "My account": "Account",
-      "Dining floor": "Floor",
-    }[label] ?? label;
+  const compactLabel = compactLabels[label] ?? label;
   const initials = userName
     .trim()
     .split(/\s+/)
