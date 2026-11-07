@@ -1,4 +1,5 @@
 import { encodeThermalReceipt, type ThermalPaper, type ThermalReceipt } from "./thermal-receipt";
+import { isInstalledAppClient } from "@/lib/pwa/installed";
 
 // Browser-native Web Bluetooth speaks BLE GATT only. Bluetooth Classic SPP is
 // deliberately NOT treated as supported and requires a separately tested native bridge.
@@ -45,11 +46,7 @@ export function canUseAndroidThermalBle(
 export function isAndroidInstalledClient(): boolean {
   if (typeof window === "undefined") return false;
   const isAndroid = /Android/i.test(navigator.userAgent);
-  const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches;
-  const twa = document.referrer.startsWith("android-app://com.bababuilds.menuminute");
-  return canUseAndroidThermalBle(isAndroid, standalone || twa, "bluetooth" in navigator);
+  return canUseAndroidThermalBle(isAndroid, isInstalledAppClient(), "bluetooth" in navigator);
 }
 
 export async function printThermalBle(receipt: ThermalReceipt, paper: ThermalPaper): Promise<void> {

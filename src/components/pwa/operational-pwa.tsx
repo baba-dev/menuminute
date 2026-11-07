@@ -7,22 +7,23 @@ import {
   subscribeOnlineStatus,
 } from "@/lib/pwa/connectivity";
 import styles from "./operational-pwa.module.css";
+import { isInstalledAppClient } from "@/lib/pwa/installed";
 
 function subscribeStandalone(onStoreChange: () => void) {
   const displayMode = window.matchMedia("(display-mode: standalone)");
+  const fullScreenMode = window.matchMedia("(display-mode: fullscreen)");
   displayMode.addEventListener?.("change", onStoreChange);
+  fullScreenMode.addEventListener?.("change", onStoreChange);
   window.addEventListener("appinstalled", onStoreChange);
   return () => {
     displayMode.removeEventListener?.("change", onStoreChange);
+    fullScreenMode.removeEventListener?.("change", onStoreChange);
     window.removeEventListener("appinstalled", onStoreChange);
   };
 }
 
 function getStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
-  );
+  return isInstalledAppClient();
 }
 
 export function OperationalPwa({ workspace }: { workspace: "POS" | "Kitchen" }) {

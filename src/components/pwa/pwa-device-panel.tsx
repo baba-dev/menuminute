@@ -18,6 +18,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import styles from "./pwa-device-panel.module.css";
+import { isInstalledAppClient } from "@/lib/pwa/installed";
 
 type ServerState = {
   enabled: boolean;
@@ -90,10 +91,7 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
       if (!response.ok) throw new Error("Could not verify your outlet permissions.");
       const state = (await response.json()) as ServerState;
       setRemote(state);
-      const standalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-      setInstalled(standalone);
+      setInstalled(isInstalledAppClient());
       setPermission("Notification" in window ? Notification.permission : "unsupported");
       const reg =
         "serviceWorker" in navigator
