@@ -79,6 +79,16 @@ describe("AI dish autofill is always a merchant-reviewed, unverified draft sugge
       candidate
     );
   });
+  it("accepts the fifth spice level but rejects out-of-range AI suggestions", () => {
+    const extreme = { ...candidate, culinary: { ...candidate.culinary, spiceLevel: 5 } };
+    expect(dishAutofillSuggestionSchema.parse(extreme).culinary.spiceLevel).toBe(5);
+    expect(() =>
+      dishAutofillSuggestionSchema.parse({
+        ...extreme,
+        culinary: { ...extreme.culinary, spiceLevel: 6 },
+      })
+    ).toThrow();
+  });
   it("fills missing fields without replacing existing merchant descriptions or nutrition", () => {
     const unverifiedDish = dishSchema.parse({
       ...dish,

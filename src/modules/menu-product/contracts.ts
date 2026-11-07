@@ -75,7 +75,7 @@ export type DishNutrition = z.infer<typeof nutritionSchema>;
 
 export const culinaryProfileSchema = z
   .object({
-    spiceLevel: z.number().int().min(0).max(4).default(0),
+    spiceLevel: z.number().int().min(0).max(5).default(0),
     flavorNotes: z.array(z.string().trim().min(1).max(30)).max(6).default([]),
     chefNote: z.string().trim().max(300).optional(),
     servingTemp: z.enum(["hot", "chilled", "ambient"]).optional(),

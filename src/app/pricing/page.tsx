@@ -7,6 +7,9 @@ import { planLadder, type PlanOffer } from "@/modules/plans/offer";
 import type { BillingCurrency } from "@/modules/billing/catalog";
 import { PLAN_LIMITS, type PlanKey } from "@/modules/plans/catalog";
 import { fmt } from "@/modules/plans/view";
+import { planSale, saleFootnote, type SaleFacts, type SaleViewer } from "@/modules/plans/sale";
+import { auth } from "@/lib/auth";
+import { publicSaleFacts } from "@/modules/plans/sale-facts";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
@@ -15,36 +18,29 @@ export const metadata: Metadata = {
     "Free QR menus. Ordering from ₹119/month or $5/month, Kitchen Pro at ₹499/month or $20/month, and private on-premise Dedicated deployment at $3,000 by contract.",
 };
 
-/** Everything below comes from the reviewed plan catalogs, the same ones checkout uses. */
-const CARD: Record<
-  PlanKey,
-  { badge?: string; cta: string; href: string; primary: boolean; blurb: string }
-> = {
+/**
+ * Prices and limits come from the reviewed plan catalogs, the same ones checkout uses. The button on each
+ * card comes from `planSale`, which reads the same switches checkout enforces, so a card never offers a
+ * purchase the deployment cannot complete.
+ */
+const CARD: Record<PlanKey, { badge?: string; primary: boolean; blurb: string }> = {
   free: {
-    cta: "Get started free",
-    href: "/register",
     primary: false,
     blurb: "Everything needed to publish a beautiful, permanent restaurant QR menu.",
   },
   ordering: {
     badge: "Most popular",
-    cta: "Get Ordering",
-    href: "/register",
     primary: true,
     blurb:
       "Let diners order from their phone at the table. Take dine-in and pickup orders, with the counter board and order tracking.",
   },
   kitchen_pro: {
     badge: "For busy kitchens",
-    cta: "Get Kitchen Pro",
-    href: "/register",
     primary: false,
     blurb:
       "Everything in Ordering, plus a kitchen display with station routing, and room for up to ten outlets.",
   },
   dedicated: {
-    cta: "Talk to us about Dedicated",
-    href: "/contact",
     primary: false,
     blurb: "Your own branded app on your own domain, set up with our team. Built around you.",
   },
@@ -87,20 +83,25 @@ const ROWS: { label: string; cell: (plan: PlanKey) => string }[] = [
   },
 ];
 
-function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurrency }) {
+function PlanCard({
+  offer,
+  currency,
+  facts,
+  viewer,
+}: {
+  offer: PlanOffer;
+  currency: BillingCurrency;
+  facts: SaleFacts;
+  viewer: SaleViewer;
+}) {
   const card = CARD[offer.key];
-  const usdInterest =
-    currency === "USD" && (offer.key === "ordering" || offer.key === "kitchen_pro");
   const isPrivateDeployment = currency === "USD" && offer.key === "dedicated";
-  const actionHref = usdInterest ? "/contact" : card.href;
-  const actionText = isPrivateDeployment
-    ? "Discuss private deployment"
-    : usdInterest
-      ? "Ask about USD billing"
-      : card.cta;
+  const sale = planSale(offer.key, currency, facts, viewer);
   const primary = card.primary;
   return (
     <div
+      data-plan={offer.key}
+      data-sale-state={sale.state}
       className={`relative flex flex-col justify-between rounded-2xl p-7 transition-shadow ${
         primary
           ? "bg-brand-600 ring-brand-600 text-white shadow-xl ring-2 dark:bg-orange-600 dark:ring-orange-600"
@@ -160,15 +161,23 @@ function PlanCard({ offer, currency }: { offer: PlanOffer; currency: BillingCurr
       </div>
       <div className="mt-8 pt-4">
         <Link
-          href={actionHref}
+          href={sale.href}
+          data-sale-cta={sale.state}
           className={`block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md transition-colors ${
             primary
               ? "text-brand-700 bg-white hover:bg-stone-100 dark:bg-stone-900 dark:text-white dark:hover:bg-stone-800"
               : "bg-brand-600 hover:bg-brand-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
           }`}
         >
-          {actionText}
+          {sale.label}
         </Link>
+        {sale.note && (
+          <p
+            className={`mt-3 text-center text-xs leading-relaxed ${primary ? "text-orange-100" : "text-muted-foreground"}`}
+          >
+            {sale.note}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -182,6 +191,13 @@ export default async function PricingPage({
   const query = await searchParams;
   const currency: BillingCurrency = query.currency === "USD" ? "USD" : "INR";
   const plans = planLadder({ currency });
+  const facts = publicSaleFacts();
+  // A lookup failure must never break a public page; anonymous links also work for signed-in visitors.
+  const viewer: SaleViewer = {
+    signedIn: await auth()
+      .then((session) => Boolean(session?.user.id))
+      .catch(() => false),
+  };
   return (
     <div className="bg-background text-foreground min-h-screen transition-colors">
       <MarketingSubpageNav />
@@ -224,7 +240,13 @@ export default async function PricingPage({
 
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((offer) => (
-            <PlanCard key={offer.key} offer={offer} currency={currency} />
+            <PlanCard
+              key={offer.key}
+              offer={offer}
+              currency={currency}
+              facts={facts}
+              viewer={viewer}
+            />
           ))}
         </div>
 
@@ -233,10 +255,7 @@ export default async function PricingPage({
           <Link href="/billing" className="text-foreground font-semibold underline">
             Manage your plan in billing
           </Link>
-          .{" "}
-          {currency === "USD"
-            ? "USD plans are published for international enquiries. USD checkout is not yet active; no USD card charges can be initiated from this page."
-            : "Current self-service checkout charges in INR. USD plan requests are available in the USD tab."}
+          . {saleFootnote(currency, facts)}
         </p>
 
         <section className="mx-auto mt-20 max-w-6xl" aria-labelledby="compare-heading">

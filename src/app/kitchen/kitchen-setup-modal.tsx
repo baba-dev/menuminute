@@ -206,7 +206,7 @@ export function KitchenSetupModal({
             <Dialog.Title className="kk-setup-title">Build your kitchen, beautifully.</Dialog.Title>
             <Dialog.Description id="kk-setup-description" className="kk-setup-description">
               Three simple steps to get {outletName} ready for its first ticket. Set up freely;
-              Kitchen Pro sales activation remains separately approved.
+              orders only start routing here once Kitchen Pro is active for this outlet.
             </Dialog.Description>
             <div className="kk-setup-spark" aria-hidden="true">
               <ChefHat size={69} strokeWidth={1.2} />
@@ -602,7 +602,7 @@ export function KitchenSetupModal({
                     <ShieldCheck size={21} />
                     <span>
                       Setup is not activation. Your existing order board stays authoritative until
-                      an approved Kitchen Pro pilot or commercial launch.
+                      Kitchen Pro is active for this outlet.
                     </span>
                   </div>
                 </section>

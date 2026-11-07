@@ -30,7 +30,7 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(() => nutritionSchema.parse({ calories: 50000 })).toThrow();
   });
 
-  it("validates culinary profile with spice level 0 to 4 and flavor notes", () => {
+  it("validates culinary profile with spice level 0 to 5 and flavor notes", () => {
     const valid = {
       spiceLevel: 3,
       flavorNotes: ["Creamy", "Smoky", "Tangy"],
@@ -43,8 +43,9 @@ describe("Top-Tier Dish Culinary Profile Contracts", () => {
     expect(parsed.flavorNotes).toHaveLength(3);
     expect(parsed.servingTemp).toBe("hot");
 
-    // Spice level out of bounds (> 4) rejected
-    expect(() => culinaryProfileSchema.parse({ spiceLevel: 5 })).toThrow();
+    expect(culinaryProfileSchema.parse({ spiceLevel: 5 }).spiceLevel).toBe(5);
+    // A sixth chilli is outside the supported scale.
+    expect(() => culinaryProfileSchema.parse({ spiceLevel: 6 })).toThrow();
     // Too many flavor notes (> 6) rejected
     expect(() =>
       culinaryProfileSchema.parse({

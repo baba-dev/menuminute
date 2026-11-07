@@ -1,9 +1,9 @@
 # Plans, resource caps and Dedicated tier — proposal
 
-**Status: proposal.** Direction approved by the owner in conversation on 2026-11-02; prices, caps and
-the Dedicated design are hypotheses awaiting sign-off. Nothing here is implemented or deployed.
-Today only two capabilities are gated (`ordering.new` ₹119, `kitchen.new` ₹299); the only hard
-resource limit in code is `MAX_TABLES_PER_OUTLET = 200`. See
+**Status: partly built.** Direction approved by the owner on 2026-11-02. The caps and prices in
+`src/modules/plans/catalog.ts` and `src/modules/billing/catalog.ts` are the source of truth; where this
+document disagrees with them, the code wins. Sections titled "as built" record what shipped (Free order
+intake ships behind an operator switch that defaults to off); other sections remain design notes. See
 [razorpay-billing.md](operations/razorpay-billing.md), [admin-feature-access.md](admin-feature-access.md)
 and [kitchen-pro-e-h-readiness.md](kitchen-pro-e-h-readiness.md).
 
@@ -399,9 +399,10 @@ page refreshes every 4 seconds (up to 10 times) until the new plan appears.
 | Access history      | Recent grant windows and their status                                                            |
 
 Honesty rules: prices are the reviewed catalog amounts only (`PAID_PLAN_CATALOG`; today Ordering
-INR 119, Kitchen Pro INR 299, which are the provider plan amounts, not the proposed Kitchen Pro
-price in the matrix above). Kitchen Pro is sold like Ordering: its card has an "Upgrade to Kitchen
-Pro" button that opens the same checkout (there is no "talk to us" path). The server remains the
+INR 119, Kitchen Pro INR 499, the final owner-approved prices). Kitchen Pro is sold like Ordering
+inside Billing: its card has an "Upgrade to Kitchen Pro" button that opens the same checkout. On the
+public pricing page, Kitchen Pro shows "Request early access" until Kitchen checkout is open (see
+[commercial availability](commercial-availability.md)). The server remains the
 authority: while the platform's Kitchen release flag (`kitchenCommerceEnabled`) is off, the card
 shows "Kitchen Pro checkout is not available on this deployment yet." instead of a button. Payment
 methods and invoices are not shown because the application does not hold them. A billing load

@@ -58,6 +58,8 @@ jobs:
         run: node scripts/security/verify-api-boundaries.mjs
       - name: Enforce patched Next.js dependency floor
         run: node scripts/security/verify-framework-version.mjs
+      - name: Verify audited dependency exceptions behave fail-closed
+        run: node --test scripts/security/verify-advisory-exceptions.test.mjs
 
       - name: Check code formatting (Prettier)
         run: |
@@ -560,6 +562,12 @@ jobs:
           run_install: false
       - name: Audit frozen dependencies
         run: pnpm audit --audit-level high
+      - name: Verify reviewed moderate advisory exceptions
+        # pnpm exits nonzero for advisories. The parser validates every reported
+        # advisory and fails for any new/unreviewed moderate or high finding.
+        run: |
+          pnpm audit --json > "$RUNNER_TEMP/pnpm-audit.json" || true
+          node scripts/security/verify-advisory-exceptions.mjs "$RUNNER_TEMP/pnpm-audit.json"
       - name: Initialize CodeQL
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:

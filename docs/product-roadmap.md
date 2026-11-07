@@ -19,7 +19,9 @@ Phase 4 — [Perfect Free QR Menu](orchestration/phase-4.md), tracked by [execut
 
 ## Commercial scope
 
-Free permanent QR menus remain the acquisition product. Ordering and Kitchen Pro are **in development, not currently available for purchase**. Older ₹149/₹299 figures were hypotheses and must not be advertised as approved prices. Subscription entitlements will enable those future capabilities. Worldwide outlets select supported local transaction currencies; platform SaaS subscriptions are planned in USD/INR. No payment gateway has been selected by implication. Initial launch diners pay at the restaurant or pickup counter.
+Free permanent QR menus remain the acquisition product, and Free already accepts guest orders up to 100 a month. Approved prices (owner-approved 2 November 2026): **Ordering ₹119, Kitchen Pro ₹499 flat for up to ten outlets, Dedicated ₹30,000 by contract** (USD $5 / $20 / $3,000 on-premise). The earlier ₹149/₹299 figures are superseded and must not be advertised.
+
+Ordering and Kitchen Pro are **built, but purchasable only when their runtime switches are on**: Razorpay checkout is off by default until provider configuration, smoke tests and the legal launch gates pass, and Kitchen Pro has an independent commercial release gate (#76/#77). The public pricing page reads those switches, so it offers purchase only when checkout can complete and otherwise offers a free start (Ordering) or an early-access request (Kitchen Pro). See [commercial availability](commercial-availability.md) for the decision, the switches and the opening checklist. USD has no checkout. Worldwide outlets select supported local transaction currencies. Initial launch diners pay at the restaurant or pickup counter.
 
 Delivery, online diner payments, WhatsApp/SMS, multi-station routing and advanced analytics remain later scope. Never show preview features as live entitlements.
 

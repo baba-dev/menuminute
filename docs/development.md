@@ -1,12 +1,12 @@
 # MenuMinute — Local Development Guide
 
-> Phase 1 uses PostgreSQL, Better Auth and separate Redis workloads. See
-> [foundation status/cutover](foundation/phase-1.md). Docker is required for isolated local dependencies.
+> MenuMinute runs on PostgreSQL, Better Auth and separate Redis workloads. Docker is required for the isolated
+> local dependencies. Foundation history: [Phase 1 status/cutover](foundation/phase-1.md).
 
 ## 1. Prerequisites
 
 - **Node.js**: Node 24 LTS, selected in `.nvmrc` to match CI and the pnpm 11 toolchain
-- **Package Manager**: `pnpm` (v11+)
+- **Package Manager**: `pnpm` 11, pinned by `packageManager` in `package.json`
 - **Git**: v2.40+
 - **GitHub CLI**: `gh` (optional, for repo management)
 
@@ -62,20 +62,30 @@ The database seed provides a pre-configured restaurant owner account:
 
 ## 4. Development Scripts
 
-| Command              | Action                                                    |
-| -------------------- | --------------------------------------------------------- |
-| `pnpm dev`           | Start Next.js development server on port 3000             |
-| `pnpm build`         | Create optimized production build                         |
-| `pnpm start`         | Run production server                                     |
-| `pnpm lint`          | Run ESLint with zero-warning threshold                    |
-| `pnpm typecheck`     | Run TypeScript compiler type checking without emit        |
-| `pnpm test`          | Run Vitest unit & integration test suite                  |
-| `pnpm test:coverage` | Run Vitest test coverage report                           |
-| `pnpm test:e2e`      | Run Playwright end-to-end browser smoke tests             |
-| `pnpm db:generate`   | Generate versioned Drizzle migrations from schema changes |
-| `pnpm db:migrate`    | Execute pending database migrations                       |
-| `pnpm db:seed`       | Idempotently seed demonstration restaurant and menu       |
-| `pnpm env:validate`  | Verify environment configuration variables                |
+Run `pnpm <script>`; the authoritative list is `scripts` in `package.json`.
+
+| Command                                                  | Action                                                                                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                               | Prepare dashboard/order media, then start Next.js on port 3000                                    |
+| `pnpm build`                                             | Verify and prepare media assets, then create the optimized production build                       |
+| `pnpm start`                                             | Run the production server                                                                         |
+| `pnpm worker` / `pnpm build:worker`                      | Run / bundle the background worker (`dist/worker.mjs`)                                            |
+| `pnpm lint` / `pnpm lint:fix`                            | ESLint with a zero-warning threshold / auto-fix                                                   |
+| `pnpm format` / `pnpm format:check`                      | Prettier write / check (CI runs the check)                                                        |
+| `pnpm typecheck`                                         | TypeScript type checking without emit                                                             |
+| `pnpm test` / `pnpm test:watch` / `pnpm test:coverage`   | Vitest run / watch / coverage                                                                     |
+| `pnpm test:e2e` / `pnpm test:e2e:ui`                     | Playwright browser tests (starts its own HTTPS server via `scripts/browser-server.mjs`) / UI mode |
+| `pnpm infra:test:up` / `pnpm infra:test:down`            | Start / remove the isolated PostgreSQL and Redis containers                                       |
+| `pnpm db:generate`                                       | Generate versioned Drizzle migrations from schema changes                                         |
+| `pnpm db:migrate`                                        | Apply pending migrations                                                                          |
+| `pnpm db:seed`                                           | Explicit non-production seed (needs `ALLOW_DEMO_SEED=true` and `DEMO_PASSWORD`)                   |
+| `pnpm db:studio`                                         | Open Drizzle Studio                                                                               |
+| `pnpm db:import:sqlite`                                  | One-time legacy SQLite import tool (read-only input)                                              |
+| `pnpm env:validate`                                      | Validate environment configuration                                                                |
+| `pnpm help:verify` / `pnpm floor:verify`                 | Verify the help registry / dining-floor system                                                    |
+| `pnpm media:verify:studio` / `:qr` / `:orders` / `:docs` | Verify generated and documented media assets                                                      |
+| `pnpm docs:capture`                                      | Re-capture documentation screenshots from the demo                                                |
+| `pnpm perf:baseline`                                     | Measure the performance baseline                                                                  |
 
 ## ARM64 build contract
 
@@ -89,7 +99,7 @@ Use the packageManager-pinned pnpm version and a frozen lockfile. Install native
 node_modules or `.next` output from AMD64/macOS. Keep caches separated by OS, architecture and
 Node major. Container builds, if introduced, must target `linux/arm64` and pass native runtime checks.
 
-Build and test outside the ERP host. The CI suite validates PostgreSQL/Redis foundation behavior; it is not an automatic deployment. Record Node, pnpm, architecture and artifact SHA for releases.
+Build and test outside the ERP host. A green PR run only validates the change; it never deploys. After a merge to `main`, CI publishes an immutable ARM64 artifact and the deploy workflow stages and, when eligible, activates it. See [CI/CD 2.0](deployment-actions.md) and [automatic migration deployment](automatic-migration-deployment.md). Record Node, pnpm, architecture and artifact SHA for releases.
 
 ## Product and design contract
 

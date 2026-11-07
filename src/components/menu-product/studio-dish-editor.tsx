@@ -632,6 +632,7 @@ export function StudioDishEditor({
                 { level: 2, label: "2 · Medium 🔥🔥" },
                 { level: 3, label: "3 · Hot 🔥🔥🔥" },
                 { level: 4, label: "4 · Extra Fiery 🔥🔥🔥🔥" },
+                { level: 5, label: "5 · Scorching 🔥🔥🔥🔥🔥" },
               ].map(({ level, label }) => (
                 <button
                   key={level}
