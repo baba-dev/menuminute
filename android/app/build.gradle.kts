@@ -14,11 +14,28 @@ android {
         versionName = "1.0.0"
     }
 
+    // CI creates unsigned bundles. Only a manual, credentialed release can sign.
+    // The signed bundle must use the Play Console upload certificate.
+    signingConfigs {
+        val storePath = System.getenv("MM_ANDROID_UPLOAD_STORE")
+        val storePass = System.getenv("MM_ANDROID_UPLOAD_STORE_PASSWORD")
+        val alias = System.getenv("MM_ANDROID_UPLOAD_KEY_ALIAS")
+        val keyPass = System.getenv("MM_ANDROID_UPLOAD_KEY_PASSWORD")
+        if (!storePath.isNullOrBlank() && !storePass.isNullOrBlank() &&
+            !alias.isNullOrBlank() && !keyPass.isNullOrBlank()) {
+            create("upload") {
+                storeFile = file(storePath)
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            // AABs are unsigned until a Play upload key is explicitly configured.
-            // Never commit a signing key or a keystore password.
+            signingConfig = signingConfigs.findByName("upload")
         }
     }
 
