@@ -1,0 +1,94 @@
+/* Consistent wide canvases, nested breadcrumbs, and minimal settings navigation. */
+.mm-workspace-shell {
+  --mm-content-wide: 1480px;
+  --mm-content-gutter: clamp(16px, 3vw, 44px);
+}
+.mm-workspace-main:has(> .mm-shared-topbar + :is(.pos-editorial, .reports-workspace, .qr-studio)) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.mm-workspace-main :is(.pos-body, .reports-body, .oh-body, .os-body, .guests-content) {
+  width: 100%;
+  max-width: var(--mm-content-wide);
+  margin-inline: auto;
+}
+.mm-dashboard-breadcrumb {
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 3px;
+}
+.mm-dashboard-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+.mm-dashboard-breadcrumb a:hover {
+  text-decoration: underline;
+}
+.mm-dashboard-breadcrumb a:focus-visible {
+  outline: 2px solid var(--mm-focus);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.mm-scope-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.mm-scope-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 15px;
+  border: 1px solid var(--decorative, #e6d5c4);
+  border-radius: 999px;
+  background: var(--paper, #fffaf4);
+  color: var(--ink, #34251a);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.mm-scope-link:hover {
+  border-color: #c97946;
+  background: var(--workspace-soft, #faf1e9);
+}
+.mm-scope-link.is-current {
+  border-color: #b95b2c;
+  background: #fff0e3;
+  color: #7c3717;
+}
+:root[data-theme="dark"] .mm-scope-link.is-current {
+  border-color: #e5a36b;
+  background: #442e23;
+  color: #ffe7c9;
+}
+.mm-scope-link:focus-visible {
+  outline: 3px solid var(--mm-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 550px) {
+  .mm-scope-nav {
+    gap: 6px;
+  }
+  .mm-scope-link {
+    flex: 1 1 auto;
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+  .mm-dashboard-breadcrumb .mm-crumb-parent,
+  .mm-dashboard-breadcrumb .mm-crumb-parent-separator {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-scope-link {
+    transition: none;
+  }
+}
