@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { posReceipt } from "@/modules/pos/service";
 import { ReceiptPrintActions } from "./receipt-print-actions";
+import type { ThermalReceipt } from "@/lib/pos/thermal-receipt";
 import "./receipt.css";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,49 @@ export default async function ReceiptPage({
   const paid = receipt.paymentStatus === "complete";
   const refunded = receipt.paymentStatus === "refunded";
   const staffPaid = paid && receipt.paymentEvidence === "staff_recorded";
+  const thermal: ThermalReceipt = {
+    merchantName: receipt.sellerName ?? outlet.name,
+    outletName: outlet.name,
+    address: receipt.sellerAddress,
+    orderNumber: String(receipt.orderNumber),
+    issuedAt: new Intl.DateTimeFormat("en", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: outlet.timezone,
+    }).format(new Date(receipt.createdAt)),
+    service: receipt.fulfillmentMode === "dine_in" ? "Dine-in" : "Pickup",
+    customerName: receipt.customerName,
+    customerPhone: receipt.customerPhone,
+    table:
+      receipt.fulfillmentMode === "dine_in"
+        ? receipt.tableNumber
+          ? receipt.tableNumber + (receipt.tableLabel ? " · " + receipt.tableLabel : "")
+          : receipt.tableLabel || "Not assigned"
+        : null,
+    paymentStatus: refunded ? "REFUNDED" : paid ? "COMPLETE" : "PENDING",
+    paymentMethod: receipt.paymentMethod?.replace("_external", " (staff recorded)"),
+    items: receipt.items.map((item) => ({
+      name: item.name,
+      variant: item.variant,
+      quantity: item.quantity,
+      unitPrice: money(item.unitMinor, receipt.currency),
+      lineTotal: money(item.lineMinor, receipt.currency),
+    })),
+    subtotalLabel: receipt.taxApplied && receipt.taxInclusive ? "Tax-inclusive prices" : "Item subtotal",
+    subtotal: money(receipt.subtotalMinor, receipt.currency),
+    taxableBase: receipt.taxApplied
+      ? money(receipt.taxableBaseMinor ?? receipt.subtotalMinor, receipt.currency)
+      : null,
+    taxLabel: receipt.taxApplied
+      ? (receipt.taxLabel ?? "Merchant tax") + (receipt.taxInclusive ? " (included)" : " (added)")
+      : null,
+    taxAmount: receipt.taxApplied ? money(receipt.taxMinor ?? "0", receipt.currency) : null,
+    totalLabel: refunded ? "Original paid amount" : "Total payable",
+    total: money(receipt.totalMinor ?? receipt.subtotalMinor, receipt.currency),
+    closingStatus: refunded ? "ORIGINAL STAFF PAYMENT REFUNDED" : staffPaid
+      ? "STAFF-RECORDED PAYMENT" : paid ? "PAYMENT COMPLETE" : "PAYMENT PENDING",
+    taxDisclaimer: "Operational receipt only. Not a statutory tax invoice or gateway-confirmed payment.",
+  };
   return (
     <main className={"receipt-shell receipt-width-" + paper}>
       <header className="receipt-toolbar">
@@ -55,7 +99,7 @@ export default async function ReceiptPage({
           <strong>Receipt Atelier</strong>
           <p>Local browser printing · non-fiscal order record</p>
         </div>
-        <ReceiptPrintActions auto={paramsQuery.auto === "1"} />
+        <ReceiptPrintActions auto={paramsQuery.auto === "1"} paper={paper} receipt={thermal} />
       </header>
       <article className="receipt-paper" aria-label="Merchant order bill">
         <header className="receipt-brand">
