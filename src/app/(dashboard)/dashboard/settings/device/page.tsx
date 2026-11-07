@@ -31,7 +31,7 @@ export default async function DeviceSettingsPage() {
             <h1>Your app, your device.</h1>
             <p>
               Manage installation, notifications and local storage for this device. These settings
-              won't change the experience for your guests.
+              will not change the experience for your guests.
             </p>
           </div>
           <Smartphone size={58} strokeWidth={1.3} aria-hidden="true" />

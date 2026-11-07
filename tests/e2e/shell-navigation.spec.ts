@@ -145,6 +145,22 @@ test.describe("desktop shell", () => {
       "/dashboard/pos"
     );
     await expect(page.getByRole("heading", { name: "India GST draft review" })).toBeVisible();
+
+    // PR CI runs desktop Chromium. Exercise the CSS phone viewport here as well,
+    // so responsive regressions cannot wait until the post-merge mobile project.
+    await page.setViewportSize({ width: 320, height: 650 });
+    await page.goto("/account");
+    await expect(page.getByRole("navigation", { name: "Settings areas" }).getByRole("link")).toHaveCount(3);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
+    await page.goto("/dashboard/reviews");
+    await expect(
+      page.getByRole("heading", { name: "Reviews, thoughtfully handled." })
+    ).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
   });
 
   test("the sidebar is grouped and unavailable items collapse into Add-ons", async ({ page }) => {
