@@ -356,4 +356,24 @@
     grid-column: 1;
     grid-row: auto;
   }
+  /* A long from/to label must not dictate the card's min-content width.
+     It previously made the 320px Dashboard 342px wide. */
+  .pb-grid,
+  .pb-benefits,
+  .pb-benefits li {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .pb-benefit-values {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+    white-space: normal;
+    text-align: left;
+  }
+  .pb-to,
+  .pb-from {
+    overflow-wrap: anywhere;
+  }
 }
