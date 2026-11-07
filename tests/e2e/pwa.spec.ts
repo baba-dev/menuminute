@@ -21,7 +21,7 @@ test.describe("Progressive Web App", () => {
       short_name: "MenuMinute",
       display: "standalone",
       scope: "/",
-      start_url: "/?source=pwa",
+      start_url: "/app",
     });
 
     for (const icon of manifest.icons as Array<{ src: string }>) {
