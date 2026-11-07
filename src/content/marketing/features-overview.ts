@@ -38,7 +38,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Live guest menu · Actual MenuMinute interface with sample restaurant content",
     guideHref: "/docs/public-menu",
     guideLabel: "See the guest menu walkthrough",
-    availabilityNote: "The published QR menu is part of the free core. Guest ordering depends on the outlet's active ordering capability.",
+    availabilityNote:
+      "The published QR menu is part of the free core. Guest ordering depends on the outlet's active ordering capability.",
   },
   {
     id: "dish-details",
@@ -59,7 +60,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Dish detail view · Actual interface, example dishes and values",
     guideHref: "/docs/public-menu",
     guideLabel: "Explore how a diner chooses dishes",
-    availabilityNote: "Dish details are visible on the guest menu; placing an order requires eligible ordering access.",
+    availabilityNote:
+      "Dish details are visible on the guest menu; placing an order requires eligible ordering access.",
   },
   {
     id: "qr-studio",
@@ -80,7 +82,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "QR Studio · Actual MenuMinute interface",
     guideHref: "/docs/qr-studio",
     guideLabel: "Learn to publish and print QR codes",
-    availabilityNote: "Permanent QR menu sharing and core QR Studio features are available with the free menu.",
+    availabilityNote:
+      "Permanent QR menu sharing and core QR Studio features are available with the free menu.",
   },
   {
     id: "dining-floor",
@@ -101,7 +104,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Dining floor · Actual MenuMinute demo workspace",
     guideHref: "/docs/floor",
     guideLabel: "Take a tour of the dining floor",
-    availabilityNote: "Table service tools require the relevant outlet setup and available operational capabilities.",
+    availabilityNote:
+      "Table service tools require the relevant outlet setup and available operational capabilities.",
   },
   {
     id: "reports",
@@ -122,7 +126,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Reports & insights · Actual MenuMinute demo data",
     guideHref: "/docs/reports",
     guideLabel: "Explore the reporting workspace",
-    availabilityNote: "Available reporting panels and POS figures depend on the plan, recorded activity and outlet capabilities.",
+    availabilityNote:
+      "Available reporting panels and POS figures depend on the plan, recorded activity and outlet capabilities.",
   },
   {
     id: "translations",
@@ -143,7 +148,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Menu Studio · Actual editing interface (not a dedicated translation screenshot)",
     guideHref: "/docs/translations",
     guideLabel: "Read the menu translation guide",
-    availabilityNote: "Translation controls and supported languages depend on the configured menu and available features.",
+    availabilityNote:
+      "Translation controls and supported languages depend on the configured menu and available features.",
   },
   {
     id: "ember",
@@ -164,7 +170,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Ember assistant · Actual MenuMinute demo interface",
     guideHref: "/docs/ember",
     guideLabel: "See what Ember can answer",
-    availabilityNote: "Ember is optional and subject to model/provider configuration, permissions and usage limits.",
+    availabilityNote:
+      "Ember is optional and subject to model/provider configuration, permissions and usage limits.",
   },
   {
     id: "team-and-outlets",
@@ -185,7 +192,8 @@ export const featureSpotlights: readonly FeatureSpotlight[] = [
     caption: "Organization & access · Actual interface with demo-safe restrictions",
     guideHref: "/docs/organization",
     guideLabel: "Learn how outlet access works",
-    availabilityNote: "Team invitations, role management and multi-outlet limits depend on the account and plan; demo writes are disabled.",
+    availabilityNote:
+      "Team invitations, role management and multi-outlet limits depend on the account and plan; demo writes are disabled.",
   },
   {
     id: "daily-dashboard",
