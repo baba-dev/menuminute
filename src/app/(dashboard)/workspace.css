@@ -1563,7 +1563,6 @@
   }
 }
 
-
 /* Explicit desktop editorial lines become naturally balanced copy on narrow screens. */
 .mm-hero-line {
   display: block;
@@ -1644,13 +1643,14 @@
   }
   /* Search, account, public menu and notifications are also in More.
      Keep New, notifications and theme immediately accessible. */
-  .mm-shared-topbar :is(
-    .mm-topbar-search,
-    .mm-topbar-chip,
-    .mm-topbar-connection,
-    .mm-dashboard-preview,
-    .mm-dashboard-user
-  ) {
+  .mm-shared-topbar
+    :is(
+      .mm-topbar-search,
+      .mm-topbar-chip,
+      .mm-topbar-connection,
+      .mm-dashboard-preview,
+      .mm-dashboard-user
+    ) {
     display: none;
   }
   .mm-shared-topbar .mm-topbar-new,

@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Bell, CircleHelp, Ellipsis, ExternalLink, Search, ShieldAlert, UserRound, X } from "lucide-react";
+import {
+  Bell,
+  CircleHelp,
+  Ellipsis,
+  ExternalLink,
+  Search,
+  ShieldAlert,
+  UserRound,
+  X,
+} from "lucide-react";
 import {
   bottomBarItems,
   isNavSelected,

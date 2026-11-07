@@ -242,7 +242,9 @@ export function StudioMenuBoard({
                     <button
                       type="button"
                       className="menu-board-section-toggle"
-                      aria-label={(expanded ? "Collapse section " : "Expand section ") + category.name}
+                      aria-label={
+                        (expanded ? "Collapse section " : "Expand section ") + category.name
+                      }
                       aria-controls={sectionId}
                       aria-expanded={expanded}
                       disabled={Boolean(query.trim())}
@@ -357,66 +359,69 @@ export function StudioMenuBoard({
                   </div>
                 )}
                 {!expanded && <div id={sectionId} hidden />}
-                {expanded && (visible.length ? (
-                  <div id={sectionId} className="menu-board-grid">
-                    {visible.map(({ dish, dishIndex }) => (
-                      <article className="menu-board-dish" key={dish.id}>
-                        {/* eslint-disable-next-line @next/next/no-img-element -- Private media is outlet-scoped. */}
-                        <img
-                          className="menu-board-dish-art"
-                          src={dishImageSrc(dish, "private")}
-                          alt=""
-                          width={108}
-                          height={108}
-                          loading="lazy"
-                        />
-                        <div className="menu-board-dish-copy">
-                          <strong>{dish.name}</strong>
-                          {dish.description && <p>{dish.description}</p>}
-                          <span className="menu-board-price">
-                            {dish.variants.length ? "From " : ""}
-                            {formatPrice(startingPriceMinor(dish), currency)}
-                          </span>
-                          {(dish.soldOut || dish.archived) && (
-                            <small className="menu-board-status">
-                              {dish.archived ? "Archived" : "Sold out"}
-                            </small>
-                          )}
-                        </div>
-                        <div className="menu-board-dish-actions">
-                          <button
-                            type="button"
-                            aria-label={"Edit " + dish.name}
-                            title={"Edit " + dish.name}
-                            onClick={() => setEditingId(dish.id)}
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={"Move " + dish.name + " up"}
-                            title="Move up"
-                            disabled={!canWrite || dishIndex === 0}
-                            onClick={() => onMoveDish(categoryIndex, dishIndex, -1)}
-                          >
-                            <ArrowUp size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={"Move " + dish.name + " down"}
-                            title="Move down"
-                            disabled={!canWrite || dishIndex === category.items.length - 1}
-                            onClick={() => onMoveDish(categoryIndex, dishIndex, 1)}
-                          >
-                            <ArrowDown size={15} />
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p id={sectionId} className="menu-board-empty">No matching dishes in this section.</p>
-                ))}
+                {expanded &&
+                  (visible.length ? (
+                    <div id={sectionId} className="menu-board-grid">
+                      {visible.map(({ dish, dishIndex }) => (
+                        <article className="menu-board-dish" key={dish.id}>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- Private media is outlet-scoped. */}
+                          <img
+                            className="menu-board-dish-art"
+                            src={dishImageSrc(dish, "private")}
+                            alt=""
+                            width={108}
+                            height={108}
+                            loading="lazy"
+                          />
+                          <div className="menu-board-dish-copy">
+                            <strong>{dish.name}</strong>
+                            {dish.description && <p>{dish.description}</p>}
+                            <span className="menu-board-price">
+                              {dish.variants.length ? "From " : ""}
+                              {formatPrice(startingPriceMinor(dish), currency)}
+                            </span>
+                            {(dish.soldOut || dish.archived) && (
+                              <small className="menu-board-status">
+                                {dish.archived ? "Archived" : "Sold out"}
+                              </small>
+                            )}
+                          </div>
+                          <div className="menu-board-dish-actions">
+                            <button
+                              type="button"
+                              aria-label={"Edit " + dish.name}
+                              title={"Edit " + dish.name}
+                              onClick={() => setEditingId(dish.id)}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={"Move " + dish.name + " up"}
+                              title="Move up"
+                              disabled={!canWrite || dishIndex === 0}
+                              onClick={() => onMoveDish(categoryIndex, dishIndex, -1)}
+                            >
+                              <ArrowUp size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={"Move " + dish.name + " down"}
+                              title="Move down"
+                              disabled={!canWrite || dishIndex === category.items.length - 1}
+                              onClick={() => onMoveDish(categoryIndex, dishIndex, 1)}
+                            >
+                              <ArrowDown size={15} />
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p id={sectionId} className="menu-board-empty">
+                      No matching dishes in this section.
+                    </p>
+                  ))}
               </section>
             );
           })}

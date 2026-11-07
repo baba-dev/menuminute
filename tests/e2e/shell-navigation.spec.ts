@@ -537,7 +537,8 @@ test.describe("phone shell", () => {
         route + " has no document overflow"
       ).toBe(true);
       if (captures.has(route)) {
-        const name = route === "/dashboard" ? "dashboard" : route.replace(/^\//, "").replace(/\//g, "-");
+        const name =
+          route === "/dashboard" ? "dashboard" : route.replace(/^\//, "").replace(/\//g, "-");
         await testInfo.attach(name + "-390-light", {
           body: await page.screenshot({ animations: "disabled" }),
           contentType: "image/png",
