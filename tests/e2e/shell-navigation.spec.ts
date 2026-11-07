@@ -150,7 +150,9 @@ test.describe("desktop shell", () => {
     // so responsive regressions cannot wait until the post-merge mobile project.
     await page.setViewportSize({ width: 320, height: 650 });
     await page.goto("/account");
-    await expect(page.getByRole("navigation", { name: "Settings areas" }).getByRole("link")).toHaveCount(3);
+    await expect(
+      page.getByRole("navigation", { name: "Settings areas" }).getByRole("link")
+    ).toHaveCount(3);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true
     );
