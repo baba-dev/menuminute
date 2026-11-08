@@ -203,6 +203,21 @@ const envSchema = z
     RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_ORDERING_ID: z.string().trim().min(1).optional(),
     RAZORPAY_PLAN_KITCHEN_ID: z.string().trim().min(1).optional(),
+    // Google Play Billing (Play-distributed Android app). OFF unless explicit; shares the isolated
+    // BILLING_DATABASE_URL identity. The service account JSON is a secret: never log or commit it.
+    PLAY_BILLING_ENABLED: strictBoolean.default(false),
+    GOOGLE_PLAY_PACKAGE_NAME: z
+      .string()
+      .trim()
+      .regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/)
+      .default("com.bababuilds.menuminute"),
+    GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: z.string().trim().min(1).optional(),
+    // Pub/Sub push (Real-time Developer Notifications) OIDC identity. The push subscription must be
+    // created with this service account and this exact audience (the webhook URL).
+    GOOGLE_PLAY_RTDN_AUDIENCE: z.string().trim().url().optional(),
+    GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT: z.string().trim().email().optional(),
+    GOOGLE_PLAY_SKU_ORDERING: z.string().trim().min(1).max(100).default("menuminute_ordering"),
+    GOOGLE_PLAY_BASE_PLAN_ORDERING: z.string().trim().min(1).max(100).default("monthly"),
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
@@ -387,6 +402,31 @@ const envSchema = z
         code: "custom",
         path: [!e.RAZORPAY_KEY_SECRET ? "RAZORPAY_KEY_SECRET" : "RAZORPAY_WEBHOOK_SECRET"],
         message: "Razorpay key secret and webhook secret are required when key ID is configured",
+      });
+    if (
+      e.PLAY_BILLING_ENABLED &&
+      (!e.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON ||
+        !e.GOOGLE_PLAY_RTDN_AUDIENCE ||
+        !e.GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT ||
+        !e.BILLING_DATABASE_URL)
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["PLAY_BILLING_ENABLED"],
+        message:
+          "Google Play billing requires a service account, an RTDN audience and identity, and an isolated billing database URL",
+      });
+    if (e.PLAY_BILLING_ENABLED && e.BILLING_DATABASE_URL === e.DATABASE_URL)
+      ctx.addIssue({
+        code: "custom",
+        path: ["BILLING_DATABASE_URL"],
+        message: "Billing must not reuse the application database identity",
+      });
+    if (e.COMMUNITY_EDITION && e.PLAY_BILLING_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["PLAY_BILLING_ENABLED"],
+        message: "Community Edition cannot collect hosted subscriptions",
       });
     if (e.REDIS_QUEUE_URL === e.REDIS_CACHE_URL)
       ctx.addIssue({

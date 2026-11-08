@@ -86,7 +86,7 @@ export async function createRazorpaySubscription(
 
 let paymentPool: Pool | undefined;
 function isolatedPool(): Pool {
-  if (!env.RAZORPAY_ENABLED || !env.BILLING_DATABASE_URL)
+  if ((!env.RAZORPAY_ENABLED && !env.PLAY_BILLING_ENABLED) || !env.BILLING_DATABASE_URL)
     throw new ValidationError("The billing writer is not configured");
   if (!paymentPool) {
     paymentPool = new Pool({
@@ -101,7 +101,7 @@ function isolatedPool(): Pool {
   }
   return paymentPool;
 }
-async function billingQuery<T extends Record<string, unknown>>(
+export async function billingQuery<T extends Record<string, unknown>>(
   sql: string,
   params: readonly unknown[]
 ): Promise<T> {

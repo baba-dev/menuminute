@@ -8,6 +8,7 @@ import { billingState } from "@/modules/billing/service";
 import { getPlanSnapshot } from "@/modules/plans/usage";
 import {
   buildBillingPageView,
+  coercePlaySubscriptions,
   coerceSubscriptions,
   type BillingStateInput,
 } from "@/modules/plans/billing-page";
@@ -69,7 +70,9 @@ export default async function BillingPage({
         isCommunityEdition: state.isCommunityEdition,
         billingEnabled: state.billingEnabled,
         kitchenCommerceEnabled: state.kitchenCommerceEnabled,
+        playBillingEnabled: state.playBillingEnabled,
         subscriptions: coerceSubscriptions(state.subscriptions),
+        playSubscriptions: coercePlaySubscriptions(state.playSubscriptions),
         grants: state.grants.map((g) => ({
           capability: g.capability,
           startsAt: g.startsAt,
@@ -94,6 +97,7 @@ export default async function BillingPage({
     billingUnavailable,
     lifecycle: snapshot.lifecycle,
     focus: typeof query.plan === "string" ? query.plan : null,
+    playClient,
   });
   return (
     <BillingConsole view={view} organizationId={snapshot.organizationId} playClient={playClient} />

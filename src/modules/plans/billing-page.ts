@@ -28,13 +28,44 @@ export type GrantInput = {
   endsAt: Date | string;
   revokedAt: Date | string | null;
 };
+export type PlaySubscriptionInput = {
+  product: string;
+  state: string;
+  currentPeriodEnd?: string | null;
+  autoRenewing: boolean;
+};
 export type BillingStateInput = {
   isCommunityEdition?: boolean;
   billingEnabled?: boolean;
   kitchenCommerceEnabled?: boolean;
+  /** Google Play Billing is configured on this deployment (only usable inside the Play app). */
+  playBillingEnabled?: boolean;
   subscriptions?: SubscriptionInput[];
+  playSubscriptions?: PlaySubscriptionInput[];
   grants?: GrantInput[];
 };
+
+/** Google Play subscription rows are stored as JSON; accept only well-formed rows. */
+export function coercePlaySubscriptions(raw: unknown): PlaySubscriptionInput[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PlaySubscriptionInput[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as Record<string, unknown>;
+    if (typeof r["product"] !== "string" || typeof r["state"] !== "string") continue;
+    out.push({
+      product: r["product"],
+      state: r["state"],
+      currentPeriodEnd: typeof r["currentPeriodEnd"] === "string" ? r["currentPeriodEnd"] : null,
+      autoRenewing: r["autoRenewing"] === true,
+    });
+  }
+  return out;
+}
+
+/** Play states that still represent a subscription the owner can manage in Google Play. */
+const PLAY_LIVE_STATES = ["active", "canceled", "grace", "on_hold", "paused"];
+export const GOOGLE_PLAY_SUBSCRIPTIONS_URL = "https://play.google.com/store/account/subscriptions";
 
 /** The provider subscription list is stored as JSON; accept only well-formed rows. */
 export function coerceSubscriptions(raw: unknown): SubscriptionInput[] {
@@ -63,6 +94,8 @@ export const formatDate = fmtDate;
 
 export type LadderAction =
   | { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string }
+  /** Google Play Billing purchase sheet, offered only inside the Play-distributed Android app. */
+  | { kind: "play-checkout"; plan: "ordering"; label: string }
   /** Dedicated is sold by contract, so its only action is a conversation. */
   | { kind: "contact"; label: string; href: string };
 export type LadderCard = PlanOffer & {
@@ -75,11 +108,14 @@ export type LadderCard = PlanOffer & {
 };
 export type SubscriptionRow = {
   id: string;
+  provider: "razorpay" | "play";
   product: string;
   status: string;
   periodEnd: string | null;
   cancelScheduled: boolean;
   canCancel: boolean;
+  /** Play subscriptions are changed or cancelled in Google Play, not in this app. */
+  manageUrl: string | null;
 };
 export type HistoryRow = { id: string; label: string; window: string; status: GrantStatus };
 
@@ -91,6 +127,9 @@ export type BillingPageView = {
   community: boolean;
   canManage: boolean;
   billingEnabled: boolean;
+  /** A purchase can be made right now from this client (Razorpay on the web, Play Billing in the app). */
+  checkoutAvailable: boolean;
+  playClient: boolean;
   billingUnavailable: boolean;
   /** Trial and payment-problem banners, most urgent first. */
   notices: LifecycleNotice[];
@@ -127,6 +166,8 @@ export function buildBillingPageView(input: {
   lifecycle?: LifecycleSnapshot;
   now?: Date;
   focus?: string | null;
+  /** True inside the Google Play TWA: purchases go through Play Billing only, never Razorpay. */
+  playClient?: boolean;
 }): BillingPageView {
   const { plan, usage, intake, canManage, billing } = input;
   const lifecycle = input.lifecycle ?? NO_LIFECYCLE;
@@ -136,8 +177,20 @@ export function buildBillingPageView(input: {
   const community = billing?.isCommunityEdition === true;
   const billingEnabled = billing?.billingEnabled === true;
   const kitchenCheckout = billing?.kitchenCommerceEnabled === true;
-  const subs = billing?.subscriptions ?? [];
+  const playClient = input.playClient === true;
+  const playBillingEnabled = billing?.playBillingEnabled === true;
+  const playSubs = billing?.playSubscriptions ?? [];
+  const livePlay = playSubs.find(
+    (p) =>
+      PLAY_LIVE_STATES.includes(p.state) &&
+      (!p.currentPeriodEnd ||
+        new Date(p.currentPeriodEnd).getTime() > (input.now ?? new Date()).getTime())
+  );
+  // One provider per organization. Razorpay rows are hidden from the Play app's purchase surface and
+  // a live Play subscription closes web checkout; the database enforces the same rule.
+  const subs = playClient ? [] : (billing?.subscriptions ?? []);
   const grants = billing?.grants ?? [];
+  const checkoutEnabled = playClient ? playBillingEnabled : billingEnabled;
 
   // ── Billing cycle ────────────────────────────────────────────────────────
   let cycle: BillingPageView["cycle"] = {
@@ -150,7 +203,22 @@ export function buildBillingPageView(input: {
     (s) => s.product === productKey(plan) && ACTIVE_SUBSCRIPTION.includes(s.status)
   );
   if (plan !== "free" && plan !== "dedicated") {
-    if (current?.currentPeriodEnd) {
+    if (livePlay?.currentPeriodEnd) {
+      const end = formatDate(livePlay.currentPeriodEnd);
+      cycle = livePlay.autoRenewing
+        ? {
+            interval: "Monthly",
+            headline: `Renews ${end}`,
+            detail: "Billed monthly by Google Play.",
+            payment: "Managed by Google Play",
+          }
+        : {
+            interval: "Monthly",
+            headline: `Ends ${end}`,
+            detail: "Renewal is off. Access continues until then.",
+            payment: "Managed by Google Play",
+          };
+    } else if (current?.currentPeriodEnd) {
       const end = formatDate(current.currentPeriodEnd);
       cycle = current.cancelRequestedAt
         ? {
@@ -200,6 +268,7 @@ export function buildBillingPageView(input: {
     };
   }
 
+  const subscribedViaPlay = livePlay !== undefined;
   const ordersOnSubscription = subs.some(
     (s) =>
       s.product === "ordering" && ACTIVE_SUBSCRIPTION.includes(s.status) && !s.cancelRequestedAt
@@ -218,7 +287,15 @@ export function buildBillingPageView(input: {
       else if (offer.key === "dedicated")
         action = { kind: "contact", label: "Talk to us about Dedicated", href: "/contact" };
       else if (!canManage) note = "Only the organization owner can change the plan.";
-      else if (!billingEnabled) note = "Paid upgrades are opening soon.";
+      else if (subscribedViaPlay)
+        note = playClient
+          ? "You are subscribed through Google Play. Manage it in Google Play subscriptions."
+          : "This organization is subscribed through Google Play. Manage it in the Google Play app.";
+      else if (!checkoutEnabled) note = "Paid upgrades are opening soon.";
+      else if (playClient && offer.key === "kitchen_pro")
+        note = "Kitchen Pro is not available in the Android app yet.";
+      else if (playClient)
+        action = { kind: "play-checkout", plan: "ordering", label: `Upgrade to ${offer.label}` };
       else if (offer.key === "kitchen_pro" && !kitchenCheckout)
         // The server is the authority: it refuses Kitchen Pro checkout until the platform release is on.
         note = "Kitchen Pro checkout is not available on this deployment yet.";
@@ -233,7 +310,12 @@ export function buildBillingPageView(input: {
       if (input.billingUnavailable)
         note = "Billing details are temporarily unavailable. Please try again shortly.";
       else if (!canManage) note = "Only the organization owner can subscribe.";
-      else if (!billingEnabled) note = "Paid plans are opening soon.";
+      else if (subscribedViaPlay)
+        note =
+          "This organization is subscribed through Google Play. Manage it in the Google Play app.";
+      else if (!checkoutEnabled) note = "Paid plans are opening soon.";
+      else if (playClient)
+        action = { kind: "play-checkout", plan: "ordering", label: "Subscribe to keep Ordering" };
       else action = { kind: "checkout", plan: "ordering", label: "Subscribe to keep Ordering" };
     }
     // Kitchen Pro includes ordering, so buying it ends an Ordering subscription's renewals. Say so first.
@@ -245,15 +327,31 @@ export function buildBillingPageView(input: {
   });
 
   // ── Subscriptions & history ──────────────────────────────────────────────
-  const subscriptions: SubscriptionRow[] = subs.map((s) => ({
+  const razorpayRows: SubscriptionRow[] = subs.map((s) => ({
     id: s.subscriptionId,
+    provider: "razorpay",
     product: s.product === "kitchen_pro" ? "Kitchen Pro" : "Online ordering",
     status: titleCase(s.status),
     periodEnd: s.currentPeriodEnd ? formatDate(s.currentPeriodEnd) : null,
     cancelScheduled: Boolean(s.cancelRequestedAt),
     canCancel:
       canManage && billingEnabled && !s.cancelRequestedAt && ACTIVE_SUBSCRIPTION.includes(s.status),
+    manageUrl: null,
   }));
+  const playRows: SubscriptionRow[] = playSubs.map((p, i) => ({
+    id: `play-${i}`,
+    provider: "play",
+    product: "Online ordering",
+    status: titleCase(
+      p.state === "grace" ? "payment issue" : p.state.replace("canceled", "active")
+    ),
+    periodEnd: p.currentPeriodEnd ? formatDate(p.currentPeriodEnd) : null,
+    cancelScheduled: PLAY_LIVE_STATES.includes(p.state) && !p.autoRenewing,
+    canCancel: false,
+    manageUrl:
+      canManage && PLAY_LIVE_STATES.includes(p.state) ? GOOGLE_PLAY_SUBSCRIPTIONS_URL : null,
+  }));
+  const subscriptions: SubscriptionRow[] = [...playRows, ...razorpayRows];
   const history: HistoryRow[] = [...grants]
     .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
     .slice(0, 8)
@@ -276,6 +374,8 @@ export function buildBillingPageView(input: {
     community,
     canManage,
     billingEnabled,
+    checkoutAvailable: checkoutEnabled && canManage && !subscribedViaPlay,
+    playClient,
     billingUnavailable: input.billingUnavailable === true,
     cycle,
     meters: usage?.meters ?? [],

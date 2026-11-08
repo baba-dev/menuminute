@@ -6,6 +6,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Lock, ShieldCheck } from "lucide-react";
 import { UsageMeter } from "@/components/plans/plan-usage";
 import type { BillingPageView, LadderCard } from "@/modules/plans/billing-page";
+import {
+  listPlayPurchaseTokens,
+  playBillingSupported,
+  PlayPurchaseCancelled,
+  purchaseWithPlay,
+} from "@/lib/play-billing-client";
 import "@/components/plans/plan-usage.css";
 
 declare global {
@@ -131,6 +137,105 @@ export function BillingConsole({
     [organizationId, router, view.plan]
   );
 
+  const verifyPlayPurchase = useCallback(
+    async (sku: string, purchaseToken: string) => {
+      const res = await fetch(`/api/organizations/${organizationId}/billing/play/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sku, purchaseToken }),
+      });
+      const data = (await res.json()) as { message?: string; entitled?: boolean; state?: string };
+      if (!res.ok) throw new Error(data.message ?? "We could not verify your purchase.");
+      return data;
+    },
+    [organizationId]
+  );
+
+  const startPlayCheckout = useCallback(
+    async (plan: Paid) => {
+      setBusy(plan);
+      setNotice(null);
+      try {
+        if (!playBillingSupported())
+          throw new Error("Google Play purchases are not available on this device.");
+        // 1. Server decides whether this owner may start a purchase and names the catalog SKU.
+        const intentRes = await fetch(`/api/organizations/${organizationId}/billing/play/intent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+        const intent = (await intentRes.json()) as { message?: string; sku?: string };
+        if (!intentRes.ok || !intent.sku)
+          throw new Error(intent.message ?? "We could not start the purchase.");
+        // 2. Google Play's own purchase sheet.
+        const token = await purchaseWithPlay(intent.sku);
+        setNotice({ kind: "info", text: "Purchase received. Confirming it with Google Play…" });
+        // 3. The server re-queries Google Play and only then unlocks the plan.
+        const result = await verifyPlayPurchase(intent.sku, token);
+        setNotice(
+          result.entitled
+            ? { kind: "ok", text: "Subscription active. Thank you!" }
+            : {
+                kind: "info",
+                text: "Your purchase is pending confirmation from Google Play. Your plan will unlock automatically.",
+              }
+        );
+        router.refresh();
+      } catch (error) {
+        if (!(error instanceof PlayPurchaseCancelled))
+          setNotice({
+            kind: "error",
+            text: error instanceof Error ? error.message : "The purchase could not be completed.",
+          });
+      } finally {
+        setBusy(null);
+      }
+    },
+    [organizationId, router, verifyPlayPurchase]
+  );
+
+  // Restore: re-submit purchases Google Play still reports (reinstall, missed callback, new device).
+  // The server binds tokens only for the signed-in owner and ignores anything Google does not confirm.
+  const canRestore = view.playClient && view.canManage && view.checkoutAvailable;
+  useEffect(() => {
+    if (!canRestore || !playBillingSupported()) return;
+    let flagged = false;
+    try {
+      flagged = window.sessionStorage.getItem("mm.play.restored") === organizationId;
+    } catch {
+      /* storage unavailable: restore once per mount instead */
+    }
+    if (flagged) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const intentRes = await fetch(`/api/organizations/${organizationId}/billing/play/intent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: "ordering" }),
+        });
+        const intent = (await intentRes.json()) as { sku?: string };
+        if (!intentRes.ok || !intent.sku) return;
+        const tokens = await listPlayPurchaseTokens(intent.sku);
+        for (const token of tokens) {
+          if (cancelled) return;
+          await verifyPlayPurchase(intent.sku, token).catch(() => undefined);
+        }
+        try {
+          window.sessionStorage.setItem("mm.play.restored", organizationId);
+        } catch {
+          /* ignore */
+        }
+        if (tokens.length > 0 && !cancelled) router.refresh();
+      } catch {
+        /* restore is best-effort; the manual purchase flow is unaffected */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canRestore, organizationId, router, verifyPlayPurchase]);
+
   async function cancelRenewal() {
     if (!cancelTarget) return;
     setCancelBusy(true);
@@ -171,8 +276,30 @@ export function BillingConsole({
         : "Active";
 
   const renderAction = (card: LadderCard, size: "lg" | "md" = "md") => {
-    // Google Play's consumption-only distribution must never surface a digital checkout.
-    if (playClient) return null;
+    // The Play app sells only through Google Play Billing; Razorpay checkout is never rendered there.
+    if (playClient && card.action?.kind === "play-checkout") {
+      const plan = card.action.plan;
+      const working = busy === plan;
+      return (
+        <button
+          type="button"
+          className={size === "lg" ? "bp-btn bp-btn--primary bp-btn--lg" : "bp-btn bp-btn--primary"}
+          disabled={busy !== null}
+          aria-busy={working}
+          onClick={() => void startPlayCheckout(plan)}
+        >
+          {working ? "Opening Google Play…" : card.action.label}
+          {!working && <ArrowRight size={16} aria-hidden="true" />}
+        </button>
+      );
+    }
+    if (playClient && card.action?.kind !== "contact") {
+      return card.note ? (
+        <p className="bp-note">
+          <Lock size={14} aria-hidden="true" /> {card.note}
+        </p>
+      ) : null;
+    }
     if (card.action?.kind === "checkout") {
       const plan = card.action.plan;
       const working = busy === plan;
@@ -216,9 +343,7 @@ export function BillingConsole({
           <h1>Your plan, in one place.</h1>
           <p>
             {view.organizationName} · See your current plan, usage and billing cycle.
-            {playClient
-              ? " Purchases are not offered in the Android app."
-              : " Explore available upgrades."}
+            {" Explore available upgrades."}
           </p>
         </div>
         <div className="bp-hero-plan" aria-label="Current plan">
@@ -231,7 +356,7 @@ export function BillingConsole({
       </header>
 
       {view.notices
-        .filter((entry) => !playClient || !entry.action)
+        .filter((entry) => !playClient || !entry.action || view.checkoutAvailable)
         .map((notice) => (
           <div
             key={notice.key}
@@ -299,7 +424,7 @@ export function BillingConsole({
             </div>
             <div>
               <dt>Currency</dt>
-              <dd>INR</dd>
+              <dd>{playClient ? "Set by Google Play" : "INR"}</dd>
             </div>
             <div>
               <dt>Payment method</dt>
@@ -308,7 +433,9 @@ export function BillingConsole({
           </dl>
           <p className="bp-secure">
             <ShieldCheck size={15} aria-hidden="true" />
-            Payments are processed by Razorpay. MenuMinute never sees or stores your card details.
+            {playClient
+              ? "Payments are processed by Google Play. MenuMinute never sees or stores your payment details."
+              : "Payments are processed by Razorpay. MenuMinute never sees or stores your card details."}
           </p>
         </article>
 
@@ -330,7 +457,7 @@ export function BillingConsole({
           )}
         </article>
 
-        {!playClient && (
+        {(!playClient || view.checkoutAvailable) && (
           <article className="bp-tile bp-tile--accent bp-span-5" aria-labelledby="bp-next-title">
             {view.next ? (
               <>
@@ -375,7 +502,7 @@ export function BillingConsole({
         )}
       </div>
 
-      {!playClient && (
+      {(!playClient || view.checkoutAvailable) && (
         <section className="bp-section" aria-labelledby="bp-plans-title">
           <div className="bp-section-head">
             <h2 id="bp-plans-title">Choose your plan</h2>
@@ -451,6 +578,17 @@ export function BillingConsole({
                   <span className="bp-chip">
                     {sub.cancelScheduled ? "Renewal cancelled" : sub.status}
                   </span>
+                  {sub.manageUrl && (
+                    <a
+                      className="bp-btn bp-btn--quiet"
+                      href={sub.manageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Manage in Google Play
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </a>
+                  )}
                   {sub.canCancel &&
                     (cancelTarget === sub.id ? (
                       <div className="bp-confirm" role="group" aria-label="Confirm cancellation">
@@ -493,7 +631,7 @@ export function BillingConsole({
           </span>
           <p className="bp-muted">
             {playClient
-              ? "Your existing subscription remains usable here. This Android app does not sell digital subscriptions."
+              ? "Subscriptions are bought, renewed and cancelled through Google Play. Manage them in Google Play subscriptions."
               : "You pick how to pay inside the secure checkout. Card numbers go straight to our payment provider and never touch MenuMinute."}
           </p>
           <p className="bp-muted">

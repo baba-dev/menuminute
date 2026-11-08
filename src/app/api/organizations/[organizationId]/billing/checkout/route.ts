@@ -47,6 +47,14 @@ async function observed_POST(
         sql`SELECT app_private.entitlement_blocks_checkout(${organizationId},'ordering.new') AS ordering,
           app_private.entitlement_blocks_checkout(${organizationId},'kitchen.new') AS kitchen`
       );
+      // One provider per organization: Google Play is already billing this organization.
+      const play = await tx.execute<{ blocked: boolean }>(
+        sql`SELECT app_private.play_subscription_blocks_razorpay(${organizationId}) AS blocked`
+      );
+      if (play.rows[0]?.blocked)
+        throw new ValidationError(
+          "This organization is subscribed through Google Play. Manage it in the Google Play app."
+        );
       const launch = await tx.execute<{ ready: boolean }>(
         sql`SELECT app_private.kitchen_commerce_enabled() AS ready`
       );
