@@ -33,6 +33,13 @@ export async function billingState(actor: Actor, organizationId: string) {
             sql`SELECT app_private.razorpay_subscription_state(${organizationId}) AS subscriptions`
           )
         ).rows[0]?.subscriptions;
+    const playState = community
+      ? []
+      : (
+          await tx.execute<{ subscriptions: unknown }>(
+            sql`SELECT app_private.play_subscription_state(${organizationId}) AS subscriptions`
+          )
+        ).rows[0]?.subscriptions;
     const commerce = await tx.execute<{ ready: boolean }>(
       sql`SELECT app_private.kitchen_commerce_enabled() AS ready`
     );
@@ -46,6 +53,17 @@ export async function billingState(actor: Actor, organizationId: string) {
         env.RAZORPAY_KITCHEN_ENABLED &&
         commerce.rows[0]?.ready === true,
       subscriptions: Array.isArray(state) ? state : [],
+      playBillingEnabled: !community && env.PLAY_BILLING_ENABLED,
+      playKitchenEnabled:
+        !community &&
+        env.PLAY_BILLING_ENABLED &&
+        env.PLAY_KITCHEN_ENABLED &&
+        commerce.rows[0]?.ready === true,
+      playSkus: {
+        ordering: env.GOOGLE_PLAY_SKU_ORDERING,
+        kitchen_pro: env.GOOGLE_PLAY_SKU_KITCHEN,
+      },
+      playSubscriptions: Array.isArray(playState) ? playState : [],
       ...effective.rows[0]!,
       grants,
     };

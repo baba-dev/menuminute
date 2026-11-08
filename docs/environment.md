@@ -36,7 +36,7 @@ validating schema. History: [Phase 1 implementation and cutover](foundation/phas
 
 `DEMO_MODE_ENABLED=false` (default) is the public-demo kill switch for the worker reset job; see [demo runbook](demo.md).
 
-Billing and edition are opt-in: the hosted service must set `COMMUNITY_EDITION=false`; `RAZORPAY_ENABLED=false` and `RAZORPAY_KITCHEN_ENABLED=false` are safe defaults. Before enabling Razorpay install verified production plan IDs, webhook/REST keys and a distinct restricted `BILLING_DATABASE_URL` identity. Never reuse the application or migration-owner credential. Self-hosted edition needs a separately provisioned, owner-controlled database configuration.
+Billing and edition are opt-in: the hosted service must set `COMMUNITY_EDITION=false`; `RAZORPAY_ENABLED=false` and `RAZORPAY_KITCHEN_ENABLED=false` are safe defaults. Before enabling Razorpay install verified production plan IDs, webhook/REST keys and a distinct restricted `BILLING_DATABASE_URL` identity. Never reuse the application or migration-owner credential. Google Play Billing is a separate opt-in (`PLAY_BILLING_ENABLED=false` by default); it reuses the same restricted `BILLING_DATABASE_URL` identity and additionally needs the `GOOGLE_PLAY_*` variables listed in `.env.example` and `docs/android-release/play-billing.md`. Self-hosted edition needs a separately provisioned, owner-controlled database configuration.
 
 Set explicit connection/request timeouts and pool/concurrency limits in validated configuration.
 Implementation may rename variables for SDK conventions, but must update the schema, examples,

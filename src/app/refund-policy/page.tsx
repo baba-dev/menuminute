@@ -407,6 +407,17 @@ export default function RefundPolicyPage() {
                 and ordinarily preserves eligible paid access until that period ends.
               </p>
               <p>
+                If you subscribed through the MenuMinute Android app, Google Play bills the
+                subscription. Cancel it under Subscriptions in the Google Play app or on the{" "}
+                <a href="https://play.google.com/store/account/subscriptions" rel="noopener">
+                  Google Play subscriptions
+                </a>
+                . Cancelling stops future renewals and you keep access until the paid period ends.
+                Refunds for Google Play purchases are handled under Google Play&apos;s refund
+                process and applicable law; you can also contact us at{" "}
+                <a href={SUPPORT_EMAIL}>admin@bababuilds.com</a>.
+              </p>
+              <p>
                 A cancellation is not the same as a refund of past charges. Removing an installed
                 web app or discontinuing use does not by itself cancel a recurring subscription.
                 Please check that the cancellation was acknowledged and contact us promptly if a

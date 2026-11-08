@@ -9,7 +9,7 @@ Manage your restaurant from a phone with MenuMinute. Publish a permanent QR menu
 
 Features depend on your restaurant's existing plan and enabled services. All live order, POS and kitchen actions require a network connection. Guests can use your restaurant QR menu without installing this app.
 
-This Play edition does not sell subscriptions in the app. If you already use MenuMinute on the web, sign in to access your active restaurant features.
+Free QR menus stay free. Optional paid plans (for example Ordering, billed monthly) are available as Google Play subscriptions: the price and billing period are shown before you buy, they renew automatically until cancelled, and you can cancel any time under Subscriptions in the Google Play app. If you already subscribed, sign in to access your active restaurant features.
 
 **Developer:** BabaBuilds (verify the legal developer name shown in Play Console).
 **Support:** admin@bababuilds.com

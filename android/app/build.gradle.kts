@@ -48,4 +48,8 @@ android {
 dependencies {
     // Google's documented TWA helper: launcher, browser selection and verified origin.
     implementation("com.google.androidbrowserhelper:androidbrowserhelper:2.7.4")
+    // Digital Goods API bridge to Google Play Billing (billing 1.2.0 = Play Billing Library 8.3.0, which
+    // Google Play requires for app updates after 2026-08-31). The web app never loads a billing SDK; it
+    // only calls navigator Digital Goods / PaymentRequest, and the server verifies every purchase.
+    implementation("com.google.androidbrowserhelper:billing:1.2.0")
 }
