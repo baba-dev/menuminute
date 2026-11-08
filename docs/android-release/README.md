@@ -19,7 +19,7 @@ The Play entry sets an HttpOnly, Secure, SameSite=Lax cookie. This cookie is not
 - Android package `com.bababuilds.menuminute`; confirm before first Play upload.
 - Compile/target SDK 36; min SDK 26; Java 17; Android Browser Helper 2.7.4.
 - CI builds a debug APK and unsigned release AAB, and its result is required by the existing quality gate.
-- Manual `Android signed internal-release candidate` workflow requires Play upload keystore secrets and a protected GitHub `android-play-internal` environment. The workflow does not submit anything to Play automatically.
+- The protected `Android signed internal-release candidate` workflow signs **only reviewed current-main native changes** after successful push CI, and still supports explicit manual release candidates. Its output has automatically managed version codes and **never** uploads directly to Play. Play upload is a separate manual, reviewer-protected **internal draft** action; see [`release-automation.md`](release-automation.md).
 - Never commit keystores or app-signing credentials.
 
 ## C — merchant UX
