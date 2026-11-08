@@ -57,11 +57,16 @@ jobs:
           MM_ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: gradle --no-daemon --stacktrace :app:bundleRelease
       - name: Verify Java archive signature
+        # Upload keys are intentionally self-signed. Trust ONLY the configured
+        # upload keystore, not a public CA, while retaining strict signature
+        # integrity checks and refusing a mismatched signer.
+        env:
+          VERIFY_STORE_PASS: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
         run: |
           set -euo pipefail
           AAB=android/app/build/outputs/bundle/release/app-release.aab
           test -s "$AAB"
-          jarsigner -verify -strict "$AAB"
+          jarsigner -verify -strict -keystore "$RUNNER_TEMP/upload.jks" -storepass:env VERIFY_STORE_PASS "$AAB"
           sha256sum "$AAB" > "$AAB.sha256"
       - name: Retain signed candidate for manual Play internal testing
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
