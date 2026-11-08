@@ -189,6 +189,10 @@ candidate_configuration_ok || {
   echo "DEPLOYMENT_PREFLIGHT_FAILED: Invalid or missing production runtime configuration (see variable names above)" >&2
   exit 1
 }
+# The web's public demo must never promise half-hourly resets when the restricted
+# worker has the kill switch absent or disabled. Only the flag is inspected.
+"$node24" "$release/dist/demo-env-parity.mjs" \
+  /etc/menuminute/web.env /etc/menuminute/worker.env || exit 1
 systemctl cat menuminute-web.service >/dev/null
 systemctl cat menuminute-worker.service >/dev/null
 # Do not redirect live traffic into a release started with the old ERP Node runtime.

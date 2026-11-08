@@ -273,6 +273,44 @@ describe("demo outlet reset", () => {
     ).toBe(1);
   });
 
+  it("detects 8-day-old live Kitchen work and verifies a reset really restores fresh tickets", async () => {
+    await resetDemoOutlet(worker);
+    const readHealth = async () => {
+      const r = await worker.query<{
+        health: {
+          activeTickets: number;
+          oldestActiveMinutes: number | null;
+          lastResetAgeMinutes: number | null;
+        };
+      }>("select app_private.demo_reset_health() as health");
+      return r.rows[0]!.health;
+    };
+    const initial = await readHealth();
+    expect(initial.activeTickets).toBeGreaterThan(0);
+    expect(initial.oldestActiveMinutes).not.toBeNull();
+    expect(initial.oldestActiveMinutes!).toBeLessThanOrEqual(60);
+    expect(initial.lastResetAgeMinutes).toBeLessThanOrEqual(2);
+
+    // Reproduce the public demo's >10,000-minute ticket-age defect, confined to the demo.
+    const changed = await owner.query(
+      `update kitchen_work set created_at=clock_timestamp()-interval '8 days'
+       where outlet_id=$1 and status in ('queued','preparing')`,
+      [DEMO_IDS.outletId]
+    );
+    expect(changed.rowCount).toBeGreaterThan(0);
+    const stale = await readHealth();
+    expect(stale.oldestActiveMinutes).toBeGreaterThan(10_000);
+
+    await resetDemoOutlet(worker);
+    const healed = await readHealth();
+    expect(healed.activeTickets).toBeGreaterThan(0);
+    expect(healed.oldestActiveMinutes!).toBeLessThanOrEqual(60);
+    expect(healed.lastResetAgeMinutes).toBeLessThanOrEqual(2);
+
+    // Only the isolated worker identity can inspect this fixed demo probe.
+    await expect(app.query("select app_private.demo_reset_health()")).rejects.toThrow();
+  });
+
   it("never touches other tenants", async () => {
     await resetDemoOutlet(worker);
     const r = await owner.query("select count(*)::int n from orders where id='real-order-1'");

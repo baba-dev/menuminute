@@ -764,6 +764,13 @@
       "when": 1796821200044,
       "tag": "0109_community_single_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1796821200045,
+      "tag": "0110_demo_reset_health",
+      "breakpoints": true
     }
   ]
 }
