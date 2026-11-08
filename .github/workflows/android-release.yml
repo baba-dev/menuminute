@@ -6,9 +6,15 @@ on:
 permissions:
   contents: read
 
+# Never run two signing attempts against the same protected release branch simultaneously.
+concurrency:
+  group: android-play-internal-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   signed_aab:
     name: Sign and verify Play upload candidate
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: android-play-internal
@@ -25,7 +31,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.13"
-      - name: Load upload signing credentials without printing secrets
+      - name: Load and validate upload keystore without printing secrets
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           STORE_PASS: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
@@ -37,14 +43,18 @@ jobs:
           for var in KEYSTORE_B64 STORE_PASS KEY_ALIAS KEY_PASS; do
             test -n "${!var}" || { echo "::error::Missing signing configuration"; exit 1; }
           done
-          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
           chmod 600 "$RUNNER_TEMP/upload.jks"
-          echo "MM_ANDROID_UPLOAD_STORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
-          echo "MM_ANDROID_UPLOAD_STORE_PASSWORD=$STORE_PASS" >> "$GITHUB_ENV"
-          echo "MM_ANDROID_UPLOAD_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
-          echo "MM_ANDROID_UPLOAD_KEY_PASSWORD=$KEY_PASS" >> "$GITHUB_ENV"
+          test -s "$RUNNER_TEMP/upload.jks"
+          keytool -list -keystore "$RUNNER_TEMP/upload.jks" -alias "$KEY_ALIAS" -storepass:env STORE_PASS > /dev/null
       - name: Build signed Android App Bundle
         working-directory: android
+        env:
+          MM_ANDROID_UPLOAD_STORE: ${{ runner.temp }}/upload.jks
+          MM_ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          MM_ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          MM_ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: gradle --no-daemon --stacktrace :app:bundleRelease
       - name: Verify Java archive signature
         run: |
@@ -61,3 +71,7 @@ jobs:
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/bundle/release/app-release.aab.sha256
           retention-days: 7
+      - name: Remove temporary upload keystore
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/upload.jks"
