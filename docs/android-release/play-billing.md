@@ -45,8 +45,17 @@ Invariants (do not weaken):
    after 3 days, so a purchase the ledger refuses (state `conflict`) is deliberately left unacknowledged.
 5. **Idempotent and re-entrant.** Pub/Sub redelivery, duplicate verification, and app restore all converge on the same
    state (`play_events` records each event id once; one live grant per purchase token).
-6. **Launch scope is Ordering only.** Kitchen Pro bundling and auto-routing live in the Razorpay charge function and
-   are not replicated. The DB constrains `product_key` to `ordering`, and the UI hides Kitchen Pro in the Play app.
+6. **Kitchen Pro mirrors Razorpay exactly.** It needs `PLAY_KITCHEN_ENABLED=true` **and** the platform's global Kitchen
+   commercial release switch (`kitchen_commerce_enabled()`); the ledger refuses to grant otherwise. A verified Kitchen
+   purchase mints the bundled Ordering grant from the same purchase (`kitchen_paid_ordering_grants`), revokes it together
+   with the Kitchen grant (the existing `kitchen_bundle_revoke` trigger now covers `google-play`), and activates ready
+   outlets (`kitchen_auto_paid_activate` through the extended `kitchen_paid_subscription_active`).
+7. **Upgrade path inside Play.** A live Play _Ordering_ subscription does not block a Kitchen Pro purchase. Once Kitchen
+   Pro is verified the server calls `purchases.subscriptions.cancel` on the Ordering token so it stops renewing; its
+   already-paid days stay active (`play_superseded_by` / `mark_play_superseded`). Kitchen→Ordering downgrade is not
+   offered while Kitchen is live.
+8. **Abuse bounds.** `intent` and `verify` are rate limited fail-closed in Redis (30 per account / 60 per organization per
+   10 minutes, 2000 global) because each call can cost a Google API request.
 
 ### State mapping
 
@@ -72,7 +81,9 @@ needs an operator, see runbook).
 1. Create the app with package `com.bababuilds.menuminute` (permanent). Enrol in **Play App Signing**; copy the _app
    signing_ SHA-256 into `ANDROID_PLAY_APP_SIGNING_SHA256` (not the upload key).
 2. **Monetize → Products → Subscriptions → Create subscription**
-   - Product ID: `menuminute_ordering` (or set `GOOGLE_PLAY_SKU_ORDERING`).
+   - Product ID: `menuminute_ordering` (or set `GOOGLE_PLAY_SKU_ORDERING`). Create a second subscription,
+     `menuminute_kitchen_pro` (`GOOGLE_PLAY_SKU_KITCHEN`), with the same single `monthly` base plan, when enabling
+     Kitchen Pro.
    - **Exactly one base plan**, id `monthly` (or set `GOOGLE_PLAY_BASE_PLAN_ORDERING`), billing period 1 month,
      auto-renewing, **no add-ons / one product per subscription**. The server rejects any other shape.
    - Prices must match the published Ordering price book per region (`src/modules/billing/catalog.ts`). Pricing changes
@@ -106,6 +117,9 @@ GOOGLE_PLAY_RTDN_AUDIENCE=https://food.bababuilds.com/api/webhooks/billing/googl
 GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT=play-rtdn-push@<project>.iam.gserviceaccount.com
 GOOGLE_PLAY_SKU_ORDERING=menuminute_ordering
 GOOGLE_PLAY_BASE_PLAN_ORDERING=monthly
+PLAY_KITCHEN_ENABLED=false            # true only after the Kitchen commercial release is approved
+GOOGLE_PLAY_SKU_KITCHEN=menuminute_kitchen_pro
+GOOGLE_PLAY_BASE_PLAN_KITCHEN=monthly
 BILLING_DATABASE_URL=<the existing restricted menuminute_billing URL>
 ```
 
@@ -113,7 +127,7 @@ BILLING_DATABASE_URL=<the existing restricted menuminute_billing URL>
 billing DB URL, or when `BILLING_DATABASE_URL` equals `DATABASE_URL`, or in Community Edition.
 
 Deploy migration `0111_google_play_billing.sql` through the normal checksummed pipeline (forward-only, additive; it
-creates two `app_private` tables and seven functions and touches no existing object).
+creates two `app_private` tables and the Play functions; it replaces only `kitchen_paid_subscription_active` and `kitchen_bundle_revoke` (superset of the Razorpay behaviour)).
 
 ## Verification before enabling for real users
 
@@ -130,6 +144,9 @@ Run on a **physical Android device** from Play **Internal testing** with a licen
 - [ ] Org with active Razorpay: Play `intent` refuses. Org with active Play: web Razorpay checkout refuses.
 - [ ] Trial org: purchase ends the trial grant and starts exactly one paid grant.
 - [ ] Offline/airplane purchase attempt shows a clear failure and grants nothing.
+- [ ] Kitchen Pro (when enabled): purchase unlocks Kitchen **and** Ordering; a ready outlet starts routing; an on-hold
+      state removes both; upgrading from a live Play Ordering plan cancels Ordering renewal in Play (it shows "canceled").
+- [ ] Rapid repeated taps on Subscribe return a rate-limit message, not a Google error storm.
 - [ ] Non-Play browser on the same account sees "Managed by Google Play" and no checkout button.
 
 ## Operations runbook
@@ -149,9 +166,12 @@ Run on a **physical Android device** from Play **Internal testing** with a licen
 
 ## Known limitations
 
-- Kitchen Pro is not sold through Play yet.
-- Plan changes between products inside Play (upgrade/downgrade) are not supported; one Ordering subscription only.
-- The verification endpoint has no application-level rate limit beyond owner authentication; Google API quota and
-  the single-row-per-token ledger bound the cost. Add the platform limiter if abuse appears.
-- The Android project was not compiled in the authoring environment (Maven Central was rate-limited). The CI
-  `android_twa` lane and the signed internal-release workflow are the compile evidence.
+- Purchase tokens are bearer secrets and the Digital Goods API cannot attach an account id to a purchase. Registration
+  is therefore trusted to the authenticated **owner** who submits a token, which Google only reveals to the purchaser.
+  A leaked token could be attached by another owner before the purchaser does; it can never be re-bound afterward and
+  every call is rate limited. If stronger binding is required, move to a native Play Billing flow that sets
+  `obfuscatedExternalAccountId`.
+- Only monthly single-base-plan subscriptions are supported; the server rejects other shapes.
+- Kitchen→Ordering downgrade and yearly plans are not offered.
+- Real Google calls (purchase, RTDN, cancel, acknowledge) are **unverified** until the on-device checklist above is run
+  against a license-tester account. Unit and integration tests stub Google; the Android CI lane proves the app compiles.

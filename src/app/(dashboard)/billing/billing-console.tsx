@@ -196,9 +196,9 @@ export function BillingConsole({
 
   // Restore: re-submit purchases Google Play still reports (reinstall, missed callback, new device).
   // The server binds tokens only for the signed-in owner and ignores anything Google does not confirm.
-  const restoreSku = view.playClient && view.canManage ? view.playSku : null;
+  const restoreSkus = view.playClient && view.canManage ? view.playSkus : null;
   useEffect(() => {
-    if (!restoreSku || !playBillingSupported()) return;
+    if (!restoreSkus || !playBillingSupported()) return;
     let flagged = false;
     try {
       flagged = window.sessionStorage.getItem("mm.play.restored") === organizationId;
@@ -209,17 +209,20 @@ export function BillingConsole({
     let cancelled = false;
     void (async () => {
       try {
-        const tokens = await listPlayPurchaseTokens(restoreSku);
-        for (const token of tokens) {
-          if (cancelled) return;
-          await verifyPlayPurchase(restoreSku, token).catch(() => undefined);
+        let restored = 0;
+        for (const sku of restoreSkus) {
+          for (const token of await listPlayPurchaseTokens(sku)) {
+            if (cancelled) return;
+            restored += 1;
+            await verifyPlayPurchase(sku, token).catch(() => undefined);
+          }
         }
         try {
           window.sessionStorage.setItem("mm.play.restored", organizationId);
         } catch {
           /* ignore */
         }
-        if (tokens.length > 0 && !cancelled) router.refresh();
+        if (restored > 0 && !cancelled) router.refresh();
       } catch {
         /* restore is best-effort; the manual purchase flow is unaffected */
       }
@@ -227,7 +230,7 @@ export function BillingConsole({
     return () => {
       cancelled = true;
     };
-  }, [restoreSku, organizationId, router, verifyPlayPurchase]);
+  }, [restoreSkus, organizationId, router, verifyPlayPurchase]);
 
   async function cancelRenewal() {
     if (!cancelTarget) return;

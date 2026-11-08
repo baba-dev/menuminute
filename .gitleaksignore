@@ -1,0 +1,2 @@
+# Fake purchase token used as a unit-test fixture (not a credential). Later commits generate it at runtime.
+96e1bd65beb47b3c3abb191fe5969b9bfe26e4b7:tests/google-play-billing-view.test.ts:generic-api-key:164

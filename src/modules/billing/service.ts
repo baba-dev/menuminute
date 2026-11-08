@@ -54,7 +54,15 @@ export async function billingState(actor: Actor, organizationId: string) {
         commerce.rows[0]?.ready === true,
       subscriptions: Array.isArray(state) ? state : [],
       playBillingEnabled: !community && env.PLAY_BILLING_ENABLED,
-      playSku: env.GOOGLE_PLAY_SKU_ORDERING,
+      playKitchenEnabled:
+        !community &&
+        env.PLAY_BILLING_ENABLED &&
+        env.PLAY_KITCHEN_ENABLED &&
+        commerce.rows[0]?.ready === true,
+      playSkus: {
+        ordering: env.GOOGLE_PLAY_SKU_ORDERING,
+        kitchen_pro: env.GOOGLE_PLAY_SKU_KITCHEN,
+      },
       playSubscriptions: Array.isArray(playState) ? playState : [],
       ...effective.rows[0]!,
       grants,

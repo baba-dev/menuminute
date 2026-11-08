@@ -218,6 +218,10 @@ const envSchema = z
     GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT: z.string().trim().email().optional(),
     GOOGLE_PLAY_SKU_ORDERING: z.string().trim().min(1).max(100).default("menuminute_ordering"),
     GOOGLE_PLAY_BASE_PLAN_ORDERING: z.string().trim().min(1).max(100).default("monthly"),
+    // Kitchen Pro through Play needs this flag AND the platform's global Kitchen commercial release.
+    PLAY_KITCHEN_ENABLED: strictBoolean.default(false),
+    GOOGLE_PLAY_SKU_KITCHEN: z.string().trim().min(1).max(100).default("menuminute_kitchen_pro"),
+    GOOGLE_PLAY_BASE_PLAN_KITCHEN: z.string().trim().min(1).max(100).default("monthly"),
   })
   .superRefine((e, ctx) => {
     validateMediaEnv(e, ctx);
@@ -415,6 +419,18 @@ const envSchema = z
         path: ["PLAY_BILLING_ENABLED"],
         message:
           "Google Play billing requires a service account, an RTDN audience and identity, and an isolated billing database URL",
+      });
+    if (e.PLAY_KITCHEN_ENABLED && !e.PLAY_BILLING_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["PLAY_KITCHEN_ENABLED"],
+        message: "Kitchen Pro on Google Play requires Google Play billing to be enabled",
+      });
+    if (e.GOOGLE_PLAY_SKU_KITCHEN === e.GOOGLE_PLAY_SKU_ORDERING)
+      ctx.addIssue({
+        code: "custom",
+        path: ["GOOGLE_PLAY_SKU_KITCHEN"],
+        message: "Ordering and Kitchen Pro must use different Google Play product ids",
       });
     if (e.PLAY_BILLING_ENABLED && e.BILLING_DATABASE_URL === e.DATABASE_URL)
       ctx.addIssue({

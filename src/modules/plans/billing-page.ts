@@ -41,7 +41,8 @@ export type BillingStateInput = {
   /** Google Play Billing is configured on this deployment (only usable inside the Play app). */
   playBillingEnabled?: boolean;
   /** Catalog SKU for Ordering, used by the Play app to restore purchases without a checkout call. */
-  playSku?: string;
+  playKitchenEnabled?: boolean;
+  playSkus?: { ordering: string; kitchen_pro: string };
   subscriptions?: SubscriptionInput[];
   playSubscriptions?: PlaySubscriptionInput[];
   grants?: GrantInput[];
@@ -97,7 +98,7 @@ export const formatDate = fmtDate;
 export type LadderAction =
   | { kind: "checkout"; plan: "ordering" | "kitchen_pro"; label: string }
   /** Google Play Billing purchase sheet, offered only inside the Play-distributed Android app. */
-  | { kind: "play-checkout"; plan: "ordering"; label: string }
+  | { kind: "play-checkout"; plan: "ordering" | "kitchen_pro"; label: string }
   /** Dedicated is sold by contract, so its only action is a conversation. */
   | { kind: "contact"; label: string; href: string };
 export type LadderCard = PlanOffer & {
@@ -131,7 +132,8 @@ export type BillingPageView = {
   billingEnabled: boolean;
   /** A purchase can be made right now from this client (Razorpay on the web, Play Billing in the app). */
   checkoutAvailable: boolean;
-  playSku: string | null;
+  /** Catalog SKUs the Play app restores purchases for. Null outside the Play app. */
+  playSkus: string[] | null;
   playClient: boolean;
   billingUnavailable: boolean;
   /** Trial and payment-problem banners, most urgent first. */
@@ -272,6 +274,21 @@ export function buildBillingPageView(input: {
   }
 
   const subscribedViaPlay = livePlay !== undefined;
+  const liveStates = (product: string) =>
+    playSubs.some(
+      (p) =>
+        p.product === product &&
+        PLAY_LIVE_STATES.includes(p.state) &&
+        (!p.currentPeriodEnd ||
+          new Date(p.currentPeriodEnd).getTime() > (input.now ?? new Date()).getTime())
+    );
+  const playKitchenLive = liveStates("kitchen_pro");
+  const playOrderingLive = liveStates("ordering");
+  // A live Play subscription closes web checkout entirely. Inside the Play app, a live Ordering
+  // subscription still allows the Kitchen Pro upgrade; a live Kitchen Pro subscription blocks everything.
+  const blockedByPlay = (offerKey: string) =>
+    subscribedViaPlay && (!playClient || playKitchenLive || offerKey !== "kitchen_pro");
+  const playKitchenEnabled = billing?.playKitchenEnabled === true;
   const ordersOnSubscription = subs.some(
     (s) =>
       s.product === "ordering" && ACTIVE_SUBSCRIPTION.includes(s.status) && !s.cancelRequestedAt
@@ -290,15 +307,19 @@ export function buildBillingPageView(input: {
       else if (offer.key === "dedicated")
         action = { kind: "contact", label: "Talk to us about Dedicated", href: "/contact" };
       else if (!canManage) note = "Only the organization owner can change the plan.";
-      else if (subscribedViaPlay)
+      else if (blockedByPlay(offer.key))
         note = playClient
           ? "You are subscribed through Google Play. Manage it in Google Play subscriptions."
           : "This organization is subscribed through Google Play. Manage it in the Google Play app.";
       else if (!checkoutEnabled) note = "Paid upgrades are opening soon.";
-      else if (playClient && offer.key === "kitchen_pro")
+      else if (playClient && offer.key === "kitchen_pro" && !playKitchenEnabled)
         note = "Kitchen Pro is not available in the Android app yet.";
       else if (playClient)
-        action = { kind: "play-checkout", plan: "ordering", label: `Upgrade to ${offer.label}` };
+        action = {
+          kind: "play-checkout",
+          plan: offer.key as "ordering" | "kitchen_pro",
+          label: `Upgrade to ${offer.label}`,
+        };
       else if (offer.key === "kitchen_pro" && !kitchenCheckout)
         // The server is the authority: it refuses Kitchen Pro checkout until the platform release is on.
         note = "Kitchen Pro checkout is not available on this deployment yet.";
@@ -313,7 +334,7 @@ export function buildBillingPageView(input: {
       if (input.billingUnavailable)
         note = "Billing details are temporarily unavailable. Please try again shortly.";
       else if (!canManage) note = "Only the organization owner can subscribe.";
-      else if (subscribedViaPlay)
+      else if (blockedByPlay("ordering"))
         note =
           "This organization is subscribed through Google Play. Manage it in the Google Play app.";
       else if (!checkoutEnabled) note = "Paid plans are opening soon.";
@@ -323,7 +344,9 @@ export function buildBillingPageView(input: {
     }
     // Kitchen Pro includes ordering, so buying it ends an Ordering subscription's renewals. Say so first.
     const switchNote =
-      offer.key === "kitchen_pro" && action?.kind === "checkout" && ordersOnSubscription
+      offer.key === "kitchen_pro" &&
+      ((action?.kind === "checkout" && ordersOnSubscription) ||
+        (action?.kind === "play-checkout" && playOrderingLive))
         ? "Kitchen Pro includes Ordering. Your Ordering subscription stops renewing once Kitchen Pro starts, and the days you have already paid for stay active."
         : null;
     return { ...offer, state, action, note, switchNote };
@@ -344,7 +367,7 @@ export function buildBillingPageView(input: {
   const playRows: SubscriptionRow[] = playSubs.map((p, i) => ({
     id: `play-${i}`,
     provider: "play",
-    product: "Online ordering",
+    product: p.product === "kitchen_pro" ? "Kitchen Pro" : "Online ordering",
     status: titleCase(
       p.state === "grace" ? "payment issue" : p.state.replace("canceled", "active")
     ),
@@ -377,8 +400,13 @@ export function buildBillingPageView(input: {
     community,
     canManage,
     billingEnabled,
-    checkoutAvailable: checkoutEnabled && canManage && !subscribedViaPlay,
-    playSku: playClient && playBillingEnabled ? (billing?.playSku ?? null) : null,
+    checkoutAvailable: playClient
+      ? ladder.some((c) => c.action?.kind === "play-checkout")
+      : checkoutEnabled && canManage && !subscribedViaPlay,
+    playSkus:
+      playClient && playBillingEnabled && billing?.playSkus
+        ? [billing.playSkus.ordering, billing.playSkus.kitchen_pro]
+        : null,
     playClient,
     billingUnavailable: input.billingUnavailable === true,
     cycle,

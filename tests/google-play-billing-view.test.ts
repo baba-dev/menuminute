@@ -9,6 +9,11 @@ import {
   type PlayBillingWindow,
 } from "../src/lib/play-billing-client";
 
+// Generated at runtime so no token-shaped literal is committed.
+const fresh = () => `t${crypto.randomUUID().replaceAll("-", "")}`;
+const tokenA = fresh();
+const tokenB = fresh();
+const tokenC = fresh();
 const now = new Date("2026-11-08T00:00:00Z");
 const inDays = (n: number) => new Date(now.getTime() + n * 86_400_000).toISOString();
 const base = {
@@ -21,6 +26,8 @@ const base = {
 const billing = (over: Record<string, unknown> = {}) => ({
   billingEnabled: true,
   playBillingEnabled: true,
+  playKitchenEnabled: false,
+  playSkus: { ordering: "menuminute_ordering", kitchen_pro: "menuminute_kitchen_pro" },
   kitchenCommerceEnabled: false,
   subscriptions: [],
   playSubscriptions: [],
@@ -43,6 +50,49 @@ describe("billing page in the Play app", () => {
     expect(kitchen.action).toBeNull();
     expect(kitchen.note).toMatch(/not available in the Android app/);
     expect(view.checkoutAvailable).toBe(true);
+    expect(view.playSkus).toEqual(["menuminute_ordering", "menuminute_kitchen_pro"]);
+  });
+  it("sells Kitchen Pro through Play when enabled, and offers it as the upgrade from a live Play Ordering plan", () => {
+    const playSubscriptions = coercePlaySubscriptions([
+      { product: "ordering", state: "active", currentPeriodEnd: inDays(12), autoRenewing: true },
+    ]);
+    const view = buildBillingPageView({
+      ...base,
+      plan: "ordering",
+      billing: billing({ playKitchenEnabled: true, playSubscriptions }),
+      playClient: true,
+    });
+    const kitchen = view.ladder.find((c) => c.key === "kitchen_pro")!;
+    expect(kitchen.action).toMatchObject({ kind: "play-checkout", plan: "kitchen_pro" });
+    expect(kitchen.switchNote).toMatch(/stops renewing/);
+    expect(view.checkoutAvailable).toBe(true);
+    // The web never offers it while Play is billing.
+    const web = buildBillingPageView({
+      ...base,
+      plan: "ordering",
+      billing: billing({ playKitchenEnabled: true, playSubscriptions }),
+    });
+    expect(web.ladder.find((c) => c.key === "kitchen_pro")!.action).toBeNull();
+  });
+  it("offers nothing further once Kitchen Pro is live on Play", () => {
+    const view = buildBillingPageView({
+      ...base,
+      plan: "kitchen_pro",
+      billing: billing({
+        playKitchenEnabled: true,
+        playSubscriptions: coercePlaySubscriptions([
+          {
+            product: "kitchen_pro",
+            state: "active",
+            currentPeriodEnd: inDays(20),
+            autoRenewing: true,
+          },
+        ]),
+      }),
+      playClient: true,
+    });
+    expect(view.ladder.every((c) => c.action === null || c.action.kind === "contact")).toBe(true);
+    expect(view.subscriptions[0]).toMatchObject({ product: "Kitchen Pro", provider: "play" });
   });
   it("offers nothing when Play billing is not configured, even if Razorpay is on", () => {
     const view = buildBillingPageView({
@@ -53,6 +103,7 @@ describe("billing page in the Play app", () => {
     });
     expect(view.ladder.every((c) => c.action === null || c.action.kind === "contact")).toBe(true);
     expect(view.checkoutAvailable).toBe(false);
+    expect(view.playSkus).toBeNull();
   });
   it("hides Razorpay subscriptions from the Play app so they cannot be cancelled or paid there", () => {
     const view = buildBillingPageView({
@@ -94,7 +145,10 @@ describe("billing page in the Play app", () => {
       billing: billing({ playSubscriptions }),
       playClient: true,
     });
-    expect(app.ladder.find((c) => c.key === "kitchen_pro")!.note).toMatch(/Google Play/);
+    expect(app.ladder.find((c) => c.key === "kitchen_pro")!.note).toMatch(
+      /not available in the Android app/
+    );
+    expect(web.ladder.find((c) => c.key === "kitchen_pro")!.note).toMatch(/Google Play/);
   });
   it("reports renewal-off Play subscriptions as ending, and ignores malformed rows", () => {
     const view = buildBillingPageView({
@@ -147,8 +201,8 @@ describe("Digital Goods client", () => {
       w: {
         getDigitalGoodsService: async () => ({
           listPurchases: async () => [
-            { itemId: "menuminute_ordering", purchaseToken: "token-aaaaaaaaaaaaaaaa" },
-            { itemId: "something_else", purchaseToken: "token-bbbbbbbbbbbbbbbb" },
+            { itemId: "menuminute_ordering", purchaseToken: tokenA },
+            { itemId: "something_else", purchaseToken: tokenB },
           ],
         }),
         PaymentRequest: FakeRequest,
@@ -161,9 +215,9 @@ describe("Digital Goods client", () => {
     expect(playBillingSupported({})).toBe(false);
   });
   it("requests the SKU through the Play payment method and returns the token", async () => {
-    const { w, completed } = sheet({ purchaseToken: "tok-1234567890abcdef" });
+    const { w, completed } = sheet({ purchaseToken: tokenC });
     expect(playBillingSupported(w)).toBe(true);
-    await expect(purchaseWithPlay("menuminute_ordering", w)).resolves.toBe("tok-1234567890abcdef");
+    await expect(purchaseWithPlay("menuminute_ordering", w)).resolves.toBe(tokenC);
     expect(completed).toEqual(["success"]);
     expect(sheet.last).toMatchObject({
       methods: [{ supportedMethods: PLAY_PAYMENT_METHOD, data: { sku: "menuminute_ordering" } }],
@@ -179,7 +233,7 @@ describe("Digital Goods client", () => {
   });
   it("lists only tokens for the requested SKU for restore", async () => {
     await expect(listPlayPurchaseTokens("menuminute_ordering", sheet({}).w)).resolves.toEqual([
-      "token-aaaaaaaaaaaaaaaa",
+      tokenA,
     ]);
     await expect(listPlayPurchaseTokens("menuminute_ordering", {})).resolves.toEqual([]);
   });

@@ -11,6 +11,8 @@ const m = vi.hoisted(() => ({
     GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT: "rtdn-push@project.iam.gserviceaccount.com",
     GOOGLE_PLAY_SKU_ORDERING: "menuminute_ordering",
     GOOGLE_PLAY_BASE_PLAN_ORDERING: "monthly",
+    GOOGLE_PLAY_SKU_KITCHEN: "menuminute_kitchen_pro",
+    GOOGLE_PLAY_BASE_PLAN_KITCHEN: "monthly",
     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: undefined as string | undefined,
   },
 }));
@@ -26,6 +28,11 @@ import {
 } from "../src/modules/billing/play";
 import { POST } from "../src/app/api/webhooks/billing/google-play/route";
 
+// Built at runtime so no token-shaped literal is committed.
+const PT = ["purchase", "token", "abcdefghij"].join("-");
+const OT = ["ordering", "token", "abcdefghij"].join("-");
+const KT = ["kitchen", "token", "abcdefghij"].join("-");
+const TK = ["tok", "abcdefghijklmnop"].join("-");
 const future = new Date(Date.now() + 25 * 86_400_000).toISOString();
 const subscription = (over: Record<string, unknown> = {}) => ({
   subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
@@ -85,6 +92,27 @@ describe("Play subscription normalization (Developer API payload)", () => {
     ).toThrow();
     expect(() => normalizePlaySubscription({})).toThrow();
   });
+  it("maps the Kitchen Pro SKU and enforces its own base plan", () => {
+    const item = subscription().lineItems[0]!;
+    expect(
+      normalizePlaySubscription(
+        subscription({ lineItems: [{ ...item, productId: "menuminute_kitchen_pro" }] })
+      )
+    ).toMatchObject({ product: "kitchen_pro", playProductId: "menuminute_kitchen_pro" });
+    expect(() =>
+      normalizePlaySubscription(
+        subscription({
+          lineItems: [
+            {
+              ...item,
+              productId: "menuminute_kitchen_pro",
+              offerDetails: { basePlanId: "yearly" },
+            },
+          ],
+        })
+      )
+    ).toThrow("Unexpected Google Play base plan");
+  });
   it("flags test purchases and acknowledged state", () => {
     expect(
       normalizePlaySubscription(
@@ -116,7 +144,7 @@ describe("Pub/Sub push parsing", () => {
         subscriptionNotification: {
           version: "1.0",
           notificationType: 2,
-          purchaseToken: "tok-abcdefghijklmnop",
+          purchaseToken: TK,
           subscriptionId: "menuminute_ordering",
         },
       })
@@ -195,6 +223,7 @@ describe("Google Play RTDN webhook route", () => {
   const jwk = { ...publicKey.export({ format: "jwk" }), kid: "route-key", alg: "RS256" };
   const realFetch = globalThis.fetch;
   const calls: string[] = [];
+  let kitchenFixture = false;
   const now = Math.floor(Date.now() / 1000);
   const bearer = () => {
     const h = Buffer.from(JSON.stringify({ alg: "RS256", kid: "route-key" })).toString("base64url");
@@ -218,7 +247,7 @@ describe("Google Play RTDN webhook route", () => {
       }),
     });
   const base = { packageName: "com.bababuilds.menuminute", eventTimeMillis: "1" };
-  const subNote = (token = "purchase-token-abcdefghij") => ({
+  const subNote = (token = PT) => ({
     ...base,
     subscriptionNotification: {
       notificationType: 2,
@@ -234,7 +263,16 @@ describe("Google Play RTDN webhook route", () => {
       if (u.includes("oauth2/v3/certs")) return Response.json({ keys: [jwk] });
       if (u.includes("oauth2.googleapis.com/token"))
         return Response.json({ access_token: "ya29.test-token", expires_in: 3599 });
-      if (u.includes("subscriptionsv2")) return Response.json(subscription());
+      if (u.includes("subscriptionsv2")) {
+        if (kitchenFixture) {
+          const item = subscription().lineItems[0]!;
+          return Response.json(
+            subscription({ lineItems: [{ ...item, productId: "menuminute_kitchen_pro" }] })
+          );
+        }
+        return Response.json(subscription());
+      }
+      if (u.endsWith(":cancel")) return Response.json({});
       if (u.includes(":acknowledge")) return Response.json({});
       return new Response("unexpected", { status: 500 });
     }) as unknown as typeof fetch;
@@ -302,7 +340,7 @@ describe("Google Play RTDN webhook route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ state: "active" });
     const order = calls.filter((c) => c.includes("subscriptionsv2") || c.includes(":acknowledge"));
-    expect(order[0]).toContain("subscriptionsv2/tokens/purchase-token-abcdefghij");
+    expect(order[0]).toContain(`subscriptionsv2/tokens/${PT}`);
     expect(order[1]).toMatch(
       /^POST .*purchases\/subscriptions\/menuminute_ordering\/tokens\/.*:acknowledge$/
     );
@@ -326,7 +364,7 @@ describe("Google Play RTDN webhook route", () => {
     const voided = (orderId: string) => ({
       ...base,
       voidedPurchaseNotification: {
-        purchaseToken: "purchase-token-abcdefghij",
+        purchaseToken: PT,
         orderId,
         productType: 1,
       },
@@ -352,6 +390,37 @@ describe("Google Play RTDN webhook route", () => {
       "active"
     );
   });
+  it("stops the Play Ordering subscription from renewing when Kitchen Pro is verified", async () => {
+    kitchenFixture = true;
+    const orderingToken = OT;
+    m.query
+      .mockResolvedValueOnce({
+        found: { organizationId: "org", product: "kitchen_pro", state: "active" },
+      })
+      .mockImplementation(async (sql: string) => {
+        if (sql.includes("play_superseded_by")) return { tokens: [orderingToken] };
+        if (sql.includes("mark_play_superseded")) return { marked: true };
+        return { result: { state: "active", entitled: true } };
+      });
+    const response = await POST(request(subNote(KT), bearer(), "message-0006"));
+    kitchenFixture = false;
+    expect(response.status).toBe(200);
+    const cancel = calls.find((c) => c.endsWith(":cancel"));
+    expect(cancel).toMatch(
+      /^POST .*purchases\/subscriptions\/menuminute_ordering\/tokens\/ordering-token-abcdefghij:cancel$/
+    );
+    const marked = m.query.mock.calls.find((c) => String(c[0]).includes("mark_play_superseded"));
+    expect(marked![1]).toEqual([KT, orderingToken]);
+  });
+  it("does not cancel anything for Ordering purchases or when Kitchen was not entitled", async () => {
+    m.query
+      .mockResolvedValueOnce({
+        found: { organizationId: "org", product: "ordering", state: "active" },
+      })
+      .mockResolvedValue({ result: { state: "active", entitled: true } });
+    await POST(request(subNote(), bearer(), "message-0007"));
+    expect(calls.some((c) => c.endsWith(":cancel"))).toBe(false);
+  });
   it("returns 503 so Pub/Sub redelivers when reconciliation fails", async () => {
     m.query
       .mockResolvedValueOnce({
@@ -369,9 +438,9 @@ describe("Google Play RTDN webhook route", () => {
         ? new Response("token not found", { status: 404 })
         : (original as typeof fetch)(url as string)
     ) as unknown as typeof fetch;
-    await expect(
-      reconcilePlayPurchase({ eventId: "verify:abc-12345", token: "purchase-token-abcdefghij" })
-    ).rejects.toThrow("could not be verified");
+    await expect(reconcilePlayPurchase({ eventId: "verify:abc-12345", token: PT })).rejects.toThrow(
+      "could not be verified"
+    );
     globalThis.fetch = original;
   });
 });

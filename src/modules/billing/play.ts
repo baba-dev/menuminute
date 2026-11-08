@@ -18,7 +18,7 @@ const GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 const PUBLISHER_SCOPE = "https://www.googleapis.com/auth/androidpublisher";
 const TOKEN_PATTERN = /^[A-Za-z0-9._\-~+/=]{16,4096}$/;
 
-export type PlayProduct = "ordering";
+export type PlayProduct = "ordering" | "kitchen_pro";
 export type PlayState =
   "pending" | "active" | "canceled" | "grace" | "on_hold" | "paused" | "expired" | "revoked";
 
@@ -26,7 +26,6 @@ export function isPlausiblePurchaseToken(token: unknown): token is string {
   return typeof token === "string" && TOKEN_PATTERN.test(token);
 }
 
-/** Launch scope is Ordering only; Kitchen Pro stays Razorpay-only (see migration 0111). */
 export function playCatalog() {
   return {
     ordering: {
@@ -34,10 +33,17 @@ export function playCatalog() {
       sku: env.GOOGLE_PLAY_SKU_ORDERING,
       basePlanId: env.GOOGLE_PLAY_BASE_PLAN_ORDERING,
     },
+    kitchen_pro: {
+      product: "kitchen_pro" as const,
+      sku: env.GOOGLE_PLAY_SKU_KITCHEN,
+      basePlanId: env.GOOGLE_PLAY_BASE_PLAN_KITCHEN,
+    },
   };
 }
 export function playProductForSku(sku: string): PlayProduct | null {
-  return sku === env.GOOGLE_PLAY_SKU_ORDERING ? "ordering" : null;
+  if (sku === env.GOOGLE_PLAY_SKU_ORDERING) return "ordering";
+  if (sku === env.GOOGLE_PLAY_SKU_KITCHEN) return "kitchen_pro";
+  return null;
 }
 
 // ───────────────────────── Developer API client ─────────────────────────
@@ -222,6 +228,25 @@ export async function acknowledgePlaySubscription(sku: string, token: string): P
   if (!response.ok) throw new Error("Google Play acknowledgement failed");
 }
 
+/**
+ * Stop a subscription from renewing; the paid period stays valid until its expiry (Play Developer API
+ * `purchases.subscriptions.cancel`). Treated as done when Google reports it is already ended or canceled.
+ */
+export async function cancelPlaySubscriptionRenewal(sku: string, token: string): Promise<void> {
+  if (!isPlausiblePurchaseToken(token) || playProductForSku(sku) === null)
+    throw new ValidationError("Invalid purchase");
+  const response = await publisherFetch(
+    `purchases/subscriptions/${encodeURIComponent(sku)}/tokens/${encodeURIComponent(token)}:cancel`,
+    { method: "POST", body: "{}" }
+  );
+  if (response.ok) return;
+  // Already canceled/expired: re-query to confirm instead of guessing from the error body.
+  const state = await fetchPlaySubscription(token).catch(() => null);
+  if (state && (state.state === "canceled" || state.state === "expired" || !state.autoRenewing))
+    return;
+  throw new Error("Google Play could not stop the superseded subscription");
+}
+
 // ───────────────────────── Ledger writes (restricted identity) ─────────────────────────
 
 export interface PlayReconcileResult {
@@ -297,7 +322,26 @@ export async function reconcilePlayPurchase(params: {
       acknowledged: true,
     });
   }
+  // Kitchen Pro includes Ordering: stop the organization's Play Ordering subscription from renewing.
+  // A failure throws so the caller or Pub/Sub retries; every step is idempotent.
+  if (result.entitled && snapshot.product === "kitchen_pro")
+    await supersedePlayOrdering(params.token);
   return result;
+}
+
+async function supersedePlayOrdering(kitchenToken: string): Promise<void> {
+  const found = await billingQuery<{ tokens: string[] }>(
+    "SELECT app_private.play_superseded_by($1) AS tokens",
+    [kitchenToken]
+  );
+  for (const orderingToken of found.tokens) {
+    if (!isPlausiblePurchaseToken(orderingToken)) continue;
+    await cancelPlaySubscriptionRenewal(playCatalog().ordering.sku, orderingToken);
+    await billingQuery<{ marked: boolean }>(
+      "SELECT app_private.mark_play_superseded($1,$2) AS marked",
+      [kitchenToken, orderingToken]
+    );
+  }
 }
 
 export async function recordPlayNotification(eventId: string, kind: string): Promise<boolean> {

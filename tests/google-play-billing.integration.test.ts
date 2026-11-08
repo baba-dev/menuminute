@@ -195,7 +195,7 @@ describe("Google Play purchase ledger", () => {
     const blocker = () =>
       withActor(f.actor, async (tx) => {
         const r = await tx.execute<{ b: string | null }>(
-          sql`SELECT app_private.play_checkout_blocker(${f.outlet.organizationId}) b`
+          sql`SELECT app_private.play_checkout_blocker(${f.outlet.organizationId},'ordering') b`
         );
         return r.rows[0]!.b;
       });
@@ -225,10 +225,132 @@ describe("Google Play purchase ledger", () => {
     );
     const razorpayBlocker = await withActor(g.actor, async (tx) => {
       const r = await tx.execute<{ b: string | null }>(
-        sql`SELECT app_private.play_checkout_blocker(${g.outlet.organizationId}) b`
+        sql`SELECT app_private.play_checkout_blocker(${g.outlet.organizationId},'ordering') b`
       );
       return r.rows[0]!.b;
     });
     expect(razorpayBlocker).toBe("razorpay");
+  });
+});
+
+describe("Kitchen Pro through Google Play", () => {
+  const setRelease = (enabled: boolean) =>
+    owner("update app_private.kitchen_commercial_release set enabled=$1 where singleton", [
+      enabled,
+    ]);
+  const registerAs = (f: F, token: string, product: string) =>
+    withActor(f.actor, (tx) =>
+      tx.execute(
+        sql`SELECT app_private.register_play_purchase(${token},${f.outlet.organizationId},${product})`
+      )
+    );
+  async function recordKitchen(token: string, state: string, expiry: Date) {
+    const rows = await owner<{ r: { state: string; entitled: boolean } }>(
+      "select app_private.record_play_state($1,$2,'kitchen_pro','menuminute_kitchen_pro','monthly',$3,$4,true,'GPA.9999-8888-7777-66666',null,false,true,'INR') r",
+      ["evt_" + crypto.randomUUID(), token, state, expiry]
+    );
+    return rows[0]!.r;
+  }
+  const grantsOf = (f: F, cap: string) =>
+    owner<{ id: string; revoked_at: Date | null }>(
+      "select id,revoked_at from entitlement_grants where organization_id=$1 and capability=$2 and operator='google-play' order by created_at",
+      [f.outlet.organizationId, cap]
+    );
+  const blockerFor = (f: F, product: string) =>
+    withActor(f.actor, async (tx) => {
+      const r = await tx.execute<{ b: string | null }>(
+        sql`SELECT app_private.play_checkout_blocker(${f.outlet.organizationId},${product}) b`
+      );
+      return r.rows[0]!.b;
+    });
+
+  it("is refused until the platform Kitchen release is approved, and grants nothing", async () => {
+    await setRelease(false);
+    const f = await fixture();
+    const token = tokenOf();
+    await registerAs(f, token, "kitchen_pro");
+    await expect(recordKitchen(token, "active", new Date(Date.now() + 30 * DAY))).rejects.toThrow(
+      "Kitchen Pro paid release has not been approved"
+    );
+    expect(await grantsOf(f, "kitchen.new")).toHaveLength(0);
+    expect(await blockerFor(f, "kitchen_pro")).toBe("kitchen_unavailable");
+  });
+
+  it("grants Kitchen plus the bundled Ordering grant from one purchase and revokes both together", async () => {
+    await setRelease(true);
+    try {
+      const f = await fixture();
+      const token = tokenOf();
+      await registerAs(f, token, "kitchen_pro");
+      const expiry = new Date(Date.now() + 30 * DAY);
+      expect((await recordKitchen(token, "active", expiry)).entitled).toBe(true);
+      const kitchen = await grantsOf(f, "kitchen.new");
+      const ordering = await grantsOf(f, "ordering.new");
+      expect(kitchen).toHaveLength(1);
+      expect(ordering).toHaveLength(1);
+      const bundle = await owner<{ n: string }>(
+        "select count(*) n from app_private.kitchen_paid_ordering_grants where kitchen_grant_id=$1 and ordering_grant_id=$2",
+        [kitchen[0]!.id, ordering[0]!.id]
+      );
+      expect(bundle[0]!.n).toBe("1");
+      const active = await owner<{ a: boolean }>(
+        "select app_private.kitchen_paid_subscription_active($1) a",
+        [f.outlet.organizationId]
+      );
+      expect(active[0]!.a).toBe(true);
+
+      // Renewal rolls both forward without stacking.
+      await recordKitchen(token, "active", new Date(expiry.getTime() + 30 * DAY));
+      const live = async (cap: string) =>
+        (await grantsOf(f, cap)).filter((g) => g.revoked_at === null);
+      expect(await live("kitchen.new")).toHaveLength(1);
+      expect(await live("ordering.new")).toHaveLength(1);
+
+      // A hold ends Kitchen and its bundled Ordering immediately (and stops auto-routing).
+      expect((await recordKitchen(token, "on_hold", expiry)).entitled).toBe(false);
+      expect(await live("kitchen.new")).toHaveLength(0);
+      expect(await live("ordering.new")).toHaveLength(0);
+      const stillActive = await owner<{ a: boolean }>(
+        "select app_private.kitchen_paid_subscription_active($1) a",
+        [f.outlet.organizationId]
+      );
+      expect(stillActive[0]!.a).toBe(false);
+    } finally {
+      await setRelease(false);
+    }
+  });
+
+  it("upgrades from Play Ordering: Kitchen is allowed over it, Ordering renewal is superseded, paid days stay", async () => {
+    await setRelease(true);
+    try {
+      const f = await fixture();
+      const ordering = tokenOf();
+      await registerAs(f, ordering, "ordering");
+      await record(ordering, "active", new Date(Date.now() + 10 * DAY));
+      expect(await blockerFor(f, "ordering")).toBe("play");
+      expect(await blockerFor(f, "kitchen_pro")).toBeNull();
+
+      const kitchen = tokenOf();
+      await registerAs(f, kitchen, "kitchen_pro");
+      expect(
+        (await recordKitchen(kitchen, "active", new Date(Date.now() + 30 * DAY))).entitled
+      ).toBe(true);
+      expect(await blockerFor(f, "kitchen_pro")).toBe("play");
+
+      const found = await owner<{ t: string[] }>("select app_private.play_superseded_by($1) t", [
+        kitchen,
+      ]);
+      expect(found[0]!.t).toEqual([ordering]);
+      await owner("select app_private.mark_play_superseded($1,$2)", [kitchen, ordering]);
+      const again = await owner<{ t: string[] }>("select app_private.play_superseded_by($1) t", [
+        kitchen,
+      ]);
+      expect(again[0]!.t).toEqual([]);
+      // Ordering's already-paid grant is untouched by the supersede marker.
+      const live = (await grantsOf(f, "ordering.new")).filter((g) => g.revoked_at === null);
+      expect(live.length).toBeGreaterThanOrEqual(1);
+    } finally {
+      await setRelease(false);
+    }
   });
 });

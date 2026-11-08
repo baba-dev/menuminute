@@ -13,6 +13,7 @@ import {
   playProductForSku,
   reconcilePlayPurchase,
 } from "@/modules/billing/play";
+import { reservePlayPurchaseCall } from "@/modules/billing/play-rate-limit";
 
 const noStore = { "cache-control": "private, no-store" };
 
@@ -32,6 +33,7 @@ async function observed_POST(
     if (!env.PLAY_BILLING_ENABLED || env.COMMUNITY_EDITION)
       throw new ValidationError("Subscriptions are not enabled on this deployment.");
     const { organizationId } = await context.params;
+    await reservePlayPurchaseCall("verify", actor.userId, organizationId);
     const body: unknown = await boundedJson(req);
     const { purchaseToken, sku } =
       body !== null && typeof body === "object"

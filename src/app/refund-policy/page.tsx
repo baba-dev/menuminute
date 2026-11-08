@@ -408,9 +408,9 @@ export default function RefundPolicyPage() {
               </p>
               <p>
                 If you subscribed through the MenuMinute Android app, Google Play bills the
-                subscription. Cancel it under Subscriptions in the Google Play app or at{" "}
+                subscription. Cancel it under Subscriptions in the Google Play app or on the{" "}
                 <a href="https://play.google.com/store/account/subscriptions" rel="noopener">
-                  play.google.com/store/account/subscriptions
+                  Google Play subscriptions
                 </a>
                 . Cancelling stops future renewals and you keep access until the paid period ends.
                 Refunds for Google Play purchases are handled under Google Play&apos;s refund
