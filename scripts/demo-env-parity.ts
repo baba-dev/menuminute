@@ -8,7 +8,10 @@ try {
   if (!lstatSync(webPath).isFile() || !lstatSync(workerPath).isFile()) {
     throw new Error("Runtime environment files must be regular files");
   }
-  const enabled = assertDemoModeParity(readFileSync(webPath, "utf8"), readFileSync(workerPath, "utf8"));
+  const enabled = assertDemoModeParity(
+    readFileSync(webPath, "utf8"),
+    readFileSync(workerPath, "utf8")
+  );
   process.stdout.write(
     enabled
       ? "Demo reset worker is enabled and matches the web service.\n"

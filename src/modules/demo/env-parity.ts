@@ -10,11 +10,7 @@ export function demoEnabledInEnvironmentFile(fileContent: string): boolean {
     const setting = match[1];
     if (setting === "true" || setting === '"true"' || setting === "'true'") {
       value = true;
-    } else if (
-      setting === "false" ||
-      setting === '"false"' ||
-      setting === "'false'"
-    ) {
+    } else if (setting === "false" || setting === '"false"' || setting === "'false'") {
       value = false;
     } else {
       throw new Error("Invalid DEMO_MODE_ENABLED setting");

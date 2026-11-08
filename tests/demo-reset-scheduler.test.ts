@@ -43,7 +43,8 @@ describe("public demo reset scheduler", () => {
   });
 
   it("retries failures before the next reset rather than hiding them for thirty minutes", async () => {
-    const run = vi.fn()
+    const run = vi
+      .fn()
       .mockRejectedValueOnce(new Error("transient"))
       .mockResolvedValue({ seededOrders: 9 });
     const failure = vi.fn();
@@ -65,7 +66,12 @@ describe("public demo reset scheduler", () => {
 
   it("never overlaps an in-flight reset with the next scheduled boundary", async () => {
     let finish: ((value: number) => void) | undefined;
-    const run = vi.fn(() => new Promise<number>((resolve) => { finish = resolve; }));
+    const run = vi.fn(
+      () =>
+        new Promise<number>((resolve) => {
+          finish = resolve;
+        })
+    );
     const schedule = startDemoResetScheduler({
       enabled: true,
       run,
