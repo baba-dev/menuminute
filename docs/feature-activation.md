@@ -1,5 +1,7 @@
 # Feature Activation & Gate Cleanup — slice A/C
 
+> **9 November 2026:** General Phase 4/5 release blockers have been lifted by the owner. This page describes the implemented read-only diagnostics from PR #313, not a new system for reintroducing those holds. Any unfinished #312 operator/merchant enhancements are nonblocking follow-up work. Keep independent Play, fiscal, payment, security, PWA device and AI approvals. See [current release status](release-status.md).
+
 Read-only superadmin route: `/admin/features` (issue #312).
 
 The page distinguishes **configuration** from tested production operation and does
