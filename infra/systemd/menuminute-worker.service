@@ -11,7 +11,8 @@ User=menuminute-worker
 Group=menuminute-worker
 SupplementaryGroups=menuminute-media
 WorkingDirectory=/var/www/menuminute/worker-current
-# Only WORKER_DATABASE_URL and REDIS_QUEUE_URL. No auth secret, web URL or migration credential.
+# Restricted runtime: WORKER_DATABASE_URL, REDIS_QUEUE_URL, and demo kill switch when enabled.
+# No auth secret, web URL, or migration credential.
 EnvironmentFile=/etc/menuminute/worker.env
 Environment=NODE_ENV=production
 ExecStart=/opt/menuminute/node24/bin/node dist/worker.mjs
