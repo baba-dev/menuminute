@@ -2,10 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const releaseWorkflow = readFileSync(
-  path.resolve(".github/workflows/android-release.yml"),
-  "utf8"
-);
+const releaseWorkflow = readFileSync(path.resolve(".github/workflows/android-release.yml"), "utf8");
 
 describe("Google Play upload bundle verification", () => {
   it("verifies the Android AAB strictly against the owner-provided upload certificate", () => {
@@ -25,12 +22,12 @@ describe("Google Play upload bundle verification", () => {
     expect(verification).toContain('sha256sum "$AAB" > "$AAB.sha256"');
     expect(verification).not.toContain("|| true");
     expect(verification).not.toContain("continue-on-error");
-    expect(verification).not.toContain("jarsigner -verify -strict \"$AAB\"");
+    expect(verification).not.toContain('jarsigner -verify -strict "$AAB"');
   });
 
   it("does not put signing passwords into GITHUB_ENV or bundle artifacts", () => {
-    expect(releaseWorkflow).not.toContain("echo \"MM_ANDROID_UPLOAD_STORE_PASSWORD=");
-    expect(releaseWorkflow).not.toContain("echo \"MM_ANDROID_UPLOAD_KEY_PASSWORD=");
+    expect(releaseWorkflow).not.toContain('echo "MM_ANDROID_UPLOAD_STORE_PASSWORD=');
+    expect(releaseWorkflow).not.toContain('echo "MM_ANDROID_UPLOAD_KEY_PASSWORD=');
     expect(releaseWorkflow).toContain('rm -f "$RUNNER_TEMP/upload.jks"');
     const artifacts = releaseWorkflow
       .split("      - name: Retain signed candidate")[1]!
