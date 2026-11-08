@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   title: "MenuMinute — Free QR Menus for Restaurants",
   description:
-    "Create and publish a free digital menu with permanent QR codes. Ordering and Kitchen Pro availability require separate approval.",
+    "Create a free restaurant QR menu and grow with online ordering, point of sale and multi-station Kitchen Pro. Explore plans and features.",
 };
 
 export default async function HomePage() {
