@@ -1,11 +1,8 @@
 import { processMedia } from "../media/worker";
 import { processImport } from "../menu-import/engine";
-import {
-  DEMO_RESET_INTERVAL_MS,
-  demoModeEnabled,
-  nextDemoResetAt,
-  resetDemoOutlet,
-} from "../demo/reset";
+import { demoModeEnabled, resetDemoOutlet } from "../demo/reset";
+import { startDemoResetScheduler } from "../demo/reset-scheduler";
+import { logger } from "@/lib/logger";
 import { Pool } from "pg";
 import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { z } from "zod";
@@ -402,29 +399,31 @@ export async function startWorker(
   };
   const maintenanceTimer = setInterval(prune, 6 * 60 * 60 * 1000);
   prune();
-  // Public demo: restore the fixed demo outlet to its baseline. Off unless DEMO_MODE_ENABLED=true.
-  // Never blocks the dispatcher; a failure only logs and retries at the next interval.
-  let demoReset: Promise<unknown> | undefined;
-  const demoTick = () => {
-    if (stopping || demoReset) return;
-    demoReset = resetDemoOutlet(pool)
-      .catch(() => console.error("Demo reset unavailable"))
-      .finally(() => {
-        demoReset = undefined;
+  // The web and worker must agree on DEMO_MODE_ENABLED (deployment preflight enforces parity).
+  // A failed reset must be observable and retried; otherwise the UI clock can claim a reset
+  // while the kitchen is still showing week-old work.
+  const demoEnabled = demoModeEnabled();
+  logger.info("Public demo scheduler initialized", {
+    event: "demo.reset.scheduler",
+    enabled: demoEnabled,
+  });
+  const demoScheduler = startDemoResetScheduler({
+    enabled: demoEnabled,
+    run: () => resetDemoOutlet(pool),
+    onSuccess: (summary) => {
+      logger.info("Public demo reset and kitchen freshness verified", {
+        event: "demo.reset.succeeded",
+        seededOrders: summary["seededOrders"] ?? 0,
       });
-  };
-  // Reset once at start, then on every wall-clock half hour so the dashboard countdown stays truthful.
-  let demoTimer: ReturnType<typeof setInterval> | undefined;
-  const demoAlign = demoModeEnabled()
-    ? setTimeout(
-        () => {
-          demoTick();
-          demoTimer = setInterval(demoTick, DEMO_RESET_INTERVAL_MS);
-        },
-        nextDemoResetAt(Date.now()) - Date.now()
-      )
-    : undefined;
-  if (demoAlign) demoTick();
+    },
+    onFailure: (error, attempts, retryMs) => {
+      logger.error("Public demo reset failed; retry scheduled", error, {
+        event: "demo.reset.failed",
+        attempts,
+        retryMs,
+      });
+    },
+  });
   // Plan overflow: after a downgrade, hide (never delete) dishes beyond the plan's cap once the
   // grace period ends, and restore them when the plan allows. Inert unless plan limits are
   // enforced here and the database switch is on. Never blocks the dispatcher; failures just retry.
@@ -451,9 +450,8 @@ export async function startWorker(
       clearInterval(mediaTimer);
       clearInterval(maintenanceTimer);
       clearInterval(overflowTimer);
-      if (demoAlign) clearTimeout(demoAlign);
-      if (demoTimer) clearInterval(demoTimer);
-      await Promise.all([pending, mediaPending, maintenance, demoReset, overflowSweep]);
+      await demoScheduler.close();
+      await Promise.all([pending, mediaPending, maintenance, overflowSweep]);
       await Promise.all([worker.close(), importWorker.close()]);
       await Promise.all([producer.close(), importProducer.close()]);
       await pool.end();
