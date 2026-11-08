@@ -40,6 +40,8 @@ export type BillingStateInput = {
   kitchenCommerceEnabled?: boolean;
   /** Google Play Billing is configured on this deployment (only usable inside the Play app). */
   playBillingEnabled?: boolean;
+  /** Catalog SKU for Ordering, used by the Play app to restore purchases without a checkout call. */
+  playSku?: string;
   subscriptions?: SubscriptionInput[];
   playSubscriptions?: PlaySubscriptionInput[];
   grants?: GrantInput[];
@@ -129,6 +131,7 @@ export type BillingPageView = {
   billingEnabled: boolean;
   /** A purchase can be made right now from this client (Razorpay on the web, Play Billing in the app). */
   checkoutAvailable: boolean;
+  playSku: string | null;
   playClient: boolean;
   billingUnavailable: boolean;
   /** Trial and payment-problem banners, most urgent first. */
@@ -375,6 +378,7 @@ export function buildBillingPageView(input: {
     canManage,
     billingEnabled,
     checkoutAvailable: checkoutEnabled && canManage && !subscribedViaPlay,
+    playSku: playClient && playBillingEnabled ? (billing?.playSku ?? null) : null,
     playClient,
     billingUnavailable: input.billingUnavailable === true,
     cycle,

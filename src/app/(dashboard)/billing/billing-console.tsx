@@ -196,9 +196,9 @@ export function BillingConsole({
 
   // Restore: re-submit purchases Google Play still reports (reinstall, missed callback, new device).
   // The server binds tokens only for the signed-in owner and ignores anything Google does not confirm.
-  const canRestore = view.playClient && view.canManage && view.checkoutAvailable;
+  const restoreSku = view.playClient && view.canManage ? view.playSku : null;
   useEffect(() => {
-    if (!canRestore || !playBillingSupported()) return;
+    if (!restoreSku || !playBillingSupported()) return;
     let flagged = false;
     try {
       flagged = window.sessionStorage.getItem("mm.play.restored") === organizationId;
@@ -209,17 +209,10 @@ export function BillingConsole({
     let cancelled = false;
     void (async () => {
       try {
-        const intentRes = await fetch(`/api/organizations/${organizationId}/billing/play/intent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: "ordering" }),
-        });
-        const intent = (await intentRes.json()) as { sku?: string };
-        if (!intentRes.ok || !intent.sku) return;
-        const tokens = await listPlayPurchaseTokens(intent.sku);
+        const tokens = await listPlayPurchaseTokens(restoreSku);
         for (const token of tokens) {
           if (cancelled) return;
-          await verifyPlayPurchase(intent.sku, token).catch(() => undefined);
+          await verifyPlayPurchase(restoreSku, token).catch(() => undefined);
         }
         try {
           window.sessionStorage.setItem("mm.play.restored", organizationId);
@@ -234,7 +227,7 @@ export function BillingConsole({
     return () => {
       cancelled = true;
     };
-  }, [canRestore, organizationId, router, verifyPlayPurchase]);
+  }, [restoreSku, organizationId, router, verifyPlayPurchase]);
 
   async function cancelRenewal() {
     if (!cancelTarget) return;

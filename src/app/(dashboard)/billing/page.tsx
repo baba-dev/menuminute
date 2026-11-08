@@ -71,6 +71,7 @@ export default async function BillingPage({
         billingEnabled: state.billingEnabled,
         kitchenCommerceEnabled: state.kitchenCommerceEnabled,
         playBillingEnabled: state.playBillingEnabled,
+        playSku: state.playSku,
         subscriptions: coerceSubscriptions(state.subscriptions),
         playSubscriptions: coercePlaySubscriptions(state.playSubscriptions),
         grants: state.grants.map((g) => ({

@@ -203,7 +203,7 @@ describe("Google Play purchase ledger", () => {
 
     const token = tokenOf();
     await register(f, token);
-    expect(await blocker()).toBe("play"); // pending purchase window
+    expect(await blocker()).toBeNull(); // registered-but-unverified must not block retry or restore
     await record(token, "active", new Date(Date.now() + 30 * DAY));
     expect(await blocker()).toBe("play");
     const blocksRazorpay = await withActor(f.actor, async (tx) => {

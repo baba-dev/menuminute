@@ -83,8 +83,7 @@ BEGIN
   THEN RETURN 'razorpay'; END IF;
   IF EXISTS(SELECT 1 FROM app_private.play_purchases p WHERE p.organization_id=p_org
       AND ((p.state IN ('active','grace','on_hold','paused','pending') AND (p.expiry_time IS NULL OR p.expiry_time>clock_timestamp()))
-        OR (p.state='canceled' AND p.expiry_time>clock_timestamp())
-        OR (p.state='registered' AND p.created_at>clock_timestamp()-interval '1 hour')))
+        OR (p.state='canceled' AND p.expiry_time>clock_timestamp())))
   THEN RETURN 'play'; END IF;
   IF app_private.entitlement_blocks_checkout(p_org,'ordering.new') THEN RETURN 'entitlement'; END IF;
   RETURN NULL;
