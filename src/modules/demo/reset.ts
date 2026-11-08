@@ -7,7 +7,9 @@ export { DEMO_RESET_INTERVAL_MS, demoModeEnabled, nextDemoResetAt } from "./ids"
  * Only the restricted worker role can reset the fixed demo outlet. Never load the app's env,
  * Redis, or the migration-owner credentials here.
  */
-export async function resetDemoOutlet(pool: Pick<Pool, "connect">): Promise<Record<string, number>> {
+export async function resetDemoOutlet(
+  pool: Pick<Pool, "connect">
+): Promise<Record<string, number>> {
   // The general worker pool enforces a 5-second statement timeout. Demo restoration writes
   // 30 days of sample orders and their Kitchen fan-out, so give ONLY this transaction an
   // explicit bounded allowance. The client's normal settings are restored on COMMIT/ROLLBACK.
