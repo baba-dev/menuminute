@@ -1,6 +1,6 @@
 # Phase 4 Free QR Menu — executable acceptance matrix
 
-Parent [#37](https://github.com/baba-dev/menuminute/issues/37); QA package [#47](https://github.com/baba-dev/menuminute/issues/47). Status: test plan and existing test coverage enumerated; this document does not assert unrun production acceptance. For each final feature PR record its exact head SHA, links to all four native ARM64 checks plus aggregate gate, desktop/mobile screenshots, untested failure paths, and independent review. Release acceptance requires one integrated final-main run, not stitched green results from intermediate commits.
+> **9 November 2026:** Historical acceptance matrix; general launch holds were lifted by the owner without converting unchecked device/operator evidence into a passing result. See [current release status](../release-status.md) and continue independent QA in #47/#76.\n\nParent [#37](https://github.com/baba-dev/menuminute/issues/37); QA package [#47](https://github.com/baba-dev/menuminute/issues/47). Status: test plan and existing test coverage enumerated; this document does not assert unrun production acceptance. For each final feature PR record its exact head SHA, links to all four native ARM64 checks plus aggregate gate, desktop/mobile screenshots, untested failure paths, and independent review. Release acceptance requires one integrated final-main run, not stitched green results from intermediate commits.
 
 ## Browser journey
 
