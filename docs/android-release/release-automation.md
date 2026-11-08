@@ -34,6 +34,6 @@ The Play upload job requires human review in GitHub **and** an explicit Play Con
 - **Android/native update:** Merge → main CI → automated signed candidate with new code → manual testing/download → separate optional Play draft upload → human Play Console release.
 - **Hotfix to installed native shell:** Manually dispatch new signed candidate on green `main`, then follow the same operator approvals.
 - **Billing/web compatibility:** Keep server-side API contracts compatible with older installed Android versions until Play updates reach users.
-- **Secrets:** Reuse the *same* encrypted offline upload JKS and protected `android-play-internal` secrets for every Android build. Google Play uses a distinct app-signing key.
+- **Secrets:** Reuse the _same_ encrypted offline upload JKS and protected `android-play-internal` secrets for every Android build. Google Play uses a distinct app-signing key.
 
 Also see `docs/android-release/signing-setup.md`, `docs/android-release/play-compliance.md` and `docs/android-release/device-test-matrix.md`. Neither the web publishing workflow nor the VPS deployment workflow is changed by this architecture.
