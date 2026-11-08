@@ -1,25 +1,115 @@
 name: Android signed internal-release candidate
 
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
-# Never run two signing attempts against the same protected release branch simultaneously.
+# Keep this independent from the normal MenuMinute ARM64 VPS deployment.
 concurrency:
-  group: android-play-internal-${{ github.ref }}
+  group: menuminute-android-upload-main
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: Confirm reviewed main and plan Android version
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    outputs:
+      should_sign: ${{ steps.plan.outputs.should_sign }}
+      source_sha: ${{ steps.plan.outputs.source_sha }}
+      version_code: ${{ steps.plan.outputs.version_code }}
+      version_name: ${{ steps.plan.outputs.version_name }}
+      artifact_name: ${{ steps.plan.outputs.artifact_name }}
+    steps:
+      - name: Verify source is current main with successful push CI
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+          current_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          if [[ "$RELEASE_SHA" != "$current_sha" ]]; then
+            echo "::notice::Superseded commit: refusing to sign an older main SHA"
+            exit 1
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$RELEASE_SHA" '
+              .workflow_run.conclusion == "success" and
+              .workflow_run.event == "push" and
+              .workflow_run.head_branch == "main" and
+              .workflow_run.head_sha == $sha and
+              .workflow_run.head_repository.full_name == $repo and
+              .workflow_run.name == "CI"
+            ' "$GITHUB_EVENT_PATH" >/dev/null
+          else
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&branch=main&event=push&per_page=100" |
+              jq -e --arg sha "$RELEASE_SHA" '
+                any(.workflow_runs[]; .head_sha == $sha and .event == "push" and
+                    .head_branch == "main" and .status == "completed" and .conclusion == "success")
+              ' >/dev/null || { echo "::error::No green push CI found for this SHA"; exit 1; }
+          fi
+          echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Detect native changes and allocate the next Play version
+        id: plan
+        env:
+          RELEASE_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          ANDROID_VERSION_LINE: "1.0"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            git rev-parse HEAD^ >/dev/null
+            git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/native-changes.txt"
+          else
+            : > "$RUNNER_TEMP/native-changes.txt"
+          fi
+          RELEASE_CHANGED_PATHS="$RUNNER_TEMP/native-changes.txt" python3 scripts/android/release-plan.py
+
   signed_aab:
     name: Sign and verify Play upload candidate
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.should_sign == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: android-play-internal
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.preflight.outputs.source_sha }}
+          persist-credentials: false
+      - name: Recheck exact main before accessing signing credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.preflight.outputs.source_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')" = "$RELEASE_SHA" ||
+            { echo "::error::Release superseded while waiting for signing approval"; exit 1; }
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -48,34 +138,53 @@ jobs:
           chmod 600 "$RUNNER_TEMP/upload.jks"
           test -s "$RUNNER_TEMP/upload.jks"
           keytool -list -keystore "$RUNNER_TEMP/upload.jks" -alias "$KEY_ALIAS" -storepass:env STORE_PASS > /dev/null
-      - name: Build signed Android App Bundle
+      - name: Build signed versioned Android App Bundle
         working-directory: android
         env:
           MM_ANDROID_UPLOAD_STORE: ${{ runner.temp }}/upload.jks
           MM_ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           MM_ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           MM_ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          MM_ANDROID_VERSION_CODE: ${{ needs.preflight.outputs.version_code }}
+          MM_ANDROID_VERSION_NAME: ${{ needs.preflight.outputs.version_name }}
         run: gradle --no-daemon --stacktrace :app:bundleRelease
       - name: Verify Java archive signature
-        # Upload keys are intentionally self-signed. Trust ONLY the configured
-        # upload keystore, not a public CA, while retaining strict signature
-        # integrity checks and refusing a mismatched signer.
         env:
           VERIFY_STORE_PASS: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          SOURCE_SHA: ${{ needs.preflight.outputs.source_sha }}
+          RELEASE_CODE: ${{ needs.preflight.outputs.version_code }}
+          RELEASE_NAME: ${{ needs.preflight.outputs.version_name }}
+        shell: bash
         run: |
           set -euo pipefail
           AAB=android/app/build/outputs/bundle/release/app-release.aab
           test -s "$AAB"
           jarsigner -verify -strict -keystore "$RUNNER_TEMP/upload.jks" -storepass:env VERIFY_STORE_PASS "$AAB"
           sha256sum "$AAB" > "$AAB.sha256"
-      - name: Retain signed candidate for manual Play internal testing
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          output = Path('android/app/build/outputs/bundle/release/android-release.json')
+          output.write_text(json.dumps({
+              'package_name': 'com.bababuilds.menuminute',
+              'source_sha': os.environ['SOURCE_SHA'],
+              'workflow_run_id': int(os.environ['GITHUB_RUN_ID']),
+              'workflow_run_number': int(os.environ['GITHUB_RUN_NUMBER']),
+              'version_code': int(os.environ['RELEASE_CODE']),
+              'version_name': os.environ['RELEASE_NAME'],
+              'distribution': 'signed-candidate-only',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Retain signed candidate for separate Play approval
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: menuminute-android-signed-${{ github.sha }}
+          name: ${{ needs.preflight.outputs.artifact_name }}
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/bundle/release/app-release.aab.sha256
-          retention-days: 7
+            android/app/build/outputs/bundle/release/android-release.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Remove temporary upload keystore
         if: always()
         shell: bash

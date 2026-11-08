@@ -1,0 +1,139 @@
+name: Google Play internal draft submission
+
+on:
+  workflow_dispatch:
+    inputs:
+      signed_run_id:
+        description: Successful Android signed candidate Actions run ID
+        type: string
+        required: true
+      approved_sha:
+        description: Reviewed full 40-character SHA used for that signed bundle
+        type: string
+        required: true
+
+# Manual, separate operator-gated Play upload only.
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: menuminute-play-internal-draft
+  cancel-in-progress: false
+
+jobs:
+  source:
+    name: Verify immutable signed artifact provenance
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      artifact_name: ${{ steps.source.outputs.artifact_name }}
+      sha: ${{ steps.source.outputs.sha }}
+      run_number: ${{ steps.source.outputs.run_number }}
+    steps:
+      - name: Reject wrong run, identity or missing signed artifact
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED_RUN_ID: ${{ inputs.signed_run_id }}
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SIGNED_RUN_ID" =~ ^[1-9][0-9]*$ ]] || exit 1
+          [[ "$APPROVED_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SIGNED_RUN_ID")"
+          jq -e --arg sha "$APPROVED_SHA" --arg repo "$GITHUB_REPOSITORY" '
+            .status == "completed" and .conclusion == "success" and
+            (.event == "workflow_run" or .event == "workflow_dispatch") and
+            .head_sha == $sha and .head_branch == "main" and
+            .repository.full_name == $repo and
+            .name == "Android signed internal-release candidate" and
+            (.path | contains(".github/workflows/android-release.yml"))
+          ' <<< "$run" >/dev/null || { echo "::error::Source is not an approved, successful signed workflow"; exit 1; }
+          run_number="$(jq -r .run_number <<< "$run")"
+          artifact="menuminute-android-signed-$APPROVED_SHA-$run_number"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SIGNED_RUN_ID/artifacts?per_page=100" |
+            jq -e --arg name "$artifact" 'any(.artifacts[]; .name == $name and .expired == false and .size_in_bytes > 0)' >/dev/null ||
+            { echo "::error::Signed candidate artifact not found or expired"; exit 1; }
+          echo "sha=$APPROVED_SHA" >> "$GITHUB_OUTPUT"
+          echo "run_number=$run_number" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$artifact" >> "$GITHUB_OUTPUT"
+
+  upload:
+    name: Operator-approved Google Play INTERNAL DRAFT upload
+    needs: source
+    if: needs.source.result == 'success'
+    environment:
+      name: android-play-publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Require explicit Play API opt-in and short-lived identity config
+        env:
+          PLAY_PUBLISH_ENABLED: ${{ vars.PLAY_PUBLISH_ENABLED }}
+          PLAY_WIF_PROVIDER: ${{ vars.PLAY_WIF_PROVIDER }}
+          PLAY_SERVICE_ACCOUNT_EMAIL: ${{ vars.PLAY_SERVICE_ACCOUNT_EMAIL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$PLAY_PUBLISH_ENABLED" = "true" || { echo "::error::Play API upload is not enabled"; exit 1; }
+          test -n "$PLAY_WIF_PROVIDER" || exit 1
+          test -n "$PLAY_SERVICE_ACCOUNT_EMAIL" || exit 1
+      - name: Download exact signed candidate without rebuilding
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          run-id: ${{ inputs.signed_run_id }}
+          name: ${{ needs.source.outputs.artifact_name }}
+          github-token: ${{ github.token }}
+          path: signed-bundle
+      - name: Verify checksum, release metadata and immutable provenance
+        env:
+          APPROVED_SHA: ${{ needs.source.outputs.sha }}
+          SOURCE_RUN_ID: ${{ inputs.signed_run_id }}
+          SOURCE_RUN_NUMBER: ${{ needs.source.outputs.run_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s signed-bundle/app-release.aab
+          test -s signed-bundle/app-release.aab.sha256
+          test -s signed-bundle/android-release.json
+          expected="$(awk 'NR==1 { print $1 }' signed-bundle/app-release.aab.sha256)"
+          [[ "$expected" =~ ^[a-f0-9]{64}$ ]] || exit 1
+          echo "$expected  signed-bundle/app-release.aab" | sha256sum --check --strict
+          jq -e --arg sha "$APPROVED_SHA" --argjson id "$SOURCE_RUN_ID" --argjson n "$SOURCE_RUN_NUMBER" '
+            .package_name == "com.bababuilds.menuminute" and
+            .source_sha == $sha and .workflow_run_id == $id and
+            .workflow_run_number == $n and .version_code == ($n + 1) and
+            .distribution == "signed-candidate-only"
+          ' signed-bundle/android-release.json >/dev/null
+      - name: Authenticate to Google with short-lived Workload Identity Federation
+        id: google_auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.PLAY_WIF_PROVIDER }}
+          service_account: ${{ vars.PLAY_SERVICE_ACCOUNT_EMAIL }}
+          create_credentials_file: true
+      - name: Upload to Google Play INTERNAL track as DRAFT ONLY
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJson: ${{ steps.google_auth.outputs.credentials_file_path }}
+          packageName: com.bababuilds.menuminute
+          releaseFiles: signed-bundle/app-release.aab
+          tracks: internal
+          status: draft
+          changesNotSentForReview: true
+      - name: Summarize manual Play Console follow-up
+        env:
+          APPROVED_SHA: ${{ needs.source.outputs.sha }}
+        shell: bash
+        run: |
+          echo '### Google Play INTERNAL DRAFT uploaded' >> "$GITHUB_STEP_SUMMARY"
+          echo "- Reviewed web/native commit: $APPROVED_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo '- Track: **internal**; status: **draft** (not distributed)' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Owner must inspect and release it in Play Console.' >> "$GITHUB_STEP_SUMMARY"

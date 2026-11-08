@@ -2,6 +2,20 @@ plugins {
     id("com.android.application")
 }
 
+// Local/unsigned builds keep the original v1 identity. Each signed release
+// supplies its own immutable version through the protected GitHub workflow.
+val suppliedCode = System.getenv("MM_ANDROID_VERSION_CODE")
+val playVersionCode = suppliedCode?.toIntOrNull() ?: if (suppliedCode == null) 1
+    else error("MM_ANDROID_VERSION_CODE must be a valid integer")
+require(playVersionCode in 1..2_100_000_000) {
+    "Android versionCode exceeds the supported Google Play range"
+}
+
+val playVersionName = System.getenv("MM_ANDROID_VERSION_NAME") ?: "1.0.0"
+require(playVersionName.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+"))) {
+    "MM_ANDROID_VERSION_NAME must have numeric major.minor.patch components"
+}
+
 android {
     namespace = "com.bababuilds.menuminute"
     compileSdk = 36
@@ -10,8 +24,8 @@ android {
         applicationId = "com.bababuilds.menuminute"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = playVersionCode
+        versionName = playVersionName
     }
 
     // CI creates unsigned bundles. Only a manual, credentialed release can sign.

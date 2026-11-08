@@ -16,6 +16,6 @@ cd android
 gradle :app:assembleDebug :app:bundleRelease
 ```
 
-The debug APK is for internal QA only. The release bundle is **unsigned** unless a verified Play upload-signing process is configured. Do not upload unsigned artifacts to production.
+The debug APK is for internal QA only. The release bundle is **unsigned** unless a verified Play upload-signing process is configured. Do not upload unsigned artifacts to production. After green push CI on current `main`, native Android changes automatically produce a **versioned, signed AAB candidate** via the separate protected GitHub workflow. Web-only updates never generate an AAB. See `docs/android-release/release-automation.md` for the manual Play draft upload and review gate.
 
 Before production: configure verified Digital Asset Links, supply securely stored Play upload credentials, test Play Internal Testing on physical Android devices, verify Chrome provider and OAuth, confirm printer compatibility, and complete the Google Play Data Safety + access declarations. See `docs/android-release/README.md` for gates.
