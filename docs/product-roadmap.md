@@ -1,30 +1,35 @@
 # Product roadmap
 
-## Current implementation baseline (17 October 2026)
+> **Current as of 9 November 2026.** [Release-status decision and issue disposition](release-status.md) supersede the October planning-stage release holds. Implementation and activation are distinct: a code-complete feature does not imply an approved payment provider, statutory invoice, external AI provider, Play publication or complete disaster-recovery drill.
 
-Phase 0 agent ownership/orchestration and Phases 1–3 implementation have merged: PostgreSQL 17 with Drizzle/pg, Better Auth sessions and scoped tenancy, independent Redis queue/cache, durable PostgreSQL outbox/BullMQ, organization/outlet/role management, versioned Menu Studio, private reviewed media, permanent QR identities and an anonymous public menu. The earlier SQLite/NextAuth scaffold described in historical notes is **not** the current production architecture.
+## Delivered product
 
-Phase 4 — [Perfect Free QR Menu](orchestration/phase-4.md), tracked by [execution epic #37](https://github.com/baba-dev/menuminute/issues/37), refines the existing free product instead of creating a second editor. The shared Ink & Ember primitives, canonical dashboard, safe create/publish, guest QR revocation recovery, honest public product descriptions, guided onboarding, selected-QR printing and accessible dish controls are scoped in independently tested PRs. See [acceptance matrix](orchestration/phase-4-acceptance.md) and [operator evidence](orchestration/phase-4-ops-evidence.md). **Merged code and successful CI do not certify the entire Phase 4 production exit gate.** Check current GitHub PR/main SHA and actual host release separately; do not infer deployment from this document.
+- Free permanent QR menus, menu import/review foundations, merchant onboarding, versioned publishing, private/approved media, QR Studio, outlet profiles, and responsive public browsing.
+- Guest ordering (including free-tier limited intake), authoritative quotes and service status, multi-station Kitchen Pro with routing/expeditor, staff workspaces, Dining Floor and the standard POS with cashier shifts/receipts.
+- Paid plans, guest CRM, merchant sales-tax quote/snapshot support (opt-in, non-fiscal), Android TWA foundation and signed internal AAB workflow, plus optional Google Play Billing server integration (disabled by default pending provider/store configuration).
+- Incremental security and UI fixes from PRs #306, #313, #321, #328, #330, #331, #332, #335, #338, #339, #342 and #344.
 
-## Approved delivery sequence
+General Phase 4/5 launch holds have been lifted by owner decision; they are **not** proof that every historic acceptance check passed. Runtime authorizations, tenants/roles, subscriptions, configured providers and fail-closed finance boundaries remain in force.
 
-1. Phase 0: agent orchestration, exclusive path reservations and architecture decisions — implemented.
-2. Phase 1: PostgreSQL/Drizzle, Better Auth, tenancy/RLS and native ARM64 CI — implemented.
-3. Phase 2: independent Redis workloads, BullMQ/outbox, organizations/outlets/roles and billing entitlement foundations — implemented.
-4. Phase 3: Free QR Menu foundation, versioned Menu Studio, private/approved media and anonymous QR browsing — implemented in the repository.
-5. Phase 4: make Free QR Menu merchant-ready: Ink & Ember Light/Dark/System, guided onboarding, canonical dashboard, safe editor and guest experience, reviewed media and permanent print-friendly QR; exact-final-SHA CI, independent product review and operator-backed restore/ERP evidence remain explicit exit requirements.
-6. Following Phase 4: dine-in and pickup ordering, closing-time expiry, authoritative pricing, staff acceptance and resilient Kitchen Display System, with separate scope and safety gates.
-7. Merchant-reviewed AI menu import, descriptions, translations and image suggestions; budget/quota/fallback controls, never autonomous publication of dietary/allergen claims.
-8. Commercial collection/renewal, operational monitoring and measured capacity; validate restored SQL+media, external alerting, ERP coexistence and agreed SLO/RPO/RTO.
+## Current work, not a general web launch hold
 
-## Commercial scope
+1. **Google Play internal distribution:** #340; Play Console, app signing assetlinks, compliance declarations, physical tests and review. Assetlinks returned 503 during the 9 November public check. Native verified deletion remains in #286.
+2. **Independent operational quality:** #47 and #76; live device/role/accessibility, capacity, restore/ERP coexistence and threat testing. #49/#131 were already closed in GitHub, but a closed ticket is not a substitute for real restore evidence.
+3. **Security and responsible intelligence:** #326 residual hardening, #230 Ember provider budgets, retention and action guards; #312 follow-up diagnostic improvements.
+4. **Capability-specific rollout:** #249 physical-device push; #226 legal/jurisdiction-reviewed statutory invoicing. Merchant sales-tax collection itself was implemented in #321 and remains opt-in per outlet.
+5. **Commerce and worldwide operations:** monitor actual Razorpay/Google Play configured subscriptions, cross-border checkout eligibility, dispute/reversal paths and localized merchant compliance. USD list pricing is not proof of USD self-service checkout.
 
-Free permanent QR menus remain the acquisition product, and Free already accepts guest orders up to 100 a month. Approved prices (owner-approved 2 November 2026): **Ordering ₹119, Kitchen Pro ₹499 flat for up to ten outlets, Dedicated ₹30,000 by contract** (USD $5 / $20 / $3,000 on-premise). The earlier ₹149/₹299 figures are superseded and must not be advertised.
+## Plans and current positioning
 
-Ordering and Kitchen Pro are **built, but purchasable only when their runtime switches are on**: Razorpay checkout is off by default until provider configuration, smoke tests and the legal launch gates pass, and Kitchen Pro has an independent commercial release gate (#76/#77). The public pricing page reads those switches, so it offers purchase only when checkout can complete and otherwise offers a free start (Ordering) or an early-access request (Kitchen Pro). See [commercial availability](commercial-availability.md) for the decision, the switches and the opening checklist. USD has no checkout. Worldwide outlets select supported local transaction currencies. Initial launch diners pay at the restaurant or pickup counter.
+Free: ₹0, 20 dishes and 2 QR codes; Ordering: ₹119/month (USD listing $5); Kitchen Pro: ₹499/month flat for up to ten outlets (USD listing $20); Dedicated: ₹30,000/month or $3,000 private on-premise by contract. Prices and quotas derive from catalogs; purchase buttons must reflect runtime sale authority. **Do not advertise certified GST/VAT invoices, card settlement, all-device push, or a published Play app without separate verification.**
 
-Delivery, online diner payments, WhatsApp/SMS, multi-station routing and advanced analytics remain later scope. Never show preview features as live entitlements.
+## Source of truth
 
-## Approved launch envelope
+- [Release status](release-status.md)
+- [Live commercial availability contract](commercial-availability.md)
+- [Feature activation diagnostics](feature-activation.md)
+- [Production runbook](production-runbook.md)
+- [Android release program](android-release/README.md)
+- [Historical Phase 4](orchestration/phase-4.md) and [historical Phase 5](orchestration/phase-5.md) planning documents
 
-Read [product requirements](product-requirements.md): worldwide multiple organizations/outlets, outlet-type journeys, permanent QR identity, flat variants/add-ons and scoped role permissions. The 25-owner / 50-outlet / 1,000-order-per-hour envelope is a **planning target, not measured production capacity**. Host-backup operation, an isolated matching SQL+media restore, off-host alerting and co-hosted ERP resource measurements require separate operator evidence before launch sign-off.
+The earlier 25-owner / 50-outlet / 1,000-order-per-hour target is **a planning target**, not a measured production capacity guarantee.
