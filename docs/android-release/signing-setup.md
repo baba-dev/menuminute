@@ -30,12 +30,12 @@ In [Repository Settings → Environments](https://github.com/baba-dev/menuminute
 2. Set **Deployment branches and tags → Selected branches and tags → Branch: main**. On supported plans, add an independent required reviewer, and disallow bypass if available.
 3. Under **Environment secrets** (not repository secrets or variables), add the four secrets below:
 
-| Secret | Value |
-| --- | --- |
-| `ANDROID_UPLOAD_KEYSTORE_BASE64` | Base64-encoded contents of the `.jks` file |
-| `ANDROID_UPLOAD_STORE_PASSWORD` | Private JKS store password |
-| `ANDROID_UPLOAD_KEY_ALIAS` | `menuminute-upload` |
-| `ANDROID_UPLOAD_KEY_PASSWORD` | Private key password, which may equal the store password |
+| Secret                           | Value                                                    |
+| -------------------------------- | -------------------------------------------------------- |
+| `ANDROID_UPLOAD_KEYSTORE_BASE64` | Base64-encoded contents of the `.jks` file               |
+| `ANDROID_UPLOAD_STORE_PASSWORD`  | Private JKS store password                               |
+| `ANDROID_UPLOAD_KEY_ALIAS`       | `menuminute-upload`                                      |
+| `ANDROID_UPLOAD_KEY_PASSWORD`    | Private key password, which may equal the store password |
 
 On the owner's Windows PC, this command copies the **sensitive** JKS Base64 to clipboard for immediate pasting into GitHub's environment secret editor:
 
