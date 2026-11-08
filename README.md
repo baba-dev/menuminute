@@ -124,7 +124,7 @@ An in-product AI helper for menus and operations with grounded answers and budge
 
 ### 🧾 POS & ledger
 
-A native Till, invoice history and register closing desk. _In design and phased delivery._
+A working cashier POS with shifts, guest lookup, receipt printing and register closing. Certified statutory invoicing remains separately controlled.
 
 [POS overview →](docs/pos/README.md) · [Contracts →](docs/pos/contracts.md)
 
@@ -142,7 +142,7 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 </table>
 
 > [!NOTE]
-> Features are released in phases. Orders, Kitchen and POS ship behind explicit activation gates, and AI is budgeted and optional. See the [roadmap](docs/product-roadmap.md) and the [feature activation guide](docs/feature-activation.md) for what is live today.
+> Free QR publishing, guest ordering, standard POS and multi-station Kitchen Pro are delivered; the product owner lifted the general Phase 4/5 release blockers on 9 November 2026. Plan entitlement and safe operational checks still apply. AI, legal fiscal issuance, push and Google Play have separate readiness controls. See [current release status](docs/release-status.md), [roadmap](docs/product-roadmap.md) and [feature activation](docs/feature-activation.md).
 
 ---
 
@@ -180,17 +180,17 @@ Multi-outlet scope, independent country, currency, locale and timezone. Platform
 | --------------- | ------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | **Free**        | ₹0 forever                            | 1 outlet, 20 dishes, 2 QR codes, 2 tables, up to 100 guest orders a month  | **Yes.** Permanent QR menu, no diner sign-up                                |
 | **Ordering**    | ₹119 / month (also $5)                | 1 outlet, 200 dishes, 25 QR codes, 10 tables, no order cap                 | Self-service checkout, when the payment switches are on                     |
-| **Kitchen Pro** | ₹499 / month flat (also $20)          | Up to 10 outlets, 2,000 dishes, 200 QR codes, kitchen display and stations | Self-service checkout once its own release gate is on; otherwise by request |
+| **Kitchen Pro** | ₹499 / month flat (also $20)          | Up to 10 outlets, 2,000 dishes, 200 QR codes, kitchen display and stations | Self-service with configured provider and entitlement; otherwise by request |
 | **Dedicated**   | ₹30,000 / month, or $3,000 on-premise | Virtually unlimited; own domain and branding set up with the team          | By contract ([contact](https://food.bababuilds.com/contact))                |
 
 Free permanent QR menus stay live even after paid access ends, and printed QR links survive every downgrade.
-On Free, guest-order intake is disabled until an operator enables it; the 100-order monthly cap still applies.
+Free guest-order intake is subject to the configured owner entitlement and the 100-order monthly cap.
 Prices and limits are read from `src/modules/billing/catalog.ts` and `src/modules/plans/catalog.ts` by the
 pricing page, billing page and checkout alike.
 
 Whether a plan can be **bought** is decided at runtime, not in copy. Razorpay checkout is off by default in the
 code (and for self-hosters), needs verified provider configuration, and Kitchen Pro also needs
-`RAZORPAY_KITCHEN_ENABLED` plus the database release approval. The pricing page reads those switches, so it shows
+`RAZORPAY_KITCHEN_ENABLED` plus the database commercial authority. The general historical Phase 5 issue gate is superseded by the owner; provider-specific authorization is not. The pricing page reads those switches, so it shows
 "Get Ordering" / "Get Kitchen Pro" only when checkout can complete and otherwise offers "Start free for now" /
 "Request early access". USD prices are for enquiries only; there is no USD checkout. See
 [commercial availability](docs/commercial-availability.md) and [plans and limits](docs/plans-and-limits.md).
