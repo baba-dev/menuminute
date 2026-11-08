@@ -88,6 +88,8 @@ jobs:
 
       - name: Verify operator readiness and recovery guardrails (offline)
         run: python3 -m unittest discover -s tests/deploy -p 'test_*.py' -v
+      - name: Verify isolated Android version planner and native-change triggers (offline)
+        run: python3 -m unittest discover -s tests/android -p 'test_*.py' -v
       - name: Verify browser-evidence integrity and immutable SHA contract (offline)
         run: node --test scripts/qa/phase5-browser-evidence.test.mjs infra/load/kitchen-contract.test.mjs
 
