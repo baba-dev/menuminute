@@ -148,7 +148,7 @@ jobs:
           MM_ANDROID_VERSION_CODE: ${{ needs.preflight.outputs.version_code }}
           MM_ANDROID_VERSION_NAME: ${{ needs.preflight.outputs.version_name }}
         run: gradle --no-daemon --stacktrace :app:bundleRelease
-      - name: Verify signed AAB against the trusted upload certificate
+      - name: Verify Java archive signature
         env:
           VERIFY_STORE_PASS: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           SOURCE_SHA: ${{ needs.preflight.outputs.source_sha }}
