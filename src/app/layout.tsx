@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     template: "%s | MenuMinute",
   },
   description:
-    "Create and publish free digital menus with permanent QR codes. Online ordering and Kitchen Pro require separate activation.",
+    "Create free digital menus with permanent QR codes, guest ordering, cashier POS and Kitchen Pro. Choose features and plans for your restaurant.",
   keywords: ["restaurant menu", "QR code menu", "digital menu", "online ordering"],
   applicationName: "MenuMinute",
   manifest: "/manifest.webmanifest",
