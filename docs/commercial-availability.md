@@ -1,5 +1,7 @@
 # Commercial availability: what is sellable, and how the site decides
 
+> **9 November 2026 release-policy update:** The owner lifted the general Phase 4/5 launch blockers. The older October release issues #37/#50/#67/#77 are historical and no longer independently suppress standard Ordering or Kitchen Pro availability. However, Razorpay plan configuration, signed payment verification, authorized catalog and database commerce switches still decide whether a paid checkout can actually complete. Do not infer a successful real purchase from a pricing-page button. See [current release status](release-status.md).
+
 Decision record dated **6 November 2026**. It answers one question for every public surface: _what may a
 visitor be told they can buy today?_ Prices and limits are unchanged and live in
 `src/modules/billing/catalog.ts` and `src/modules/plans/catalog.ts`; this document is about
@@ -88,7 +90,7 @@ Do these in order; the pricing page changes by itself at the end.
 3. Legal gates in [legal README](legal/README.md): India-qualified review of the cancellation notice, registered
    address and grievance details, renewal/tax terms shown at checkout.
 4. Set `RAZORPAY_ENABLED=true` (Ordering opens). Confirm with the `curl` above: `ordering` becomes `checkout`.
-5. Kitchen Pro only after its own gates (issues #76 and #77, commercial release in `/admin/kitchen`): set
+5. For Kitchen Pro, verify provider and database commerce authority in `/admin/kitchen` (the old #76/#77 general-phase holds are superseded; independent QA remains tracked): set
    `RAZORPAY_KITCHEN_ENABLED=true` and `RAZORPAY_PLAN_KITCHEN_ID`. `kitchen_pro` becomes `checkout`.
 6. To pause sales during an incident, set `RAZORPAY_ENABLED=false`; both buttons revert at once.
 

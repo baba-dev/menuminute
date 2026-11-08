@@ -1,6 +1,6 @@
 # Production deployment and recovery — Oracle ARM64
 
-Last operator evidence: **2026-10-16**. This is the canonical account of the **deployed host**; `docs/deployment.md` describes the architecture and `docs/deployment-actions.md` describes the optional subsequent GitHub Actions deployment mechanism. These are not interchangeable. Update this document and the dated evidence after any host change. Never commit secrets or paste environment-file contents into tickets.
+> **Current-status note (9 November 2026):** This runbook contains historical host observations (some dating to 16 October) and recovery requirements; its old "blocked launch" wording is **not** current product release policy. The owner lifted general Phase 4/5 web release blockers, while host checks, tenant security, exact SHA, backups, provider settlement and restoration remain independently verifiable obligations. See [release status](release-status.md). Do not infer live host configuration or a finished restore drill from this note.\n\nLast operator evidence: **2026-10-16**. This is the canonical account of the **deployed host**; `docs/deployment.md` describes the architecture and `docs/deployment-actions.md` describes the optional subsequent GitHub Actions deployment mechanism. These are not interchangeable. Update this document and the dated evidence after any host change. Never commit secrets or paste environment-file contents into tickets.
 
 ## Current status: facts versus outstanding gates
 

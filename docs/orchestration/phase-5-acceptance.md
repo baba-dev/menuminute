@@ -1,6 +1,6 @@
 # Phase 5 — executable acceptance and release matrix
 
-> Integration note (19 October 2026): This PR carries planning and **pure, non-wired domain contracts only**. Guest-facing editorial dish-detail UI has been extracted to [draft PR #101](https://github.com/baba-dev/menuminute/pull/101). Neither the pure reducer nor this documentation authorizes Kitchen Pro or checkout activation.
+> **Reconciliation — 9 November 2026:** Historical, uncompleted acceptance checkboxes below remain **unchecked evidence**, but no longer serve as a blanket hold on the general web launch following the owner's release decision. Continue #76 independent QA as nonblocking tracked work and preserve capability-specific approvals. [Current release status](../release-status.md).\n\n> Integration note (19 October 2026): This PR carries planning and **pure, non-wired domain contracts only**. Guest-facing editorial dish-detail UI has been extracted to [draft PR #101](https://github.com/baba-dev/menuminute/pull/101). Neither the pure reducer nor this documentation authorizes Kitchen Pro or checkout activation.
 
 Parent [#67](https://github.com/baba-dev/menuminute/issues/67), continuous QA [P5-08 #76](https://github.com/baba-dev/menuminute/issues/76), final integration [P5-09 #77](https://github.com/baba-dev/menuminute/issues/77). All boxes are **pending** until linked to exact real evidence; this planning checklist does not declare Phase 4 or Phase 5 production readiness. The owner approved Guest B / Kitchen C / Design C, not unrecorded tax/pickup/commercial rules.
 

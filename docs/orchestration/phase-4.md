@@ -1,6 +1,6 @@
 # Phase 4 — Perfect Free QR Menu execution baseline
 
-Status: In progress, engineering work packages [#38–#50](https://github.com/baba-dev/menuminute/issues/37). Baseline `main`: `94fb552a06c0aa77729217733eb103771961306f` as inspected 2026-10-17. This file describes source-observed implementation, not independently verified live host state.
+> **Status update — 9 November 2026:** This is an **October 2026 historical implementation and QA baseline**, not the current release hold. The owner lifted the general Phase 4/5 web release blockers after the production implementation had shipped. Current decision, issue disposition and the distinction between owner waiver and independently verified tests: [release status](../release-status.md). Preserve these original checklists as test history and follow-up risk; do not use them to disable otherwise authorized services.\n\nStatus: In progress, engineering work packages [#38–#50](https://github.com/baba-dev/menuminute/issues/37). Baseline `main`: `94fb552a06c0aa77729217733eb103771961306f` as inspected 2026-10-17. This file describes source-observed implementation, not independently verified live host state.
 
 ## Scope and source of truth
 

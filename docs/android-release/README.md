@@ -1,6 +1,6 @@
 # Android release program — phases A–F
 
-**Status: source integration candidate, NOT approved for Google Play production.** Do not mark this phase completed merely because GitHub CI is green.
+**Status (9 November 2026): Android source and Play billing foundation merged; a signed internal-release AAB was verified in [run 42496478422](https://github.com/baba-dev/menuminute/actions/runs/42496478422). Google Play Internal Testing, Play App Signing/TWA association, declarations and physical-device QA remain incomplete.** General web release blockers were lifted by the owner, but that does **not** authorize Play production. See [#340](https://github.com/baba-dev/menuminute/issues/340) and [current release status](../release-status.md).
 
 ## Architecture
 
