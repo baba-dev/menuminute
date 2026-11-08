@@ -1,12 +1,12 @@
 # Release status and issue reconciliation — 9 November 2026
 
-> **Source of truth for current release policy.** This document supersedes the *release-blocking status* of the October Phase 4/5 planning and acceptance documents, not their engineering contracts, security safeguards or historical test records. Do not mistake the owner's policy decision for a completed test, certified jurisdiction, provider approval, or current VPS verification.
+> **Source of truth for current release policy.** This document supersedes the _release-blocking status_ of the October Phase 4/5 planning and acceptance documents, not their engineering contracts, security safeguards or historical test records. Do not mistake the owner's policy decision for a completed test, certified jurisdiction, provider approval, or current VPS verification.
 
 ## Owner decision and scope
 
 The product owner states that **the general MenuMinute web release blockers are lifted** as of 9 November 2026. Free QR menus, guest ordering, standard POS, service orders and multi-station Kitchen Pro are implemented rather than pending Phase 4/5 development. Release and merchant availability must follow actual role, plan, entitlement, provider and configuration checks rather than stale cross-phase approval tickets.
 
-The earlier Phase 4/5 *epic-level launch holds* are superseded; they must not be reused to disable otherwise authorized web functionality. This is **not** a waiver of tenant isolation, order correctness, immutable migrations, runtime health, backup safety, payments verification, privacy, fiscal law, or security reviews. Outstanding independent QA/operations evidence is a **tracked post-release risk**, not evidence of having passed. Never mark unchecked historical acceptance boxes as complete.
+The earlier Phase 4/5 _epic-level launch holds_ are superseded; they must not be reused to disable otherwise authorized web functionality. This is **not** a waiver of tenant isolation, order correctness, immutable migrations, runtime health, backup safety, payments verification, privacy, fiscal law, or security reviews. Outstanding independent QA/operations evidence is a **tracked post-release risk**, not evidence of having passed. Never mark unchecked historical acceptance boxes as complete.
 
 ## Verified repository versus live deployment
 
@@ -18,18 +18,18 @@ The earlier Phase 4/5 *epic-level launch holds* are superseded; they must not be
 
 ## Product and commercial boundaries
 
-| Area | Current source/policy status | Still restricted or unverified |
-| --- | --- | --- |
-| Free QR Menu / publishing | Delivered; no inherited Phase 4 blocker | Auth, tenancy, media approval, valid QR and safe publish contracts remain mandatory |
-| Guest ordering / service board | Delivered, including free-tier quotas and merchant entitlement flows | Outlet hours, price reconfirmation, active entitlements, staff permissions and runtime availability still apply |
-| Standard POS / receipts | Delivered; legacy finance gate must not suppress ordinary cashier service | External payment settlement and certified fiscal documents are **separate** features |
-| Kitchen Pro | Multi-station implementation delivered; owner says general release hold lifted | Billing must still pass provider, plan, entitlement and database authorization checks; no fabricated transaction readiness |
-| Merchant-configured tax | Guest/POS server quote, frozen snapshots and non-fiscal receipts delivered in #321 | Merchant explicitly enables tax collection after required classifications; not certified GST/VAT invoicing |
-| AI menu import / Ember | Feature-specific controls and some workflows delivered | Provider readiness, monetary limits, privacy, consent, role permissions and scoped AI actions remain independent |
-| PWA / Web Push | Source delivered | Physical-device acceptance and push rollout in #249 are not proven globally |
-| Android / Google Play | TWA source, compliance documentation and signed AAB built | #340: identity, App Signing assetlinks, Play tracks, Data Safety, device QA and store review; #286 deletion validation |
-| Statutory invoices | India GST draft/ledger work in #318/#320 | #226 legal/jurisdiction review and actual statutory issuance remain fail-closed |
-| USD subscriptions | USD prices/contract inquiries published | Do not imply verified live international recurring checkout without the provider integration and approval |
+| Area                           | Current source/policy status                                                       | Still restricted or unverified                                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Free QR Menu / publishing      | Delivered; no inherited Phase 4 blocker                                            | Auth, tenancy, media approval, valid QR and safe publish contracts remain mandatory                                        |
+| Guest ordering / service board | Delivered, including free-tier quotas and merchant entitlement flows               | Outlet hours, price reconfirmation, active entitlements, staff permissions and runtime availability still apply            |
+| Standard POS / receipts        | Delivered; legacy finance gate must not suppress ordinary cashier service          | External payment settlement and certified fiscal documents are **separate** features                                       |
+| Kitchen Pro                    | Multi-station implementation delivered; owner says general release hold lifted     | Billing must still pass provider, plan, entitlement and database authorization checks; no fabricated transaction readiness |
+| Merchant-configured tax        | Guest/POS server quote, frozen snapshots and non-fiscal receipts delivered in #321 | Merchant explicitly enables tax collection after required classifications; not certified GST/VAT invoicing                 |
+| AI menu import / Ember         | Feature-specific controls and some workflows delivered                             | Provider readiness, monetary limits, privacy, consent, role permissions and scoped AI actions remain independent           |
+| PWA / Web Push                 | Source delivered                                                                   | Physical-device acceptance and push rollout in #249 are not proven globally                                                |
+| Android / Google Play          | TWA source, compliance documentation and signed AAB built                          | #340: identity, App Signing assetlinks, Play tracks, Data Safety, device QA and store review; #286 deletion validation     |
+| Statutory invoices             | India GST draft/ledger work in #318/#320                                           | #226 legal/jurisdiction review and actual statutory issuance remain fail-closed                                            |
+| USD subscriptions              | USD prices/contract inquiries published                                            | Do not imply verified live international recurring checkout without the provider integration and approval                  |
 
 ## Issue disposition
 
