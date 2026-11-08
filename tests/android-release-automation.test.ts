@@ -20,8 +20,12 @@ describe("separate guarded Android release automation", () => {
   });
 
   it("uses generated versions and immutable release metadata", () => {
-    expect(signing).toContain("MM_ANDROID_VERSION_CODE: ${{ needs.preflight.outputs.version_code }}");
-    expect(signing).toContain("MM_ANDROID_VERSION_NAME: ${{ needs.preflight.outputs.version_name }}");
+    expect(signing).toContain(
+      "MM_ANDROID_VERSION_CODE: ${{ needs.preflight.outputs.version_code }}"
+    );
+    expect(signing).toContain(
+      "MM_ANDROID_VERSION_NAME: ${{ needs.preflight.outputs.version_name }}"
+    );
     expect(signing).toContain("android-release.json");
     expect(signing).toContain("retention-days: 30");
     expect(gradle).toContain('System.getenv("MM_ANDROID_VERSION_CODE")');
