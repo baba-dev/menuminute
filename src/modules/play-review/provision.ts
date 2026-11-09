@@ -27,7 +27,6 @@ export async function provisionPlayReviewer(
     errorCorrectionLevel: "M",
     margin: 2,
   });
-  const allDishes = menu.categories.flatMap((category) => category.items);
   await c.query("BEGIN");
   try {
     await c.query("SET LOCAL lock_timeout = '5000ms'");
