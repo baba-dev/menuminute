@@ -49,7 +49,7 @@ describe("The Droid Pie dedicated Google Play reviewer tenant", () => {
     expect(code).toContain('process.env["MIGRATION_DATABASE_URL"]');
     expect(code).not.toContain("console.log(password");
     expect(provisioner).toContain("pg_advisory_xact_lock");
-    expect(provisioner).toContain('operator,reason,request_key');
+    expect(provisioner).toContain("operator,reason,request_key");
     expect(provisioner).toContain("ROLLBACK");
     expect(provisioner).toContain("ON CONFLICT(id) DO NOTHING");
     expect(deployment).not.toContain("play-reviewer-provision.mjs");
