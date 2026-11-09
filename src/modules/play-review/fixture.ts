@@ -28,9 +28,9 @@ export function buildPlayReviewMenu(): MenuDocument {
     const found = menu.categories.find((category) => category.id === id);
     return found ? [{ ...found, items: found.items.slice(0, 12) }] : [];
   });
-  const featured = categories.flatMap((category) => category.items).filter((dish) =>
-    /pizza|lasagna|burger|fries|pasta|risotto/i.test(dish.name)
-  );
+  const featured = categories
+    .flatMap((category) => category.items)
+    .filter((dish) => /pizza|lasagna|burger|fries|pasta|risotto/i.test(dish.name));
   return menuDocumentSchema.parse({
     ...menu,
     name: "The Droid Pie",
@@ -52,7 +52,11 @@ export const PLAY_REVIEW_TABLES = Array.from({ length: 10 }, (_, i) => ({
 
 /** Synthetic, deterministic order history; it contains no real guests or payment credentials. */
 export function buildPlayReviewOrders(now: Date = new Date()): DemoOrder[] {
-  const generated = buildDemoOrders(buildPlayReviewMenu(), PLAY_REVIEW_TABLES.map((t) => t.id), now);
+  const generated = buildDemoOrders(
+    buildPlayReviewMenu(),
+    PLAY_REVIEW_TABLES.map((t) => t.id),
+    now
+  );
   const history = generated.filter((order) => !order.live);
   const recentByPeriod = history.filter((_, i) => i % 4 === 0).slice(-110);
   const live = generated.filter((order) => order.live);
