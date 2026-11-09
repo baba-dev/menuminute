@@ -1,6 +1,11 @@
 import QRCode from "qrcode";
 import type { PoolClient } from "pg";
-import { PLAY_REVIEW, PLAY_REVIEW_TABLES, buildPlayReviewMenu, buildPlayReviewOrders } from "./fixture";
+import {
+  PLAY_REVIEW,
+  PLAY_REVIEW_TABLES,
+  buildPlayReviewMenu,
+  buildPlayReviewOrders,
+} from "./fixture";
 
 /**
  * Production-only operator command. This is NOT an HTTP route and never runs
@@ -36,9 +41,7 @@ export async function provisionPlayReviewer(
       [userId, email]
     );
     if (
-      identity.rows.some(
-        (row) => row.id !== userId || row.name !== userName || row.email !== email
-      )
+      identity.rows.some((row) => row.id !== userId || row.name !== userName || row.email !== email)
     ) {
       throw new Error("Reviewer identity conflict: refusing to take over an existing account");
     }
@@ -92,7 +95,8 @@ export async function provisionPlayReviewer(
           outletType: "restaurant",
           fulfillmentModes: ["dine_in", "pickup"],
           city: "Sample City",
-          description: "Play Store review restaurant. All orders, guests and payments are fictional.",
+          description:
+            "Play Store review restaurant. All orders, guests and payments are fictional.",
           svgData: svg,
         }),
       ]);
@@ -100,10 +104,10 @@ export async function provisionPlayReviewer(
 
     // Lower MFA requirements for this isolated reviewer organization only.
     // The reviewer is a REAL role-scoped owner (never the shared public-demo identity).
-    await c.query(
-      "UPDATE organizations SET mfa_required=false WHERE id=$1 AND name=$2",
-      [organizationId, outletName]
-    );
+    await c.query("UPDATE organizations SET mfa_required=false WHERE id=$1 AND name=$2", [
+      organizationId,
+      outletName,
+    ]);
     const outlet = await c.query<{ organization_id: string; public_id: string }>(
       "SELECT organization_id,public_id FROM restaurants WHERE id=$1",
       [outletId]
@@ -112,7 +116,8 @@ export async function provisionPlayReviewer(
       outlet.rows.length !== 1 ||
       outlet.rows[0]!.organization_id !== organizationId ||
       outlet.rows[0]!.public_id !== publicId
-    ) throw new Error("Reviewer outlet identity conflict");
+    )
+      throw new Error("Reviewer outlet identity conflict");
 
     await c.query(
       `UPDATE restaurants SET free_menu_enabled=true,is_published=true
@@ -266,7 +271,9 @@ export async function provisionPlayReviewer(
           order.number,
           createdAt,
           `play-review-track-${order.id}`,
-          order.live ? new Date(Date.now() + 35 * 86400000) : new Date(createdAt.getTime() + 7200000),
+          order.live
+            ? new Date(Date.now() + 35 * 86400000)
+            : new Date(createdAt.getTime() + 7200000),
           "Synthetic demonstration order; never collected from a real customer",
         ]
       );
@@ -357,7 +364,8 @@ export async function provisionPlayReviewer(
       Number(status.tables) < 8 ||
       Number(status.grants) !== 2 ||
       Number(status.member_count) !== 1
-    ) throw new Error("Reviewer fixture failed its data integrity checks");
+    )
+      throw new Error("Reviewer fixture failed its data integrity checks");
     await c.query("COMMIT");
     return {
       restaurant: outletName,
