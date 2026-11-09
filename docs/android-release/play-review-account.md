@@ -1,6 +1,6 @@
 # Google Play review account: The Droid Pie
 
-This is a **separate, opt-in, non-production-data tenant in the production database** for Google Play app reviewers. It is a regular Better Auth email/password account with an owner role on one isolated restaurant, *not* the public demo actor; the public demo guard and automatic 30-minute reset do not apply.
+This is a **separate, opt-in, non-production-data tenant in the production database** for Google Play app reviewers. It is a regular Better Auth email/password account with an owner role on one isolated restaurant, _not_ the public demo actor; the public demo guard and automatic 30-minute reset do not apply.
 
 **Account display name:** Reviewer Account
 
@@ -21,7 +21,7 @@ This is a **separate, opt-in, non-production-data tenant in the production datab
 
 ## One-time owner action on the production VPS (after PR CI + deployment)
 
-Create a private env file with *only* these values, as root:
+Create a private env file with _only_ these values, as root:
 
 ```bash
 sudo install -m 600 -o root -g root /dev/null /etc/menuminute/play-reviewer.env
@@ -66,7 +66,7 @@ sudo shred --remove /etc/menuminute/play-reviewer.env
 
 ### Password rotation later
 
-Re-create the root-only env file with the **same email** and a *new* password plus `PLAY_REVIEWER_ROTATE_PASSWORD=true`, then re-run. That updates the Better Auth credential hash only. Existing sessions are not implicitly revoked; revoke them in account security if rotating due to suspected compromise. Do not edit raw hashed credentials manually.
+Re-create the root-only env file with the **same email** and a _new_ password plus `PLAY_REVIEWER_ROTATE_PASSWORD=true`, then re-run. That updates the Better Auth credential hash only. Existing sessions are not implicitly revoked; revoke them in account security if rotating due to suspected compromise. Do not edit raw hashed credentials manually.
 
 ## Play Console reviewer-access form
 
