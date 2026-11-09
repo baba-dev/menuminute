@@ -339,8 +339,9 @@ export async function provisionPlayReviewer(
       member_count: string;
     }>(
       `SELECT
-        (SELECT count(*)::text FROM jsonb_array_elements((SELECT document FROM menus WHERE id=$1)->'categories') cats
-          CROSS JOIN LATERAL jsonb_array_elements(cats->'items')) AS items,
+        (SELECT count(*)::text
+         FROM jsonb_array_elements((SELECT document FROM menus WHERE id=$1)->'categories') AS cat(value)
+         CROSS JOIN LATERAL jsonb_array_elements(cat.value->'items') AS dish(item)) AS items,
         (SELECT count(*)::text FROM orders WHERE restaurant_id=$2) AS order_count,
         (SELECT count(*)::text FROM restaurant_tables WHERE restaurant_id=$2) AS tables,
         (SELECT count(*)::text FROM entitlement_grants WHERE organization_id=$3
