@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher: translucent hand-off to Chrome; the splash image is drawn by Android Browser Helper. -->
+    <style name="Theme.MenuMinute.Launcher" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@color/mm_splash_background</item>
+    </style>
+    <!-- Native print bridge dialog (Bluetooth Classic / USB). -->
+    <style name="Theme.MenuMinute.Print" parent="@android:style/Theme.Material.Light.Dialog.NoActionBar">
+        <item name="android:colorAccent">#C2410C</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
+</resources>

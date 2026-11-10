@@ -6,7 +6,8 @@ This Android project packages the existing HTTPS merchant PWA as a **Trusted Web
 - Target/compile API 36, minimum API 26.
 - Trusted origin: `https://food.bababuilds.com`; launch URL: `/api/app/launch` (server redirects to `/app`).
 - The web app uses this launch marker to enter **Play mode**: Razorpay checkout is disabled within the Play client and subscriptions are sold through **Google Play Billing** (Digital Goods API via `androidbrowserhelper:billing`, Play Billing Library 8.3.0). The app contains no billing logic; the server verifies every purchase with the Google Play Developer API. See `docs/android-release/play-billing.md`.
-- The app does not claim native Bluetooth Classic printing. BLE GATT receipt printers can be accessed through Web Bluetooth in compatible Chrome/TWA installations after user permission.
+- Receipt printing: Bluetooth Classic (SPP) and USB printers go through the native `PrintBridgeActivity` (see `docs/android-release/print-bridge.md`; implemented, not yet hardware-verified). BLE GATT printers use Web Bluetooth in Chrome after user permission. PDF/system print remains the fallback.
+- Launcher icon is an adaptive + themed (monochrome) vector built from the approved brand mark; splash, system-bar colours and notification small icon are configured in the manifest and `res/`.
 - `assetlinks.json` must contain the **Play App Signing** certificate's SHA-256 fingerprint, not only the local upload-key fingerprint.
 
 Build with JDK 17, Android SDK platform 36 and Gradle 8.13:

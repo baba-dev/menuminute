@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MenuMinute menu-book + clock emblem (approved icon-master.svg), scaled into the adaptive safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="10.480" android:translateY="10.140" android:scaleX="0.68" android:scaleY="0.68">
+        <path android:fillColor="#FFFFFF" android:pathData="M31.5,39.1c0,-5 3.9,-7.4 8.1,-5.1L61,45.9v48.5L35.9,81.2c-2.9,-1.6 -4.4,-3.5 -4.4,-6.9V39.1z"/>
+        <path android:fillColor="#FFFFFF" android:pathData="M63.1,45.9L88.8,33c4.7,-2.3 8.2,0.5 8.2,5.1v37c0,2.9 -1.5,5.3 -4.2,6.9L63.1,96V45.9z"/>
+        <path android:strokeColor="#FF4B0A" android:strokeWidth="4.4" android:strokeLineCap="round" android:pathData="M40.5,49.1L53.1,55.8"/>
+        <path android:strokeColor="#FF4B0A" android:strokeWidth="4.4" android:strokeLineCap="round" android:pathData="M40.5,60.9L53.1,67.6"/>
+        <path android:strokeColor="#FF4B0A" android:strokeWidth="4.4" android:strokeLineCap="round" android:pathData="M40.5,72.7L53.1,79.4"/>
+        <path android:fillColor="#FF4B0A" android:pathData="M79.8,64.2m-13.3,0a13.3,13.3 0 1,1 26.6,0a13.3,13.3 0 1,1 -26.6,0"/>
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="3.6" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M80,56.7v7.6l-4.1,4.7"/>
+    </group>
+</vector>
