@@ -2,6 +2,28 @@
 
 **Status: proposed plan, 10 November 2026. Nothing here is deployed or proven on a device.** Evidence labelled _verified_ was reproduced or observed in this analysis; everything labelled _unverified_ needs a real-device or Play Console check. This plan extends [`README.md`](README.md) (phases A–F) and [`device-test-matrix.md`](device-test-matrix.md); it does not replace the owner's Play gates in [#340](https://github.com/baba-dev/menuminute/issues/340).
 
+## 0. Update 10 November 2026 (second pass): owner decisions and what is built
+
+Owner decisions: the app launches **login, then Menu Studio**; **edge-to-edge** layout; **Bluetooth Classic and USB printers are a launch requirement**. An external audit (ChatGPT) was merged in below.
+
+| Item                                                                       | Status in this branch                                                                                                                                                                       | Still open                                                                                            |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Launch redirect to localhost (L1)                                          | Fixed; deterministic contract check `scripts/android/verify-launch-contract.sh` fails on the live bug today                                                                                 | Deploy, then re-run it (must pass)                                                                    |
+| Launcher test can pass without confirming the destination (audit P0, L2)   | Emulator smoke now screenshots, dumps the UI, taps through Chrome first-run, and fails on localhost/error pages (strict on manual/daily runs, warning on PRs); daily scheduled contract run | Run once green on the emulator (not run in this sandbox)                                              |
+| Previous Java crash fixed but installed Play version unverified (audit P0) | Any `android/` change makes the release workflow build a new signed AAB candidate                                                                                                           | Owner uploads it to Internal Testing and installs it from Play                                        |
+| Fullscreen TWA trust (audit P1, L3/L4)                                     | `assetlinks.json` is live (200) with one fingerprint; contract check validates shape and can pin `EXPECT_ASSETLINKS_SHA256`                                                                 | Owner confirms the fingerprint equals Play Console App signing key; device check shows no browser bar |
+| Smoke uses a debug APK, not the Play-signed install (audit P1)             | Documented limitation; Play pre-launch report is the signed-install test                                                                                                                    | Run Play internal-track install and pre-launch report                                                 |
+| Billing implemented but disabled (audit P1)                                | Unchanged on purpose                                                                                                                                                                        | Live purchase, restore, cancel, refund tests before enabling `PLAY_BILLING_ENABLED`                   |
+| `main` not branch-protected (audit P1)                                     | Cannot be changed from here                                                                                                                                                                 | **Owner:** require PR review and the "Required CI quality gate" check on `main`                       |
+| Play cookie lasts one year and affects regular Chrome (audit P1)           | Unchanged; the cookie only hides Razorpay checkout                                                                                                                                          | Test switching between the Play app and web billing; decide whether a session-length cookie is better |
+| App Links only handle `/api/app/launch` (audit P2, L5)                     | Merchant routes now open in the app; diner `/m/...` stays in the browser                                                                                                                    | Verify notification URLs and OAuth callbacks on a device                                              |
+| Thermal printing limited to BLE (audit P2)                                 | Bluetooth Classic + USB native bridge built ([`print-bridge.md`](print-bridge.md)); BLE and PDF fallback kept                                                                               | **Untested on real printers**; hardware matrix rows                                                   |
+| Native launcher presentation (audit P2, N1-N4)                             | Adaptive + themed icon, splash, status/navigation bar colours, notification small icon, short label (`MenuMinute`)                                                                          | Visual check on Android 10/13/15/16 and large screens                                                 |
+| Edge-to-edge (W3)                                                          | `viewport-fit=cover`, safe-area padding, status-bar scrim in installed mode, sticky headers below the inset                                                                                 | Device verification; per-screen audit of every fixed bottom bar                                       |
+| Launch journey                                                             | `/app` sends signed-in merchants to Menu Studio; signed-out goes to login and returns                                                                                                       | New-account and no-outlet paths on device                                                             |
+
+Nothing in the table marked "open" is proven by this branch. CI proves compilation, unit tests and the server contract only.
+
 ## 1. Verdict
 
 The Android shell is a thin Trusted Web Activity (TWA) around the Next.js PWA. That is the right architecture for "one codebase, every Android phone and tablet": all UI, authorization, billing validation and ordering stay server-side. But today the app is **not launch-ready**:
@@ -141,8 +163,8 @@ Work the P0 merchant journeys in this order: login/MFA, `/app` entry, onboarding
 ## 6. Decisions for the owner
 
 1. Which merchant URLs should open in the app (L5)?
-2. Edge-to-edge or letterboxed layout (W3)?
-3. Are Bluetooth Classic/USB printers a launch requirement? If yes, a native print bridge is a separate project.
+2. ~~Edge-to-edge or letterboxed layout (W3)?~~ **Edge-to-edge (decided 2026-11-10).**
+3. ~~Are Bluetooth Classic/USB printers a launch requirement?~~ **Yes (decided 2026-11-10).** Native bridge built; needs hardware verification.
 4. Is an iOS App Store app in scope, or is the PWA sufficient?
 
 ## 7. What this analysis could not verify
