@@ -18,12 +18,12 @@ if (origin.protocol !== "https:" || origin.hostname !== "food.bababuilds.com") {
 }
 const shots = [
   { id: "01-dashboard", title: "Restaurant dashboard", path: "/dashboard" },
-  { id: "02-menu-studio", title: "Digital menu studio", path: "/dashboard/menu" },
-  { id: "03-pos", title: "Point of sale", path: "/dashboard/pos" },
-  { id: "04-orders", title: "Orders", path: "/dashboard/orders" },
-  { id: "05-kitchen", title: "Kitchen display", path: "/kitchen" },
-  { id: "06-qr-studio", title: "QR menu studio", path: "/dashboard/qr-codes" },
-  { id: "07-guest-qr-menu", title: "Guest-facing QR menu", path: "/m/demo-spice-route-kitchen-v2" },
+  { id: "02-menu-studio", title: "Digital menu studio", path: "/dashboard/menu", scroll: 480 },
+  { id: "03-pos", title: "Point of sale", path: "/dashboard/pos", scroll: 460 },
+  { id: "04-orders", title: "Orders", path: "/dashboard/orders", scroll: 500 },
+  { id: "05-kitchen", title: "Kitchen station setup", path: "/kitchen" },
+  { id: "06-qr-studio", title: "QR menu studio", path: "/dashboard/qr-codes", scroll: 510 },
+  { id: "07-guest-qr-menu", title: "Guest-facing QR menu", path: "/m/demo-spice-route-kitchen-v2", scroll: 735 },
 ];
 
 mkdirSync(OUTPUT, { recursive: true });
@@ -75,6 +75,14 @@ try {
     const pageTitle = await page.title();
     if ((await page.locator("body").innerText()).length < 140) {
       throw new Error("Insufficient visible demo content for " + shot.id);
+    }
+    if (shot.scroll) {
+      const actualScroll = await page.evaluate((top) => {
+        window.scrollTo(0, top);
+        return window.scrollY;
+      }, shot.scroll);
+      console.log("Scroll for " + shot.id + ": requested " + shot.scroll + ", initial " + actualScroll);
+      await page.waitForTimeout(1700);
     }
     const png = await page.screenshot({ type: "png", fullPage: false, animations: "disabled" });
     const width = png.readUInt32BE(16);
