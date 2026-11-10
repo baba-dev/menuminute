@@ -25,6 +25,7 @@ The Play entry sets an HttpOnly, Secure, SameSite=Lax cookie. This cookie is not
 ## C — merchant UX
 
 - Installed PWA starts at `/app`, not the marketing homepage. Play TWA launches `/api/app/launch`.
+- `/api/app/launch` must answer with a **relative** `Location: /app`. Behind Nginx the Node server listens on `HOSTNAME=127.0.0.1:PORT` and Next derives `request.url` from that listener (not from `Host`/`X-Forwarded-*`), so building an absolute URL from `request.url` sent the TWA to `https://localhost:3100/app` (observed live on 2026-11-10, fixed in the launch route). Never build redirect or canonical URLs from `request.url`; use relative redirects or `PUBLIC_ORIGIN`.
 - Signed-out merchants see login. Existing merchants see Dashboard. New accounts use `/start` onboarding.
 - Normal diner QR `/m/...` URLs are independent. Public menu offline snapshots remain anonymous and never queue orders.
 - Verify Google OAuth, password/MFA, app Back handling, external links, uploads, screen orientation and background/restart behavior on devices.
