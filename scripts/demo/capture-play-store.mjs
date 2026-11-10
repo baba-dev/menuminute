@@ -23,7 +23,12 @@ const shots = [
   { id: "04-orders", title: "Orders", path: "/dashboard/orders", scroll: 500 },
   { id: "05-kitchen", title: "Kitchen station setup", path: "/kitchen" },
   { id: "06-qr-studio", title: "QR menu studio", path: "/dashboard/qr-codes", scroll: 510 },
-  { id: "07-guest-qr-menu", title: "Guest-facing QR menu", path: "/m/demo-spice-route-kitchen-v2", scroll: 735 },
+  {
+    id: "07-guest-qr-menu",
+    title: "Guest-facing QR menu",
+    path: "/m/demo-spice-route-kitchen-v2",
+    scroll: 735,
+  },
 ];
 
 mkdirSync(OUTPUT, { recursive: true });
@@ -81,7 +86,9 @@ try {
         window.scrollTo(0, top);
         return window.scrollY;
       }, shot.scroll);
-      console.log("Scroll for " + shot.id + ": requested " + shot.scroll + ", initial " + actualScroll);
+      console.log(
+        "Scroll for " + shot.id + ": requested " + shot.scroll + ", initial " + actualScroll
+      );
       await page.waitForTimeout(1700);
     }
     const png = await page.screenshot({ type: "png", fullPage: false, animations: "disabled" });
