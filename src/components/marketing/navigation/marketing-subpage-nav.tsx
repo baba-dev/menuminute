@@ -59,7 +59,7 @@ export function MarketingSubpageNav() {
   return (
     <nav
       aria-label="Subpage navigation"
-      className="border-border bg-background/90 sticky top-0 z-50 border-b backdrop-blur-md transition-colors"
+      className="border-border bg-background/90 sticky top-[env(safe-area-inset-top,0px)] z-50 border-b backdrop-blur-md transition-colors"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">

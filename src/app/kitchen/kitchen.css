@@ -44,7 +44,7 @@
   background: var(--kk-panel);
   border-bottom: 1px solid var(--kk-line);
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 50;
 }
 .kk-topbar-inner {
@@ -2173,7 +2173,7 @@
   }
   .kk-stations {
     position: sticky;
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     z-index: 5;
     padding: 8px 0;
     background: inherit;

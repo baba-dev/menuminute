@@ -63,7 +63,7 @@ Subscriptions: <https://support.google.com/googleplay/android-developer/answer/1
 ## 5. Store listing
 
 - Title ≤ 30 characters; short description ≤ 80; full description ≤ 4000. Keep claims to features present in the build;
-  do not claim Bluetooth Classic printing (`README.md` §E).
+  claim Bluetooth Classic/USB printing only for printer models recorded as passed in the device matrix (`README.md` §E, `print-bridge.md`). Declare the Bluetooth permission use in Play Console.
 - Replace "This Play edition does not sell subscriptions in the app" (removed from `store-listing.md`): the listing now
   discloses that paid plans are available through Google Play.
 - Screenshots must be real device captures of the signed build; no price or competitor claims that the app cannot back.

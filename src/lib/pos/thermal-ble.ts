@@ -1,8 +1,8 @@
 import { encodeThermalReceipt, type ThermalPaper, type ThermalReceipt } from "./thermal-receipt";
 import { isInstalledAppClient } from "@/lib/pwa/installed";
 
-// Browser-native Web Bluetooth speaks BLE GATT only. Bluetooth Classic SPP is
-// deliberately NOT treated as supported and requires a separately tested native bridge.
+// Browser-native Web Bluetooth speaks BLE GATT only. Bluetooth Classic (SPP) and USB printers are
+// served by the native Android print bridge instead; see native-print.ts.
 const profiles = [
   {
     service: "0000ffe0-0000-1000-8000-00805f9b34fb",

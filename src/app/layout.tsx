@@ -88,6 +88,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  // Edge-to-edge: lets the Android TWA/installed PWA draw behind system bars; safe-area insets in
+  // globals.css keep content clear of them. No effect in a normal browser tab (insets are 0).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f97316" },
     { media: "(prefers-color-scheme: dark)", color: "#1c1917" },

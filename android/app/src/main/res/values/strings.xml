@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MenuMinute Restaurant Manager</string>
+    <!-- Launcher label must stay short: long names truncate on most launchers. The Play title is separate. -->
+    <string name="app_name">MenuMinute</string>
     <string name="launch_url" translatable="false">https://food.bababuilds.com/api/app/launch</string>
+    <string name="print_api_url" translatable="false">https://food.bababuilds.com/api/native-print/receipt</string>
     <string name="asset_statements" translatable="false">[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"web\",\"site\":\"https://food.bababuilds.com\"}}]</string>
+
+    <string name="print_title">Print receipt</string>
+    <string name="print_choose_printer">Choose a printer</string>
+    <string name="print_no_printers">No printers found. Pair a Bluetooth printer in Android settings, or connect a USB printer, then tap Refresh.</string>
+    <string name="print_action">Print</string>
+    <string name="print_test_action">Test print</string>
+    <string name="print_refresh">Refresh</string>
+    <string name="print_pair_bluetooth">Pair Bluetooth printer</string>
+    <string name="print_close">Close</string>
+    <string name="print_bluetooth_permission">Allow Bluetooth access to print on a paired printer.</string>
 </resources>

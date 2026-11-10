@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FF4B0A</color>
+    <!-- Mirror viewport.themeColor in src/app/layout.tsx so native bars and the web scrim match. -->
+    <color name="mm_status_bar">#F97316</color>
+    <color name="mm_status_bar_dark">#1C1917</color>
+    <color name="mm_navigation_bar">#FAFAF9</color>
+    <color name="mm_navigation_bar_dark">#1C1917</color>
+    <color name="mm_navigation_divider">#E7E5E4</color>
+    <color name="mm_navigation_divider_dark">#292524</color>
+    <color name="mm_splash_background">#F97316</color>
+</resources>

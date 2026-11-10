@@ -16,7 +16,7 @@ interface HelpHeaderProps {
 
 export function HelpHeader({ breadcrumbs, backLink }: HelpHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/95 backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/95">
+    <header className="sticky top-[env(safe-area-inset-top,0px)] z-40 border-b border-stone-200/80 bg-white/95 backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/95">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="MenuMinute Home">

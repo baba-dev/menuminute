@@ -2,6 +2,8 @@
 
 **Status (9 November 2026): Android source and Play billing foundation merged; a signed internal-release AAB was verified in [run 42496478422](https://github.com/baba-dev/menuminute/actions/runs/42496478422). Google Play Internal Testing, Play App Signing/TWA association, declarations and physical-device QA remain incomplete.** General web release blockers were lifted by the owner, but that does **not** authorize Play production. See [#340](https://github.com/baba-dev/menuminute/issues/340) and [current release status](../release-status.md).
 
+> Production-readiness analysis, findings and phased plan: [`mobile-production-plan.md`](mobile-production-plan.md).
+
 ## Architecture
 
 MenuMinute remains one Next.js application. `android/` is a tiny Android Trusted Web Activity using Android Browser Helper and Android 16 / API 36. The PWA manifest starts at `/app`, which validates a real server-side session; the Play launcher starts at `/api/app/launch`, which marks the browser profile as **consumption only** and then redirects to `/app`. Authentication, outlet RBAC, POS, Kitchen and the ordering ledger are unchanged.
@@ -24,7 +26,10 @@ The Play entry sets an HttpOnly, Secure, SameSite=Lax cookie. This cookie is not
 
 ## C — merchant UX
 
-- Installed PWA starts at `/app`, not the marketing homepage. Play TWA launches `/api/app/launch`.
+- Installed PWA starts at `/app`, not the marketing homepage. Play TWA launches `/api/app/launch`. **Launch journey (owner decision, 2026-11-10): login, then Menu Studio** (`/dashboard/menu`). Signed out goes to `/login?next=%2Fapp`; signed in goes straight to Menu Studio; merchants with no outlet go to `/start`.
+- **Edge-to-edge:** the viewport uses `viewport-fit=cover`; `globals.css` pads for `env(safe-area-inset-*)` (side insets always, status-bar scrim and top inset in installed display modes), and sticky headers stick below the top inset. System bar colours (`STATUS_BAR_COLOR*`, `NAVIGATION_BAR_COLOR*`) mirror `viewport.themeColor`. In a normal browser tab every inset is 0, so layout there is unchanged. Whether Chrome actually draws web content behind the bars in a TWA depends on the device's Chrome version: verify on Android 10, 13, 15 and 16.
+- **App Links:** merchant routes (`/app`, `/login`, `/dashboard`, `/kitchen`, `/invite`, `/verify-email`, `/reset-password`) open in the app; diner `/m/...` links and marketing pages stay in the browser.
+- `/api/app/launch` must answer with a **relative** `Location: /app`. Behind Nginx the Node server listens on `HOSTNAME=127.0.0.1:PORT` and Next derives `request.url` from that listener (not from `Host`/`X-Forwarded-*`), so building an absolute URL from `request.url` sent the TWA to `https://localhost:3100/app` (observed live on 2026-11-10, fixed in the launch route). Never build redirect or canonical URLs from `request.url`; use relative redirects or `PUBLIC_ORIGIN`.
 - Signed-out merchants see login. Existing merchants see Dashboard. New accounts use `/start` onboarding.
 - Normal diner QR `/m/...` URLs are independent. Public menu offline snapshots remain anonymous and never queue orders.
 - Verify Google OAuth, password/MFA, app Back handling, external links, uploads, screen orientation and background/restart behavior on devices.
@@ -43,7 +48,7 @@ The Play entry sets an HttpOnly, Secure, SameSite=Lax cookie. This cookie is not
 - Operational POS receipts receive immutable server-rendered totals and can be encoded to 58/80 mm ESC/POS locally.
 - Android Chrome in installed PWA/TWA mode can offer **Bluetooth LE GATT** printing after user taps the button and selects a compatible printer. Supported tested code paths currently include FFE0/FFE1 and ISSC-style BLE characteristics. No auto BLE send; chooser requires a user gesture.
 - Existing Android system Print / Save PDF remains available. Fiscal/statutory invoices retain their existing print pipeline.
-- **Bluetooth Classic SPP, USB printers and vendor-specific printers are NOT supported by the TWA bridge in this phase.** They need a native implementation and hardware compatibility testing before such support may be advertised.
+- **Bluetooth Classic (SPP) and USB printers are a launch requirement and are served by a native print bridge** (`PrintBridgeActivity`, see [`print-bridge.md`](print-bridge.md)). The code is implemented and builds, but it is **untested on real printers**: do not advertise printer compatibility until the hardware rows in `device-test-matrix.md` pass. Vendor-specific/proprietary protocols (non-ESC/POS) remain unsupported.
 - No order replay or offline finance writes, even if Bluetooth printing fails.
 
 ## F — distribution gates

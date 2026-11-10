@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android Browser Helper hands the splash image to Chrome through this provider. -->
+<paths>
+    <files-path path="twa_splash/" name="twa_splash"/>
+</paths>
