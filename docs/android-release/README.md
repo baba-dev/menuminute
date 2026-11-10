@@ -2,6 +2,8 @@
 
 **Status (9 November 2026): Android source and Play billing foundation merged; a signed internal-release AAB was verified in [run 42496478422](https://github.com/baba-dev/menuminute/actions/runs/42496478422). Google Play Internal Testing, Play App Signing/TWA association, declarations and physical-device QA remain incomplete.** General web release blockers were lifted by the owner, but that does **not** authorize Play production. See [#340](https://github.com/baba-dev/menuminute/issues/340) and [current release status](../release-status.md).
 
+> Production-readiness analysis, findings and phased plan: [`mobile-production-plan.md`](mobile-production-plan.md).
+
 ## Architecture
 
 MenuMinute remains one Next.js application. `android/` is a tiny Android Trusted Web Activity using Android Browser Helper and Android 16 / API 36. The PWA manifest starts at `/app`, which validates a real server-side session; the Play launcher starts at `/api/app/launch`, which marks the browser profile as **consumption only** and then redirects to `/app`. Authentication, outlet RBAC, POS, Kitchen and the ordering ledger are unchanged.
