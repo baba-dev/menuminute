@@ -1,0 +1,69 @@
+name: Capture Google Play demo phone screenshots
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/play-store-screenshots.yml
+      - scripts/demo/capture-play-store.mjs
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/play-store-screenshots.yml
+      - scripts/demo/capture-play-store.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    name: Capture 1080x1920 demo PNGs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+      - name: Install checked-in dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install headless Chromium with required Linux dependencies
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Capture real mobile demo screenshots
+        env:
+          PLAY_CAPTURE_BASE: https://food.bababuilds.com
+          PLAY_CAPTURE_OUTPUT: play-store-demo-screenshots
+        run: node scripts/demo/capture-play-store.mjs
+      - name: Verify seven full-resolution PNG screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find play-store-demo-screenshots -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 7
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const root = 'play-store-demo-screenshots';
+          const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json')));
+          if (manifest.screenshots.length !== 7) throw new Error('Incomplete screenshot set');
+          for (const item of manifest.screenshots) {
+            const buf = fs.readFileSync(path.join(root, item.filename));
+            if (buf.readUInt32BE(16) !== 1080 || buf.readUInt32BE(20) !== 1920) {
+              throw new Error(item.filename + ' is not 1080x1920');
+            }
+            if (buf.length < 10000) throw new Error(item.filename + ' is unexpectedly empty');
+          }
+          NODE
+      - name: Downloadable Google Play screenshots ZIP
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: MenuMinute-Google-Play-Demo-Screenshots
+          path: play-store-demo-screenshots/
+          if-no-files-found: error
+          retention-days: 30
