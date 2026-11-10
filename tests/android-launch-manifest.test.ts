@@ -25,8 +25,8 @@ describe("Android Browser Helper startup manifest completeness", () => {
   });
 
   it("preserves the installed package, Play Billing integrations, and trusted origin", () => {
-    expect(application).toContain('@string/asset_statements');
-    expect(application).toContain('@string/launch_url');
+    expect(application).toContain("@string/asset_statements");
+    expect(application).toContain("@string/launch_url");
     expect(application).toContain('android:name=".ExtraFeaturesService"');
     expect(application).toContain(
       'android:name="com.google.androidbrowserhelper.playbilling.provider.PaymentActivity"'
