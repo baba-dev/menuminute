@@ -93,7 +93,17 @@ try {
       sha256: createHash("sha256").update(png).digest("hex"),
       pageTitle,
     });
-    console.log("Captured " + filename + ": " + width + "x" + height + " (" + Math.round(png.length / 1024) + " KiB)");
+    console.log(
+      "Captured " +
+        filename +
+        ": " +
+        width +
+        "x" +
+        height +
+        " (" +
+        Math.round(png.length / 1024) +
+        " KiB)"
+    );
   }
   writeFileSync(
     join(OUTPUT, "manifest.json"),
