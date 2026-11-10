@@ -14,7 +14,9 @@ BAD = [
     (r"This site can.?t be reached|isn.?t working|Webpage not available|can.?t reach this page", "Chrome error page"),
     (r"Your connection is not private|NET::ERR", "TLS error page"),
 ]
-GOOD = re.compile(r"sign in|log in|login|e-?mail|password|menu studio|dashboard", re.I)
+# MenuMinute-specific content only. Generic words such as "sign in" also appear on Chrome's own
+# first-run screen ("Sign in to browse easier across devices") and made an earlier version pass falsely.
+GOOD = re.compile(r"welcome back|you@restaurant\.com|your password|menu studio|menuminute dashboard", re.I)
 DISMISS = re.compile(r"^(accept (&|and) continue|no thanks|use without an account|got it|skip|not now)$", re.I)
 
 
@@ -32,7 +34,13 @@ def classify(xml_text: str) -> str:
     except ET.ParseError:
         return "unknown:no UI dump yet"
     texts, taps = [], []
+    first_run = False
     for node in root.iter("node"):
+        rid = node.get("resource-id") or ""
+        if "signin_fre" in rid or "_fre_" in rid or (node.get("text") or "").strip() == "Welcome to Chrome":
+            first_run = True
+            if "dismiss" in rid and center(node.get("bounds")):
+                taps.insert(0, center(node.get("bounds")))
         text = (node.get("text") or "").strip()
         desc = (node.get("content-desc") or "").strip()
         for value in (text, desc):
@@ -40,6 +48,11 @@ def classify(xml_text: str) -> str:
                 texts.append(value)
         if DISMISS.match(text) and center(node.get("bounds")):
             taps.append(center(node.get("bounds")))
+    # Chrome's first-run screen is never the destination: dismiss it and look again.
+    if first_run:
+        if taps:
+            return f"tap {taps[0][0]} {taps[0][1]}"
+        return "unknown:Chrome first-run screen with no dismiss button"
     blob = "\n".join(texts)
     for pattern, reason in BAD:
         if re.search(pattern, blob, re.I):
