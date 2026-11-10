@@ -31,13 +31,15 @@ describe("two-tap native print handoff", () => {
   it("prepares an intent without navigating after the asynchronous request", async () => {
     const grant = "abc_DEF-123.sig_456-xyz";
     const expiresAt = new Date(Date.now() + 120_000).toISOString();
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ grant, expiresAt }), { status: 200 })
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ grant, expiresAt }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     const prepared = await prepareNativePrint(
-      "sale-1", "80", "https://food.bababuilds.com/dashboard/pos/receipts/sale-1"
+      "sale-1",
+      "80",
+      "https://food.bababuilds.com/dashboard/pos/receipts/sale-1"
     );
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/pos/receipts/sale-1/native-print-grant",

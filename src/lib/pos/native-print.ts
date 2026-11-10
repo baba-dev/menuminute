@@ -44,7 +44,11 @@ export async function prepareNativePrint(
   }
   const body = (await response.json()) as { grant?: unknown; expiresAt?: unknown };
   const expiresAtMs = typeof body.expiresAt === "string" ? Date.parse(body.expiresAt) : NaN;
-  if (typeof body.grant !== "string" || !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+  if (
+    typeof body.grant !== "string" ||
+    !Number.isFinite(expiresAtMs) ||
+    expiresAtMs <= Date.now()
+  ) {
     throw new Error("Could not prepare a valid print request. Please try again.");
   }
   return {
