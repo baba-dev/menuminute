@@ -4,9 +4,14 @@ on:
   pull_request:
     paths:
       - android/**
-      - scripts/android/launch-smoke.sh
+      - scripts/android/**
+      - src/app/api/app/launch/**
+      - src/app/app/**
       - .github/workflows/android-launch-smoke.yml
   workflow_dispatch:
+  # Daily guard against a production regression of the launch path (e.g. a redirect to localhost).
+  schedule:
+    - cron: "17 5 * * *"
 
 permissions:
   contents: read
@@ -16,8 +21,15 @@ jobs:
     name: Launch Android TWA on a real emulator and capture crashes
     runs-on: ubuntu-24.04
     timeout-minutes: 35
+    env:
+      # Pull requests run against the DEPLOYED server, which can lag the code under review, so the
+      # destination problems are warnings there. Manual and scheduled runs are strict.
+      STRICT_DESTINATION: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Server launch contract (redirect, cookie, login page, Digital Asset Links)
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: bash scripts/android/verify-launch-contract.sh https://food.bababuilds.com
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
