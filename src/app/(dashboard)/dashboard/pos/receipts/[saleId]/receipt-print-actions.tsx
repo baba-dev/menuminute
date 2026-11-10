@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isAndroidInstalledClient, printThermalBle } from "@/lib/pos/thermal-ble";
+import { printViaNativeBridge } from "@/lib/pos/native-print";
 import type { ThermalPaper, ThermalReceipt } from "@/lib/pos/thermal-receipt";
 
 function subscribeInstalledApp(onChange: () => void) {
@@ -29,10 +30,15 @@ export function ReceiptPrintActions({
   auto,
   paper,
   receipt,
+  saleId,
+  nativePrint,
 }: {
   auto: boolean;
   paper: ThermalPaper;
   receipt: ThermalReceipt;
+  saleId: string;
+  /** The MenuMinute Android app has been used on this device (server-read marker, UI only). */
+  nativePrint: boolean;
 }) {
   const triggered = useRef(false);
   const environment = useSyncExternalStore(
@@ -49,6 +55,20 @@ export function ReceiptPrintActions({
     const id = window.setTimeout(() => window.print(), 300);
     return () => window.clearTimeout(id);
   }, [auto, environment]);
+
+  async function printNative() {
+    if (printing) return;
+    setPrinting(true);
+    setMessage(null);
+    try {
+      await printViaNativeBridge(saleId, paper);
+      setMessage("Opening the printer screen in the MenuMinute app…");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not start printing.");
+    } finally {
+      setPrinting(false);
+    }
+  }
 
   async function printBluetooth() {
     if (printing) return;
@@ -76,6 +96,16 @@ export function ReceiptPrintActions({
 
   return (
     <div className="receipt-print-actions">
+      {environment === "ble" && nativePrint && (
+        <button
+          type="button"
+          onClick={() => void printNative()}
+          disabled={printing}
+          className="receipt-print-button"
+        >
+          Print thermal receipt (Bluetooth / USB)
+        </button>
+      )}
       {environment === "ble" && (
         <button
           type="button"
