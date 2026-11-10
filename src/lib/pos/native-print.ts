@@ -16,8 +16,18 @@ export function buildNativePrintIntentUrl(grant: string, fallbackUrl: string): s
   );
 }
 
-/** Must be called from a user gesture: Chrome only follows intent: navigations after a tap. */
-export async function printViaNativeBridge(saleId: string, paper: ThermalPaper): Promise<void> {
+/** Prepared asynchronously; the browser must launch the intent on a subsequent direct tap. */
+export interface PreparedNativePrint {
+  intentUrl: string;
+  expiresAtMs: number;
+}
+
+/** Never navigate to intent:// after awaiting fetch: Chrome may have lost user activation. */
+export async function prepareNativePrint(
+  saleId: string,
+  paper: ThermalPaper,
+  fallbackUrl: string
+): Promise<PreparedNativePrint> {
   const response = await fetch(
     `/api/pos/receipts/${encodeURIComponent(saleId)}/native-print-grant`,
     {
@@ -32,7 +42,18 @@ export async function printViaNativeBridge(saleId: string, paper: ThermalPaper):
     const problem = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(problem?.message ?? "Could not start printing. Use Print / save PDF.");
   }
-  const body = (await response.json()) as { grant?: unknown };
-  if (typeof body.grant !== "string") throw new Error("Could not start printing.");
-  window.location.href = buildNativePrintIntentUrl(body.grant, window.location.href);
+  const body = (await response.json()) as { grant?: unknown; expiresAt?: unknown };
+  const expiresAtMs = typeof body.expiresAt === "string" ? Date.parse(body.expiresAt) : NaN;
+  if (typeof body.grant !== "string" || !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+    throw new Error("Could not prepare a valid print request. Please try again.");
+  }
+  return {
+    intentUrl: buildNativePrintIntentUrl(body.grant, fallbackUrl),
+    expiresAtMs,
+  };
+}
+
+/** Recheck expiry immediately before following the prepared link. */
+export function nativePrintIsExpired(prepared: PreparedNativePrint, nowMs = Date.now()): boolean {
+  return prepared.expiresAtMs <= nowMs + 1000;
 }
