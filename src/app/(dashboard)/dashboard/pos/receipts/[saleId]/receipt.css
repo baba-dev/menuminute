@@ -40,6 +40,13 @@
   font-weight: 700;
   cursor: pointer;
 }
+.receipt-toolbar a.receipt-print-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+}
 .receipt-paper {
   width: 72mm;
   max-width: 100%;

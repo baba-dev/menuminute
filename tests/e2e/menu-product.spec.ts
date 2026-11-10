@@ -651,9 +651,15 @@ test("Tabletop Press is responsive and uses real QR media for all printable form
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/dashboard/qr-codes");
-  const studio = page.getByTestId("tabletop-press");
+  // Next App Router may briefly retain an inactive route tree during navigation.
+  // Require exactly one VISIBLE studio so genuine duplicate active UIs still fail,
+  // instead of matching both the visible section and a hidden retained tree.
+  const studio = page.locator('#workspace-main [data-testid="tabletop-press"]:visible');
+  await expect(studio).toHaveCount(1);
   await expect(studio.getByRole("heading", { name: /Print once/ })).toBeVisible();
-  await expect(studio.getByLabel("QR inventory at a glance")).toBeVisible();
+  const inventory = studio.getByRole("region", { name: "QR inventory at a glance" });
+  await expect(inventory).toHaveCount(1);
+  await expect(inventory).toBeVisible();
   await expect(studio.getByRole("heading", { name: "Your QR library" })).toBeVisible();
   await studio.locator('summary[aria-label="About Active codes"]').click();
   await expect(studio.getByText("Currently usable permanent destination tokens.")).toBeVisible();

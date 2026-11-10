@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type MouseEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isAndroidInstalledClient, printThermalBle } from "@/lib/pos/thermal-ble";
-import { printViaNativeBridge } from "@/lib/pos/native-print";
+import {
+  nativePrintIsExpired,
+  prepareNativePrint,
+  type PreparedNativePrint,
+} from "@/lib/pos/native-print";
 import type { ThermalPaper, ThermalReceipt } from "@/lib/pos/thermal-receipt";
 
 function subscribeInstalledApp(onChange: () => void) {
@@ -48,6 +52,11 @@ export function ReceiptPrintActions({
   );
   const [printing, setPrinting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [preparedNative, setPreparedNative] = useState<
+    (PreparedNativePrint & { saleId: string; paper: ThermalPaper }) | null
+  >(null);
+  const readyNative =
+    preparedNative?.saleId === saleId && preparedNative.paper === paper ? preparedNative : null;
 
   useEffect(() => {
     if (!auto || triggered.current || environment !== "browser") return;
@@ -56,18 +65,31 @@ export function ReceiptPrintActions({
     return () => window.clearTimeout(id);
   }, [auto, environment]);
 
-  async function printNative() {
+  async function prepareNative() {
     if (printing) return;
     setPrinting(true);
+    setPreparedNative(null);
     setMessage(null);
     try {
-      await printViaNativeBridge(saleId, paper);
-      setMessage("Opening the printer screen in the MenuMinute app…");
+      const prepared = await prepareNativePrint(saleId, paper, window.location.href);
+      setPreparedNative({ ...prepared, saleId, paper });
+      setMessage("Receipt ready for two minutes. Tap Open printer to choose your device.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not start printing.");
+      setMessage(error instanceof Error ? error.message : "Could not prepare printing.");
     } finally {
       setPrinting(false);
     }
+  }
+
+  // This callback runs synchronously on a fresh link click, with no awaited network work.
+  function openNative(event: MouseEvent<HTMLAnchorElement>) {
+    if (!readyNative || nativePrintIsExpired(readyNative)) {
+      event.preventDefault();
+      setPreparedNative(null);
+      setMessage("This print request expired. Tap Prepare receipt again.");
+      return;
+    }
+    setMessage("Opening the MenuMinute printer screen…");
   }
 
   async function printBluetooth() {
@@ -97,14 +119,21 @@ export function ReceiptPrintActions({
   return (
     <div className="receipt-print-actions">
       {environment === "ble" && nativePrint && (
-        <button
-          type="button"
-          onClick={() => void printNative()}
-          disabled={printing}
-          className="receipt-print-button"
-        >
-          Print thermal receipt (Bluetooth / USB)
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => void prepareNative()}
+            disabled={printing}
+            className="receipt-print-button"
+          >
+            {printing ? "Preparing receipt…" : "Prepare thermal receipt (Bluetooth / USB)"}
+          </button>
+          {readyNative && (
+            <a href={readyNative.intentUrl} onClick={openNative} className="receipt-print-button">
+              Open printer (Bluetooth / USB)
+            </a>
+          )}
+        </>
       )}
       {environment === "ble" && (
         <button

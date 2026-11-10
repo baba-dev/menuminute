@@ -57,6 +57,15 @@ describe("Android Browser Helper startup manifest completeness", () => {
     expect(label.length).toBeLessThanOrEqual(14);
   });
 
+  it("matches Android Browser Helper's literal navigation-divider metadata keys", () => {
+    // GoogleChrome/android-browser-helper LauncherActivityMetadata uses "androix" here.
+    // This is an upstream typo in the published contract, not a typo in our manifest.
+    for (const key of ["NAVIGATION_BAR_DIVIDER_COLOR", "NAVIGATION_BAR_DIVIDER_COLOR_DARK"]) {
+      expect(application).toContain(`android:name="androix.browser.trusted.${key}"`);
+      expect(application).not.toContain(`android:name="androidx.browser.trusted.${key}"`);
+    }
+  });
+
   it("keeps merchant deep links in the app and diner menus in the browser", () => {
     for (const prefix of ["/api/app/launch", "/app", "/login", "/dashboard", "/kitchen", "/invite"])
       expect(application).toContain(`android:pathPrefix="${prefix}"`);
