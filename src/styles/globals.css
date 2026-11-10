@@ -140,6 +140,43 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Edge-to-edge (Android TWA / installed PWA) ─────────────────────────────
+   The viewport uses viewport-fit=cover, so env(safe-area-inset-*) reports the real system-bar,
+   display-cutout and gesture-bar sizes. In a normal browser tab every inset is 0, so none of this
+   changes layout there. Components with their own bottom bars already add the bottom inset. */
+
+:root {
+  --mm-system-bar: #f97316; /* mirrors viewport.themeColor (light) */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mm-system-bar: #1c1917; /* mirrors viewport.themeColor (dark) */
+  }
+}
+
+body {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Keeps scrolled content from showing behind the status bar and keeps its icons legible. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--mm-system-bar);
+    z-index: 2147483000;
+    pointer-events: none;
+  }
+}
+
 /* ─── Smooth Transitions ───────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: no-preference) {

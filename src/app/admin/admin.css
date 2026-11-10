@@ -36,7 +36,7 @@
     display: flex;
     width: 16.5rem;
     position: sticky;
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     height: 100vh;
   }
 }

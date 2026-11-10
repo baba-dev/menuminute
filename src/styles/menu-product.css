@@ -239,7 +239,7 @@ body {
 }
 .product .public-toolbar {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 20;
   background: var(--paper);
   padding: 0.8rem 0;
@@ -711,7 +711,7 @@ body.font-sans {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--decorative);
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   background: var(--paper);
   z-index: 10;
 }

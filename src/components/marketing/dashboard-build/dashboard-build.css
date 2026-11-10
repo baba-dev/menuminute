@@ -374,7 +374,7 @@
 /* ── Sticky homepage nav (the shared HomeNav, wrapped by the page) ── */
 .db-nav {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 40;
   border-bottom: 1px solid var(--decorative);
   background: color-mix(in srgb, var(--paper) 90%, transparent);

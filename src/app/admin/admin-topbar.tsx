@@ -42,7 +42,7 @@ export function AdminTopbar({ actorName, actorEmail, isProd }: AdminTopbarProps)
       .toUpperCase() || "SA";
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-stone-200/80 bg-white/95 px-4 backdrop-blur-sm sm:px-6 dark:border-stone-800 dark:bg-stone-900/95">
+    <header className="sticky top-[env(safe-area-inset-top,0px)] z-10 flex h-14 items-center justify-between border-b border-stone-200/80 bg-white/95 px-4 backdrop-blur-sm sm:px-6 dark:border-stone-800 dark:bg-stone-900/95">
       {/* Breadcrumb Section */}
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <AdminMobileNav />
