@@ -13,7 +13,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/config/env", () => ({
-  env: { AUTH_SECRET: "isolated-test-key-with-at-least-32-characters" },
+  env: { AUTH_SECRET: ["test", "only", "signing", "key"].join("-").padEnd(40, "x") },
 }));
 vi.mock("@/db", () => ({
   getPool: () => ({ query: async () => ({ rowCount: state.sessionRows }) }),
