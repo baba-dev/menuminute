@@ -47,7 +47,7 @@ test("signup, atomic outlet setup, private mutation and session recovery", async
   await page.getByRole("checkbox", { name: /I confirm OMR is the currency/ }).check();
   await expect(launch).toBeEnabled();
   await launch.click();
-  await expect(page).toHaveURL(/\/dashboard\/get-started/);
+  await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto("/dashboard/menu");
   await expect(page.getByRole("heading", { name: "Menu Studio" })).toBeVisible();
   const created = await page.request.post("/api/menu/categories", {
