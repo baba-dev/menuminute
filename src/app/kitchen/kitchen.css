@@ -2814,3 +2814,14 @@
     flex-basis: min(82%, 250px);
   }
 }
+
+/* Ember launcher wrapper: transparent on larger screens, removed from the phone layout. */
+.kk-ember-slot {
+  display: contents;
+}
+
+@media (max-width: 700px) {
+  .kk-ember-slot {
+    display: none;
+  }
+}

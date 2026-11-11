@@ -1,5 +1,5 @@
 /* POS editorial workspace: matches the Dashboard and Tabletop Press without changing finance behavior. */
-.mm-workspace-main:has(> .mm-shared-topbar + .till-page.pos-editorial) {
+.mm-workspace-main:has(> .till-page.pos-editorial) {
   max-width: none;
   margin: 0;
   padding: 0;

@@ -97,11 +97,13 @@ export default async function KitchenPage() {
         <OperationalPwa workspace="Kitchen" />
       ) : null}
       {showEmber && (
-        <EmberLauncher
-          organizationId={outlet.organizationId}
-          outletId={outlet.id}
-          outletName={outlet.name}
-        />
+        <div className="kk-ember-slot">
+          <EmberLauncher
+            organizationId={outlet.organizationId}
+            outletId={outlet.id}
+            outletName={outlet.name}
+          />
+        </div>
       )}
       <KitchenBoard
         organizationId={outlet.organizationId}

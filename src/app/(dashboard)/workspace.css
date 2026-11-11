@@ -1083,13 +1083,14 @@
     border-bottom: 1px solid var(--decorative);
   }
 
+  /* Phones/tablets use the bottom bar and shared topbar; the logo header only wasted space. */
   .mm-workspace-brand {
-    min-height: 60px;
-    margin: 0 16px;
+    display: none;
   }
 
-  .mm-workspace-brand img {
-    width: 150px;
+  /* Nothing left to show (single outlet): remove the empty header and its border. */
+  .mm-workspace-sidebar:not(:has(.mm-workspace-outlet)) {
+    display: none;
   }
 
   .mm-workspace-outlet {

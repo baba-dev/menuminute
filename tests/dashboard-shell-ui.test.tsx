@@ -226,7 +226,7 @@ describe("mobile bottom bar", () => {
       within(bar)
         .getAllByRole("link")
         .map((l) => l.getAttribute("aria-label"))
-    ).toEqual(["Orders", "Point of Sale", "Kitchen", "Dining floor"]);
+    ).toEqual(["Menu Studio", "QR codes", "Orders", "Dining floor"]);
     expect(within(bar).getByRole("button", { name: "More" })).toBeInTheDocument();
   });
 
@@ -254,7 +254,7 @@ describe("mobile bottom bar", () => {
     );
   });
 
-  it("keeps the Kitchen Setup name while it is still being set up", () => {
+  it("keeps the Kitchen Setup name while it is still being set up", async () => {
     render(
       <Shell
         capabilities={caps({ kitchenOperational: false, kitchenSetup: true })}
@@ -263,7 +263,9 @@ describe("mobile bottom bar", () => {
         <WorkspaceBottomBar />
       </Shell>
     );
-    expect(screen.getByRole("link", { name: "Kitchen Setup" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    const sheet = await screen.findByRole("dialog", { name: "More" });
+    expect(within(sheet).getByRole("link", { name: "Kitchen Setup" })).toBeInTheDocument();
   });
 
   it("badges Orders with the number waiting, in the accessible name too", async () => {
@@ -286,8 +288,8 @@ describe("mobile bottom bar", () => {
     fireEvent.click(more);
     const sheet = await screen.findByRole("dialog", { name: "More" });
     for (const name of [
-      "Menu Studio",
-      "QR codes",
+      "Point of Sale",
+      "Kitchen",
       "Reports & Insights",
       "Settings",
       "Account & security",
@@ -295,6 +297,9 @@ describe("mobile bottom bar", () => {
       expect(within(sheet).getByRole("link", { name })).toBeInTheDocument();
     // Items already on the bar are not repeated in the sheet.
     expect(within(sheet).queryByRole("link", { name: "Orders" })).toBeNull();
+    expect(within(sheet).queryByRole("link", { name: "Menu Studio" })).toBeNull();
+    // Sign out is one tap away instead of buried in Settings.
+    expect(within(sheet).getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     fireEvent.keyDown(sheet, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "More" })).toBeNull());
   });

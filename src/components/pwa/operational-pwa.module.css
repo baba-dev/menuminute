@@ -75,3 +75,10 @@
   margin: 0 0 0.4rem;
   text-transform: uppercase;
 }
+
+/* On phones the floating control covers the bottom navigation; keep it for tablets/desktop. */
+@media (max-width: 900px) {
+  .wakeControl {
+    display: none;
+  }
+}

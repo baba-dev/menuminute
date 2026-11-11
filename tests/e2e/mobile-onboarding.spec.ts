@@ -161,9 +161,10 @@ for (const size of SIZES) {
     });
     expect(covered, "launch button is not covered by another bar").toBe(false);
     await launch.click();
-    await expect(page).toHaveURL(/\/dashboard\/get-started/);
-    expect(await overflowOffenders(page), "get-started overflow").toEqual([]);
-    await snap("06-get-started");
+    // Completing onboarding lands on the dashboard overview; the checklist is one tap away.
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(await overflowOffenders(page), "overview overflow").toEqual([]);
+    await snap("06-overview");
 
     // --- First dashboard ---------------------------------------------------------------------
     await page.goto("/dashboard");

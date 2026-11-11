@@ -47,7 +47,9 @@ test("QR-only Quick Start resumes its compact flow and reaches the first menu mi
   await page.getByRole("checkbox", { name: /I confirm the operating timezone/ }).check();
   await page.getByRole("checkbox", { name: /I confirm BWP is the currency/ }).check();
   await page.getByRole("button", { name: "Confirm & Create Outlet" }).click();
-  await expect(page).toHaveURL(/\/dashboard\/get-started/);
+  // Onboarding now lands on the overview; the checklist remains one navigation away.
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.goto("/dashboard/get-started");
   await expect(page.getByRole("link", { name: "Add your first dish" })).toBeVisible();
   const status = await (await page.request.get("/api/onboarding")).json();
   expect(status.status).toBe("completed");

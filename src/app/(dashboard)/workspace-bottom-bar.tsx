@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   Bell,
   CircleHelp,
   Ellipsis,
   ExternalLink,
+  LogOut,
   Search,
   ShieldAlert,
   UserRound,
@@ -19,12 +21,13 @@ import {
   moreItems,
   type ResolvedNavItem,
 } from "@/modules/dashboard/nav-model";
+import { authClient } from "@/lib/auth-client";
 import { useReturnFocus } from "@/lib/use-return-focus";
 import { WorkspaceIcon } from "./workspace-icons";
 import { useWorkspaceShell } from "./workspace-shell";
 
 /**
- * Phone navigation: Orders, POS, Kitchen and Floor (whichever the user can use), then More.
+ * Phone navigation: Menus, QR Codes, Orders and Floor (whichever the user can use), then More.
  * Visible text is short; the accessible name stays the full label (for example "Kitchen Setup").
  */
 export function WorkspaceBottomBar({
@@ -35,6 +38,23 @@ export function WorkspaceBottomBar({
   publicHref?: string | null;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      const result = await authClient.signOut();
+      if (result.error) throw new Error("not confirmed");
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setSignOutError("Couldn't sign out. Please try again.");
+      setSigningOut(false);
+    }
+  }
   const returnFocus = useReturnFocus();
   const {
     capabilities,
@@ -198,6 +218,23 @@ export function WorkspaceBottomBar({
                   <CircleHelp size={19} strokeWidth={1.9} aria-hidden="true" />
                   <span>Help &amp; guides (new tab)</span>
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="mm-sheet-link"
+                  style={{ width: "100%", textAlign: "left", font: "inherit" }}
+                  disabled={signingOut}
+                  onClick={() => void signOut()}
+                >
+                  <LogOut size={19} strokeWidth={1.9} aria-hidden="true" />
+                  <span>{signingOut ? "Signing out…" : "Sign out"}</span>
+                </button>
+                {signOutError && (
+                  <p role="alert" className="mm-sheet-link" style={{ color: "#b42318" }}>
+                    {signOutError}
+                  </p>
+                )}
               </li>
             </ul>
           </Dialog.Content>

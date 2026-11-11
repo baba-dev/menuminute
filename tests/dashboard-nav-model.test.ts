@@ -118,33 +118,39 @@ describe("grouped sidebar", () => {
 });
 
 describe("mobile bottom bar", () => {
-  it("shows Orders, POS, Kitchen and Floor when all are usable", () => {
-    expect(ids(bottomBarItems(caps()))).toEqual(["orders", "pos", "kitchen", "floor"]);
+  it("shows Menus, QR Codes, Orders and Floor when all are usable", () => {
+    expect(ids(bottomBarItems(caps()))).toEqual(["menu", "qr", "orders", "floor"]);
+  });
+
+  it("uses the requested short labels", () => {
+    const bar = bottomBarItems(caps());
+    expect(bar.map((item) => item.shortLabel)).toEqual(["Menus", "QR Codes", "Orders", "Floor"]);
   });
 
   it("filters by permission rather than showing dead tabs", () => {
-    expect(ids(bottomBarItems(caps({ kitchenOperational: false })))).toEqual([
-      "orders",
+    expect(ids(bottomBarItems(caps({ ordering: false })))).toEqual([
+      "overview",
+      "menu",
+      "qr",
       "pos",
-      "floor",
     ]);
   });
 
   it("back-fills a menu-only outlet so the bar is never nearly empty", () => {
     const bar = ids(bottomBarItems(caps({ ordering: false, kitchenOperational: false })));
-    expect(bar).toEqual(["overview", "pos", "menu", "qr"]);
+    expect(bar).toEqual(["overview", "menu", "qr", "pos"]);
   });
 
   it("falls back to ungated destinations when capabilities are unknown", () => {
-    expect(ids(bottomBarItems(undefined))).toEqual(["overview", "pos", "menu", "qr"]);
+    expect(ids(bottomBarItems(undefined))).toEqual(["overview", "menu", "qr", "pos"]);
   });
 
   it("lists everything else that is available in More, with no duplicates of the bar", () => {
     const more = ids(moreItems(caps()));
     expect(more).toEqual([
       "overview",
-      "menu",
-      "qr",
+      "pos",
+      "kitchen",
       "guests",
       "reports",
       "organization",

@@ -71,7 +71,8 @@ test("first-outlet wizard resumes a saved draft, recovers from failure and opens
   await page.getByRole("checkbox", { name: /I confirm INR is the currency/ }).check();
   await expect(recoveredLaunch).toBeEnabled();
   await recoveredLaunch.click();
-  await expect(page).toHaveURL(/\/dashboard\/get-started/);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.goto("/dashboard/get-started");
   await expect(page.getByText("Kitchen for Guided Setup").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Import your existing menu/ })).toBeVisible();
   expect(requests).toBe(2);

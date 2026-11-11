@@ -399,7 +399,7 @@ test.describe("phone shell", () => {
     await signIn(page, await seed({ ordering: true }));
     const bar = page.getByRole("navigation", { name: "Primary" });
     await expect(bar).toBeVisible();
-    for (const name of ["Orders", "Point of Sale", "Dining floor", "More"])
+    for (const name of ["Menu Studio", "QR codes", "Orders", "Dining floor", "More"])
       await expect(bar.getByRole(name === "More" ? "button" : "link", { name })).toBeVisible();
     // The old chip row is gone, and the bar never makes the page scroll sideways.
     await expect(page.getByRole("navigation", { name: "Workspace" })).toBeHidden();
@@ -412,9 +412,10 @@ test.describe("phone shell", () => {
 
     await bar.getByRole("button", { name: "More" }).click();
     const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet.getByRole("link", { name: "Menu Studio" })).toBeVisible();
-    await sheet.getByRole("link", { name: "Menu Studio" }).click();
-    await expect(page).toHaveURL(/\/dashboard\/menu/);
+    await expect(sheet.getByRole("button", { name: "Sign out" })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Point of Sale" })).toBeVisible();
+    await sheet.getByRole("link", { name: "Point of Sale" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pos/);
     await expect(page.getByRole("dialog", { name: "More" })).toHaveCount(0);
     await expect(bar.getByRole("button", { name: "More" })).toBeVisible();
   });
@@ -479,8 +480,8 @@ test.describe("phone shell", () => {
     try {
       await signIn(page, await seed({ ordering: false }));
       const bar = page.getByRole("navigation", { name: "Primary" });
-      // The owner can set up the kitchen, which takes a slot; Overview and Menu fill the rest.
-      for (const name of ["Overview", "Point of Sale", "Kitchen Setup", "Menu Studio"])
+      // Menus and QR Codes stay; Overview and POS fill the remaining slots (Kitchen is in More).
+      for (const name of ["Overview", "Menu Studio", "QR codes", "Point of Sale"])
         await expect(bar.getByRole("link", { name })).toBeVisible();
       await expect(bar.getByRole("link", { name: "Orders" })).toHaveCount(0);
     } finally {
