@@ -116,7 +116,7 @@ export const navItems: readonly NavItem[] = [
     id: "menu",
     href: "/dashboard/menu",
     label: "Menu Studio",
-    shortLabel: "Menu",
+    shortLabel: "Menus",
     group: "menu",
     icon: "menu",
     gate: null,
@@ -126,7 +126,7 @@ export const navItems: readonly NavItem[] = [
     id: "qr",
     href: "/dashboard/qr-codes",
     label: "QR codes",
-    shortLabel: "QR",
+    shortLabel: "QR Codes",
     group: "menu",
     icon: "qr",
     gate: null,
@@ -281,9 +281,9 @@ export function isNavSelected(item: Pick<NavItem, "href">, pathname: string): bo
 }
 
 /**
- * Mobile bottom bar: Orders, POS, Kitchen and Floor when the user can use them, then More.
- * An outlet without ordering would otherwise get a nearly empty bar, so it is back-filled with
- * Overview, Menu and QR codes until there are at least three destinations.
+ * Mobile bottom bar: Menus, QR Codes, Orders and Floor when the user can use them, then More.
+ * An outlet without ordering would otherwise get a short bar, so it is back-filled with
+ * Overview, POS and Kitchen until there are at least three destinations.
  */
 export function bottomBarItems(capabilities: DashboardNavigation | undefined): ResolvedNavItem[] {
   const resolved = resolveNavigation(capabilities);
@@ -291,9 +291,9 @@ export function bottomBarItems(capabilities: DashboardNavigation | undefined): R
     ids
       .map((id) => resolved.find((item) => item.id === id)!)
       .filter((item) => item.nav.state === "available");
-  const primary = pick(["orders", "pos", "kitchen", "floor"]);
+  const primary = pick(["menu", "qr", "orders", "floor"]);
   if (primary.length >= 3) return primary;
-  const filler = pick(["overview", "menu", "qr"]).filter(
+  const filler = pick(["overview", "pos", "kitchen"]).filter(
     (item) => !primary.some((p) => p.id === item.id)
   );
   const needed = Math.max(0, 4 - primary.length);
