@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
@@ -36,13 +36,13 @@ export function RegistrationForm({ googleEnabled = false }: { googleEnabled?: bo
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     shouldFocusError: true,
   });
-  const termsAccepted = watch("acceptTerms") === true;
+  const termsAccepted = useWatch({ control, name: "acceptTerms" }) === true;
   return (
     <AuthShell
       eyebrow="CREATE YOUR ACCOUNT / FREE QR MENU"
