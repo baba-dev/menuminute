@@ -78,7 +78,9 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               }
             }}
           >
-            <span aria-hidden="true" className="mm-auth-google-g">G</span>
+            <span aria-hidden="true" className="mm-auth-google-g">
+              G
+            </span>
             {googleBusy ? "Connecting to Google…" : "Continue with Google"}
           </button>
         )}
@@ -92,7 +94,9 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
         </Link>
         <p className="mm-auth-entry-help">New restaurant? Start free — no payment card needed.</p>
       </div>
-      <div className="mm-auth-email-divider"><span>Or sign in with email</span></div>
+      <div className="mm-auth-email-divider">
+        <span>Or sign in with email</span>
+      </div>
       <form
         className="mm-auth-form"
         aria-busy={busy}
@@ -170,7 +174,8 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               ? "This account is protected by an authenticator. Sign in with your email, password and verification code."
               : params.get("error") === "account_not_linked"
                 ? "That Google account is not connected yet. Sign in with your password, then link Google in Account Security."
-                : params.get("error") === "signup_disabled" || params.get("error") === "terms_required"
+                : params.get("error") === "signup_disabled" ||
+                    params.get("error") === "terms_required"
                   ? "New to MenuMinute? Choose Create a free account to register with Google or email."
                   : "Google sign-in could not be completed. If your account is not yet linked, sign in with your password first."}
           </p>
