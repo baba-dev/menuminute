@@ -75,9 +75,6 @@ export default async function PosPage() {
       : null;
   return (
     <>
-      {workspace.context.enabled && pwaOperationalEnabledForOutlet(outlet.id) ? (
-        <OperationalPwa workspace="POS" />
-      ) : null}
       <TheTill
         key={outlet.id}
         organizationId={outlet.organizationId}
@@ -85,6 +82,9 @@ export default async function PosPage() {
         initial={workspace}
         publishedSummary={publishedSummary}
       />
+      {workspace.context.enabled && pwaOperationalEnabledForOutlet(outlet.id) ? (
+        <OperationalPwa workspace="POS" />
+      ) : null}
     </>
   );
 }

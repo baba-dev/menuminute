@@ -3,7 +3,7 @@
   --mm-content-wide: 1480px;
   --mm-content-gutter: clamp(16px, 3vw, 44px);
 }
-.mm-workspace-main:has(> .mm-shared-topbar + :is(.pos-editorial, .reports-workspace, .qr-studio)) {
+.mm-workspace-main:has(> :is(.pos-editorial, .reports-workspace, .qr-studio)) {
   max-width: none;
   margin: 0;
   padding: 0;
