@@ -135,19 +135,26 @@ export function RegistrationForm({ googleEnabled = false }: { googleEnabled?: bo
                     provider: "google",
                     requestSignUp: true,
                     callbackURL: next || "/onboarding",
-                    errorCallbackURL: "/register" + (next ? "?next=" + encodeURIComponent(next) : ""),
+                    errorCallbackURL:
+                      "/register" + (next ? "?next=" + encodeURIComponent(next) : ""),
                     additionalData: { acceptTerms: true, termsVersion: TERMS_VERSION },
                   });
                   if (result.error)
-                    setError("Google registration could not be started. Please retry or use email.");
+                    setError(
+                      "Google registration could not be started. Please retry or use email."
+                    );
                 } catch {
-                  setError("Unable to connect to Google. Please retry or create an account with email.");
+                  setError(
+                    "Unable to connect to Google. Please retry or create an account with email."
+                  );
                 } finally {
                   setGoogleBusy(false);
                 }
               }}
             >
-              <span aria-hidden="true" className="mm-auth-google-g">G</span>
+              <span aria-hidden="true" className="mm-auth-google-g">
+                G
+              </span>
               {googleBusy ? "Connecting to Google…" : "Continue with Google"}
             </button>
             <p className="mm-auth-entry-help">
@@ -155,7 +162,9 @@ export function RegistrationForm({ googleEnabled = false }: { googleEnabled?: bo
                 ? "Google will securely verify your email. No password to remember."
                 : "Accept the Terms and Privacy Policy above to register with Google."}
             </p>
-            <div className="mm-auth-email-divider"><span>Or create with email</span></div>
+            <div className="mm-auth-email-divider">
+              <span>Or create with email</span>
+            </div>
           </div>
         )}
         <label className="mm-auth-field" htmlFor="name">
