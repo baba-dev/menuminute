@@ -16,7 +16,6 @@ import {
   createAuthMiddleware,
   getOAuthState,
 } from "better-auth/api";
-import { TERMS_VERSION } from "@/content/legal";
 import {
   googleSignupConsentFromState,
   googleSignupServerContext,
