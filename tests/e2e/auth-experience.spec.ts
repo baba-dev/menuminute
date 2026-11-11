@@ -37,8 +37,9 @@ test("reduced motion and narrow view retain accessible form without horizontal o
   ).toBe(true);
 });
 
-
-test("Android-sized login exposes signup above the fold and keeps the app return target", async ({ page }) => {
+test("Android-sized login exposes signup above the fold and keeps the app return target", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("/login?next=%2Fapp");
   const create = page.getByRole("link", { name: "Create a free account" });
@@ -67,6 +68,8 @@ test("Google signup stays accessible on small and large phone screens", async ({
     await expect(create).toBeInViewport();
     const bounds = await create.boundingBox();
     expect(bounds?.height ?? 0).toBeGreaterThanOrEqual(44);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true
+    );
   }
 });
