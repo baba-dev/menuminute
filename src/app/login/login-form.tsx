@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { ArrowRight, ShieldCheck, UserRound, X } from "lucide-react";
+import { ArrowRight, ShieldCheck, UserRound, UserRoundPlus, X } from "lucide-react";
 import {
   clearRememberedAccount,
   completePendingLoginPreference,
@@ -52,15 +52,47 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
       eyebrow="SIGN IN / WELCOME BACK"
       title="Good to have you back."
       description="Pick up where you left off. Your restaurant stays yours, across every device."
-      extra={
-        <div className="mm-auth-secondary">
-          <span>New to MenuMinute?</span>
-          <Link href={next ? "/register?next=" + encodeURIComponent(next) : "/register"}>
-            Create an account
-          </Link>
-        </div>
-      }
     >
+      <div className="mm-auth-entry" aria-label="Choose how to access MenuMinute">
+        {googleEnabled && (
+          <button
+            type="button"
+            className="mm-auth-google"
+            disabled={busy || googleBusy}
+            onClick={async () => {
+              if (googleBusy) return;
+              setGoogleBusy(true);
+              setError("");
+              try {
+                const result = await authClient.signIn.social({
+                  provider: "google",
+                  callbackURL: next || "/dashboard",
+                  errorCallbackURL: "/login" + (next ? "?next=" + encodeURIComponent(next) : ""),
+                });
+                if (result.error)
+                  setError("Google sign-in did not finish. Please retry or sign in with email.");
+              } catch {
+                setError("Unable to connect to Google. Check your connection and try again.");
+              } finally {
+                setGoogleBusy(false);
+              }
+            }}
+          >
+            <span aria-hidden="true" className="mm-auth-google-g">G</span>
+            {googleBusy ? "Connecting to Google…" : "Continue with Google"}
+          </button>
+        )}
+        <Link
+          className="mm-auth-create-account"
+          href={next ? "/register?next=" + encodeURIComponent(next) : "/register"}
+        >
+          <UserRoundPlus size={18} aria-hidden="true" />
+          <span>Create a free account</span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </Link>
+        <p className="mm-auth-entry-help">New restaurant? Start free — no payment card needed.</p>
+      </div>
+      <div className="mm-auth-email-divider"><span>Or sign in with email</span></div>
       <form
         className="mm-auth-form"
         aria-busy={busy}
@@ -136,7 +168,11 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
           <p className="mm-auth-message mm-auth-message--error" role="alert">
             {params.get("error") === "mfa_requires_password"
               ? "This account is protected by an authenticator. Sign in with your email, password and verification code."
-              : "Google sign-in could not be completed. Sign in with your password first, then connect Google in Account Security."}
+              : params.get("error") === "account_not_linked"
+                ? "That Google account is not connected yet. Sign in with your password, then link Google in Account Security."
+                : params.get("error") === "signup_disabled" || params.get("error") === "terms_required"
+                  ? "New to MenuMinute? Choose Create a free account to register with Google or email."
+                  : "Google sign-in could not be completed. If your account is not yet linked, sign in with your password first."}
           </p>
         )}
         {error && (
@@ -230,44 +266,6 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
           {!busy && <ArrowRight size={18} aria-hidden="true" />}
         </button>
       </form>
-      {googleEnabled && (
-        <div className="mm-auth-social">
-          <p>Or sign in with a connected account</p>
-          <button
-            type="button"
-            className="mm-auth-google"
-            disabled={busy || googleBusy}
-            onClick={async () => {
-              if (googleBusy) return;
-              setGoogleBusy(true);
-              setError("");
-              try {
-                const result = await authClient.signIn.social({
-                  provider: "google",
-                  callbackURL: next || "/dashboard",
-                  errorCallbackURL: "/login",
-                });
-                if (result.error)
-                  setError(
-                    "Google sign-in failed. Sign in with your password to manage connected accounts."
-                  );
-              } catch {
-                setError("Unable to start Google sign-in. Please use your password.");
-              } finally {
-                setGoogleBusy(false);
-              }
-            }}
-          >
-            <span aria-hidden="true" className="mm-auth-google-g">
-              G
-            </span>
-            {googleBusy ? "Connecting to Google…" : "Continue with Google"}
-          </button>
-          <small>
-            New here? Create your account with email first, then connect Google in Account Security.
-          </small>
-        </div>
-      )}
     </AuthShell>
   );
 }
