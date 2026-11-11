@@ -543,3 +543,107 @@
   background: var(--paper);
   border-radius: 50%;
 }
+
+
+/* Mobile-first entry choices: first-time owners must never hunt below the email form. */
+.mm-auth-entry {
+  display: grid;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+.mm-auth-entry-help {
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+.mm-auth a.mm-auth-create-account {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 11px 16px;
+  border: 1.5px solid var(--auth-border);
+  border-radius: 12px;
+  background: var(--auth-soft);
+  color: var(--auth-text);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+.mm-auth-create-account svg:first-child {
+  color: var(--auth-accent);
+}
+.mm-auth-create-account svg:last-child {
+  margin-left: auto;
+}
+.mm-auth a.mm-auth-create-account:hover {
+  border-color: var(--auth-accent);
+}
+.mm-auth .mm-auth-google {
+  min-height: 48px;
+  background: var(--auth-paper);
+  color: var(--auth-text);
+  border-color: var(--auth-border);
+}
+.mm-auth .mm-auth-google:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.mm-auth-google-g {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+  color: #4285f4;
+}
+.mm-auth-email-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0 18px;
+  color: var(--auth-muted);
+  font-size: 12px;
+  text-align: center;
+}
+.mm-auth-email-divider::before,
+.mm-auth-email-divider::after {
+  content: "";
+  height: 1px;
+  min-width: 12px;
+  flex: 1;
+  background: var(--auth-border);
+}
+.mm-auth-register-google {
+  display: grid;
+  gap: 12px;
+}
+.mm-auth-register-google .mm-auth-email-divider {
+  margin: 4px 0 0;
+}
+.mm-auth-form > .mm-auth-secondary:first-of-type {
+  justify-content: flex-start;
+  padding: 12px 0;
+  line-height: 1.6;
+}
+.mm-auth-form > .mm-auth-secondary:first-of-type input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--auth-accent);
+}
+@media (max-width: 440px) {
+  .mm-auth-card h1 {
+    font-size: clamp(27px, 7.8vw, 34px);
+  }
+  .mm-auth-description {
+    margin-bottom: 20px;
+  }
+  .mm-auth-main {
+    gap: 18px;
+  }
+}
