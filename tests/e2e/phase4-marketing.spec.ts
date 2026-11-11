@@ -118,13 +118,13 @@ test("sign-in and sign-up carry a Billing return path, which is how pricing butt
 }) => {
   // Anonymous visitors are sent to sign-in with the Billing card as the return path (see planSale).
   await page.goto("/login?next=%2Fbilling%3Fplan%3Dkitchen_pro");
-  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
     "href",
     "/register?next=%2Fbilling%3Fplan%3Dkitchen_pro"
   );
   // The return path must stay on this site's own pages.
   await page.goto("/login?next=https%3A%2F%2Fevil.example%2Fbilling");
-  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
     "href",
     "/register"
   );

@@ -10,7 +10,16 @@ import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
 import { twoFactor, captcha } from "better-auth/plugins";
-import { APIError } from "better-auth/api";
+import {
+  APIError,
+  addOAuthServerContext,
+  createAuthMiddleware,
+  getOAuthState,
+} from "better-auth/api";
+import {
+  googleSignupConsentFromState,
+  googleSignupServerContext,
+} from "@/lib/google-signup-consent";
 import { recordAuthEvent, alertSecurityEvent } from "@/lib/security-events";
 import { sendAuthEmail } from "@/lib/auth-email";
 import { isDemoActor } from "@/modules/demo/guard";
@@ -35,6 +44,15 @@ export const authServer = betterAuth({
           error: "mfa_requires_password",
           errorDescription: "This account requires password and authenticator sign-in.",
         };
+      if (source.action === "create-user") {
+        const state = await getOAuthState().catch(() => null);
+        if (!googleSignupConsentFromState(state))
+          return {
+            error: "terms_required",
+            errorDescription:
+              "Accept the current terms on the registration page before continuing.",
+          };
+      }
     },
     additionalFields: {
       termsVersion: { type: "string", required: true, input: true },
@@ -45,14 +63,36 @@ export const authServer = betterAuth({
     },
   },
   trustedOrigins: [new URL(env.APP_URL).origin],
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/social") return;
+      const body = ctx.body as
+        { provider?: unknown; requestSignUp?: unknown; additionalData?: unknown } | undefined;
+      if (body?.provider !== "google" || body.requestSignUp !== true) return;
+      const consent = googleSignupServerContext(body.additionalData);
+      if (!consent)
+        throw new APIError("BAD_REQUEST", {
+          message: "Accept the current Terms and Privacy Policy before registering with Google.",
+        });
+      // Only server-validated consent is persisted into OAuth state. The client cannot
+      // forge serverContext, and the callback cannot skip this user-creation gate.
+      await addOAuthServerContext(consent);
+    }),
+  },
   socialProviders:
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
           google: {
             clientId: env.GOOGLE_CLIENT_ID,
             clientSecret: env.GOOGLE_CLIENT_SECRET,
-            disableSignUp: true,
+            // Returning sign-ins are never allowed to silently create a new user.
+            // Explicit Google registration supplies requestSignUp + server-trusted consent.
+            disableImplicitSignUp: true,
             disableIdTokenSignIn: true,
+            mapProfileToUser: async () => {
+              const state = await getOAuthState().catch(() => null);
+              return googleSignupConsentFromState(state) ?? {};
+            },
             requireEmailVerification: true,
           },
         }

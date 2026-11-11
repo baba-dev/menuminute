@@ -63,6 +63,11 @@ test("keyboard users can skip the sidebar", async ({ page }) => {
   // signIn already lands on the dashboard: an immediate redundant navigation can
   // catch the outgoing and incoming route during a short App Router transition.
   await expect(page.locator("#workspace-main").getByTestId("editorial-dashboard")).toHaveCount(1);
+  // RouteFocus intentionally focuses the dashboard heading on SPA navigation.
+  // Reload to start a fresh document keyboard sequence, as a user opening the
+  // dashboard directly would, before asserting the first Tab reaches the skip link.
+  await page.reload();
+  await expect(page.locator("#workspace-main").getByTestId("editorial-dashboard")).toBeVisible();
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name: "Skip to main content" });
   await expect(skip).toBeFocused();
