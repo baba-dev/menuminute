@@ -134,7 +134,7 @@ export function RegistrationForm({ googleEnabled = false }: { googleEnabled?: bo
                   const result = await authClient.signIn.social({
                     provider: "google",
                     requestSignUp: true,
-                    callbackURL: next || "/onboarding",
+                    callbackURL: "/login" + (next ? "?next=" + encodeURIComponent(next) : ""),
                     errorCallbackURL:
                       "/register" + (next ? "?next=" + encodeURIComponent(next) : ""),
                     additionalData: { acceptTerms: true, termsVersion: TERMS_VERSION },

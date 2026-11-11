@@ -7,8 +7,8 @@ import { getRestaurantsByUserId } from "@/modules/restaurants/service";
 // Always read the authenticated session on the server, including after sign-out/revocation.
 // This route intentionally stays network-only in the service worker.
 export const dynamic = "force-dynamic";
-/** Menu Studio. Single source for where the installed app and Play TWA land after sign-in. */
-const APP_HOME_PATH = "/dashboard/menu";
+/** Overview. Single source for where the installed app and Play TWA land after sign-in. */
+const APP_HOME_PATH = "/dashboard";
 export const metadata = {
   title: "Open MenuMinute",
   robots: { index: false, follow: false },

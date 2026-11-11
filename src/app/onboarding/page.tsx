@@ -49,7 +49,10 @@ export default async function OnboardingPage({
           className="wizard-welcome-mobile"
         />
       </div>
-      <OnboardingForm initialQuick={quick === "1"} />
+      <OnboardingForm
+        initialQuick={quick === "1"}
+        prefill={{ name: session.user.name, email: session.user.email }}
+      />
     </AuthShell>
   );
 }

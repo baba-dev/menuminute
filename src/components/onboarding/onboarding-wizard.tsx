@@ -132,10 +132,18 @@ function validateStep(step: number, draft: WizardDraft): string | null {
 interface OnboardingWizardProps {
   onSuccess?: (outletId: string) => void;
   initialQuick?: boolean;
+  /** Account profile (e.g. from Google) used only to suggest empty contact fields. */
+  prefill?: { name?: string; email?: string };
 }
 
-export function OnboardingWizard({ onSuccess, initialQuick = false }: OnboardingWizardProps) {
+export function OnboardingWizard({
+  onSuccess,
+  initialQuick = false,
+  prefill,
+}: OnboardingWizardProps) {
   const router = useRouter();
+  const prefillName = prefill?.name;
+  const prefillEmail = prefill?.email;
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [quickStart, setQuickStart] = useState(initialQuick);
   const quickLinkRequested = useRef(initialQuick);
@@ -183,7 +191,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
           } catch {
             /* Storage may be unavailable. */
           }
-          router.replace("/dashboard/get-started");
+          router.replace("/dashboard");
           router.refresh();
         }
         return;
@@ -220,7 +228,13 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
           window.navigator.language,
           Intl.DateTimeFormat().resolvedOptions().timeZone
         );
-        const fresh = { ...initialWizardDraft, ...(browser ?? {}) };
+        const fresh = {
+          ...initialWizardDraft,
+          ...(browser ?? {}),
+          // Suggestions from the signed-in account; saved drafts are never overwritten.
+          operationsContactName: prefillName?.trim() ?? "",
+          operationsContactEmail: prefillEmail?.trim() ?? "",
+        };
         setDraft(shouldQuick ? quickStartDraft(fresh) : fresh);
       }
       let storedStep = Number.NaN;
@@ -251,7 +265,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
     } finally {
       reconciliation.current = false;
     }
-  }, [router, onSuccess]);
+  }, [router, onSuccess, prefillName, prefillEmail]);
 
   useEffect(() => {
     void Promise.resolve().then(reconcile);
@@ -409,7 +423,7 @@ export function OnboardingWizard({ onSuccess, initialQuick = false }: Onboarding
           } catch {
             /* Storage may be unavailable. */
           }
-          router.replace("/dashboard/get-started");
+          router.replace("/dashboard");
           router.refresh();
         }
       }

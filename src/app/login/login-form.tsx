@@ -18,6 +18,7 @@ import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { authNextKey, safeReturnPath } from "@/lib/auth-return";
+import { TERMS_VERSION } from "@/content/legal";
 const schema = z.object({
   email: z.email("Enter a valid email address."),
   password: z.string().min(1, "Password is required."),
@@ -66,8 +67,13 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               try {
                 const result = await authClient.signIn.social({
                   provider: "google",
-                  callbackURL: next || "/dashboard",
+                  // One seamless flow: unknown Google accounts are registered, with the
+                  // disclosed current terms recorded server-side, then routed via /login
+                  // (outlets -> dashboard overview, none -> onboarding).
+                  requestSignUp: true,
+                  callbackURL: "/login" + (next ? "?next=" + encodeURIComponent(next) : ""),
                   errorCallbackURL: "/login" + (next ? "?next=" + encodeURIComponent(next) : ""),
+                  additionalData: { acceptTerms: true, termsVersion: TERMS_VERSION },
                 });
                 if (result.error)
                   setError("Google sign-in did not finish. Please retry or sign in with email.");
@@ -83,6 +89,19 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
             </span>
             {googleBusy ? "Connecting to Google…" : "Continue with Google"}
           </button>
+        )}
+        {googleEnabled && (
+          <p className="mm-auth-entry-help">
+            New here? Continuing with Google creates your account and means you agree to the{" "}
+            <Link href="/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </Link>{" "}
+            and acknowledge the{" "}
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         )}
         <Link
           className="mm-auth-create-account"
@@ -176,7 +195,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
                 ? "That Google account is not connected yet. Sign in with your password, then link Google in Account Security."
                 : params.get("error") === "signup_disabled" ||
                     params.get("error") === "terms_required"
-                  ? "New to MenuMinute? Choose Create a free account to register with Google or email."
+                  ? "We could not create your account with Google. Please retry, or choose Create a free account to register with email."
                   : "Google sign-in could not be completed. If your account is not yet linked, sign in with your password first."}
           </p>
         )}
