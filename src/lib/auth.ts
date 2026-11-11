@@ -10,7 +10,12 @@ import { env } from "@/lib/config/env";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import bcrypt from "bcryptjs";
 import { twoFactor, captcha } from "better-auth/plugins";
-import { APIError, addOAuthServerContext, createAuthMiddleware, getOAuthState } from "better-auth/api";
+import {
+  APIError,
+  addOAuthServerContext,
+  createAuthMiddleware,
+  getOAuthState,
+} from "better-auth/api";
 import { TERMS_VERSION } from "@/content/legal";
 import {
   googleSignupConsentFromState,
@@ -45,7 +50,8 @@ export const authServer = betterAuth({
         if (!googleSignupConsentFromState(state))
           return {
             error: "terms_required",
-            errorDescription: "Accept the current terms on the registration page before continuing.",
+            errorDescription:
+              "Accept the current terms on the registration page before continuing.",
           };
       }
     },
@@ -62,8 +68,7 @@ export const authServer = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/sign-in/social") return;
       const body = ctx.body as
-        | { provider?: unknown; requestSignUp?: unknown; additionalData?: unknown }
-        | undefined;
+        { provider?: unknown; requestSignUp?: unknown; additionalData?: unknown } | undefined;
       if (body?.provider !== "google" || body.requestSignUp !== true) return;
       const consent = googleSignupServerContext(body.additionalData);
       if (!consent)
