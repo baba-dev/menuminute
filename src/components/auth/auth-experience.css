@@ -333,6 +333,9 @@
   .mm-auth-main {
     padding: 24px 16px 48px;
   }
+  .mm-auth-story {
+    display: none;
+  }
   .mm-auth-header {
     height: 74px;
   }
@@ -543,7 +546,6 @@
   background: var(--paper);
   border-radius: 50%;
 }
-
 
 /* Mobile-first entry choices: first-time owners must never hunt below the email form. */
 .mm-auth-entry {
