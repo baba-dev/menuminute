@@ -226,7 +226,9 @@ test("Point of Sale creates one canonical accepted staff order with one-tap entr
   await expect(page.locator(".receipt-paper")).toContainText("Paneer Lunch");
   await expect(page.locator(".receipt-details")).toContainText("+919876543210");
   await expect(page.locator(".receipt-details dt").filter({ hasText: "Table" })).toHaveCount(0);
-  await expect(page.locator(".mm-workspace-sidebar")).toBeVisible();
+  // Phones hide the sidebar (bottom bar navigation); desktop shows it on screen.
+  if ((page.viewportSize()?.width ?? 0) > 900)
+    await expect(page.locator(".mm-workspace-sidebar")).toBeVisible();
   await page.emulateMedia({ media: "print" });
   await expect(page.locator(".mm-workspace-sidebar")).toBeHidden();
   await expect(page.locator(".mm-shared-topbar")).toBeHidden();

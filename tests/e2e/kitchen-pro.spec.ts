@@ -60,7 +60,16 @@ test("Kitchen Pro is scoped, responsive, and safely setup-only before commercial
   await page.getByLabel("Password", { exact: true }).fill(f.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
-  await expect(page.getByRole("link", { name: "Kitchen Setup" })).toBeVisible();
+  // On phones Kitchen lives in the More sheet; on larger screens it is in the sidebar.
+  const more = page.getByRole("button", { name: "More" });
+  if (await more.isVisible()) {
+    await more.click();
+    await expect(
+      page.getByRole("dialog", { name: "More" }).getByRole("link", { name: "Kitchen Setup" })
+    ).toBeVisible();
+  } else {
+    await expect(page.getByRole("link", { name: "Kitchen Setup" })).toBeVisible();
+  }
   await page.goto("/kitchen");
   // The modal is deliberately accessible and hides the underlying kitchen
   // from the accessibility tree. Verify first-run onboarding before page content.
