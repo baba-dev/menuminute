@@ -17,7 +17,7 @@ describe("crawl policy", () => {
     const urls = sitemap().map((e) => e.url);
     expect(new Set(urls).size).toBe(urls.length);
     for (const u of urls) {
-      expect(u.startsWith("https://food.bababuilds.com")).toBe(true);
+      expect(new URL(u).origin).toBe("https://food.bababuilds.com");
       const path = new URL(u).pathname;
       expect(path).not.toMatch(/^\/(api|admin|dashboard|kitchen|login|register|account)(\/|$)/);
       expect(path).not.toMatch(/^\/m\/[^/]+\/orders(\/|$)/);
