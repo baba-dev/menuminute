@@ -3,7 +3,7 @@
 Status: implemented in code; Search Console verification and submission are operator steps and
 have **not** been done.
 
-- `src/app/robots.ts` → `/robots.txt`: crawlable marketing, help, docs and `/m/` public menus. Blocks
+- `src/app/robots.ts` → `/robots.txt`: all search and AI crawlers (Google, Bing, GPTBot, ClaudeBot, PerplexityBot, etc., named explicitly) get the same policy: crawlable marketing, help, docs and `/m/` public menus. Blocks
   API, admin, dashboard, kitchen, account, auth flows, `/home-v2` and guest order tracking
   (`/m/*/orders/`). robots.txt controls crawling only; private pages also set `robots: { index: false }`.
 - `src/app/sitemap.ts` → `/sitemap.xml` (dynamic): static marketing pages, feature and solution pages,
@@ -25,3 +25,5 @@ Migration: 0112 is additive and forward-only (one function + grant); no data cha
 Operator follow-up: add `https://food.bababuilds.com` as a Search Console and Bing Webmaster property
 and submit `/sitemap.xml`. Googlebot will now crawl store menus through the existing public-render
 admission control; watch load after launch.
+
+- `public/llms.txt` gives AI assistants a curated index of the public site.

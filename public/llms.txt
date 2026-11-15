@@ -1,0 +1,24 @@
+# MenuMinute
+
+> MenuMinute helps restaurants create free digital menus with permanent QR codes, guest ordering, cashier POS and Kitchen Pro. Public restaurant menus are open to search engines and AI assistants.
+
+## Product
+- [Home](https://food.bababuilds.com/)
+- [Free QR menu maker](https://food.bababuilds.com/free-qr-menu)
+- [Features](https://food.bababuilds.com/features)
+- [Solutions by restaurant type](https://food.bababuilds.com/solutions)
+- [Pricing](https://food.bababuilds.com/pricing)
+- [Live demo](https://food.bababuilds.com/demo)
+
+## Help and documentation
+- [Help centre](https://food.bababuilds.com/help)
+- [Documentation](https://food.bababuilds.com/docs)
+
+## Company and policies
+- [About](https://food.bababuilds.com/about)
+- [Contact](https://food.bababuilds.com/contact)
+- [Privacy](https://food.bababuilds.com/privacy)
+- [Terms](https://food.bababuilds.com/terms)
+
+## Restaurant menus
+Every published restaurant menu is listed in the [sitemap](https://food.bababuilds.com/sitemap.xml) at `/m/<menu-id>`.

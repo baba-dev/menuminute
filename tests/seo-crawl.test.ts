@@ -17,10 +17,23 @@ describe("crawl policy", () => {
   it("points crawlers at the sitemap and blocks private and tokenised routes", () => {
     const r = robots();
     expect(r.sitemap).toBe("https://food.bababuilds.com/sitemap.xml");
-    const rule = Array.isArray(r.rules) ? r.rules[0]! : r.rules;
+    const rules = Array.isArray(r.rules) ? r.rules : [r.rules];
+    const rule = rules[0]!;
     const disallow = rule.disallow as string[];
     for (const p of ["/api/", "/dashboard/", "/admin/", "/m/*/orders/", "/login"]) {
       expect(disallow).toContain(p);
+    }
+  });
+
+  it("welcomes AI crawlers without exposing private routes to them", () => {
+    const r = robots();
+    const rules = Array.isArray(r.rules) ? r.rules : [r.rules];
+    for (const bot of ["GPTBot", "ClaudeBot", "PerplexityBot", "Googlebot", "Bingbot"]) {
+      const rule = rules.find((x) => x.userAgent === bot);
+      expect(rule, bot).toBeDefined();
+      expect(rule!.allow).toContain("/");
+      expect(rule!.disallow).toContain("/api/");
+      expect(rule!.disallow).toContain("/dashboard/");
     }
   });
 
