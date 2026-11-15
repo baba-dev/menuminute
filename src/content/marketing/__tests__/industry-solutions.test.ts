@@ -58,8 +58,8 @@ describe("industry solutions", () => {
     }
   });
 
-  it("has canonical URLs and single sitemap entries without duplicates", () => {
-    const urls = sitemap().map(({ url }) => url);
+  it("has canonical URLs and single sitemap entries without duplicates", async () => {
+    const urls = (await sitemap()).map(({ url }) => url);
     expect(new Set(urls).size).toBe(urls.length);
     for (const path of [
       "/solutions",
