@@ -9,6 +9,7 @@ import { customerArticles } from "@/content/help";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/help/customer" },
   title: "Diner & Guest Guides — MenuMinute Help Center",
   description:
     "Help for dining guests: Learn how to scan table QR codes, browse dishes, filter allergens, customize meals, track orders, and call your server.",

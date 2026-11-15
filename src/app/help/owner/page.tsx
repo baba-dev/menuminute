@@ -9,6 +9,7 @@ import { ownerArticles, getCategories } from "@/content/help";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/help/owner" },
   title: "Restaurant Owner & Staff Guides — MenuMinute Help Center",
   description:
     "Comprehensive, user-friendly guides for restaurant operators: Menu Studio, QR tabletop press, Kitchen Pro, Dish Availability, Point of Sale, and daily reports.",
