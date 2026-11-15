@@ -20,6 +20,7 @@ const categoryCount = demoMenu.categories.length;
 const dishCount = demoMenu.categories.reduce((n, c) => n + c.items.length, 0);
 
 export const metadata = {
+  alternates: { canonical: "/demo" },
   title: "Live Interactive Demo — MenuMinute",
   description:
     "Experience the customer QR menu and restaurant dashboard without creating an account.",

@@ -10,6 +10,7 @@ import { STICKER_DEMO_URL } from "@/components/marketing/storefront-studio/stick
 import QRCode from "qrcode";
 import { HomeNav } from "@/components/marketing/navigation/home-nav";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
+import { safeJsonLd, siteJsonLd } from "@/lib/marketing/seo";
 import "./home-layout.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,10 @@ export default async function HomePage() {
   });
   return (
     <div className="mm-homepage min-h-screen bg-stone-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(siteJsonLd()) }}
+      />
       {/* The navigation is part of the hero, not a separate sticky toolbar. */}
       <section className="food-orbit-hero relative isolate overflow-hidden">
         <HomeNav />

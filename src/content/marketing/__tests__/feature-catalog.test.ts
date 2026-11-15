@@ -85,8 +85,8 @@ describe("marketing feature coverage", () => {
       );
     }
   });
-  it("includes every indexable marketing and documentation page exactly once", () => {
-    const urls = sitemap().map((entry) => entry.url);
+  it("includes every indexable marketing and documentation page exactly once", async () => {
+    const urls = (await sitemap()).map((entry) => entry.url);
     const expected = [
       "/",
       "/about",

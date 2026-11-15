@@ -4,9 +4,45 @@ import { GUIDES } from "@/content/docs/guides";
 import { marketingFeatures } from "@/content/marketing/features";
 import { industrySolutions } from "@/content/marketing/solutions";
 
-const BASE_URL = "https://food.bababuilds.com";
+import { PUBLIC_ORIGIN as BASE_URL } from "@/lib/marketing/seo";
+import { demoModeEnabled } from "@/modules/demo/ids";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Never prerendered at build time: the public menu list comes from PostgreSQL.
+export const dynamic = "force-dynamic";
+
+// sitemaps.org allows 50,000 URLs per file; keep headroom for the static pages.
+const MAX_MENU_URLS = 45000;
+const MENU_CACHE_TTL_MS = 10 * 60 * 1000;
+let menuCache: { at: number; entries: MetadataRoute.Sitemap } | null = null;
+
+/** Every outlet whose public menu is actually served (active QR, published outlet, active org). */
+async function publicMenuEntries(): Promise<MetadataRoute.Sitemap> {
+  if (menuCache && Date.now() - menuCache.at < MENU_CACHE_TTL_MS) return menuCache.entries;
+  try {
+    const { getPool } = await import("@/db");
+    const r = await getPool().query<{ token: string; updated_at: Date; is_demo: boolean }>(
+      "select token, updated_at, is_demo from app_private.public_menu_sitemap($1)",
+      [MAX_MENU_URLS]
+    );
+    const demoOn = demoModeEnabled();
+    const entries: MetadataRoute.Sitemap = r.rows
+      // The demo outlet follows its kill switch: off means it is neither served nor advertised.
+      .filter((row) => !row.is_demo || demoOn)
+      .map((row) => ({
+        url: `${BASE_URL}/m/${encodeURIComponent(row.token)}`,
+        lastModified: row.updated_at,
+        changeFrequency: "weekly",
+        priority: 0.5,
+      }));
+    menuCache = { at: Date.now(), entries };
+    return entries;
+  } catch {
+    // A database outage must not take the sitemap (and the marketing URLs) down with it.
+    return menuCache?.entries ?? [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static marketing & product routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -114,5 +150,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
     priority: 0.6,
   }));
-  return [...staticRoutes, ...helpHubs, ...ownerGuideRoutes, ...customerGuideRoutes, ...docsRoutes];
+  const menuRoutes = await publicMenuEntries();
+  return [
+    ...staticRoutes,
+    ...helpHubs,
+    ...ownerGuideRoutes,
+    ...customerGuideRoutes,
+    ...docsRoutes,
+    ...menuRoutes,
+  ];
 }
