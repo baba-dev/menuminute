@@ -4,7 +4,8 @@ import { GUIDES } from "@/content/docs/guides";
 import { marketingFeatures } from "@/content/marketing/features";
 import { industrySolutions } from "@/content/marketing/solutions";
 
-const BASE_URL = "https://food.bababuilds.com";
+import { PUBLIC_ORIGIN as BASE_URL } from "@/lib/marketing/seo";
+import { DEMO_IDS, demoModeEnabled } from "@/modules/demo/ids";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Static marketing & product routes
@@ -114,5 +115,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
     priority: 0.6,
   }));
-  return [...staticRoutes, ...helpHubs, ...ownerGuideRoutes, ...customerGuideRoutes, ...docsRoutes];
+  // Only the single owner-approved public demo menu is listed. Private tenants' menus are never
+  // enumerated here; they stay reachable by their QR link and are not pushed to search engines.
+  const demoRoutes: MetadataRoute.Sitemap = demoModeEnabled()
+    ? [{ url: `${BASE_URL}/m/${DEMO_IDS.publicId}`, changeFrequency: "daily", priority: 0.5 }]
+    : [];
+  return [
+    ...staticRoutes,
+    ...helpHubs,
+    ...ownerGuideRoutes,
+    ...customerGuideRoutes,
+    ...docsRoutes,
+    ...demoRoutes,
+  ];
 }

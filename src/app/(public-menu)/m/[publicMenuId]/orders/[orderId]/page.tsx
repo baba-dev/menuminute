@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import { OrderTracker } from "@/components/menu-product/order-tracker";
 import { env } from "@/lib/config/env";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 type Props = {
   params: Promise<{ publicMenuId: string; orderId: string }>;

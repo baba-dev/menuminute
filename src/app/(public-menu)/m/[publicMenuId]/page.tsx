@@ -28,10 +28,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     "Explore the digital menu from " +
       data.outlet.name +
       ". Browse dishes and restaurant-supplied descriptions.";
+  const { publicMenuId } = await params;
   return {
     title: data.outlet.name + " — Digital Menu",
     description,
+    // ?lang= variants canonicalise to the base menu URL so they are not indexed as duplicates.
+    alternates: { canonical: "/m/" + publicMenuId },
     openGraph: {
+      type: "website",
+      url: "/m/" + publicMenuId,
       title: data.outlet.name + " — Digital Menu",
       description,
       images: [

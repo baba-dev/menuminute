@@ -49,3 +49,27 @@ export function faqJsonLd(faqs: ReadonlyArray<{ question: string; answer: string
     })),
   };
 }
+
+/** Site-level structured data for the home page. Facts only: no ratings, no unverified profiles. */
+export function siteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": PUBLIC_ORIGIN + "/#organization",
+        name: "MenuMinute",
+        url: PUBLIC_ORIGIN,
+        logo: PUBLIC_ORIGIN + "/brand/icons/pwa/icon-512.png",
+      },
+      {
+        "@type": "WebSite",
+        "@id": PUBLIC_ORIGIN + "/#website",
+        url: PUBLIC_ORIGIN,
+        name: "MenuMinute",
+        inLanguage: "en",
+        publisher: { "@id": PUBLIC_ORIGIN + "/#organization" },
+      },
+    ],
+  };
+}
