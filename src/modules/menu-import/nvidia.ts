@@ -7,47 +7,57 @@ import { mergeCandidateCategories } from "./merge";
 
 /** Fixed provider endpoint; no caller-supplied URL or public source links. */
 export const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const name = z.string().trim().min(1).max(1000);
-const variantSchema = z
-  .object({
-    name,
-    price: z.string().trim().max(32).nullable().optional(),
-    uncertain: z.boolean().optional(),
-  })
-  .strict();
-const pageSchema = z
-  .object({
-    categories: z
-      .array(
-        z
-          .object({
-            name,
-            items: z
-              .array(
-                z
-                  .object({
-                    name,
-                    description: z.string().trim().max(1000).nullable().optional(),
-                    price: z.string().trim().max(32).nullable().optional(),
-                    uncertain: z.boolean().optional(),
-                    variants: z.array(variantSchema).max(20).optional(),
-                  })
-                  .strict()
-              )
-              .max(200),
-          })
-          .strict()
-      )
-      .max(25),
-  })
-  .strict();
+/**
+ * The page schema is deliberately tolerant about *form*, never about *content*. Vision models
+ * routinely print a price as a number, add a key nobody asked for, or return a blank heading for
+ * dishes that have none. Each of those used to fail validation and discard the whole photograph.
+ * Unknown keys are dropped, numbers become strings, blank names become null, and a dish with no
+ * readable name is omitted; nothing is ever invented.
+ */
+const printed = (max: number) =>
+  z.preprocess(
+    (value) => (typeof value === "number" && Number.isFinite(value) ? String(value) : value),
+    z.string().trim().max(max).nullable().optional()
+  );
+const flag = z.boolean().nullable().optional();
+const variantSchema = z.object({ name: printed(1000), price: printed(32), uncertain: flag });
+const pageSchema = z.object({
+  categories: z
+    .array(
+      z.object({
+        name: printed(1000),
+        items: z
+          .array(
+            z.object({
+              name: printed(1000),
+              description: printed(1000),
+              price: printed(32),
+              uncertain: flag,
+              variants: z.array(variantSchema).max(20).nullable().optional(),
+            })
+          )
+          .max(200)
+          .nullable()
+          .optional(),
+      })
+    )
+    .max(25),
+});
+/** Some models answer with a list of parts instead of one string. */
+const messageContent = z.union([
+  z.string().max(130000),
+  z
+    .array(z.object({ type: z.string().optional(), text: z.string().optional() }).passthrough())
+    .max(64)
+    .transform((parts) => parts.map((part) => part.text ?? "").join("")),
+]);
 const completionSchema = z
   .object({
     choices: z
       .array(
         z
           .object({
-            message: z.object({ content: z.string().max(130000) }).passthrough(),
+            message: z.object({ content: messageContent }).passthrough(),
             finish_reason: z.string().nullable().optional(),
           })
           .passthrough()
@@ -101,18 +111,53 @@ export function importOutputTokenBudget(vars: Partial<NodeJS.ProcessEnv> = proce
   const tokens = Number(raw);
   return tokens >= 1024 && tokens <= 8192 ? tokens : null;
 }
-/** Accept only one JSON object, optionally wrapped by a fenced JSON code block. */
+/** Removes a hidden-reasoning preamble that some models print before their answer. */
+const withoutReasoning = (content: string) =>
+  content.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+/**
+ * Reads the one JSON value the model was asked for. It may be bare, inside a fenced code block, or
+ * surrounded by a sentence of commentary; a bare list of categories is accepted as the page. The
+ * result is still validated against the page schema, so stray text can never become menu data.
+ */
 function decodePageJson(content: string): unknown {
-  const clean = content.trim();
-  const fenced = /^\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n\x60\x60\x60$/i.exec(clean);
-  return JSON.parse(fenced ? fenced[1]! : clean) as unknown;
+  const clean = withoutReasoning(content);
+  const fenced = /\x60\x60\x60(?:json)?\s*\n([\s\S]*?)\n?\x60\x60\x60/i.exec(clean);
+  const text = (fenced ? fenced[1]! : clean).trim();
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    const start = text.search(/[{[]/);
+    const end = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+    if (start < 0 || end <= start) throw error;
+    value = JSON.parse(text.slice(start, end + 1));
+  }
+  return Array.isArray(value) ? { categories: value } : value;
+}
+/**
+ * Menus print prices as "₹299", "Rs. 1,299/-" or "12.50 USD". Only unambiguous decoration is
+ * removed: a currency marker at either end, a trailing "/-", and thousands separators in a
+ * well-formed group. Anything else (for example a decimal comma) is left for the reviewer.
+ */
+export function normalizePrintedPrice(raw: string): string {
+  let value = raw.trim();
+  const marker = "(?:[₹$€£¥₩₦₱฿₫₪₨]|rs\\.?|inr|[a-z]{3})";
+  value = value.replace(new RegExp("^" + marker + "\\s*", "i"), "");
+  value = value.replace(/\s*(?:\/-|\/=|-\/|\.-|only)$/i, "");
+  value = value.replace(new RegExp("\\s*" + marker + "$", "i"), "").trim();
+  if (
+    /^\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(value) ||
+    /^\d{1,2}(?:,\d{2})+,\d{3}(?:\.\d+)?$/.test(value)
+  )
+    value = value.replace(/,/g, "");
+  return value;
 }
 /**
  * A response cut off by the output-token limit is usually valid up to its last complete dish. Keep every
  * complete category and dish (never a half-printed dish or variant list) and close the rest.
  */
 export function salvageTruncatedJson(content: string): unknown {
-  const text = content.trim().replace(/^\x60\x60\x60(?:json)?\s*\n?/i, "");
+  const text = withoutReasoning(content).replace(/^[^{[]*/, "");
   const stack: string[] = [];
   let inString = false;
   let escaped = false;
@@ -172,9 +217,10 @@ const recognition = (value: string | null, sourceId: string, attention = false) 
 type WarningList = Array<{ sourceId: string; reason: SourceWarningReason }>;
 function parsedPrice(value: string | null, uncertain: boolean, currency: string, sourceId: string) {
   let amount: number | null = null;
-  if (!uncertain && value !== null && /^\d+(?:\.\d+)?$/.test(value)) {
+  const plain = value === null ? null : normalizePrintedPrice(value);
+  if (!uncertain && plain !== null && /^\d+(?:\.\d+)?$/.test(plain)) {
     try {
-      amount = displayToMinor(value, currency);
+      amount = displayToMinor(plain, currency);
     } catch {
       amount = null;
     }
@@ -292,17 +338,23 @@ export async function extractNvidiaCandidate(
         if (!truncated) throw error;
         page = pageSchema.parse(salvageTruncatedJson(choice.message.content));
       }
-      if (!page.categories.some((category) => category.items.length))
-        throw new Error("No legible menu entries");
-      for (const category of page.categories)
+      // A dish needs a readable name; a heading does not (many menus print dishes without one).
+      const legible = page.categories
+        .map((category) => ({
+          name: category.name || null,
+          items: (category.items ?? []).filter((item) => item.name),
+        }))
+        .filter((category) => category.items.length);
+      if (!legible.length) throw new Error("No legible menu entries");
+      for (const category of legible)
         categories.push({
           id: randomUUID(),
           name: recognition(category.name, source.id),
           items: category.items.map((item) => {
-            const variants = item.variants ?? [];
+            const variants = (item.variants ?? []).filter((variant) => variant.name);
             return {
               id: randomUUID(),
-              name: recognition(item.name, source.id),
+              name: recognition(item.name!, source.id),
               ...(item.description
                 ? { description: recognition(item.description, source.id) }
                 : {}),
@@ -317,7 +369,7 @@ export async function extractNvidiaCandidate(
                   ),
               variants: variants.map((variant) => ({
                 id: randomUUID(),
-                name: recognition(variant.name, source.id),
+                name: recognition(variant.name!, source.id),
                 priceMinor: parsedPrice(
                   variant.price ?? null,
                   variant.uncertain === true,

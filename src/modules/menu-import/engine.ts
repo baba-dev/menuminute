@@ -9,6 +9,12 @@ import {
 } from "./nvidia";
 
 const HEARTBEAT_MS = 15_000;
+/** A failure that happened before any provider request, with the code the owner is shown. */
+class ImportFailure extends Error {
+  constructor(readonly code: "engine_unavailable" | "source_unavailable") {
+    super(code);
+  }
+}
 type Work = {
   done?: boolean;
   active?: boolean;
@@ -76,13 +82,19 @@ export async function processImport(
     error: "engine_unavailable",
   };
   try {
-    if (!enabled || !work.importId || !work.currency || !work.sources?.length)
-      throw new NvidiaExtractionError("provider_unavailable", usage);
+    // The worker has its own environment. A worker without the model or key is a deployment
+    // problem, not a provider outage, and must not be reported to the owner as one.
+    if (!enabled) throw new ImportFailure("engine_unavailable");
+    if (!work.importId || !work.currency || !work.sources?.length)
+      throw new ImportFailure("source_unavailable");
     const sources = await Promise.all(
       work.sources.map(async (s) => {
         importId.parse(s.id);
-        const bytes = await getPrivateSource(s.key);
-        if (digest(bytes) !== s.sha) throw new NvidiaExtractionError("source_unavailable", usage);
+        // A missing or altered stored photo is a source problem, not an unexplained failure.
+        const bytes = await getPrivateSource(s.key).catch(() => {
+          throw new ImportFailure("source_unavailable");
+        });
+        if (digest(bytes) !== s.sha) throw new ImportFailure("source_unavailable");
         return { id: s.id, pageIndex: s.pageIndex, bytes };
       })
     );
@@ -115,7 +127,10 @@ export async function processImport(
     result = {
       ok: false,
       usage: err instanceof NvidiaExtractionError ? err.usage : usage,
-      error: err instanceof NvidiaExtractionError ? err.code : "processing_failed",
+      error:
+        err instanceof NvidiaExtractionError || err instanceof ImportFailure
+          ? err.code
+          : "processing_failed",
     };
   } finally {
     clearInterval(timer);

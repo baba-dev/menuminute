@@ -8,7 +8,7 @@ import {
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
 import { NotFoundError } from "@/lib/errors";
 import { AI_CREDIT_COSTS, spendAiCredits } from "@/modules/plans/credits";
-import { domainError } from "@/modules/organizations/service";
+import { importDomainError } from "./errors";
 import { createImportSchema, importId, sourceUploadHeaders, cancelImportSchema } from "./contracts";
 import { digest, getPrivateSource, normalizeSource, putPrivateSource } from "./storage";
 
@@ -32,7 +32,7 @@ export async function createImport(actor: Actor, outletId: string, input: unknow
         ).rows[0]!.result
     );
   } catch (error) {
-    domainError(error);
+    importDomainError(error);
   }
 }
 export async function listImports(actor: Actor, outletId: string) {
@@ -184,7 +184,7 @@ export async function addImportSource(
         ).rows[0]!.result
     );
   } catch (error) {
-    domainError(error);
+    importDomainError(error);
   }
   if (reservation.status === "ready") return { id: sourceId, status: "ready", duplicate: true };
   if (!reservation.storageKey) throw new Error("Private source reservation missing");
@@ -201,7 +201,7 @@ export async function addImportSource(
         ).rows[0]!.result
     );
   } catch (error) {
-    domainError(error);
+    importDomainError(error);
   }
 }
 export async function cancelImport(
@@ -223,7 +223,7 @@ export async function cancelImport(
         ).rows[0]!.result
     );
   } catch (error) {
-    domainError(error);
+    importDomainError(error);
   }
 }
 

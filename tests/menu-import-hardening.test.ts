@@ -3,6 +3,7 @@ import sharp from "sharp";
 import {
   extractNvidiaCandidate,
   NvidiaExtractionError,
+  normalizePrintedPrice,
   salvageTruncatedJson,
 } from "../src/modules/menu-import/nvidia";
 import { mergeCandidateCategories, normalizeLabel } from "../src/modules/menu-import/merge";
@@ -233,4 +234,83 @@ it("normalizes labels without losing distinct names", () => {
 
 it("merge keeps identities and order of first appearance", () => {
   expect(mergeCandidateCategories([])).toEqual([]);
+});
+
+it("reads a page whose format deviates harmlessly instead of discarding the photograph", async () => {
+  const { run: pending } = await run([
+    () =>
+      reply(
+        "<think>two columns, prices on the right</think>Here is the menu:\n\x60\x60\x60json\n" +
+          JSON.stringify({
+            restaurant: "ignored extra key",
+            categories: [
+              {
+                name: "",
+                items: [
+                  { name: "Masala Dosa", price: 120, confidence: 0.9 },
+                  { name: "Idli", price: "Rs. 1,250/-", uncertain: null },
+                  { name: "", price: "40" },
+                  { name: "Vada", price: "12,50" },
+                ],
+              },
+              { name: "Empty", items: null },
+            ],
+          }) +
+          "\n\x60\x60\x60\nLet me know if you need anything else."
+      ),
+  ]);
+  const out = await pending;
+  expect(out.candidate.sourceWarnings).toBeUndefined();
+  expect(out.candidate.categories).toHaveLength(1);
+  const [category] = out.candidate.categories;
+  // A missing heading is unreadable, never invented.
+  expect(category?.name).toMatchObject({ value: null, review: "unreadable" });
+  expect(category?.items.map((item) => [item.name.value, item.priceMinor.value])).toEqual([
+    ["Masala Dosa", 12000],
+    ["Idli", 125000],
+    // A decimal comma is ambiguous, so the reviewer decides.
+    ["Vada", null],
+  ]);
+  expect(category?.items[1]?.priceMinor.evidence[0]?.excerpt).toBe("Rs. 1,250/-");
+});
+
+it("accepts a bare list of categories and a multi-part message", async () => {
+  const { run: pending } = await run([
+    () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify([
+                      { name: "Tea", items: [{ name: "Chai", price: "₹10" }] },
+                    ]),
+                  },
+                ],
+              },
+              finish_reason: "stop",
+            },
+          ],
+        })
+      ),
+  ]);
+  const out = await pending;
+  expect(out.candidate.categories[0]?.items[0]?.priceMinor.value).toBe(1000);
+});
+
+it("still rejects prose and never treats it as a menu", async () => {
+  const { run: pending } = await run([() => reply("I could not find a menu in this image.")]);
+  await expect(pending).rejects.toMatchObject({ code: "invalid_provider_response" });
+});
+
+it("strips only unambiguous price decoration", () => {
+  expect(normalizePrintedPrice("₹299")).toBe("299");
+  expect(normalizePrintedPrice("Rs. 1,299/-")).toBe("1299");
+  expect(normalizePrintedPrice("1,29,900.50")).toBe("129900.50");
+  expect(normalizePrintedPrice("12.50 USD")).toBe("12.50");
+  expect(normalizePrintedPrice("12,50")).toBe("12,50");
+  expect(normalizePrintedPrice("120 / 180")).toBe("120 / 180");
 });
