@@ -12,6 +12,24 @@ test.describe("MenuMinute End-to-End Smoke Tests", () => {
     await expect(page.locator('a[href="/demo"]').first()).toHaveAttribute("href", "/demo");
   });
 
+  test("Unknown addresses get the branded not-found page with a 404 status", async ({ page }) => {
+    const response = await page.goto("/this-page-does-not-exist");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("We couldn’t find that page.");
+    await expect(page.getByRole("link", { name: "Back to homepage" })).toHaveAttribute("href", "/");
+  });
+
+  test("Marketing pages load without Content Security Policy violations", async ({ page }) => {
+    const violations: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error" && /Content Security Policy/i.test(message.text()))
+        violations.push(message.text());
+    });
+    await page.goto("/pricing");
+    await expect(page.getByTestId("brand-nav-motion")).toBeVisible();
+    expect(violations).toEqual([]);
+  });
+
   test("Pricing page displays all 4 product tiers correctly", async ({ page }) => {
     await page.goto("/pricing");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Simple, honest pricing.");

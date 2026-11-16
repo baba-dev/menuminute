@@ -1,8 +1,9 @@
 "use client";
 
-import { localeOptions, suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
+import { suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
 import { OutletTimezonePicker } from "./timezone-picker";
 import type { WizardDraft } from "./wizard-types";
+import { useRegionOptions, useSupportedCurrencies } from "@/lib/use-intl-options";
 
 const suggestions: Record<string, string> = {
   IN: "Asia/Kolkata",
@@ -26,6 +27,8 @@ export function QuickMenuRegion({
   onChange: <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => void;
   onTimezoneSuggestion: (timezone: string) => void;
 }) {
+  const regions = useRegionOptions(draft.country || undefined);
+  const currencies = useSupportedCurrencies(draft.currency || undefined);
   return (
     <div className="wizard-content">
       <div className="wizard-header">
@@ -52,8 +55,8 @@ export function QuickMenuRegion({
             if (suggestions[country]) onTimezoneSuggestion(suggestions[country]);
           }}
         >
-          {localeOptions().map((region) => (
-            <option key={region.code} value={region.code}>
+          {regions.map((region) => (
+            <option key={region.code} value={region.code} suppressHydrationWarning>
               {region.label} ({region.code})
             </option>
           ))}
@@ -72,7 +75,7 @@ export function QuickMenuRegion({
           <option value="" disabled>
             Select a pricing currency
           </option>
-          {Intl.supportedValuesOf("currency").map((code) => (
+          {currencies.map((code) => (
             <option key={code} value={code}>
               {code}
             </option>

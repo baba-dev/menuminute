@@ -108,16 +108,19 @@ export function RegistrationForm({ googleEnabled = false }: { googleEnabled?: bo
                 : "Google registration could not be completed. Try again or register with email."}
           </p>
         )}
-        <label className="mm-auth-secondary">
-          <input type="checkbox" {...register("acceptTerms")} /> I agree to the{" "}
-          <Link href="/terms" target="_blank" rel="noopener noreferrer">
-            Terms of Service
-          </Link>{" "}
-          and acknowledge the{" "}
-          <Link href="/privacy" target="_blank" rel="noopener noreferrer">
-            Privacy Policy
-          </Link>
-          .
+        <label className="mm-auth-secondary mm-auth-consent">
+          <input type="checkbox" {...register("acceptTerms")} />
+          <span>
+            I agree to the{" "}
+            <Link href="/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </Link>{" "}
+            and acknowledge the{" "}
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+              Privacy Policy
+            </Link>
+            .
+          </span>
         </label>
         {errors.acceptTerms && <small role="alert">{errors.acceptTerms.message}</small>}
         {googleEnabled && (

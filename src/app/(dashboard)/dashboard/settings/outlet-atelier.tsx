@@ -22,7 +22,7 @@ import type { OutletProfileFields } from "@/modules/restaurants/profile";
 import { OutletTimezonePicker } from "@/components/onboarding/timezone-picker";
 import { SettingsScopeNav } from "@/components/settings/settings-scope-nav";
 import { canonicalOutletTimezone } from "@/lib/outlet-timezones";
-import { localeOptions } from "@/modules/onboarding/locales";
+import { useRegionOptions, useSupportedCurrencies } from "@/lib/use-intl-options";
 type Outlet = {
   name: string;
   slug: string;
@@ -113,8 +113,8 @@ function OutletOperationsForm({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const countries = useMemo(() => localeOptions(), []);
-  const currencies = useMemo(() => Intl.supportedValuesOf("currency"), []);
+  const countries = useRegionOptions(draft.country);
+  const currencies = useSupportedCurrencies(draft.currency);
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
   const setTimezone = useCallback(
     (timezone: string) => setDraft((current) => ({ ...current, timezone })),
@@ -185,7 +185,7 @@ function OutletOperationsForm({
               onChange={(event) => setDraft({ ...draft, country: event.target.value })}
             >
               {countries.map(({ code, label }) => (
-                <option key={code} value={code}>
+                <option key={code} value={code} suppressHydrationWarning>
                   {label} ({code})
                 </option>
               ))}

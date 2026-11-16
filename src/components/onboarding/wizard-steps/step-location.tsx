@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { MapPin, Navigation, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react";
-import { localeOptions, suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
+import { suggestedCurrencyForCountry } from "@/modules/onboarding/locales";
 import type { WizardDraft } from "../wizard-types";
+import { useRegionOptions } from "@/lib/use-intl-options";
 import { ThemedArtwork } from "../themed-artwork";
 
 interface StepLocationProps {
@@ -12,7 +13,6 @@ interface StepLocationProps {
   onTimezoneSuggestion: (timezone: string) => void;
 }
 
-const regions = localeOptions();
 // These are suggestions, not compulsory timezone overrides for international operators.
 const timezoneSuggestions: Record<string, string> = {
   IN: "Asia/Kolkata",
@@ -27,6 +27,7 @@ const timezoneSuggestions: Record<string, string> = {
 };
 
 export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLocationProps) {
+  const regions = useRegionOptions(draft.country || undefined);
   const [geoLocating, setGeoLocating] = useState(false);
   const [geoNotice, setGeoNotice] = useState<string | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -303,7 +304,7 @@ export function StepLocation({ draft, onChange, onTimezoneSuggestion }: StepLoca
           }}
         >
           {regions.map((r) => (
-            <option key={r.code} value={r.code}>
+            <option key={r.code} value={r.code} suppressHydrationWarning>
               {r.label} ({r.code})
             </option>
           ))}

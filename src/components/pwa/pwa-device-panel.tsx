@@ -202,7 +202,7 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
     <div className={styles.stack}>
       <section className={styles.intro}>
         <span className={styles.eyebrow}>YOUR DEVICE · {outletName}</span>
-        <h1>MenuMinute on this device</h1>
+        <h2>MenuMinute on this device</h2>
         <p>
           Keep service alerts and offline viewing under your control. Live orders, Kitchen and Point
           of Sale always need a working connection.
@@ -222,7 +222,15 @@ export function PwaDevicePanel({ outletName }: { outletName: string }) {
         <div className={styles.stat}>
           <Bell size={21} aria-hidden="true" />
           <span>Device permission</span>
-          <strong>{permission === "unsupported" ? "Unsupported" : permission}</strong>
+          <strong>
+            {permission === "granted"
+              ? "Allowed"
+              : permission === "denied"
+                ? "Blocked in browser"
+                : permission === "default"
+                  ? "Not asked yet"
+                  : "Unsupported"}
+          </strong>
         </div>
       </div>
       <section className={styles.panel} aria-labelledby="device-alerts">
