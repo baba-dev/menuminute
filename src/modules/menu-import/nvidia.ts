@@ -103,6 +103,24 @@ export function importEngineDiagnostic(vars: Partial<NodeJS.ProcessEnv> = proces
 }
 
 type Source = { id: string; pageIndex: number; bytes: Buffer };
+/**
+ * Statuses with which the provider explicitly refused a request before producing a completion:
+ * rate limiting and gateway/availability errors. No completion means nothing was billed, so
+ * repeating the same page is safe. A timeout or a dropped connection is NOT in this set: the
+ * provider may have finished (and billed) the request, so those are never repeated.
+ */
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
+/** Two retries per page, waiting 2 s then 8 s unless the provider asks for longer. */
+export const IMPORT_RETRY_DELAYS_MS = [2000, 8000] as const;
+const MAX_RETRY_DELAY_MS = 30000;
+const pause = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+/** Honours a Retry-After given in seconds, bounded so one page cannot stall the import. */
+export function importRetryDelay(retryAfter: string | null, attempt: number) {
+  const fallback = IMPORT_RETRY_DELAYS_MS[attempt] ?? MAX_RETRY_DELAY_MS;
+  if (!retryAfter || !/^\d{1,5}$/.test(retryAfter.trim())) return fallback;
+  return Math.min(MAX_RETRY_DELAY_MS, Math.max(fallback, Number(retryAfter.trim()) * 1000));
+}
 /** Avoid requesting more output tokens than a configured vision NIM supports. */
 export function importOutputTokenBudget(vars: Partial<NodeJS.ProcessEnv> = process.env) {
   const raw = vars["NVIDIA_IMPORT_MAX_OUTPUT_TOKENS"];
@@ -239,6 +257,8 @@ export async function extractNvidiaCandidate(
     model: string;
     apiKey: string;
     guard?: (usage: Meter) => Promise<void>;
+    /** Pause between retries; replaced in tests. */
+    wait?: (milliseconds: number) => Promise<void>;
   },
   request: typeof fetch = fetch
 ): Promise<{ candidate: ImportCandidate; usage: Meter }> {
@@ -275,35 +295,49 @@ export async function extractNvidiaCandidate(
     await input.guard?.(usage);
     try {
       usage.requests++;
-      const response = await request(NVIDIA_CHAT_URL, {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + input.apiKey,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(45000),
-        cache: "no-store",
-        body: JSON.stringify({
-          model: input.model,
-          temperature: 0,
-          // A bounded worker setting; never controlled by a restaurant client.
-          max_tokens: tokenBudget,
-          stream: false,
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: prompt(input.currency) },
-                {
-                  type: "image_url",
-                  image_url: { url: "data:image/jpeg;base64," + image.toString("base64") },
-                },
-              ],
-            },
-          ],
-        }),
-      });
+      const send = () =>
+        request(NVIDIA_CHAT_URL, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + input.apiKey,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(45000),
+          cache: "no-store",
+          body: JSON.stringify({
+            model: input.model,
+            temperature: 0,
+            // A bounded worker setting; never controlled by a restaurant client.
+            max_tokens: tokenBudget,
+            stream: false,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: prompt(input.currency) },
+                  {
+                    type: "image_url",
+                    image_url: { url: "data:image/jpeg;base64," + image.toString("base64") },
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+      let response = await send();
+      // An explicit refusal is repeated for this page only, after a pause and a fresh lease check
+      // (so a cancelled import stops here too). `usage.requests` still counts the page once.
+      for (
+        let attempt = 0;
+        attempt < IMPORT_RETRY_DELAYS_MS.length && RETRYABLE_STATUS.has(response.status);
+        attempt++
+      ) {
+        await response.body?.cancel().catch(() => undefined);
+        await (input.wait ?? pause)(importRetryDelay(response.headers.get("retry-after"), attempt));
+        await input.guard?.(usage);
+        response = await send();
+      }
       if (!response.ok || Number(response.headers.get("content-length") ?? 0) > 150000)
         throw new Error("Provider response rejected");
       accepted = true;
@@ -381,7 +415,9 @@ export async function extractNvidiaCandidate(
           }),
         });
       if (truncated) sourceWarnings.push({ sourceId: source.id, reason: "truncated_output" });
-    } catch {
+    } catch (error) {
+      // A lost lease or a cancel raised while waiting to retry is terminal, never a partial draft.
+      if (error instanceof NvidiaExtractionError) throw error;
       if (!metered) {
         usage.inputTokens = null;
         usage.outputTokens = null;

@@ -288,8 +288,9 @@ export function StorefrontStudio({ qrDataUrl }: { qrDataUrl: string }) {
             <span>ONE PERMANENT DIGITAL DESTINATION</span>
             <h3>Make your first scan count.</h3>
             <p>
-              See how your guests explore a real sample menu. Create your own free menu when you are
-              ready; printable sticker tooling is a future concept.
+              See how your guests explore a real sample menu. Create your own free menu, then print
+              your QR codes from the dashboard. These sticker designs are illustrations, not a
+              printing service.
             </p>
             <div className="ss-links">
               <Link href="/register" className="ss-primary">

@@ -3,6 +3,7 @@ import sharp from "sharp";
 import {
   extractNvidiaCandidate,
   NvidiaExtractionError,
+  importRetryDelay,
   normalizePrintedPrice,
   salvageTruncatedJson,
 } from "../src/modules/menu-import/nvidia";
@@ -24,9 +25,11 @@ const reply = (content: string, finish_reason = "stop") =>
 const page = (...categories: unknown[]) => JSON.stringify({ categories });
 async function run(
   replies: Array<() => Response | Promise<Response>>,
-  guard?: () => Promise<void>
+  guard?: () => Promise<void>,
+  // Retries consume extra replies, so the number of photographs can be smaller.
+  pages = replies.length
 ) {
-  const ids = replies.map(() => crypto.randomUUID());
+  const ids = Array.from({ length: pages }, () => crypto.randomUUID());
   let call = 0;
   const run = extractNvidiaCandidate(
     {
@@ -37,6 +40,7 @@ async function run(
       ),
       model: "example/vision",
       apiKey: "k",
+      wait: async () => undefined,
       ...(guard ? { guard } : {}),
     },
     async () => replies[call++]!()
@@ -92,11 +96,18 @@ it("still skips a truncated page that has nothing salvageable", async () => {
 });
 
 it("keeps earlier pages when the provider fails later, flagging the rest", async () => {
-  const { ids, run: pending } = await run([
-    () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
-    () => new Response("down", { status: 503 }),
-    () => reply(page({ name: "never", items: [{ name: "sent", price: "1" }] })),
-  ]);
+  const { ids, run: pending } = await run(
+    [
+      () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
+      // Page 2 is refused on its first attempt and on both retries.
+      () => new Response("down", { status: 503 }),
+      () => new Response("down", { status: 503 }),
+      () => new Response("down", { status: 503 }),
+      () => reply(page({ name: "never", items: [{ name: "sent", price: "1" }] })),
+    ],
+    undefined,
+    3
+  );
   const out = await pending;
   expect(out.usage.requests).toBe(2);
   expect(out.candidate.categories).toHaveLength(1);
@@ -313,4 +324,76 @@ it("strips only unambiguous price decoration", () => {
   expect(normalizePrintedPrice("12.50 USD")).toBe("12.50");
   expect(normalizePrintedPrice("12,50")).toBe("12,50");
   expect(normalizePrintedPrice("120 / 180")).toBe("120 / 180");
+});
+
+it("recovers a rate-limited page on retry without counting it twice", async () => {
+  const { run: pending } = await run(
+    [
+      () => new Response("slow down", { status: 429, headers: { "retry-after": "1" } }),
+      () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
+    ],
+    undefined,
+    1
+  );
+  const out = await pending;
+  expect(out.candidate.sourceWarnings).toBeUndefined();
+  expect(out.candidate.categories[0]?.items[0]?.name.value).toBe("Chai");
+  // Credits and the request cap follow pages, not attempts.
+  expect(out.usage.requests).toBe(1);
+});
+
+it("never repeats a request that may have been billed", async () => {
+  // A timeout, a dropped connection, a client error and a plain server error are each sent once:
+  // were any of them retried, the readable second reply would turn the import into a success.
+  for (const failure of [
+    () => Promise.reject(new DOMException("timed out", "TimeoutError")),
+    () => Promise.reject(new TypeError("fetch failed")),
+    () => new Response("bad key", { status: 401 }),
+    () => new Response("oops", { status: 500 }),
+  ]) {
+    const { run: pending } = await run(
+      [failure, () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] }))],
+      undefined,
+      1
+    );
+    await expect(pending).rejects.toMatchObject({ code: "provider_unavailable" });
+  }
+});
+
+it("stops retrying as soon as the lease check refuses", async () => {
+  let checks = 0;
+  let sent = 0;
+  const { run: pending } = await run(
+    [
+      () => {
+        sent++;
+        return new Response("busy", { status: 503 });
+      },
+      () => {
+        sent++;
+        return reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] }));
+      },
+    ],
+    async () => {
+      // Two checks precede the first attempt; the third guards the retry.
+      if (++checks > 2)
+        throw new NvidiaExtractionError("provider_unavailable", {
+          requests: 1,
+          inputTokens: null,
+          outputTokens: null,
+        });
+    },
+    1
+  );
+  await expect(pending).rejects.toMatchObject({ code: "provider_unavailable" });
+  expect(sent).toBe(1);
+});
+
+it("bounds the pause and honours a longer Retry-After", () => {
+  expect(importRetryDelay(null, 0)).toBe(2000);
+  expect(importRetryDelay(null, 1)).toBe(8000);
+  expect(importRetryDelay("5", 0)).toBe(5000);
+  expect(importRetryDelay("1", 1)).toBe(8000);
+  expect(importRetryDelay("600", 0)).toBe(30000);
+  expect(importRetryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 0)).toBe(2000);
 });

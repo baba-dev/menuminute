@@ -15,7 +15,7 @@ const groups = [
   {
     title: "Company & ecosystem",
     links: [
-      { label: "About Menu Minute", href: "/about" },
+      { label: "About MenuMinute", href: "/about" },
       { label: "BabaBuilds website", href: "https://bababuilds.com/", external: true },
       { label: "BabaBuilds ERP", href: "https://erp.bababuilds.com/", external: true },
       { label: "Contact", href: "/contact" },
@@ -71,11 +71,7 @@ function FooterAnchor({
 /** Public pages only: not the merchant dashboard or restaurant customer menus. */
 export function PublicFooter() {
   return (
-    <footer
-      className="mm-public-footer"
-      data-testid="public-footer"
-      aria-label="Menu Minute footer"
-    >
+    <footer className="mm-public-footer" data-testid="public-footer" aria-label="MenuMinute footer">
       <div className="mmf-container">
         <div className="mmf-intro">
           <div>
@@ -96,7 +92,7 @@ export function PublicFooter() {
         </div>
         <div className="mmf-main">
           <div className="mmf-brand">
-            <Link href="/" className="mmf-brand-logo" aria-label="Menu Minute homepage">
+            <Link href="/" className="mmf-brand-logo" aria-label="MenuMinute homepage">
               <Image
                 src="/brand/logos/logo-horizontal-dark.svg"
                 alt=""
@@ -136,8 +132,7 @@ export function PublicFooter() {
         <div className="mmf-proof">
           <div className="mmf-trust">
             <div className="mmf-proof-label">
-              Our product principles{" "}
-              <span>Menu Minute originals · not external certifications</span>
+              Our product principles <span>MenuMinute originals · not external certifications</span>
             </div>
             <div className="mmf-marks">
               <span>

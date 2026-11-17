@@ -32,3 +32,7 @@ Source PRs do not prove server activation or live NVIDIA billing behavior. No pr
 ## Addendum — cancel and credits (migration 0108)
 
 `import_engine_heartbeat` now returns false once the import is no longer `processing`, so a cancelled import is not renewable and the worker's per-page lease check stops it. `import_engine_begin` (cancel before start) and `import_engine_finish` call the internal `import_release_credits`, which returns credits for pages never sent. See [menu-import-engine.md](menu-import-engine.md).
+
+## Addendum — bounded retry of refused pages
+
+A page the provider explicitly refuses (HTTP 429, 502, 503, 504) is retried up to twice inside the same fenced execution; see [menu-import-engine.md](menu-import-engine.md). The fence is checked before each retry and heartbeats continue during the pause. A delivery that is interrupted, times out or loses its lease is still never reissued.
