@@ -122,5 +122,6 @@ let prev = {};
 try {
   prev = JSON.parse((await import("node:fs")).readFileSync(marksFile, "utf8"));
 } catch {}
-writeFileSync(marksFile, JSON.stringify({ ...prev, ...marksOut }, null, 1));
+// Prettier style (2-space indent, trailing newline) so `prettier --check .` passes in CI.
+writeFileSync(marksFile, JSON.stringify({ ...prev, ...marksOut }, null, 2) + "\n");
 await browser.close();
