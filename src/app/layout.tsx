@@ -27,15 +27,19 @@ const handwritingFont = Kalam({
   variable: "--font-kalam",
 });
 
+// The two print faces are only used inside QR Print Studio. Without `preload: false` every page,
+// including a guest's menu on mobile data, preloaded them ahead of its own content.
 const printSerif = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-print-playfair",
 });
 const printDisplay = Bebas_Neue({
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+  preload: false,
   variable: "--font-print-bebas",
 });
 

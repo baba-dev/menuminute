@@ -298,8 +298,8 @@ export default async function DemoPage({
                   <span className="text-foreground font-semibold">Veg, Vegan, Gluten-Free</span>
                 </div>
                 <div className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-muted-foreground">Pricing Engine</span>
-                  <span className="text-foreground font-semibold">Integer Minor Units (Paise)</span>
+                  <span className="text-muted-foreground">Menu currency</span>
+                  <span className="text-foreground font-semibold">Indian Rupee (₹)</span>
                 </div>
               </div>
             </div>

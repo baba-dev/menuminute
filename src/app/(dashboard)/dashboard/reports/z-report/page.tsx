@@ -50,6 +50,7 @@ export default async function ZReportStandalonePage({
         </Link>
       </div>
 
+      <h1 className="sr-only">Provisional daily order summary</h1>
       <ZReportPreview report={workspaceData.dailyZReport} />
     </div>
   );

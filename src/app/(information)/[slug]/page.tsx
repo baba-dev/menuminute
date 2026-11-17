@@ -29,7 +29,7 @@ const pages = {
   guides: {
     title: "Guides & tutorials",
     category: "Resources",
-    description: "Learn how to make the most of Menu Minute.",
+    description: "Learn how to make the most of MenuMinute.",
     detail:
       "Step-by-step guides are being prepared. Browse the interactive demo to explore the QR menu experience.",
   },
@@ -93,7 +93,7 @@ export default async function InformationPage({ params }: { params: Promise<{ sl
     <div className="flex min-h-screen flex-col bg-stone-50 text-stone-900">
       <header className="border-b border-stone-200 bg-white px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <Link href="/" aria-label="Menu Minute home">
+          <Link href="/" aria-label="MenuMinute home">
             <Image
               src="/brand/logos/logo-horizontal-light.svg"
               alt=""

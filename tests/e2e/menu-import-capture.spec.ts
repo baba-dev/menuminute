@@ -265,3 +265,59 @@ test("reviewer corrects an unreadable price and applies only a private draft", a
     await verify.end();
   }
 });
+test("a phone-sized photo is resized and uploaded, and an unsupported file is named", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu/import");
+  await expect(page.getByRole("heading", { name: "Your menu. Digitized." })).toBeVisible();
+  // 17 megapixels: over the server's 10 megapixel limit, like any current phone camera.
+  const phonePhoto = await sharp({
+    create: { width: 4800, height: 3600, channels: 3, background: "white" },
+  })
+    .jpeg()
+    .toBuffer();
+  await page.getByLabel("Choose menu photographs").setInputFiles([
+    { name: "IMG_2041.jpg", mimeType: "image/jpeg", buffer: phonePhoto },
+    { name: "menu.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") },
+  ]);
+  await expect(page.getByRole("alert").filter({ hasText: "menu.pdf" })).toContainText(
+    "is a PDF, which is not supported yet"
+  );
+  await expect(page.getByText("1 large photo was resized to fit.")).toBeVisible();
+  await expect(page.getByText("IMG_2041.jpg")).toBeVisible();
+  await page.getByRole("button", { name: "Upload photos privately" }).click();
+  await expect(page.getByText("Page 1 · ready")).toBeVisible();
+  // The stored page is within the limit and kept its 4:3 shape.
+  await expect(page.getByText("3200 × 2400")).toBeVisible();
+});
+test("reaching the unfinished-import limit says so and what to do", async ({ page }) => {
+  test.setTimeout(90000);
+  const f = await seed();
+  await page.context().setExtraHTTPHeaders({ "x-browser-test-client": crypto.randomUUID() });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(f.email);
+  await page.getByLabel("Password", { exact: true }).fill(f.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await page.goto("/dashboard/menu/import");
+  for (let draft = 0; draft < 5; draft++) {
+    await page.getByRole("button", { name: "Create private draft" }).click();
+    await expect(page.getByRole("heading", { name: "Collect photographs" })).toBeVisible();
+    await page.getByRole("button", { name: "All drafts" }).click();
+    await expect(page.getByRole("heading", { name: "Recent imports" })).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Create private draft" }).click();
+  await expect(
+    page.getByText(
+      "You already have 5 unfinished imports. Cancel or finish one under Recent imports, then start again."
+    )
+  ).toBeVisible();
+});

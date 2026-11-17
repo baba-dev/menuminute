@@ -833,7 +833,9 @@ export function ReviewWorkspace({
             disabled={busy || locked}
             onClick={() => {
               if (!dirty || window.confirm("Discard unsaved corrections and load server draft?"))
-                void refresh().catch((e) => setError(String(e)));
+                void refresh().catch((e) =>
+                  setError(e instanceof Error ? e.message : "The import could not be refreshed.")
+                );
             }}
             className="inline-flex items-center gap-2 rounded-xl border border-stone-300 px-4 py-3 text-sm font-bold text-stone-800"
           >

@@ -19,6 +19,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { currencyExponent } from "@/lib/money";
+import { PhotoError, preparePhoto, UPLOAD_BYTE_LIMIT } from "@/lib/menu-import/prepare-photo";
 
 type Source = {
   id: string;
@@ -52,6 +53,7 @@ type Session = {
   currency: string;
   sources: Source[];
   candidate: Candidate | null;
+  updatedAt?: string;
   engineResult?: {
     state: string;
     errorCode: string | null;
@@ -63,6 +65,8 @@ type SessionSummary = Pick<Session, "id" | "revision" | "currency" | "status"> &
   createdAt?: string;
   updatedAt?: string;
 };
+/** Twelve pages at the 45 second provider timeout is nine minutes; beyond this something is stuck. */
+const SLOW_AFTER_MS = 15 * 60 * 1000;
 type Draft = {
   id: string;
   pageIndex: number;
@@ -71,22 +75,39 @@ type Draft = {
   state: "pending" | "uploading" | "ready" | "error";
   error?: string;
 };
-const MAX_PHOTO = 5 * 1024 * 1024;
+const MAX_PHOTO = UPLOAD_BYTE_LIMIT;
+const MAX_PAGES = 12;
+const MAX_IMPORT_BYTES = 30 * 1024 * 1024;
 const supported = new Set(["image/jpeg", "image/png", "image/webp"]);
+/** What happened and what to do next, in the owner's words. Keyed by the worker's failure code. */
 const failureHelp: Record<string, string> = {
   invalid_provider_response:
-    "The AI model returned data that could not be validated. Retake blurry photos, split dense columns, or use a vision-capable model.",
+    "No dishes could be read from these photos. Retake them in good light with the page flat and the text sharp, photograph crowded pages in two halves, then start a new import.",
   provider_unavailable:
-    "The configured image-capable provider was unavailable, timed out or rejected the request. Ask the operator to check provider access before trying a fresh import.",
+    "The reading service did not respond, so no dishes were read. This is a problem on our side, not with your photos. Start a new import in a few minutes.",
   source_unavailable:
-    "A private source photograph could not be read or prepared. Start a new import and upload the photo again.",
+    "One of your uploaded photos could not be opened for reading. Start a new import and upload the photos again.",
   processing_failed:
-    "Processing ended unexpectedly. Contact the operator with this import ID for investigation.",
+    "The import stopped before it finished. Start a new import. If it happens again, contact support and quote the import ID below.",
   engine_unavailable:
-    "AI extraction is not enabled on the processing worker. Contact the operator.",
+    "Menu reading is not fully set up on our side yet, so nothing was read. Contact support and quote the import ID below.",
   ambiguous_delivery:
-    "Processing was interrupted and the provider's billing status is uncertain. The request will not be repeated automatically.",
+    "The import was interrupted while a page was being read, and we cannot tell whether that page finished. It is not repeated automatically. Start a new import.",
 };
+const warningHelp: Record<string, string> = {
+  invalid_provider_response: "nothing readable was found on it",
+  provider_unavailable: "the reading service failed while reading it",
+  not_processed: "it was not read, because the reading service failed on an earlier page",
+  truncated_output:
+    "it has more dishes than could be read in one pass, so the last ones are missing",
+};
+const draftStateText: Record<Draft["state"], string> = {
+  pending: "ready to upload",
+  uploading: "uploading…",
+  ready: "uploaded",
+  error: "upload failed",
+};
+const plural = (count: number, word: string) => count + " " + word + (count === 1 ? "" : "s");
 function statusText(status: string) {
   return (
     (
@@ -123,6 +144,7 @@ export function CaptureWizard({
   const [engine, setEngine] = useState(false);
   const [engineReason, setEngineReason] = useState<string>("checking");
   const [consent, setConsent] = useState(false);
+  const [slow, setSlow] = useState(false);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const creation = useRef<{ id: string; key: string } | null>(null);
   const localUrls = useRef(new Set<string>());
@@ -133,11 +155,14 @@ export function CaptureWizard({
         cache: "no-store",
         headers: { "x-outlet-id": outletId, ...options.headers },
       });
-      const body = await response
-        .json()
-        .catch(() => ({ message: "The server did not return a valid response" }));
+      const body = await response.json().catch(() => ({}) as { message?: string });
       if (!response.ok)
-        throw new Error(body.message ?? "Request failed. Your existing photos are safe.");
+        throw new Error(
+          body.message ??
+            "The server could not complete this step (error " +
+              response.status +
+              "). Your uploaded photos are safe; try again."
+        );
       return body as T;
       // The outlet selector is explicit; never depend on a demo/implicit tenant.
     },
@@ -183,9 +208,17 @@ export function CaptureWizard({
     if (!session || !["queued", "processing"].includes(session.status)) return;
     let live = true;
     const timer = window.setInterval(() => {
-      void refresh(session.id).catch(() => {
-        if (live) setNotice("Connection interrupted. Use Refresh to check your existing session.");
-      });
+      void refresh(session.id)
+        .then((next) => {
+          if (live && next.updatedAt)
+            setSlow(Date.now() - Date.parse(next.updatedAt) > SLOW_AFTER_MS);
+        })
+        .catch(() => {
+          if (live)
+            setNotice(
+              "The connection dropped, so this page stopped updating. Your import is still running; press Refresh to see its progress."
+            );
+        });
     }, 4000);
     return () => {
       live = false;
@@ -236,10 +269,11 @@ export function CaptureWizard({
       urls.forEach(URL.revokeObjectURL);
     };
   }, [session?.id, sourceIds, outletId]);
-  async function begin(initialFiles?: File[]) {
+  async function begin(initialFiles?: File[], note = "") {
     if (busy) return;
     setBusy(true);
-    setError("");
+    // Keep any per-photo problem reported while the chosen photos were prepared.
+    if (!initialFiles?.length) setError("");
     setNotice("");
     const command = creation.current ?? { id: crypto.randomUUID(), key: crypto.randomUUID() };
     creation.current = command;
@@ -253,64 +287,101 @@ export function CaptureWizard({
       setDrafts([]);
       setConsent(false);
       const createdSession = await refresh(created.id);
-      if (initialFiles?.length) choose(initialFiles, createdSession);
+      if (initialFiles?.length) place(initialFiles, createdSession, []);
       setNotice(
         initialFiles?.length
-          ? "Photos selected. Review and upload them privately."
+          ? note + "Photos selected. Check the order, then upload them privately."
           : "Private draft created. Your live menu remains unchanged."
       );
       setHistory((prev) => prev.filter((i) => i.id !== created.id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start import. Retry safely.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "The import could not be started. Check your connection and try again."
+      );
     } finally {
       setBusy(false);
     }
   }
-  function choose(files: FileList | File[] | null, target: Session | null = session) {
-    if (!files?.length) return;
-    if (!target) {
-      const chosen = Array.from(files);
-      if (
-        chosen.length > 12 ||
-        chosen.some(
-          (file) => !supported.has(file.type) || file.size === 0 || file.size > MAX_PHOTO
-        ) ||
-        chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024
-      ) {
-        setError(
-          "Choose up to 12 JPEG, PNG or WebP photos, each under 5 MiB and at most 30 MiB combined."
-        );
-        return;
-      }
-      void begin(chosen);
-      return;
-    }
-    if (target.status !== "collecting") return;
+  /**
+   * Validates and prepares the chosen photos, then adds them to the draft (creating one first when
+   * needed). Every refusal names the photo and says what to do; large phone photos are resized
+   * instead of being refused.
+   */
+  async function choose(files: FileList | File[] | null, target: Session | null = session) {
+    // Copy first: the file input is reset right after this call.
+    const picked = files ? Array.from(files) : [];
+    if (!picked.length || busy) return;
+    if (target && target.status !== "collecting") return;
     setError("");
     setNotice("");
-    if (drafts.some((d) => d.state !== "ready")) {
-      setError("Upload or retry your selected batch before choosing more photographs.");
+    if (target && drafts.some((d) => d.state !== "ready")) {
+      setError("Upload or remove the photos you already selected before adding more.");
       return;
     }
-    const chosen = Array.from(files);
-    if (chosen.some((f) => !supported.has(f.type) || f.size === 0 || f.size > MAX_PHOTO)) {
-      setError("Only nonempty JPEG, PNG or WebP files up to 5 MiB each are supported.");
+    const used = target
+      ? target.sources.filter((s) => s.status === "ready").length +
+        drafts.filter((d) => d.state !== "ready").length
+      : 0;
+    const room = MAX_PAGES - used;
+    if (picked.length > room) {
+      setError(
+        room <= 0
+          ? "This import already has 12 photos, the most one import can hold. Start another import for the rest."
+          : "You chose " +
+              plural(picked.length, "photo") +
+              ", but this import has room for " +
+              room +
+              " more (12 in total). Choose fewer, or start another import for the rest."
+      );
       return;
     }
-    if (chosen.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
-      setError("Selected files exceed the 30 MiB import limit.");
+    setBusy(true);
+    setNotice("Preparing your photos…");
+    const prepared: File[] = [];
+    const problems: string[] = [];
+    let resized = 0;
+    for (const file of picked) {
+      try {
+        const result = await preparePhoto(file);
+        prepared.push(result.file);
+        if (result.resized) resized++;
+      } catch (err) {
+        problems.push(
+          err instanceof PhotoError
+            ? err.message
+            : "“" + file.name + "” could not be prepared. Take or choose the photo again."
+        );
+      }
+    }
+    setBusy(false);
+    setNotice("");
+    if (problems.length) setError(problems.join(" "));
+    if (!prepared.length) return;
+    if (prepared.reduce((sum, file) => sum + file.size, 0) > MAX_IMPORT_BYTES) {
+      setError(
+        "Together these photos are over the 30 MiB limit for one import. Add them in two smaller batches or imports."
+      );
       return;
     }
-    const ready = target.sources.filter((s) => s.status === "ready");
+    const note = resized
+      ? plural(resized, "large photo") + (resized === 1 ? " was" : " were") + " resized to fit. "
+      : "";
+    if (!target) {
+      await begin(prepared, note);
+      return;
+    }
+    place(prepared, target);
+    setNotice(note + "Use a clear, flat image with all prices visible.");
+  }
+  /** Assigns page numbers to prepared photos, reusing reserved slots of interrupted uploads. */
+  function place(chosen: File[], target: Session, existing: Draft[] = drafts) {
     const reserved = target.sources
       .filter((s) => s.status !== "ready")
       .sort((a, b) => a.pageIndex - b.pageIndex);
-    if (chosen.length + ready.length + drafts.filter((d) => d.state !== "ready").length > 12) {
-      setError("One draft supports up to 12 photographs. Remove extras or start a new draft.");
-      return;
-    }
     const next =
-      Math.max(-1, ...target.sources.map((s) => s.pageIndex), ...drafts.map((d) => d.pageIndex)) +
+      Math.max(-1, ...target.sources.map((s) => s.pageIndex), ...existing.map((d) => d.pageIndex)) +
       1;
     let cursor = 0;
     const items = chosen.map((file) => {
@@ -328,7 +399,6 @@ export function CaptureWizard({
       };
     });
     setDrafts((prev) => [...prev, ...items]);
-    setNotice("Use a clear, flat image with all prices visible.");
   }
   /** Splitting is user-directed; no automatic guesswork about page layout. */
   async function splitPending(id: string) {
@@ -408,7 +478,11 @@ export function CaptureWizard({
         "Two column crops are ready for private upload. Splitting helps recognition but cannot restore unreadable text."
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not split this photo.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "This photo could not be split. Upload it whole, or crop it on your phone first."
+      );
     } finally {
       bitmap?.close();
       setBusy(false);
@@ -475,18 +549,34 @@ export function CaptureWizard({
             body: item.file,
           }
         );
-        const body = await response
-          .json()
-          .catch(() => ({ message: "Upload response unavailable" }));
-        if (!response.ok) throw new Error(body.message ?? "Upload could not be completed");
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok)
+          throw new Error(
+            body.message ??
+              (response.status === 413
+                ? "This photo is too large to upload. Remove it and add it again so it can be resized."
+                : "The server could not save this photo (error " + response.status + ").")
+          );
         setDrafts((prev) => prev.map((d) => (d.id === item.id ? { ...d, state: "ready" } : d)));
         current = await refresh(current.id);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Upload interrupted";
+        // fetch rejects with a TypeError only when the request never reached the server.
+        const message =
+          err instanceof TypeError
+            ? "The connection dropped before this photo was sent."
+            : err instanceof Error
+              ? err.message
+              : "The upload was interrupted.";
         setDrafts((prev) =>
           prev.map((d) => (d.id === item.id ? { ...d, state: "error", error: message } : d))
         );
-        setError("An upload stopped. Retry uses the same source ID; nothing is published.");
+        setError(
+          "Page " +
+            (item.pageIndex + 1) +
+            " was not uploaded: " +
+            message +
+            " Pages already uploaded are saved. Fix or remove this page, then press Upload again."
+        );
         break;
       }
     }
@@ -505,7 +595,11 @@ export function CaptureWizard({
       await refresh(session.id);
       setNotice("Import cancelled. Stored photos remain private under the retention policy.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Cancellation failed; refresh the status.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "The import could not be cancelled. Refresh to see its current state."
+      );
     } finally {
       setBusy(false);
     }
@@ -523,7 +617,11 @@ export function CaptureWizard({
       await refresh(session.id);
       setNotice("Extraction queued. This is a review draft, never an automatic menu change.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start extraction.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Reading could not be started. Your photos are saved; try again."
+      );
     } finally {
       setBusy(false);
     }
@@ -538,7 +636,7 @@ export function CaptureWizard({
   function onDrop(event: React.DragEvent<HTMLElement>) {
     event.preventDefault();
     setDragging(false);
-    if (!busy) choose(event.dataTransfer.files);
+    if (!busy) void choose(event.dataTransfer.files);
   }
   function showHistory() {
     if (
@@ -589,7 +687,7 @@ export function CaptureWizard({
               <ShieldCheck className="size-4" /> Private photos
             </span>
             <span>Up to 12 pages</span>
-            <span>5 MiB / photo · 30 MiB total</span>
+            <span>Large photos are resized automatically</span>
             <span>{currency}</span>
           </div>
         </div>
@@ -670,7 +768,7 @@ export function CaptureWizard({
                   capture="environment"
                   disabled={busy}
                   onChange={(event) => {
-                    choose(event.target.files);
+                    void choose(event.target.files);
                     event.target.value = "";
                   }}
                 />
@@ -685,7 +783,7 @@ export function CaptureWizard({
                   multiple
                   disabled={busy}
                   onChange={(event) => {
-                    choose(event.target.files);
+                    void choose(event.target.files);
                     event.target.value = "";
                   }}
                 />
@@ -824,7 +922,7 @@ export function CaptureWizard({
                         className="sr-only"
                         disabled={busy}
                         onChange={(e) => {
-                          choose(e.target.files);
+                          void choose(e.target.files);
                           e.target.value = "";
                         }}
                       />
@@ -840,7 +938,7 @@ export function CaptureWizard({
                         className="sr-only"
                         disabled={busy}
                         onChange={(e) => {
-                          choose(e.target.files);
+                          void choose(e.target.files);
                           e.target.value = "";
                         }}
                       />
@@ -867,7 +965,7 @@ export function CaptureWizard({
                           <p className="truncate text-sm font-bold text-stone-900">{d.file.name}</p>
                           <p className="text-xs text-stone-600">
                             Page {d.pageIndex + 1} · {(d.file.size / 1048576).toFixed(2)} MiB ·{" "}
-                            {d.state}
+                            {draftStateText[d.state]}
                           </p>
                           {d.error && (
                             <p role="alert" className="text-xs text-red-700">
@@ -1004,23 +1102,22 @@ export function CaptureWizard({
                 </div>
                 {!engine ? (
                   <p className="mt-2 text-sm text-stone-600">
-                    Extraction is currently unavailable. Your {totalCount} stored page(s) remain
-                    private.{" "}
-                    {engineReason === "provider_approval_required"
-                      ? "Provider commercial approval is required before extraction can start."
-                      : engineReason === "model_unconfigured"
-                        ? "The extraction model is not configured on this deployment."
-                        : engineReason === "checking"
-                          ? "Checking availability."
-                          : "You can return when the licensed extraction service is enabled."}
+                    Extraction is currently unavailable, so these photos cannot be read into dishes
+                    yet. Your {plural(totalCount, "uploaded page")}{" "}
+                    {totalCount === 1 ? "stays" : "stay"} private and saved.{" "}
+                    {engineReason === "checking"
+                      ? "Checking availability…"
+                      : engineReason === "unavailable"
+                        ? "We could not check availability. Refresh the page to try again."
+                        : "Menu reading has not been switched on for this service yet. You can add dishes by hand in Menu Studio in the meantime."}
                   </p>
                 ) : (
                   <>
                     <p className="mt-2 text-sm text-stone-600">
-                      This sends your saved photos to the configured AI provider for transcription.
-                      A person must verify the resulting draft; it never publishes automatically.
-                      The processing worker verifies its own provider configuration when the job
-                      runs; this status does not guarantee provider availability.
+                      This sends your saved photos to our AI reading service, which turns them into
+                      a draft list of dishes and prices. It uses one AI credit per photo. You check
+                      every entry before anything is added to a menu, and nothing is published
+                      automatically.
                     </p>
                     <label className="mt-3 flex items-start gap-2 text-sm text-stone-700">
                       <input
@@ -1054,20 +1151,38 @@ export function CaptureWizard({
             )}
             {["queued", "processing"].includes(session.status) && (
               <p role="status" className="mt-5 rounded-xl bg-orange-50 p-4 text-sm text-orange-900">
-                Your draft is being processed. This page checks progress automatically; returning
-                later is safe.
+                Reading your photos. Each page can take up to a minute. This page updates on its
+                own, and it is safe to leave and come back.
+                {slow && (
+                  <span className="mt-2 block font-semibold">
+                    This is taking longer than expected and may be stuck in a queue. You can keep
+                    waiting, or cancel below and start a new import. Pages that were never sent do
+                    not use AI credits.
+                  </span>
+                )}
               </p>
             )}
             {session.status === "failed" && (
               <div role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">
                 <p className="font-semibold">
-                  The engine could not produce a trustworthy draft. Nothing has been published.
+                  This import did not produce a draft. Your menu is unchanged and nothing was
+                  published.
                 </p>
                 <p className="mt-1">
                   {failureHelp[session.engineResult?.errorCode ?? ""] ??
-                    "Start a fresh private import after checking the photographs and provider configuration."}
+                    failureHelp["processing_failed"]}
                 </p>
-                <p className="mt-2 text-xs">
+                <p className="mt-1">
+                  You are not charged AI credits for pages that were never sent.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => showHistory()}
+                  className="scan-action scan-action--secondary mt-3"
+                >
+                  Start a new import
+                </button>
+                <p className="mt-3 text-xs">
                   Import ID: <code className="select-all">{session.id}</code>
                   {session.engineResult?.errorCode &&
                     " · Reason: " + session.engineResult.errorCode}
@@ -1104,9 +1219,25 @@ export function CaptureWizard({
                   role="status"
                   className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
                 >
-                  Partial extraction: {session.candidate.document.sourceWarnings.length}{" "}
-                  photographed page(s) were missing or incomplete. Review the other pages carefully;
-                  missing entries must be added manually or reimported from a clearer photograph.
+                  <p className="font-semibold">
+                    {plural(session.candidate.document.sourceWarnings.length, "page")} could not be
+                    read in full. The other pages are below.
+                  </p>
+                  <ul className="mt-1 list-disc pl-5">
+                    {session.candidate.document.sourceWarnings.map((warning) => {
+                      const source = session.sources.find((s) => s.id === warning.sourceId);
+                      return (
+                        <li key={warning.sourceId}>
+                          {source ? "Page " + (source.pageIndex + 1) : "One page"}:{" "}
+                          {warningHelp[warning.reason] ?? "it could not be read"}.
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-1">
+                    Add the missing dishes by hand in Menu Studio, or start a new import with
+                    clearer photos of those pages.
+                  </p>
                 </div>
               )}
               <Link

@@ -56,6 +56,19 @@
   letter-spacing: 0.15em;
   line-height: 1.5;
 }
+/* Same availability pill as sections 04 and 05, so "available now" reads consistently. */
+.ma-availability {
+  display: table;
+  margin: 13px auto 0;
+  border: 1px solid var(--ma-edge);
+  border-radius: 40px;
+  background: var(--ma-quiet);
+  color: var(--ma-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  padding: 8px 14px;
+}
 .ma-intro h2 {
   font-family: var(--font-display), sans-serif;
   font-size: clamp(2.4rem, 4.75vw, 4.75rem);

@@ -11,12 +11,15 @@ test("Menu Alchemy follows the Journey and preserves the existing product links"
   await expect(journey).toBeVisible();
   await expect(alchemy).toBeVisible();
   await expect(alchemy.getByRole("heading", { name: /Your menu already exists/i })).toBeVisible();
-  await expect(alchemy.getByText(/COMING SOON — SMART MENU IMPORT/i)).toBeVisible();
+  await expect(alchemy.getByText("03 / SMART MENU IMPORT")).toBeVisible();
+  await expect(alchemy).not.toContainText(/coming soon|in development/i);
   await expect(alchemy.getByRole("link", { name: /Create your free menu today/i })).toHaveAttribute(
     "href",
     "/register"
   );
-  await expect(alchemy.getByText(/Manual menu creation is available now/i)).toBeVisible();
+  await expect(
+    alchemy.getByText(/Photo import uses the AI credits included in your plan/i)
+  ).toBeVisible();
   await expect(
     page.getByTestId("service-worlds").getByRole("heading", { name: /Different kitchens/i })
   ).toBeVisible();

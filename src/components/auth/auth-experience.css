@@ -638,6 +638,19 @@
   flex: none;
   accent-color: var(--auth-accent);
 }
+/* The consent sentence is one inline run beside its checkbox. As bare flex children each phrase
+   and link became its own item, which split the sentence across ragged rows on phones. */
+.mm-auth-form > .mm-auth-consent {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+.mm-auth-consent > span {
+  flex: 1;
+  min-width: 0;
+}
+.mm-auth-consent input[type="checkbox"] {
+  margin-top: 2px;
+}
 @media (max-width: 440px) {
   .mm-auth-card h1 {
     font-size: clamp(27px, 7.8vw, 34px);

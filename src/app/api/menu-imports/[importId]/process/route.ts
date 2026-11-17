@@ -5,7 +5,7 @@ import { requestContext, errorResponse } from "@/lib/request-context";
 import { boundedJson } from "@/lib/bounded-input";
 import { AppError } from "@/lib/errors";
 import { submitImportForProcessing } from "@/modules/menu-import/service";
-import { domainError } from "@/modules/organizations/service";
+import { importDomainError } from "@/modules/menu-import/errors";
 import { importId } from "@/modules/menu-import/contracts";
 import { importEngineEnabled } from "@/modules/menu-import/nvidia";
 type C = { params: Promise<{ importId: string }> };
@@ -27,7 +27,7 @@ async function observed_POST(req: Request, c: C) {
     try {
       result = await submitImportForProcessing(actor, restaurant.id, id, input.expectedRevision);
     } catch (err) {
-      domainError(err);
+      importDomainError(err);
     }
     return NextResponse.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (err) {

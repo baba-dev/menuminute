@@ -59,10 +59,10 @@ export default async function HomePage() {
       {/* A three-stage illustrated story, following the Food Orbit hero. */}
       <MenuJourney />
 
-      {/* Editorial preview of planned smart import; no inference runs on this page. */}
+      {/* Illustrated story of photo-to-menu import; no inference runs on this page. */}
       <MenuAlchemy />
 
-      {/* Section 4: illustrated preview of future dine-in and pickup ordering. */}
+      {/* Section 4: illustrated story of dine-in and pickup ordering. */}
       <OrderConveyor />
 
       {/* Section 5: illustrated multi-station Kitchen Pro concept, not a live KDS. */}

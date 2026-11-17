@@ -18,7 +18,7 @@ Approved product mark: orange menu-book with clock, **MenuMinute by BabaBuilds**
 
 ## Motion interaction contract
 
-`src/components/marketing/brand/brand-nav-logo.tsx` observes the resolved `html[data-theme]` attribute, as managed by existing ThemeSync. It server-renders a static fallback and mounts the relevant external transparent SVG after hydration. `key={mode}` means **one play on initial mount, hold at final frame, replay only on a resolved-theme change**. Do not change key on normal renders or loop CSS. The parent home link provides the accessible name, and the decorative SVG is hidden from assistive technology. The SVG itself honors `prefers-reduced-motion` and shows the final logo without transition. Test light, dark, theme changes, mobile and reduced motion.
+`src/components/marketing/brand/brand-nav-logo.tsx` observes the resolved `html[data-theme]` attribute, as managed by existing ThemeSync. It server-renders a static fallback and mounts the relevant external transparent SVG after hydration as an `<img>` (never `<object>`: the site CSP sets `object-src 'none'`). `key={mode}` means **one play on initial mount, hold at final frame, replay only on a resolved-theme change**. Do not change key on normal renders or loop CSS. The parent home link provides the accessible name, and the decorative SVG is hidden from assistive technology. The SVG itself honors `prefers-reduced-motion` and shows the final logo without transition. Test light, dark, theme changes, mobile and reduced motion.
 
 ## Scope / handoff
 

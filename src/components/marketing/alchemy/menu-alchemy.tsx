@@ -171,22 +171,20 @@ export function MenuAlchemy() {
         <header className="ma-intro">
           <span className="ma-kicker">
             <Sparkles size={14} aria-hidden="true" />
-            03 / COMING SOON — SMART MENU IMPORT
+            03 / SMART MENU IMPORT
           </span>
+          <span className="ma-availability">PHOTO IMPORT · AVAILABLE NOW</span>
           <h2 id="menu-alchemy-heading">
             Your menu already exists.
             <span>Why type it all again?</span>
           </h2>
           <p>
-            We&apos;re building a smarter way to bring your restaurant online. Turn photos of your
-            existing menu into organized, editable dish records with prices and suggested imagery.
+            Photograph your printed menu and MenuMinute reads it into organised, editable dishes and
+            prices. You check every entry against the photo before anything is added to your menu.
           </p>
         </header>
 
-        <div
-          className="ma-stage"
-          aria-label="Illustrated preview of the proposed menu import experience"
-        >
+        <div className="ma-stage" aria-label="Illustrated preview of the menu import experience">
           <div
             ref={artRef}
             className="ma-desktop-art"
@@ -240,7 +238,7 @@ export function MenuAlchemy() {
         </div>
 
         <div className="ma-toolbar">
-          <span className="ma-sample-note">Illustrative preview · No live import is performed</span>
+          <span className="ma-sample-note">Illustrative preview with a sample menu</span>
           <div className="ma-controls" role="group" aria-label="Illustration playback controls">
             <button
               type="button"
@@ -279,7 +277,7 @@ export function MenuAlchemy() {
             </span>
             <i aria-hidden="true" />
             <span>
-              <ScanText size={17} aria-hidden="true" /> Organize
+              <ScanText size={17} aria-hidden="true" /> Organise
             </span>
             <i aria-hidden="true" />
             <span>
@@ -295,7 +293,8 @@ export function MenuAlchemy() {
             Create your free menu today <ArrowRight size={18} aria-hidden="true" />
           </Link>
           <p className="ma-cta-note">
-            Manual menu creation is available now; smart photo import is in development.
+            Photo import uses the AI credits included in your plan. Prefer typing? Add dishes by
+            hand any time.
           </p>
         </div>
       </div>

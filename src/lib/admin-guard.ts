@@ -3,7 +3,7 @@ import { getDb } from "@/db";
 import { users, adminAuditLogs } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ForbiddenError } from "@/lib/errors";
 import { withActor } from "@/modules/tenancy/service";
 import { trustedAuditIp } from "@/lib/trusted-audit-source";
@@ -35,9 +35,9 @@ export async function verifySuperAdmin(): Promise<AdminActor> {
 
   const isSuper = user.isSuperAdmin;
   if (!isSuper) {
-    throw new ForbiddenError(
-      "Superadmin privileges required to access the Platform Control Plane."
-    );
+    // Deny as "not found": an uncaught ForbiddenError rendered a 500 error page for any signed-in
+    // account that opened /admin, and confirmed that the control plane exists.
+    notFound();
   }
 
   // Superadmins MUST have 2FA enabled

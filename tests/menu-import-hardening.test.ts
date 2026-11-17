@@ -3,6 +3,8 @@ import sharp from "sharp";
 import {
   extractNvidiaCandidate,
   NvidiaExtractionError,
+  importRetryDelay,
+  normalizePrintedPrice,
   salvageTruncatedJson,
 } from "../src/modules/menu-import/nvidia";
 import { mergeCandidateCategories, normalizeLabel } from "../src/modules/menu-import/merge";
@@ -23,9 +25,11 @@ const reply = (content: string, finish_reason = "stop") =>
 const page = (...categories: unknown[]) => JSON.stringify({ categories });
 async function run(
   replies: Array<() => Response | Promise<Response>>,
-  guard?: () => Promise<void>
+  guard?: () => Promise<void>,
+  // Retries consume extra replies, so the number of photographs can be smaller.
+  pages = replies.length
 ) {
-  const ids = replies.map(() => crypto.randomUUID());
+  const ids = Array.from({ length: pages }, () => crypto.randomUUID());
   let call = 0;
   const run = extractNvidiaCandidate(
     {
@@ -36,6 +40,7 @@ async function run(
       ),
       model: "example/vision",
       apiKey: "k",
+      wait: async () => undefined,
       ...(guard ? { guard } : {}),
     },
     async () => replies[call++]!()
@@ -91,11 +96,18 @@ it("still skips a truncated page that has nothing salvageable", async () => {
 });
 
 it("keeps earlier pages when the provider fails later, flagging the rest", async () => {
-  const { ids, run: pending } = await run([
-    () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
-    () => new Response("down", { status: 503 }),
-    () => reply(page({ name: "never", items: [{ name: "sent", price: "1" }] })),
-  ]);
+  const { ids, run: pending } = await run(
+    [
+      () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
+      // Page 2 is refused on its first attempt and on both retries.
+      () => new Response("down", { status: 503 }),
+      () => new Response("down", { status: 503 }),
+      () => new Response("down", { status: 503 }),
+      () => reply(page({ name: "never", items: [{ name: "sent", price: "1" }] })),
+    ],
+    undefined,
+    3
+  );
   const out = await pending;
   expect(out.usage.requests).toBe(2);
   expect(out.candidate.categories).toHaveLength(1);
@@ -233,4 +245,155 @@ it("normalizes labels without losing distinct names", () => {
 
 it("merge keeps identities and order of first appearance", () => {
   expect(mergeCandidateCategories([])).toEqual([]);
+});
+
+it("reads a page whose format deviates harmlessly instead of discarding the photograph", async () => {
+  const { run: pending } = await run([
+    () =>
+      reply(
+        "<think>two columns, prices on the right</think>Here is the menu:\n\x60\x60\x60json\n" +
+          JSON.stringify({
+            restaurant: "ignored extra key",
+            categories: [
+              {
+                name: "",
+                items: [
+                  { name: "Masala Dosa", price: 120, confidence: 0.9 },
+                  { name: "Idli", price: "Rs. 1,250/-", uncertain: null },
+                  { name: "", price: "40" },
+                  { name: "Vada", price: "12,50" },
+                ],
+              },
+              { name: "Empty", items: null },
+            ],
+          }) +
+          "\n\x60\x60\x60\nLet me know if you need anything else."
+      ),
+  ]);
+  const out = await pending;
+  expect(out.candidate.sourceWarnings).toBeUndefined();
+  expect(out.candidate.categories).toHaveLength(1);
+  const [category] = out.candidate.categories;
+  // A missing heading is unreadable, never invented.
+  expect(category?.name).toMatchObject({ value: null, review: "unreadable" });
+  expect(category?.items.map((item) => [item.name.value, item.priceMinor.value])).toEqual([
+    ["Masala Dosa", 12000],
+    ["Idli", 125000],
+    // A decimal comma is ambiguous, so the reviewer decides.
+    ["Vada", null],
+  ]);
+  expect(category?.items[1]?.priceMinor.evidence[0]?.excerpt).toBe("Rs. 1,250/-");
+});
+
+it("accepts a bare list of categories and a multi-part message", async () => {
+  const { run: pending } = await run([
+    () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify([
+                      { name: "Tea", items: [{ name: "Chai", price: "₹10" }] },
+                    ]),
+                  },
+                ],
+              },
+              finish_reason: "stop",
+            },
+          ],
+        })
+      ),
+  ]);
+  const out = await pending;
+  expect(out.candidate.categories[0]?.items[0]?.priceMinor.value).toBe(1000);
+});
+
+it("still rejects prose and never treats it as a menu", async () => {
+  const { run: pending } = await run([() => reply("I could not find a menu in this image.")]);
+  await expect(pending).rejects.toMatchObject({ code: "invalid_provider_response" });
+});
+
+it("strips only unambiguous price decoration", () => {
+  expect(normalizePrintedPrice("₹299")).toBe("299");
+  expect(normalizePrintedPrice("Rs. 1,299/-")).toBe("1299");
+  expect(normalizePrintedPrice("1,29,900.50")).toBe("129900.50");
+  expect(normalizePrintedPrice("12.50 USD")).toBe("12.50");
+  expect(normalizePrintedPrice("12,50")).toBe("12,50");
+  expect(normalizePrintedPrice("120 / 180")).toBe("120 / 180");
+});
+
+it("recovers a rate-limited page on retry without counting it twice", async () => {
+  const { run: pending } = await run(
+    [
+      () => new Response("slow down", { status: 429, headers: { "retry-after": "1" } }),
+      () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] })),
+    ],
+    undefined,
+    1
+  );
+  const out = await pending;
+  expect(out.candidate.sourceWarnings).toBeUndefined();
+  expect(out.candidate.categories[0]?.items[0]?.name.value).toBe("Chai");
+  // Credits and the request cap follow pages, not attempts.
+  expect(out.usage.requests).toBe(1);
+});
+
+it("never repeats a request that may have been billed", async () => {
+  // A timeout, a dropped connection, a client error and a plain server error are each sent once:
+  // were any of them retried, the readable second reply would turn the import into a success.
+  for (const failure of [
+    () => Promise.reject(new DOMException("timed out", "TimeoutError")),
+    () => Promise.reject(new TypeError("fetch failed")),
+    () => new Response("bad key", { status: 401 }),
+    () => new Response("oops", { status: 500 }),
+  ]) {
+    const { run: pending } = await run(
+      [failure, () => reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] }))],
+      undefined,
+      1
+    );
+    await expect(pending).rejects.toMatchObject({ code: "provider_unavailable" });
+  }
+});
+
+it("stops retrying as soon as the lease check refuses", async () => {
+  let checks = 0;
+  let sent = 0;
+  const { run: pending } = await run(
+    [
+      () => {
+        sent++;
+        return new Response("busy", { status: 503 });
+      },
+      () => {
+        sent++;
+        return reply(page({ name: "Tea", items: [{ name: "Chai", price: "10" }] }));
+      },
+    ],
+    async () => {
+      // Two checks precede the first attempt; the third guards the retry.
+      if (++checks > 2)
+        throw new NvidiaExtractionError("provider_unavailable", {
+          requests: 1,
+          inputTokens: null,
+          outputTokens: null,
+        });
+    },
+    1
+  );
+  await expect(pending).rejects.toMatchObject({ code: "provider_unavailable" });
+  expect(sent).toBe(1);
+});
+
+it("bounds the pause and honours a longer Retry-After", () => {
+  expect(importRetryDelay(null, 0)).toBe(2000);
+  expect(importRetryDelay(null, 1)).toBe(8000);
+  expect(importRetryDelay("5", 0)).toBe(5000);
+  expect(importRetryDelay("1", 1)).toBe(8000);
+  expect(importRetryDelay("600", 0)).toBe(30000);
+  expect(importRetryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 0)).toBe(2000);
 });

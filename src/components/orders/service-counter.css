@@ -1258,3 +1258,28 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Between the phone layout and wide desktops the sidebar leaves the hero ~700–1200px wide, where
+   the headline and actions ran across the artwork's subject. Keep the copy in the calm left
+   portion and lift it off the photograph with a stronger scrim. */
+@media (min-width: 681px) and (max-width: 1439px) {
+  .sc-hero-copy {
+    max-width: min(520px, 47%);
+  }
+  .sc-hero::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 247, 234, 0.88) 0%,
+      rgba(255, 247, 234, 0.62) 38%,
+      transparent 60%
+    );
+  }
+  :root[data-theme="dark"] .sc-hero::before {
+    background: linear-gradient(
+      90deg,
+      rgba(23, 16, 13, 0.88) 0%,
+      rgba(23, 16, 13, 0.6) 38%,
+      transparent 60%
+    );
+  }
+}

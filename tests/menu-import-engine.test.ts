@@ -205,8 +205,9 @@ it("retains good pages and records rejected ones without bypassing review", asyn
     { sourceId: bad, reason: "invalid_provider_response" },
   ]);
 });
-it("does not issue more billable pages following an unavailable provider", async () => {
+it("retries a refused page a bounded number of times and never sends later pages after it fails", async () => {
   let calls = 0;
+  const waits: number[] = [];
   await expect(
     extractNvidiaCandidate(
       {
@@ -218,14 +219,17 @@ it("does not issue more billable pages following an unavailable provider", async
         ],
         model: "example/vision",
         apiKey: "k",
+        wait: async (ms) => void waits.push(ms),
       },
       async () => {
         calls++;
         return new Response("upstream failure", { status: 503 });
       }
     )
-  ).rejects.toMatchObject({ code: "provider_unavailable" });
-  expect(calls).toBe(1);
+  ).rejects.toMatchObject({ code: "provider_unavailable", usage: { requests: 1 } });
+  // One attempt plus two retries for page 1; page 2 is never sent.
+  expect(calls).toBe(3);
+  expect(waits).toEqual([2000, 8000]);
 });
 it("durably queues, meters, and writes a review-only candidate using the restricted worker role", async () => {
   const base = await fs.mkdtemp(path.join(os.tmpdir(), "menu-nim-test-"));

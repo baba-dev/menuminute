@@ -3,8 +3,8 @@ import { UtensilsCrossed, Package, Clock, CalendarDays, HelpCircle } from "lucid
 import { OutletTimezonePicker } from "../timezone-picker";
 import { BusinessHoursEditor } from "../business-hours-editor";
 import type { WizardDraft } from "../wizard-types";
+import { useSupportedCurrencies } from "@/lib/use-intl-options";
 
-const currencies = Intl.supportedValuesOf("currency");
 export function StepOperations({
   draft,
   onChange,
@@ -12,6 +12,7 @@ export function StepOperations({
   draft: WizardDraft;
   onChange: <K extends keyof WizardDraft>(key: K, value: WizardDraft[K]) => void;
 }) {
+  const currencies = useSupportedCurrencies(draft.currency || undefined);
   const hasPickup = draft.fulfillmentModes.includes("pickup");
   const toggle = (mode: "dine_in" | "pickup") => {
     const active = draft.fulfillmentModes.includes(mode);

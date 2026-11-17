@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
-import { domainError } from "@/modules/organizations/service";
+import { importDomainError } from "./errors";
 import { ValidationError } from "@/lib/errors";
 import { menuDocumentSchema, type MenuDocument } from "@/modules/menu-product/contracts";
 import { invalidateOutletMenuCache } from "@/modules/menu-product/service";
@@ -139,7 +139,7 @@ export async function saveReview(actor: Actor, outletId: string, rawId: string, 
         ).rows[0]!.result
     );
   } catch (err) {
-    domainError(err);
+    importDomainError(err);
   }
 }
 export async function applyReview(actor: Actor, outletId: string, rawId: string, raw: unknown) {
@@ -169,6 +169,6 @@ export async function applyReview(actor: Actor, outletId: string, rawId: string,
     await invalidateOutletMenuCache(outletId);
     return result;
   } catch (err) {
-    domainError(err);
+    importDomainError(err);
   }
 }

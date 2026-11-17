@@ -45,26 +45,22 @@ export function BrandNavLogo() {
 
   return (
     <span className="mm-brand-nav-logo" data-testid="brand-nav-logo" data-brand-mode={mode}>
-      {/* A keyed external SVG runs once on mount and holds its final frame.
-          Only a genuine resolved-theme change swaps the object and replays it. */}
-      <object
+      {/* A keyed external SVG runs once on mount and holds its final frame; only a genuine
+          resolved-theme change swaps the image and replays it. This is an <img>, not an
+          <object>: the site CSP sets `object-src 'none'`, which blocked the embed (and logged a
+          violation on every page). CSS animation inside the SVG still runs in an <img>. */}
+      <Image
         key={mode}
-        type="image/svg+xml"
-        data={`/brand/motion/logo-reveal-${mode}-nav.svg`}
+        src={`/brand/motion/logo-reveal-${mode}-nav.svg`}
+        alt=""
+        width={660}
+        height={156}
+        unoptimized
+        priority
         data-testid="brand-nav-motion"
         data-brand-mode={mode}
-        aria-hidden="true"
-        tabIndex={-1}
         className="mm-brand-nav-logo__motion pointer-events-none"
-      >
-        <Image
-          src={`/brand/logos/logo-horizontal-${mode}.svg`}
-          alt=""
-          width={660}
-          height={156}
-          unoptimized
-        />
-      </object>
+      />
     </span>
   );
 }
