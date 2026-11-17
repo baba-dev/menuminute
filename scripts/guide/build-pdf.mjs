@@ -64,10 +64,10 @@ h1 .hi{font-size:22pt;line-height:1.3;color:var(--orange);font-weight:700;margin
 .lead .en{font-size:11pt;line-height:1.45;color:var(--ink)}
 .lead .hi{font-size:10.5pt;line-height:1.65;color:var(--muted);margin-top:1mm}
 /* cover */
-.cover .art{position:absolute;left:0;right:0;top:128mm;height:136mm}
+.cover .art{position:absolute;left:0;right:0;top:128mm;height:140mm}
 .cover h1 .en{font-size:42pt}.cover h1 .hi{font-size:30pt}
 .cover h1 .o{color:var(--orange)}
-.strip{position:absolute;left:0;right:0;bottom:25mm;height:17mm;background:var(--orange);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 16mm}
+.strip{position:absolute;left:0;right:0;bottom:21mm;height:34mm;background:var(--orange);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 16mm}
 .strip .en{font-size:10.5pt;font-weight:500}.strip .hi{font-size:9.5pt;opacity:.95}
 .tag{display:inline-block;margin-top:5mm;padding:1mm 3.5mm;border:1px solid var(--orange);color:var(--orange);border-radius:99px;font-size:7.5pt;letter-spacing:.14em;font-weight:700}
 .art{overflow:hidden;background:#F3C79B}
@@ -100,11 +100,11 @@ h1 .hi{font-size:22pt;line-height:1.3;color:var(--orange);font-weight:700;margin
 .road .t .en{font-size:10.5pt;font-weight:500}.road .t .hi{font-size:10pt;color:var(--muted);line-height:1.55}
 .road .c{font-size:8pt;font-weight:700;color:var(--orange-d);background:var(--cream);padding:1mm 3mm;border-radius:99px;white-space:nowrap}
 /* chapter title page */
-.chap .art{position:absolute;left:0;right:0;top:0;height:150mm}
-.chap .art-fade{position:absolute;left:0;right:0;top:112mm;height:38mm;background:linear-gradient(to bottom,rgba(254,246,232,0),var(--bg))}
+.chap .art{position:absolute;left:0;right:0;top:0;height:140mm}
+.chap .art-fade{position:absolute;left:0;right:0;top:106mm;height:34mm;background:linear-gradient(to bottom,rgba(254,246,232,0),var(--bg))}
 .chap .logo{position:absolute;left:16mm;top:11mm;background:rgba(255,246,232,.92);border-radius:4mm;padding:2mm 4mm}
 .chap .logo img{height:11mm;display:block}
-.chap .body{position:absolute;left:16mm;right:16mm;top:150mm}
+.chap .body{position:absolute;left:16mm;right:16mm;top:146mm}
 .chap .big{font-size:78pt;font-weight:700;color:var(--orange);line-height:.9;letter-spacing:-.04em}
 .chap .learn{margin-top:6mm;display:grid;grid-template-columns:1fr;gap:1.8mm}
 .chap .learn .l{display:grid;grid-template-columns:6mm 1fr;gap:3mm;align-items:start}
@@ -155,6 +155,31 @@ h1 .hi{font-size:22pt;line-height:1.3;color:var(--orange);font-weight:700;margin
 .help{margin-top:4mm;background:var(--orange);color:#fff;border-radius:5mm;padding:3.5mm 6mm}
 .help .en{font-size:13pt;font-weight:700}.help .hi{font-size:12pt;font-weight:700}
 .help .row{margin-top:2.5mm;font-size:10.5pt;display:flex;gap:8mm;font-weight:500}
+
+/* colour pass: per-page accent themes, tinted header band, panels */
+:root{--cream:#FFE6BF;--mint:#CDE7D3;--lav:#DDD0EF;--blue:#CBDFF2}
+.t0{--a:#E8502A;--p:#FFDFCC}.t1{--a:#7A3E8E;--p:#E6D6F2}.t2{--a:#2F7D57;--p:#CFEAD8}.t3{--a:#2F6FA8;--p:#D2E4F7}.t4{--a:#C9810A;--p:#FFE6B0}
+.page{--a:var(--orange);--p:#FFE3D2;isolation:isolate}
+.band{position:absolute;left:0;right:0;top:0;height:96mm;z-index:-1;background:linear-gradient(180deg,var(--p) 0%,var(--p) 58%,var(--bg) 100%)}
+.band svg{position:absolute;right:-6mm;top:-4mm;width:96mm;height:96mm}
+.ghost{position:absolute;right:16mm;top:27mm;font-size:104pt;font-weight:700;line-height:1;color:var(--a);opacity:.2;z-index:-1;letter-spacing:-.04em}
+.eyebrow{color:var(--a)}
+h1 .hi{color:var(--a)}
+.stepno .b{background:var(--a)}
+.foot b{color:var(--a)}
+.visuals{background:var(--p);border-radius:7mm;padding:5mm 5mm 3mm;gap:6mm;justify-content:center;margin-top:4mm}
+.ins{margin-top:4mm;gap:2mm}
+.ins .i{background:#fff;border-radius:4mm;padding:1.5mm 4mm;border-left:1.4mm solid var(--a)}
+.note{margin-top:4mm}
+.sect h2 .hi{color:var(--a)}
+.chap .tagbar{background:var(--a)}.chap .learn .dot{background:var(--a)}
+.chap .big{color:var(--a)}
+.card.cream{border-top:2mm solid #F0A93B}.card.mint{border-top:2mm solid #4E9C6E}.card.lav{border-top:2mm solid #8E5BB0}.card.blue{border-top:2mm solid #4A89C4}
+.word{border-left:1.4mm solid var(--a)}
+.toc .row:nth-child(5n+1) .n{background:#FFDFCC;color:#C23E1B}.toc .row:nth-child(5n+2) .n{background:#E6D6F2;color:#7A3E8E}.toc .row:nth-child(5n+3) .n{background:#CFEAD8;color:#2F7D57}.toc .row:nth-child(5n+4) .n{background:#D2E4F7;color:#2F6FA8}.toc .row:nth-child(5n) .n{background:#FFE6B0;color:#9A6200}
+.toc .row.on .n{background:var(--orange);color:#fff}
+.road .s:nth-child(5n+1) .k{background:#E8502A}.road .s:nth-child(5n+2) .k{background:#7A3E8E}.road .s:nth-child(5n+3) .k{background:#2F7D57}.road .s:nth-child(5n+4) .k{background:#2F6FA8}.road .s:nth-child(5n) .k{background:#C9810A}
+.checks .c{border-left:1.4mm solid var(--a)}
 `;
 
 /** Placeholder scene used until public/guide/art/chapter-NN.jpg exists. */
@@ -187,6 +212,8 @@ function art(n) {
   return existsSync(jpg) ? `<img src="${pathToFileURL(jpg).href}" alt="">` : placeholderArt(n);
 }
 
+const band = (ghost = "") =>
+  `<div class="band"><svg viewBox="0 0 100 100"><path d="M8 100V52a42 42 0 0 1 84 0v48z" style="fill:var(--a);opacity:.16"/><path d="M20 100V54a30 30 0 0 1 60 0v46z" style="fill:var(--a);opacity:.16"/><path d="M8 100V52a42 42 0 0 1 84 0v48" style="fill:none;stroke:var(--a);stroke-width:.8;opacity:.5"/></svg></div>${ghost ? `<div class="ghost">${ghost}</div>` : ""}`;
 let pageNo = 0;
 const footer = () => {
   pageNo += 1;
@@ -213,7 +240,7 @@ ${top("Made for restaurant owners · रेस्टोरेंट मालि
 
 function howTo() {
   const h = HOW_TO_READ;
-  return `<section class="page">
+  return `<section class="page t3">${band()}
 ${top("Start here · यहाँ से शुरू करें")}
 <div class="eyebrow">${bi({ en: "BEFORE YOU BEGIN", hi: "शुरू करने से पहले" })}</div>
 <h1 style="margin-top:3mm">${bi(h.title)}</h1>
@@ -232,7 +259,7 @@ ${footer()}</section>`;
 }
 
 function contents() {
-  return `<section class="page">
+  return `<section class="page t4">${band()}
 ${top("Start here · यहाँ से शुरू करें")}
 <div class="eyebrow">${bi({ en: "WHAT IS INSIDE", hi: "अंदर क्या है" })}</div>
 <h1 style="margin-top:3mm">${bi({ en: "Chapters and your first day", hi: "चैप्टर और आपका पहला दिन" })}</h1>
@@ -253,7 +280,7 @@ ${footer()}</section>`;
 }
 
 function chapterTitle(ch) {
-  return `<section class="page chap">
+  return `<section class="page chap t${(ch.no - 1) % 5}">
 <div class="art">${art(ch.no)}</div><div class="art-fade"></div>
 <div class="logo"><img src="${logo}" alt="MenuMinute"></div>
 <div class="body">
@@ -282,9 +309,9 @@ function shotHtml(id, view, kind) {
 }
 
 function stepPage(ch, s) {
-  const dW = s.desktop && s.mobile ? (s.compact ? "106mm" : "121mm") : "100%";
-  const pW = s.compact ? "38mm" : "43mm";
-  return `<section class="page">
+  const dW = s.desktop && s.mobile ? (s.compact ? "94mm" : "114mm") : "100%";
+  const pW = s.compact ? "34mm" : "40mm";
+  return `<section class="page t${(s.no - 1) % 5}">${band(s.no)}
 ${top(`Chapter ${ch.no} · ${ch.title.en} · अध्याय ${ch.no}`)}
 <div class="eyebrow stepno"><span class="b">STEP ${s.no} · चरण ${s.no}</span></div>
 <h1 style="margin-top:3mm">${bi(s.title)}</h1>
@@ -305,7 +332,7 @@ ${footer()}</section>`;
 }
 
 function recap(ch) {
-  return `<section class="page">
+  return `<section class="page t2">${band("✓")}
 ${top(`Chapter ${ch.no} · ${ch.title.en} · अध्याय ${ch.no}`)}
 <div class="eyebrow">${bi({ en: "WRAP UP", hi: "समेटते हैं" })}</div>
 <h1 style="margin-top:3mm">${bi({ en: "Before you move on", hi: "आगे बढ़ने से पहले" })}</h1>
