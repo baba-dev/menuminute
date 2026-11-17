@@ -26,7 +26,7 @@ test.describe("home-v2 scroll-assembled dashboard", () => {
     await page.goto("/home-v2");
     const nav = page.getByRole("navigation", { name: "Main navigation" });
     await expect(nav).toBeVisible();
-    await expect(page.getByRole("link", { name: "MenuMinute home" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "MenuMinute home", exact: true })).toBeVisible();
     const html = page.locator("html");
     const before = (await html.getAttribute("data-theme")) === "dark" ? "dark" : "light";
     const after = before === "dark" ? "light" : "dark";

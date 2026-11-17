@@ -4,7 +4,7 @@ test("nav logo plays once per resolved theme and is a correctly labeled home lin
   page,
 }) => {
   await page.goto("/");
-  const link = page.getByRole("link", { name: "MenuMinute home" });
+  const link = page.getByRole("link", { name: "MenuMinute home", exact: true });
   await expect(link).toBeVisible();
   const current =
     (await page.locator("html").getAttribute("data-theme")) === "dark" ? "dark" : "light";
