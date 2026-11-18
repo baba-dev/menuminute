@@ -562,14 +562,20 @@ jobs:
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
-      - name: Audit frozen dependencies
-        run: pnpm audit --audit-level high
-      - name: Verify reviewed moderate advisory exceptions
-        # pnpm exits nonzero for advisories. The parser validates every reported
-        # advisory and fails for any new/unreviewed moderate or high finding.
+      - name: Verify reviewed advisory exceptions
+        # Runs FIRST on the unmodified workspace. pnpm exits nonzero for advisories, so the JSON report is
+        # validated by the parser, which fails for any new/unreviewed moderate or high finding, for the
+        # temporary high exception once it expires or leaves its reviewed versions/paths, and for critical
+        # findings. (The ignore below makes pnpm persist itself into pnpm-workspace.yaml, which would hide
+        # the advisory from this check, so the order of these two steps matters.)
         run: |
           pnpm audit --json > "$RUNNER_TEMP/pnpm-audit.json" || true
           node scripts/security/verify-advisory-exceptions.mjs "$RUNNER_TEMP/pnpm-audit.json"
+      - name: Audit frozen dependencies
+        # TEMPORARY: GHSA-fc5q-39xc-vjpf (picomatch <=4.0.7) has no patched release on npm yet. Only this one
+        # advisory ID is ignored; any other high/critical finding still fails here. Remove this --ignore once
+        # picomatch >=4.0.8 is installed (docs/security-audit-advisories.md).
+        run: pnpm audit --audit-level high --ignore GHSA-fc5q-39xc-vjpf
       - name: Initialize CodeQL
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:
