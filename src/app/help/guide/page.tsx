@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { MarketingSubpageNav } from "@/components/marketing/navigation/marketing-subpage-nav";
 import { PublicFooter } from "@/components/marketing/footer/public-footer";
 import { Bilingual, ChapterArt } from "@/components/guide/guide-parts";
@@ -37,6 +38,20 @@ export default function GuideIndexPage() {
         <p className="mt-4 max-w-2xl text-lg">
           <Bilingual text={COVER.sub} hiClass="text-muted-foreground mt-1" />
         </p>
+
+        <a
+          href="/guide/MenuMinute-User-Guide.pdf"
+          download
+          className="mt-6 inline-flex items-center gap-3 rounded-2xl bg-orange-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-orange-700"
+        >
+          <Download className="size-5" aria-hidden="true" />
+          <span>
+            <span className="block">Download the PDF (about 11 MB)</span>
+            <span lang="hi" className="block text-sm font-normal">
+              PDF डाउनलोड कीजिए (लगभग 11 MB)
+            </span>
+          </span>
+        </a>
 
         <h2 className="font-display mt-12 text-2xl font-extrabold">
           <Bilingual text={HOW_TO_READ.title} hiClass="text-orange-600" />

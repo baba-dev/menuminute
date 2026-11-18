@@ -1,7 +1,7 @@
 # MenuMinute User Operation Guide (English + Hindi)
 
 A 62-page A4 guide for non-technical restaurant owners and staff, with English first and Hindi directly below on
-every page. The built PDF is [MenuMinute-User-Guide.pdf](MenuMinute-User-Guide.pdf).
+every page. The built PDF is [MenuMinute-User-Guide.pdf](../../public/guide/MenuMinute-User-Guide.pdf), served at `/guide/MenuMinute-User-Guide.pdf`.
 
 ## Where things live
 
@@ -21,7 +21,7 @@ Screenshots come from the local demo tenant only (never production). Start the a
 
 ```bash
 node scripts/guide/capture.mjs            # all screenshots, or pass shot ids
-pnpm exec tsx scripts/guide/build-pdf.mjs # writes docs/user-guide/MenuMinute-User-Guide.pdf
+pnpm exec tsx scripts/guide/build-pdf.mjs # writes public/guide/MenuMinute-User-Guide.pdf
 ```
 
 The capture script sends an `x-real-ip` header because the demo entry limiter expects the reverse proxy's header.

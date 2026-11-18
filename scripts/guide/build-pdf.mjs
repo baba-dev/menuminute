@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Builds the bilingual User Guide PDF from src/content/guide/content.ts.
-//   pnpm exec tsx scripts/guide/build-pdf.mjs [--out docs/user-guide/MenuMinute-User-Guide.pdf]
+//   pnpm exec tsx scripts/guide/build-pdf.mjs [--out public/guide/MenuMinute-User-Guide.pdf]
 // Needs public/guide/{fonts,shots}. Chapter artwork is optional: public/guide/art/chapter-NN.jpg replaces
 // the built-in placeholder illustration (see docs/user-guide/artwork-prompts.md).
 import { chromium } from "@playwright/test";
@@ -27,7 +27,7 @@ const marks = JSON.parse(readFileSync(join(pub, "shots/marks.json"), "utf8"));
 const argOut = process.argv.indexOf("--out");
 const outPdf = join(
   root,
-  argOut > 0 ? process.argv[argOut + 1] : "docs/user-guide/MenuMinute-User-Guide.pdf"
+  argOut > 0 ? process.argv[argOut + 1] : "public/guide/MenuMinute-User-Guide.pdf"
 );
 mkdirSync(dirname(outPdf), { recursive: true });
 
