@@ -53,6 +53,12 @@ export default function GuideIndexPage() {
           </span>
         </a>
 
+        <p className="text-muted-foreground mt-4 text-sm">
+          <Link href="/brochure" className="font-semibold text-orange-600 hover:underline">
+            Looking for the sales brochure? Download it here.
+          </Link>
+        </p>
+
         <h2 className="font-display mt-12 text-2xl font-extrabold">
           <Bilingual text={HOW_TO_READ.title} hiClass="text-orange-600" />
         </h2>

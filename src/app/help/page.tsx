@@ -58,6 +58,15 @@ export default function HelpCenterPage() {
               Illustrated step-by-step guide · English + हिंदी
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
+            <span className="text-muted-foreground mx-3" aria-hidden="true">
+              ·
+            </span>
+            <Link
+              href="/brochure"
+              className="text-sm font-semibold text-orange-600 hover:underline"
+            >
+              Restaurant brochure (PDF)
+            </Link>
           </div>
 
           {/* Hero Visual Placeholder Card */}
