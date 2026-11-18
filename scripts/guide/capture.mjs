@@ -27,29 +27,37 @@ const VIEWS = {
 const marksOut = {};
 const browser = await chromium.launch({ executablePath, args: ["--no-sandbox"] });
 for (const [view, cfg] of Object.entries(VIEWS)) {
-  const context = await browser.newContext({
-    viewport: cfg.viewport,
-    deviceScaleFactor: cfg.scale,
-    reducedMotion: "reduce",
-    colorScheme: "light",
-    isMobile: view === "mobile",
-    hasTouch: view === "mobile",
-    extraHTTPHeaders: { "x-real-ip": "127.0.0.1" },
-  });
-  await context.addInitScript(() => {
-    try {
-      localStorage.setItem("menuminute.appearance", "light");
-    } catch {}
-    const style = document.createElement("style");
-    style.textContent =
-      "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}";
-    document.addEventListener("DOMContentLoaded", () => document.head.appendChild(style));
-  });
-  const page = await context.newPage();
+  const newContext = async () => {
+    const context = await browser.newContext({
+      viewport: cfg.viewport,
+      deviceScaleFactor: cfg.scale,
+      reducedMotion: "reduce",
+      colorScheme: "light",
+      isMobile: view === "mobile",
+      hasTouch: view === "mobile",
+      extraHTTPHeaders: { "x-real-ip": "127.0.0.1" },
+    });
+    await context.addInitScript(() => {
+      try {
+        localStorage.setItem("menuminute.appearance", "light");
+      } catch {}
+      const style = document.createElement("style");
+      style.textContent =
+        "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}";
+      document.addEventListener("DOMContentLoaded", () => document.head.appendChild(style));
+    });
+    return context;
+  };
+  // Separate browser contexts: signed-in screens must not leak a session into public pages (/login redirects).
+  const authContext = await newContext();
+  const publicContext = await newContext();
+  const authPage = await authContext.newPage();
+  const publicPage = await publicContext.newPage();
   let signedIn = false;
   for (const shot of SHOTS) {
     if (only.size && !only.has(shot.id)) continue;
     if (shot.views && !shot.views.includes(view)) continue;
+    const page = shot.auth ? authPage : publicPage;
     if (shot.auth && !signedIn) {
       await page.goto(base + "/demo", { waitUntil: "domcontentloaded", timeout: 120000 });
       await Promise.all([
@@ -95,6 +103,16 @@ for (const [view, cfg] of Object.entries(VIEWS)) {
             console.error("  mark not found", shot.id, view, m.n);
             continue;
           }
+          // Drop call-outs that fall outside the cropped area (they would be drawn in the wrong place).
+          if (
+            box.y < area.y - 2 ||
+            box.y + box.height > area.y + area.height + 2 ||
+            box.x < area.x - 2 ||
+            box.x + box.width > area.x + area.width + 2
+          ) {
+            console.error("  mark outside crop", shot.id, view, m.n);
+            continue;
+          }
           list.push({
             n: m.n,
             x: ((box.x - area.x) / area.width) * 100,
@@ -115,7 +133,8 @@ for (const [view, cfg] of Object.entries(VIEWS)) {
       console.error("FAILED", shot.id, view, e instanceof Error ? e.message.split("\n")[0] : e);
     }
   }
-  await context.close();
+  await authContext.close();
+  await publicContext.close();
 }
 const marksFile = join(outDir, "marks.json");
 let prev = {};

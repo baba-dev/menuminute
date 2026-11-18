@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Builds the bilingual User Guide PDF from src/content/guide/content.ts.
-//   pnpm exec tsx scripts/guide/build-pdf.mjs [--out docs/user-guide/MenuMinute-User-Guide-SAMPLE.pdf]
+//   pnpm exec tsx scripts/guide/build-pdf.mjs [--out docs/user-guide/MenuMinute-User-Guide.pdf]
 // Needs public/guide/{fonts,shots}. Chapter artwork is optional: public/guide/art/chapter-NN.jpg replaces
 // the built-in placeholder illustration (see docs/user-guide/artwork-prompts.md).
 import { chromium } from "@playwright/test";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import sharp from "sharp";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
@@ -14,8 +15,9 @@ import {
   HOW_TO_READ,
   ROADMAP,
   CHAPTER_LIST,
-  CHAPTER_3,
 } from "../../src/content/guide/content.ts";
+import { CHAPTERS } from "../../src/content/guide/chapters.ts";
+import { CH11, BACK_COVER } from "../../src/content/guide/help.ts";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const pub = join(root, "public/guide");
@@ -25,7 +27,7 @@ const marks = JSON.parse(readFileSync(join(pub, "shots/marks.json"), "utf8"));
 const argOut = process.argv.indexOf("--out");
 const outPdf = join(
   root,
-  argOut > 0 ? process.argv[argOut + 1] : "docs/user-guide/MenuMinute-User-Guide-SAMPLE.pdf"
+  argOut > 0 ? process.argv[argOut + 1] : "docs/user-guide/MenuMinute-User-Guide.pdf"
 );
 mkdirSync(dirname(outPdf), { recursive: true });
 
@@ -180,6 +182,18 @@ h1 .hi{color:var(--a)}
 .toc .row.on .n{background:var(--orange);color:#fff}
 .road .s:nth-child(5n+1) .k{background:#E8502A}.road .s:nth-child(5n+2) .k{background:#7A3E8E}.road .s:nth-child(5n+3) .k{background:#2F7D57}.road .s:nth-child(5n+4) .k{background:#2F6FA8}.road .s:nth-child(5n) .k{background:#C9810A}
 .checks .c{border-left:1.4mm solid var(--a)}
+.dense .visuals{padding:3.5mm 4mm 2mm;margin-top:2.5mm}.dense .ins{margin-top:2.5mm;gap:1.4mm}.dense .note{margin-top:2.5mm;padding:3mm 4mm}.dense .lead{margin-top:2mm!important}
+.toc .row{grid-template-columns:9mm 1fr auto}.toc .pg{font-size:8pt;font-weight:700;color:var(--orange-d)}
+.fx{display:flex;flex-direction:column;gap:2.6mm;margin-top:3mm}.fx .f{border-radius:4.5mm;padding:3.4mm 5mm;border-left:1.6mm solid var(--a);background:#fff}
+.fx .q .en{font-weight:700;font-size:10.5pt}.fx .q .hi{font-weight:700;font-size:10pt;color:var(--a)}.fx .a{margin-top:1.4mm}.fx .a .en{font-size:9.5pt;line-height:1.4}.fx .a .hi{font-size:9.5pt;line-height:1.65;color:var(--muted)}
+.gl{display:grid;grid-template-columns:1fr 1fr;gap:2.6mm;margin-top:3mm}.gl .g{background:#fff;border:1px solid var(--line);border-left:1.6mm solid var(--a);border-radius:4mm;padding:2.6mm 4mm}
+.gl .t .en{font-weight:700;font-size:10pt}.gl .t .hi{font-weight:700;font-size:9.5pt;color:var(--a)}.gl .d{margin-top:1mm}.gl .d .en{font-size:8.8pt;line-height:1.35}.gl .d .hi{font-size:8.8pt;line-height:1.55;color:var(--muted)}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-top:6mm}.cbox{border-radius:6mm;padding:6mm;color:#fff}.cbox.e{background:var(--orange)}.cbox.w{background:#2F7D57}
+.cbox .l{font-size:8pt;letter-spacing:.14em;font-weight:700;opacity:.9}.cbox .v{font-size:14pt;font-weight:700;margin-top:2mm}
+.tell .i{display:grid;grid-template-columns:6mm 1fr;gap:3mm;align-items:center;margin-top:3mm;background:#fff;border:1px solid var(--line);border-left:1.6mm solid var(--a);border-radius:4mm;padding:4mm 5mm}.tell .dot{width:5mm;height:5mm;border-radius:50%;background:var(--a)}.tell .en{font-size:11pt;font-weight:500}.tell .hi{font-size:10.5pt;color:var(--muted);line-height:1.6}
+.back .art{position:absolute;left:0;right:0;top:0;height:140mm}.back .over{position:absolute;left:94mm;top:18mm;width:62mm;text-align:left}
+.back .over .big .en{font-size:34pt;font-weight:700;color:#5A1F10;line-height:1.05}.back .over .big .hi{font-size:28pt;font-weight:700;color:#8A2A12;line-height:1.3}
+.back .over .sm{margin-top:4mm}.back .over .sm .en{font-size:10.5pt;font-weight:500;color:#5A1F10}.back .over .sm .hi{font-size:10pt;color:#6B2A18;line-height:1.6}
 `;
 
 /** Placeholder scene used until public/guide/art/chapter-NN.jpg exists. */
@@ -208,12 +222,50 @@ function placeholderArt(n) {
 }
 
 function art(n) {
-  const jpg = join(pub, `art/chapter-${pad(n)}.jpg`);
+  const jpg = join(root, `docs/user-guide/out/art/chapter-${pad(n)}.jpg`);
   return existsSync(jpg) ? `<img src="${pathToFileURL(jpg).href}" alt="">` : placeholderArt(n);
 }
 
 const band = (ghost = "") =>
   `<div class="band"><svg viewBox="0 0 100 100"><path d="M8 100V52a42 42 0 0 1 84 0v48z" style="fill:var(--a);opacity:.16"/><path d="M20 100V54a30 30 0 0 1 60 0v46z" style="fill:var(--a);opacity:.16"/><path d="M8 100V52a42 42 0 0 1 84 0v48" style="fill:none;stroke:var(--a);stroke-width:.8;opacity:.5"/></svg></div>${ghost ? `<div class="ghost">${ghost}</div>` : ""}`;
+// Chromium stores WebP losslessly in PDFs (huge); re-encode screenshots as JPEG for a print-friendly size.
+{
+  const outDir = join(root, "docs/user-guide/out/shots");
+  mkdirSync(outDir, { recursive: true });
+  for (const f of readdirSync(join(pub, "shots")).filter((n) => n.endsWith(".webp"))) {
+    // Phone shots are shown ~40 mm wide: 520 px is ~330 dpi, plenty for print.
+    const img = sharp(join(pub, "shots", f));
+    await (
+      f.includes("-mobile")
+        ? img.resize({ width: 520 })
+        : img.resize({ width: 1200, withoutEnlargement: true })
+    )
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: 76, mozjpeg: true })
+      .toFile(join(outDir, f.replace(/\.webp$/, ".jpg")));
+  }
+}
+{
+  const artOut = join(root, "docs/user-guide/out/art");
+  mkdirSync(artOut, { recursive: true });
+  for (const f of existsSync(join(pub, "art"))
+    ? readdirSync(join(pub, "art")).filter((n) => n.endsWith(".jpg"))
+    : []) {
+    await sharp(join(pub, "art", f))
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toFile(join(artOut, f));
+  }
+}
+// Page plan: cover, how-to, contents, then each chapter (title + steps + recap), help chapter, back cover.
+const startPage = {};
+{
+  let n = 4;
+  for (const c of CHAPTERS) {
+    startPage[c.no] = n;
+    n += c.steps.length + 2;
+  }
+  startPage[11] = n;
+}
 let pageNo = 0;
 const footer = () => {
   pageNo += 1;
@@ -231,7 +283,7 @@ ${top("Made for restaurant owners · रेस्टोरेंट मालि
 <h1 style="margin-top:6mm"><span class="en">${esc(COVER.line1.en)}</span><span class="en o">${esc(COVER.line2.en)}</span>
 <span class="hi">${esc(COVER.line1.hi)} ${esc(COVER.line2.hi)}</span></h1>
 <div class="lead" style="margin-top:6mm;width:150mm">${bi(COVER.sub)}</div>
-<span class="tag">SAMPLE EDITION · नमूना</span>
+<span class="tag">FIRST EDITION · पहला संस्करण</span>
 <div class="art">${art(0)}</div>
 <div class="strip">${bi(COVER.strip)}</div>
 <div class="foot"><span>MENUMINUTE · A SUBSIDIARY OF BABABUILDS.COM</span><span class="fhelp">✉ ${SUPPORT.email} &nbsp;·&nbsp; WhatsApp ${SUPPORT.whatsapp}</span><b>01</b></div>
@@ -267,15 +319,14 @@ ${top("Start here · यहाँ से शुरू करें")}
 <div class="road">${ROADMAP.steps
     .map(
       (s, i) =>
-        `<div class="s"><div class="k">${i + 1}</div><div class="t">${bi(s.text)}</div><div class="c">Chapter ${s.ch} · अध्याय ${s.ch}</div></div>`
+        `<div class="s"><div class="k">${i + 1}</div><div class="t">${bi(s.text)}</div><div class="c">Chapter ${s.ch} · p. ${startPage[s.ch]}</div></div>`
     )
     .join("")}</div>
 <div class="sect"><h2>${bi({ en: "All chapters", hi: "सारे चैप्टर" })}</h2></div>
 <div class="toc">${CHAPTER_LIST.map(
     (c) =>
-      `<div class="row ${c.no === 3 ? "on" : ""}"><div class="n">${c.no}</div><div class="t">${bi(c.title)}</div></div>`
+      `<div class="row"><div class="n">${c.no}</div><div class="t">${bi(c.title)}</div><div class="pg">p. ${startPage[c.no]}</div></div>`
   ).join("")}</div>
-<p style="position:absolute;left:16mm;right:16mm;bottom:17mm;font-size:7.5pt;color:var(--muted)">This sample edition contains Chapter 3 in full (highlighted). · इस नमूने में सिर्फ़ चैप्टर 3 पूरा दिया गया है (हाइलाइट किया हुआ)।</p>
 ${footer()}</section>`;
 }
 
@@ -293,10 +344,12 @@ function chapterTitle(ch) {
 </section>`;
 }
 
-function shotHtml(id, view, kind) {
-  const file = join(pub, `shots/${id}-${view}.webp`);
-  if (!existsSync(file)) return "";
+function shotHtml(id, view, kind, used) {
+  const webp = join(pub, `shots/${id}-${view}.webp`);
+  if (!existsSync(webp)) return "";
+  const file = join(root, "docs/user-guide/out/shots", `${id}-${view}.jpg`);
   const m = (marks[`${id}-${view}`] ?? [])
+    .filter((k) => !used || used.has(k.n))
     .map(
       (k) =>
         `<div class="box" style="left:${k.x}%;top:${k.y}%;width:${k.w}%;height:${k.h}%"></div><div class="badge" style="left:${Math.max(k.x, 1.5)}%;top:${Math.max(k.y, 1.5)}%">${k.n}</div>`
@@ -311,14 +364,15 @@ function shotHtml(id, view, kind) {
 function stepPage(ch, s) {
   const dW = s.desktop && s.mobile ? (s.compact ? "94mm" : "114mm") : "100%";
   const pW = s.compact ? "34mm" : "40mm";
-  return `<section class="page t${(s.no - 1) % 5}">${band(s.no)}
+  const used = new Set(s.instructions.filter((i) => i.mark).map((i) => i.mark));
+  return `<section class="page${s.compact ? " dense" : ""} t${(s.no - 1) % 5}">${band(s.no)}
 ${top(`Chapter ${ch.no} · ${ch.title.en} · अध्याय ${ch.no}`)}
 <div class="eyebrow stepno"><span class="b">STEP ${s.no} · चरण ${s.no}</span></div>
 <h1 style="margin-top:3mm">${bi(s.title)}</h1>
 <div class="lead" style="margin-top:3mm">${bi(s.intro)}</div>
 <div class="visuals">
-${s.desktop ? `<div class="vwrap" style="width:${dW}">${shotHtml(s.desktop, "desktop", "desktop")}<div class="cap">On a computer <span class="hi">कंप्यूटर पर</span></div></div>` : ""}
-${s.mobile ? `<div class="vwrap" style="width:${pW}">${shotHtml(s.mobile, "mobile", "phone")}<div class="cap">On a phone <span class="hi">फ़ोन पर</span></div></div>` : ""}
+${s.desktop ? `<div class="vwrap" style="width:${dW}">${shotHtml(s.desktop, "desktop", "desktop", used)}<div class="cap">On a computer <span class="hi">कंप्यूटर पर</span></div></div>` : ""}
+${s.mobile ? `<div class="vwrap" style="width:${pW}">${shotHtml(s.mobile, "mobile", "phone", used)}<div class="cap">On a phone <span class="hi">फ़ोन पर</span></div></div>` : ""}
 </div>
 <div class="ins">${s.instructions
     .map(
@@ -332,7 +386,7 @@ ${footer()}</section>`;
 }
 
 function recap(ch) {
-  return `<section class="page t2">${band("✓")}
+  return `<section class="page t${(ch.no - 1) % 5}">${band("✓")}
 ${top(`Chapter ${ch.no} · ${ch.title.en} · अध्याय ${ch.no}`)}
 <div class="eyebrow">${bi({ en: "WRAP UP", hi: "समेटते हैं" })}</div>
 <h1 style="margin-top:3mm">${bi({ en: "Before you move on", hi: "आगे बढ़ने से पहले" })}</h1>
@@ -345,15 +399,74 @@ ${top(`Chapter ${ch.no} · ${ch.title.en} · अध्याय ${ch.no}`)}
 ${footer()}</section>`;
 }
 
+function fixesPage(items, part) {
+  return `<section class="page t${(CH11.no - 1) % 5}">${band(part)}
+${top(`Chapter ${CH11.no} · ${CH11.title.en} · अध्याय ${CH11.no}`)}
+<div class="eyebrow">${bi({ en: "TROUBLESHOOTING", hi: "समस्या का हल" })}</div>
+<h1 style="margin-top:3mm">${bi(CH11.fixTitle)}</h1>
+<div class="fx">${items.map((f) => `<div class="f"><div class="q">${bi(f.q)}</div><div class="a">${bi(f.a)}</div></div>`).join("")}</div>
+${footer()}</section>`;
+}
+
+function glossaryPage() {
+  return `<section class="page t${(CH11.no - 1) % 5}">${band("A–Z")}
+${top(`Chapter ${CH11.no} · ${CH11.title.en} · अध्याय ${CH11.no}`)}
+<div class="eyebrow">${bi({ en: "GLOSSARY", hi: "शब्दकोश" })}</div>
+<h1 style="margin-top:3mm">${bi(CH11.glossaryTitle)}</h1>
+<div class="gl">${CH11.glossary.map((g) => `<div class="g"><div class="t">${bi(g.term)}</div><div class="d">${bi(g.text)}</div></div>`).join("")}</div>
+${footer()}</section>`;
+}
+
+function contactPage() {
+  const c = CH11.contact;
+  return `<section class="page t${(CH11.no - 1) % 5}">${band("☎")}
+${top(`Chapter ${CH11.no} · ${CH11.title.en} · अध्याय ${CH11.no}`)}
+<div class="eyebrow">${bi({ en: "CONTACT", hi: "संपर्क" })}</div>
+<h1 style="margin-top:3mm">${bi(c.title)}</h1>
+<div class="lead" style="margin-top:3mm">${bi(c.intro)}</div>
+<div class="contact">
+<div class="cbox e"><div class="l">EMAIL SUPPORT · ईमेल सहायता</div><div class="v">${SUPPORT.email}</div></div>
+<div class="cbox w"><div class="l">WHATSAPP SUPPORT · व्हाट्सऐप सहायता</div><div class="v">${SUPPORT.whatsapp}</div></div>
+</div>
+<div class="sect"><h2>${bi(c.tellUs)}</h2></div>
+<div class="tell">${c.items.map((i) => `<div class="i"><span class="dot"></span><div>${bi(i)}</div></div>`).join("")}</div>
+${footer()}</section>`;
+}
+
+function backCover() {
+  pageNo += 1;
+  return `<section class="page back t0">
+<div class="art">${art(12)}<div class="over"><div class="big">${bi(BACK_COVER.thanks)}</div><div class="sm">${bi(BACK_COVER.line)}</div></div></div>
+<div style="position:absolute;left:16mm;right:16mm;top:150mm">
+<div class="eyebrow">${bi({ en: "NEED A HAND?", hi: "मदद चाहिए?" })}</div>
+<div class="contact" style="margin-top:4mm">
+<div class="cbox e"><div class="l">EMAIL SUPPORT · ईमेल सहायता</div><div class="v">${SUPPORT.email}</div></div>
+<div class="cbox w"><div class="l">WHATSAPP SUPPORT · व्हाट्सऐप सहायता</div><div class="v">${SUPPORT.whatsapp}</div></div>
+</div>
+<div style="margin-top:10mm;display:flex;align-items:center;gap:6mm"><img src="${logo}" alt="MenuMinute" style="height:14mm"><div style="font-size:8pt;letter-spacing:.12em;color:var(--muted)">MENUMINUTE · A SUBSIDIARY OF BABABUILDS.COM</div></div>
+</div>
+<div class="strip" style="bottom:0;height:12mm;flex-direction:row;align-items:center"><span class="en" style="font-size:9pt">© MenuMinute · ${bi({ en: "User Operation Guide", hi: "उपयोग की गाइड" }).replace(/<[^>]+>/g, " ")}</span></div>
+</section>`;
+}
+
+const fixHalf = Math.ceil(CH11.fixes.length / 2);
 const pages = [
   cover(),
   howTo(),
   contents(),
-  chapterTitle(CHAPTER_3),
-  ...CHAPTER_3.steps.map((s) => stepPage(CHAPTER_3, s)),
-  recap(CHAPTER_3),
+  ...CHAPTERS.flatMap((ch) => [
+    chapterTitle(ch),
+    ...ch.steps.map((st) => stepPage(ch, st)),
+    recap(ch),
+  ]),
+  chapterTitle(CH11),
+  fixesPage(CH11.fixes.slice(0, fixHalf), "?"),
+  fixesPage(CH11.fixes.slice(fixHalf), "?"),
+  glossaryPage(),
+  contactPage(),
+  backCover(),
 ];
-const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MenuMinute User Guide (Sample)</title><style>${CSS}</style></head><body>${pages.join("\n")}</body></html>`;
+const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MenuMinute User Operation Guide</title><style>${CSS}</style></head><body>${pages.join("\n")}</body></html>`;
 const htmlPath = join(root, "docs/user-guide/out", "guide-build.html"); // out/ is git-ignored
 mkdirSync(dirname(htmlPath), { recursive: true });
 writeFileSync(htmlPath, html);
