@@ -59,3 +59,75 @@ describe("dependency advisory review gate", () => {
     assert.throws(() => verifyAudit({}), /missing or invalid/);
   });
 });
+
+const picomatch = {
+  github_advisory_id: "GHSA-fc5q-39xc-vjpf",
+  module_name: "picomatch",
+  severity: "high",
+  findings: [
+    { version: "4.0.7", paths: [".>better-auth>vitest>vite>picomatch", ".>vitest>vite>picomatch"] },
+    { version: "2.3.2", paths: [".>eslint-config-next>@next/eslint-plugin-next>picomatch"] },
+  ],
+};
+const during = { now: new Date("2026-11-20T00:00:00Z") };
+
+describe("temporary picomatch high exception (no patched release published)", () => {
+  it("accepts only the reviewed advisory, versions and development-tool paths", () => {
+    const accepted = verifyAudit(report([esbuild, minimatch, picomatch]), during);
+    assert.equal(accepted.length, 4);
+    assert.ok(
+      accepted.some((entry) => entry.includes("picomatch@4.0.7 (HIGH, expires 2026-12-18)"))
+    );
+    assert.equal(verifyAudit(report([picomatch]), during).length, 2);
+  });
+  it("fails closed after the expiry date, forcing a re-review", () => {
+    assert.throws(
+      () => verifyAudit(report([picomatch]), { now: new Date("2026-12-19T00:00:00Z") }),
+      /expired on 2026-12-18/
+    );
+  });
+  it("fails if picomatch appears outside the development-tool dependency paths", () => {
+    assert.throws(
+      () =>
+        verifyAudit(
+          report([{ ...picomatch, findings: [{ version: "4.0.7", paths: [".>next>picomatch"] }] }]),
+          during
+        ),
+      /unreviewed version or dependency path/
+    );
+  });
+  it("fails for an unreviewed picomatch version", () => {
+    assert.throws(
+      () =>
+        verifyAudit(
+          report([
+            { ...picomatch, findings: [{ version: "4.0.6", paths: [".>vitest>vite>picomatch"] }] },
+          ]),
+          during
+        ),
+      /unreviewed version or dependency path/
+    );
+  });
+  it("still fails on any other high advisory and on critical findings", () => {
+    assert.throws(
+      () =>
+        verifyAudit(
+          report([picomatch, { ...picomatch, github_advisory_id: "GHSA-other" }]),
+          during
+        ),
+      /requires remediation/
+    );
+    assert.throws(
+      () => verifyAudit(report([{ ...picomatch, module_name: "other-package" }]), during),
+      /requires remediation/
+    );
+    const critical = report([picomatch]);
+    critical.metadata.vulnerabilities.critical = 1;
+    assert.throws(() => verifyAudit(critical, during), /not allowed/);
+  });
+  it("fails when the reported high total disagrees with the reviewed advisory", () => {
+    const extra = report([picomatch]);
+    extra.metadata.vulnerabilities.high = 2;
+    assert.throws(() => verifyAudit(extra, during), /not allowed/);
+  });
+});
