@@ -29,8 +29,10 @@ export type ActivationInputs = {
   emberPublish: boolean;
   emberProviderVerified: boolean;
   pwaOperational: boolean;
+  pwaAllOutlets: boolean;
   pwaOutletCount: number;
   pwaPush: boolean;
+  pwaPushAllOutlets: boolean;
   pwaPushOutletCount: number;
   pwaVapidConfigured: boolean;
 };
@@ -40,6 +42,9 @@ export function featureActivationRows(c: ActivationInputs): ActivationEntry[] {
     c.kitchenRelease && c.kitchenCatalog && c.razorpay && c.kitchenBilling && c.kitchenProviderPlan;
   const importReady = c.importWebEnabled && c.importApproved && c.importModel && c.importKey;
   const conciergeProvider = c.conciergeProvider && c.conciergeEnabled;
+  const pwaOn = c.pwaOperational && (c.pwaAllOutlets || c.pwaOutletCount > 0);
+  const pushOn =
+    c.pwaPush && (c.pwaPushAllOutlets || c.pwaPushOutletCount > 0) && c.pwaVapidConfigured;
   const emberReady = c.emberRead && c.emberProviderVerified;
   return [
     {
@@ -125,25 +130,28 @@ export function featureActivationRows(c: ActivationInputs): ActivationEntry[] {
     {
       id: "pwa",
       title: "Operational PWA and offline guest viewing",
-      state: c.pwaOperational && c.pwaOutletCount > 0 ? "limited" : "unavailable",
-      scope: "Physical-device pilot",
-      detail:
-        c.pwaOperational && c.pwaOutletCount > 0
-          ? `Enabled for ${c.pwaOutletCount} explicit outlet(s), not every paid merchant.`
-          : "Operational offline features are not enabled for an approved outlet.",
+      state: pwaOn ? (c.pwaAllOutlets ? "configured" : "limited") : "unavailable",
+      scope: c.pwaAllOutlets ? "All outlets" : "Physical-device pilot",
+      detail: !pwaOn
+        ? "Operational offline features are not enabled for an approved outlet."
+        : c.pwaAllOutlets
+          ? "Enabled for all outlets; device behaviour still needs real-device verification."
+          : `Enabled for ${c.pwaOutletCount} explicit outlet(s), not every paid merchant.`,
       nextStep:
-        "Complete device, recovery and privacy acceptance in #249 before considering a wider rollout.",
+        "Complete device, recovery and privacy acceptance in #249; keep the service worker rollback path ready.",
     },
     {
       id: "push",
       title: "Opt-in Web Push",
-      state:
-        c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured ? "limited" : "unavailable",
-      scope: "Explicit outlet and device consent",
-      detail:
-        c.pwaPush && c.pwaPushOutletCount > 0 && c.pwaVapidConfigured
-          ? `Configured for ${c.pwaPushOutletCount} outlet(s); a device still must opt in and delivery is best effort.`
-          : "The push rollout, outlet pilot, or VAPID configuration is incomplete.",
+      state: pushOn ? (c.pwaPushAllOutlets ? "configured" : "limited") : "unavailable",
+      scope: c.pwaPushAllOutlets
+        ? "All outlets, per-device consent"
+        : "Explicit outlet and device consent",
+      detail: !pushOn
+        ? "The push rollout, outlet pilot, or VAPID configuration is incomplete."
+        : c.pwaPushAllOutlets
+          ? "Available to all outlets; a device still must opt in and delivery is best effort."
+          : `Configured for ${c.pwaPushOutletCount} outlet(s); a device still must opt in and delivery is best effort.`,
       nextStep:
         "Keep manual permission, current-session checks, and PWA real-device acceptance; never enroll devices automatically.",
     },

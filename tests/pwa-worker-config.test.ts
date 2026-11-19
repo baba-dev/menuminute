@@ -37,3 +37,23 @@ describe("isolated worker PWA configuration", () => {
     expect(config?.outletIds).toEqual(["outlet-a", "outlet-b"]);
   });
 });
+
+describe("all-outlet push worker mode", () => {
+  const keys = () => {
+    const ecdh = createECDH("prime256v1");
+    ecdh.generateKeys();
+    return {
+      PWA_PUSH_VAPID_PUBLIC_KEY: ecdh.getPublicKey().toString("base64url"),
+      PWA_PUSH_VAPID_PRIVATE_KEY: ecdh.getPrivateKey().toString("base64url"),
+      PWA_PUSH_VAPID_SUBJECT: "mailto:admin@bababuilds.com",
+    };
+  };
+  it("uses the wildcard sentinel only when explicitly enabled", () => {
+    const base = { PWA_PUSH_ENABLED: "true", ...keys() };
+    expect(parsePushWorkerSettings({ ...base, PWA_PUSH_ALL_OUTLETS: "true" })?.outletIds).toEqual([
+      "*",
+    ]);
+    expect(() => parsePushWorkerSettings(base)).toThrow();
+    expect(() => parsePushWorkerSettings({ ...base, PWA_PUSH_ALL_OUTLETS: "yes" })).toThrow();
+  });
+});

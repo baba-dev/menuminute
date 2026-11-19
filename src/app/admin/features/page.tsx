@@ -67,8 +67,10 @@ export default async function AdminFeatureActivationPage() {
       (env.AI_NVIDIA_ENABLED && env.AI_NVIDIA_TOOLS_VERIFIED) ||
       (env.AI_CLOUDFLARE_ENABLED && env.AI_CLOUDFLARE_TOOLS_VERIFIED),
     pwaOperational: env.PWA_OPERATIONAL_ENABLED,
+    pwaAllOutlets: env.PWA_OPERATIONAL_ALL_OUTLETS,
     pwaOutletCount: env.PWA_OPERATIONAL_OUTLET_IDS.length,
     pwaPush: env.PWA_PUSH_ENABLED,
+    pwaPushAllOutlets: env.PWA_PUSH_ALL_OUTLETS,
     pwaPushOutletCount: env.PWA_PUSH_OUTLET_IDS.length,
     pwaVapidConfigured: Boolean(
       env.PWA_PUSH_VAPID_PUBLIC_KEY && env.PWA_PUSH_VAPID_PRIVATE_KEY && env.PWA_PUSH_VAPID_SUBJECT

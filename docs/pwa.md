@@ -121,6 +121,16 @@ preparing, ready, rejected or cancelled. It reuses the staff push gate (`PWA_PUS
 - **Rollback:** turn `PWA_PUSH_ENABLED` off or remove the outlet from the allowlist; nothing is sent and
   unsubscribe keeps working.
 
+## All-outlet mode (migration 0113)
+
+`PWA_OPERATIONAL_ALL_OUTLETS=true` and `PWA_PUSH_ALL_OUTLETS=true` (each requires its master switch;
+push also requires the VAPID keys) replace the exact-ID allowlists with every outlet. Both default to
+`false`. Push claims use the sentinel `ARRAY['*']` in `pwa_push_claim` / `guest_push_claim`; the live
+session, membership, grant and demo-tenant re-checks are unchanged, and devices still opt in manually.
+Web and worker must carry the same values, so restart both after changing them. The `/admin/features`
+page reports "Configured" for all-outlet mode, which is **not** device acceptance (#249). Rollback: set
+the flag to `false` (or the master switch off) and restart web and worker.
+
 ## Activation and rollback
 
 1. Deploy with `PWA_OPERATIONAL_ENABLED=false`; this also replaces v1 caches with the safer v2

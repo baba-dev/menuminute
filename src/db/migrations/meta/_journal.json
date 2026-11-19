@@ -785,6 +785,13 @@
       "when": 1796907600046,
       "tag": "0112_public_menu_sitemap",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1796994000046,
+      "tag": "0113_push_all_outlets",
+      "breakpoints": true
     }
   ]
 }

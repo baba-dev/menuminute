@@ -8,6 +8,9 @@ type Lease = {
   kind: "order.created" | "kitchen.changed";
 };
 
+/** Sentinel understood by the claim functions (migration 0113): every outlet. */
+const ALL_OUTLETS = "*";
+
 type PushSettings = {
   outletIds: string[];
   keys: { publicKey: string; privateKey: string; subject: string };
@@ -23,11 +26,15 @@ export function parsePushWorkerSettings(
   const flag = source["PWA_PUSH_ENABLED"] ?? "false";
   if (flag === "false") return null;
   if (flag !== "true") throw new Error("PWA_PUSH_ENABLED must be true or false");
+  const allFlag = source["PWA_PUSH_ALL_OUTLETS"] ?? "false";
+  if (allFlag !== "true" && allFlag !== "false")
+    throw new Error("PWA_PUSH_ALL_OUTLETS must be true or false");
   const outletIds = (source["PWA_PUSH_OUTLET_IDS"] ?? "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);
-  if (
+  if (allFlag === "true") outletIds.splice(0, outletIds.length, ALL_OUTLETS);
+  else if (
     outletIds.length === 0 ||
     outletIds.length > 50 ||
     new Set(outletIds).size !== outletIds.length ||
