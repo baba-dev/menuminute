@@ -9,6 +9,7 @@ import { requestActor, errorResponse } from "@/lib/request-context";
 import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { withOutlet, withOutletRead } from "@/modules/tenancy/service";
 import { env } from "@/lib/config/env";
+import { pwaPushEnabledForOutlet } from "@/lib/pwa/rollout";
 import { allowedPushEndpoint } from "@/modules/pwa/vapid";
 import { reservePushMutation } from "@/modules/pwa/push-rate-limit";
 
@@ -49,7 +50,7 @@ async function handleGet(req: Request) {
           app_private.kitchen_access(${outlet.id}) as "canKitchen"`
       )
     );
-    const enabled = env.PWA_PUSH_ENABLED && env.PWA_PUSH_OUTLET_IDS.includes(outlet.id);
+    const enabled = pwaPushEnabledForOutlet(outlet.id);
     return NextResponse.json(
       {
         enabled,
@@ -76,10 +77,7 @@ async function handlePost(req: Request) {
     const input = subscriptionInput.parse(JSON.parse(raw));
     if (!allowedPushEndpoint(input.endpoint))
       return NextResponse.json({ message: "Unsupported push service" }, { status: 422, headers });
-    if (
-      input.action === "subscribe" &&
-      (!env.PWA_PUSH_ENABLED || !env.PWA_PUSH_OUTLET_IDS.includes(outlet.id))
-    ) {
+    if (input.action === "subscribe" && !pwaPushEnabledForOutlet(outlet.id)) {
       return NextResponse.json(
         { message: "Device alerts are not enabled for this outlet" },
         { status: 403, headers }

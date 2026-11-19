@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getPool } from "@/db";
 import { env } from "@/lib/config/env";
+import { pwaPushEnabledForOutlet } from "@/lib/pwa/rollout";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { allowedPushEndpoint, pushEndpointHash } from "@/modules/pwa/vapid";
 import { publicOrderOutlet } from "@/modules/orders/rate-limit";
@@ -25,7 +26,7 @@ export async function guestPushOutlet(menuToken: string): Promise<string | null>
   if (!env.PWA_PUSH_ENABLED) return null;
   identity.parse(menuToken);
   const outletId = await publicOrderOutlet(menuToken);
-  return outletId && env.PWA_PUSH_OUTLET_IDS.includes(outletId) ? outletId : null;
+  return outletId && pwaPushEnabledForOutlet(outletId) ? outletId : null;
 }
 
 function mapError(error: unknown): never {

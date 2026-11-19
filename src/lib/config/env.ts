@@ -96,9 +96,12 @@ const envSchema = z
     // required. This remains independent from POS/Kitchen product activation and permissions.
     PWA_OPERATIONAL_ENABLED: strictBoolean.default(false),
     PWA_OPERATIONAL_OUTLET_IDS: rolloutOutletIds,
+    // Explicit global mode (all outlets). Needs the master switch; never implied by it.
+    PWA_OPERATIONAL_ALL_OUTLETS: strictBoolean.default(false),
     // H: opt-in push is independent of the guest offline and POS/Kitchen flags.
     PWA_PUSH_ENABLED: strictBoolean.default(false),
     PWA_PUSH_OUTLET_IDS: rolloutOutletIds,
+    PWA_PUSH_ALL_OUTLETS: strictBoolean.default(false),
     // Treat blank, unconfigured .env entries as absent while the feature stays off.
     PWA_PUSH_VAPID_PUBLIC_KEY: z.preprocess(
       (value) => (value === "" ? undefined : value),
@@ -245,7 +248,7 @@ const envSchema = z
       });
     if (
       e.PWA_PUSH_ENABLED &&
-      (e.PWA_PUSH_OUTLET_IDS.length === 0 ||
+      ((e.PWA_PUSH_OUTLET_IDS.length === 0 && !e.PWA_PUSH_ALL_OUTLETS) ||
         !e.PWA_PUSH_VAPID_PUBLIC_KEY ||
         !e.PWA_PUSH_VAPID_PRIVATE_KEY ||
         !e.PWA_PUSH_VAPID_SUBJECT)
@@ -253,13 +256,30 @@ const envSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["PWA_PUSH_ENABLED"],
-        message: "Push requires approved outlet IDs, a P-256 VAPID key pair and contact subject",
+        message:
+          "Push requires approved outlet IDs (or PWA_PUSH_ALL_OUTLETS), a P-256 VAPID key pair and contact subject",
       });
-    if (e.PWA_OPERATIONAL_ENABLED && e.PWA_OPERATIONAL_OUTLET_IDS.length === 0)
+    if (e.PWA_PUSH_ALL_OUTLETS && !e.PWA_PUSH_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["PWA_PUSH_ALL_OUTLETS"],
+        message: "All-outlet push requires PWA_PUSH_ENABLED=true",
+      });
+    if (
+      e.PWA_OPERATIONAL_ENABLED &&
+      e.PWA_OPERATIONAL_OUTLET_IDS.length === 0 &&
+      !e.PWA_OPERATIONAL_ALL_OUTLETS
+    )
       ctx.addIssue({
         code: "custom",
         path: ["PWA_OPERATIONAL_OUTLET_IDS"],
-        message: "Operational PWA rollout requires at least one outlet ID",
+        message: "Operational PWA rollout requires at least one outlet ID or all-outlet mode",
+      });
+    if (e.PWA_OPERATIONAL_ALL_OUTLETS && !e.PWA_OPERATIONAL_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["PWA_OPERATIONAL_ALL_OUTLETS"],
+        message: "All-outlet operational PWA requires PWA_OPERATIONAL_ENABLED=true",
       });
     if (e.AI_ASSISTANT_PUBLISH_ENABLED && !e.AI_ASSISTANT_ACTIONS_ENABLED)
       ctx.addIssue({

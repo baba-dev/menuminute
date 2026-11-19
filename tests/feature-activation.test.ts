@@ -23,8 +23,10 @@ const base: ActivationInputs = {
   emberPublish: false,
   emberProviderVerified: false,
   pwaOperational: false,
+  pwaAllOutlets: false,
   pwaOutletCount: 0,
   pwaPush: false,
+  pwaPushAllOutlets: false,
   pwaPushOutletCount: 0,
   pwaVapidConfigured: false,
 };
@@ -84,6 +86,15 @@ describe("feature activation diagnostics", () => {
     expect(
       item({ pwaPush: true, pwaPushOutletCount: 1, pwaVapidConfigured: true }, "push").state
     ).toBe("limited");
+  });
+
+  it("reports all-outlet PWA and push as configured only with their prerequisites", () => {
+    expect(item({ pwaOperational: true, pwaAllOutlets: true }, "pwa").state).toBe("configured");
+    expect(item({ pwaAllOutlets: true }, "pwa").state).toBe("unavailable");
+    expect(item({ pwaPush: true, pwaPushAllOutlets: true }, "push").state).toBe("unavailable");
+    const all = item({ pwaPush: true, pwaPushAllOutlets: true, pwaVapidConfigured: true }, "push");
+    expect(all.state).toBe("configured");
+    expect(all.scope).toMatch(/All outlets/);
   });
 
   it("never reports publisher access based on read-only Ember configuration", () => {
