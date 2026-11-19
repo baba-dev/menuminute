@@ -52,3 +52,35 @@ test("footer links stay trimmed on another public page and on mobile", async ({ 
     await expect(footer.locator(`a[href="${href}"]`)).toHaveCount(0);
   }
 });
+
+test("footer Resources offers the user guide, documentation and brochure, without placeholders", async ({
+  page,
+}) => {
+  await page.goto("/refund-policy");
+  const footer = page.getByTestId("public-footer");
+  const resources = footer
+    .getByRole("navigation", { name: "Footer navigation" })
+    .locator(".mmf-nav-group")
+    .filter({ has: page.getByRole("heading", { name: "Resources" }) });
+
+  await expect(resources.locator('a[href="/help"]')).toHaveCount(1);
+  await expect(resources.locator('a[href="/help/faq"]')).toHaveCount(1);
+  await expect(resources.getByRole("link", { name: "User Guide" })).toHaveAttribute(
+    "href",
+    "/help/guide"
+  );
+  await expect(resources.getByRole("link", { name: "Documentation" })).toHaveAttribute(
+    "href",
+    "/docs"
+  );
+  const brochure = resources.getByRole("link", { name: /Product Brochure/ });
+  await expect(brochure).toHaveAttribute("href", "/brochure/MenuMinute-Restaurant-Brochure.pdf");
+  await expect(brochure).toHaveAttribute("download", "");
+
+  // The old "Guides" label was renamed, and the "Soon" placeholders were removed.
+  await expect(resources.getByRole("link", { name: "Guides", exact: true })).toHaveCount(0);
+  await expect(resources.locator('a[href="/integrations"]')).toHaveCount(0);
+  await expect(resources.locator('a[href="/status"]')).toHaveCount(0);
+  await expect(resources).not.toContainText("Integrations");
+  await expect(resources).not.toContainText("System status");
+});
