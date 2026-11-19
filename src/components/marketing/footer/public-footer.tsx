@@ -1,6 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, HeartHandshake, QrCode, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Download,
+  HeartHandshake,
+  QrCode,
+  ShieldCheck,
+} from "lucide-react";
 import "./public-footer.css";
 
 const groups = [
@@ -27,9 +34,13 @@ const groups = [
     links: [
       { label: "Help centre", href: "/help" },
       { label: "FAQs", href: "/help/faq" },
-      { label: "Guides", href: "/docs" },
-      { label: "Integrations", href: "/integrations", soon: true },
-      { label: "System status", href: "/status", soon: true },
+      { label: "User Guide", href: "/help/guide" },
+      { label: "Documentation", href: "/docs" },
+      {
+        label: "Product Brochure (PDF)",
+        href: "/brochure/MenuMinute-Restaurant-Brochure.pdf",
+        download: true,
+      },
     ],
   },
   {
@@ -47,15 +58,23 @@ const groups = [
 function FooterAnchor({
   item,
 }: {
-  item: { label: string; href: string; external?: boolean; soon?: boolean };
+  item: { label: string; href: string; external?: boolean; soon?: boolean; download?: boolean };
 }) {
   const contents = (
     <>
       <span>{item.label}</span>
       {item.external && <ArrowUpRight size={13} aria-hidden="true" />}
+      {item.download && <Download size={13} aria-hidden="true" />}
       {item.soon && <span className="mmf-soon">Soon</span>}
     </>
   );
+  if (item.download) {
+    return (
+      <a href={item.href} download className="mmf-link">
+        {contents}
+      </a>
+    );
+  }
   return item.external ? (
     <a href={item.href} target="_blank" rel="noopener noreferrer" className="mmf-link">
       {contents}
