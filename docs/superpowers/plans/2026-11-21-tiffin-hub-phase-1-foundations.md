@@ -37,28 +37,30 @@ The spec lists a `"delivery"` fulfillment mode and an order-to-slot link in phas
 
 ## File Structure
 
-| File | Responsibility |
-| ---- | -------------- |
-| `docs/decisions.md` (modify) | ADR for the tiffin module and the delivery deferral |
-| `docs/tiffin.md` (create) | Current-status doc: implemented vs planned, links to spec and plans |
-| `src/lib/config/env.ts` (modify) | `TIFFIN_ENABLED` flag |
-| `src/modules/tiffin/contracts.ts` (create) | Outlet-type constant, slot kinds, Zod schemas for slot/combo/area |
-| `src/db/schema/tiffin.ts` (create) / `index.ts` (modify) | Drizzle tables |
-| `src/db/migrations/0114_tiffin_foundation.sql` (create) / `meta/_journal.json` (modify) | Constraint widening + tables + RLS |
-| `src/modules/restaurants/service.ts` (modify) | Accept `tiffin` only when flag on |
-| onboarding/settings/organization UI files | Offer the type only when the flag is on |
-| `tests/tiffin-contracts.test.ts`, `tests/tiffin-foundation.integration.test.ts`, `tests/tiffin-outlet-type.test.ts` (create) | Proof for each task |
+| File                                                                                                                         | Responsibility                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `docs/decisions.md` (modify)                                                                                                 | ADR for the tiffin module and the delivery deferral                 |
+| `docs/tiffin.md` (create)                                                                                                    | Current-status doc: implemented vs planned, links to spec and plans |
+| `src/lib/config/env.ts` (modify)                                                                                             | `TIFFIN_ENABLED` flag                                               |
+| `src/modules/tiffin/contracts.ts` (create)                                                                                   | Outlet-type constant, slot kinds, Zod schemas for slot/combo/area   |
+| `src/db/schema/tiffin.ts` (create) / `index.ts` (modify)                                                                     | Drizzle tables                                                      |
+| `src/db/migrations/0114_tiffin_foundation.sql` (create) / `meta/_journal.json` (modify)                                      | Constraint widening + tables + RLS                                  |
+| `src/modules/restaurants/service.ts` (modify)                                                                                | Accept `tiffin` only when flag on                                   |
+| onboarding/settings/organization UI files                                                                                    | Offer the type only when the flag is on                             |
+| `tests/tiffin-contracts.test.ts`, `tests/tiffin-foundation.integration.test.ts`, `tests/tiffin-outlet-type.test.ts` (create) | Proof for each task                                                 |
 
 ---
 
 ### Task 1: ADR and status doc
 
 **Files:**
+
 - Modify: `docs/decisions.md`
 - Create: `docs/tiffin.md`
 - Modify: `docs/product-roadmap.md` (add a "Planned: Tiffin & Home-Chef Hub" line linking `tiffin.md`; do not claim it delivered)
 
 **Interfaces:**
+
 - Produces: the ADR number later tasks cite as "ADR tiffin-hub" (use the next free number after the highest row in `docs/decisions.md`; at planning time the highest was 031).
 
 - [ ] **Step 1: Add the ADR row** in the table's existing format: status "Approved 2026-11-21", decision "Tiffin planning layer creates real orders; delivery mode and slot link deferred to phase 3 with the order-function change; outlet type `tiffin` behind `TIFFIN_ENABLED`", and a link to the spec.
@@ -71,11 +73,13 @@ The spec lists a `"delivery"` fulfillment mode and an order-to-slot link in phas
 ### Task 2: Feature flag and contracts
 
 **Files:**
+
 - Modify: `src/lib/config/env.ts` near `PUBLIC_DINER_STREAM_ENABLED` (line ~196)
 - Create: `src/modules/tiffin/contracts.ts`
 - Test: `tests/tiffin-contracts.test.ts`
 
 **Interfaces:**
+
 - Produces from `src/modules/tiffin/contracts.ts`:
   - `export const TIFFIN_OUTLET_TYPE = "tiffin" as const;`
   - `export const SLOT_KINDS = ["lunch", "dinner"] as const; export type SlotKind = (typeof SLOT_KINDS)[number];`
@@ -96,12 +100,14 @@ The spec lists a `"delivery"` fulfillment mode and an order-to-slot link in phas
 ### Task 3: Migration 0114 and Drizzle schema
 
 **Files:**
+
 - Create: `src/db/migrations/0114_tiffin_foundation.sql`
 - Modify: `src/db/migrations/meta/_journal.json` (append idx 113, tag `0114_tiffin_foundation`, `when` greater than the last entry, `version "7"`, `breakpoints true`)
 - Create: `src/db/schema/tiffin.ts`; Modify: `src/db/schema/index.ts` (`export * from "./tiffin";`)
 - Test: `tests/tiffin-foundation.integration.test.ts`
 
 **Interfaces:**
+
 - Produces tables (all with `id text primary key`, `organization_id text not null references organizations(id)`, `outlet_id text not null`, `created_at`/`updated_at timestamptz default clock_timestamp()`, and `UNIQUE (organization_id, id)`; outlet FK is composite `(organization_id, outlet_id) → restaurants(organization_id, id)` if that unique key exists, otherwise add the same cross-tenant guard used by `crm_guest_orders` in `0085`):
   - `tiffin_slots(kind, start_minute, end_minute, cutoff_minutes_before, capacity null, enabled)` with `UNIQUE (outlet_id, kind)` and CHECKs mirroring `slotInputSchema`.
   - `tiffin_week_menus(id, outlet_id, slot_id, weekday smallint 0–6)` unique per `(slot_id, weekday)`.
@@ -123,11 +129,13 @@ The spec lists a `"delivery"` fulfillment mode and an order-to-slot link in phas
 ### Task 4: Gate the `tiffin` outlet type
 
 **Files:**
+
 - Modify: `src/modules/restaurants/service.ts:72` (add `"tiffin"` to the `outletType` enum)
 - Modify: `src/components/onboarding/wizard-types.ts:3`, `src/components/onboarding/wizard-steps/step-identity.tsx`, `src/components/onboarding/quick-menu-identity.tsx`, `src/app/(dashboard)/dashboard/settings/outlet-atelier.tsx`, `src/app/(dashboard)/dashboard/organization/organization-manager.tsx` (offer the type only when the flag is on; pass the flag from a server component as a prop, never read server env in a client component)
 - Test: `tests/tiffin-outlet-type.test.ts`
 
 **Interfaces:**
+
 - Consumes: `tiffinEnabled()` and `TIFFIN_OUTLET_TYPE` from Task 2.
 - Produces: `createRestaurant(userId, { outletType: "tiffin", ... })` succeeds only when `tiffinEnabled()`; otherwise throws a validation error with message `Tiffin outlets are not available yet`. A tiffin outlet is created with `fulfillmentModes: ["pickup"]` (delivery arrives in phase 3).
 

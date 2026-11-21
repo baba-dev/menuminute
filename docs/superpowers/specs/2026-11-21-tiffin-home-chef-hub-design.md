@@ -89,11 +89,11 @@ spreadsheet beside it.
 
 ## Approaches considered
 
-| Approach                                       | Trade-off                                                                                                            |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| A. Extend menus and orders in place            | Least new code, but bends tables shared by every restaurant; menus have no order-time schedule today.               |
-| B. Separate tiffin module with its own orders  | Cleanest isolation, but re-implements idempotency, snapshots, audit and entitlements, the riskiest code to copy.     |
-| **C. Planning layer that creates real orders** | **Chosen.** New module owns planning data; confirmed bookings create ordinary orders through the order service.      |
+| Approach                                       | Trade-off                                                                                                        |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A. Extend menus and orders in place            | Least new code, but bends tables shared by every restaurant; menus have no order-time schedule today.            |
+| B. Separate tiffin module with its own orders  | Cleanest isolation, but re-implements idempotency, snapshots, audit and entitlements, the riskiest code to copy. |
+| **C. Planning layer that creates real orders** | **Chosen.** New module owns planning data; confirmed bookings create ordinary orders through the order service.  |
 
 **Chosen: C**, by the owner. Why: orders keep every existing guarantee, and tiffin complexity stays in
 one module that consumes the orders public contract and never writes its tables.
