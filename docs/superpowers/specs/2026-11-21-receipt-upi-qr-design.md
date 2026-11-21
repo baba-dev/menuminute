@@ -61,13 +61,13 @@ no money movement, no webhook, no confirmation, and no change to how payments ar
 
 ## Approaches considered
 
-| Approach                                                       | Trade-off                                                                                                                   | Outcome                         |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **A. Merchant enters UPI ID; we generate the QR**              | Crisp, nothing to store or moderate, no new dependency. Merchant must know their UPI ID.                                    | **Chosen by owner**             |
-| B. Upload a QR image and print it as is                        | Literal "upload", but screenshots and photos shrink badly to 1-bit at 203 dpi, carry bank branding, and need file handling. | Rejected                        |
-| C. Upload, decode the payload, store text, regenerate          | Friendlier input, but adds a decoder dependency and a failure mode. Same end result as A.                                   | Deferred; can be added later    |
-| Native ESC/POS QR command (`GS ( k`) vs. raster image block    | Native command is tiny but gives no frame, no side-by-side text and varies by printer model.                                | Rejected; raster block is used  |
-| Dynamic Razorpay QR                                            | Requires merchant-linked provider accounts and payment processing.                                                          | Rejected by owner (out of scope) |
+| Approach                                                    | Trade-off                                                                                                                   | Outcome                          |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **A. Merchant enters UPI ID; we generate the QR**           | Crisp, nothing to store or moderate, no new dependency. Merchant must know their UPI ID.                                    | **Chosen by owner**              |
+| B. Upload a QR image and print it as is                     | Literal "upload", but screenshots and photos shrink badly to 1-bit at 203 dpi, carry bank branding, and need file handling. | Rejected                         |
+| C. Upload, decode the payload, store text, regenerate       | Friendlier input, but adds a decoder dependency and a failure mode. Same end result as A.                                   | Deferred; can be added later     |
+| Native ESC/POS QR command (`GS ( k`) vs. raster image block | Native command is tiny but gives no frame, no side-by-side text and varies by printer model.                                | Rejected; raster block is used   |
+| Dynamic Razorpay QR                                         | Requires merchant-linked provider accounts and payment processing.                                                          | Rejected by owner (out of scope) |
 
 ## Design
 
