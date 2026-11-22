@@ -10,7 +10,9 @@ import { StepIdentity } from "./wizard-steps/step-identity";
 import { StepLocation } from "./wizard-steps/step-location";
 import { StepOperations } from "./wizard-steps/step-operations";
 import { StepContactTables } from "./wizard-steps/step-contact-tables";
+import { StepGetPaid } from "./wizard-steps/step-get-paid";
 import { StepLaunch } from "./wizard-steps/step-launch";
+import { upiStepProblem } from "./upi-step";
 import { QuickMenuIdentity } from "./quick-menu-identity";
 import { QuickMenuRegion } from "./quick-menu-region";
 import {
@@ -51,9 +53,15 @@ const STEPS: { id: WizardStepId; label: string; number: number; subtitle: string
     subtitle: "Setting the Tables · Configure guest access and service points",
   },
   {
+    id: "payments",
+    label: "Get paid",
+    number: 5,
+    subtitle: "Settling the Bill · Optional UPI QR printed on your bills",
+  },
+  {
     id: "launch",
     label: "Launch",
-    number: 5,
+    number: 6,
     subtitle: "Opening Night · Review your details before creating the outlet",
   },
 ];
@@ -126,6 +134,7 @@ function validateStep(step: number, draft: WizardDraft): string | null {
       }
     }
   }
+  if (step === 4) return upiStepProblem(draft);
   return null;
 }
 
@@ -560,7 +569,7 @@ export function OnboardingWizard({
             </p>
           </div>
         </div>
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <div style={{ padding: "0 2.25rem" }}>
             <ChefStickyNote
               author="Opening Night Checklist"
@@ -608,7 +617,8 @@ export function OnboardingWizard({
           )}
           {currentStep === 2 && <StepOperations draft={draft} onChange={updateDraft} />}
           {currentStep === 3 && <StepContactTables draft={draft} onChange={updateDraft} />}
-          {currentStep === 4 && (
+          {currentStep === 4 && <StepGetPaid draft={draft} onChange={updateDraft} />}
+          {currentStep === 5 && (
             <StepLaunch
               key={draft.timezone}
               draft={draft}

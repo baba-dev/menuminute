@@ -39,7 +39,7 @@ export function StepLaunch({ draft, busy, onLaunch, quick = false }: StepLaunchP
     <div className="wizard-content">
       <div className="wizard-header">
         <span className="wizard-eyebrow">
-          {quick ? "Step 03" : "Step 05"} / Review &amp; Create
+          {quick ? "Step 03" : "Step 06"} / Review &amp; Create
         </span>
         <h2 className="wizard-title">Review your outlet details.</h2>
         <p className="wizard-desc">

@@ -6,8 +6,30 @@ import { createRestaurant, createRestaurantSchema } from "@/modules/restaurants/
 import { env } from "@/lib/config/env";
 import { sendAuthEmail } from "@/lib/auth-email";
 import { AppError, ConflictError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+import { normalizePayeeName, parseUpiId } from "@/lib/pos/upi";
+import { saveOutletReceiptPayment } from "@/modules/receipt-payment/service";
 import { domainError } from "@/modules/organizations/service";
-export const onboardingDraftSchema = createRestaurantSchema.partial().strict();
+// Optional UPI fields are saved with the draft but are not outlet columns: they are applied to the
+// receipt payment profile after the outlet is created and stripped by createRestaurantSchema.
+export const onboardingDraftSchema = createRestaurantSchema
+  .partial()
+  .extend({
+    upiId: z
+      .string()
+      .max(400)
+      .refine((value) => value.trim() === "" || parseUpiId(value) !== null, "Invalid UPI ID")
+      .optional(),
+    upiPayeeName: z
+      .string()
+      .max(400)
+      .refine(
+        (value) => value.trim() === "" || normalizePayeeName(value) !== null,
+        "Invalid payee name"
+      )
+      .optional(),
+  })
+  .strict();
 const invitationInput = z
   .object({
     email: z
@@ -112,6 +134,30 @@ export async function saveOnboarding(actor: Actor, input: unknown) {
     return { key, draft, status: "draft" as const, outletId: null };
   });
 }
+/** Best effort: a profile problem must never fail or duplicate outlet creation. The merchant can
+ * always set the UPI ID later in Settings.
+ */
+async function applyOnboardingUpi(
+  actor: Actor,
+  outlet: { id: string; organizationId: string; name: string },
+  draft: Record<string, unknown>
+) {
+  const upiId = typeof draft["upiId"] === "string" ? draft["upiId"].trim() : "";
+  if (!upiId) return;
+  const typed = typeof draft["upiPayeeName"] === "string" ? draft["upiPayeeName"].trim() : "";
+  try {
+    await saveOutletReceiptPayment(actor, outlet.organizationId, outlet.id, {
+      expectedRevision: 0,
+      upiId,
+      payeeName: typed || normalizePayeeName(outlet.name) || "Restaurant",
+      enabled: true,
+    });
+  } catch (error) {
+    logger.warn("onboarding UPI profile was not saved; set it in Settings", {
+      error: error instanceof Error ? error.name : "unknown",
+    });
+  }
+}
 export async function provisionOnboarding(actor: Actor) {
   const state = await onboardingState(actor);
   if (state.status === "completed" && state.outletId)
@@ -133,6 +179,7 @@ export async function provisionOnboarding(actor: Actor) {
   });
   try {
     const outlet = await createRestaurant(actor.userId, input.data, state.key);
+    await applyOnboardingUpi(actor, outlet, state.draft);
     await withActor(actor, async (tx) =>
       tx.execute(sql`update onboarding_progress set status='completed',outlet_id=${outlet.id},
         draft='{}'::jsonb,updated_at=now() where user_id=${actor.userId} and operation_key=${state.key}`)

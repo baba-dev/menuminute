@@ -36,6 +36,9 @@ export interface WizardDraft {
   operationsContactName: string;
   operationsContactPhone: string;
   operationsContactEmail: string;
+  /** Optional UPI ID printed as a pre-filled QR on unpaid INR bills (step 'Get paid'). */
+  upiId: string;
+  upiPayeeName: string;
 }
 
 export const initialWizardDraft: WizardDraft = {
@@ -69,4 +72,6 @@ export const initialWizardDraft: WizardDraft = {
   operationsContactName: "",
   operationsContactPhone: "",
   operationsContactEmail: "",
+  upiId: "",
+  upiPayeeName: "",
 };

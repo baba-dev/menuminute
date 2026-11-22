@@ -1,8 +1,9 @@
 import type { WizardDraft } from "./wizard-types";
 
-/** Keep full onboarding intact; Quick Start only skips optional setup screens. */
+/** Keep full onboarding intact; Quick Start only skips optional setup screens (including the
+ * optional "Get paid by UPI" step, step 4). Step 5 is the final launch review. */
 export function visibleOnboardingSteps(quick: boolean): number[] {
-  return quick ? [0, 1, 4] : [0, 1, 2, 3, 4];
+  return quick ? [0, 1, 5] : [0, 1, 2, 3, 4, 5];
 }
 
 export function nextOnboardingStep(current: number, quick: boolean): number {
