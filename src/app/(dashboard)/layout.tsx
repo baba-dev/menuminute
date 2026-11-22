@@ -22,6 +22,7 @@ import {
   dashboardPublicProjection,
   dashboardQrRows,
 } from "@/modules/menu-product/dashboard-data";
+import { tiffinNavEnabled } from "@/modules/tiffin/dashboard-access";
 import { preferredMenuQr } from "@/modules/menu-product/dashboard-summary";
 import { auth } from "@/lib/auth";
 import { DemoBanner } from "@/components/demo/demo-banner";
@@ -88,7 +89,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       outletManage = extraResult.value.outletManage;
     }
     if (navigationResult.status === "fulfilled") {
-      capabilities = navigationResult.value;
+      capabilities = tiffinNavEnabled(restaurant.outletType)
+        ? { ...navigationResult.value, tiffin: true }
+        : navigationResult.value;
     } else {
       reportOptionalShellFailure("navigation", navigationResult.reason);
     }
