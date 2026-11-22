@@ -214,9 +214,11 @@ describe("combo editor", () => {
     reply(422, { message: "Explicit repricing required" });
     mount({ archivedCombos: [old] });
     fireEvent.click(screen.getByRole("button", { name: "Restore Old thali" }));
-    const alert = await screen.findByText(/Explicit repricing required/);
+    const alert = await screen.findByText(/Choose Edit, save it with a price in INR/);
     expect(lastBody()).toEqual({ id: "c2", archived: false });
-    expect(alert.textContent).toMatch(/save it with a price in INR, then restore/);
+    expect(alert.textContent).toBe(
+      "This combo needs a new price before it can be restored. Choose Edit, save it with a price in INR, then restore it."
+    );
     expect(
       screen.getByRole("button", { name: "Restore Old thali" }).getAttribute("aria-describedby")
     ).toBe(alert.id);
@@ -224,5 +226,23 @@ describe("combo editor", () => {
     reply(200, { ...old, archived: false });
     fireEvent.click(screen.getByRole("button", { name: "Restore Old thali" }));
     await screen.findByText("Restored “Old thali”.");
+  });
+
+  it("does not prefill prices from a combo stored in another currency", () => {
+    const usd: ComboView = { ...old, id: "c3", name: "Dollar thali", currency: "USD" };
+    mount({ archivedCombos: [usd] });
+    fireEvent.click(screen.getByRole("button", { name: "Edit Dollar thali" }));
+    expect((screen.getByLabelText("Price (INR)") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Add-on 1 price (INR)") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Add-on 1 name") as HTMLInputElement).value).toBe("Raita");
+    expect(
+      screen.getByText("Previously priced in USD ($120.00). Enter the price in INR.")
+    ).toBeTruthy();
+    // A combo in the outlet currency is still prefilled.
+    cleanup();
+    mount({ archivedCombos: [old] });
+    fireEvent.click(screen.getByRole("button", { name: "Edit Old thali" }));
+    expect((screen.getByLabelText("Price (INR)") as HTMLInputElement).value).toBe("120.00");
+    expect(screen.queryByText(/Previously priced in/)).toBeNull();
   });
 });

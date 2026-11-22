@@ -36,11 +36,17 @@ function emptyForm(): ComboFormValues {
   };
 }
 
-function formFrom(combo: ComboView): ComboFormValues {
+/**
+ * Prices are prefilled only when the combo is stored in the outlet currency. A combo priced in another
+ * currency (only archived ones can be) starts with empty price fields, so an old amount is never
+ * resubmitted under the outlet currency's label.
+ */
+function formFrom(combo: ComboView, currency: string): ComboFormValues {
+  const sameCurrency = combo.currency === currency;
   return {
     name: combo.name,
     description: combo.description,
-    price: minorToInput(combo.priceMinor, combo.currency),
+    price: sameCurrency ? minorToInput(combo.priceMinor, combo.currency) : "",
     items: combo.items.map((item) => ({
       key: nextKey(),
       label: item.label,
@@ -49,7 +55,7 @@ function formFrom(combo: ComboView): ComboFormValues {
     addons: combo.addons.map((addon) => ({
       key: nextKey(),
       label: addon.label,
-      price: minorToInput(addon.priceMinor, combo.currency),
+      price: sameCurrency ? minorToInput(addon.priceMinor, combo.currency) : "",
     })),
   };
 }
@@ -122,7 +128,7 @@ export function ComboEditor({ outletId, currency, combos, archivedCombos }: Prop
   });
 
   function open(next: Mode, combo?: ComboView) {
-    setForm(combo ? formFrom(combo) : emptyForm());
+    setForm(combo ? formFrom(combo, currency) : emptyForm());
     setErrors({});
     setFormError("");
     setNotice("");
@@ -209,7 +215,7 @@ export function ComboEditor({ outletId, currency, combos, archivedCombos }: Prop
       setRowErrors((current) => ({
         ...current,
         [combo.id]: repricing
-          ? `${result.message}. This combo was priced in another currency. Choose Edit, save it with a price in ${currency}, then restore it.`
+          ? `This combo needs a new price before it can be restored. Choose Edit, save it with a price in ${currency}, then restore it.`
           : result.message,
       }));
       return;
@@ -302,6 +308,12 @@ export function ComboEditor({ outletId, currency, combos, archivedCombos }: Prop
           {editing?.archived && (
             <p className="tiffin-muted">
               This combo is archived. Saving updates it; use Restore afterwards to offer it again.
+            </p>
+          )}
+          {editing && editing.currency !== currency && (
+            <p className="tiffin-muted">
+              Previously priced in {editing.currency} (
+              {formatMinor(editing.priceMinor, editing.currency)}). Enter the price in {currency}.
             </p>
           )}
           {formError && (
