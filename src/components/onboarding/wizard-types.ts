@@ -1,6 +1,7 @@
 import type { Schedule } from "@/modules/menu-product/contracts";
 
-export type OutletType = "restaurant" | "cafe" | "takeout" | "cloud_kitchen" | "hotel" | "mixed";
+export type OutletType =
+  "restaurant" | "cafe" | "takeout" | "cloud_kitchen" | "hotel" | "mixed" | "tiffin";
 
 export type FulfillmentMode = "dine_in" | "pickup";
 

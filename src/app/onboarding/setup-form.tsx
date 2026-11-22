@@ -9,9 +9,13 @@ import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 export function OnboardingForm({
   initialQuick = false,
   prefill,
+  tiffinOffered = false,
 }: {
   initialQuick?: boolean;
   prefill?: { name?: string; email?: string };
+  tiffinOffered?: boolean;
 }) {
-  return <OnboardingWizard initialQuick={initialQuick} prefill={prefill} />;
+  return (
+    <OnboardingWizard initialQuick={initialQuick} prefill={prefill} tiffinOffered={tiffinOffered} />
+  );
 }
