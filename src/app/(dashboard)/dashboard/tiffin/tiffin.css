@@ -258,3 +258,133 @@ a.tiffin-card:hover {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Weekly menu and special dates */
+.tiffin-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.tiffin-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--tf-accent);
+}
+.tiffin-slots {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.tiffin-slot {
+  padding: 18px;
+  border: 1px solid var(--tf-line);
+  border-radius: 14px;
+  background: var(--tf-panel);
+}
+.tiffin-slot-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.tiffin-slot .tiffin-field :is(input, select),
+.tiffin-form .tiffin-field select,
+.tiffin-form .tiffin-field input[type="date"] {
+  min-height: 44px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: inherit;
+  font: inherit;
+}
+.tiffin-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 8px;
+}
+.tiffin-check input {
+  width: 22px;
+  height: 22px;
+}
+.tiffin-readonly {
+  margin: 12px 0 0;
+}
+.tiffin-readonly dt {
+  color: var(--tf-muted);
+  font-weight: 600;
+}
+.tiffin-readonly dd {
+  margin: 0 0 8px;
+}
+.tiffin-table-wrap {
+  overflow-x: auto;
+}
+.tiffin-grid {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+.tiffin-grid :is(th, td) {
+  padding: 12px;
+  border: 1px solid var(--tf-line);
+  text-align: left;
+  vertical-align: top;
+}
+.tiffin-grid thead th {
+  background: var(--tf-soft);
+}
+.tiffin-grid tbody th {
+  white-space: nowrap;
+}
+.tiffin-picks {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.tiffin-pick {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-soft);
+}
+.tiffin-pick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tiffin-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.tiffin-add select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0 10px;
+  border: 1px solid var(--tf-line);
+  border-radius: 10px;
+  background: var(--tf-panel);
+  color: inherit;
+  font: inherit;
+}
+.tiffin-dirty {
+  color: var(--tf-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.tiffin-overrides {
+  margin-top: 32px;
+}
+.tiffin-shell :is(select, [tabindex="-1"]):focus-visible {
+  outline: 3px solid var(--mm-focus, #d76b29);
+  outline-offset: 2px;
+}

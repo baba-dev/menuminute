@@ -30,10 +30,10 @@ export default async function TiffinPage() {
           <h2>Combos</h2>
           <p>Create meals with their items, prices and optional add-ons.</p>
         </Link>
-        <div className="tiffin-card is-disabled">
+        <Link href="/dashboard/tiffin/week" className="tiffin-card">
           <h2>Weekly menu</h2>
-          <p>Available in the next step.</p>
-        </div>
+          <p>Choose the combos for each weekday and close or change specific dates.</p>
+        </Link>
       </div>
     </main>
   );
