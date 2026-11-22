@@ -86,6 +86,25 @@ describe("priceSelection", () => {
     expect(() => priceSelection([thali], many)).toThrow(ValidationError);
     expect(priceSelection([thali], many.slice(0, 100)).totalMinor).toBe(1_200_000n);
   });
+  it("keeps a maximum safe quantity exact and rejects overflow", () => {
+    const one: PricedCombo = { ...snack, priceMinor: 1000n };
+    const r = priceSelection(
+      [one],
+      [{ comboId: "combo-snack", addonIds: [], quantity: Number.MAX_SAFE_INTEGER }]
+    );
+    expect(r.totalMinor).toBe(1000n * BigInt(Number.MAX_SAFE_INTEGER));
+    const big: PricedCombo = { ...snack, priceMinor: 2147483647n };
+    expect(() =>
+      priceSelection(
+        [big],
+        Array.from({ length: 100 }, () => ({
+          comboId: "combo-snack",
+          addonIds: [],
+          quantity: Number.MAX_SAFE_INTEGER,
+        }))
+      )
+    ).toThrow(ValidationError);
+  });
   it("rejects a total above the limit", () => {
     const big: PricedCombo = { ...snack, priceMinor: 2n ** 62n };
     expect(() =>

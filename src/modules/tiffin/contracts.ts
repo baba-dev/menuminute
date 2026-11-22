@@ -88,7 +88,7 @@ export const tiffinQuoteInputSchema = z
           .object({
             comboId: z.string().min(1).max(64),
             addonIds: z.array(z.string().min(1).max(64)).max(20),
-            quantity: z.number().int().min(1).max(99),
+            quantity: z.number().int().positive().safe(),
           })
           .strict()
       )

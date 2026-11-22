@@ -164,6 +164,23 @@ describe("tiffinQuoteInputSchema", () => {
   });
 });
 
+describe("tiffinQuoteInputSchema line quantity", () => {
+  const withQty = (quantity: number) => ({
+    localDate: "2026-02-27",
+    slotKind: "lunch",
+    lines: [{ comboId: "a", addonIds: [], quantity }],
+  });
+  it("accepts any positive safe integer (no merchant-facing cap)", () => {
+    expect(tiffinQuoteInputSchema.safeParse(withQty(1000000)).success).toBe(true);
+    expect(tiffinQuoteInputSchema.safeParse(withQty(Number.MAX_SAFE_INTEGER)).success).toBe(true);
+  });
+  it("rejects zero, negative, fractional and unsafe quantities", () => {
+    for (const q of [0, -1, 1.5, 2 ** 53]) {
+      expect(tiffinQuoteInputSchema.safeParse(withQty(q)).success).toBe(false);
+    }
+  });
+});
+
 describe("tiffinFlagEnabled", () => {
   afterEach(() => vi.unstubAllEnvs());
   it("parses only the flag, fail closed", () => {
