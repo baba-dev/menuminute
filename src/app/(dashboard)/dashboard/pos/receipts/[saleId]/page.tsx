@@ -7,6 +7,7 @@ import { getDefaultOrActiveRestaurant } from "@/modules/restaurants/service";
 import { posReceipt } from "@/modules/pos/service";
 import { getReceiptPaymentForPrint } from "@/modules/receipt-payment/service";
 import { ReceiptPrintActions } from "./receipt-print-actions";
+import { PayBlockPreview } from "@/components/pos/pay-block-preview";
 import { buildThermalReceipt, formatReceiptMoney as money } from "@/modules/pos/thermal-view";
 import "./receipt.css";
 
@@ -182,6 +183,7 @@ export default async function ReceiptPage({
           <span>{refunded ? "Original paid amount (refunded)" : "Total payable"}</span>
           <strong>{money(receipt.totalMinor ?? receipt.subtotalMinor, receipt.currency)}</strong>
         </div>
+        {thermal.payBlock && <PayBlockPreview block={thermal.payBlock} paper={paper} />}
         <div className="receipt-rule" aria-hidden="true" />
         <div className="receipt-center receipt-footer">
           <strong>
