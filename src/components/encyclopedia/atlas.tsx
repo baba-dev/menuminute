@@ -285,7 +285,13 @@ export function AtlasAdReservation({ kind }: { kind: "inline" | "sidebar" | "hor
     </div>
   );
 }
-export function AtlasArticleSections({ entry }: { entry: FoodEntry }) {
+export function AtlasArticleSections({
+  entry,
+  related,
+}: {
+  entry: FoodEntry;
+  related?: FoodEntry[];
+}) {
   return (
     <div className="atlas-article-layout">
       <nav className="atlas-article-toc" aria-label="On this page">
@@ -317,17 +323,38 @@ export function AtlasArticleSections({ entry }: { entry: FoodEntry }) {
             <p>{entry.caution}</p>
           </aside>
         )}
-        <p className="atlas-source-note">
-          Editorial demonstration only. Food preparation varies; no claim describes a specific
-          restaurant serving.
-        </p>
+        {entry.status === "published" ? (
+          <div className="atlas-source-note" aria-label="Article sources and review">
+            <strong>Sources and editorial review</strong>
+            <p>
+              Reviewed by {entry.reviewedBy},{" "}
+              {entry.reviewedAt
+                ? new Date(entry.reviewedAt).toLocaleDateString("en-GB")
+                : "review date recorded"}
+              . Food preparation varies between restaurants.
+            </p>
+            <ol>
+              {entry.sourceUrls.map((url) => (
+                <li key={url}>
+                  <a href={url} target="_blank" rel="nofollow noopener noreferrer">
+                    {new URL(url).hostname}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : (
+          <p className="atlas-source-note">
+            Editorial demonstration only. This guide is not independently reviewed.
+          </p>
+        )}
         <AtlasArticleCTA />
       </article>
       <aside className="atlas-article-aside" aria-label="Related reading">
         <div className="atlas-aside-card">
           <span className="atlas-kicker">KEEP EXPLORING</span>
           <h3>Follow your curiosity.</h3>
-          {getRelatedFood(entry).map((related) => (
+          {(related ?? getRelatedFood(entry)).map((related) => (
             <Link key={related.id} href={foodPath(related)}>
               {related.title}
               <ArrowRight size={16} aria-hidden="true" />

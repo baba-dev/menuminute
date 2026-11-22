@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Lock,
   LifeBuoy,
+  BookOpenText,
   ArrowLeft,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { href: "/admin/payments", label: "Payments & Grants", icon: CreditCard },
   { href: "/admin/kitchen", label: "Kitchen Control Desk", icon: ChefHat },
   { href: "/admin/support", label: "Support Desk", icon: LifeBuoy },
+  { href: "/admin/encyclopedia", label: "Food Encyclopedia", icon: BookOpenText },
   { href: "/admin/security", label: "Security & Audits", icon: Lock },
 ];
 

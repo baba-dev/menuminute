@@ -6,7 +6,7 @@ import { industrySolutions } from "@/content/marketing/solutions";
 
 import { PUBLIC_ORIGIN as BASE_URL } from "@/lib/marketing/seo";
 import { demoModeEnabled } from "@/modules/demo/ids";
-import { publishedFoodEntries } from "@/modules/food-encyclopedia/pilot";
+import { listPublishedFoodSitemap } from "@/modules/food-encyclopedia/editorial-service";
 import { foodPath } from "@/modules/food-encyclopedia/contracts";
 
 // Never prerendered at build time: the public menu list comes from PostgreSQL.
@@ -159,9 +159,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
   // Only independently reviewed, explicitly published editorial guides are indexable.
   // Preview/design profiles are NEVER promoted into the sitemap.
-  const foodRoutes: MetadataRoute.Sitemap = publishedFoodEntries.map((entry) => ({
+  const verifiedFood = await listPublishedFoodSitemap();
+  const foodRoutes: MetadataRoute.Sitemap = verifiedFood.map((entry) => ({
     url: BASE_URL + foodPath(entry),
-    lastModified: entry.reviewedAt,
+    lastModified: entry.reviewed_at,
     changeFrequency: "monthly",
     priority: 0.65,
   }));
