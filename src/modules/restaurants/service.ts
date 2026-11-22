@@ -5,6 +5,7 @@ import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { ValidationError } from "@/lib/errors";
 import { restaurantTables, restaurants, qrCodes } from "@/db/schema";
 import { getPool } from "@/db";
 import { withActor, withOutlet, type Actor } from "@/modules/tenancy/service";
@@ -14,7 +15,6 @@ import { canonicalOutletTimezone, isRuntimeTimezone } from "@/lib/outlet-timezon
 import { regions } from "@/modules/onboarding/locales";
 import { verifyOutletTimezone } from "@/modules/timezones/service";
 import { TIFFIN_OUTLET_TYPE, tiffinEnabled } from "@/modules/tiffin/contracts";
-import { ValidationError } from "@/lib/errors";
 export const createRestaurantSchema = z.object({
   fulfillmentModes: z
     .array(z.enum(["dine_in", "pickup"]))
@@ -85,6 +85,22 @@ export const createRestaurantSchema = z.object({
   pickupAdvanceDays: z.number().int().min(1).max(30).optional(),
   tableCount: z.number().int().min(0).max(50).optional().nullable(),
 });
+const PICKUP_ONLY_OUTLET_TYPES = new Set(["takeout", "cloud_kitchen"]);
+/**
+ * Mirrors the `pickup_only_types` database CHECK so an impossible combination is rejected as a
+ * validation error before any state is claimed. Omitted modes default to pickup-only in the DB.
+ */
+export function assertFulfillmentModesForOutletType(input: {
+  outletType?: string | undefined;
+  fulfillmentModes?: readonly string[] | undefined;
+}) {
+  if (!input.outletType || !PICKUP_ONLY_OUTLET_TYPES.has(input.outletType)) return;
+  const modes = input.fulfillmentModes;
+  if (modes && !(modes.length === 1 && modes[0] === "pickup"))
+    throw new ValidationError("Takeout and cloud kitchen outlets support pickup only.", {
+      fulfillmentModes: ["Takeout and cloud kitchen outlets support pickup only."],
+    });
+}
 export type CreateRestaurantInput = z.input<typeof createRestaurantSchema>;
 /**
  * Server-side gate for every path that can set an outlet type. The provisioning SQL accepts

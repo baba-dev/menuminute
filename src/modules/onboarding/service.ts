@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { withActor, type Actor } from "@/modules/tenancy/service";
 import {
+  assertFulfillmentModesForOutletType,
   assertOutletTypeAllowed,
   createRestaurant,
   createRestaurantSchema,
@@ -88,6 +89,7 @@ export async function saveOnboarding(actor: Actor, input: unknown) {
   // Reject at save so a tiffin draft can never reach provisioning with dine-in.
   if (draft.outletType === "tiffin" && draft.fulfillmentModes !== undefined)
     tiffinFulfillmentModes(draft.fulfillmentModes);
+  assertFulfillmentModesForOutletType(draft);
   return withActor(actor, async (tx) => {
     const current = await tx.execute<Progress>(
       sql`select operation_key,draft,status,outlet_id from onboarding_progress
@@ -133,6 +135,8 @@ export async function provisionOnboarding(actor: Actor) {
   // Before the draft is claimed as 'provisioning', so a disabled flag leaves it resumable.
   assertOutletTypeAllowed(input.data.outletType);
   if (input.data.outletType === "tiffin") tiffinFulfillmentModes(input.data.fulfillmentModes);
+  // Reject combinations the database would refuse before the draft is claimed as provisioning.
+  assertFulfillmentModesForOutletType(input.data);
   await withActor(actor, async (tx) => {
     const claimed = await tx.execute<{ operation_key: string }>(
       sql`update onboarding_progress set status='provisioning',updated_at=now()

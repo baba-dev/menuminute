@@ -14,7 +14,10 @@ export function StepOperations({
 }) {
   const currencies = useSupportedCurrencies(draft.currency || undefined);
   const hasPickup = draft.fulfillmentModes.includes("pickup");
+  // Mirrors the database rule: takeout and cloud kitchen outlets are pickup-only.
+  const pickupOnly = draft.outletType === "takeout" || draft.outletType === "cloud_kitchen";
   const toggle = (mode: "dine_in" | "pickup") => {
+    if (pickupOnly && mode === "dine_in") return;
     const active = draft.fulfillmentModes.includes(mode);
     if (mode === "dine_in" && draft.outletType === "tiffin") return;
     if (active && draft.fulfillmentModes.length === 1) return;
@@ -61,14 +64,18 @@ export function StepOperations({
                 className="wizard-mode-checkbox"
                 type="checkbox"
                 checked={draft.fulfillmentModes.includes(mode.id)}
-                disabled={mode.id === "dine_in" && draft.outletType === "tiffin"}
+                disabled={(pickupOnly || draft.outletType === "tiffin") && mode.id === "dine_in"}
                 onChange={() => toggle(mode.id)}
               />
               <div>
                 <strong>
                   <mode.Icon size={16} aria-hidden="true" /> {mode.name}
                 </strong>
-                <p>{mode.desc}</p>
+                <p>
+                  {pickupOnly && mode.id === "dine_in"
+                    ? "Not available for takeout and cloud kitchen outlets."
+                    : mode.desc}
+                </p>
               </div>
             </label>
           ))}
