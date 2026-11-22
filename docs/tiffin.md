@@ -26,10 +26,15 @@ generally available. Merging is not deployment.
 - **Pricing and contracts:** `src/modules/tiffin/pricing.ts` (checked integer money, no client prices) and the phase 2
   input schemas in `src/modules/tiffin/contracts.ts`.
 - **Migration 0115 (authoring):** guarded `SECURITY DEFINER` authoring functions for slots, combos (with items and
-  add-ons), week menus and date overrides, audit rows for every edit, the currency guard trigger on `tiffin_combos`
-  and the 200 non-archived combos per outlet bound.
+  add-ons), week menus and date overrides, audit rows for every edit, the currency guard trigger
+  (`BEFORE UPDATE OF currency ON restaurants`, refusing a change while a non-archived combo has another currency)
+  and the 200 non-archived combos per outlet bound. `tiffin_can` fails closed on any mode other than `read`/`write`.
 - **Migration 0116 (public read):** `tiffin_public_week` and `tiffin_public_offer`, plus owner-only clock-injected
   test-support variants (`tiffin_public_week_at`, `tiffin_public_offer_at`) that the app and worker roles cannot execute.
+  The public week JSON is `{outlet, today, combos, days}`: `combos` maps each offered combo id to the combo (embedded
+  once), and each day's `slots.lunch`/`slots.dinner` carries `kind`, `startMinute`, `endMinute`, `open`, `closed` and the
+  ordered `comboIds`. Disabled slots are absent. Prices are decimal strings of minor units. The SQL accepts 1–14 days;
+  the public route (`?days=`) accepts 1–7 and answers 422 above that.
 - **Service and routes:** `src/modules/tiffin/service.ts`. Authoring routes live under `/api/tiffin/[outletId]/...`
   (session and outlet scope checked in the service). Public routes live under `/api/public-tiffin/[publicMenuId]/...`:
   the public week (GET) and the quote (POST). With the flag off or malformed, every tiffin route answers a plain 404.
@@ -50,7 +55,9 @@ generally available. Merging is not deployment.
 - Edits take effect immediately and are audited. Last write wins per outlet (advisory lock).
 - A date override replaces that day's menu; a closed override means nothing is offered that day.
 - Weekday convention: 0 = Sunday.
-- Archived combos are never offered or quoted and keep their stored currency.
+- Archived combos are never offered or quoted and keep their stored currency. Restoring a combo does not bring it
+  back into a week cell or override that was saved while it was archived: saving a cell or override replaces its
+  whole list and drops links to archived combos.
 - The combo currency is set by the server from the outlet. A currency change is blocked while a non-archived combo
   has a different currency.
 - 200 non-archived combos per outlet is an abuse bound, not a plan limit.
@@ -60,6 +67,20 @@ generally available. Merging is not deployment.
   or non-tiffin outlet.
 
 No booking, orders integration, job cards, customer list, ledger or subscription exists.
+
+## Before enabling TIFFIN_ENABLED
+
+Every item must be done, or explicitly accepted by the owner, before the flag is turned on in production:
+
+- [ ] The live Nginx `location /api/public-tiffin` block is added (see the operator note below; do not copy it from
+      anywhere else).
+- [ ] The IPv6 /64 source-aggregation gap in the public rate limits is resolved or accepted. It multiplies any
+      public-payload concern, because one /64 supplies unlimited sources.
+- [ ] The public payload and SSR size are reviewed. The public week embeds each combo once and the route caps days at
+      7; still measure the SSR HTML size of a maximal week (200 combos with maximum text) on `/m/<publicMenuId>/week`.
+- [ ] `scripts/security/verify-live-edge.mjs` is updated, only **after** the live host has the new location block.
+- [ ] A fresh verified off-host backup exists and migrations 0115/0116 shipped through the helper v7 path.
+- [ ] The owner has decided whether combos count against the Free plan's dish cap.
 
 ## Operator notes
 
