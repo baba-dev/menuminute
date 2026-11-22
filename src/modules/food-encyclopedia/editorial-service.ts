@@ -22,11 +22,11 @@ export async function getPublishedFoodEntry(kind: FoodKind, slug: string): Promi
     return null;
   }
 }
-export async function listPublishedFood(kind?: FoodKind, query?: string, limit = 40): Promise<FoodEntry[]> {
+export async function listPublishedFood(kind?: FoodKind, query?: string, limit = 40, offset = 0): Promise<FoodEntry[]> {
   try {
     const r = await getPool().query<{ entry: unknown }>(
-      "SELECT entry FROM app_private.food_public_list($1,$2,$3)",
-      [kind ?? null, (query ?? "").trim().slice(0, 100), Math.min(100,Math.max(1,limit))]
+      "SELECT entry FROM app_private.food_public_list($1,$2,$3,$4)",
+      [kind ?? null, (query ?? "").trim().slice(0, 100), Math.min(100,Math.max(1,limit)), Math.max(0,Math.min(offset,50000))]
     );
     return r.rows.flatMap(({ entry }) => { const parsed = parseFoodRow(entry); return parsed ? [parsed] : []; });
   } catch { return []; }
@@ -69,4 +69,13 @@ export async function runEditorialCommand(actor: AdminActor, action: FoodEditori
     if (!result.rows[0]) throw new Error("No editorial command receipt");
     return result.rows[0].result;
   });
+}
+
+export async function listPublishedFoodSitemap(limit=45000):Promise<Array<{kind:FoodKind;slug:string;reviewed_at:Date}>> {
+ try {
+  const result=await getPool().query<{kind:FoodKind;slug:string;reviewed_at:Date}>(
+    "SELECT kind,slug,reviewed_at FROM app_private.food_public_sitemap($1)",
+    [Math.max(0,Math.min(limit,45000))]);
+  return result.rows;
+ } catch { return []; }
 }

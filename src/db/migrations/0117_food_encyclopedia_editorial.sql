@@ -175,7 +175,7 @@ REVOKE ALL ON FUNCTION app_private.food_public_entry(text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app_private.food_public_entry(text,text) TO menuminute_app;
 
 -- Bounded search across reviewed publication only; drafts and archived revisions never leak.
-CREATE FUNCTION app_private.food_public_list(p_kind text,p_query text,p_limit integer)
+CREATE FUNCTION app_private.food_public_list(p_kind text,p_query text,p_limit integer,p_offset integer)
 RETURNS TABLE(entry jsonb) LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path=pg_catalog,public,pg_temp AS $list$
   SELECT app_private.food_public_payload(e,r) AS entry
@@ -189,10 +189,27 @@ SET search_path=pg_catalog,public,pg_temp AS $list$
        OR e.search_text ILIKE ('%' || replace(replace(left(p_query,100),'%','\\%'),'_','\\_') || '%') ESCAPE '\\'
      )
    ORDER BY e.published_at DESC,e.id
-   LIMIT GREATEST(0,LEAST(coalesce(p_limit,30),100));
+   LIMIT GREATEST(0,LEAST(coalesce(p_limit,30),100))
+   OFFSET GREATEST(0,LEAST(coalesce(p_offset,0),50000));
 $list$;
-REVOKE ALL ON FUNCTION app_private.food_public_list(text,text,integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_private.food_public_list(text,text,integer) TO menuminute_app;
+REVOKE ALL ON FUNCTION app_private.food_public_list(text,text,integer,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_public_list(text,text,integer,integer) TO menuminute_app;
+
+
+-- Approved, public-only sitemaps must remain complete as the encyclopedia scales.
+CREATE FUNCTION app_private.food_public_sitemap(p_limit integer)
+RETURNS TABLE(kind text,slug text,reviewed_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,pg_temp AS $sitemap$
+ SELECT e.kind,e.slug,r.reviewed_at FROM food_entries e
+ JOIN food_revisions r ON r.entry_id=e.id AND r.id=e.published_revision_id
+ WHERE e.published_revision_id IS NOT NULL AND e.published_at IS NOT NULL
+ AND r.approved AND r.reviewed_by IS NOT NULL AND r.reviewed_at IS NOT NULL
+ ORDER BY e.published_at DESC,e.id
+ LIMIT GREATEST(0,LEAST(coalesce(p_limit,45000),45000));
+$sitemap$;
+REVOKE ALL ON FUNCTION app_private.food_public_sitemap(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_private.food_public_sitemap(integer) TO menuminute_app;
 
 CREATE FUNCTION app_private.food_public_redirect(p_kind text,p_slug text)
 RETURNS text LANGUAGE sql STABLE SECURITY DEFINER
