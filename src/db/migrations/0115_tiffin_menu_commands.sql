@@ -109,12 +109,14 @@ LANGUAGE sql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp
 $$;
 
 -- ── Authorization ──────────────────────────────────────────────────────────────────────────────────
+-- Fails closed: only 'read' and 'write' map to a permission; any other mode (or NULL) yields false
+-- (the explicit IN check matters because can_outlet allows owners and admins any permission).
 CREATE FUNCTION app_private.tiffin_can(p_outlet text,p_mode text) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
  SELECT EXISTS(SELECT 1 FROM restaurants r JOIN organizations o ON o.id=r.organization_id
  WHERE r.id=p_outlet AND r.is_active AND o.is_active AND r.outlet_type='tiffin'
- AND current_setting('app.outlet_id',true)=p_outlet
- AND app_private.can_outlet(p_outlet,CASE p_mode WHEN 'write' THEN 'menu.write' ELSE 'menu.read' END))
+ AND current_setting('app.outlet_id',true)=p_outlet AND p_mode IN ('read','write')
+ AND app_private.can_outlet(p_outlet,CASE p_mode WHEN 'read' THEN 'menu.read' WHEN 'write' THEN 'menu.write' END))
 $$;
 
 -- ── Slots ──────────────────────────────────────────────────────────────────────────────────────────
@@ -391,8 +393,10 @@ BEGIN
 END $$;
 
 -- ── Read ───────────────────────────────────────────────────────────────────────────────────────────
--- Archived combos are listed separately and are hidden from week and override combo lists (the
--- links are kept, so a restore brings them back). Overrides from outlet-local yesterday forward.
+-- Archived combos are listed separately and are hidden from week and override combo lists. Their stored
+-- links survive only until that week cell or override is saved again (tiffin_week_set and
+-- tiffin_override_set replace the whole list), so a restore brings a combo back only where its link was
+-- never re-saved. Overrides from outlet-local yesterday forward.
 CREATE FUNCTION app_private.tiffin_menu_read(p_outlet text) RETURNS jsonb
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
 DECLARE v_org text; v_currency text; v_tz text; v_today date;

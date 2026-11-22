@@ -341,6 +341,14 @@ describe("tiffin menu commands 0115 — authorization", () => {
     await expectPg(call(noGrant, f.outlet.id, "tiffin_menu_read"), "42501", "Not allowed");
   });
 
+  it("tiffin_can fails closed on an unknown mode", async () => {
+    const f = await tiffinFixture();
+    expect(await can(f.userId, f.outlet.id, "read")).toBe(true);
+    expect(await can(f.userId, f.outlet.id, "write")).toBe(true);
+    for (const mode of ["Write", "admin", "", null])
+      expect(await can(f.userId, f.outlet.id, mode as string), String(mode)).toBe(false);
+  });
+
   it("denies a foreign organization, a restaurant outlet, a mismatched session outlet and inactive tenants", async () => {
     const f = await tiffinFixture();
     const other = await tiffinFixture();

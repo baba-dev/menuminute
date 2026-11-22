@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 import { admin, fixture } from "./helpers";
 import {
@@ -849,5 +850,57 @@ describe("tiffin public functions (0116) grants", () => {
       "tiffin_public_week",
       "tiffin_public_week_at",
     ]);
+  });
+});
+
+describe("tiffin 0115/0116 function privilege matrix", () => {
+  // Entry points executable by menuminute_app; every other function from 0115/0116 is owner-only.
+  const APP_EXECUTABLE = [
+    "tiffin_can",
+    "tiffin_combo_save",
+    "tiffin_menu_read",
+    "tiffin_override_set",
+    "tiffin_public_offer",
+    "tiffin_public_week",
+    "tiffin_slot_save",
+    "tiffin_week_set",
+  ];
+
+  it("grants EXECUTE to menuminute_app only on the entry points, never to worker or PUBLIC", async () => {
+    const created = new Set<string>();
+    for (const file of ["0115_tiffin_menu_commands.sql", "0116_tiffin_public_week.sql"]) {
+      const text = await readFile(`src/db/migrations/${file}`, "utf8");
+      for (const m of text.matchAll(/CREATE FUNCTION app_private\.(\w+)\(/g)) created.add(m[1]!);
+    }
+    expect(created.size).toBe(21);
+    const rows = await admin(
+      async (_db, pool) =>
+        (
+          await pool.query<{ proname: string; app: boolean; worker: boolean; public: boolean }>(
+            `select p.proname,
+             has_function_privilege('menuminute_app',p.oid,'EXECUTE') as app,
+             has_function_privilege('menuminute_worker',p.oid,'EXECUTE') as worker,
+             exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+                    where a.grantee=0 and a.privilege_type='EXECUTE') as public
+           from pg_proc p
+           where p.pronamespace='app_private'::regnamespace and p.proname=any($1::text[])`,
+            [[...created]]
+          )
+        ).rows
+    );
+    // One overload per name: every function the migrations create exists exactly once.
+    expect(rows.map((r) => r.proname).sort()).toEqual([...created].sort());
+    for (const r of rows) {
+      expect({ fn: r.proname, app: r.app }).toEqual({
+        fn: r.proname,
+        app: APP_EXECUTABLE.includes(r.proname),
+      });
+      expect({ fn: r.proname, worker: r.worker, public: r.public }).toEqual({
+        fn: r.proname,
+        worker: false,
+        public: false,
+      });
+    }
+    expect(APP_EXECUTABLE.every((fn) => created.has(fn))).toBe(true);
   });
 });
