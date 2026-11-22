@@ -78,6 +78,25 @@ export const overrideSetSchema = z
   })
   .strict();
 
+/** Slot save: the slot fields plus the optional `enabled` switch accepted by tiffin_slot_save. */
+export const slotSaveSchema = z
+  .object({ ...slotInputSchema.shape, enabled: z.boolean().optional() })
+  .strict()
+  .refine((slot) => slot.endMinute > slot.startMinute, {
+    message: "endMinute must be after startMinute",
+    path: ["endMinute"],
+  });
+
+/** Archive (archived: true) or restore (archived: false) one combo by id. */
+export const comboArchiveSchema = z
+  .object({ id: z.string().min(1).max(64), archived: z.boolean() })
+  .strict();
+
+/** Removes the override for one slot and date, restoring the weekday menu. */
+export const overrideClearSchema = z
+  .object({ slotKind: z.enum(SLOT_KINDS), localDate, clear: z.literal(true) })
+  .strict();
+
 export const tiffinQuoteInputSchema = z
   .object({
     localDate,

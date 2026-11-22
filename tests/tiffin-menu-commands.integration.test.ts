@@ -1081,9 +1081,9 @@ describe("tiffin menu commands 0115 — migration ledger", () => {
       const journal = JSON.parse(
         await readFile("src/db/migrations/meta/_journal.json", "utf8")
       ) as { entries: { idx: number; tag: string; when: number }[] };
-      const last = journal.entries.at(-1)!;
-      expect(last).toMatchObject({ idx: 114, tag: "0115_tiffin_menu_commands" });
-      expect(last.when).toBeGreaterThan(journal.entries.at(-2)!.when);
+      const at = journal.entries.findIndex((e) => e.tag === "0115_tiffin_menu_commands");
+      expect(journal.entries[at]).toMatchObject({ idx: 114, tag: "0115_tiffin_menu_commands" });
+      expect(journal.entries[at]!.when).toBeGreaterThan(journal.entries[at - 1]!.when);
       const names = (
         await pool.query<{ name: string }>("select name from drizzle.foundation_migrations")
       ).rows.map((row) => row.name);
