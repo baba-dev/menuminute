@@ -3,11 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { verifySuperAdmin } from "@/lib/admin-guard";
-import {
-  FoodDraftSchema,
-  FoodEditorialActionSchema,
-  type FoodDraft,
-} from "@/modules/food-encyclopedia/editorial-contracts";
+import { FoodDraftSchema, FoodEditorialActionSchema } from "@/modules/food-encyclopedia/editorial-contracts";
 import { runEditorialCommand } from "@/modules/food-encyclopedia/editorial-service";
 
 const requestSchema = z
