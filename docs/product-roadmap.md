@@ -25,7 +25,7 @@ Free: ₹0, 20 dishes and 2 QR codes; Ordering: ₹119/month (USD listing $5); K
 
 ## Planned: Tiffin & Home-Chef Hub
 
-Planned, not delivered: weekly menus, day booking, job cards, customer ledger and subscriptions for tiffin and home-chef outlets. See [Tiffin hub status](tiffin.md) and ADR 032.
+Phases 1-2 (outlet type, weekly menus, combos, public weekly view, date overrides, pre-tax quote) are implemented behind a default-off flag and are not generally available. Planned, not delivered: day booking, job cards, customer ledger and subscriptions for tiffin and home-chef outlets. See [Tiffin hub status](tiffin.md) and ADR 032.
 
 ## Source of truth
 
