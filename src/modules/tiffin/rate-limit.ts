@@ -9,9 +9,16 @@ const WINDOW_SECONDS = 60;
 export const TIFFIN_SOURCE_LIMIT: Record<Operation, number> = { week: 60, quote: 30 };
 /** Per verified source and token, per minute. */
 export const TIFFIN_SOURCE_TOKEN_LIMIT: Record<Operation, number> = { week: 40, quote: 20 };
-/** Per token across all sources, per minute. */
-export const TIFFIN_TOKEN_LIMIT = 120;
-/** Across all sources, per minute: a ceiling on the load the unauthenticated routes can place on PostgreSQL. */
+/**
+ * Per token across all sources, per minute. Deliberately high: QR tokens are public, so a low
+ * token-wide cap would let a few sources (or one IPv6 /64) keep one real outlet's menu at 429.
+ * It only bounds runaway key growth for a single token; it is not the PostgreSQL protection.
+ */
+export const TIFFIN_TOKEN_LIMIT = 2000;
+/**
+ * Across all sources, per minute. This global cap is the PostgreSQL protection: a ceiling on the
+ * load the unauthenticated routes can place on the database.
+ */
 export const TIFFIN_GLOBAL_LIMIT: Record<Operation, number> = { week: 3000, quote: 1500 };
 
 /** Counters are incremented in one Redis operation; the most specific quota is charged first. */
