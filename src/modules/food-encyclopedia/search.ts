@@ -7,7 +7,7 @@ function normalized(input: string): string {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g, "")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ");
 }
