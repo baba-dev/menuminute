@@ -59,6 +59,10 @@ export function isEditoriallyIndexable(entry: FoodEntry): boolean {
 }
 
 /** Search input cannot influence SQL or arbitrary external network calls. */
-export function cleanFoodQuery(value: string | undefined): string {
-  return (value ?? "").normalize("NFKC").trim().replace(/\s+/g, " ").slice(0, 100);
+export function cleanFoodQuery(value: unknown): string {
+  return (typeof value === "string" ? value : "")
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 100);
 }

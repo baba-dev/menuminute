@@ -31,6 +31,7 @@ describe("Food Encyclopedia editorial safety", () => {
   it("normalizes and bounds untrusted search input", () => {
     expect(cleanFoodQuery("  paneer   tikka  ")).toBe("paneer tikka");
     expect(cleanFoodQuery("x".repeat(300)).length).toBe(100);
+    expect(cleanFoodQuery(["paneer", "tikka"])).toBe("");
     expect(searchFood("<script>alert(1)</script>")).toEqual([]);
     expect(searchFood(undefined)).toEqual([]);
   });
